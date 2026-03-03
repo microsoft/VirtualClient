@@ -92,17 +92,6 @@ namespace VirtualClient.Dependencies.MySqlServer
         }
 
         /// <summary>
-        /// MySQL Admin Username
-        /// </summary>
-        public string Username
-        {
-            get
-            {
-                return this.Parameters.GetValue<string>(nameof(this.Username), string.Empty);
-            }
-        }
-
-        /// <summary>
         /// Database Name to create and utilize
         /// </summary>
         public string DatabaseName
@@ -226,11 +215,6 @@ namespace VirtualClient.Dependencies.MySqlServer
             {
                 string clientIps = this.GetClientIpAddresses();
                 arguments += $" --clientIps \"{clientIps}\"";
-            }
-
-            if (!string.IsNullOrEmpty(this.Username))
-            {
-                arguments += $" --username {this.Username}";
             }
 
             using (IProcessProxy process = await this.ExecuteCommandAsync(

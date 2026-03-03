@@ -74,7 +74,7 @@
             "Parameters": {
                 "Scenario": "DownloadMySqlServerPackage",
                 "BlobContainer": "packages",
-                "BlobName": "mysql.8.0.36.rev4.zip",
+                "BlobName": "mysql-server-8.0.36-v4.zip",
                 "PackageName": "mysql-server",
                 "Extract": true,
                 "Role": "Server"
