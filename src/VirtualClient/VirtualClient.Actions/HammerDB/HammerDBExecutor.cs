@@ -125,6 +125,18 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// Disk filter specified
+        /// </summary>
+        public string DiskFilter
+        {
+            get
+            {
+                // and 256G
+                return this.Parameters.GetValue<string>(nameof(this.DiskFilter), "osdisk:false&sizegreaterthan:256g");
+            }
+        }
+
+        /// <summary>
         /// Workload duration.
         /// </summary>
         public TimeSpan Duration
@@ -334,7 +346,7 @@ namespace VirtualClient.Actions
 
         private async Task ConfigureCreateHammerDBFile(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            this.GenerateCommandLineArguments();
+            await this.GenerateCommandLineArguments(cancellationToken);
 
             using (IProcessProxy process = await this.ExecuteCommandAsync(
                 $"python3",
@@ -352,10 +364,12 @@ namespace VirtualClient.Actions
             }
         }
 
-        private void GenerateCommandLineArguments()
+        private async Task GenerateCommandLineArguments(CancellationToken cancellationToken)
         {
+            string directories = await this.GetDataDirectoriesAsync(cancellationToken);
+
             string arguments = $"{this.PlatformSpecifics.Combine(this.HammerDBPackagePath, "configure-workload-generator.py")} --workload {this.Workload} --sqlServer {this.SQLServer} --port {this.Port}" +
-                    $" --virtualUsers {this.VirtualUsers} --password {this.SuperUserPassword} --dbName {this.DatabaseName} --hostIPAddress {this.ServerIpAddress}";
+                    $" --virtualUsers {this.VirtualUsers} --password {this.SuperUserPassword} --dbName {this.DatabaseName} --hostIPAddress {this.ServerIpAddress} --directories {directories}";
 
             if (this.Workload.Equals("tpcc", StringComparison.OrdinalIgnoreCase))
             {
@@ -375,6 +389,50 @@ namespace VirtualClient.Actions
             }
 
             this.HammerDBScenarioArguments = arguments;
+        }
+
+        private async Task<string> GetDataDirectoriesAsync(CancellationToken cancellationToken)
+        {
+            string diskPaths = string.Empty;
+
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                IEnumerable<Disk> disks = await this.SystemManager.DiskManager.GetDisksAsync(cancellationToken)
+                        .ConfigureAwait(false);
+
+                if (disks?.Any() != true)
+                {
+                    throw new WorkloadException(
+                        "Unexpected scenario. The disks defined for the system could not be properly enumerated.",
+                        ErrorReason.WorkloadUnexpectedAnomaly);
+                }
+
+                IEnumerable<Disk> disksToTest = DiskFilters.FilterDisks(disks, this.DiskFilter, this.Platform).ToList();
+
+                if (disksToTest?.Any() != true)
+                {
+                    throw new WorkloadException(
+                        "Expected disks to test not found. Given the parameters defined for the profile action/step or those passed " +
+                        "in on the command line, the requisite disks do not exist on the system or could not be identified based on the properties " +
+                        "of the existing disks.",
+                        ErrorReason.DependencyNotFound);
+                }
+
+                foreach (Disk disk in disksToTest)
+                {
+                    string path = this.Combine(disk.GetPreferredAccessPath(this.Platform), $"{this.SQLServer.ToLower()}");
+
+                    // Create the directory if it doesn't exist
+                    if (!this.SystemManager.FileSystem.Directory.Exists(path))
+                    {
+                        this.SystemManager.FileSystem.Directory.CreateDirectory(path);
+                    }
+
+                    diskPaths += $"{path}:";
+                }
+            }
+
+            return diskPaths;
         }
 
         private static Task OpenFirewallPortsAsync(int port, IFirewallManager firewallManager, CancellationToken cancellationToken)

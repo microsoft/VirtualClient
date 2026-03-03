@@ -137,34 +137,9 @@
         {
             "Type": "HammerDBExecutor",
             "Parameters": {
-                "Scenario": "CreateMySQLDatabase",
-                "DatabaseName": "$.Parameters.DatabaseName",
-                "Workload": "tpch",
-                "SQLServer": "mysql",
-                "PackageName": "hammerdb",
-                "VirtualUsers": 1,
-                "ScaleFactor": 1,
-                "Port": "$.Parameters.Port",
-                "Duration": "$.Parameters.Duration",
-                "Role": "Server"
-            }
-        },
-        {
-            "Type": "MySQLServerConfiguration",
-            "Parameters": {
-                "Scenario": "DistributeMySQLDatabase",
-                "Action": "DistributeDatabase",
-                "DatabaseName": "$.Parameters.DatabaseName",
-                "DiskFilter": "$.Parameters.DiskFilter",
-                "PackageName": "mysql-server",
-                "Role": "Server"
-            }
-        },
-        {
-            "Type": "HammerDBExecutor",
-            "Parameters": {
                 "Scenario": "PopulateMySQLDatabase",
                 "DatabaseName": "$.Parameters.DatabaseName",
+                "DiskFilter": "$.Parameters.DiskFilter",
                 "Workload": "tpch",
                 "SQLServer": "mysql",
                 "PackageName": "hammerdb",
