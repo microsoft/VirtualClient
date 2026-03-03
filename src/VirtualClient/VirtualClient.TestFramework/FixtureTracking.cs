@@ -200,7 +200,7 @@ namespace VirtualClient
             }
             catch
             {
-                return string.Equals(fullCommand, pattern, StringComparison.OrdinalIgnoreCase);
+                return fullCommand.IndexOf(pattern, StringComparison.OrdinalIgnoreCase) >= 0;
             }
         }
 
