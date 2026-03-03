@@ -269,7 +269,7 @@ namespace VirtualClient.Actions.NetworkPerformance
         }
 
         /// <inheritdoc/>
-        protected override Task<IProcessProxy> ExecuteWorkloadAsync(string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken, TimeSpan? timeout = null)
+        protected override Task ExecuteWorkloadAsync(string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken, TimeSpan? timeout = null)
         {
             EventContext relatedContext = telemetryContext.Clone()
                 .AddContext("command", this.ExecutablePath)
@@ -320,8 +320,6 @@ namespace VirtualClient.Actions.NetworkPerformance
                         }
                     });
                 }
-
-                return process;
             });
         }
 

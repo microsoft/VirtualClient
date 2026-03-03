@@ -130,13 +130,9 @@ namespace VirtualClient.Actions
 
             if (!state.DatabasePopulated)
             {
-                int tableCount = GetTableCount(this.DatabaseScenario, this.TableCount, this.Workload);
-                int threadCount = GetThreadCount(this.SystemManager, this.DatabaseScenario, this.Threads);
-
-                string sysbenchPrepareArguments = $"--dbName {this.DatabaseName} --databaseSystem {this.DatabaseSystem} --benchmark {this.Benchmark} --threadCount {threadCount} --tableCount {tableCount} --recordCount 1 --password {this.SuperUserPassword}";
                 string serverIp = (this.IsMultiRoleLayout() && this.IsInRole(ClientRole.Client)) ? this.ServerIpAddress : "localhost";
-                sysbenchPrepareArguments += $" --host \"{serverIp}\"";
-
+                string sysbenchPrepareArguments = $"{this.BuildSysbenchLoggingArguments(prepare: true)} --password {this.SuperUserPassword} --host \"{serverIp}\"";
+  
                 string command = $"{this.SysbenchPackagePath}/populate-database.py";
 
                 using (IProcessProxy process = await this.ExecuteCommandAsync(
@@ -169,13 +165,8 @@ namespace VirtualClient.Actions
 
             if (!state.DatabasePopulated)
             {
-                int tableCount = GetTableCount(this.DatabaseScenario, this.TableCount, this.Workload);
-                int threadCount = GetThreadCount(this.SystemManager, this.DatabaseScenario, this.Threads);
-                int warehouseCount = GetWarehouseCount(this.DatabaseScenario, this.WarehouseCount);
-
-                string sysbenchPrepareArguments = $"--dbName {this.DatabaseName} --databaseSystem {this.DatabaseSystem} --benchmark {this.Benchmark} --tableCount {tableCount} --warehouses 1 --threadCount {threadCount} --password {this.SuperUserPassword}";
                 string serverIp = (this.IsMultiRoleLayout() && this.IsInRole(ClientRole.Client)) ? this.ServerIpAddress : "localhost";
-                sysbenchPrepareArguments += $" --host \"{serverIp}\"";
+                string sysbenchPrepareArguments = $"{this.BuildSysbenchLoggingArguments(prepare: true)} --password {this.SuperUserPassword} --host \"{serverIp}\"";
 
                 string script = $"{this.SysbenchPackagePath}/populate-database.py";
 
@@ -211,15 +202,10 @@ namespace VirtualClient.Actions
             {
                 await this.Logger.LogMessageAsync($"{this.TypeName}.PopulateDatabase", telemetryContext.Clone(), async () =>
                 {
-                    int tableCount = GetTableCount(this.DatabaseScenario, this.TableCount, this.Workload);
-                    int threadCount = GetThreadCount(this.SystemManager, this.DatabaseScenario, this.Threads);
-                    int recordCount = GetRecordCount(this.SystemManager, this.DatabaseScenario, this.RecordCount);
-
-                    string sysbenchLoggingArguments = $"--dbName {this.DatabaseName} --databaseSystem {this.DatabaseSystem} --benchmark {this.Benchmark} --threadCount {threadCount} --tableCount {tableCount} --recordCount {recordCount}";
-                    this.sysbenchPopulationArguments = $"{sysbenchLoggingArguments} --password {this.SuperUserPassword}";
-
                     string serverIp = (this.IsMultiRoleLayout() && this.IsInRole(ClientRole.Client)) ? this.ServerIpAddress : "localhost";
-                    this.sysbenchPopulationArguments += $" --host \"{serverIp}\"";
+
+                    string sysbenchLoggingArguments = this.BuildSysbenchLoggingArguments(prepare: false);
+                    this.sysbenchPopulationArguments = $"{sysbenchLoggingArguments} --password {this.SuperUserPassword} --host \"{serverIp}\"";
 
                     string script = $"{this.SysbenchPackagePath}/populate-database.py";
 
@@ -261,15 +247,10 @@ namespace VirtualClient.Actions
             {
                 await this.Logger.LogMessageAsync($"{this.TypeName}.PopulateDatabase", telemetryContext.Clone(), async () =>
                 {
-                    int tableCount = GetTableCount(this.DatabaseScenario, this.TableCount, this.Workload);
-                    int threadCount = GetThreadCount(this.SystemManager, this.DatabaseScenario, this.Threads);
-                    int warehouseCount = GetWarehouseCount(this.DatabaseScenario, this.WarehouseCount);
-
-                    string sysbenchLoggingArguments = $"--dbName {this.DatabaseName} --databaseSystem {this.DatabaseSystem} --benchmark {this.Benchmark} --threadCount {threadCount} --tableCount {tableCount} --warehouses {warehouseCount}";
-                    this.sysbenchPopulationArguments = $"{sysbenchLoggingArguments} --password {this.SuperUserPassword}";
-
                     string serverIp = (this.IsMultiRoleLayout() && this.IsInRole(ClientRole.Client)) ? this.ServerIpAddress : "localhost";
-                    this.sysbenchPopulationArguments += $" --host \"{serverIp}\"";
+
+                    string sysbenchLoggingArguments = this.BuildSysbenchLoggingArguments(prepare: false);
+                    this.sysbenchPopulationArguments = $"{sysbenchLoggingArguments} --password {this.SuperUserPassword} --host \"{serverIp}\"";
 
                     string script = $"{this.SysbenchPackagePath}/populate-database.py";
 
@@ -339,7 +320,7 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Supported Sysbench Client actions.
+        /// Supported Sysbench Configuration actions.
         /// </summary>
         internal class ConfigurationAction
         {

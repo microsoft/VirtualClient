@@ -6,9 +6,7 @@
         "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows,AwsLinux"
     },
     "Parameters": {
-        "ConfigureNetwork": true,
         "EnableBusyPoll": true,
-        "DisableFirewall": true,
         "NTttcpPort": 5500,
         "NTttcpDuration": "00:01:00",
         "ProfilingEnabled": false,
@@ -208,6 +206,16 @@
         {
             "Type": "DependencyPackageInstallation",
             "Parameters": {
+                "Scenario": "InstallSystemConfigScriptPackage",
+                "BlobContainer": "packages",
+                "BlobName": "system_config.1.0.0.zip",
+                "PackageName": "system_config",
+                "Extract": true
+            }
+        },
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
                 "Scenario": "InstallNetworkToolsetPackage",
                 "BlobContainer": "packages",
                 "BlobName": "networking.3.1.0.zip",
@@ -223,13 +231,24 @@
             }
         },
         {
-            "Type": "NetworkConfigurationSetup",
+            "Type": "ExecuteCommand",
             "Parameters": {
                 "Scenario": "ConfigureNetwork",
-                "ConfigureNetwork": "$.Parameters.ConfigureNetwork",
+                "Command": "sudo chmod -R 2777 \"{ScriptPackage}\"&&sudo bash -c \"{ScriptPackage}/config_network.sh --disable-firewall=true --enable-busy-poll={EnableBusyPoll}\"",
                 "EnableBusyPoll": "$.Parameters.EnableBusyPoll",
-                "DisableFirewall": "$.Parameters.DisableFirewall",
-                "VisualStudioCRuntimePackageName": "visualstudiocruntime"
+                "LogFolderName": "configure_network",
+                "ScriptPackage": "{PackageDir/Platform:system_config}",
+                "SupportedPlatforms": "linux-x64,linux-arm64"
+            }
+        },
+        {
+            "Type": "ExecuteCommand",
+            "Parameters": {
+                "Scenario": "ConfigureNetwork",
+                "Command": "{ScriptPackage}/config_network.cmd",
+                "LogFolderName": "configure_network",
+                "ScriptPackage": "{PackageDir/Platform:system_config}",
+                "SupportedPlatforms": "win-x64,win-arm64"
             }
         },
         {

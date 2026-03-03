@@ -375,6 +375,37 @@ namespace VirtualClient.Actions
             await this.stateManager.SaveStateAsync<SysbenchState>(nameof(SysbenchState), state, cancellationToken);
         }
 
+        /// <summary>
+        /// Build the Sysbench Logging Basic Arguments, having the common parameters
+        /// dbName, databaseSystem, benchmark and tableCount.
+        /// </summary>
+        /// <returns></returns>
+        protected string BuildSysbenchLoggingArguments(bool prepare)
+        {
+            int tableCount = GetTableCount(this.DatabaseScenario, this.TableCount, this.Workload);
+            int threadCount = GetThreadCount(this.SystemManager, this.DatabaseScenario, this.Threads);
+
+            string loggingArguments = $"--dbName {this.DatabaseName} --databaseSystem {this.DatabaseSystem} --benchmark {this.Benchmark} --threadCount {threadCount} --tableCount {tableCount}";
+
+            switch (this.Benchmark)
+            {
+                case BenchmarkName.OLTP:
+                    int recordCount = GetRecordCount(this.SystemManager, this.DatabaseScenario, this.RecordCount);
+                    loggingArguments = $"{loggingArguments} --recordCount {recordCount}";
+                    break;
+                case BenchmarkName.TPCC:
+                    int warehouseCount = GetWarehouseCount(this.DatabaseScenario, this.WarehouseCount);
+                    loggingArguments = $"{loggingArguments} --warehouses {warehouseCount}";
+                    break;
+                default:
+                    throw new DependencyException(
+                        $"The '{this.Benchmark}' benchmark is not supported with the Sysbench workload. Supported options include: \"OLTP, TPCC\".",
+                        ErrorReason.NotSupported);
+            }
+
+            return loggingArguments;
+        }
+
         private async Task CheckDistroSupportAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             if (this.Platform == PlatformID.Unix)

@@ -41,10 +41,8 @@ namespace VirtualClient.Actions.NetworkPerformance
         }
 
         /// <inheritdoc/>
-        protected override Task<IProcessProxy> ExecuteWorkloadAsync(string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken, TimeSpan? timeout = null)
+        protected override Task ExecuteWorkloadAsync(string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken, TimeSpan? timeout = null)
         {
-            IProcessProxy process = null;
-
             EventContext relatedContext = telemetryContext.Clone()
                .AddContext("command", this.ExecutablePath)
                .AddContext("commandArguments", commandArguments);
@@ -55,12 +53,14 @@ namespace VirtualClient.Actions.NetworkPerformance
                 {
                     await this.ProcessStartRetryPolicy.ExecuteAsync(async () =>
                     {
-                        using (process = this.SystemManagement.ProcessManager.CreateProcess(this.ExecutablePath, commandArguments))
+                        using (IProcessProxy process = this.SystemManagement.ProcessManager.CreateProcess(this.ExecutablePath, commandArguments))
                         {
+                            int processId = -1;
+
                             try
                             {
-                                this.CleanupTasks.Add(() => process.SafeKill(this.Logger));
-                                await process.StartAndWaitAsync(cancellationToken, timeout, withExitConfirmation: true);
+                                await process.StartAndWaitAsync(cancellationToken, timeout);
+                                processId = process.Id;
 
                                 if (!cancellationToken.IsCancellationRequested)
                                 {
@@ -80,19 +80,22 @@ namespace VirtualClient.Actions.NetworkPerformance
                                 // We give this a best effort but do not want it to prevent the next workload
                                 // from executing.
                                 this.Logger.LogMessage($"{this.GetType().Name}.WorkloadTimeout", LogLevel.Warning, relatedContext.AddError(exc));
-                                process.SafeKill(this.Logger);
                             }
                             catch (Exception exc)
                             {
                                 this.Logger.LogMessage($"{this.GetType().Name}.WorkloadStartupError", LogLevel.Warning, relatedContext.AddError(exc));
-                                process.SafeKill(this.Logger);
                                 throw;
+                            }
+                            finally
+                            {
+                                if (processId > 0)
+                                {
+                                    this.SystemManagement.ProcessManager.SafeKill(processId, this.Logger);
+                                }
                             }
                         }
                     });
                 }
-
-                return process;
             });
         }
 
@@ -104,8 +107,7 @@ namespace VirtualClient.Actions.NetworkPerformance
             string clientIPAddress = this.GetLayoutClientInstances(ClientRole.Client).First().IPAddress;
             string serverIPAddress = this.GetLayoutClientInstances(ClientRole.Server).First().IPAddress;
 
-            return $"-so -c -a {serverIPAddress}:{this.Port} -rio -i {this.Iterations} -riopoll {this.RioPoll} -{this.Protocol.ToString().ToLowerInvariant()} " +
-            $"-hist -hl 1 -hc 9998 -bl {clientIPAddress}";
+            return $"-so -c -a {serverIPAddress}:{this.Port} -t {this.TestDuration.TotalSeconds} -rio -riopoll {this.RioPoll} -{this.Protocol.ToString().ToLowerInvariant()} -hist -hl 1 -hc 9998 -bl {clientIPAddress}";
         }
 
         /// <summary>

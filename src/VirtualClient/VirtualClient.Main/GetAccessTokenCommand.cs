@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient
@@ -11,39 +11,32 @@ namespace VirtualClient
     using VirtualClient.Contracts;
 
     /// <summary>
-    /// Command executes the operations to bootstrap/install dependencies on the system
-    /// prior to running a Virtual Client profile.
+    /// Command that executes a profile to acquire an access token for an Azure Key Vault.
     /// </summary>
-    internal class BootstrapPackageCommand : ExecuteProfileCommand
+    internal class GetAccessTokenCommand : ExecuteProfileCommand
     {
         /// <summary>
-        /// The name (logical name) to use when registering the package.
+        /// Key vault initialization is not required for getting an access token.
         /// </summary>
-        public string Name { get; set; }
+        protected override bool ShouldInitializeKeyVault => false;
 
         /// <summary>
-        /// The name of the package (in storage) to bootstrap/install.
+        /// The tenant ID associated with your Microsoft Entra ID (formerly Azure Active Directory).
         /// </summary>
-        public string Package { get; set; }
+        public string TenantId { get; set; }
 
         /// <summary>
-        /// Executes the dependency bootstrap/installation operations.
+        /// Executes the access token acquisition operations using the configured profile.
         /// </summary>
         /// <param name="args">The arguments provided to the application on the command line.</param>
         /// <param name="cancellationTokenSource">Provides a token that can be used to cancel the command operations.</param>
         /// <returns>The exit code for the command operations.</returns>
         public override Task<int> ExecuteAsync(string[] args, CancellationTokenSource cancellationTokenSource)
         {
-            string registerAsName = this.Name;
-            if (String.IsNullOrWhiteSpace(registerAsName))
-            {
-                registerAsName = Path.GetFileNameWithoutExtension(this.Package);
-            }
-
             this.Timeout = ProfileTiming.OneIteration();
             this.Profiles = new List<DependencyProfileReference>
             {
-                new DependencyProfileReference("BOOTSTRAP-DEPENDENCIES.json")
+                new DependencyProfileReference("GET-ACCESS-TOKEN.json")
             };
 
             if (this.Parameters == null)
@@ -51,9 +44,9 @@ namespace VirtualClient
                 this.Parameters = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
             }
 
-            this.Parameters["Package"] = this.Package;
-            this.Parameters["RegisterAsName"] = registerAsName;
-
+            this.Parameters["KeyVaultUri"] = this.KeyVault;
+            this.Parameters["TenantId"] = this.TenantId;
+            
             return base.ExecuteAsync(args, cancellationTokenSource);
         }
     }

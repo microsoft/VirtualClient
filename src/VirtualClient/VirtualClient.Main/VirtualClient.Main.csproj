@@ -62,7 +62,8 @@
     -->
     <Target Name="CopyScriptsToOutputDirectory" AfterTargets="Build">
         <ItemGroup>
-            <ScriptFiles Include="$(RepoPath)\out\scripts\**\*.*" />
+			<ScriptFiles Include="$(RepoPath)\out\scripts\**\*.*" />
+            <ScriptFiles Include="scripts\**\*.*" />
         </ItemGroup>
 
         <Copy SourceFiles="@(ScriptFiles)" DestinationFiles="@(ScriptFiles->'$(OutputPath)scripts\%(RecursiveDir)%(Filename)%(Extension)')" />
