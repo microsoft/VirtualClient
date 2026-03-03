@@ -41,7 +41,7 @@ namespace VirtualClient.Dependencies
         /// Gets the Azure Key Vault URI for which the access token will be requested.
         /// Example: https://anyvault.vault.azure.net/
         /// </summary>
-        public string KeyVaultUri
+        protected string KeyVaultUri
         {
             get
             {
