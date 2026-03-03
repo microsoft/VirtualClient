@@ -20,7 +20,7 @@ namespace VirtualClient.Actions
     /// <summary>
     /// The SuperBenchmark workload executor.
     /// </summary>
-    [SupportedPlatforms("linux-x64", true)]
+    [SupportedPlatforms("linux-x64,linux-arm64", true)]
     public class SuperBenchmarkExecutor : VirtualClientComponent
     {
         private const string SuperBenchmarkRunShell = "RunSuperBenchmark.sh";

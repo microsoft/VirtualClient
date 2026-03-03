@@ -1,0 +1,53 @@
+{
+    "Description": "NVIDIA GB200 GPU Driver Installation Dependency",
+    "Metadata": {
+        "RecommendedMinimumExecutionTime": "00:10:00",
+        "SupportedPlatforms": "linux-arm64",
+        "SupportedOperatingSystems": "Linux",
+        "SupportedLinuxGpuModel": "NVIDIA GB200",
+        "SupportedLinuxDistros": "Ubuntu24",
+        "SpecialRequirements": "This is an NVIDIA GPU Driver dependency. It can only be installed on the system having an NVIDIA GB200 GPU card/chip."
+    },
+    "Parameters": {
+        "ConfigurationFile": "default.yaml",
+        "Username": "",
+        "LinuxCudaVersion": "13.1",
+        "LinuxDriverVersion": "590",
+        "LinuxLocalRunFile": "https://developer.download.nvidia.com/compute/cuda/13.1.1/local_installers/cuda_13.1.1_590.48.01_linux_sbsa.run"
+    },
+    "Dependencies": [
+        {
+            "Type": "DockerInstallation",
+            "Parameters": {
+                "Scenario": "InstallDocker"
+            }
+        },
+        {
+            "Type": "NvidiaCudaInstallation",
+            "Parameters": {
+                "Scenario": "InstallNvidiaCuda",
+                "LinuxCudaVersion": "$.Parameters.LinuxCudaVersion",
+                "LinuxDriverVersion": "$.Parameters.LinuxDriverVersion",
+                "Username": "$.Parameters.Username",
+                "LinuxLocalRunFile": "$.Parameters.LinuxLocalRunFile"
+            }
+        },
+        {
+            "Type": "NvidiaContainerToolkitInstallation",
+            "Parameters": {
+                "Scenario": "InstallNvidiaContainerToolkit"
+            }
+        },
+        {
+            "Type": "LinuxPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallLinuxPackages",
+                "Packages": "sshpass,python3-pip",
+                "Packages-Apt": "nvidia-common",
+                "Packages-Dnf": "nvidia-driver",
+                "Packages-Yum": "nvidia-driver",
+                "Packages-Zypper": ""
+            }
+        }
+    ]
+}
