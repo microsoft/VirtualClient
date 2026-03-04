@@ -240,11 +240,11 @@
         {
             "Type": "SysbenchConfiguration",
             "Parameters": {
-                "Scenario": "PopulateMySQLDatabase",
+                "Scenario": "PrepareMySQLDatabase",
+                "Action": "CreateTables",
                 "DatabaseSystem": "MySQL",
                 "Benchmark": "OLTP",
                 "DatabaseName": "$.Parameters.DatabaseName",
-                "RecordCount": 1,
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
                 "PackageName": "sysbench",
                 "Role": "Server"
@@ -265,6 +265,7 @@
             "Type": "SysbenchConfiguration",
             "Parameters": {
                 "Scenario": "PopulateMySQLDatabase",
+                "Action": "PopulateTables",
                 "DatabaseSystem": "MySQL",
                 "Benchmark": "OLTP",
                 "DatabaseName": "$.Parameters.DatabaseName",
