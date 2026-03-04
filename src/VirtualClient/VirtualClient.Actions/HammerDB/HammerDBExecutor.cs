@@ -45,6 +45,18 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// The specifed action that controls the execution of the dependency.
+        /// </summary>
+        public string Action
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(this.Action), out IConvertible action);
+                return action?.ToString();
+            }
+        }
+
+        /// <summary>
         /// Defines the name of the createDB TCL file.
         /// </summary>
         public string CreateDBTclName
@@ -225,7 +237,7 @@ namespace VirtualClient.Actions
             HammerDBState state = await this.stateManager.GetStateAsync<HammerDBState>(nameof(HammerDBState), cancellationToken)
                ?? new HammerDBState();
 
-            if (state.DatabaseCreated != 2)
+            if (!state.DatabasePopulated)
             {
                 await this.Logger.LogMessageAsync($"{this.TypeName}.{this.Scenario}", telemetryContext.Clone(), async () =>
                 {
@@ -234,8 +246,12 @@ namespace VirtualClient.Actions
                         await this.PrepareSQLDatabase(telemetryContext, cancellationToken);
                     }
                 });
-                state.DatabaseCreated++;
-                await this.stateManager.SaveStateAsync<HammerDBState>(nameof(HammerDBState), state, cancellationToken);
+
+                if (this.Action == ConfigurationAction.PopulateTables)
+                {
+                    state.DatabasePopulated = true;
+                    await this.stateManager.SaveStateAsync<HammerDBState>(nameof(HammerDBState), state, cancellationToken);
+                }
             }
         }
 
@@ -346,7 +362,9 @@ namespace VirtualClient.Actions
 
         private async Task ConfigureCreateHammerDBFile(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            await this.GenerateCommandLineArguments(cancellationToken);
+            string command = $"python3";
+            string arguments = $"{this.HammerDBPackagePath}/configure-workload-generator.py --workload {this.Workload} --sqlServer {this.SQLServer} --port {this.Port}" +
+                    $" --virtualUsers {this.VirtualUsers} --warehouseCount {this.WarehouseCount} --password {this.SuperUserPassword} --dbName {this.DatabaseName} --hostIPAddress {this.ServerIpAddress}";
 
             using (IProcessProxy process = await this.ExecuteCommandAsync(
                 $"python3",
@@ -504,18 +522,34 @@ namespace VirtualClient.Actions
                 }
             }
 
-            public int DatabaseCreated
+            public bool DatabasePopulated
             {
                 get
                 {
-                    return this.Properties.GetValue<int>(nameof(HammerDBState.DatabaseCreated), 0);
+                    return this.Properties.GetValue<bool>(nameof(HammerDBState.DatabasePopulated), false);
                 }
 
                 set
                 {
-                    this.Properties[nameof(HammerDBState.DatabaseCreated)] = value;
+                    this.Properties[nameof(HammerDBState.DatabasePopulated)] = value;
                 }
             }
+        }
+
+        /// <summary>
+        /// Supported HammerDB Configuration actions.
+        /// </summary>
+        internal class ConfigurationAction
+        {
+            /// <summary>
+            /// Initializes the tables on the database.
+            /// </summary>
+            public const string CreateTables = nameof(CreateTables);
+
+            /// <summary>
+            /// Populates Database on server.
+            /// </summary>
+            public const string PopulateTables = nameof(PopulateTables);
         }
     }
 }

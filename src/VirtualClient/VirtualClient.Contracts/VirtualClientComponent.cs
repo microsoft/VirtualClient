@@ -760,7 +760,7 @@ namespace VirtualClient.Contracts
 
                     await this.Logger.LogMessageAsync($"{this.TypeName}.Execute", telemetryContext, async () =>
                     {
-                        bool succeeded = false;
+                        bool succeeded = true;
 
                         try
                         {
@@ -768,7 +768,6 @@ namespace VirtualClient.Contracts
                             this.Validate();
 
                             await this.ExecuteAsync(telemetryContext, cancellationToken);
-                            succeeded = true;
                         }
                         catch (OperationCanceledException)
                         {
@@ -776,6 +775,8 @@ namespace VirtualClient.Contracts
                         }
                         catch (Exception)
                         {
+                            succeeded = false;
+
                             // Occasionally some of the workloads throw exceptions right as VC receives a
                             // cancellation/exit request.
                             if (!cancellationToken.IsCancellationRequested)

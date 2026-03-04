@@ -11,6 +11,7 @@ namespace VirtualClient.Actions
     using System.Runtime.InteropServices;
     using System.Security.Cryptography;
     using System.Text;
+    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
@@ -177,18 +178,6 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// The specifed action that controls the execution of the dependency.
-        /// </summary>
-        public string Action
-        {
-            get
-            {
-                this.Parameters.TryGetValue(nameof(this.Action), out IConvertible action);
-                return action?.ToString();
-            }
-        }
-
-        /// <summary>
         /// Client used to communicate with the hosted instance of the
         /// Virtual Client API at server side.
         /// </summary>
@@ -308,10 +297,7 @@ namespace VirtualClient.Actions
             DependencyPath package = await this.GetPackageAsync(this.PackageName, cancellationToken);
             this.SysbenchPackagePath = package.Path;
 
-            if (this.Action != ClientAction.TruncateDatabase)
-            {
-                await this.InitializeExecutablesAsync(telemetryContext, cancellationToken);
-            }
+            await this.InitializeExecutablesAsync(telemetryContext, cancellationToken);
 
             this.InitializeApiClients(telemetryContext, cancellationToken);
 
@@ -390,40 +376,34 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Add metrics to telemtry.
+        /// Build the Sysbench Logging Basic Arguments, having the common parameters
+        /// dbName, databaseSystem, benchmark and tableCount.
         /// </summary>
-        /// <param name="arguments"></param>
-        /// <param name="process"></param>
-        /// <param name="telemetryContext"></param>
-        /// <param name="cancellationToken"></param>
-        protected void AddMetric(string arguments, IProcessProxy process, EventContext telemetryContext, CancellationToken cancellationToken)
+        /// <returns></returns>
+        protected string BuildSysbenchLoggingArguments(bool prepare)
         {
-            if (!cancellationToken.IsCancellationRequested)
+            int tableCount = GetTableCount(this.DatabaseScenario, this.TableCount, this.Workload);
+            int threadCount = GetThreadCount(this.SystemManager, this.DatabaseScenario, this.Threads);
+
+            string loggingArguments = $"--dbName {this.DatabaseName} --databaseSystem {this.DatabaseSystem} --benchmark {this.Benchmark} --threadCount {threadCount} --tableCount {tableCount}";
+
+            switch (this.Benchmark)
             {
-                this.MetadataContract.AddForScenario(
-                    "Sysbench",
-                    process.FullCommand(),
-                    toolVersion: null);
-
-                this.MetadataContract.Apply(telemetryContext);
-
-                string text = process.StandardOutput.ToString();
-
-                List<Metric> metrics = new List<Metric>();
-                double duration = (process.ExitTime - process.StartTime).TotalMinutes;
-                metrics.Add(new Metric("PopulateDatabaseDuration", duration, "minutes", MetricRelativity.LowerIsBetter));
-
-                this.Logger.LogMetrics(
-                    toolName: "Sysbench",
-                    scenarioName: this.MetricScenario ?? this.Scenario,
-                    process.StartTime,
-                    process.ExitTime,
-                    metrics,
-                    null,
-                    scenarioArguments: arguments,
-                    this.Tags,
-                    telemetryContext);
+                case BenchmarkName.OLTP:
+                    int recordCount = GetRecordCount(this.SystemManager, this.DatabaseScenario, this.RecordCount);
+                    loggingArguments = $"{loggingArguments} --recordCount {recordCount}";
+                    break;
+                case BenchmarkName.TPCC:
+                    int warehouseCount = GetWarehouseCount(this.DatabaseScenario, this.WarehouseCount);
+                    loggingArguments = $"{loggingArguments} --warehouses {warehouseCount}";
+                    break;
+                default:
+                    throw new DependencyException(
+                        $"The '{this.Benchmark}' benchmark is not supported with the Sysbench workload. Supported options include: \"OLTP, TPCC\".",
+                        ErrorReason.NotSupported);
             }
+
+            return loggingArguments;
         }
 
         private async Task CheckDistroSupportAsync(EventContext telemetryContext, CancellationToken cancellationToken)
@@ -508,32 +488,6 @@ namespace VirtualClient.Actions
         {
             public const string OLTP = nameof(OLTP);
             public const string TPCC = nameof(TPCC);
-        }
-
-        /// <summary>
-        /// Supported Sysbench Client actions.
-        /// </summary>
-        internal class ClientAction
-        {
-            /// <summary>
-            /// Creates Database on MySQL server and Users on Server and any Clients.
-            /// </summary>
-            public const string PopulateDatabase = nameof(PopulateDatabase);
-
-            /// <summary>
-            /// Truncates all tables existing in database
-            /// </summary>
-            public const string TruncateDatabase = nameof(TruncateDatabase);
-
-            /// <summary>
-            /// Runs specified workload.
-            /// </summary>
-            public const string RunWorkload = nameof(RunWorkload);
-
-            /// <summary>
-            /// Runs sysbench cleanup action.
-            /// </summary>
-            public const string Cleanup = nameof(Cleanup);
         }
     }
 }

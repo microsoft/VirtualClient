@@ -28,11 +28,11 @@ namespace VirtualClient
         private static readonly Semaphore FileAccessLock = new Semaphore(1, 1);
 
         /// <summary>
-        /// Returns the target log directory for the component and tool name.
+        /// Returns the target log directory name for the component.
         /// </summary>
         /// <param name="component">The component requesting the logging.</param>
         /// <param name="toolName">The name of the toolset running in the process.</param>
-        public static string GetLogDirectory(this VirtualClientComponent component, string toolName = null)
+        public static string GetLogDirectoryName(this VirtualClientComponent component, string toolName = null)
         {
             string[] possibleLogFolderNames = new string[]
             {
@@ -41,8 +41,20 @@ namespace VirtualClient
                 component.TypeName
             };
 
-            string logFolderName = VirtualClientLoggingExtensions.GetSafeFileName(possibleLogFolderNames.First(name => !string.IsNullOrWhiteSpace(name)), false);
-            string logDirectory = component.PlatformSpecifics.GetLogsPath(logFolderName.ToLowerInvariant().RemoveWhitespace());
+            string logDirectoryName = VirtualClientLoggingExtensions.GetSafeFileName(possibleLogFolderNames.First(name => !string.IsNullOrWhiteSpace(name)), false);
+
+            return logDirectoryName;
+        }
+
+        /// <summary>
+        /// Returns the target log directory for the component.
+        /// </summary>
+        /// <param name="component">The component requesting the logging.</param>
+        /// <param name="toolName">The name of the toolset running in the process.</param>
+        public static string GetLogDirectory(this VirtualClientComponent component, string toolName = null)
+        {
+            string logDirectoryName = component.GetLogDirectoryName(toolName);
+            string logDirectory = component.PlatformSpecifics.GetLogsPath(logDirectoryName.ToLowerInvariant().RemoveWhitespace());
 
             return logDirectory;
         }
@@ -397,7 +409,7 @@ namespace VirtualClient
 
                     if (upload && component.TryGetContentStoreManager(out IBlobManager blobManager))
                     {
-                        string effectiveToolName = fileSystem.Path.GetDirectoryName(logDirectory);
+                        string effectiveToolName = component.GetLogDirectoryName(processDetails.ToolName);
 
                         FileContext fileContext = new FileContext(
                             fileSystem.FileInfo.New(logFilePath),
