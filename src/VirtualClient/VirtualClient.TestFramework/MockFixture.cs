@@ -258,6 +258,11 @@ namespace VirtualClient
         public ProfileTiming Timing { get; set; }
 
         /// <summary>
+        /// Gets the process tracking instance. This is populated after the <see cref="TrackProcesses"/> method is called.
+        /// </summary>
+        public FixtureTracking Tracking => this.ProcessManager.Tracking;
+
+        /// <summary>
         /// Returns the contents of the file at the path defined by the path segments
         /// (e.g. [ "/home/users/examples", "toolset", "example.txt" ])
         /// </summary>
@@ -657,6 +662,36 @@ namespace VirtualClient
                 this.Layout = new EnvironmentLayout(clients);
             }
 
+            return this;
+        }
+
+        /// <summary>
+        /// Enables automatic tracking of all process executions.
+        /// </summary>
+        /// <param name="reset">True to clear any previously tracked commands.</param>
+        /// <returns>The fixture instance for method chaining.</returns>
+        public MockFixture TrackProcesses(bool reset = true)
+        {
+            this.ProcessManager.TrackProcesses(reset);
+            return this;
+        }
+
+        /// <summary>
+        /// Sets up automatic output for processes whose full command line matches
+        /// the pattern provided.
+        /// </summary>
+        /// <param name="commandPattern">A regex pattern matching the command.</param>
+        /// <param name="standardOutput">The standard output to return for matching commands.</param>
+        /// <param name="standardError">The standard error output (optional).</param>
+        /// <param name="exitCode">The exit code for the process (default: 0).</param>
+        /// <returns>The fixture instance for method chaining.</returns>
+        public MockFixture SetupProcessOutput(
+            string commandPattern,
+            string standardOutput,
+            string standardError = null,
+            int exitCode = 0)
+        {
+            this.ProcessManager.SetupProcessOutput(commandPattern, standardOutput, standardError, exitCode);
             return this;
         }
 
