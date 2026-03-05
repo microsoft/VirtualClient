@@ -203,6 +203,11 @@ namespace VirtualClient
         public ProfileTiming Timing { get; set; }
 
         /// <summary>
+        /// Gets the process tracking instance. This is populated after the <see cref="TrackProcesses"/> method is called.
+        /// </summary>
+        public FixtureTracking Tracking => this.ProcessManager.Tracking;
+
+        /// <summary>
         /// Returns a path that is combined specific to the platform defined for this
         /// fixture.
         /// </summary>
@@ -403,6 +408,36 @@ namespace VirtualClient
         {
             dependency.ThrowIfNull(nameof(dependency));
             return this.PlatformSpecifics.ToPlatformSpecificPath(dependency, platform, architecture);
+        }
+
+        /// <summary>
+        /// Enables automatic tracking of all process executions.
+        /// </summary>
+        /// <param name="reset">True to clear any previously tracked commands.</param>
+        /// <returns>The fixture instance for method chaining.</returns>
+        public DependencyFixture TrackProcesses(bool reset = true)
+        {
+            this.ProcessManager.TrackProcesses(reset);
+            return this;
+        }
+
+        /// <summary>
+        /// Sets up automatic output for processes whose full command line matches
+        /// the pattern provided.
+        /// </summary>
+        /// <param name="commandPattern">A regex pattern matching the command.</param>
+        /// <param name="standardOutput">The standard output to return for matching commands.</param>
+        /// <param name="standardError">The standard error output (optional).</param>
+        /// <param name="exitCode">The exit code for the process (default: 0).</param>
+        /// <returns>The fixture instance for method chaining.</returns>
+        public DependencyFixture SetupProcessOutput(
+            string commandPattern,
+            string standardOutput,
+            string standardError = null,
+            int exitCode = 0)
+        {
+            this.ProcessManager.SetupProcessOutput(commandPattern, standardOutput, standardError, exitCode);
+            return this;
         }
 
         private IServiceCollection InitializeDependencies()

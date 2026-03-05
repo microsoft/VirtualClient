@@ -8,7 +8,9 @@ namespace VirtualClient
     using System.Diagnostics;
     using System.IO;
     using System.Linq;
+    using System.Text.RegularExpressions;
     using VirtualClient.Common;
+    using VirtualClient.Common.Extensions;
 
     /// <summary>
     /// A mock/test process manager.
@@ -81,31 +83,112 @@ namespace VirtualClient
         /// <inheritdoc />
         public override PlatformID Platform { get; }
 
+        /// <summary>
+        /// Gets the process tracking instance. This is populated after the <see cref="TrackProcesses"/> method is called.
+        /// </summary>
+        public FixtureTracking Tracking { get; private set; }
+
+        /// <summary>
+        /// Enables automatic tracking of all process executions. This wraps the existing <see cref="OnCreateProcess"/>
+        /// handler to record each execution in a <see cref="FixtureTracking"/> instance.
+        /// </summary>
+        /// <param name="reset">True to clear any previously tracked commands.</param>
+        public InMemoryProcessManager TrackProcesses(bool reset = true)
+        {
+            if (this.Tracking == null || reset)
+            {
+                this.Tracking = new FixtureTracking();
+            }
+
+            Func<string, string, string, IProcessProxy> existingHandler = this.OnCreateProcess;
+
+            this.OnCreateProcess = (command, arguments, workingDirectory) =>
+            {
+                IProcessProxy process = existingHandler != null
+                    ? existingHandler(command, arguments, workingDirectory)
+                    : this.CreateDefaultProcess(command, arguments, workingDirectory);
+
+                this.Tracking.AddCommand(new CommandExecutionInfo(
+                    command,
+                    arguments,
+                    workingDirectory,
+                    process,
+                    DateTime.UtcNow));
+
+                return process;
+            };
+
+            return this;
+        }
+
+        /// <summary>
+        /// Sets up automatic output for processes whose full command line matches
+        /// the pattern provided. This wraps the existing <see cref="OnCreateProcess"/> handler
+        /// to inject standard output and error into matching processes.
+        /// </summary>
+        /// <param name="commandPattern">A regex pattern (or plain substring) matched against the full command.</param>
+        /// <param name="standardOutput">The standard output to inject into matching processes.</param>
+        /// <param name="standardError">The standard error to inject into matching processes (optional).</param>
+        /// <param name="exitCode">The exit code for matching processes (default: 0).</param>
+        public InMemoryProcessManager SetupProcessOutput(
+            string commandPattern,
+            string standardOutput,
+            string standardError = null,
+            int exitCode = 0)
+        {
+            commandPattern.ThrowIfNullOrWhiteSpace(nameof(commandPattern));
+
+            Func<string, string, string, IProcessProxy> existingHandler = this.OnCreateProcess;
+
+            this.OnCreateProcess = (command, arguments, workingDirectory) =>
+            {
+                IProcessProxy process = existingHandler != null
+                    ? existingHandler(command, arguments, workingDirectory)
+                    : this.CreateDefaultProcess(command, arguments, workingDirectory);
+
+                string fullCommand = string.IsNullOrEmpty(arguments)
+                    ? command
+                    : $"{command} {arguments}";
+
+                bool matches;
+                try
+                {
+                    matches = Regex.IsMatch(fullCommand, commandPattern, RegexOptions.IgnoreCase);
+                }
+                catch
+                {
+                    matches = fullCommand.Contains(commandPattern, StringComparison.OrdinalIgnoreCase);
+                }
+
+                if (matches && process is InMemoryProcess inMemoryProcess)
+                {
+                    // Inject output/error into the existing process so that any tracking
+                    // wrapper already holding a reference to it sees the populated buffers.
+                    inMemoryProcess.ExitCode = exitCode;
+
+                    if (!string.IsNullOrEmpty(standardOutput))
+                    {
+                        inMemoryProcess.StandardOutput.Append(standardOutput);
+                    }
+
+                    if (!string.IsNullOrEmpty(standardError))
+                    {
+                        inMemoryProcess.StandardError.Append(standardError);
+                    }
+                }
+
+                return process;
+            };
+
+            return this;
+        }
+
         /// <inheritdoc />
         public override IProcessProxy CreateProcess(string command, string arguments = null, string workingDir = null)
         {
-            IProcessProxy process = null;
-            if (this.OnCreateProcess != null)
-            {
-                process = this.OnCreateProcess?.Invoke(command, arguments, workingDir);
-            }
-            else
-            {
-                process = new InMemoryProcess
-                {
-                    StartInfo = new ProcessStartInfo
-                    {
-                        FileName = command,
-                        Arguments = arguments,
-                        WorkingDirectory = workingDir ?? (this.Platform == PlatformID.Unix 
-                            ? Path.GetDirectoryName(command).Replace('\\', '/')
-                            : Path.GetDirectoryName(command))
-                    }
-                };
-
-                (process as InMemoryProcess).OnHasExited = () => true;
-                (process as InMemoryProcess).OnStart = () => true;
-            }
+            IProcessProxy process = this.OnCreateProcess != null
+                ? this.OnCreateProcess.Invoke(command, arguments, workingDir)
+                : this.CreateDefaultProcess(command, arguments, workingDir);
 
             (this.Processes as List<IProcessProxy>).Add(process);
             this.OnProcessCreated?.Invoke(process);
@@ -125,6 +208,25 @@ namespace VirtualClient
             {
                 process = this.Processes?.FirstOrDefault(p => p.Id == processId);
             }
+
+            return process;
+        }
+
+        private IProcessProxy CreateDefaultProcess(string command, string arguments, string workingDirectory)
+        {
+            InMemoryProcess process = new InMemoryProcess
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = command,
+                    Arguments = arguments,
+                    WorkingDirectory = workingDirectory ?? (this.Platform == PlatformID.Unix
+                        ? Path.GetDirectoryName(command).Replace('\\', '/')
+                        : Path.GetDirectoryName(command))
+                },
+                OnHasExited = () => true,
+                OnStart = () => true
+            };
 
             return process;
         }
