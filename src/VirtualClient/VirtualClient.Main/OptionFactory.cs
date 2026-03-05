@@ -605,7 +605,7 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreateTokenOption(bool required = false, object defaultValue = null)
         {
-            Option<string> option = new Option<string>(new string[] { "--token", "--access-token" })
+            Option<string> option = new Option<string>(new string[] { "--token" })
             {
                 Name = "AccessToken",
                 Description = "Authentication token for Azure Key Vault access. When not provided, uses default Azure credential authentication (Azure CLI, Managed Identity, etc.).",
@@ -624,7 +624,7 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreateCertificateNameOption(bool required = false, object defaultValue = null)
         {
-            Option<string> option = new Option<string>(new string[] { "--certname", "--certificate-name", "--cert-name" })
+            Option<string> option = new Option<string>(new string[] {"--certificate-name", "--cert-name" })
             {
                 Name = "CertificateName",
                 Description = "The name of the certificate in Azure Key Vault to install to the local certificate store.",
@@ -643,11 +643,30 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreateTenantIdOption(bool required = false, object defaultValue = null)
         {
-            Option<string> option = new Option<string>(new string[] { "--tenant-id", "--tid" })
+            Option<string> option = new Option<string>(new string[] { "--tenant-id" })
             {
                 Name = "TenantId",
                 Description = "The tenant ID associated with your Microsoft Entra ID.",
                 ArgumentHelpName = "tid",
+                AllowMultipleArgumentsPerToken = false
+            };
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+            return option;
+        }
+
+        /// <summary>
+        /// Command line option defines the directory to which certificates downloaded from Key Vault can be saved.
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateCertificateInstallationDirectoryOption(bool required = false, object defaultValue = null)
+        {
+            Option<string> option = new Option<string>(new string[] { "--cert-installation-dir" })
+            {
+                Name = "CertificateInstallationDir",
+                Description = "Defines the directory where certificates downloaded from Key Vault will be saved.",
+                ArgumentHelpName = "path",
                 AllowMultipleArgumentsPerToken = false
             };
 

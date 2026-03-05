@@ -311,9 +311,9 @@ namespace VirtualClient
 
                 // --verbose
                 OptionFactory.CreateVerboseFlag(required: false, false),
-                
-                // --token
-                OptionFactory.CreateTokenOption(required: false)
+                                
+                // --tenant-id
+                OptionFactory.CreateTenantIdOption(required: false),
             };
 
             // Single command execution is also supported. Behind the scenes this uses a
@@ -474,6 +474,9 @@ namespace VirtualClient
 
                 // --token
                 OptionFactory.CreateTokenOption(required: false),
+
+                // --cert-installation-dir
+                OptionFactory.CreateCertificateInstallationDirectoryOption(required: false),
                 
                 // --tenant-id
                 OptionFactory.CreateTenantIdOption(required: false),

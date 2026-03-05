@@ -128,6 +128,27 @@ namespace VirtualClient
         }
 
         [Test]
+        public void SetupCertificateInstallation_AllowsCertificateDownloadDirectory()
+        {
+            var command = new TestBootstrapCommand
+            {
+                Parameters = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase),
+                CertificateName = "mycert",
+                KeyVault = "https://myvault.vault.azure.net/",
+                AccessToken = "token123",
+                TenantId = "00000000-0000-0000-0000-000000000001",
+                CertificateInstallationDir = "C:\\certs"
+            };
+
+            command.SetupCertificateInstallationPublic();
+
+            Assert.AreEqual(command.Parameters["KeyVaultUri"], command.KeyVault);
+            Assert.AreEqual(command.Parameters["CertificateName"], command.CertificateName);
+            Assert.AreEqual(command.Parameters["CertificateInstallationDir"], command.CertificateInstallationDir);
+            Assert.AreEqual(command.Parameters.Count, 3);
+        }
+
+        [Test]
         [TestCase(null)]
         [TestCase("")]
         [TestCase(" ")]

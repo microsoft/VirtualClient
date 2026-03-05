@@ -41,12 +41,24 @@ namespace VirtualClient.Dependencies
         /// Gets the Azure Key Vault URI for which the access token will be requested.
         /// Example: https://anyvault.vault.azure.net/
         /// </summary>
-        protected string KeyVaultUri { get; set; }
+        protected string KeyVaultUri
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.KeyVaultUri));
+            }
+        }
 
         /// <summary>
         /// Gets the Azure tenant ID used to acquire an access token.
         /// </summary>
-        protected string TenantId { get; set; }
+        protected string TenantId
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.TenantId));
+            }
+        }
 
         /// <summary>
         /// Gets or sets the full file path where the acquired access token will be written when file logging is enabled.
@@ -84,16 +96,8 @@ namespace VirtualClient.Dependencies
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            this.KeyVaultUri = this.Parameters.GetValue<string>(nameof(this.KeyVaultUri));
             this.KeyVaultUri.ThrowIfNullOrWhiteSpace(nameof(this.KeyVaultUri));
-
-            string tenantId = this.Parameters.GetValue<string>(nameof(this.TenantId));
-            if (string.IsNullOrWhiteSpace(tenantId))
-            {
-                EndpointUtility.TryParseMicrosoftEntraTenantIdReference(new Uri(this.KeyVaultUri), out tenantId);
-            }
-
-            tenantId.ThrowIfNullOrWhiteSpace(nameof(tenantId));
+            this.TenantId.ThrowIfNullOrWhiteSpace(nameof(this.TenantId));
 
             string accessToken = null;
             if (!cancellationToken.IsCancellationRequested)
@@ -108,7 +112,7 @@ namespace VirtualClient.Dependencies
                     InteractiveBrowserCredential credential = new InteractiveBrowserCredential(
                         new InteractiveBrowserCredentialOptions
                         {
-                            TenantId = tenantId
+                            TenantId = this.TenantId
                         });
 
                     accessToken = await this.AcquireInteractiveTokenAsync(credential, requestContext, cancellationToken);
@@ -119,7 +123,7 @@ namespace VirtualClient.Dependencies
                     // the user with a code and URL to complete authentication from another device.
                     DeviceCodeCredential credential = new DeviceCodeCredential(new DeviceCodeCredentialOptions
                     {
-                        TenantId = tenantId,
+                        TenantId = this.TenantId,
                         DeviceCodeCallback = (codeInfo, token) =>
                         {
                             Console.WriteLine(string.Empty);

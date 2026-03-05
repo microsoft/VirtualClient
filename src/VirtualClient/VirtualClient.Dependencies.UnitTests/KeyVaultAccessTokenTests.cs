@@ -288,11 +288,6 @@ namespace VirtualClient.Dependencies
 
             public TokenRequestContext GetTokenRequestContextInternal()
             {
-                if (this.Parameters.ContainsKey(nameof(this.KeyVaultUri)))
-                {
-                    this.KeyVaultUri = this.Parameters[nameof(this.KeyVaultUri)].ToString();
-                }
-
                 return this.GetTokenRequestContext();
             }
 
