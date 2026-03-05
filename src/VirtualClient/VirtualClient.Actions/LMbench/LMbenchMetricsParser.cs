@@ -8,206 +8,262 @@ namespace VirtualClient.Actions
     using System.Data;
     using System.Linq;
     using System.Text.RegularExpressions;
+    using VirtualClient.Common.Extensions;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Parser;
     using DataTableExtensions = VirtualClient.Contracts.DataTableExtensions;
 
     /// <summary>
     /// Parser for LMbench output document
     /// </summary>
-    public class LMbenchMetricsParser : MetricsParser
+    public class LMbenchMetricsParser
     {
         /// <summary>
-        /// Sectionize the text by one or more empty lines.
+        /// Initializes a new instance of the <see cref="LMbenchMetricsParser"/> class.
         /// </summary>
-        private static readonly Regex LMbenchSectionDelimiter = new Regex(@"(\n)(\s)*(\n)", RegexOptions.ExplicitCapture);
-
-        /// <summary>
-        /// Constructor for <see cref="LMbenchMetricsParser"/>
-        /// </summary>
-        /// <param name="rawText">Raw text to parse.</param>
-        public LMbenchMetricsParser(string rawText)
-            : base(rawText)
+        public LMbenchMetricsParser()
         {
         }
 
         /// <summary>
-        /// Rrocessor, Processes - times in microseconds - smaller is better
+        /// Parses metrics from the LMBench workload results.
         /// </summary>
-        public DataTable ProcessorTimes { get; set; }
-
-        /// <summary>
-        /// Basic integer operations - times in nanoseconds - smaller is better
-        /// </summary>
-        public DataTable BasicInt { get; set; }
-
-        /// <summary>
-        /// Basic float operations - times in nanoseconds - smaller is better
-        /// </summary>
-        public DataTable BasicFloat { get; set; }
-
-        /// <summary>
-        /// Basic double operations - times in nanoseconds - smaller is better
-        /// </summary>
-        public DataTable BasicDouble { get; set; }
-
-        /// <summary>
-        /// Context switching - times in microseconds - smaller is better
-        /// </summary>
-        public DataTable ContextSwitching { get; set; }
-
-        /// <summary>
-        /// *Local* Communication latencies in microseconds - smaller is better
-        /// </summary>
-        public DataTable CommunicationLatency { get; set; }
-
-        /// <summary>
-        /// File and VM system latencies in microseconds - smaller is better
-        /// </summary>
-        public DataTable FileVmLatency { get; set; }
-
-        /// <summary>
-        /// *Local* Communication bandwidths in MB/s - bigger is better
-        /// </summary>
-        public DataTable CommunicationBandwidth { get; set; }
-
-        /// <summary>
-        /// Memory latencies in nanoseconds - smaller is better
-        /// </summary>
-        public DataTable MemoryLatency { get; set; }
-
-        /// <summary>
-        /// True if the results have been parsed.
-        /// </summary>
-        protected bool IsParsed
+        public IList<Metric> ParseResults(string results)
         {
-            get
-            {
-                return this.ProcessorTimes != null && this.BasicInt != null 
-                    && this.BasicFloat != null && this.BasicDouble != null 
-                    && this.ContextSwitching != null && this.CommunicationLatency != null
-                    && this.FileVmLatency != null && this.CommunicationBandwidth != null 
-                    && this.MemoryLatency != null;
-            }
-        } 
+            var parser = new DefaultResultsParser(results);
+            return parser.Parse();
+        }
 
-        /// <inheritdoc/>
-        public override IList<Metric> Parse()
+        /// <summary>
+        /// Parses metrics from the LMBench 'lat_mem_rd' workload results.
+        /// </summary>
+        /// <param name="results">The LMBench 'lat_mem_rd' workload results.</param>
+        /// <param name="memorySizeMb">The total size of the memory for the sweep (in megabytes).</param>
+        public IDictionary<int, IList<Metric>> ParseLatencyMemReadResults(string results, int memorySizeMb)
         {
-            this.Preprocess();
-            this.Sections = TextParsingExtensions.Sectionize(this.PreprocessedText, LMbenchMetricsParser.LMbenchSectionDelimiter);
-
-            // LMbench sometimes skipp those four measurements if it can't figure out the OS. Those tables are made optional.
-            this.ParseProcessorTimes();
-            this.ParseBasicInt();
-            this.ParseBasicFloat();
-            this.ParseBasicDouble();
-
-            this.ParseContextSwitching();
-            this.ParseCommunicationLatency();
-            this.ParseCommnunicationBandwidth();
-            this.ParseFileVMLatency();
-            this.ParseMemoryLatency();
-
-            List<Metric> metrics = new List<Metric>();
-
-            for (int index = 2; index < this.ProcessorTimes.Columns.Count; index++)
-            {
-                metrics.AddRange(this.ProcessorTimes.GetMetrics(valueIndex: index, name: this.ProcessorTimes.Columns[index].ColumnName, unit: MetricUnit.Microseconds, namePrefix: "Processor_Time_", metricRelativity: MetricRelativity.LowerIsBetter));
-            }
-
-            for (int index = 2; index < this.BasicInt.Columns.Count; index++)
-            {
-                metrics.AddRange(this.BasicInt.GetMetrics(valueIndex: index, name: this.BasicInt.Columns[index].ColumnName, unit: MetricUnit.Nanoseconds, namePrefix: "Integer_Operations_Time_", metricRelativity: MetricRelativity.LowerIsBetter));
-            }
-
-            for (int index = 2; index < this.BasicFloat.Columns.Count; index++)
-            {
-                metrics.AddRange(this.BasicFloat.GetMetrics(valueIndex: index, name: this.BasicFloat.Columns[index].ColumnName, unit: MetricUnit.Nanoseconds, namePrefix: "Float_Operations_Time_", metricRelativity: MetricRelativity.LowerIsBetter));
-            }
-
-            for (int index = 2; index < this.BasicDouble.Columns.Count; index++)
-            {
-                metrics.AddRange(this.BasicDouble.GetMetrics(valueIndex: index, name: this.BasicDouble.Columns[index].ColumnName, unit: MetricUnit.Nanoseconds, namePrefix: "Double_Operations_Time_", metricRelativity: MetricRelativity.LowerIsBetter));
-            }
-
-            for (int index = 2; index < this.ContextSwitching.Columns.Count; index++)
-            {
-                metrics.AddRange(this.ContextSwitching.GetMetrics(valueIndex: index, name: this.ContextSwitching.Columns[index].ColumnName, unit: MetricUnit.Microseconds, namePrefix: "Context_Switching_Time_", metricRelativity: MetricRelativity.LowerIsBetter));
-            }
-
-            for (int index = 2; index < this.CommunicationLatency.Columns.Count; index++)
-            {
-                metrics.AddRange(this.CommunicationLatency.GetMetrics(valueIndex: index, name: this.CommunicationLatency.Columns[index].ColumnName, unit: MetricUnit.Microseconds, namePrefix: "Communications_Latency_", metricRelativity: MetricRelativity.LowerIsBetter));
-            }
-
-            for (int index = 2; index < this.FileVmLatency.Columns.Count; index++)
-            {
-                metrics.AddRange(this.FileVmLatency.GetMetrics(valueIndex: index, name: this.FileVmLatency.Columns[index].ColumnName, unit: MetricUnit.Microseconds, namePrefix: "File_System_Latency_", metricRelativity: MetricRelativity.LowerIsBetter));
-            }
-
-            for (int index = 2; index < this.CommunicationBandwidth.Columns.Count; index++)
-            {
-                metrics.AddRange(this.CommunicationBandwidth.GetMetrics(valueIndex: index, name: this.CommunicationBandwidth.Columns[index].ColumnName, unit: MetricUnit.MegabytesPerSecond, namePrefix: "Communications_Bandwidth_", metricRelativity: MetricRelativity.HigherIsBetter));
-            }
-
-            for (int index = 2; index < this.MemoryLatency.Columns.Count - 1; index++)
-            {
-                // The last column is "Guesses" which is not a metric.
-                metrics.AddRange(this.MemoryLatency.GetMetrics(valueIndex: index, name: this.MemoryLatency.Columns[index].ColumnName, unit: MetricUnit.Nanoseconds, namePrefix: "Memory_Latency_", metricRelativity: MetricRelativity.LowerIsBetter));
-            }
-
-            // The unit is not totally consistent in the output. Adjusting to correct units.
-            metrics.ForEach(m => 
-            {
-                if (m.Name.EndsWith("_Mhz"))
-                {
-                    m.Unit = MetricUnit.Megahertz;
-                }
-            });
-
-            // The Mhz sometimes fail to estimate Mhz and return -1. Those need to be filtered out.
-            metrics.Remove(metrics.Where(m => m.Name == "Memory_Latency_Mhz" && m.Value < 0).FirstOrDefault());
+            var parser = new LatencyMemReadResultsParser(memorySizeMb);
+            parser.TryParse(results, out IDictionary<int, IList<Metric>> metrics);
 
             return metrics;
         }
 
-        /// <inheritdoc/>
-        protected override void Preprocess()
+        /// <summary>
+        /// Parser for LMBench default command results.
+        /// </summary>
+        private class DefaultResultsParser : MetricsParser
         {
-            // Remove dashed lines
-            Regex dashLineRegex = new Regex(@"(-){2,}(\s)*", RegexOptions.ExplicitCapture);
-            this.PreprocessedText = TextParsingExtensions.RemoveRows(this.RawText, dashLineRegex);
+            /// <summary>
+            /// Sectionize the text by one or more empty lines.
+            /// </summary>
+            private static readonly Regex LMbenchSectionDelimiter = new Regex(@"(\n)(\s)*(\n)", RegexOptions.ExplicitCapture);
 
-            // Add new line to avoid make output included in the tables.
-            this.PreprocessedText = this.PreprocessedText.Replace("make", $"{Environment.NewLine}make");
-
-            // Remove the extra label line to make parsing easier.
-            Regex ctxswLine = new Regex(@"(ctxsw)", RegexOptions.ExplicitCapture);
-            this.PreprocessedText = TextParsingExtensions.RemoveRows(this.PreprocessedText, ctxswLine);
-
-            Regex createLine = new Regex(@"(Create)", RegexOptions.ExplicitCapture);
-            this.PreprocessedText = TextParsingExtensions.RemoveRows(this.PreprocessedText, createLine);
-
-            Regex rereadLine = new Regex(@"(reread)", RegexOptions.ExplicitCapture);
-            this.PreprocessedText = TextParsingExtensions.RemoveRows(this.PreprocessedText, rereadLine);
-
-            Regex warningLine = new Regex(@"(WARNING)", RegexOptions.ExplicitCapture);
-            this.PreprocessedText = TextParsingExtensions.RemoveRows(this.PreprocessedText, warningLine);
-
-            Regex hndlLine = new Regex(@"(hndl)", RegexOptions.ExplicitCapture);
-            this.PreprocessedText = TextParsingExtensions.RemoveRows(this.PreprocessedText, hndlLine);
-
-            Regex addLine = new Regex(@"(add)", RegexOptions.ExplicitCapture);
-            this.PreprocessedText = TextParsingExtensions.RemoveRows(this.PreprocessedText, addLine);
-        }
-
-        private void ParseProcessorTimes()
-        {
-            string tableName = "Processor, Processes - times in microseconds - smaller is better";
-            
-            if (this.Sections.ContainsKey(tableName))
+            /// <summary>
+            /// Constructor for <see cref="LMbenchMetricsParser"/>
+            /// </summary>
+            /// <param name="rawText">Raw text to parse.</param>
+            public DefaultResultsParser(string rawText)
+                : base(rawText)
             {
-                IList<string> columnNames = new List<string>
+            }
+
+            /// <summary>
+            /// Rrocessor, Processes - times in microseconds - smaller is better
+            /// </summary>
+            protected DataTable ProcessorTimes { get; set; }
+
+            /// <summary>
+            /// Basic integer operations - times in nanoseconds - smaller is better
+            /// </summary>
+            protected DataTable BasicInt { get; set; }
+
+            /// <summary>
+            /// Basic float operations - times in nanoseconds - smaller is better
+            /// </summary>
+            protected DataTable BasicFloat { get; set; }
+
+            /// <summary>
+            /// Basic double operations - times in nanoseconds - smaller is better
+            /// </summary>
+            protected DataTable BasicDouble { get; set; }
+
+            /// <summary>
+            /// Context switching - times in microseconds - smaller is better
+            /// </summary>
+            protected DataTable ContextSwitching { get; set; }
+
+            /// <summary>
+            /// *Local* Communication latencies in microseconds - smaller is better
+            /// </summary>
+            protected DataTable CommunicationLatency { get; set; }
+
+            /// <summary>
+            /// File and VM system latencies in microseconds - smaller is better
+            /// </summary>
+            protected DataTable FileVmLatency { get; set; }
+
+            /// <summary>
+            /// *Local* Communication bandwidths in MB/s - bigger is better
+            /// </summary>
+            protected DataTable CommunicationBandwidth { get; set; }
+
+            /// <summary>
+            /// Memory latencies in nanoseconds - smaller is better
+            /// </summary>
+            protected DataTable MemoryLatency { get; set; }
+
+            /// <summary>
+            /// True if the results have been parsed.
+            /// </summary>
+            protected bool IsParsed
+            {
+                get
+                {
+                    return this.ProcessorTimes != null && this.BasicInt != null
+                        && this.BasicFloat != null && this.BasicDouble != null
+                        && this.ContextSwitching != null && this.CommunicationLatency != null
+                        && this.FileVmLatency != null && this.CommunicationBandwidth != null
+                        && this.MemoryLatency != null;
+                }
+            }
+
+            /// <inheritdoc/>
+            public override IList<Metric> Parse()
+            {
+                this.Preprocess();
+                this.Sections = TextParsingExtensions.Sectionize(this.PreprocessedText, DefaultResultsParser.LMbenchSectionDelimiter);
+
+                // LMbench sometimes skipp those four measurements if it can't figure out the OS. Those tables are made optional.
+                this.ParseProcessorTimes();
+                this.ParseBasicInt();
+                this.ParseBasicFloat();
+                this.ParseBasicDouble();
+
+                this.ParseContextSwitching();
+                this.ParseCommunicationLatency();
+                this.ParseCommnunicationBandwidth();
+                this.ParseFileVMLatency();
+                this.ParseMemoryLatency();
+
+                List<Metric> metrics = new List<Metric>();
+
+                for (int index = 2; index < this.ProcessorTimes.Columns.Count; index++)
+                {
+                    metrics.AddRange(this.ProcessorTimes.GetMetrics(valueIndex: index, name: this.ProcessorTimes.Columns[index].ColumnName, unit: MetricUnit.Microseconds, namePrefix: "Processor_Time_", metricRelativity: MetricRelativity.LowerIsBetter));
+                }
+
+                for (int index = 2; index < this.BasicInt.Columns.Count; index++)
+                {
+                    metrics.AddRange(this.BasicInt.GetMetrics(valueIndex: index, name: this.BasicInt.Columns[index].ColumnName, unit: MetricUnit.Nanoseconds, namePrefix: "Integer_Operations_Time_", metricRelativity: MetricRelativity.LowerIsBetter));
+                }
+
+                for (int index = 2; index < this.BasicFloat.Columns.Count; index++)
+                {
+                    metrics.AddRange(this.BasicFloat.GetMetrics(valueIndex: index, name: this.BasicFloat.Columns[index].ColumnName, unit: MetricUnit.Nanoseconds, namePrefix: "Float_Operations_Time_", metricRelativity: MetricRelativity.LowerIsBetter));
+                }
+
+                for (int index = 2; index < this.BasicDouble.Columns.Count; index++)
+                {
+                    metrics.AddRange(this.BasicDouble.GetMetrics(valueIndex: index, name: this.BasicDouble.Columns[index].ColumnName, unit: MetricUnit.Nanoseconds, namePrefix: "Double_Operations_Time_", metricRelativity: MetricRelativity.LowerIsBetter));
+                }
+
+                for (int index = 2; index < this.ContextSwitching.Columns.Count; index++)
+                {
+                    metrics.AddRange(this.ContextSwitching.GetMetrics(valueIndex: index, name: this.ContextSwitching.Columns[index].ColumnName, unit: MetricUnit.Microseconds, namePrefix: "Context_Switching_Time_", metricRelativity: MetricRelativity.LowerIsBetter));
+                }
+
+                for (int index = 2; index < this.CommunicationLatency.Columns.Count; index++)
+                {
+                    metrics.AddRange(this.CommunicationLatency.GetMetrics(valueIndex: index, name: this.CommunicationLatency.Columns[index].ColumnName, unit: MetricUnit.Microseconds, namePrefix: "Communications_Latency_", metricRelativity: MetricRelativity.LowerIsBetter));
+                }
+
+                for (int index = 2; index < this.FileVmLatency.Columns.Count; index++)
+                {
+                    metrics.AddRange(this.FileVmLatency.GetMetrics(valueIndex: index, name: this.FileVmLatency.Columns[index].ColumnName, unit: MetricUnit.Microseconds, namePrefix: "File_System_Latency_", metricRelativity: MetricRelativity.LowerIsBetter));
+                }
+
+                for (int index = 2; index < this.CommunicationBandwidth.Columns.Count; index++)
+                {
+                    metrics.AddRange(this.CommunicationBandwidth.GetMetrics(valueIndex: index, name: this.CommunicationBandwidth.Columns[index].ColumnName, unit: MetricUnit.MegabytesPerSecond, namePrefix: "Communications_Bandwidth_", metricRelativity: MetricRelativity.HigherIsBetter));
+                }
+
+                for (int index = 2; index < this.MemoryLatency.Columns.Count - 1; index++)
+                {
+                    // The last column is "Guesses" which is not a metric.
+                    metrics.AddRange(this.MemoryLatency.GetMetrics(valueIndex: index, name: this.MemoryLatency.Columns[index].ColumnName, unit: MetricUnit.Nanoseconds, namePrefix: "Memory_Latency_", metricRelativity: MetricRelativity.LowerIsBetter));
+                }
+
+                // The unit is not totally consistent in the output. Adjusting to correct units.
+                metrics.ForEach(m =>
+                {
+                    /*
+                     *  memory_latency_main_mem
+                        memory_latency_l2
+                        memory_latency_l1
+                        memory_latency_mhz
+                        memory_latency_random_mem
+                        communications_bandwidth_mem_write
+                        communications_bandwidth_mem_reread
+                        communications_bandwidth_bcopy(hand)
+                        communications_bandwidth_bcopy(libc)
+                        communications_bandwidth_mmap_reread
+                        communications_bandwidth_file_reread
+                        file_system_latency_mmap_latency
+                        file_system_latency_10k_delete
+                        file_system_latency_10k_create
+                        file_system_latency_0k_delete
+                        file_system_latency_0k_create
+                        processor_time_mhz
+                    */
+                    m.Name = m.Name.ToLowerInvariant();
+                    if (m.Name.EndsWith("_Mhz"))
+                    {
+                        m.Unit = MetricUnit.Megahertz;
+                    }
+                });
+
+                // The Mhz sometimes fail to estimate Mhz and return -1. Those need to be filtered out.
+                metrics.Remove(metrics.Where(m => m.Name == "memory_latency_mhz" && m.Value < 0).FirstOrDefault());
+
+                return metrics;
+            }
+
+            /// <inheritdoc/>
+            protected override void Preprocess()
+            {
+                // Remove dashed lines
+                Regex dashLineRegex = new Regex(@"(-){2,}(\s)*", RegexOptions.ExplicitCapture);
+                this.PreprocessedText = TextParsingExtensions.RemoveRows(this.RawText, dashLineRegex);
+
+                // Add new line to avoid make output included in the tables.
+                this.PreprocessedText = this.PreprocessedText.Replace("make", $"{Environment.NewLine}make");
+
+                // Remove the extra label line to make parsing easier.
+                Regex ctxswLine = new Regex(@"(ctxsw)", RegexOptions.ExplicitCapture);
+                this.PreprocessedText = TextParsingExtensions.RemoveRows(this.PreprocessedText, ctxswLine);
+
+                Regex createLine = new Regex(@"(Create)", RegexOptions.ExplicitCapture);
+                this.PreprocessedText = TextParsingExtensions.RemoveRows(this.PreprocessedText, createLine);
+
+                Regex rereadLine = new Regex(@"(reread)", RegexOptions.ExplicitCapture);
+                this.PreprocessedText = TextParsingExtensions.RemoveRows(this.PreprocessedText, rereadLine);
+
+                Regex warningLine = new Regex(@"(WARNING)", RegexOptions.ExplicitCapture);
+                this.PreprocessedText = TextParsingExtensions.RemoveRows(this.PreprocessedText, warningLine);
+
+                Regex hndlLine = new Regex(@"(hndl)", RegexOptions.ExplicitCapture);
+                this.PreprocessedText = TextParsingExtensions.RemoveRows(this.PreprocessedText, hndlLine);
+
+                Regex addLine = new Regex(@"(add)", RegexOptions.ExplicitCapture);
+                this.PreprocessedText = TextParsingExtensions.RemoveRows(this.PreprocessedText, addLine);
+            }
+
+            private void ParseProcessorTimes()
+            {
+                string tableName = "Processor, Processes - times in microseconds - smaller is better";
+
+                if (this.Sections.ContainsKey(tableName))
+                {
+                    IList<string> columnNames = new List<string>
                 {
                     "Host",
                     "OS",
@@ -223,7 +279,7 @@ namespace VirtualClient.Actions
                     "Exec_Proc",
                     "Sh_Proc",
                 };
-                IList<KeyValuePair<int, int>> cellLocation = new List<KeyValuePair<int, int>>
+                    IList<KeyValuePair<int, int>> cellLocation = new List<KeyValuePair<int, int>>
                 {
                     new KeyValuePair<int, int>(0, 9),
                     new KeyValuePair<int, int>(10, 13),
@@ -240,25 +296,25 @@ namespace VirtualClient.Actions
                     new KeyValuePair<int, int>(74, 4)
                 };
 
-                this.ProcessorTimes = DataTableExtensions.ConvertToDataTable(this.Sections[tableName], cellLocation, columnNames, tableName);
+                    this.ProcessorTimes = DataTableExtensions.ConvertToDataTable(this.Sections[tableName], cellLocation, columnNames, tableName);
 
-                // Remove the first row which is the duplicated column names.
-                this.ProcessorTimes.Rows.RemoveAt(0);
-                this.ProcessorTimes.TranslateUnits();
-                this.ProcessorTimes.ReplaceEmptyCell(replacement: null);
+                    // Remove the first row which is the duplicated column names.
+                    this.ProcessorTimes.Rows.RemoveAt(0);
+                    this.ProcessorTimes.TranslateUnits();
+                    this.ProcessorTimes.ReplaceEmptyCell(replacement: null);
+                }
+                else
+                {
+                    this.ProcessorTimes = new DataTable();
+                }
             }
-            else
-            {
-                this.ProcessorTimes = new DataTable();
-            }
-        }
 
-        private void ParseBasicInt()
-        {
-            string tableName = "Basic integer operations - times in nanoseconds - smaller is better";
-            if (this.Sections.ContainsKey(tableName))
+            private void ParseBasicInt()
             {
-                IList<string> columnNames = new List<string>
+                string tableName = "Basic integer operations - times in nanoseconds - smaller is better";
+                if (this.Sections.ContainsKey(tableName))
+                {
+                    IList<string> columnNames = new List<string>
                 {
                     "Host",
                     "OS",
@@ -268,7 +324,7 @@ namespace VirtualClient.Actions
                     "Divide",
                     "Mod"
                 };
-                IList<KeyValuePair<int, int>> cellLocation = new List<KeyValuePair<int, int>>
+                    IList<KeyValuePair<int, int>> cellLocation = new List<KeyValuePair<int, int>>
                 {
                     new KeyValuePair<int, int>(0, 9),
                     new KeyValuePair<int, int>(10, 13),
@@ -279,25 +335,25 @@ namespace VirtualClient.Actions
                     new KeyValuePair<int, int>(52, 6)
                 };
 
-                this.BasicInt = DataTableExtensions.ConvertToDataTable(this.Sections[tableName], cellLocation, columnNames, tableName);
+                    this.BasicInt = DataTableExtensions.ConvertToDataTable(this.Sections[tableName], cellLocation, columnNames, tableName);
 
-                // Remove the first row which is the duplicated column names.
-                this.BasicInt.Rows.RemoveAt(0);
-                this.BasicInt.TranslateUnits();
-                this.BasicInt.ReplaceEmptyCell(replacement: null);
+                    // Remove the first row which is the duplicated column names.
+                    this.BasicInt.Rows.RemoveAt(0);
+                    this.BasicInt.TranslateUnits();
+                    this.BasicInt.ReplaceEmptyCell(replacement: null);
+                }
+                else
+                {
+                    this.BasicInt = new DataTable();
+                }
             }
-            else
-            {
-                this.BasicInt = new DataTable();
-            }
-        }
 
-        private void ParseBasicFloat()
-        {
-            string tableName = "Basic float operations - times in nanoseconds - smaller is better";
-            if (this.Sections.ContainsKey(tableName))
+            private void ParseBasicFloat()
             {
-                IList<string> columnNames = new List<string>
+                string tableName = "Basic float operations - times in nanoseconds - smaller is better";
+                if (this.Sections.ContainsKey(tableName))
+                {
+                    IList<string> columnNames = new List<string>
                 {
                     "Host",
                     "OS",
@@ -306,7 +362,7 @@ namespace VirtualClient.Actions
                     "Divide",
                     "Bogo"
                 };
-                IList<KeyValuePair<int, int>> cellLocation = new List<KeyValuePair<int, int>>
+                    IList<KeyValuePair<int, int>> cellLocation = new List<KeyValuePair<int, int>>
                 {
                     new KeyValuePair<int, int>(0, 9),
                     new KeyValuePair<int, int>(10, 13),
@@ -316,25 +372,25 @@ namespace VirtualClient.Actions
                     new KeyValuePair<int, int>(45, 6)
                 };
 
-                this.BasicFloat = DataTableExtensions.ConvertToDataTable(this.Sections[tableName], cellLocation, columnNames, tableName);
+                    this.BasicFloat = DataTableExtensions.ConvertToDataTable(this.Sections[tableName], cellLocation, columnNames, tableName);
 
-                // Remove the first row which is the duplicated column names.
-                this.BasicFloat.Rows.RemoveAt(0);
-                this.BasicFloat.TranslateUnits();
-                this.BasicFloat.ReplaceEmptyCell(replacement: null);
+                    // Remove the first row which is the duplicated column names.
+                    this.BasicFloat.Rows.RemoveAt(0);
+                    this.BasicFloat.TranslateUnits();
+                    this.BasicFloat.ReplaceEmptyCell(replacement: null);
+                }
+                else
+                {
+                    this.BasicFloat = new DataTable();
+                }
             }
-            else
-            {
-                this.BasicFloat = new DataTable();
-            }
-        }
 
-        private void ParseBasicDouble()
-        {
-            string tableName = "Basic double operations - times in nanoseconds - smaller is better";
-            if (this.Sections.ContainsKey(tableName))
+            private void ParseBasicDouble()
             {
-                IList<string> columnNames = new List<string>
+                string tableName = "Basic double operations - times in nanoseconds - smaller is better";
+                if (this.Sections.ContainsKey(tableName))
+                {
+                    IList<string> columnNames = new List<string>
                 {
                     "Host",
                     "OS",
@@ -343,7 +399,7 @@ namespace VirtualClient.Actions
                     "Divide",
                     "Bogo"
                 };
-                IList<KeyValuePair<int, int>> cellLocation = new List<KeyValuePair<int, int>>
+                    IList<KeyValuePair<int, int>> cellLocation = new List<KeyValuePair<int, int>>
                 {
                     new KeyValuePair<int, int>(0, 9),
                     new KeyValuePair<int, int>(10, 13),
@@ -353,26 +409,26 @@ namespace VirtualClient.Actions
                     new KeyValuePair<int, int>(45, 6)
                 };
 
-                this.BasicDouble = DataTableExtensions.ConvertToDataTable(this.Sections[tableName], cellLocation, columnNames, tableName);
+                    this.BasicDouble = DataTableExtensions.ConvertToDataTable(this.Sections[tableName], cellLocation, columnNames, tableName);
 
-                // Remove the first row which is the duplicated column names.
-                this.BasicDouble.Rows.RemoveAt(0);
-                this.BasicDouble.TranslateUnits();
-                this.BasicDouble.ReplaceEmptyCell(replacement: null);
+                    // Remove the first row which is the duplicated column names.
+                    this.BasicDouble.Rows.RemoveAt(0);
+                    this.BasicDouble.TranslateUnits();
+                    this.BasicDouble.ReplaceEmptyCell(replacement: null);
+                }
+                else
+                {
+                    this.BasicDouble = new DataTable();
+                }
             }
-            else
+
+            private void ParseContextSwitching()
             {
-                this.BasicDouble = new DataTable();
-            }
-        }
-
-        private void ParseContextSwitching()
-        {
-            string tableName = "Context switching - times in microseconds - smaller is better";
-            IList<string> columnNames = new List<string> 
-            { 
-                "Host", 
-                "OS", 
+                string tableName = "Context switching - times in microseconds - smaller is better";
+                IList<string> columnNames = new List<string>
+            {
+                "Host",
+                "OS",
                 "2p/0K",
                 "2p/16K",
                 "2p/64K",
@@ -381,7 +437,7 @@ namespace VirtualClient.Actions
                 "16p/16K",
                 "16p/64K",
             };
-            IList<KeyValuePair<int, int>> cellLocation = new List<KeyValuePair<int, int>>
+                IList<KeyValuePair<int, int>> cellLocation = new List<KeyValuePair<int, int>>
             {
                 new KeyValuePair<int, int>(0, 9),
                 new KeyValuePair<int, int>(10, 13),
@@ -394,18 +450,18 @@ namespace VirtualClient.Actions
                 new KeyValuePair<int, int>(67, 7)
             };
 
-            this.ContextSwitching = DataTableExtensions.ConvertToDataTable(this.Sections[tableName], cellLocation, columnNames, tableName);
+                this.ContextSwitching = DataTableExtensions.ConvertToDataTable(this.Sections[tableName], cellLocation, columnNames, tableName);
 
-            // Remove the first row which is the duplicated column names.
-            this.ContextSwitching.Rows.RemoveAt(0);
-            this.ContextSwitching.TranslateUnits();
-            this.ContextSwitching.ReplaceEmptyCell(replacement: null);
-        }
+                // Remove the first row which is the duplicated column names.
+                this.ContextSwitching.Rows.RemoveAt(0);
+                this.ContextSwitching.TranslateUnits();
+                this.ContextSwitching.ReplaceEmptyCell(replacement: null);
+            }
 
-        private void ParseCommunicationLatency()
-        {
-            string tableName = "*Local* Communication latencies in microseconds - smaller is better";
-            IList<string> columnNames = new List<string>
+            private void ParseCommunicationLatency()
+            {
+                string tableName = "*Local* Communication latencies in microseconds - smaller is better";
+                IList<string> columnNames = new List<string>
             {
                 "Host",
                 "OS",
@@ -419,7 +475,7 @@ namespace VirtualClient.Actions
                 "TCP_Conn"
             };
 
-            IList<KeyValuePair<int, int>> cellLocation = new List<KeyValuePair<int, int>>
+                IList<KeyValuePair<int, int>> cellLocation = new List<KeyValuePair<int, int>>
             {
                 new KeyValuePair<int, int>(0, 9),
                 new KeyValuePair<int, int>(10, 13),
@@ -433,18 +489,18 @@ namespace VirtualClient.Actions
                 new KeyValuePair<int, int>(65, 4)
             };
 
-            this.CommunicationLatency = DataTableExtensions.ConvertToDataTable(this.Sections[tableName], cellLocation, columnNames, tableName);
+                this.CommunicationLatency = DataTableExtensions.ConvertToDataTable(this.Sections[tableName], cellLocation, columnNames, tableName);
 
-            // Remove the first row which is the duplicated column names.
-            this.CommunicationLatency.Rows.RemoveAt(0);
-            this.CommunicationLatency.TranslateUnits();
-            this.CommunicationLatency.ReplaceEmptyCell(replacement: null);
-        }
+                // Remove the first row which is the duplicated column names.
+                this.CommunicationLatency.Rows.RemoveAt(0);
+                this.CommunicationLatency.TranslateUnits();
+                this.CommunicationLatency.ReplaceEmptyCell(replacement: null);
+            }
 
-        private void ParseFileVMLatency()
-        {
-            string tableName = "File & VM system latencies in microseconds - smaller is better";
-            IList<string> columnNames = new List<string>
+            private void ParseFileVMLatency()
+            {
+                string tableName = "File & VM system latencies in microseconds - smaller is better";
+                IList<string> columnNames = new List<string>
             {
                 "Host",
                 "OS",
@@ -458,7 +514,7 @@ namespace VirtualClient.Actions
                 "100fd_Select"
             };
 
-            IList<KeyValuePair<int, int>> cellLocation = new List<KeyValuePair<int, int>>
+                IList<KeyValuePair<int, int>> cellLocation = new List<KeyValuePair<int, int>>
             {
                 new KeyValuePair<int, int>(0, 9),
                 new KeyValuePair<int, int>(10, 13),
@@ -472,18 +528,18 @@ namespace VirtualClient.Actions
                 new KeyValuePair<int, int>(74, 5)
             };
 
-            this.FileVmLatency = DataTableExtensions.ConvertToDataTable(this.Sections[tableName], cellLocation, columnNames, tableName);
+                this.FileVmLatency = DataTableExtensions.ConvertToDataTable(this.Sections[tableName], cellLocation, columnNames, tableName);
 
-            // Remove the first row which is the duplicated column names.
-            this.FileVmLatency.Rows.RemoveAt(0);
-            this.FileVmLatency.TranslateUnits();
-            this.FileVmLatency.ReplaceEmptyCell(replacement: null);
-        }
+                // Remove the first row which is the duplicated column names.
+                this.FileVmLatency.Rows.RemoveAt(0);
+                this.FileVmLatency.TranslateUnits();
+                this.FileVmLatency.ReplaceEmptyCell(replacement: null);
+            }
 
-        private void ParseCommnunicationBandwidth()
-        {
-            string tableName = "*Local* Communication bandwidths in MB/s - bigger is better";
-            IList<string> columnNames = new List<string>
+            private void ParseCommnunicationBandwidth()
+            {
+                string tableName = "*Local* Communication bandwidths in MB/s - bigger is better";
+                IList<string> columnNames = new List<string>
             {
                 "Host",
                 "OS",
@@ -498,7 +554,7 @@ namespace VirtualClient.Actions
                 "Mem_Write"
             };
 
-            IList<KeyValuePair<int, int>> cellLocation = new List<KeyValuePair<int, int>>
+                IList<KeyValuePair<int, int>> cellLocation = new List<KeyValuePair<int, int>>
             {
                 new KeyValuePair<int, int>(0, 9),
                 new KeyValuePair<int, int>(10, 13),
@@ -513,18 +569,18 @@ namespace VirtualClient.Actions
                 new KeyValuePair<int, int>(72, 5)
             };
 
-            this.CommunicationBandwidth = DataTableExtensions.ConvertToDataTable(this.Sections[tableName], cellLocation, columnNames, tableName);
+                this.CommunicationBandwidth = DataTableExtensions.ConvertToDataTable(this.Sections[tableName], cellLocation, columnNames, tableName);
 
-            // Remove the first row which is the duplicated column names.
-            this.CommunicationBandwidth.Rows.RemoveAt(0);
-            this.CommunicationBandwidth.TranslateUnits();
-            this.CommunicationBandwidth.ReplaceEmptyCell(replacement: null);
-        }
+                // Remove the first row which is the duplicated column names.
+                this.CommunicationBandwidth.Rows.RemoveAt(0);
+                this.CommunicationBandwidth.TranslateUnits();
+                this.CommunicationBandwidth.ReplaceEmptyCell(replacement: null);
+            }
 
-        private void ParseMemoryLatency()
-        {
-            string tableName = "Memory latencies in nanoseconds - smaller is better";
-            IList<string> columnNames = new List<string>
+            private void ParseMemoryLatency()
+            {
+                string tableName = "Memory latencies in nanoseconds - smaller is better";
+                IList<string> columnNames = new List<string>
             {
                 "Host",
                 "OS",
@@ -536,7 +592,7 @@ namespace VirtualClient.Actions
                 "Guesses"
             };
 
-            IList<KeyValuePair<int, int>> cellLocation = new List<KeyValuePair<int, int>>
+                IList<KeyValuePair<int, int>> cellLocation = new List<KeyValuePair<int, int>>
             {
                 new KeyValuePair<int, int>(0, 9),
                 new KeyValuePair<int, int>(10, 13),
@@ -548,12 +604,116 @@ namespace VirtualClient.Actions
                 new KeyValuePair<int, int>(68, 11)
             };
 
-            this.MemoryLatency = DataTableExtensions.ConvertToDataTable(this.Sections[tableName], cellLocation, columnNames, tableName);
+                this.MemoryLatency = DataTableExtensions.ConvertToDataTable(this.Sections[tableName], cellLocation, columnNames, tableName);
 
-            // Remove the first row which is the duplicated column names.
-            this.MemoryLatency.Rows.RemoveAt(0);
-            this.MemoryLatency.TranslateUnits();
-            this.MemoryLatency.ReplaceEmptyCell(replacement: null);
+                // Remove the first row which is the duplicated column names.
+                this.MemoryLatency.Rows.RemoveAt(0);
+                this.MemoryLatency.TranslateUnits();
+                this.MemoryLatency.ReplaceEmptyCell(replacement: null);
+            }
+        }
+
+        /// <summary>
+        /// Parser for LMBench 'lat_mem_rd' command results.
+        /// </summary>
+        private class LatencyMemReadResultsParser : ITextParser<IDictionary<int, IList<Metric>>>
+        {
+            /// <summary>
+            /// Sectionize by one or more empty lines.
+            /// </summary>
+            private static readonly Regex LatMemRdSectionDelimiter = new Regex(@$"({Environment.NewLine})(\s)*({Environment.NewLine})", RegexOptions.ExplicitCapture);
+            private int memorySize;
+
+            /// <summary>
+            /// Initializes a new instance of the <see cref="LatencyMemReadResultsParser"/> class.
+            /// </summary>
+            /// <param name="memorySize">The memory size (in megabytes).</param>
+            public LatencyMemReadResultsParser(int memorySize)
+            {
+                this.memorySize = memorySize;
+            }
+
+            public bool TryParse(string text, out IDictionary<int, IList<Metric>> metrics)
+            {
+                text.ThrowIfNullOrWhiteSpace(nameof(text));
+                metrics = null;
+
+                IDictionary<string, string> sections = TextParsingExtensions.Sectionize(text.Trim(), LatMemRdSectionDelimiter);
+
+                if (sections?.Any() == true)
+                {
+                    metrics = new Dictionary<int, IList<Metric>>();
+
+                    foreach (var section in sections)
+                    {
+                        var lines = section.Value.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
+
+                        foreach (var line in lines)
+                        {
+                            var values = line.Split(' ');
+                            int strideSizeInBytes = int.Parse(section.Key.Split('=')[1]);
+                            long arraySizeInBytes = this.RoundOffToNearest512Multiple(double.Parse(values[0]) * 1024 * 1024) * 512;
+
+                            var metadata = new Dictionary<string, IConvertible>
+                            {
+                                { "strideSizeBytes", strideSizeInBytes },
+                                { "arraySizeBytes", arraySizeInBytes }
+                            };
+
+                            string arraySize = this.ConvertArraySize(arraySizeInBytes);
+
+                            if (!metrics.ContainsKey(strideSizeInBytes))
+                            {
+                                metrics.Add(strideSizeInBytes, new List<Metric>());
+                            }
+
+                            // e.g.
+                            // memory_latency_stride
+                            var metric = new Metric(
+                                $"memory_latency_{arraySize}",
+                                double.Parse(values[1]),
+                                MetricUnit.Nanoseconds,
+                                MetricRelativity.LowerIsBetter,
+                                null,
+                                $"Latency for memory read operations at a stride size of '{strideSizeInBytes} bytes' for '{arraySize}' of memory.",
+                                metadata);
+
+                            metric.Categorization = $"{this.memorySize}mb memory";
+                            metric.Tags.Add("lat_mem_rd");
+                            metrics[strideSizeInBytes].Add(metric);
+                        }
+                    }
+                }
+
+                return metrics?.Any() == true;
+            }
+
+            private string ConvertArraySize(double bytes)
+            {
+                // Note:
+                // Although the correct unit of measurement here are kebibytes and mebibytes
+                // our scenarios (and related command line arguments) reference 'megabytes'. To prevent
+                // confusion between scenario names and metric names, we will keep the units to the decimal
+                // representation (over the binary representation). The pure accuracy of the unit of measurement
+                // is less important here than the metric value transitions across the strides.
+                if (bytes >= 1024 * 1024)
+                {
+                    return $"{bytes / (1024 * 1024)}mb";
+                }
+                else if (bytes >= 1024)
+                {
+                    return $"{bytes / 1024}kb";
+                }
+                else
+                {
+                    return $"{bytes}b";
+                }
+            }
+
+            private long RoundOffToNearest512Multiple(double number)
+            {
+                return (long)Math.Round(number / 512.0);
+            }
         }
     }
 }
