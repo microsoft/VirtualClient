@@ -2,10 +2,14 @@
     "Description": "SPEC CPU 2017 Floating Point (SPECspeed) Benchmark Workload",
     "MinimumExecutionInterval": "00:05:00",
     "MinimumRequiredExecutionTime": "02:00:00",
+    "Documentation": {
+        "General": "https://microsoft.github.io/VirtualClient/docs/workloads/speccpu/speccpu-profiles/",
+        "CompilerMachineArchitectures": "GCC '-march' option definitions: https://gcc.gnu.org/onlinedocs/gcc/x86-Options.html, https://gcc.gnu.org/onlinedocs/gcc/AArch64-Options.html"
+    },
     "Metadata": {
         "RecommendedMinimumExecutionTime": "(4-cores)=02:00:00,(16-cores)=06:00:00,(64-cores)=12:00:00",
         "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64",
-        "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows",
+        "SupportedOperatingSystems": "Azure Linux,CentOS,Debian,RedHat,Suse,Ubuntu,Windows",
         "Notes": "Using a private package 'speccpu.2017.1.1.9-danielbowers.zip' to enable support for speccpu on Ubuntu 24",
         "Limitations": "The following benchmarks don't work on Windows: 607, 621, 627, 628, 638, 649"
     },
@@ -16,9 +20,8 @@
         "Threads": "{LogicalCoreCount}",
         "Copies": "{LogicalCoreCount}",
         "Benchmarks": "{calculate(\"{Platform}\".StartsWith(\"linux\") ? \"fpspeed\" : \"603 619 644 654\")}",
-        "BaseOptimizingFlags": "-g -O3 -march={MachineArch} -frecord-gcc-switches",
-        "PeakOptimizingFlags": "-g -Ofast -march={MachineArch} -flto -frecord-gcc-switches",
-        "MachineArch": "{calculation(\"{Architecture}\" == \"x64\" ? \"native\" : \"armv8-a\")}"
+        "BaseOptimizingFlags": "-g -O3 -march={calculate(\"{Architecture}\" == \"x64\" ? \"native\" : \"armv8-a\")} -frecord-gcc-switches",
+        "PeakOptimizingFlags": "-g -Ofast -march={calculate(\"{Architecture}\" == \"x64\" ? \"native\" : \"armv8-a\")} -flto -frecord-gcc-switches"
     },
     "Actions": [
         {
