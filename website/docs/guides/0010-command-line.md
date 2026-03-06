@@ -191,6 +191,7 @@ The following tables describe the various subcommands that are supported by the 
   | --lr, --log-retention=\<mins_or_timespan\>                      | No       | timespan or integer          | Log retention period. |
   | --mt, --metadata=\<key=value,,,key=value...\>                   | No       | string/text                  | Metadata to include with telemetry output. |
   | --n, --name=\<name\>                                            | No       | string/name                  | Logical name to register a package as. |
+  | --output-file=\<path\>                                          | No       | string/path                  | A path to a file in which to output a certificate when downloaded. |
   | --pdir, --package-dir=\<path\>                                  | No       | string/path                  | Alternate packages directory. |
   | --sdir, --state-dir=\<path\>                                    | No       | string/path                  | Alternate state directory. |
   | --s, --system=\<executionSystem\>                               | No       | string/text                  | Execution system/platform identifier (e.g. Azure). |
@@ -249,6 +250,12 @@ The following tables describe the various subcommands that are supported by the 
         --cert-name="mycert123" 
         --key-vault="https://my-key-vault.vault.azure.net" 
         --tenant-id="ac5c84c4-7ffd-48e2-923c-94ebf8e57e49"
+
+    VirtualClient.exe bootstrap 
+        --cert-name="mycert123" 
+        --key-vault="https://my-key-vault.vault.azure.net" 
+        --tenant-id="ac5c84c4-7ffd-48e2-923c-94ebf8e57e49"
+        --output-file="C:\Users\Any\mycert123.pfx"
   ```
 
 * ### clean
@@ -318,13 +325,18 @@ The following tables describe the various subcommands that are supported by the 
   | --kv, --keyvault, --key-vault=\<uri\>         | Yes      | uri           | Azure Key Vault URI used as the authentication resource (e.g. `https://myvault.vault.azure.net/`). |
   | --tenant-Id, --tid=\<tenantId\>               | Yes      | string        | Azure Active Directory tenant ID used for authentication. | 
   | --clean=\<target,target...\>                  | No       | string        | Perform an initial cleanup (logs/packages/state/temp/all). |
+  | --output-file=\<path\>                        | No       | string/path   | A path to a file in which to output the access token. |
   | --pm, --parameters=\<key=value,,,key=value\>  | No       | string/text   | Additional parameters/overrides (optional). |
   | --verbose                                     | No       |               | Verbose console logging (equivalent to `--log-level=Trace`). |
   | -?, -h, --help                                | No       |               | Show help information. |
   | --version                                     | No       |               | Show application version information. |
 
   ```
+  # Get an access token.
   VirtualClient.exe get-token --key-vault="https://my-keyVault.vault.azure.net" --tenant-id="caa7a00f-0558-4c4a-9613-965683a01f45"
+
+  # Get an access token and write it to file.
+  VirtualClient.exe get-token --key-vault="https://my-keyVault.vault.azure.net" --tenant-id="caa7a00f-0558-4c4a-9613-965683a01f45" --output-file="C:\Users\Any\access_token.txt"
   ```
 
 * ### upload-files
