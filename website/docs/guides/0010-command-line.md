@@ -136,14 +136,39 @@ VirtualClient.exe
 ## Subcommands
 The following tables describe the various subcommands that are supported by the Virtual Client application.
 
+* ### api
+  Runs the Virtual Client API service and optionally monitors the API (local or a remote instance) for heartbeats.
+
+  | Option                                     | Required | Data Type           | Description |
+  |--------------------------------------------|----------|---------------------|-------------|
+  | --clean=\<target,target...\>               | No       | string              | Instructs the application to perform an initial clean before continuing to remove pre-existing files/content created by the application from the file system. This can include log files, packages previously downloaded, state management and temporary files. This option can be used as a flag (e.g. --clean) as well to clean all file content. Valid target resources include: logs, packages, state, temp, all (e.g. --clean=logs, --clean=packages). Multiple resources can be comma-delimited (e.g. --clean=logs,packages). To perform a full reset of the application state, use the option as a flag (e.g. --clean). This effectively sets the application back to a "first run" state. |
+  | --port, --api-port=\<port>                 | No       | integer             | The port to use for hosting the Virtual Client REST API service. Additionally, a port may be defined for the Client system and Server system independently using the format `\<Port> / \<Role>` with each port/role combination delimited by a comma (e.g. 4501/Client,4502/Server). |
+  | --ip, --ip-address                         | No       | string/IP address   | An IPv4 or IPv6 address of a target/remote system on which a Virtual Client instance is running to monitor. The API service must also be running on the target instance.  |
+  | --isolated                                 | No       |                     | Flag indicates that the application should run with dependency isolation in place. This will result in a unique directory (per experiment ID) used for logs, packages, state and temp file storage. |
+  | --logger=\<reference\>                     | No       | string/path         | One or more logger definitions. Multiple loggers/options can be used on the command line (e.g. --logger=logger1 --logger=logger2). See the `Supported Loggers` section at the bottom. |
+  | --ldir, --log-dir=\<path\>                 | No       | string/path         | Defines an alternate directory to which log files should be written. |
+  | --ll, --log-level=\<level\>                | No       | integer/string      | Defines the logging severity level for traces output. Values map to the [Microsoft.Extensions.Logging.LogLevel](https://learn.microsoft.com/en-us/dotnet/api/microsoft.extensions.logging.loglevel?view=dotnet-plat-ext-8.0) enumeration. Valid values include: Trace (0), Debug (1), Information (2), Warning (3), Error (4), Critical (5). Note that this option affects ONLY trace logs and is designed to allow the user to control the amount of operational telemetry emitted by VC. It does not affect metrics or event logging nor any non-telemetry logging. Default = Information (2). |
+  | --lr, --log-retention=\<mins_or_timespan\> | No       | timespan or integer | Defines the log retention period. This is a timespan or length of time (in minutes) to apply to cleaning up/deleting existing log files (e.g. 2880, 02.00:00:00). Log files with creation times older than the retention period will be deleted. |
+  | --mon, --monitor                           | No       |                     | If supplied as a flag (i.e. no argument), the Virtual Client will run a background thread that tests the local API. If an IP address is provided, the target Virtual Client API will be monitored/tested. This is typically used for debugging scenarios to make sure 2 different instances of the Virtual Client can communicate with each other through the API. |
+  | --verbose                                  | No       |                     | Request verbose logging output to the console. This is equivalent to setting `--log-level=Trace` |
+  | -?, -h, --help                             | No       |                     | Show help information. |
+  | --version                                  | No       |                     | Show application version information. |
+
+  ``` bash
+  # Run the API service locally.
+  VirtualClient.exe api
+
+  # Run the API service locally and monitor another remote instance of the Virtual Client.
+  VirtualClient.exe api --monitor --ip-address=1.2.3.4
+  ```
 
 * ### bootstrap
   Command is used to bootstrap/install dependency packages and/or install a certificate on the system.
 
-  * **Package bootstrapping**: Install an extensions/dependency package to the Virtual Client runtime.  
+  * **Package Bootstrapping**: Install an extensions/dependency package to the Virtual Client runtime.  
     Requires `--package` (and typically `--package-store/--packages` to fetch it from storage).
 
-  * **Certificate bootstrapping**: Install a certificate to the system for use by workloads that require certificate-based authentication.  
+  * **Certificate Bootstrapping**: Install a certificate to the system for use by workloads that require certificate-based authentication.  
     Requires `--cert-name` **and** `--key-vault`.  
     Optionally supports `--token` to provide an access token for Key Vault authentication (if not provided, the default Azure credential flow is used).
 
@@ -151,10 +176,7 @@ The following tables describe the various subcommands that are supported by the 
   |-----------------------------------------------------------------|----------|------------------------------|-------------|
   | --pkg, --package=\<blobName\>                                   | No*      | string/blob name             | Name/ID of a package to bootstrap/install (e.g. `anypackage.1.0.0.zip`). Required when doing **package bootstrapping**. |
   | --ps, --packages, --package-store=\<connection\>                | No       | string/connection string/SAS | Connection description for an Azure Storage Account/container to download packages from. See [Azure Storage Account Integration](./0600-integration-blob-storage.md). |
-  | --certificateName, --cert-name=\<certificateName\>              | No*      | string/certificate name      | Name of the certificate in Key Vault to bootstrap/install (e.g. `--cert-name="crc-sdk-cert"`). Required when doing **certificate bootstrapping**. |
-  | --key-vault, --kv=\<keyVaultUri\>                               | No*      | uri                          | Azure Key Vault URI to source the certificate from (e.g. `https://myvault.vault.azure.net/`). Required when doing **certificate bootstrapping**. |
-  | --token, --access-token=\<accessToken\>                         | No       | string                       | Optional access token used to authenticate to Key Vault when installing certificates. If not provided, Virtual Client uses the default Azure credential flow (e.g. Azure CLI, Managed Identity, etc.). |
-  | --tenant-Id, --tid=\<tenantId\>                                 | No       | string                       | Azure Active Directory tenant ID used for authentication. |
+  | --cert-name=\<certificateName\>                                 | No*      | string/certificate name      | Name of the certificate in Key Vault to bootstrap/install (e.g. `--cert-name="crc-sdk-cert"`). Required when doing **certificate bootstrapping**. |
   | --c, --client-id=\<id\>                                         | No       | string/text                  | Identifier to uniquely identify the instance (telemetry correlation). |
   | --clean=\<target,target...\>                                    | No       | string                       | Perform an initial cleanup (logs/packages/state/temp/all). |
   | --cs, --content, --content-store=\<connection\>                 | No       | string/connection string/SAS | Storage connection for uploading files/content (e.g. logs). |
@@ -162,6 +184,7 @@ The following tables describe the various subcommands that are supported by the 
   | --event-hub=\<connection\>                                      | No       | string/connection string     | Event Hub connection for telemetry upload (deprecated in favor of `--logger=eventhub;...`). |
   | --e, --experiment-id=\<guid\>                                   | No       | guid                         | Experiment identifier. |
   | --isolated                                                      | No       |                              | Run with dependency isolation (unique logs/packages/state/temp per experiment). |
+  | --key-vault=\<keyVaultUri\>                                     | No*      | uri                          | Azure Key Vault URI to source the certificate from (e.g. `https://myvault.vault.azure.net/`). Required when doing **certificate bootstrapping**. |
   | --logger=\<reference\>                                          | No       | string/path                  | One or more logger definitions. |
   | --ldir, --log-dir=\<path\>                                      | No       | string/path                  | Alternate logs directory. |
   | --ll, --log-level=\<level\>                                     | No       | integer/string               | Trace severity level. |
@@ -172,6 +195,8 @@ The following tables describe the various subcommands that are supported by the 
   | --sdir, --state-dir=\<path\>                                    | No       | string/path                  | Alternate state directory. |
   | --s, --system=\<executionSystem\>                               | No       | string/text                  | Execution system/platform identifier (e.g. Azure). |
   | --tdir, --temp-dir=\<path\>                                     | No       | string/path                  | Alternate temp directory. |
+  | --tenant-Id, --tid=\<tenantId\>                                 | No       | string                       | Azure Active Directory tenant ID used for authentication. |
+  | --token=\<accessToken\>                                         | No       | string                       | Optional access token used to authenticate to Key Vault when installing certificates. If not provided, Virtual Client uses the default Azure credential flow (e.g. Azure CLI, Managed Identity, etc.). |
   | --wait, --exit-wait=\<mins_or_timespan\>                        | No       | timespan or integer          | Wait for graceful exit/telemetry flush. |
   | --verbose                                                       | No       |                              | Verbose console logging (equivalent to `--log-level=Trace`). |
   | -?, -h, --help                                                  | No       |                              | Show help. |
@@ -196,9 +221,6 @@ The following tables describe the various subcommands that are supported by the 
 
   ## Installs certificate from Key Vault using provided access token.
   VirtualClient.exe bootstrap --cert-name="crc-sdk-principal" --key-vault="{KeyVaultConnectionString|SAS URI}" --token="{AccessToken}" 
-
-  ## Installs both certificate and package in the same command.
-  VirtualClient.exe bootstrap --cert-name="crc-sdk-principal" --key-vault="{KeyVaultConnectionString|SAS URI}" --package=diskspd.2.0.21.zip 
 
   # Full command line example
   VirtualClient.exe bootstrap
@@ -226,8 +248,7 @@ The following tables describe the various subcommands that are supported by the 
     VirtualClient.exe bootstrap 
         --cert-name="mycert123" 
         --key-vault="https://my-key-vault.vault.azure.net" 
-        --tenant-id="7..."
-  
+        --tenant-id="ac5c84c4-7ffd-48e2-923c-94ebf8e57e49"
   ```
 
 * ### clean
@@ -281,30 +302,29 @@ The following tables describe the various subcommands that are supported by the 
   VirtualClient.exe convert --profile=S:\Users\Any\Profiles\PERF-CPU-OPENSSL.yml --output-path=S:\Users\Any\Profiles
   ```
 
-* ### api
-  Runs the Virtual Client API service and optionally monitors the API (local or a remote instance) for heartbeats.
+* ### get-token
+  Command is used to retrieve an Azure access token for the **current user**. This token can be supplied to other commands (e.g. `bootstrap`) using the `--token/--access-token` option for explicit authentication against Azure Key Vault.
 
-  | Option                                     | Required | Data Type           | Description |
-  |--------------------------------------------|----------|---------------------|-------------|
-  | --clean=\<target,target...\>               | No       | string              | Instructs the application to perform an initial clean before continuing to remove pre-existing files/content created by the application from the file system. This can include log files, packages previously downloaded, state management and temporary files. This option can be used as a flag (e.g. --clean) as well to clean all file content. Valid target resources include: logs, packages, state, temp, all (e.g. --clean=logs, --clean=packages). Multiple resources can be comma-delimited (e.g. --clean=logs,packages). To perform a full reset of the application state, use the option as a flag (e.g. --clean). This effectively sets the application back to a "first run" state. |
-  | --port, --api-port=\<port>                 | No       | integer             | The port to use for hosting the Virtual Client REST API service. Additionally, a port may be defined for the Client system and Server system independently using the format `\<Port> / \<Role>` with each port/role combination delimited by a comma (e.g. 4501/Client,4502/Server). |
-  | --ip, --ip-address                         | No       | string/IP address   | An IPv4 or IPv6 address of a target/remote system on which a Virtual Client instance is running to monitor. The API service must also be running on the target instance.  |
-  | --isolated                                 | No       |                     | Flag indicates that the application should run with dependency isolation in place. This will result in a unique directory (per experiment ID) used for logs, packages, state and temp file storage. |
-  | --logger=\<reference\>                     | No       | string/path         | One or more logger definitions. Multiple loggers/options can be used on the command line (e.g. --logger=logger1 --logger=logger2). See the `Supported Loggers` section at the bottom. |
-  | --ldir, --log-dir=\<path\>                 | No       | string/path         | Defines an alternate directory to which log files should be written. |
-  | --ll, --log-level=\<level\>                | No       | integer/string      | Defines the logging severity level for traces output. Values map to the [Microsoft.Extensions.Logging.LogLevel](https://learn.microsoft.com/en-us/dotnet/api/microsoft.extensions.logging.loglevel?view=dotnet-plat-ext-8.0) enumeration. Valid values include: Trace (0), Debug (1), Information (2), Warning (3), Error (4), Critical (5). Note that this option affects ONLY trace logs and is designed to allow the user to control the amount of operational telemetry emitted by VC. It does not affect metrics or event logging nor any non-telemetry logging. Default = Information (2). |
-  | --lr, --log-retention=\<mins_or_timespan\> | No       | timespan or integer | Defines the log retention period. This is a timespan or length of time (in minutes) to apply to cleaning up/deleting existing log files (e.g. 2880, 02.00:00:00). Log files with creation times older than the retention period will be deleted. |
-  | --mon, --monitor                           | No       |                     | If supplied as a flag (i.e. no argument), the Virtual Client will run a background thread that tests the local API. If an IP address is provided, the target Virtual Client API will be monitored/tested. This is typically used for debugging scenarios to make sure 2 different instances of the Virtual Client can communicate with each other through the API. |
-  | --verbose                                  | No       |                     | Request verbose logging output to the console. This is equivalent to setting `--log-level=Trace` |
-  | -?, -h, --help                             | No       |                     | Show help information. |
-  | --version                                  | No       |                     | Show application version information. |
+  This is useful when:
+  - the default Azure credential flow is not available on the machine, or
+  - you want to explicitly pass a token to `bootstrap` for Key Vault certificate installation.
 
-  ``` bash
-  # Run the API service locally.
-  VirtualClient.exe api
+  **Authentication experience**
+  - If browser-based authentication is available, Virtual Client will open/prompt a sign-in in your browser.
+  - If browser-based authentication is not available, Virtual Client will automatically switch to **device code flow** and display a URL and a short code. Complete sign-in on another authenticated device using the provided URL and code.
 
-  # Run the API service locally and monitor another remote instance of the Virtual Client.
-  VirtualClient.exe api --monitor --ip-address=1.2.3.4
+  | Option                                         | Required | Data Type     | Description |
+  |-----------------------------------------------|----------|---------------|-------------|
+  | --kv, --keyvault, --key-vault=\<uri\>         | Yes      | uri           | Azure Key Vault URI used as the authentication resource (e.g. `https://myvault.vault.azure.net/`). |
+  | --tenant-Id, --tid=\<tenantId\>               | Yes      | string        | Azure Active Directory tenant ID used for authentication. | 
+  | --clean=\<target,target...\>                  | No       | string        | Perform an initial cleanup (logs/packages/state/temp/all). |
+  | --pm, --parameters=\<key=value,,,key=value\>  | No       | string/text   | Additional parameters/overrides (optional). |
+  | --verbose                                     | No       |               | Verbose console logging (equivalent to `--log-level=Trace`). |
+  | -?, -h, --help                                | No       |               | Show help information. |
+  | --version                                     | No       |               | Show application version information. |
+
+  ```
+  VirtualClient.exe get-token --key-vault="https://my-keyVault.vault.azure.net" --tenant-id="caa7a00f-0558-4c4a-9613-965683a01f45"
   ```
 
 * ### upload-files
@@ -420,37 +440,6 @@ The following tables describe the various subcommands that are supported by the 
       --intrinsic
       --recursive
   ```
-
-* ### get-token
-  Command is used to retrieve an Azure access token for the **current user**. This token can be supplied to other commands (e.g. `bootstrap`) using the `--token/--access-token` option for explicit authentication against Azure Key Vault.
-
-  This is useful when:
-  - the default Azure credential flow is not available on the machine, or
-  - you want to explicitly pass a token to `bootstrap` for Key Vault certificate installation.
-
-  **Authentication experience**
-  - If browser-based authentication is available, Virtual Client will open/prompt a sign-in in your browser.
-  - If browser-based authentication is not available, Virtual Client will automatically switch to **device code flow** and display a URL and a short code. Complete sign-in on another authenticated device using the provided URL and code.
-
-  | Option                                         | Required | Data Type     | Description |
-  |-----------------------------------------------|----------|---------------|-------------|
-  | --kv, --keyvault, --key-vault=\<uri\>         | Yes      | uri           | Azure Key Vault URI used as the authentication resource (e.g. `https://myvault.vault.azure.net/`). |
-  | --tenant-Id, --tid=\<tenantId\>               | Yes      | string        | Azure Active Directory tenant ID used for authentication. | 
-  | --clean=\<target,target...\>                  | No       | string        | Perform an initial cleanup (logs/packages/state/temp/all). |
-  | --c, --client-id=\<id\>                       | No       | string/text   | Identifier to uniquely identify the instance (telemetry correlation). |
-  | --e, --experiment-id=\<guid\>                 | No       | guid          | Experiment identifier. |
-  | --pm, --parameters=\<key=value,,,key=value\>  | No       | string/text   | Additional parameters/overrides (optional). |
-  | --verbose                                     | No       |               | Verbose console logging (equivalent to `--log-level=Trace`). |
-  | -?, -h, --help                                | No       |               | Show help information. |
-  | --version                                     | No       |               | Show application version information. |
-
-```
-Examples: 
-
-VirtualClient.exe get-token --key-vault="https://my-keyVault.vault.azure.net/?cid=a5432368-4cf1-4b72-b7f1-443c875f8a01&tid=caa7a00f-0558-4c4a-9613-965683a01f45" --tenant-id="caa7a00f-0558-4c4a-9613-965683a01f45"
-
-VirtualClient.exe get-token --key-vault="https://my-keyVault.vault.azure.net" --tenant-id="caa7a00f-0558-4c4a-9613-965683a01f45"
-```
 
 ## Supported Loggers
 The following section describes the set of loggers supported by the application out-of-box. Note that multiple loggers can be provided on the command

@@ -294,7 +294,6 @@ namespace VirtualClient
         [TestCase("--wait", "00:10:00")]
         [TestCase("--i", "3")]
         [TestCase("--iterations", "3")]
-        [TestCase("--kv", "https://anyvault.vault.windows.net")]
         [TestCase("--key-vault", "https://anyvault.vault.windows.net")]
         [TestCase("--layout-path", "C:\\any\\path\\to\\layout.json")]
         [TestCase("--layout", "C:\\any\\path\\to\\layout.json")]
@@ -452,6 +451,57 @@ namespace VirtualClient
             }
         }
 
+        [Test]
+        public void VirtualClientBootstrapCommandRequiresATargetResourceToBeSpecified()
+        {
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+            {
+                CommandLineBuilder commandBuilder = Program.SetupCommandLine(Array.Empty<string>(), tokenSource);
+
+                ArgumentException error = Assert.Throws<ArgumentException>(() =>
+                {
+                    ParseResult parseResult = commandBuilder.Build().Parse(new[]
+                    {
+                        "bootstrap"
+                    });
+                });
+
+                Assert.AreEqual(
+                    "Invalid usage. At least one type of target resource must be specified for the bootstrap command." +
+                    "Use --package to install a package or --cert-name to install a certificate.", 
+                    error.Message);
+            }
+        }
+
+        [Test]
+        public void VirtualClientBootstrapCommandValidatesParametersRequiredForCertificateInstallation()
+        {
+            using CancellationTokenSource tokenSource = new CancellationTokenSource();
+            CommandLineBuilder commandBuilder = Program.SetupCommandLine(Array.Empty<string>(), tokenSource);
+
+            ArgumentException error = Assert.Throws<ArgumentException>(() =>
+            {
+                ParseResult parseResult = commandBuilder.Build().Parse(new[]
+                {
+                    "bootstrap",
+                    "--cert-name=any-cert"
+                });
+            });
+
+            Assert.AreEqual("The Key Vault URI must be provided (--key-vault) when installing a certificate.", error.Message);
+
+            error = Assert.Throws<ArgumentException>(() =>
+            {
+                ParseResult parseResult = commandBuilder.Build().Parse(new[]
+                {
+                    "bootstrap",
+                    "--cert-name=any-cert",
+                    "--key-vault=https://any.vault"
+                });
+            });
+
+            Assert.AreEqual("The Azure tenant ID must be provided (--tenant-id) when installing a certificate.", error.Message);
+        }
 
         [Test]
         [TestCase("--clean", null)]
@@ -609,19 +659,12 @@ namespace VirtualClient
         }
 
         [Test]
-        [TestCase("--agentId", "AgentID")]
-        [TestCase("--client-id", "AgentID")]
-        [TestCase("--c", "AgentID")]
         [TestCase("--clean", null)]
         [TestCase("--clean", "logs")]
         [TestCase("--clean", "logs,packages,state,temp")]
-        [TestCase("--experimentId", "0B692DEB-411E-4AC1-80D5-AF539AE1D6B2")]
-        [TestCase("--experiment-id", "0B692DEB-411E-4AC1-80D5-AF539AE1D6B2")]
-        [TestCase("--e", "0B692DEB-411E-4AC1-80D5-AF539AE1D6B2")]
         [TestCase("--parameters", "helloWorld=123,,,TenantId=789203498")]
         [TestCase("--pm", "testing")]
         [TestCase("--verbose", null)]
-        [TestCase("", "")]
         public void VirtualClientGetTokenCommandSupportsOnlyExpectedOptions(string option, string value)
         {            
             using (CancellationTokenSource cancellationSource = new CancellationTokenSource())
@@ -629,7 +672,7 @@ namespace VirtualClient
                 List<string> arguments = new List<string>()
                 {
                     "get-token",
-                    "--kv", "https://anyvault.vault.azure.net/?cid=1...&tid=2",
+                    "--key-vault", "https://any.vault.azure.net/",
                     "--tenant-id", "tenant1"
                 };
 

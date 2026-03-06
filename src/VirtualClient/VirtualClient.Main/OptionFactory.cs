@@ -117,6 +117,25 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Command line option defines the certificate name to retrieve from Key Vault.
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateCertificateNameOption(bool required = false, object defaultValue = null)
+        {
+            Option<string> option = new Option<string>(new string[] { "--cert-name" })
+            {
+                Name = "CertificateName",
+                Description = "The name of the certificate in Azure Key Vault to install to the local certificate store.",
+                ArgumentHelpName = "name",
+                AllowMultipleArgumentsPerToken = false
+            };
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+            return option;
+        }
+
+        /// <summary>
         /// Command line option indicates a clean/reset should be performed and defines the targets
         /// (e.g. logs, state, packages, all).
         /// </summary>
@@ -582,12 +601,19 @@ namespace VirtualClient
         /// </summary>
         /// <param name="required">Sets this option as required.</param>
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
-        public static Option CreateKeyVaultOption(bool required = false, object defaultValue = null)
+        /// <param name="certificateManager">Optional parameter defines the certificate manager to use for accessing certificates on the system.</param>
+        /// <param name="fileSystem">Optional parameter to use to validate file system paths.</param>
+        public static Option CreateKeyVaultStoreOption(bool required = false, object defaultValue = null, ICertificateManager certificateManager = null, IFileSystem fileSystem = null)
         {
-            Option<string> option = new Option<string>(
-                new string[] { "--kv", "--key-vault" })
+            Option<DependencyStore> option = new Option<DependencyStore>(
+                new string[] { "--key-vault" },
+                new ParseArgument<DependencyStore>(result => OptionFactory.ParseKeyVaultStore(
+                    result,
+                    DependencyStore.KeyVault,
+                    certificateManager ?? OptionFactory.defaultCertificateManager,
+                    fileSystem ?? OptionFactory.defaultFileSystem)))
             {
-                Name = "KeyVault",
+                Name = "KeyVaultStore",
                 Description = "An endpoint URI or connection string to the Key Vault from which secrets and certificates can be accessed.",
                 ArgumentHelpName = "connectionstring|sas",
                 AllowMultipleArgumentsPerToken = false
@@ -595,63 +621,6 @@ namespace VirtualClient
 
             OptionFactory.SetOptionRequirements(option, required, defaultValue);
 
-            return option; 
-        }
-
-        /// <summary>
-        /// Command line option defines the authentication token for Key Vault to authenticate requests.
-        /// </summary>
-        /// <param name="required">Sets this option as required.</param>
-        /// <param name="defaultValue">Sets the default value when none is provided.</param>
-        public static Option CreateTokenOption(bool required = false, object defaultValue = null)
-        {
-            Option<string> option = new Option<string>(new string[] { "--token", "--access-token" })
-            {
-                Name = "AccessToken",
-                Description = "Authentication token for Azure Key Vault access. When not provided, uses default Azure credential authentication (Azure CLI, Managed Identity, etc.).",
-                ArgumentHelpName = "token",
-                AllowMultipleArgumentsPerToken = false
-            };
-
-            OptionFactory.SetOptionRequirements(option, required, defaultValue);
-            return option;
-        }
-
-        /// <summary>
-        /// Command line option defines the certificate name to retrieve from Key Vault.
-        /// </summary>
-        /// <param name="required">Sets this option as required.</param>
-        /// <param name="defaultValue">Sets the default value when none is provided.</param>
-        public static Option CreateCertificateNameOption(bool required = false, object defaultValue = null)
-        {
-            Option<string> option = new Option<string>(new string[] { "--certname", "--certificate-name", "--cert-name" })
-            {
-                Name = "CertificateName",
-                Description = "The name of the certificate in Azure Key Vault to install to the local certificate store.",
-                ArgumentHelpName = "name",
-                AllowMultipleArgumentsPerToken = false
-            };
-
-            OptionFactory.SetOptionRequirements(option, required, defaultValue);
-            return option;
-        }
-
-        /// <summary>
-        /// Command line option defines the tenant ID associated with your Microsoft Entra ID
-        /// </summary>
-        /// <param name="required">Sets this option as required.</param>
-        /// <param name="defaultValue">Sets the default value when none is provided.</param>
-        public static Option CreateTenantIdOption(bool required = false, object defaultValue = null)
-        {
-            Option<string> option = new Option<string>(new string[] { "--tenant-id", "--tid" })
-            {
-                Name = "TenantId",
-                Description = "The tenant ID associated with your Microsoft Entra ID.",
-                ArgumentHelpName = "tid",
-                AllowMultipleArgumentsPerToken = false
-            };
-
-            OptionFactory.SetOptionRequirements(option, required, defaultValue);
             return option;
         }
 
@@ -908,6 +877,26 @@ namespace VirtualClient
             {
                 Name = "OutputPath",
                 Description = "The directory to which file output should be written.",
+                ArgumentHelpName = "path",
+                AllowMultipleArgumentsPerToken = false
+            };
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+
+            return option;
+        }
+
+        /// <summary>
+        /// Command line option defines the path to a file in which output should be written.
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateOutputFileOption(bool required = false, object defaultValue = null)
+        {
+            Option<string> option = new Option<string>(new string[] { "--output-file" })
+            {
+                Name = "OutputFilePath",
+                Description = "A path to the file in which output should be written.",
                 ArgumentHelpName = "path",
                 AllowMultipleArgumentsPerToken = false
             };
@@ -1374,6 +1363,25 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Command line option defines the tenant ID associated with your Microsoft Entra ID
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateTenantIdOption(bool required = false, object defaultValue = null)
+        {
+            Option<string> option = new Option<string>(new string[] { "--tenant-id" })
+            {
+                Name = "TenantId",
+                Description = "The ID of the Azure tenant in which target resources exist (e.g. Microsoft Entra, Key Vault).",
+                ArgumentHelpName = "tid",
+                AllowMultipleArgumentsPerToken = false
+            };
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+            return option;
+        }
+
+        /// <summary>
         /// Command line option defines the duration/timeout for running the operation (e.g. workload execution timeout).
         /// </summary>
         /// <param name="required">Sets this option as required.</param>
@@ -1406,6 +1414,25 @@ namespace VirtualClient
 
             OptionFactory.SetOptionRequirements(option, required, defaultValue);
 
+            return option;
+        }
+
+        /// <summary>
+        /// Command line option defines the authentication token to use for request authentication.
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateTokenOption(bool required = false, object defaultValue = null)
+        {
+            Option<string> option = new Option<string>(new string[] { "--token" })
+            {
+                Name = "AccessToken",
+                Description = "A token to use for authentication with Azure resources.",
+                ArgumentHelpName = "token",
+                AllowMultipleArgumentsPerToken = false
+            };
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
             return option;
         }
 
@@ -1555,6 +1582,28 @@ namespace VirtualClient
                     $"See the following documentation for additional details and examples:{Environment.NewLine}" +
                     $"- https://microsoft.github.io/VirtualClient/docs/guides/0010-command-line/{Environment.NewLine}" +
                     $"- https://microsoft.github.io/VirtualClient/docs/guides/0600-integration-blob-storage/{Environment.NewLine}");
+            }
+
+            return store;
+        }
+
+        private static DependencyStore ParseKeyVaultStore(ArgumentResult parsedResult, string storeName, ICertificateManager certificateManager, IFileSystem fileSystem)
+        {
+            string endpoint = OptionFactory.GetValue(parsedResult);
+            DependencyStore store = EndpointUtility.CreateKeyVaultStoreReference(storeName, endpoint, certificateManager);
+
+            // If the certificate is not found, the certificate manager will throw and exception. The logic that follows
+            // here would happen if the user provided invalid information that precedes the search for the actual certificate.
+            if (store == null)
+            {
+                throw new SchemaException(
+                    $"The value provided for the Key Vault endpoint is invalid. The value must be one of the following supported identifiers:{Environment.NewLine}" +
+                    $"1) A valid storage account or blob container SAS URI{Environment.NewLine}" +
+                    $"2) A URI with Microsoft Entra ID/App identity information (e.g. using certificate-based authentication){Environment.NewLine}" +
+                    $"3) A URI with Microsoft Azure Managed Identity information{Environment.NewLine}" +
+                    $"4) A directory path that exists on the system.{Environment.NewLine}{Environment.NewLine}{Environment.NewLine}" +
+                    $"See the following documentation for additional details and examples:{Environment.NewLine}" +
+                    $"- https://microsoft.github.io/VirtualClient/docs/guides/0010-command-line/{Environment.NewLine}");
             }
 
             return store;

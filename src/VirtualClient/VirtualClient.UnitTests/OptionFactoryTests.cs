@@ -587,10 +587,9 @@ namespace VirtualClient
 
         [Test]
         [TestCase("--key-vault")]
-        [TestCase("--kv")]
         public void KeyVaultOptionSupportsExpectedAliases(string alias)
         {
-            Option option = OptionFactory.CreateKeyVaultOption();
+            Option option = OptionFactory.CreateKeyVaultStoreOption();
             ParseResult result = option.Parse($"{alias}=https://my-keyvault.vault.azure.net/?miid=307591a4-abb2-4559-af59-b47177d140cf");
             Assert.IsFalse(result.Errors.Any());
         }
@@ -599,7 +598,7 @@ namespace VirtualClient
         [TestCaseSource(nameof(GetExampleManagedIdentityConnectionStrings), new object[] { DependencyStore.StoreTypeAzureKeyVault })]
         public void KeyVaultOptionSupportsConnectionStringsWithManagedIdentyReferences(string argument)
         {
-            Option option = OptionFactory.CreateKeyVaultOption();
+            Option option = OptionFactory.CreateKeyVaultStoreOption();
             ParseResult result = option.Parse($"--key-vault={argument}");
             Assert.IsFalse(result.Errors.Any());
         }
@@ -608,7 +607,7 @@ namespace VirtualClient
         [TestCaseSource(nameof(GetExampleManagedIdentityUris), new object[] { DependencyStore.StoreTypeAzureKeyVault })]
         public void KeyVaultOptionSupportsUrisWithManagedIdentityReferences(string argument)
         {
-            Option option = OptionFactory.CreateKeyVaultOption();
+            Option option = OptionFactory.CreateKeyVaultStoreOption();
             ParseResult result = option.Parse($"--key-vault={argument}");
             Assert.IsFalse(result.Errors.Any());
         }
@@ -617,8 +616,27 @@ namespace VirtualClient
         [TestCaseSource(nameof(GetExampleMicrosoftEntraIdConnectionStrings), new object[] { DependencyStore.StoreTypeAzureKeyVault })]
         public void KeyVaultOptionSupportsConnectionStringsWithMicrosoftEntraIdAndCertificateReferences(string argument)
         {
-            Option option = OptionFactory.CreateKeyVaultOption();
-            ParseResult result = option.Parse($"--kv={argument}");
+            var mockCertManager = new Mock<ICertificateManager>();
+
+            mockCertManager
+                .Setup(c => c.GetCertificateFromStoreAsync(
+                    "123456789",
+                    It.IsAny<IEnumerable<StoreLocation>>(),
+                    StoreName.My))
+                .ReturnsAsync(OptionFactoryTests.GenerateMockCertificate());
+
+            // Setup:
+            // A matching certificate is found in the local store.
+            mockCertManager
+                .Setup(c => c.GetCertificateFromStoreAsync(
+                    It.Is<string>(issuer => issuer == "ABC" || issuer == "ABC CA 01" || issuer == "CN=ABC CA 01, DC=ABC, DC=COM"),
+                    It.Is<string>(subject => subject == "any.domain.com" || subject == "CN=any.domain.com"),
+                    It.IsAny<IEnumerable<StoreLocation>>(),
+                    StoreName.My))
+                .ReturnsAsync(OptionFactoryTests.GenerateMockCertificate());
+
+            Option option = OptionFactory.CreateKeyVaultStoreOption(certificateManager: mockCertManager.Object);
+            ParseResult result = option.Parse($"--key-vault={argument}");
             Assert.IsFalse(result.Errors.Any());
         }
 
@@ -626,8 +644,27 @@ namespace VirtualClient
         [TestCaseSource(nameof(GetExampleMicrosoftEntraIdUris), new object[] { DependencyStore.StoreTypeAzureKeyVault })]
         public void KeyVaultOptionSupportsUrisWithMicrosoftEntraIdAndCertificateReferences(string argument)
         {
-            Option option = OptionFactory.CreateKeyVaultOption();
-            ParseResult result = option.Parse($"--kv={argument}");
+            var mockCertManager = new Mock<ICertificateManager>();
+
+            mockCertManager
+                .Setup(c => c.GetCertificateFromStoreAsync(
+                    "123456789",
+                    It.IsAny<IEnumerable<StoreLocation>>(),
+                    StoreName.My))
+                .ReturnsAsync(OptionFactoryTests.GenerateMockCertificate());
+
+            // Setup:
+            // A matching certificate is found in the local store.
+            mockCertManager
+                .Setup(c => c.GetCertificateFromStoreAsync(
+                    It.Is<string>(issuer => issuer == "ABC" || issuer == "ABC CA 01" || issuer == "CN=ABC CA 01, DC=ABC, DC=COM"),
+                    It.Is<string>(subject => subject == "any.domain.com" || subject == "CN=any.domain.com"),
+                    It.IsAny<IEnumerable<StoreLocation>>(),
+                    StoreName.My))
+                .ReturnsAsync(OptionFactoryTests.GenerateMockCertificate());
+
+            Option option = OptionFactory.CreateKeyVaultStoreOption(certificateManager: mockCertManager.Object);
+            ParseResult result = option.Parse($"--key-vault={argument}");
             Assert.IsFalse(result.Errors.Any());
         }
 

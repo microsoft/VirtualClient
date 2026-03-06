@@ -1,20 +1,20 @@
 {
-    "Description": "Installs dependencies from a package store.",
+    "Description": "Installs a certificate from a target Key Vault.",
     "Parameters": {
-        "KeyVaultUri": null,
         "CertificateName": null,
         "AccessToken": null,
-        "LogFileName": null
+        "TenantId": null,
+        "FilePath": null
     },
     "Actions": [
         {
             "Type": "CertificateInstallation",
             "Parameters": {
                 "Scenario": "InstallCertificate",
-                "KeyVaultUri": "$.Parameters.KeyVaultUri",
                 "CertificateName": "$.Parameters.CertificateName",
                 "AccessToken": "$.Parameters.AccessToken",
-                "AccessTokenPath": "$.Parameters.LogFileName"
+                "FilePath": "$.Parameters.FilePath",
+                "TenantId": "$.Parameters.TenantId"
             }
         }
     ]

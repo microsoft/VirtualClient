@@ -17,6 +17,9 @@ namespace VirtualClient
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
+    using Azure;
+    using Azure.Core;
+    using Azure.Identity;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
@@ -138,9 +141,9 @@ namespace VirtualClient
         public bool Isolated { get; set; }
 
         /// <summary>
-        /// Describes the target Key vault from where secrets and certificates should be accessed.
+        /// Describes the target Key Vault store where secrets and certificates should be accessed.
         /// </summary>
-        public string KeyVault { get; set; }
+        public DependencyStore KeyVaultStore { get; set; }
 
         /// <summary>
         /// An alternate directory to which write log files. Setting this overrides
@@ -543,10 +546,10 @@ namespace VirtualClient
 
             ISystemManagement systemManagement = DependencyFactory.CreateSystemManager(this.ClientId, this.ExperimentId, platformSpecifics, this.Isolated);
             IApiManager apiManager = new ApiManager(systemManagement.FirewallManager);
+            IAuthorizationManager authorizationManager = new AuthorizationManager();
             IProfileManager profileManager = new ProfileManager();
             ISshClientFactory sshClientFactory = new SshClientFactory();
             List<IBlobManager> blobStores = new List<IBlobManager>();
-            IKeyVaultManager keyVaultManager = new KeyVaultManager();
             ApiClientManager apiClientManager = new ApiClientManager(this.ApiPorts);
 
             // Ensure the core/fundamental directories exist.
@@ -586,34 +589,13 @@ namespace VirtualClient
                     blobStores.Add(DependencyFactory.CreateBlobManager(this.ContentStore));
                 }
 
-                if (this.KeyVault != null && this.ShouldInitializeKeyVault)
-                {
-                    DependencyKeyVaultStore keyVaultStore = EndpointUtility.CreateKeyVaultStoreReference(DependencyStore.KeyVault, endpoint: this.KeyVault, this.CertificateManager ?? new CertificateManager());
-                    keyVaultManager = DependencyFactory.CreateKeyVaultManager(keyVaultStore);
-                }
-
-                if (this.PackageStore != null && PackageStore.StoreType == DependencyStore.StoreTypeAzureCDN)
-                {
-                    DependencyBlobStore blobStore = this.PackageStore as DependencyBlobStore;
-                    IConvertible packageSource = null;
-                    this.Parameters?.TryGetValue(GlobalParameter.PackageStoreSource, out packageSource);
-
-                    ILogger debugLogger = DependencyFactory.CreateFileLoggerProvider(platformSpecifics.GetLogsPath("proxy-traces.log"), TimeSpan.FromSeconds(5), LogLevel.Warning)
-                        .CreateLogger("Proxy");
-
-                    blobStores.Add(DependencyFactory.CreateProxyBlobManager(new DependencyProxyStore(DependencyBlobStore.Packages, blobStore.EndpointUri), packageSource?.ToString(), debugLogger));
-
-                    // Enabling ApiClientManager to save Proxy API will allow downstream to access proxy endpoints as required.
-                    apiClientManager.GetOrCreateProxyApiClient(Guid.NewGuid().ToString(), blobStore.EndpointUri);
-                }
-                else if (this.PackageStore != null)
+                if (this.PackageStore != null)
                 {
                     blobStores.Add(DependencyFactory.CreateBlobManager(this.PackageStore));
                 }
-
-                // Use default public package store if none is defined.
-                if (this.PackageStore == null)
+                else
                 {
+                    // Use default public package store if none is defined.
                     blobStores.Add(DependencyFactory.CreateBlobManager(
                         EndpointUtility.CreateBlobStoreReference(DependencyStore.Packages, CommandBase.defaultPackageStoreUri, this.CertificateManager)));
                 }
@@ -623,13 +605,13 @@ namespace VirtualClient
             dependencies.AddSingleton<PlatformSpecifics>(platformSpecifics);
             dependencies.AddSingleton<IApiManager>(apiManager);
             dependencies.AddSingleton<IApiClientManager>(apiClientManager);
+            dependencies.AddSingleton<IAuthorizationManager>(authorizationManager);
             dependencies.AddSingleton<IConfiguration>(configuration);
             dependencies.AddSingleton<IDiskManager>(systemManagement.DiskManager);
             dependencies.AddSingleton<IExpressionEvaluator>(ProfileExpressionEvaluator.Instance);
             dependencies.AddSingleton<IEnumerable<IBlobManager>>(blobStores);
             dependencies.AddSingleton<IFileSystem>(systemManagement.FileSystem);
             dependencies.AddSingleton<IFirewallManager>(systemManagement.FirewallManager);
-            dependencies.AddSingleton<IKeyVaultManager>(keyVaultManager);
             dependencies.AddSingleton<IPackageManager>(systemManagement.PackageManager);
             dependencies.AddSingleton<IProfileManager>(profileManager);
             dependencies.AddSingleton<ISshClientFactory>(sshClientFactory);
@@ -637,12 +619,18 @@ namespace VirtualClient
             dependencies.AddSingleton<ISystemInfo>(systemManagement);
             dependencies.AddSingleton<ISystemManagement>(systemManagement);
             dependencies.AddSingleton<ProcessManager>(systemManagement.ProcessManager);
+            
 
             IList<ILoggerProvider> loggerProviders = this.InitializeLoggerProviders(dependencies, telemetrySource?.ToString());
             ILogger logger = loggerProviders.Any() ? new LoggerFactory(loggerProviders).CreateLogger("VirtualClient") : NullLogger.Instance;
 
             systemManagement.SetLogger(logger);
             dependencies.AddSingleton<ILogger>(logger);
+
+            if (this.KeyVaultStore != null)
+            {
+                dependencies.AddSingleton<IKeyVaultManager>(DependencyFactory.CreateKeyVaultManager(this.KeyVaultStore));
+            }
 
             // Add in any SSH targets to the dependencies.
             if (this.TargetAgents?.Any() == true)
@@ -953,11 +941,5 @@ namespace VirtualClient
 
             return FileContext.ResolvePathTemplate(path, this.pathReplacements);
         }
-
-        /// <summary>
-        /// Determines whether the Key Vault manager should be initialized during dependency setup.
-        /// Can be overridden by derived commands that need to skip Key Vault initialization.
-        /// </summary>
-        protected virtual bool ShouldInitializeKeyVault => true;
     }
 }

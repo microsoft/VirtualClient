@@ -4,381 +4,154 @@
 namespace VirtualClient
 {
     using System;
-    using System.Collections.Generic;
-    using System.IO;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using NUnit.Framework;
-    using VirtualClient.Contracts;
 
     [TestFixture]
     [Category("Unit")]
     public class BootstrapCommandTests
     {
         [Test]
-        [TestCase(null)]
-        [TestCase("")]
-        [TestCase(" ")]
-        public void SetupAccessToken_Throws_WhenKeyVaultIsInvalid(string keyVaultName)
-        {
-            var command = new TestBootstrapCommand
-            {
-                Parameters = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase),
-                KeyVault = keyVaultName
-            };
-
-            var ex = Assert.Throws<ArgumentException>(() => command.SetupAccessTokenPublic());
-            StringAssert.Contains("--key-vault", ex!.Message);
-        }
-
-        [Test]
-        [TestCase(null)]
-        [TestCase("")]
-        [TestCase(" ")]
-        public void SetupAccessToken_Throws_WhenTenantIdIsInvalid(string tenantId)
-        {
-            var command = new TestBootstrapCommand
-            {
-                Parameters = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase),
-                KeyVault = "https://myvault.vault.azure.net/",
-                TenantId = tenantId
-            };
-
-            var ex = Assert.Throws<ArgumentException>(() => command.SetupAccessTokenPublic());
-            StringAssert.Contains("--tenant-id", ex!.Message);
-        }
-
-        [Test]
-        public void SetupAccessToken_SetsExpectedParameters()
-        {
-            var command = new TestBootstrapCommand
-            {
-                Parameters = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase),
-                PackageName = "mypackage.zip",
-                Name = "customname",
-                CertificateName = "mycert",
-                KeyVault = "https://myvault.vault.azure.net/",
-                TenantId = "00000000-0000-0000-0000-000000000001",
-                AccessToken = "token",
-            };
-
-            command.SetupAccessTokenPublic();
-
-            Assert.AreEqual(command.Parameters["KeyVaultUri"], command.KeyVault);
-            Assert.AreEqual(command.Parameters["TenantId"], command.TenantId);
-            Assert.AreEqual(command.Parameters["LogFileName"], "AccessToken.txt");
-            Assert.AreEqual(command.Parameters.Count, 3);
-        }
-
-        [Test]
-        [TestCase(null)]
-        [TestCase("")]
-        [TestCase(" ")]
-        public void SetupCertificateInstallation_Throws_WhenCertNameMissing(string certName)
-        {
-            var command = new TestBootstrapCommand
-            {
-                Parameters = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase),
-                CertificateName = certName,
-                KeyVault = "https://myvault.vault.azure.net/"
-            };
-
-            var ex = Assert.Throws<ArgumentException>(() => command.SetupCertificateInstallationPublic());
-            StringAssert.Contains("--cert-name", ex!.Message);
-        }
-
-        [Test]
-        [TestCase(null)]
-        [TestCase("")]
-        [TestCase(" ")]
-        public void SetupCertificateInstallation_Throws_WhenKeyVaultMissing(string keyVaultName)
-        {
-            var command = new TestBootstrapCommand
-            {
-                Parameters = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase),
-                CertificateName = "mycert",
-                KeyVault = keyVaultName
-            };
-
-            var ex = Assert.Throws<ArgumentException>(() => command.SetupCertificateInstallationPublic());
-            StringAssert.Contains("--key-vault", ex!.Message);
-        }
-
-        [Test]
-        public void SetupCertificateInstallation_SetsUpOnlyExpectedParameters()
-        {
-            var command = new TestBootstrapCommand
-            {
-                Parameters = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase),
-                CertificateName = "mycert",
-                KeyVault = "https://myvault.vault.azure.net/",
-                AccessToken = "token123",
-                TenantId = "00000000-0000-0000-0000-000000000001",
-            };
-
-            command.SetupCertificateInstallationPublic();
-
-            Assert.AreEqual(command.Parameters["KeyVaultUri"], command.KeyVault);
-            Assert.AreEqual(command.Parameters["CertificateName"], command.CertificateName);
-            Assert.AreEqual(command.Parameters.Count, 2);
-
-            Assert.IsFalse(command.Parameters.ContainsKey("AccessToken"));
-            Assert.IsFalse(command.Parameters.ContainsKey("TenantId"));
-        }
-
-        [Test]
-        [TestCase(null)]
-        [TestCase("")]
-        [TestCase(" ")]
-        public void SetupPackageInstallation_Throws_WhenPackageNameIsInvalid(string value)
-        {
-            var command = new TestBootstrapCommand
-            {
-                Parameters = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase),
-                PackageName = value
-            };
-
-            var ex = Assert.Throws<ArgumentException>(() => command.SetupPackageInstallationPublic());
-            StringAssert.Contains("--package", ex!.Message);
-        }
-
-        [Test]
-        public void SetupPackageInstallation_SetsRegisterAsNameToName_WhenProvided()
-        {
-            var command = new TestBootstrapCommand
-            {
-                Parameters = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase),
-                PackageName = "mypackage.zip",
-                Name = "customname"
-            };
-
-            command.SetupPackageInstallationPublic();
-
-            Assert.AreEqual(command.Parameters["Package"], command.PackageName);
-            Assert.AreEqual(command.Parameters["RegisterAsName"], "customname");
-        }
-
-        [Test]
-        public void SetupPackageInstallation_SetsRegisterAsNameToPackageFileName_WhenNameNotProvided()
-        {
-            var command = new TestBootstrapCommand
-            {
-                Parameters = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase),
-                PackageName = Path.Combine("C:\\packages", "mypackage.zip"),
-                Name = null
-            };
-
-            command.SetupPackageInstallationPublic();
-
-            Assert.AreEqual(command.Parameters["Package"], command.PackageName);
-            Assert.AreEqual(command.Parameters["RegisterAsName"], "mypackage");
-        }
-
-        [Test]
-        public void SetupPackageInstallation_SetsUpOnlyExpectedParameters()
-        {
-            var command = new TestBootstrapCommand
-            {
-                Parameters = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase),
-                PackageName = "mypackage.zip",
-                Name = "customname",
-                CertificateName = "mycert",
-                KeyVault = "https://myvault.vault.azure.net/",
-                AccessToken = "token123",
-                TenantId = "00000000-0000-0000-0000-000000000001",
-            };
-
-            command.SetupPackageInstallationPublic();
-
-            Assert.AreEqual(command.Parameters["Package"], command.PackageName);
-            Assert.AreEqual(command.Parameters["RegisterAsName"], "customname");
-            Assert.AreEqual(command.Parameters.Count, 2);
-        }
-
-        [Test]
-        public void ExecuteAsync_Throws_WhenNoOperationsSpecified()
+        public void BootstrapCommandValidatesRequiredParameters()
         {
             var command = new TestBootstrapCommand();
+            var error = Assert.Throws<ArgumentException>(() => command.Validate());
 
-            var ex = Assert.ThrowsAsync<ArgumentException>(
-                () => command.ExecuteAsync(Array.Empty<string>(), new CancellationTokenSource()));
-
-            StringAssert.Contains("At least one operation must be specified", ex!.Message);
-            StringAssert.Contains("--package", ex!.Message);
-            StringAssert.Contains("--cert-name", ex!.Message);
+            Assert.AreEqual(
+                "At least one operation must be specified. Use --package for package installation from remote store or --cert-name for certificate installation.",
+                error.Message);
         }
 
         [Test]
-        public async Task ExecuteAsync_InstallsCertificateOnlyWhenTokenIsProvided()
+        public void BootstrapCommandValidatesRequiredParametersForCertificateInstallation()
         {
-            var command = new TestBootstrapCommand
+            var command = new TestBootstrapCommand();
+            command.CertificateName = "any-cert";
+            Exception error = Assert.Throws<ArgumentException>(() => command.Validate());
+
+            Assert.AreEqual(
+                "A Key Vault URI must be provided on the command line (--key-vault) to install a certificate.",
+                error.Message);
+
+            command.KeyVaultStore = new DependencyKeyVaultStore(DependencyStore.KeyVault, new Uri("https://any.vault"));
+            error = Assert.Throws<ArgumentException>(() => command.Validate());
+
+            Assert.AreEqual(
+                "The Azure tenant ID must be provided on the command line (--tenant-id) to install a certificate.",
+                error.Message);
+        }
+
+        [Test]
+        public void BootstrapCommandValidatesRequiredParametersForPackageDownloads()
+        {
+            var command = new TestBootstrapCommand();
+            command.PackageName = "any-package.zip";
+            Exception error = Assert.Throws<ArgumentException>(() => command.Validate());
+
+            Assert.AreEqual(
+                "A package store must be provided on the command line (--package-store) when installing packages.",
+                error.Message);
+        }
+
+        [Test]
+        public void BootstrapCommandExecutesTheExpectedProfileToBootrapCertificates()
+        {
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
             {
-                CertificateName = "mycert",
-                KeyVault = "https://myvault.vault.azure.net/",
-                PackageName = null,
-                AccessToken = "token"
-            };
+                var command = new TestBootstrapCommand
+                {
+                    CertificateName = "any-cert",
+                    TenantId = Guid.NewGuid().ToString()
+                };
 
-            await command.ExecuteAsync(Array.Empty<string>(), new CancellationTokenSource());
+                command.Initialize();
 
-            CollectionAssert.AreEqual(new[] { "BOOTSTRAP-CERTIFICATE.json" }, command.Profiles.Select(p => p.ProfileName).ToArray());
-
-            Assert.AreEqual(command.Parameters["KeyVaultUri"], command.KeyVault);
-            Assert.AreEqual(command.Parameters["CertificateName"], command.CertificateName);
+                Assert.IsNotEmpty(command.Profiles);
+                Assert.IsTrue(command.Profiles.Count() == 1);
+                Assert.IsTrue(command.Profiles.Count(p => p.ProfileName == "BOOTSTRAP-CERTIFICATE.json") == 1);
+            }
         }
 
         [Test]
-        public async Task ExecuteAsync_InstallsCertificateUsingGetAccessTokenWhenTokenNotIsProvided()
+        public void BootstrapCommandProvidesTheExpectedParametersToTheProfileToBootrapCertificates()
         {
-            var command = new TestBootstrapCommand
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
             {
-                CertificateName = "mycert",
-                KeyVault = "https://myvault.vault.azure.net/",
-                TenantId = "00000000-0000-0000-0000-000000000001",
-                AccessToken = null,
-                PackageName = null
-            };
+                var command = new TestBootstrapCommand
+                {
+                    AccessToken = "anyT@k3n",
+                    CertificateName = "any-cert",
+                    TenantId = Guid.NewGuid().ToString()
+                };
 
-            await command.ExecuteAsync(Array.Empty<string>(), new CancellationTokenSource());
+                command.Initialize();
 
-            CollectionAssert.AreEqual(new[] { "GET-ACCESS-TOKEN.json", "BOOTSTRAP-CERTIFICATE.json" }, command.Profiles.Select(p => p.ProfileName).ToArray());
-
-            // From SetupAccessToken()
-            Assert.AreEqual(command.Parameters["KeyVaultUri"], command.KeyVault);
-            Assert.AreEqual(command.Parameters["TenantId"], command.TenantId);
-
-            // From SetupCertificateInstallation()
-            Assert.AreEqual(command.Parameters["CertificateName"], command.CertificateName);
+                Assert.IsNotEmpty(command.Parameters);
+                Assert.IsTrue(command.Parameters.TryGetValue("AccessToken", out IConvertible accessToken) && accessToken.ToString() == command.AccessToken);
+                Assert.IsTrue(command.Parameters.TryGetValue("CertificateName", out IConvertible certificateName) && certificateName.ToString() == command.CertificateName);
+                Assert.IsTrue(command.Parameters.TryGetValue("TenantId", out IConvertible tenantId) && tenantId.ToString() == command.TenantId);
+            }
         }
 
         [Test]
-        public async Task ExecuteAsync_InstallsPackageOnlyWhenPackageIsProvided()
+        public void BootstrapCommandExecutesTheExpectedProfileToBootstrapPackages()
         {
-            var command = new TestBootstrapCommand
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
             {
-                PackageName = Path.Combine("C:\\packages", "mypackage.zip"),
-                Name = null
-            };
+                var command = new TestBootstrapCommand
+                {
+                    PackageName = "any-package.zip",
+                    Name = "any-package"
+                };
 
-            await command.ExecuteAsync(Array.Empty<string>(), new CancellationTokenSource());
-            CollectionAssert.AreEqual(new[] { "BOOTSTRAP-PACKAGE.json" }, command.Profiles.Select(p => p.ProfileName).ToArray());
+                command.Initialize();
 
-            Assert.AreEqual(command.Parameters["Package"], command.PackageName);
-            Assert.AreEqual(command.Parameters["RegisterAsName"], "mypackage");
+                Assert.IsNotEmpty(command.Profiles);
+                Assert.IsTrue(command.Profiles.Count() == 1);
+                Assert.IsTrue(command.Profiles.Count(p => p.ProfileName == "BOOTSTRAP-PACKAGE.json") == 1);
+            }
         }
 
         [Test]
-        public async Task ExecuteAsync_InstallsCertificateThenPackage()
+        public void BootstrapCommandProvidesTheExpectedParametersToTheProfileToBootstrapPackages()
         {
-            var command = new TestBootstrapCommand
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
             {
-                CertificateName = "mycert",
-                KeyVault = "https://myvault.vault.azure.net/",
-                PackageName = "mypackage.zip",
-                Name = "regname",
-                AccessToken = "token",
-                TenantId = "00000000-0000-0000-0000-000000000001"
-            };
+                var command = new TestBootstrapCommand
+                {
+                    PackageName = "any-package.zip",
+                    Name = "any-package"
+                };
 
-            await command.ExecuteAsync(Array.Empty<string>(), new CancellationTokenSource());
+                command.Initialize();
 
-            CollectionAssert.AreEqual(new[] { "BOOTSTRAP-CERTIFICATE.json", "BOOTSTRAP-PACKAGE.json" }, command.Profiles.Select(p => p.ProfileName).ToArray());
-
-            Assert.AreEqual(command.Parameters["KeyVaultUri"], command.KeyVault);
-            Assert.AreEqual(command.Parameters["CertificateName"], command.CertificateName);
-            Assert.AreEqual(command.Parameters["Package"], command.PackageName);
-            Assert.AreEqual(command.Parameters["RegisterAsName"], "regname");
-            Assert.IsFalse(command.Parameters.ContainsKey("TenantId"));
-            Assert.AreEqual(command.Parameters.Count, 5);
-        }
-
-        [Test]
-        public async Task ExecuteAsync_GetTokenThenInstallsCertificateThenPackage()
-        {
-            var command = new TestBootstrapCommand
-            {
-                CertificateName = "mycert",
-                KeyVault = "https://myvault.vault.azure.net/",
-                PackageName = "mypackage.zip",
-                Name = "regname",
-                AccessToken = null,
-                TenantId = "00000000-0000-0000-0000-000000000001"
-            };
-
-            await command.ExecuteAsync(Array.Empty<string>(), new CancellationTokenSource());
-
-            CollectionAssert.AreEqual(new[] { "GET-ACCESS-TOKEN.json", "BOOTSTRAP-CERTIFICATE.json", "BOOTSTRAP-PACKAGE.json" }, command.Profiles.Select(p => p.ProfileName).ToArray());
-
-            Assert.AreEqual(command.Parameters["KeyVaultUri"], command.KeyVault);
-            Assert.AreEqual(command.Parameters["CertificateName"], command.CertificateName);
-            Assert.AreEqual(command.Parameters["Package"], command.PackageName);
-            Assert.AreEqual(command.Parameters["RegisterAsName"], "regname");
-            Assert.AreEqual(command.Parameters["TenantId"], "00000000-0000-0000-0000-000000000001");
-            Assert.IsTrue(command.Parameters.ContainsKey("LogFileName"));
-            Assert.AreEqual(command.Parameters.Count, 6);
-        }
-
-        [Test]
-        public void ShouldInitializeKeyVault_IsTrue_WhenAccessTokenNotProvided()
-        {
-            var command = new TestBootstrapCommand { AccessToken = null };
-            Assert.IsTrue(command.ShouldInitializeKeyVaultPublic());
-        }
-
-        [Test]
-        public void ShouldInitializeKeyVault_IsTrue_WhenTenantIdIsNotProvided()
-        {
-            var command = new TestBootstrapCommand { TenantId = null };
-            Assert.IsTrue(command.ShouldInitializeKeyVaultPublic());
-        }
-
-        [Test]
-        public void ShouldInitializeKeyVault_IsTrue_WhenTenantIdAndAccessTokenAreNotProvided()
-        {
-            var command = new TestBootstrapCommand { TenantId = " ", AccessToken = " "};
-            Assert.IsTrue(command.ShouldInitializeKeyVaultPublic());
-        }
-
-        [Test]
-        public void ShouldInitializeKeyVault_IsFalse_WhenAccessTokenIsProvided()
-        {
-            var command = new TestBootstrapCommand { AccessToken = "helloWorld" };
-            Assert.IsFalse(command.ShouldInitializeKeyVaultPublic());
-        }
-
-        [Test]
-        public void ShouldInitializeKeyVault_IsFalse_WhenTenantIdIsProvided()
-        {
-            var command = new TestBootstrapCommand { TenantId = "helloWorld" };
-            Assert.IsFalse(command.ShouldInitializeKeyVaultPublic());
-        }
-
-        [Test]
-        public void ShouldInitializeKeyVault_IsFalse_WhenTenantIdAndAccessTokenAreProvided()
-        {
-            var command = new TestBootstrapCommand { TenantId = "helloWorld", AccessToken = "helloworld" };
-            Assert.IsFalse(command.ShouldInitializeKeyVaultPublic());
+                Assert.IsNotEmpty(command.Parameters);
+                Assert.IsTrue(command.Parameters.TryGetValue("Package", out IConvertible packageName) && packageName.ToString() == command.PackageName);
+                Assert.IsTrue(command.Parameters.TryGetValue("RegisterAsName", out IConvertible name) && name.ToString() == command.Name);
+            }
         }
 
         internal class TestBootstrapCommand : BootstrapCommand
         {
-            public void SetupAccessTokenPublic() => this.SetupAccessToken();
-
-            public void SetupCertificateInstallationPublic() => this.SetupCertificateInstallation();
-
-            public void SetupPackageInstallationPublic() => this.SetupPackageInstallation();
-
-            public bool ShouldInitializeKeyVaultPublic() => this.ShouldInitializeKeyVault;
-
             /// <summary>
             /// Prevents the ExecuteProfileCommand pipeline from running. We only want to validate
             /// the side-effects of BootstrapCommand.ExecuteAsync: profiles computed + parameters set.
             /// </summary>
             public override Task<int> ExecuteAsync(string[] args, CancellationTokenSource cancellationTokenSource)
             {
-                base.ExecuteAsync(args, cancellationTokenSource);
                 return Task.FromResult(0);
+            }
+
+            public new void Initialize()
+            {
+                base.Initialize();
+            }
+
+            public new void Validate()
+            {
+                base.Validate();
             }
         }
     }

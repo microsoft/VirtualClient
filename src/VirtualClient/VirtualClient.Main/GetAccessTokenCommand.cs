@@ -5,7 +5,6 @@ namespace VirtualClient
 {
     using System;
     using System.Collections.Generic;
-    using System.IO;
     using System.Threading;
     using System.Threading.Tasks;
     using VirtualClient.Contracts;
@@ -16,9 +15,9 @@ namespace VirtualClient
     internal class GetAccessTokenCommand : ExecuteProfileCommand
     {
         /// <summary>
-        /// Key vault initialization is not required for getting an access token.
+        /// A path to a file to which the access token should be written.
         /// </summary>
-        protected override bool ShouldInitializeKeyVault => false;
+        public string OutputFilePath { get; set; }
 
         /// <summary>
         /// The tenant ID associated with your Microsoft Entra ID (formerly Azure Active Directory).
@@ -44,9 +43,9 @@ namespace VirtualClient
                 this.Parameters = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
             }
 
-            this.Parameters["KeyVaultUri"] = this.KeyVault;
+            this.Parameters["FilePath"] = this.OutputFilePath;
             this.Parameters["TenantId"] = this.TenantId;
-            
+
             return base.ExecuteAsync(args, cancellationTokenSource);
         }
     }

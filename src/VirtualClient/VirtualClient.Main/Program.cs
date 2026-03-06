@@ -253,7 +253,7 @@ namespace VirtualClient
                 OptionFactory.CreateIterationsOption(required: false),
 
                 // --key-vault
-                OptionFactory.CreateKeyVaultOption(required: false),
+                OptionFactory.CreateKeyVaultStoreOption(required: false),
 
                 // --layout-path
                 OptionFactory.CreateLayoutPathOption(required: false),
@@ -414,51 +414,25 @@ namespace VirtualClient
             return apiCommand;
         }
 
-        private static Command CreateGetTokenSubcommand(DefaultSettings settings)
-        {
-            Command getAccessTokenCommand = new Command(
-                "get-token",
-                "Get access token for current user to authenticate with Azure Key Vault.")
-            {
-                // REQUIRED
-                // -------------------------------------------------------------------
-                // --key-vault
-                OptionFactory.CreateKeyVaultOption(required: true),
-
-                // --tenant-id
-                OptionFactory.CreateTenantIdOption(required: true),
-
-                // OPTIONAL
-                // -------------------------------------------------------------------
-                // --clean
-                OptionFactory.CreateCleanOption(required: false),
-
-                // --client-id
-                OptionFactory.CreateClientIdOption(required: false, Guid.NewGuid().ToString()),
-
-                // --experiment-id
-                OptionFactory.CreateExperimentIdOption(required: false, Guid.NewGuid().ToString()),
-
-                // --parameters
-                OptionFactory.CreateParametersOption(required: false),
-
-                // --verbose
-                OptionFactory.CreateVerboseFlag(required: false, false)
-            };
-                        
-            return getAccessTokenCommand;
-        }
-
         private static Command CreateBootstrapSubcommand(DefaultSettings settings)
         {
             // --package
-            Option pkgOption = OptionFactory.CreatePackageOption(required: false);
+            Option packageOption = OptionFactory.CreatePackageOption(required: false);
+
+            // --package-store
+            Option packageStoreOption = OptionFactory.CreatePackageStoreOption(required: false);
 
             // --cert-name
             Option certNameOption = OptionFactory.CreateCertificateNameOption(required: false);
 
             // --key-vault
-            Option kvOption = OptionFactory.CreateKeyVaultOption(required: false);
+            Option keyVaultOption = OptionFactory.CreateKeyVaultStoreOption(required: false);
+
+            // --tenant-id
+            Option tenantIdOption = OptionFactory.CreateTenantIdOption(required: false);
+
+            // --token
+            Option tokenOption = OptionFactory.CreateTokenOption(required: false);
 
             Command bootstrapCommand = new Command(
                 "bootstrap",
@@ -468,15 +442,14 @@ namespace VirtualClient
                 // -------------------------------------------------------------------
 
                 // OPTIONAL
-                // -------------------------------------------------------------------
+                // -------------------------------------------------------------------     
 
-                pkgOption, certNameOption, kvOption,
-
-                // --token
-                OptionFactory.CreateTokenOption(required: false),
-                
-                // --tenant-id
-                OptionFactory.CreateTenantIdOption(required: false),
+                packageOption, 
+                packageStoreOption, 
+                certNameOption, 
+                keyVaultOption, 
+                tenantIdOption, 
+                tokenOption,
 
                 // --clean
                 OptionFactory.CreateCleanOption(required: false),
@@ -526,14 +499,14 @@ namespace VirtualClient
                 // --log-to-file
                 OptionFactory.CreateLogToFileFlag(required: false, settings.LogToFile),
 
+                // --output-file
+                OptionFactory.CreateOutputFileOption(required: false),
+
                 // --package-dir
                 OptionFactory.CreatePackageDirectoryOption(required: false, settings.PackageDirectory),
 
                 // --parameters
                 OptionFactory.CreateParametersOption(required: false),
-
-                // --package-store
-                OptionFactory.CreatePackageStoreOption(required: false),
 
                 // --proxy-api
                 OptionFactory.CreateProxyApiOption(required: false),
@@ -553,27 +526,48 @@ namespace VirtualClient
 
             bootstrapCommand.AddValidator(result =>
             {
-                string packageName = result.FindResultFor(pkgOption)?.GetValueOrDefault<string>();
-                string certNameValue = result.FindResultFor(certNameOption)?.GetValueOrDefault<string>();
-                string keyVaultValue = result.FindResultFor(kvOption)?.GetValueOrDefault<string>();
-
-                bool packageProvided = !string.IsNullOrWhiteSpace(packageName);
-                bool certificateNameProvided = !string.IsNullOrWhiteSpace(certNameValue);
-                bool keyVaultProvided = !string.IsNullOrWhiteSpace(keyVaultValue);
+                OptionResult package = result.FindResultFor(packageOption);
+                OptionResult packageStore = result.FindResultFor(packageStoreOption);
+                OptionResult certName = result.FindResultFor(certNameOption);
+                OptionResult accessToken = result.FindResultFor(tokenOption);
+                OptionResult keyVault = result.FindResultFor(keyVaultOption);
+                OptionResult tenantId = result.FindResultFor(tenantIdOption);
 
                 // Must choose at least one operation.
-                if (!packageProvided && !certificateNameProvided)
+                if (package == null && certName == null)
                 {
-                    result.ErrorMessage = "At least one operation must be specified for the bootstrap command." +
-                    "Use --package to install a package or --cert-name to install a certificate.";
-                    return result.ErrorMessage;
+                    throw new ArgumentException(
+                        "Invalid usage. At least one type of target resource must be specified for the bootstrap command." +
+                        "Use --package to install a package or --cert-name to install a certificate.");
+                }
+
+                if (package != null && packageStore == null)
+                {
+                    throw new ArgumentException("The package store URI must be provided (--package-store) when installing a package.");
                 }
 
                 // Certificate installation requires both --cert-name and --key-vault.
-                if (certificateNameProvided && !keyVaultProvided)
+                if (certName != null)
                 {
-                    result.ErrorMessage = "The Key Vault URI must be provided (--key-vault) when installing certificates (--cert-name).";
-                    return result.ErrorMessage;
+                    if (keyVault == null)
+                    {
+                        throw new ArgumentException("The Key Vault URI must be provided (--key-vault) when installing a certificate.");
+                    }
+
+                    if (accessToken == null)
+                    {
+                        // The tenant ID is required if the Microsoft Entra and certificate information is not provided
+                        // in the URI for the Key Vault.
+                        string keyVaultConnection = keyVault.Tokens.First().Value;
+
+                        if ((Uri.TryCreate(keyVaultConnection, UriKind.Absolute, out Uri uri)
+                            && !EndpointUtility.IsCustomUri(uri))
+                            && !EndpointUtility.IsCustomConnectionString(keyVaultConnection)
+                            && tenantId == null)
+                        {
+                            throw new ArgumentException("The Azure tenant ID must be provided (--tenant-id) when installing a certificate.");
+                        }
+                    }
                 }
 
                 return null;
@@ -637,6 +631,53 @@ namespace VirtualClient
             };
 
             return convertCommand;
+        }
+
+        private static Command CreateGetTokenSubcommand(DefaultSettings settings)
+        {
+            Command getAccessTokenCommand = new Command(
+                "get-token",
+                "Get an access token for current user for authentication with Azure resources.")
+            {
+                // REQUIRED
+                // -------------------------------------------------------------------
+                // --key-vault
+                OptionFactory.CreateKeyVaultStoreOption(required: true),
+
+                // --tenant-id
+                OptionFactory.CreateTenantIdOption(required: true),
+
+                // OPTIONAL
+                // -------------------------------------------------------------------
+                // --clean
+                OptionFactory.CreateCleanOption(required: false),
+
+                // --log-dir
+                OptionFactory.CreateLogDirectoryOption(required: false, settings.LogDirectory),
+
+                 // --logger
+                OptionFactory.CreateLoggerOption(required: false, settings.Loggers),
+
+                // --log-level
+                OptionFactory.CreateLogLevelOption(required: false, LogLevel.Information),
+
+                // --log-retention
+                OptionFactory.CreateLogRetentionOption(required: false),
+
+                // --log-to-file
+                OptionFactory.CreateLogToFileFlag(required: false, settings.LogToFile),
+
+                // --output-file
+                OptionFactory.CreateOutputFileOption(required: false),
+
+                // --parameters
+                OptionFactory.CreateParametersOption(required: false),
+
+                // --verbose
+                OptionFactory.CreateVerboseFlag(required: false, false)
+            };
+
+            return getAccessTokenCommand;
         }
 
         private static Command CreateRemoteSubcommand(DefaultSettings settings)
