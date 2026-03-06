@@ -1418,7 +1418,7 @@ namespace VirtualClient
         }
 
         /// <summary>
-        /// Command line option defines the authentication token to use for request authentication.
+        /// Command line option defines an access token to use for request authentication.
         /// </summary>
         /// <param name="required">Sets this option as required.</param>
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
@@ -1429,6 +1429,26 @@ namespace VirtualClient
                 Name = "AccessToken",
                 Description = "A token to use for authentication with Azure resources.",
                 ArgumentHelpName = "token",
+                AllowMultipleArgumentsPerToken = false
+            };
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+            return option;
+        }
+
+        /// <summary>
+        /// Command line option defines a path to a file containing an access token to use for 
+        /// request authentication.
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateTokenFileOption(bool required = false, object defaultValue = null)
+        {
+            Option<string> option = new Option<string>(new string[] { "--token-file" })
+            {
+                Name = "TokenFilePath",
+                Description = "Path to a file containing a token to use for authentication with Azure resources.",
+                ArgumentHelpName = "path",
                 AllowMultipleArgumentsPerToken = false
             };
 

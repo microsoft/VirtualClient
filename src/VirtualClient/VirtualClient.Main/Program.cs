@@ -434,6 +434,9 @@ namespace VirtualClient
             // --token
             Option tokenOption = OptionFactory.CreateTokenOption(required: false);
 
+            // --token-file
+            Option tokenFileOption = OptionFactory.CreateTokenFileOption(required: false);
+
             Command bootstrapCommand = new Command(
                 "bootstrap",
                 "Bootstraps/installs a dependency package on the system.")
@@ -443,13 +446,13 @@ namespace VirtualClient
 
                 // OPTIONAL
                 // -------------------------------------------------------------------     
-
                 packageOption, 
                 packageStoreOption, 
                 certNameOption, 
                 keyVaultOption, 
                 tenantIdOption, 
                 tokenOption,
+                tokenFileOption,
 
                 // --clean
                 OptionFactory.CreateCleanOption(required: false),
@@ -530,6 +533,7 @@ namespace VirtualClient
                 OptionResult packageStore = result.FindResultFor(packageStoreOption);
                 OptionResult certName = result.FindResultFor(certNameOption);
                 OptionResult accessToken = result.FindResultFor(tokenOption);
+                OptionResult accessTokenFile = result.FindResultFor(tokenFileOption);
                 OptionResult keyVault = result.FindResultFor(keyVaultOption);
                 OptionResult tenantId = result.FindResultFor(tenantIdOption);
 
@@ -554,7 +558,7 @@ namespace VirtualClient
                         throw new ArgumentException("The Key Vault URI must be provided (--key-vault) when installing a certificate.");
                     }
 
-                    if (accessToken == null)
+                    if (accessToken == null && accessTokenFile == null)
                     {
                         // The tenant ID is required if the Microsoft Entra and certificate information is not provided
                         // in the URI for the Key Vault.
@@ -568,6 +572,11 @@ namespace VirtualClient
                             throw new ArgumentException("The Azure tenant ID must be provided (--tenant-id) when installing a certificate.");
                         }
                     }
+                }
+
+                if (accessToken != null && accessTokenFile != null)
+                {
+                    throw new ArgumentException("Ambiguous usage. The token (--token) and token path (--token-path) options cannot be used at the same time.");
                 }
 
                 return null;

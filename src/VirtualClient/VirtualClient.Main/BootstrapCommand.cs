@@ -29,6 +29,12 @@ namespace VirtualClient
         public string AccessToken { get; set; }
 
         /// <summary>
+        /// Defines a path to a file containing an access token for Key Vault authentication when 
+        /// installing certificates.
+        /// </summary>
+        public string TokenFilePath { get; set; }
+
+        /// <summary>
         /// The name (logical name) to use when registering the package.
         /// </summary>
         public string Name { get; set; }
@@ -93,11 +99,17 @@ namespace VirtualClient
 
         protected void SetupCertificateInstallation()
         {
+            string accessToken = this.AccessToken;
+            if (!string.IsNullOrWhiteSpace(this.TokenFilePath))
+            {
+                accessToken = File.ReadAllText(this.TokenFilePath)?.Trim();
+            }
+
             // If Access Token is not provided and Tenant ID is provided, bootstrap will get token using browser-based
             // (or device code flow) authentication to retrieve token.
             this.Parameters["CertificateName"] = this.CertificateName;
             this.Parameters["FilePath"] = this.OutputFilePath;
-            this.Parameters["AccessToken"] = this.AccessToken;
+            this.Parameters["AccessToken"] = accessToken;
             this.Parameters["TenantId"] = this.TenantId;
         }
 
@@ -137,6 +149,7 @@ namespace VirtualClient
                 // e.g.
                 // --key-vault="https://any.vault.azure.net?cid=8cdebecc...&tid=42005d4d...&crti=ANY&crts=any.corp.azure.com"
                 if (string.IsNullOrWhiteSpace(this.AccessToken) 
+                    && string.IsNullOrWhiteSpace(this.TokenFilePath)
                     && string.IsNullOrWhiteSpace(this.TenantId) 
                     && (this.KeyVaultStore as DependencyKeyVaultStore)?.Credentials == null)
                 {

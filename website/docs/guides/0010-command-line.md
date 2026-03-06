@@ -197,7 +197,8 @@ The following tables describe the various subcommands that are supported by the 
   | --s, --system=\<executionSystem\>                               | No       | string/text                  | Execution system/platform identifier (e.g. Azure). |
   | --tdir, --temp-dir=\<path\>                                     | No       | string/path                  | Alternate temp directory. |
   | --tenant-Id, --tid=\<tenantId\>                                 | No       | string                       | Azure Active Directory tenant ID used for authentication. |
-  | --token=\<accessToken\>                                         | No       | string                       | Optional access token used to authenticate to Key Vault when installing certificates. If not provided, Virtual Client uses the default Azure credential flow (e.g. Azure CLI, Managed Identity, etc.). |
+  | --token=\<accessToken\>                                         | No       | string                       | An access token used to authenticate to Key Vault when installing certificates. |
+  | --token-path=\<path\>                                           | No       | string/path                  | A path to a file containing an access token used to authenticate to Key Vault when installing certificates. |
   | --wait, --exit-wait=\<mins_or_timespan\>                        | No       | timespan or integer          | Wait for graceful exit/telemetry flush. |
   | --verbose                                                       | No       |                              | Verbose console logging (equivalent to `--log-level=Trace`). |
   | -?, -h, --help                                                  | No       |                              | Show help. |
@@ -246,16 +247,21 @@ The following tables describe the various subcommands that are supported by the 
       --log-level=Information
       --log-retention=01.00:00:00
 
-    VirtualClient.exe bootstrap 
-        --cert-name="mycert123" 
-        --key-vault="https://my-key-vault.vault.azure.net" 
-        --tenant-id="ac5c84c4-7ffd-48e2-923c-94ebf8e57e49"
+  VirtualClient.exe bootstrap 
+      --cert-name="mycert123" 
+      --key-vault="https://my-key-vault.vault.azure.net" 
+      --tenant-id="ac5c84c4-7ffd-48e2-923c-94ebf8e57e49"
 
-    VirtualClient.exe bootstrap 
-        --cert-name="mycert123" 
-        --key-vault="https://my-key-vault.vault.azure.net" 
-        --tenant-id="ac5c84c4-7ffd-48e2-923c-94ebf8e57e49"
-        --output-file="C:\Users\Any\mycert123.pfx"
+  VirtualClient.exe bootstrap 
+      --cert-name="mycert123" 
+      --key-vault="https://my-key-vault.vault.azure.net" 
+      --tenant-id="ac5c84c4-7ffd-48e2-923c-94ebf8e57e49"
+      --output-file="C:\Users\Any\mycert123.pfx"
+
+  VirtualClient.exe bootstrap 
+      --cert-name="mycert123" 
+      --key-vault="https://my-key-vault.vault.azure.net" 
+      --token-path="C:\Users\Any\access_token.txt"
   ```
 
 * ### clean
@@ -320,9 +326,9 @@ The following tables describe the various subcommands that are supported by the 
   - If browser-based authentication is available, Virtual Client will open/prompt a sign-in in your browser.
   - If browser-based authentication is not available, Virtual Client will automatically switch to **device code flow** and display a URL and a short code. Complete sign-in on another authenticated device using the provided URL and code.
 
-  | Option                                         | Required | Data Type     | Description |
+  | Option                                        | Required | Data Type     | Description |
   |-----------------------------------------------|----------|---------------|-------------|
-  | --kv, --keyvault, --key-vault=\<uri\>         | Yes      | uri           | Azure Key Vault URI used as the authentication resource (e.g. `https://myvault.vault.azure.net/`). |
+  | --key-vault=\<uri\>                           | Yes      | uri           | Azure Key Vault URI used as the authentication resource (e.g. `https://myvault.vault.azure.net/`). |
   | --tenant-Id, --tid=\<tenantId\>               | Yes      | string        | Azure Active Directory tenant ID used for authentication. | 
   | --clean=\<target,target...\>                  | No       | string        | Perform an initial cleanup (logs/packages/state/temp/all). |
   | --output-file=\<path\>                        | No       | string/path   | A path to a file in which to output the access token. |
