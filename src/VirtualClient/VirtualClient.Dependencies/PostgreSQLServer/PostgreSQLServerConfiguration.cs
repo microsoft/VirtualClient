@@ -124,7 +124,23 @@ namespace VirtualClient.Dependencies
                 return sharedMemoryBuffer?.ToString();
             }
         }
+        
+        /// <summary>
+        /// stripedisk mount point.
+        /// </summary>
+        public string StripeDiskMountPoint
+        {
+            get
+            {
+                if (this.Parameters.TryGetValue(nameof(this.StripeDiskMountPoint), out IConvertible stripediskmountpoint) && stripediskmountpoint != null)
+                {
+                    return stripediskmountpoint.ToString();
+                }
 
+                return string.Empty;
+            }
+        }
+        
         /// <summary>
         /// Retrieves the interface to interacting with the underlying system.
         /// </summary>
@@ -180,8 +196,30 @@ namespace VirtualClient.Dependencies
             string serverIp = (this.GetLayoutClientInstances(ClientRole.Server, false) ?? Enumerable.Empty<ClientInstance>())
                                     .FirstOrDefault()?.IPAddress
                                     ?? IPAddress.Loopback.ToString();
-
+            
             string arguments = $"{this.packageDirectory}/configure-server.py --dbName {this.DatabaseName} --serverIp {serverIp} --password {this.SuperUserPassword} --port {this.Port} --inMemory {this.SharedMemoryBuffer}";
+
+            string innoDbDirs = string.Empty;
+            if (this.Parameters.ContainsKey(nameof(this.DiskFilter)) || !string.IsNullOrEmpty(this.StripeDiskMountPoint))
+            {
+                innoDbDirs = this.Parameters.ContainsKey(nameof(this.DiskFilter)) ? await this.GetPostgreSQLInnodbDirectoriesAsync(cancellationToken) : string.Empty;
+                innoDbDirs = !string.IsNullOrEmpty(this.StripeDiskMountPoint) ? this.StripeDiskMountPoint : innoDbDirs;
+
+                if (!string.IsNullOrEmpty(innoDbDirs))
+                {
+                    if (innoDbDirs.Split(';', StringSplitOptions.RemoveEmptyEntries).Length == 1)
+                    {
+                        string cleanDirectory = innoDbDirs.TrimEnd(';');
+                        arguments += $" --innodbDirectory {cleanDirectory}";
+                    }
+                    else
+                    {
+                        throw new WorkloadException(
+                            "Multiple InnoDB directories detected. Please specify a single directory for PostgreSQL configuration when using the DiskFilter parameter explicitly for PostgreSQLServerConfiguration.",
+                            ErrorReason.InvalidProfileDefinition);
+                    }
+                }
+            }
 
             using (IProcessProxy process = await this.ExecuteCommandAsync(
                "python3",
@@ -216,7 +254,7 @@ namespace VirtualClient.Dependencies
                 }
             }
         }
-
+        
         private async Task DistributePostgreSQLDatabaseAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             string innoDbDirs = await this.GetPostgreSQLInnodbDirectoriesAsync(cancellationToken);
