@@ -1,0 +1,28 @@
+{
+    "Description": "Cassandra Workload",
+    "Metadata": {
+        "RecommendedMinimumExecutionTime": "00:05:00",
+        "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64",
+        "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows"
+    },
+    "Actions": [
+        {
+            "Type": "CassandraExecutor",
+            "Parameters": {
+                "Scenario": "Cassandra stress test for READ",
+                "command": "cassandra-stress",
+                "parameters": "read n=20000 -rate threads=50"
+            }
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "LinuxPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallCassandraPackage",
+                "Packages-Apt": "cassandra"
+            }
+        }
+    ]
+} 
+
