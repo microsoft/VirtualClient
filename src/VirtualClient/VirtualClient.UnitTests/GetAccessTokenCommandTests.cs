@@ -8,6 +8,7 @@ namespace VirtualClient.UnitTests
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.Extensions.DependencyInjection;
     using NUnit.Framework;
     using VirtualClient.Contracts;
 
@@ -73,7 +74,7 @@ namespace VirtualClient.UnitTests
             /// Follows the BootstrapCommandTests pattern: do not run the ExecuteProfileCommand pipeline.
             /// We only validate side-effects from GetAccessTokenCommand.ExecuteAsync (profiles/parameters).
             /// </summary>
-            public override Task<int> ExecuteAsync(string[] args, CancellationTokenSource cancellationTokenSource)
+            protected override Task<int> ExecuteAsync(string[] args, IServiceCollection dependencies, CancellationTokenSource cancellationTokenSource)
             {
                 this.ExecuteGetTokenOnly(args, cancellationTokenSource);
                 return Task.FromResult(0);

@@ -449,7 +449,7 @@ namespace VirtualClient
         /// <summary>
         /// Returns true/false whether the content blob store is defined and exists in the dependencies.
         /// </summary>
-        /// <param name="dependencies">The dependencies to verify.</param>
+        /// <param name="dependencies">The dependencies containing the store managers.</param>
         /// <param name="store">The content blob store information if it exists.</param>
         /// <returns>True if the content blob store is defined. False if not.</returns>
         public static bool TryGetContentStoreManager(this IServiceCollection dependencies, out IBlobManager store)
@@ -462,7 +462,7 @@ namespace VirtualClient
         /// Returns true/false whether the content blob store is defined and exists in the dependencies
         /// for the component.
         /// </summary>
-        /// <param name="component">The component with dependencies to verify.</param>
+        /// <param name="component">The component in operation.</param>
         /// <param name="store">The packages blob store information if it exists.</param>
         /// <returns>True if the content blob store is defined. False if not.</returns>
         public static bool TryGetContentStoreManager(this VirtualClientComponent component, out IBlobManager store)
@@ -474,7 +474,7 @@ namespace VirtualClient
         /// <summary>
         /// Returns true/false whether the packages blob store is defined and exists in the dependencies.
         /// </summary>
-        /// <param name="dependencies">The dependencies to verify.</param>
+        /// <param name="dependencies">The dependencies containing the store managers.</param>
         /// <param name="store">The packages blob store information if it exists.</param>
         /// <returns>True if the packages blob store is defined. False if not.</returns>
         public static bool TryGetPackageStoreManager(this IServiceCollection dependencies, out IBlobManager store)
@@ -487,13 +487,42 @@ namespace VirtualClient
         /// Returns true/false whether the packages blob store is defined and exists in the dependencies
         /// for the component.
         /// </summary>
-        /// <param name="component">The component with dependencies to verify.</param>
+        /// <param name="component">The component in operation.</param>
         /// <param name="store">The packages blob store information if it exists.</param>
         /// <returns>True if the packages blob store is defined. False if not.</returns>
         public static bool TryGetPackageStoreManager(this VirtualClientComponent component, out IBlobManager store)
         {
             component.ThrowIfNull(nameof(component));
             return VirtualClientComponentExtensions.TryGetBlobStore(component.Dependencies, DependencyStore.Packages, out store);
+        }
+
+        /// <summary>
+        /// Returns true if a set target SSH clients exist in the dependencies.
+        /// </summary>
+        /// <param name="dependencies">The dependencies containing the clients.</param>
+        /// <param name="sshClients">Target SSH clients as defined on the command line.</param>
+        /// <returns>True if target SSH clients exist. False if not.</returns>
+        public static bool TryGetSshClients(this IServiceCollection dependencies, out IEnumerable<ISshClientProxy> sshClients)
+        {
+            sshClients = null;
+            if (dependencies.TryGetService<IEnumerable<ISshClientProxy>>(out IEnumerable<ISshClientProxy> client))
+            {
+                sshClients = client;
+            }
+
+            return sshClients != null;
+        }
+
+        /// <summary>
+        /// Returns true if a set target SSH clients exist in the dependencies for the component.
+        /// </summary>
+        /// <param name="component">The component in operation.</param>
+        /// <param name="sshClients">Target SSH clients as defined on the command line.</param>
+        /// <returns>True if target SSH clients exist. False if not.</returns>
+        public static bool TryGetSshClients(this VirtualClientComponent component, out IEnumerable<ISshClientProxy> sshClients)
+        {
+            sshClients = null;
+            return VirtualClientComponentExtensions.TryGetSshClients(component.Dependencies, out sshClients);
         }
 
         /// <summary>

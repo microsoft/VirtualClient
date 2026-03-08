@@ -227,7 +227,7 @@ namespace VirtualClient
         /// <summary>
         /// The target agents/systems to establish an SSH session (e.g. anyuser@192.168.1.15;pass_w_@rd).
         /// </summary>
-        public IEnumerable<string> TargetAgents { get; set; }
+        public IEnumerable<string> Targets { get; set; }
 
         /// <summary>
         /// An alternate directory to which temp files/documents should be written. Setting this overrides
@@ -268,7 +268,94 @@ namespace VirtualClient
         /// <param name="args">The arguments provided to the application on the command line.</param>
         /// <param name="cancellationTokenSource">Provides a token that can be used to cancel the command operations.</param>
         /// <returns>The exit code for the command operations.</returns>
-        public abstract Task<int> ExecuteAsync(string[] args, CancellationTokenSource cancellationTokenSource);
+        public async Task<int> ExecuteAsync(string[] args, CancellationTokenSource cancellationTokenSource)
+        {
+            int exitCode = 0;
+            ILogger logger = null;
+
+            try
+            {
+                PlatformID osPlatform = Environment.OSVersion.Platform;
+                Architecture cpuArchitecture = RuntimeInformation.ProcessArchitecture;
+
+                PlatformSpecifics.ThrowIfNotSupported(osPlatform);
+                PlatformSpecifics.ThrowIfNotSupported(cpuArchitecture);
+                PlatformSpecifics platformSpecifics = new PlatformSpecifics(osPlatform, cpuArchitecture);
+
+                if (this.LoggingLevel == null)
+                {
+                    // Default log level is Debug/Verbose to ensure standard output + error
+                    // for processes executed is output to console/screen.
+                    this.LoggingLevel = LogLevel.Debug;
+                }
+
+                // Ensure a valid experiment ID and client ID are defined if not
+                // provided on the command line.
+                if (string.IsNullOrWhiteSpace(this.ClientId))
+                {
+                    this.ClientId = Environment.MachineName.ToLowerInvariant();
+                }
+
+                if (string.IsNullOrWhiteSpace(this.ExperimentId))
+                {
+                    this.ExperimentId = Guid.NewGuid().ToString().ToLowerInvariant();
+                }
+
+                this.Initialize(args, platformSpecifics);
+                this.SetGlobalTelemetryProperties(args);
+
+                // Users can override the location of the "logs", "packages" and "state" folders on the command line
+                // or by using environment variables. This is used in scenarios where VC may be used as a base for other
+                // applications that want to have a shared resource + dependency directories.
+                this.EvaluateDirectoryPathOverrides(platformSpecifics);
+
+                ComponentTypeCache.Instance.LoadComponentTypes(AppDomain.CurrentDomain.BaseDirectory);
+
+                // Setup any dependencies required by the application.
+                IServiceCollection dependencies = this.InitializeDependencies(args, platformSpecifics);
+                logger = dependencies.GetService<ILogger>();
+
+                exitCode = await this.ExecuteAsync(args, dependencies, cancellationTokenSource);
+            }
+            catch (OperationCanceledException)
+            {
+                // Expected when the Ctrl-C is pressed to cancel operation.
+            }
+            catch (NotSupportedException exc)
+            {
+                Program.LogErrorMessage(logger, exc, EventContext.Persisted());
+                exitCode = (int)ErrorReason.NotSupported;
+            }
+            catch (StartupException exc)
+            {
+                // The type of exceptions are captured upstream by the profile
+                // execution components.
+                Program.LogErrorMessage(logger, exc, EventContext.Persisted());
+                exitCode = (int)exc.Reason;
+            }
+            catch (VirtualClientException exc)
+            {
+                // The type of exceptions are captured upstream by the profile
+                // execution components.
+                exitCode = (int)exc.Reason;
+            }
+            catch (Exception exc)
+            {
+                Program.LogErrorMessage(logger, exc, EventContext.Persisted());
+                exitCode = 1;
+            }
+
+            return exitCode;
+        }
+
+        /// <summary>
+        /// Executes the default workload execution command.
+        /// </summary>
+        /// <param name="args">The arguments provided to the application on the command line.</param>
+        /// <param name="dependencies">Dependencies/services created for the application.</param>
+        /// <param name="cancellationTokenSource">Provides a token that can be used to cancel the command operations.</param>
+        /// <returns>The exit code for the command operations.</returns>
+        protected abstract Task<int> ExecuteAsync(string[] args, IServiceCollection dependencies, CancellationTokenSource cancellationTokenSource);
 
         /// <summary>
         /// Executes clean/reset operations within the Virtual Client application folder. This is used to 
@@ -369,13 +456,17 @@ namespace VirtualClient
         /// <param name="platformSpecifics">Defines the fundamental directory paths for the application.</param>
         protected void EvaluateDirectoryPathOverrides(PlatformSpecifics platformSpecifics)
         {
+            // Logs Directory
+            // -------------------------------------------------
             // Priority (logs directory):
             // 1) --log-dir command line option
             // 2) VC_LOGS_DIR environment variable
+            // 3) Default location
+            string logDirectory = platformSpecifics.LogsDirectory;
             if (!string.IsNullOrWhiteSpace(this.LogDirectory))
             {
                 // Users can override on the command line with the --log-dir option.
-                platformSpecifics.LogsDirectory = this.EvaluatePathReplacements(this.LogDirectory);
+                logDirectory = this.LogDirectory;
             }
             else
             {
@@ -383,17 +474,29 @@ namespace VirtualClient
                 string environmentVariableValue = platformSpecifics.GetEnvironmentVariable(EnvironmentVariable.VC_LOGS_DIR);
                 if (!string.IsNullOrWhiteSpace(environmentVariableValue))
                 {
-                    platformSpecifics.LogsDirectory = this.EvaluatePathReplacements(environmentVariableValue);
+                    logDirectory = environmentVariableValue;
                 }
             }
 
+            // Fully qualify the log directory.
+            if (!Path.IsPathRooted(logDirectory))
+            {
+                logDirectory = Path.GetFullPath(logDirectory);
+            }
+
+            platformSpecifics.LogsDirectory = this.EvaluatePathReplacements(logDirectory, platformSpecifics);
+
+            // Packages Directory
+            // -------------------------------------------------
             // Priority (packages directory):
             // 1) --package-dir command line option
             // 2) VC_PACKAGES_DIR environment variable
+            // 3) Default location
+            string packageDirectory = platformSpecifics.PackagesDirectory;
             if (!string.IsNullOrWhiteSpace(this.PackageDirectory))
             {
                 // Users can override on the command line with the --package-dir option.
-                platformSpecifics.PackagesDirectory = this.EvaluatePathReplacements(this.PackageDirectory);
+                packageDirectory = this.PackageDirectory;
             }
             else
             {
@@ -401,17 +504,29 @@ namespace VirtualClient
                 string environmentVariableValue = platformSpecifics.GetEnvironmentVariable(EnvironmentVariable.VC_PACKAGES_DIR);
                 if (!string.IsNullOrWhiteSpace(environmentVariableValue))
                 {
-                    platformSpecifics.PackagesDirectory = this.EvaluatePathReplacements(environmentVariableValue);
+                    packageDirectory = environmentVariableValue;
                 }
             }
 
+            // Fully qualify the package directory.
+            if (!Path.IsPathRooted(packageDirectory))
+            {
+                packageDirectory = Path.GetFullPath(packageDirectory);
+            }
+
+            platformSpecifics.PackagesDirectory = this.EvaluatePathReplacements(packageDirectory, platformSpecifics);
+
+            // State Directory
+            // -------------------------------------------------
             // Priority (state directory):
             // 1) --state-dir command line option
             // 2) VC_STATE_DIR environment variable
+            // 3) Default location
+            string stateDirectory = platformSpecifics.StateDirectory;
             if (!string.IsNullOrWhiteSpace(this.StateDirectory))
             {
                 // Users can override on the command line with the --state-dir option.
-                platformSpecifics.StateDirectory = this.EvaluatePathReplacements(this.StateDirectory);
+                stateDirectory = this.StateDirectory;
             }
             else
             {
@@ -419,17 +534,29 @@ namespace VirtualClient
                 string environmentVariableValue = platformSpecifics.GetEnvironmentVariable(EnvironmentVariable.VC_STATE_DIR);
                 if (!string.IsNullOrWhiteSpace(environmentVariableValue))
                 {
-                    platformSpecifics.StateDirectory = this.EvaluatePathReplacements(environmentVariableValue);
+                    stateDirectory = environmentVariableValue;
                 }
             }
 
+            // Fully qualify the state directory.
+            if (!Path.IsPathRooted(stateDirectory))
+            {
+                stateDirectory = OptionFactory.ToFullPath(stateDirectory);
+            }
+
+            platformSpecifics.StateDirectory = this.EvaluatePathReplacements(stateDirectory, platformSpecifics);
+
+            // Temp Directory
+            // -------------------------------------------------
             // Priority (temp directory):
             // 1) --temp-dir command line option
             // 2) VC_TEMP_DIR environment variable
+            // 3) Default location
+            string tempDirectory = platformSpecifics.TempDirectory;
             if (!string.IsNullOrWhiteSpace(this.TempDirectory))
             {
                 // Users can override on the command line with the --temp-dir option.
-                platformSpecifics.TempDirectory = this.EvaluatePathReplacements(this.TempDirectory);
+                tempDirectory = this.TempDirectory;
             }
             else
             {
@@ -437,9 +564,17 @@ namespace VirtualClient
                 string environmentVariableValue = platformSpecifics.GetEnvironmentVariable(EnvironmentVariable.VC_TEMP_DIR);
                 if (!string.IsNullOrWhiteSpace(environmentVariableValue))
                 {
-                    platformSpecifics.TempDirectory = this.EvaluatePathReplacements(environmentVariableValue);
+                    tempDirectory = environmentVariableValue;
                 }
             }
+
+            // Fully qualify the temp directory.
+            if (!Path.IsPathRooted(tempDirectory))
+            {
+                tempDirectory = Path.GetFullPath(tempDirectory);
+            }
+
+            platformSpecifics.TempDirectory = this.EvaluatePathReplacements(tempDirectory, platformSpecifics);
         }
 
         /// <summary>
@@ -494,17 +629,20 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Initializes the command runtime before dependency initialization and execution.
+        /// </summary>
+        protected virtual void Initialize(string[] args, PlatformSpecifics platformSpecifics)
+        {
+            // Allows derived command classes to modify any of the existing
+            // properties before setting global telemetry, initializing dependencies,
+            // and execution.
+        }
+
+        /// <summary>
         /// Initializes dependencies required by Virtual Client application operations.
         /// </summary>
-        protected virtual IServiceCollection InitializeDependencies(string[] args)
+        protected virtual IServiceCollection InitializeDependencies(string[] args, PlatformSpecifics platformSpecifics)
         {
-            PlatformID osPlatform = Environment.OSVersion.Platform;
-            Architecture cpuArchitecture = RuntimeInformation.ProcessArchitecture;
-
-            PlatformSpecifics.ThrowIfNotSupported(osPlatform);
-            PlatformSpecifics.ThrowIfNotSupported(cpuArchitecture);
-            PlatformSpecifics platformSpecifics = new PlatformSpecifics(osPlatform, cpuArchitecture);
-
             if (this.Metadata?.Any() == true)
             {
                 // Metadata passed into VC on the command line.
@@ -516,18 +654,6 @@ namespace VirtualClient
                 // Parameters passed into VC on the command line.
                 VirtualClientRuntime.CommandLineParameters = new ReadOnlyDictionary<string, IConvertible>(this.Parameters);
             }
-
-            // Ensure that isolation is in place for controller operations. This helps
-            // protect against race conditions with package management/download/extract operations.
-            if (this.TargetAgents?.Any() == true)
-            {
-                this.Isolated = true;
-            }
-
-            // Users can override the location of the "logs", "packages" and "state" folders on the command line
-            // or by using environment variables. This is used in scenarios where VC may be used as a base for other
-            // applications that want to have a shared resource + dependency directories.
-            this.EvaluateDirectoryPathOverrides(platformSpecifics);
 
             if (this.Verbose)
             {
@@ -541,8 +667,6 @@ namespace VirtualClient
             IConfiguration configuration = Program.LoadAppSettings();
             IConvertible telemetrySource = null;
             this.Parameters?.TryGetValue(GlobalParameter.TelemetrySource, out telemetrySource);
-
-            ComponentTypeCache.Instance.LoadComponentTypes(AppDomain.CurrentDomain.BaseDirectory);
 
             ISystemManagement systemManagement = DependencyFactory.CreateSystemManager(this.ClientId, this.ExperimentId, platformSpecifics, this.Isolated);
             IApiManager apiManager = new ApiManager(systemManagement.FirewallManager);
@@ -633,10 +757,10 @@ namespace VirtualClient
             }
 
             // Add in any SSH targets to the dependencies.
-            if (this.TargetAgents?.Any() == true)
+            if (this.Targets?.Any() == true)
             {
                 List<ISshClientProxy> sshClients = new List<ISshClientProxy>();
-                foreach (string targetAgent in this.TargetAgents)
+                foreach (string targetAgent in this.Targets)
                 {
                     if (SshClientProxy.TryGetSshTargetInformation(targetAgent, out string host, out string username, out string password))
                     {
@@ -677,7 +801,7 @@ namespace VirtualClient
                     loggerParameters = loggerDefinition.Substring(indexOfDelimiter + 1).Trim();
                 }
 
-                loggerParameters = this.EvaluatePathReplacements(loggerParameters);
+                loggerParameters = this.EvaluatePathReplacements(loggerParameters, platformSpecifics);
 
                 switch (loggerName.ToLowerInvariant())
                 {
@@ -921,7 +1045,7 @@ namespace VirtualClient
             }
         }
 
-        private string EvaluatePathReplacements(string path)
+        private string EvaluatePathReplacements(string path, PlatformSpecifics platformSpecifics)
         {
             if (this.pathReplacements == null)
             {
@@ -930,7 +1054,14 @@ namespace VirtualClient
                 {
                     { "experimentId", this.ExperimentId },
                     { "agentId", this.ClientId },
-                    { "clientId", this.ClientId }
+                    { "clientId", this.ClientId },
+                    { "clientInstance", this.ClientInstance.ToString() },
+
+                    // Default directory/path placeholders are supported as well.
+                    { "logDir", platformSpecifics.LogsDirectory },
+                    { "packageDir", platformSpecifics.PackagesDirectory },
+                    { "stateDir", platformSpecifics.StateDirectory },
+                    { "tempDir", platformSpecifics.TempDirectory },
                 };
 
                 if (this.Metadata?.Any() == true)
@@ -939,7 +1070,7 @@ namespace VirtualClient
                 }
             }
 
-            return FileContext.ResolvePathTemplate(path, this.pathReplacements);
+            return FileContext.ResolvePathTemplate(path, this.pathReplacements, throwIfNotMatched: true);
         }
     }
 }

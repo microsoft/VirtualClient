@@ -55,23 +55,11 @@ namespace VirtualClient
         public string TenantId { get; set; }
 
         /// <summary>
-        /// Executes the bootstrap command.
-        /// Supports:
-        /// - Package installation from remote store (requires --packages, optionally --package for specific package name)
-        /// - Certificate installation (requires --cert-name and --key-vault)
-        /// - Both certificate and package installation (--cert-name --key-vault --packages)
+        /// Initializes the command runtime before dependency initialization and execution.
         /// </summary>
-        public override Task<int> ExecuteAsync(string[] args, CancellationTokenSource cancellationTokenSource)
+        protected override void Initialize(string[] args, PlatformSpecifics platformSpecifics)
         {
             this.Validate();
-            this.Initialize();
-
-            return base.ExecuteAsync(args, cancellationTokenSource);
-            
-        }
-
-        protected void Initialize()
-        {
             if (this.Parameters == null)
             {
                 this.Parameters = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);

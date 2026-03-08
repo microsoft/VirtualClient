@@ -3,21 +3,17 @@
 
 namespace VirtualClient
 {
-    using System;
     using System.Collections.Generic;
     using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
-    using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Logging.Abstractions;
-    using Newtonsoft.Json.Converters;
-    using Newtonsoft.Json.Serialization;
     using Newtonsoft.Json;
-    using VirtualClient.Common;
+    using Newtonsoft.Json.Converters;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Contracts;
@@ -60,12 +56,12 @@ namespace VirtualClient
         /// Executes the operations to reset the environment.
         /// </summary>
         /// <param name="args">The arguments provided to the application on the command line.</param>
+        /// <param name="dependencies">Dependencies/services created for the application.</param>
         /// <param name="cancellationTokenSource">Provides a token that can be used to cancel the command operations.</param>
         /// <returns>The exit code for the command operations.</returns>
-        public override async Task<int> ExecuteAsync(string[] args, CancellationTokenSource cancellationTokenSource)
+        protected override async Task<int> ExecuteAsync(string[] args, IServiceCollection dependencies, CancellationTokenSource cancellationTokenSource)
         {
             CancellationToken cancellationToken = cancellationTokenSource.Token;
-            IServiceCollection dependencies = this.InitializeDependencies(args);
             IEnumerable<string> profiles = await this.EvaluateProfilesAsync(dependencies);
 
             if (profiles?.Any() == true)
@@ -74,6 +70,7 @@ namespace VirtualClient
                 {
                     string profileName = Path.GetFileName(filePath);
                     ExecutionProfile profile = await this.ReadExecutionProfileAsync(filePath, dependencies, cancellationToken);
+
                     if (profile.ProfileFormat == "JSON")
                     {
                         await this.SerializeToYamlAsync(dependencies, profileName, profile);
@@ -91,10 +88,9 @@ namespace VirtualClient
         /// <summary>
         /// Initializes dependencies required by Virtual Client application operations.
         /// </summary>
-        protected override IServiceCollection InitializeDependencies(string[] args)
+        protected override IServiceCollection InitializeDependencies(string[] args, PlatformSpecifics platformSpecifics)
         {
             IServiceCollection dependencies = new ServiceCollection();
-            PlatformSpecifics platformSpecifics = new PlatformSpecifics(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture);
 
             dependencies.AddSingleton<PlatformSpecifics>(platformSpecifics);
             dependencies.AddSingleton<IFileSystem>(new FileSystem());

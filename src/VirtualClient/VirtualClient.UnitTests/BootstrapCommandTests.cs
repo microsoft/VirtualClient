@@ -7,12 +7,23 @@ namespace VirtualClient
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.Extensions.DependencyInjection;
     using NUnit.Framework;
+    using VirtualClient.Contracts;
 
     [TestFixture]
     [Category("Unit")]
     public class BootstrapCommandTests
     {
+        private MockFixture mockFixture;
+
+        [SetUp]
+        public void Setup()
+        {
+            this.mockFixture = new MockFixture();
+            this.mockFixture.Setup(PlatformID.Unix);
+        }
+
         [Test]
         public void BootstrapCommandValidatesRequiredParameters()
         {
@@ -63,10 +74,11 @@ namespace VirtualClient
                 var command = new TestBootstrapCommand
                 {
                     CertificateName = "any-cert",
+                    KeyVaultStore = new DependencyKeyVaultStore(DependencyStore.KeyVault, new Uri("https://any.vault.azure.net")),
                     TenantId = Guid.NewGuid().ToString()
                 };
 
-                command.Initialize();
+                command.Initialize(Array.Empty<string>(), this.mockFixture.PlatformSpecifics);
 
                 Assert.IsNotEmpty(command.Profiles);
                 Assert.IsTrue(command.Profiles.Count() == 1);
@@ -83,10 +95,11 @@ namespace VirtualClient
                 {
                     AccessToken = "anyT@k3n",
                     CertificateName = "any-cert",
+                    KeyVaultStore = new DependencyKeyVaultStore(DependencyStore.KeyVault, new Uri("https://any.vault.azure.net")),
                     TenantId = Guid.NewGuid().ToString()
                 };
 
-                command.Initialize();
+                command.Initialize(Array.Empty<string>(), this.mockFixture.PlatformSpecifics);
 
                 Assert.IsNotEmpty(command.Parameters);
                 Assert.IsTrue(command.Parameters.TryGetValue("AccessToken", out IConvertible accessToken) && accessToken.ToString() == command.AccessToken);
@@ -103,10 +116,11 @@ namespace VirtualClient
                 var command = new TestBootstrapCommand
                 {
                     PackageName = "any-package.zip",
+                    PackageStore = new DependencyBlobStore(DependencyStore.Packages, "https://any.storage"),
                     Name = "any-package"
                 };
 
-                command.Initialize();
+                command.Initialize(Array.Empty<string>(), this.mockFixture.PlatformSpecifics);
 
                 Assert.IsNotEmpty(command.Profiles);
                 Assert.IsTrue(command.Profiles.Count() == 1);
@@ -122,10 +136,11 @@ namespace VirtualClient
                 var command = new TestBootstrapCommand
                 {
                     PackageName = "any-package.zip",
+                    PackageStore = new DependencyBlobStore(DependencyStore.Packages, "https://any.storage"),
                     Name = "any-package"
                 };
 
-                command.Initialize();
+                command.Initialize(Array.Empty<string>(), this.mockFixture.PlatformSpecifics);
 
                 Assert.IsNotEmpty(command.Parameters);
                 Assert.IsTrue(command.Parameters.TryGetValue("Package", out IConvertible packageName) && packageName.ToString() == command.PackageName);
@@ -139,14 +154,14 @@ namespace VirtualClient
             /// Prevents the ExecuteProfileCommand pipeline from running. We only want to validate
             /// the side-effects of BootstrapCommand.ExecuteAsync: profiles computed + parameters set.
             /// </summary>
-            public override Task<int> ExecuteAsync(string[] args, CancellationTokenSource cancellationTokenSource)
+            protected override Task<int> ExecuteAsync(string[] args, IServiceCollection dependencies, CancellationTokenSource cancellationTokenSource)
             {
                 return Task.FromResult(0);
             }
 
-            public new void Initialize()
+            public new void Initialize(string[] args, PlatformSpecifics platformSpecifics)
             {
-                base.Initialize();
+                base.Initialize(args, platformSpecifics);
             }
 
             public new void Validate()

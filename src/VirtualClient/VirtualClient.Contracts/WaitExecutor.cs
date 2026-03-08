@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace VirtualClient.Dependencies
+namespace VirtualClient.Contracts
 {
     using System;
     using System.Collections.Generic;

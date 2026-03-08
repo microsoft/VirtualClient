@@ -5,7 +5,6 @@ namespace VirtualClient
 {
     using System;
     using System.Collections.Generic;
-    using System.CommandLine.Builder;
     using System.CommandLine.Invocation;
     using System.CommandLine.Parsing;
     using System.IO;
@@ -13,7 +12,11 @@ namespace VirtualClient
     using System.Reflection;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
+    using Microsoft.Extensions.Logging.Abstractions;
     using NUnit.Framework;
+    using VirtualClient.Contracts;
 
     [TestFixture]
     [Category("Unit")]
@@ -24,38 +27,207 @@ namespace VirtualClient
             "Resources");
 
         [Test]
-        [TestCase("pwsh -NonInteractive /home/user/scripts/Invoke-Script.ps1 -LogDirectory /home/user/logs")]
-        [TestCase("python /home/user/scripts/execute_script.py /home/user/logs")]
-        [TestCase("pwsh -NonInteractive /home/user/scripts/Invoke-Script.ps1 -LogDirectory \"/home/user/log files\"")]
-        [TestCase("python /home/user/scripts/execute_script.py \"/home/user/logs\"")]
-        public async Task VirtualClientHandlesCommandExecutionScenariosAsExpected(string commandLine)
+        [TestCase(
+            "--command=pwsh -NonInteractive /home/user/scripts/Invoke-Script.ps1 -LogDirectory /home/user/logs -Timeout 00:20:00",
+            "pwsh -NonInteractive /home/user/scripts/Invoke-Script.ps1 -LogDirectory /home/user/logs -Timeout 00:20:00")]
+        [TestCase(
+            "--command=pwsh -NonInteractive /home/user/scripts/Invoke-Script.ps1 -LogDirectory \"/home/user/log files\"",
+            "pwsh -NonInteractive /home/user/scripts/Invoke-Script.ps1 -LogDirectory \"/home/user/log files\"")]
+        [TestCase(
+            "--command=pwsh -NonInteractive /home/user/scripts/Invoke-Script.ps1 -LogDirectory \"/home/user/log files\" -Timeout 00:20:00",
+            "pwsh -NonInteractive /home/user/scripts/Invoke-Script.ps1 -LogDirectory \"/home/user/log files\" -Timeout 00:20:00")]
+        [TestCase(
+            "--command=pwsh -NonInteractive /home/user/scripts/Invoke-Script.ps1 -LogDirectory \"/home/user/log files\" -Timeout 00:20:00 -OtherDirectory \"/home/user/other dir\"",
+            "pwsh -NonInteractive /home/user/scripts/Invoke-Script.ps1 -LogDirectory \"/home/user/log files\" -Timeout 00:20:00 -OtherDirectory \"/home/user/other dir\"")]
+        [TestCase(
+            "--command=pwsh -NonInteractive -C \"/home/user/scripts/Invoke-Script.ps1 -LogDirectory '/home/user/log files' -Timeout 00:20:00 -OtherDirectory '/home/user/other dir'\"",
+            "pwsh -NonInteractive -C \"/home/user/scripts/Invoke-Script.ps1 -LogDirectory '/home/user/log files' -Timeout 00:20:00 -OtherDirectory '/home/user/other dir'\"")]
+        public async Task VirtualClientHandlesCommandExecutionScenariosAsExpected_Linux_PowerShell_Scenarios(string commandLine, string expectedCommand)
         {
             using (CancellationTokenSource tokenSource = new CancellationTokenSource())
             {
                 // Expected flow is the command/command line execution flow. The profile
                 // execution flow should not be executed.
-                bool commandFlowExecuted = false;
-                bool profileFlowExecuted = false;
+                bool confirmed = false;
 
                 string[] args = new string[] { commandLine };
-                CommandLineBuilder commandBuilder = Program.SetupCommandLine(args, tokenSource);
-                commandBuilder.Command.Handler = CommandHandler.Create<TestExecuteCommand>(cmd =>
-                {
-                    cmd.OnExecuteCommand = () => commandFlowExecuted = true;
-                    cmd.OnExecuteProfiles = () => profileFlowExecuted = true;
 
-                    Assert.AreEqual(commandLine, cmd.Command);
+                // System.CommandLine Quirk:
+                // The library parsing logic will strip the \" from the end of the command line
+                // vs. treating it as an explicit quotation mark to leave in place. There are no
+                // hooks in the library implementation to override this behavior.
+                //
+                // To workaround this we replace the quotes with the HTML encoding. Each option can
+                // then handle the HTML decoding as required. This happens in the preprocessing logic.
+
+                CommandLineParser parser = CommandLineParser.Create(args, tokenSource);
+                parser.Builder.Command.Handler = CommandHandler.Create<TestExecuteProfileCommand>(cmd =>
+                {
+                    cmd.OnExecute = () => confirmed = true;
+
+                    Assert.AreEqual(expectedCommand, cmd.Command);
                     Assert.IsNull(cmd.Profiles);
 
                     return cmd.ExecuteAsync(args, tokenSource);
                 });
 
-                ParseResult parseResult = commandBuilder.Build().Parse(args);
-                parseResult.ThrowOnUsageError();
+                ParseResult parseResult = parser.Parse();
                 await parseResult.InvokeAsync();
 
-                Assert.IsTrue(commandFlowExecuted);
-                Assert.IsFalse(profileFlowExecuted);
+                Assert.IsTrue(confirmed);
+            }
+        }
+
+        [Test]
+        [TestCase(
+            "--command=pwsh -NonInteractive C:\\Users\\User\\scripts\\Invoke-Script.ps1 -LogDirectory C:\\Users\\User\\logs -Timeout 00:20:00",
+            "pwsh -NonInteractive C:\\Users\\User\\scripts\\Invoke-Script.ps1 -LogDirectory C:\\Users\\User\\logs -Timeout 00:20:00")]
+        [TestCase(
+            "--command=pwsh -NonInteractive C:\\Users\\User\\scripts\\Invoke-Script.ps1 -LogDirectory \"C:\\Users\\User\\log files\"",
+            "pwsh -NonInteractive C:\\Users\\User\\scripts\\Invoke-Script.ps1 -LogDirectory \"C:\\Users\\User\\log files\"")]
+        [TestCase(
+            "--command=pwsh -NonInteractive C:\\Users\\User\\scripts\\Invoke-Script.ps1 -LogDirectory \"C:\\Users\\User\\log files\" -Timeout 00:20:00",
+            "pwsh -NonInteractive C:\\Users\\User\\scripts\\Invoke-Script.ps1 -LogDirectory \"C:\\Users\\User\\log files\" -Timeout 00:20:00")]
+        [TestCase(
+            "--command=pwsh -NonInteractive C:\\Users\\User\\scripts\\Invoke-Script.ps1 -LogDirectory \"C:\\Users\\User\\log files\" -Timeout 00:20:00 -OtherDirectory \"C:\\Users\\User\\other dir\"",
+            "pwsh -NonInteractive C:\\Users\\User\\scripts\\Invoke-Script.ps1 -LogDirectory \"C:\\Users\\User\\log files\" -Timeout 00:20:00 -OtherDirectory \"C:\\Users\\User\\other dir\"")]
+        [TestCase(
+            "--command=pwsh -NonInteractive -C \"C:\\Users\\User\\scripts\\Invoke-Script.ps1 -LogDirectory 'C:\\Users\\User\\log files' -Timeout 00:20:00 -OtherDirectory 'C:\\Users\\User\\other dir'\"",
+            "pwsh -NonInteractive -C \"C:\\Users\\User\\scripts\\Invoke-Script.ps1 -LogDirectory 'C:\\Users\\User\\log files' -Timeout 00:20:00 -OtherDirectory 'C:\\Users\\User\\other dir'\"")]
+        public async Task VirtualClientHandlesCommandExecutionScenariosAsExpected_Windows_PowerShell_Scenarios(string commandLine, string expectedCommand)
+        {
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+            {
+                // Expected flow is the command/command line execution flow. The profile
+                // execution flow should not be executed.
+                bool confirmed = false;
+
+                string[] args = new string[] { commandLine };
+
+                // System.CommandLine Quirk:
+                // The library parsing logic will strip the \" from the end of the command line
+                // vs. treating it as an explicit quotation mark to leave in place. There are no
+                // hooks in the library implementation to override this behavior.
+                //
+                // To workaround this we replace the quotes with the HTML encoding. Each option can
+                // then handle the HTML decoding as required. This happens in the preprocessing logic.
+
+                CommandLineParser parser = CommandLineParser.Create(args, tokenSource);
+                parser.Builder.Command.Handler = CommandHandler.Create<TestExecuteProfileCommand>(cmd =>
+                {
+                    cmd.OnExecute = () => confirmed = true;
+
+                    Assert.AreEqual(expectedCommand, cmd.Command);
+                    Assert.IsNull(cmd.Profiles);
+
+                    return cmd.ExecuteAsync(args, tokenSource);
+                });
+
+                ParseResult parseResult = parser.Parse();
+                await parseResult.InvokeAsync();
+
+                Assert.IsTrue(confirmed);
+            }
+        }
+
+        [Test]
+        [TestCase(
+           "--command=python /home/user/scripts/execute_script.py /home/user/logs",
+           "python /home/user/scripts/execute_script.py /home/user/logs")]
+        [TestCase(
+           "--command=python /home/user/scripts/execute_script.py \"/home/user/log dir\"",
+           "python /home/user/scripts/execute_script.py \"/home/user/log dir\"")]
+        [TestCase(
+           "--command=python /home/user/scripts/execute_script.py \"/home/user/log dir\" 00:20:00",
+           "python /home/user/scripts/execute_script.py \"/home/user/log dir\" 00:20:00")]
+        [TestCase(
+           "--command=python -c \"/home/user/scripts/execute_script.py '/home/user/log dir' 00:20:00\"",
+           "python -c \"/home/user/scripts/execute_script.py '/home/user/log dir' 00:20:00\"")]
+        [TestCase(
+           "--command=python -c \"/home/user/scripts/execute_script.py --log_dir '/home/user/log dir' --timeout 00:20:00\"",
+           "python -c \"/home/user/scripts/execute_script.py --log_dir '/home/user/log dir' --timeout 00:20:00\"")]
+        [TestCase(
+           "--command=python -c \"/home/user/scripts/execute_script.py --log_dir='/home/user/log dir' --timeout=00:20:00\"",
+           "python -c \"/home/user/scripts/execute_script.py --log_dir='/home/user/log dir' --timeout=00:20:00\"")]
+        public async Task VirtualClientHandlesCommandExecutionScenariosAsExpected_Linux_Python_Scenarios(string commandLine, string expectedCommand)
+        {
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+            {
+                // Expected flow is the command/command line execution flow. The profile
+                // execution flow should not be executed.
+                bool confirmed = false;
+
+                string[] args = new string[] { commandLine };
+
+                // System.CommandLine Quirk:
+                // The library parsing logic will strip the \" from the end of the command line
+                // vs. treating it as an explicit quotation mark to leave in place. There are no
+                // hooks in the library implementation to override this behavior.
+                //
+                // To workaround this we replace the quotes with the HTML encoding. Each option can
+                // then handle the HTML decoding as required. This happens in the preprocessing logic.
+
+                CommandLineParser parser = CommandLineParser.Create(args, tokenSource);
+                parser.Builder.Command.Handler = CommandHandler.Create<TestExecuteProfileCommand>(cmd =>
+                {
+                    cmd.OnExecute = () => confirmed = true;
+
+                    Assert.AreEqual(expectedCommand, cmd.Command);
+                    Assert.IsNull(cmd.Profiles);
+
+                    return cmd.ExecuteAsync(args, tokenSource);
+                });
+
+                ParseResult parseResult = parser.Parse();
+                await parseResult.InvokeAsync();
+
+                Assert.IsTrue(confirmed);
+            }
+        }
+
+        [Test]
+        [TestCase(
+           "--command=bash -c \"/home/user/scripts/execute_script.sh\"",
+           "bash -c \"/home/user/scripts/execute_script.sh\"")]
+        [TestCase(
+           "--command=bash -c \"/home/user/scripts/execute_script.sh --log_dir /home/user/logs\"",
+           "bash -c \"/home/user/scripts/execute_script.sh --log_dir /home/user/logs\"")]
+        [TestCase(
+           "--command=bash -c \"/home/user/scripts/execute_script.sh --log_dir '/home/user/log dir'\"",
+           "bash -c \"/home/user/scripts/execute_script.sh --log_dir '/home/user/log dir'\"")]
+        public async Task VirtualClientHandlesCommandExecutionScenariosAsExpected_Linux_Bash_Scenarios(string commandLine, string expectedCommand)
+        {
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+            {
+                // Expected flow is the command/command line execution flow. The profile
+                // execution flow should not be executed.
+                bool confirmed = false;
+
+                string[] args = new string[] { commandLine };
+
+                // System.CommandLine Quirk:
+                // The library parsing logic will strip the \" from the end of the command line
+                // vs. treating it as an explicit quotation mark to leave in place. There are no
+                // hooks in the library implementation to override this behavior.
+                //
+                // To workaround this we replace the quotes with the HTML encoding. Each option can
+                // then handle the HTML decoding as required. This happens in the preprocessing logic.
+
+                CommandLineParser parser = CommandLineParser.Create(args, tokenSource);
+                parser.Builder.Command.Handler = CommandHandler.Create<TestExecuteProfileCommand>(cmd =>
+                {
+                    cmd.OnExecute = () => confirmed = true;
+
+                    Assert.AreEqual(expectedCommand, cmd.Command);
+                    Assert.IsNull(cmd.Profiles);
+
+                    return cmd.ExecuteAsync(args, tokenSource);
+                });
+
+                ParseResult parseResult = parser.Parse();
+                await parseResult.InvokeAsync();
+
+                Assert.IsTrue(confirmed);
             }
         }
 
@@ -67,20 +239,18 @@ namespace VirtualClient
                 // Expected flow is the command/command line execution flow. The profile
                 // execution flow should not be executed.
                 string expectedCommand = "pwsh /home/user/scripts/Invoke-Script.ps1 -Name AnyScript -LogDirectory /home/user/logs";
-                bool commandFlowExecuted = false;
-                bool profileFlowExecuted = false;
+                bool confirmed = false;
 
                 string[] args = new string[]
                 {
-                    expectedCommand,
+                    $"-C {expectedCommand}",
                     "--profile=MONITORS-DEFAULT.json"
                 };
 
-                CommandLineBuilder commandBuilder = Program.SetupCommandLine(args, tokenSource);
-                commandBuilder.Command.Handler = CommandHandler.Create<TestExecuteCommand>(cmd =>
+                CommandLineParser parser = CommandLineParser.Create(args, tokenSource);
+                parser.Builder.Command.Handler = CommandHandler.Create<TestExecuteProfileCommand>(cmd =>
                 {
-                    cmd.OnExecuteCommand = () => commandFlowExecuted = true;
-                    cmd.OnExecuteProfiles = () => profileFlowExecuted = true;
+                    cmd.OnExecute = () => confirmed = true;
 
                     Assert.AreEqual(expectedCommand, cmd.Command);
                     Assert.IsNotNull(cmd.Profiles);
@@ -90,12 +260,10 @@ namespace VirtualClient
                     return cmd.ExecuteAsync(args, tokenSource);
                 });
 
-                ParseResult parseResult = commandBuilder.Build().Parse(args);
-                parseResult.ThrowOnUsageError();
+                ParseResult parseResult = parser.Parse();
                 await parseResult.InvokeAsync();
 
-                Assert.IsTrue(commandFlowExecuted);
-                Assert.IsFalse(profileFlowExecuted);
+                Assert.IsTrue(confirmed);
             }
         }
 
@@ -106,8 +274,7 @@ namespace VirtualClient
             {
                 // Expected flow is the command/command line execution flow. The profile
                 // execution flow should not be executed.
-                bool commandFlowExecuted = false;
-                bool profileFlowExecuted = false;
+                bool confirmed = false;
 
                 string[] args = new string[]
                 {
@@ -115,13 +282,12 @@ namespace VirtualClient
                     "--profile=MONITORS-DEFAULT.json"
                 };
 
-                CommandLineBuilder commandBuilder = Program.SetupCommandLine(args, tokenSource);
-                commandBuilder.Command.Handler = CommandHandler.Create<TestExecuteCommand>(cmd =>
+                CommandLineParser parser = CommandLineParser.Create(args, tokenSource);
+                parser.Builder.Command.Handler = CommandHandler.Create<TestExecuteProfileCommand>(cmd =>
                 {
-                    cmd.OnExecuteCommand = () => commandFlowExecuted = true;
-                    cmd.OnExecuteProfiles = () => profileFlowExecuted = true;
+                    cmd.OnExecute = () => confirmed = true;
 
-                    Assert.IsEmpty(cmd.Command);
+                    Assert.IsNull(cmd.Command);
                     Assert.IsNotNull(cmd.Profiles);
                     Assert.IsNotEmpty(cmd.Profiles);
                     Assert.IsTrue(cmd.Profiles.ElementAt(0).ProfileName == "ANY-PROFILE.json");
@@ -130,12 +296,10 @@ namespace VirtualClient
                     return cmd.ExecuteAsync(args, tokenSource);
                 });
 
-                ParseResult parseResult = commandBuilder.Build().Parse(args);
-                parseResult.ThrowOnUsageError();
+                ParseResult parseResult = parser.Parse();
                 await parseResult.InvokeAsync();
 
-                Assert.IsTrue(profileFlowExecuted);
-                Assert.IsFalse(commandFlowExecuted);
+                Assert.IsTrue(confirmed);
             }
         }
 
@@ -153,12 +317,12 @@ namespace VirtualClient
                     $"--profile={pathReference}"
                 };
 
-                CommandLineBuilder commandBuilder = Program.SetupCommandLine(args, tokenSource);
-                commandBuilder.Command.Handler = CommandHandler.Create<TestExecuteCommand>(cmd =>
+                CommandLineParser parser = CommandLineParser.Create(args, tokenSource);
+                parser.Builder.Command.Handler = CommandHandler.Create<TestExecuteProfileCommand>(cmd =>
                 {
                     string expectedFullPath = Path.GetFullPath(pathReference);
 
-                    Assert.IsEmpty(cmd.Command);
+                    Assert.IsNull(cmd.Command);
                     Assert.IsNotNull(cmd.Profiles);
                     Assert.IsNotEmpty(cmd.Profiles);
                     Assert.IsTrue(cmd.Profiles.ElementAt(0).IsFullPath);
@@ -167,8 +331,7 @@ namespace VirtualClient
                     return Task.FromResult(1);
                 });
 
-                ParseResult parseResult = commandBuilder.Build().Parse(args);
-                parseResult.ThrowOnUsageError();
+                ParseResult parseResult = parser.Parse();
                 await parseResult.InvokeAsync();
             }
         }
@@ -187,12 +350,12 @@ namespace VirtualClient
                     $"--profile={pathReference}"
                 };
 
-                CommandLineBuilder commandBuilder = Program.SetupCommandLine(args, tokenSource);
-                commandBuilder.Command.Handler = CommandHandler.Create<TestExecuteCommand>(cmd =>
+                CommandLineParser parser = CommandLineParser.Create(args, tokenSource);
+                parser.Builder.Command.Handler = CommandHandler.Create<TestExecuteProfileCommand>(cmd =>
                 {
                     string expectedFullPath = Path.GetFullPath(pathReference);
 
-                    Assert.IsEmpty(cmd.Command);
+                    Assert.IsNull(cmd.Command);
                     Assert.IsNotNull(cmd.Profiles);
                     Assert.IsNotEmpty(cmd.Profiles);
                     Assert.IsTrue(cmd.Profiles.ElementAt(0).IsFullPath);
@@ -201,8 +364,7 @@ namespace VirtualClient
                     return Task.FromResult(1);
                 });
 
-                ParseResult parseResult = commandBuilder.Build().Parse(args);
-                parseResult.ThrowOnUsageError();
+                ParseResult parseResult = parser.Parse();
                 await parseResult.InvokeAsync();
             }
         }
@@ -219,10 +381,10 @@ namespace VirtualClient
                     $"--profile={pathReference}"
                 };
 
-                CommandLineBuilder commandBuilder = Program.SetupCommandLine(args, tokenSource);
-                commandBuilder.Command.Handler = CommandHandler.Create<TestExecuteCommand>(cmd =>
+                CommandLineParser parser = CommandLineParser.Create(args, tokenSource);
+                parser.Builder.Command.Handler = CommandHandler.Create<TestExecuteProfileCommand>(cmd =>
                 {
-                    Assert.IsEmpty(cmd.Command);
+                    Assert.IsNull(cmd.Command);
                     Assert.IsNotNull(cmd.Profiles);
                     Assert.IsNotEmpty(cmd.Profiles);
                     Assert.AreEqual("ANY-PROFILE.json", cmd.Profiles.ElementAt(0).ProfileName);
@@ -231,8 +393,7 @@ namespace VirtualClient
                     return Task.FromResult(1);
                 });
 
-                ParseResult parseResult = commandBuilder.Build().Parse(args);
-                parseResult.ThrowOnUsageError();
+                ParseResult parseResult = parser.Parse();
                 await parseResult.InvokeAsync();
             }
         }
@@ -241,7 +402,7 @@ namespace VirtualClient
         [TestCase("--packag", "Option is simply misspelled")]
         public void VirtualClientThrowsWhenAnUnrecognizedOptionIsSuppliedOnTheCommandLine(string option, string value)
         {
-            using (CancellationTokenSource cancellationSource = new CancellationTokenSource())
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
             {
                 List<string> arguments = new List<string>()
                 {
@@ -256,9 +417,7 @@ namespace VirtualClient
 
                 ArgumentException error = Assert.Throws<ArgumentException>(() =>
                 {
-                    ParseResult result = Program.SetupCommandLine(arguments.ToArray(), cancellationSource).Build().Parse(arguments);
-                    result = Program.SetupCommandLine(arguments.ToArray(), cancellationSource).Build().Parse(string.Join(" ", arguments));
-                    result.ThrowOnUsageError();
+                    CommandLineParser.Create(arguments.ToArray(), tokenSource).Parse();
                 });
 
                 Assert.IsTrue(error.Message.StartsWith(
@@ -268,81 +427,58 @@ namespace VirtualClient
         }
 
         [Test]
-        [TestCase("--agentId", "AgentID")]
         [TestCase("--client-id", "AgentID")]
-        [TestCase("--c", "AgentID")]
-        [TestCase("--port", "4501")]
         [TestCase("--api-port", "4501")]
+        [TestCase("-c", null)]
         [TestCase("--clean", null)]
         [TestCase("--clean", "logs")]
         [TestCase("--clean", "logs,packages,state,temp")]
         [TestCase("--content-store", "https://anystorageaccount.blob.core.windows.net/;SharedAccessSignature=123")]
         [TestCase("--content", "https://anystorageaccount.blob.core.windows.net/;SharedAccessSignature=123")]
-        [TestCase("--cs", "https://anystorageaccount.blob.core.windows.net/;SharedAccessSignature=123")]
         [TestCase("--content-path-template", "anyname1/anyname2/{experimentId}/{agentId}/anyname3/{toolName}/{role}/{scenario}")]
         [TestCase("--content-path", "anyname1/anyname2/{experimentId}/{agentId}/anyname3/{toolName}/{role}/{scenario}")]
-        [TestCase("--cp", "anyname1/anyname2/{experimentId}/{agentId}/anyname3/{toolName}/{role}/{scenario}")]
+        [TestCase("-d", null)]
         [TestCase("--dependencies", null)]
-        [TestCase("--eventHubConnectionString", "Endpoint=ConnectionString")]
         [TestCase("--event-hub", "Endpoint=ConnectionString")]
-        [TestCase("--experimentId", "0B692DEB-411E-4AC1-80D5-AF539AE1D6B2")]
         [TestCase("--experiment-id", "0B692DEB-411E-4AC1-80D5-AF539AE1D6B2")]
-        [TestCase("--e", "0B692DEB-411E-4AC1-80D5-AF539AE1D6B2")]
+        [TestCase("-f", null)]
         [TestCase("--fail-fast", null)]
-        [TestCase("--ff", null)]
         [TestCase("--exit-wait", "00:10:00")]
-        [TestCase("--wait", "00:10:00")]
-        [TestCase("--i", "3")]
         [TestCase("--iterations", "3")]
         [TestCase("--key-vault", "https://anyvault.vault.windows.net")]
         [TestCase("--layout-path", "C:\\any\\path\\to\\layout.json")]
         [TestCase("--layout", "C:\\any\\path\\to\\layout.json")]
-        [TestCase("--lp", "C:\\any\\path\\to\\layout.json")]
         [TestCase("--logger", "file")]
         [TestCase("--log-dir", "C:\\any\\path\\to\\logs")]
-        [TestCase("--ldir", "C:\\any\\path\\to\\logs")]
-        [TestCase("--ll", "3")]
         [TestCase("--log-level", "2")]
         [TestCase("--log-level", "Information")]
-        [TestCase("--ll", "Error")]
         [TestCase("--log-retention", "14400")]
         [TestCase("--log-retention", "10.00:00:00")]
-        [TestCase("--lr", "14400")]
-        [TestCase("--lr", "10.00:00:00")]
+        [TestCase("-l", null)]
         [TestCase("--log-to-file", null)]
-        [TestCase("--ltf", null)]
         [TestCase("--metadata", "Key1=Value1,,,Key2=Value2")]
-        [TestCase("--mt", "Key1=Value1,,,Key2=Value2")]
         [TestCase("--package-dir", "C:\\any\\path\\to\\packages")]
-        [TestCase("--pdir", "C:\\any\\path\\to\\packages")]
         [TestCase("--package-store", "https://anystorageaccount.blob.core.windows.net/?sv=2020-08-04&ss=b")]
         [TestCase("--packages", "https://anystorageaccount.blob.core.windows.net/?sv=2020-08-04&ss=b")]
-        [TestCase("--ps", "https://anystorageaccount.blob.core.windows.net/?sv=2020-08-04&ss=b")]
         [TestCase("--parameters", "Param1=Value1,,,Param2=Value2")]
-        [TestCase("--pm", "Param1=Value1,,,Param2=Value2")]
-        [TestCase("--seed", "1234")]
-        [TestCase("--sd", "1234")]
         [TestCase("--scenarios", "Scenario1")]
-        [TestCase("--sc", "Scenario1")]
         [TestCase("--state-dir", "C:\\any\\path\\to\\state")]
-        [TestCase("--sdir", "C:\\any\\path\\to\\state")]
         [TestCase("--system", "Azure")]
-        [TestCase("--s", "Azure")]
         [TestCase("--proxy", "https://proxy.azure.net?crti=issuerName&crts=subjectName")]
         [TestCase("--proxy", "https://proxy.azure.net")]
         [TestCase("--proxy", "https://192.168.1.10:8443")]
         [TestCase("--proxy", "https://192.168.1.10")]
         [TestCase("--proxy-api", "https://proxy.azure.net/?crti=issuerName&crts=subjectName")]
-        [TestCase("--t", "1440")]
+        [TestCase("--target", "any@10.1.2.3;pass")]
         [TestCase("--timeout", "01:00:00")]
         [TestCase("--timeout", "01:00:00,deterministic")]
         [TestCase("--timeout", "01:00:00,deterministic*")]
         [TestCase("--temp-dir", "C:\\any\\path\\to\\temp")]
-        [TestCase("--tdir", "C:\\any\\path\\to\\temp")]
+        [TestCase("-v", null)]
         [TestCase("--verbose", null)]
         public void VirtualClientDefaultCommandSupportsAllExpectedOptions(string option, string value)
         {
-            using (CancellationTokenSource cancellationSource = new CancellationTokenSource())
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
             {
                 List<string> arguments = new List<string>()
                 {
@@ -357,54 +493,63 @@ namespace VirtualClient
 
                 Assert.DoesNotThrow(() =>
                 {
-                    ParseResult result = Program.SetupCommandLine(arguments.ToArray(), cancellationSource).Build().Parse(arguments);
-                    result = Program.SetupCommandLine(arguments.ToArray(), cancellationSource).Build().Parse(string.Join(" ", arguments));
-
+                    ParseResult result = CommandLineParser.Create(arguments.ToArray(), tokenSource).Parse();
                     Assert.IsFalse(result.Errors.Any());
-                    result.ThrowOnUsageError();
                 }, message: $"Option '{option}' is not supported.");
             }
         }
 
         [Test]
-        [TestCase("--agentId", "AgentID")]
+        [TestCase("--api-port", "4501")]
+        [TestCase("--event-hub", "sb://any.servicebus")]
+        [TestCase("-m", null)]
+        [TestCase("--monitor", null)]
+        [TestCase("--ip-address", "10.0.0.128")]
+        [TestCase("--logger", "file")]
+        [TestCase("--log-dir", "C:\\any\\path\\to\\logs")]
+        [TestCase("--log-level", "2")]
+        [TestCase("--log-level", "Information")]
+        [TestCase("-v", null)]
+        [TestCase("--verbose", null)]
+        public void VirtualClientApiCommandSupportsAllExpectedOptions(string option, string value)
+        {
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+            {
+                List<string> arguments = new List<string>()
+                {
+                    "api"
+                };
+
+                arguments.Add(option);
+                if (value != null)
+                {
+                    arguments.Add(value);
+                }
+
+                Assert.DoesNotThrow(() =>
+                {
+                    ParseResult result = CommandLineParser.Create(arguments, tokenSource).Parse();
+                    Assert.IsFalse(result.Errors.Any());
+                }, $"Option '{option}' is not supported.");
+            }
+        }
+
+        [Test]
         [TestCase("--client-id", "AgentID")]
-        [TestCase("--c", "AgentID")]
-        [TestCase("--clean", null)]
-        [TestCase("--clean", "logs")]
-        [TestCase("--clean", "logs,packages,state,temp")]
-        [TestCase("--event-hub", "Endpoint=ConnectionString")]
-        [TestCase("--eventHubConnectionString", "Endpoint=ConnectionString")]
-        [TestCase("--experimentId", "0B692DEB-411E-4AC1-80D5-AF539AE1D6B2")]
+        [TestCase("--event-hub", "sb://any.servicebus")]
         [TestCase("--experiment-id", "0B692DEB-411E-4AC1-80D5-AF539AE1D6B2")]
-        [TestCase("--e", "0B692DEB-411E-4AC1-80D5-AF539AE1D6B2")]
         [TestCase("--metadata", "Key1=Value1,,,Key2=Value2")]
-        [TestCase("--mt", "Key1=Value1,,,Key2=Value2")]
-        [TestCase("--n", "anypackage")]
         [TestCase("--name", "anypackage")]
         [TestCase("--logger", "file")]
         [TestCase("--log-dir", "C:\\any\\path\\to\\logs")]
-        [TestCase("--ldir", "C:\\any\\path\\to\\logs")]
         [TestCase("--log-level", "2")]
-        [TestCase("--ll", "3")]
         [TestCase("--log-level", "Information")]
-        [TestCase("--ll", "Error")]
-        [TestCase("--log-retention", "14400")]
-        [TestCase("--log-retention", "10.00:00:00")]
-        [TestCase("--lr", "14400")]
-        [TestCase("--lr", "10.00:00:00")]
         [TestCase("--package-dir", "C:\\any\\path\\to\\packages")]
-        [TestCase("--pdir", "C:\\any\\path\\to\\packages")]
-        [TestCase("--state-dir", "C:\\any\\path\\to\\state")]
-        [TestCase("--sdir", "C:\\any\\path\\to\\state")]
         [TestCase("--system", "Azure")]
-        [TestCase("--s", "Azure")]
-        [TestCase("--temp-dir", "C:\\any\\path\\to\\temp")]
-        [TestCase("--tdir", "C:\\any\\path\\to\\temp")]
         [TestCase("--verbose", null)]
-        public void VirtualClientBootstrapCommandSupportsAllExpectedOptions(string option, string value)
+        public void VirtualClientBootstrapCommandSupportsAllExpectedOptionsForPackageDownloads(string option, string value)
         {
-            using (CancellationTokenSource cancellationSource = new CancellationTokenSource())
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
             {
                 List<string> arguments = new List<string>()
                 {
@@ -421,9 +566,125 @@ namespace VirtualClient
 
                 Assert.DoesNotThrow(() =>
                 {
-                    ParseResult result = Program.SetupCommandLine(arguments.ToArray(), cancellationSource).Build().Parse(arguments);
+                    ParseResult result = CommandLineParser.Create(arguments.ToArray(), tokenSource).Parse();
                     Assert.IsFalse(result.Errors.Any());
-                    result.ThrowOnUsageError();
+                }, $"Option '{option}' is not supported.");
+            }
+        }
+
+        [Test]
+        [TestCase("--client-id", "AgentID")]
+        [TestCase("--event-hub", "sb://any.servicebus")]
+        [TestCase("--experiment-id", "0B692DEB-411E-4AC1-80D5-AF539AE1D6B2")]
+        [TestCase("--metadata", "Key1=Value1,,,Key2=Value2")]
+        [TestCase("--name", "anypackage")]
+        [TestCase("--logger", "file")]
+        [TestCase("--log-dir", "C:\\any\\path\\to\\logs")]
+        [TestCase("--log-level", "2")]
+        [TestCase("--log-level", "Information")]
+        [TestCase("--package-dir", "C:\\any\\path\\to\\packages")]
+        [TestCase("--system", "Azure")]
+        [TestCase("--verbose", null)]
+        public void VirtualClientBootstrapCommandSupportsAllExpectedOptionsForCertificateDownloads_1(string option, string value)
+        {
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+            {
+                List<string> arguments = new List<string>()
+                {
+                    "bootstrap",
+                    "--cert-name", "any-cert",
+                    "--key-vault", "https://any.vault.azure.net",
+                    "--tenant-id", "123456"
+                };
+
+                arguments.Add(option);
+                if (value != null)
+                {
+                    arguments.Add(value);
+                }
+
+                Assert.DoesNotThrow(() =>
+                {
+                    ParseResult result = CommandLineParser.Create(arguments.ToArray(), tokenSource).Parse();
+                    Assert.IsFalse(result.Errors.Any());
+                }, $"Option '{option}' is not supported.");
+            }
+        }
+
+        [Test]
+        [TestCase("--client-id", "AgentID")]
+        [TestCase("--event-hub", "sb://any.servicebus")]
+        [TestCase("--experiment-id", "0B692DEB-411E-4AC1-80D5-AF539AE1D6B2")]
+        [TestCase("--metadata", "Key1=Value1,,,Key2=Value2")]
+        [TestCase("--name", "anypackage")]
+        [TestCase("--logger", "file")]
+        [TestCase("--log-dir", "C:\\any\\path\\to\\logs")]
+        [TestCase("--log-level", "2")]
+        [TestCase("--log-level", "Information")]
+        [TestCase("--package-dir", "C:\\any\\path\\to\\packages")]
+        [TestCase("--system", "Azure")]
+        [TestCase("--verbose", null)]
+        public void VirtualClientBootstrapCommandSupportsAllExpectedOptionsForCertificateDownloads_Token_Scenario(string option, string value)
+        {
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+            {
+                List<string> arguments = new List<string>()
+                {
+                    "bootstrap",
+                    "--cert-name", "any-cert",
+                    "--key-vault", "https://any.vault.azure.net",
+                    "--token", "123456ABCDEFG"
+                };
+
+                arguments.Add(option);
+                if (value != null)
+                {
+                    arguments.Add(value);
+                }
+
+                Assert.DoesNotThrow(() =>
+                {
+                    ParseResult result = CommandLineParser.Create(arguments.ToArray(), tokenSource).Parse();
+                    Assert.IsFalse(result.Errors.Any());
+                }, $"Option '{option}' is not supported.");
+            }
+        }
+
+        [Test]
+        [TestCase("--client-id", "AgentID")]
+        [TestCase("--event-hub", "Endpoint=ConnectionString")]
+        [TestCase("--experiment-id", "0B692DEB-411E-4AC1-80D5-AF539AE1D6B2")]
+        [TestCase("--metadata", "Key1=Value1,,,Key2=Value2")]
+        [TestCase("--name", "anypackage")]
+        [TestCase("--logger", "file")]
+        [TestCase("--log-dir", "C:\\any\\path\\to\\logs")]
+        [TestCase("--log-level", "2")]
+        [TestCase("--log-level", "Information")]
+        [TestCase("--package-dir", "C:\\any\\path\\to\\packages")]
+        [TestCase("--system", "Azure")]
+        [TestCase("--verbose", null)]
+        public void VirtualClientBootstrapCommandSupportsAllExpectedOptionsForCertificateDownloads_Token_File_Scenario(string option, string value)
+        {
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+            {
+                List<string> arguments = new List<string>()
+                {
+                    "bootstrap",
+                    "--cert-name", "any-cert",
+                    "--key-vault", "https://any.vault.azure.net",
+                    "--token-file", "C:\\Users\\Any\\access_token.txt"
+                };
+
+                arguments.Add(option);
+                if (value != null)
+                {
+                    arguments.Add(value);
+                }
+
+                Assert.DoesNotThrow(() =>
+                {
+                    ParseResult result = CommandLineParser.Create(arguments.ToArray(), tokenSource).Parse();
+                    Assert.IsFalse(result.Errors.Any());
                 }, $"Option '{option}' is not supported.");
             }
         }
@@ -431,7 +692,7 @@ namespace VirtualClient
         [Test]
         public void VirtualClientBootstrapCommandHandlesNoOpArguments()
         {
-            using (CancellationTokenSource cancellationSource = new CancellationTokenSource())
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
             {
                 List<string> arguments = new List<string>()
                 {
@@ -444,9 +705,8 @@ namespace VirtualClient
 
                 Assert.DoesNotThrow(() =>
                 {
-                    ParseResult result = Program.SetupCommandLine(arguments.ToArray(), cancellationSource).Build().Parse(arguments);
+                    ParseResult result = CommandLineParser.Create(arguments.ToArray(), tokenSource).Parse();
                     Assert.IsFalse(result.Errors.Any());
-                    result.ThrowOnUsageError();
                 });
             }
         }
@@ -456,14 +716,14 @@ namespace VirtualClient
         {
             using (CancellationTokenSource tokenSource = new CancellationTokenSource())
             {
-                CommandLineBuilder commandBuilder = Program.SetupCommandLine(Array.Empty<string>(), tokenSource);
-
                 ArgumentException error = Assert.Throws<ArgumentException>(() =>
                 {
-                    ParseResult parseResult = commandBuilder.Build().Parse(new[]
+                    string[] args = new[]
                     {
                         "bootstrap"
-                    });
+                    };
+
+                    CommandLineParser.Create(args, tokenSource).Parse();
                 });
 
                 Assert.AreEqual(
@@ -476,61 +736,56 @@ namespace VirtualClient
         [Test]
         public void VirtualClientBootstrapCommandValidatesParametersRequiredForCertificateInstallation()
         {
-            using CancellationTokenSource tokenSource = new CancellationTokenSource();
-            CommandLineBuilder commandBuilder = Program.SetupCommandLine(Array.Empty<string>(), tokenSource);
-
-            ArgumentException error = Assert.Throws<ArgumentException>(() =>
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
             {
-                ParseResult parseResult = commandBuilder.Build().Parse(new[]
+                CommandLineParser parser = CommandLineParser.Create(Array.Empty<string>(), tokenSource);
+
+                ArgumentException error = Assert.Throws<ArgumentException>(() =>
                 {
-                    "bootstrap",
-                    "--cert-name=any-cert"
+                    string[] args = new[]
+                    {
+                        "bootstrap",
+                        "--cert-name=any-cert"
+                    };
+
+                    CommandLineParser.Create(args, tokenSource).Parse();
                 });
-            });
 
-            Assert.AreEqual("The Key Vault URI must be provided (--key-vault) when installing a certificate.", error.Message);
+                Assert.AreEqual("The Key Vault URI must be provided (--key-vault) when installing a certificate.", error.Message);
 
-            error = Assert.Throws<ArgumentException>(() =>
-            {
-                ParseResult parseResult = commandBuilder.Build().Parse(new[]
+                error = Assert.Throws<ArgumentException>(() =>
                 {
-                    "bootstrap",
-                    "--cert-name=any-cert",
-                    "--key-vault=https://any.vault"
-                });
-            });
+                    string[] args = new[]
+                    {
+                        "bootstrap",
+                        "--cert-name=any-cert",
+                        "--key-vault=https://any.vault"
+                    };
 
-            Assert.AreEqual("The Azure tenant ID must be provided (--tenant-id) when installing a certificate.", error.Message);
+                    CommandLineParser.Create(args, tokenSource).Parse();
+                });
+
+                Assert.AreEqual("The Azure tenant ID must be provided (--tenant-id) when installing a certificate.", error.Message);
+            }
         }
 
         [Test]
+        [TestCase("-c", null)]
         [TestCase("--clean", null)]
         [TestCase("--clean", "all")]
         [TestCase("--clean", "logs")]
         [TestCase("--clean", "packages")]
         [TestCase("--clean", "state")]
         [TestCase("--clean", "logs,packages,state")]
-        [TestCase("--logger", "file")]
         [TestCase("--log-dir", "C:\\any\\path\\to\\logs")]
-        [TestCase("--ldir", "C:\\any\\path\\to\\logs")]
-        [TestCase("--log-level", "2")]
-        [TestCase("--ll", "3")]
-        [TestCase("--log-level", "Information")]
-        [TestCase("--ll", "Error")]
         [TestCase("--log-retention", "14400")]
         [TestCase("--log-retention", "10.00:00:00")]
-        [TestCase("--lr", "14400")]
-        [TestCase("--lr", "10.00:00:00")]
         [TestCase("--package-dir", "C:\\any\\path\\to\\packages")]
-        [TestCase("--pdir", "C:\\any\\path\\to\\packages")]
         [TestCase("--state-dir", "C:\\any\\path\\to\\state")]
-        [TestCase("--sdir", "C:\\any\\path\\to\\state")]
         [TestCase("--temp-dir", "C:\\any\\path\\to\\temp")]
-        [TestCase("--tdir", "C:\\any\\path\\to\\temp")]
-        [TestCase("--verbose", null)]
         public void VirtualClientCleanCommandSupportsAllExpectedOptions(string option, string value)
         {
-            using (CancellationTokenSource cancellationSource = new CancellationTokenSource())
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
             {
                 List<string> arguments = new List<string>()
                 {
@@ -545,65 +800,41 @@ namespace VirtualClient
 
                 Assert.DoesNotThrow(() =>
                 {
-                    ParseResult result = Program.SetupCommandLine(arguments.ToArray(), cancellationSource).Build().Parse(arguments);
+                    ParseResult result = CommandLineParser.Create(arguments, tokenSource).Parse();
                     Assert.IsFalse(result.Errors.Any());
-                    result.ThrowOnUsageError();
                 }, $"Option '{option}' is not supported.");
             }
         }
 
         [Test]
-        [TestCase("convert --p=ANY-PROFILE.json --path=C:\\Any\\Path")]
-        [TestCase("convert --profile=ANY-PROFILE.json --output=C:\\Any\\Path")]
-        [TestCase("convert --profile=ANY-PROFILE.json --output-path=C:\\Any\\Path")]
+        [TestCase("convert --profile=ANY-PROFILE.json --output-dir=C:\\Any\\Path")]
         public void VirtualClientConvertCommandSupportsAllExpectedOptions(string commandLine)
         {
-            using (CancellationTokenSource cancellationSource = new CancellationTokenSource())
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
             {
                 string[] arguments = commandLine.Split(" ");
 
                 Assert.DoesNotThrow(() =>
                 {
-                    ParseResult result = Program.SetupCommandLine(arguments, cancellationSource).Build().Parse(arguments);
+                    ParseResult result = CommandLineParser.Create(arguments, tokenSource).Parse();
                     Assert.IsFalse(result.Errors.Any());
-                    result.ThrowOnUsageError();
                 });
             }
         }
 
         [Test]
-        [TestCase("--port", "4501")]
-        [TestCase("--api-port", "4501")]
-        [TestCase("--monitor", null)]
-        [TestCase("--mon", null)]
-        [TestCase("--ip-address", "10.0.0.128")]
-        [TestCase("--ip", "10.0.0.128")]
-        [TestCase("--clean", null)]
-        [TestCase("--clean", "logs")]
-        [TestCase("--clean", "logs,packages,state")]
-        [TestCase("--logger", "file")]
-        [TestCase("--log-dir", "C:\\any\\path\\to\\logs")]
-        [TestCase("--ldir", "C:\\any\\path\\to\\logs")]
-        [TestCase("--log-level", "2")]
-        [TestCase("--ll", "3")]
-        [TestCase("--log-level", "Information")]
-        [TestCase("--ll", "Error")]
-        [TestCase("--log-retention", "14400")]
-        [TestCase("--log-retention", "10.00:00:00")]
-        [TestCase("--lr", "14400")]
-        [TestCase("--lr", "10.00:00:00")]
-        [TestCase("--state-dir", "C:\\any\\path\\to\\state")]
-        [TestCase("--sdir", "C:\\any\\path\\to\\state")]
-        [TestCase("--temp-dir", "C:\\any\\path\\to\\temp")]
-        [TestCase("--tdir", "C:\\any\\path\\to\\temp")]
+        [TestCase("--output-file", "C:\\Users\\Any\\access_token.txt")]
+        [TestCase("-v", null)]
         [TestCase("--verbose", null)]
-        public void VirtualClientRunApiCommandSupportsAllExpectedOptions(string option, string value)
+        public void VirtualClientGetTokenCommandSupportsAllExpectedOptions(string option, string value)
         {
-            using (CancellationTokenSource cancellationSource = new CancellationTokenSource())
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
             {
                 List<string> arguments = new List<string>()
                 {
-                    "api"
+                    "get-token",
+                    "--key-vault=https://any.vault.azure.net",
+                    "--tenant-id=123456"
                 };
 
                 arguments.Add(option);
@@ -614,9 +845,94 @@ namespace VirtualClient
 
                 Assert.DoesNotThrow(() =>
                 {
-                    ParseResult result = Program.SetupCommandLine(arguments.ToArray(), cancellationSource).Build().Parse(arguments);
+                    ParseResult result = CommandLineParser.Create(arguments.ToArray(), tokenSource).Parse();
                     Assert.IsFalse(result.Errors.Any());
-                    result.ThrowOnUsageError();
+                }, $"Option '{option}' is not supported.");
+            }
+        }
+
+        [Test]
+        [TestCase("--client-id", "AgentID")]
+        [TestCase("--content-path", "{experimentId}/any/{toolname}")]
+        [TestCase("--content-path-template", "{experimentId}/any/{toolname}")]
+        [TestCase("--event-hub", "sb://any.servicebus")]
+        [TestCase("--exit-wait", "00:10:00")]
+        [TestCase("--experiment-id", "0B692DEB-411E-4AC1-80D5-AF539AE1D6B2")]
+        [TestCase("--logger", "csv")]
+        [TestCase("--log-dir", "C:\\any\\path\\to\\logs")]
+        [TestCase("--log-level", "2")]
+        [TestCase("--log-level", "Information")]
+        [TestCase("--metadata", "Key1=Value1,,,Key2=Value2")]
+        [TestCase("--parameters", "Param1=Value1,,,Param2=Value2")]
+        [TestCase("--system", "Azure")]
+        [TestCase("--verbose", null)]
+        public void VirtualClientUploadFilesCommandSupportsAllExpectedOptionsForCertificateDownloads(string option, string value)
+        {
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+            {
+                List<string> arguments = new List<string>()
+                {
+                    "upload-files",
+                    "--content-store", "https://anystorage",
+                    "--directory", "C:\\Any\\User\\logs"
+                };
+
+                arguments.Add(option);
+                if (value != null)
+                {
+                    arguments.Add(value);
+                }
+
+                Assert.DoesNotThrow(() =>
+                {
+                    ParseResult result = CommandLineParser.Create(arguments.ToArray(), tokenSource).Parse();
+                    Assert.IsFalse(result.Errors.Any());
+                }, $"Option '{option}' is not supported.");
+            }
+        }
+
+        [Test]
+        [TestCase("--client-id", "AgentID")]
+        [TestCase("--directory", "/home/any/logs")]
+        [TestCase("--files", "/home/any/logs/file1.metrics;/home/any/logs/file2.metrics")]
+        [TestCase("--exit-wait", "00:10:00")]
+        [TestCase("--experiment-id", "0B692DEB-411E-4AC1-80D5-AF539AE1D6B2")]
+        [TestCase("-i", null)]
+        [TestCase("--intrinsic", null)]
+        [TestCase("--log-dir", "C:\\any\\path\\to\\logs")]
+        [TestCase("--logger", "csv")]
+        [TestCase("--log-level", "2")]
+        [TestCase("--log-level", "Information")]
+        [TestCase("--match", "*.metrics")]
+        [TestCase("--metadata", "Key1=Value1,,,Key2=Value2")]
+        [TestCase("--parameters", "Param1=Value1,,,Param2=Value2")]
+        [TestCase("-r", null)]
+        [TestCase("--recursive", null)]
+        [TestCase("--system", "any")]
+        [TestCase("-v", null)]
+        [TestCase("--verbose", null)]
+        public void VirtualClientUploadTelemetryCommandSupportsAllExpectedOptions(string option, string value)
+        {
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+            {
+                List<string> arguments = new List<string>()
+                {
+                    "upload-telemetry",
+                    "--format", "CSV",
+                    "--schema", "Metrics",
+                    "--event-hub", "sb://any.servicebus.net"
+                };
+
+                arguments.Add(option);
+                if (value != null)
+                {
+                    arguments.Add(value);
+                }
+
+                Assert.DoesNotThrow(() =>
+                {
+                    ParseResult result = CommandLineParser.Create(arguments.ToArray(), tokenSource).Parse();
+                    Assert.IsFalse(result.Errors.Any());
                 }, $"Option '{option}' is not supported.");
             }
         }
@@ -624,16 +940,15 @@ namespace VirtualClient
         [Test]
         public void VirtualClientCommandLineSupportsResponseFiles()
         {
-            using (CancellationTokenSource cancellationSource = new CancellationTokenSource())
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
             {
                 List<string> arguments = new List<string>()
                 {
                     $"@{Path.Combine(CommandLineOptionTests.ResourcesDirectory, "TestOptions.rsp")}"
                 };
 
-                ParseResult result = Program.SetupCommandLine(arguments.ToArray(), cancellationSource).Build().Parse(arguments);
+                ParseResult result = CommandLineParser.Create(arguments, tokenSource).Parse();
                 Assert.IsFalse(result.Errors.Any());
-                Assert.DoesNotThrow(() => result.ThrowOnUsageError());
 
                 // Based on the options found in the Resources/TestOptions.rsp file.
                 Assert.IsTrue(result.Tokens.Count == 19);
@@ -651,62 +966,29 @@ namespace VirtualClient
                         "--package-store", "https://anystorageaccount.blob.core.windows.net/?sv=2020-08-04&ss=b",
                         "--client-id", "007",
                         "--experiment-id", "123456",
-                        "--debug"
+                        "--verbose"
                     },
                     result.Tokens.Select(t => t.Value));
 
             }
         }
 
-        [Test]
-        [TestCase("--clean", null)]
-        [TestCase("--clean", "logs")]
-        [TestCase("--clean", "logs,packages,state,temp")]
-        [TestCase("--parameters", "helloWorld=123,,,TenantId=789203498")]
-        [TestCase("--pm", "testing")]
-        [TestCase("--verbose", null)]
-        public void VirtualClientGetTokenCommandSupportsOnlyExpectedOptions(string option, string value)
-        {            
-            using (CancellationTokenSource cancellationSource = new CancellationTokenSource())
-            {
-                List<string> arguments = new List<string>()
-                {
-                    "get-token",
-                    "--key-vault", "https://any.vault.azure.net/",
-                    "--tenant-id", "tenant1"
-                };
-
-                arguments.Add(option);
-                if (value != null)
-                {
-                    arguments.Add(value);
-                }
-
-                Assert.DoesNotThrow(() =>
-                {
-                    ParseResult result = Program.SetupCommandLine(arguments.ToArray(), cancellationSource).Build().Parse(arguments);
-                    Assert.IsFalse(result.Errors.Any());
-                    result.ThrowOnUsageError();
-                }, $"Option '{option}' is not supported.");
-            }
-        }
-
-        private class TestExecuteCommand : ExecuteCommand
+        private class TestExecuteProfileCommand : ExecuteProfileCommand
         {
-            public Action OnExecuteCommand { get; set; }
+            public Action OnExecute { get; set; }
 
-            public Action OnExecuteProfiles { get; set; }
-
-            protected override Task<int> ExecuteCommandAsync(string[] args, CancellationTokenSource cancellationTokenSource)
+            protected override Task<int> ExecuteAsync(string[] args, IServiceCollection dependencies, CancellationTokenSource cancellationTokenSource)
             {
-                this.OnExecuteCommand?.Invoke();
+                this.OnExecute?.Invoke();
                 return Task.FromResult(0);
             }
 
-            protected override Task<int> ExecuteProfilesAsync(string[] args, CancellationTokenSource cancellationTokenSource)
+            protected override IServiceCollection InitializeDependencies(string[] args, PlatformSpecifics platformSpecifics)
             {
-                this.OnExecuteProfiles?.Invoke();
-                return Task.FromResult(0);
+                IServiceCollection dependencies = new ServiceCollection();
+                dependencies.AddSingleton<ILogger>(NullLogger.Instance);
+
+                return dependencies;
             }
         }
     }
