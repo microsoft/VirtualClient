@@ -1518,9 +1518,9 @@ namespace VirtualClient
         {
             List<DependencyProfileReference> profiles = new List<DependencyProfileReference>();
 
-            foreach (Token argument in parsedResult.Tokens)
+            foreach (Token token in parsedResult.Tokens)
             {
-                string profileReference = OptionFactory.GetValue(argument)?.Trim();
+                string profileReference = token.Value?.Trim();
 
                 if (PlatformSpecifics.IsFullyQualifiedPath(profileReference))
                 {
