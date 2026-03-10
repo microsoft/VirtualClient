@@ -12,6 +12,7 @@ namespace CRC.VirtualClient.Actions
     using System.Threading;
     using System.Threading.Tasks;
     using global::VirtualClient;
+    using global::VirtualClient.Common;
     using global::VirtualClient.Common.Extensions;
     using global::VirtualClient.Common.Telemetry;
     using global::VirtualClient.Contracts;
@@ -20,14 +21,15 @@ namespace CRC.VirtualClient.Actions
     /// <summary>
     /// Base class for all Elasticsearch Rally workload executors.
     /// </summary>
-    public abstract class ElasticsearchRallyBaseExecutor : VirtualClientComponent
+    [SupportedPlatforms("linux-arm64,linux-x64,win-arm64,win-x64")]
+    public abstract class ElasticsearchRallyExecutor : VirtualClientComponent
     {
         /// <summary>
-        /// Constructor for <see cref="ElasticsearchRallyBaseExecutor"/>
+        /// Constructor for <see cref="ElasticsearchRallyExecutor"/>
         /// </summary>
         /// <param name="dependencies">Provides required dependencies to the component.</param>
         /// <param name="parameters">Parameters defined in the profile or supplied on the command line.</param>
-        public ElasticsearchRallyBaseExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
+        public ElasticsearchRallyExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
              : base(dependencies, parameters)
         {
             this.SupportedRoles = new List<string>
@@ -126,29 +128,34 @@ namespace CRC.VirtualClient.Actions
         /// <exception cref="WorkloadException"></exception>
         protected virtual async Task<string> GetDataDirectoryAsync(CancellationToken cancellationToken)
         {
-            string diskPath = string.Empty;
-
-            if (!cancellationToken.IsCancellationRequested)
+            if (cancellationToken.IsCancellationRequested)
             {
-                ISystemManagement systemManager = this.Dependencies.GetService<ISystemManagement>();
-
-                IEnumerable<Disk> disks = await systemManager.DiskManager.GetDisksAsync(cancellationToken);
-
-                IEnumerable<Disk> disksToTest = DiskFilters.FilterDisks(disks, this.DiskFilter, this.Platform).ToList();
-
-                if (disksToTest?.Any() != true)
-                {
-                    throw new WorkloadException(
-                        "Expected disks to test not found. Given the parameters defined for the profile action/step or those passed " +
-                        "in on the command line, the requisite disks do not exist on the system or could not be identified based on the properties " +
-                        "of the existing disks.",
-                        ErrorReason.DependencyNotFound);
-                }
-
-                diskPath = $"{disksToTest.First().GetPreferredAccessPath(this.Platform)}";
+                return null;
             }
 
-            return diskPath;
+            ISystemManagement systemManagement = this.Dependencies.GetService<ISystemManagement>();
+
+            IEnumerable<Disk> disks = await systemManagement.DiskManager.GetDisksAsync(cancellationToken);
+
+            if (disks?.Any() != true)
+            {
+                throw new WorkloadException(
+                    "Unexpected scenario. The disks defined for the system could not be properly enumerated.",
+                    ErrorReason.WorkloadUnexpectedAnomaly);
+            }
+
+            IEnumerable<Disk> disksToTest = DiskFilters.FilterDisks(disks, this.DiskFilter, this.Platform).ToList();
+
+            if (disksToTest?.Any() != true)
+            {
+                throw new WorkloadException(
+                    "Expected disks to test not found. Given the parameters defined for the profile action/step or those passed " +
+                    "in on the command line, the requisite disks do not exist on the system or could not be identified based on the properties " +
+                    "of the existing disks.",
+                    ErrorReason.DependencyNotFound);
+            }
+
+            return $"{disksToTest.First().GetPreferredAccessPath(this.Platform)}";
         }
 
         /// <summary>
@@ -185,16 +192,26 @@ namespace CRC.VirtualClient.Actions
         }
 
         /// <summary>
+        /// Creates a directory at the specified path.
+        /// </summary>
+        /// <param name="path">The directory to create</param>
+        protected virtual void CreateDirectory(string path)
+        {
+            Directory.CreateDirectory(path);
+        }
+
+        /// <summary>
         /// Runs a windows script command.
         /// </summary>
         /// <param name="telemetryContext"></param>
+        /// <param name="cancellationToken"></param>
         /// <param name="key">Task identifier</param>
         /// <param name="script"></param>
         /// <param name="throwOnError"></param>
         /// <returns></returns>
-        protected bool RunCommandWindowsScript(EventContext telemetryContext, string key, string script, bool throwOnError = false)
+        protected bool RunCommandWindowsScript(EventContext telemetryContext, CancellationToken cancellationToken, string key, string script, bool throwOnError = false)
         {
-            bool ok = this.RunCommand("powershell.exe", BuildWindowsScript(script), out string output, out string error);
+            bool ok = this.RunCommand(telemetryContext, cancellationToken, "powershell.exe", BuildWindowsScript(script), out string output, out string error);
 
             this.HandleTelemetry(telemetryContext, key, script, throwOnError, ok, output, error);
 
@@ -226,13 +243,14 @@ namespace CRC.VirtualClient.Actions
         /// Runs a bash script command.
         /// </summary>
         /// <param name="telemetryContext"></param>
+        /// <param name="cancellationToken"></param>
         /// <param name="key">Task identifier</param>
         /// <param name="script"></param>
         /// <param name="throwOnError"></param>
         /// <returns></returns>
-        protected bool RunCommandScript(EventContext telemetryContext, string key, string script, bool throwOnError = false)
+        protected bool RunCommandScript(EventContext telemetryContext, CancellationToken cancellationToken, string key, string script, bool throwOnError = false)
         {
-            bool ok = this.RunCommand("/bin/bash", BuildBashScript(script), out string output, out string error);
+            bool ok = this.RunCommand(telemetryContext, cancellationToken, "/bin/bash", BuildBashScript(script), out string output, out string error);
 
             this.HandleTelemetry(telemetryContext, key, script, throwOnError, ok, output, error);
 
@@ -243,27 +261,32 @@ namespace CRC.VirtualClient.Actions
         /// Runs a command as root.
         /// </summary>
         /// <param name="telemetryContext"></param>
+        /// <param name="cancellationToken"></param>
         /// <param name="key">Task identifier</param>
         /// <param name="command"></param>
         /// <param name="throwOnError"></param>
         /// <returns></returns>
-        protected bool RunCommandAsRoot(EventContext telemetryContext, string key, string command, bool throwOnError = false)
+        protected bool RunCommandAsRoot(EventContext telemetryContext, CancellationToken cancellationToken, string key, string command, bool throwOnError = false)
         {
-            return this.RunCommandAsUser(telemetryContext, null, key, command, throwOnError);
+            return this.RunCommandAsUser(telemetryContext, cancellationToken, null, key, command, throwOnError);
         }
 
         /// <summary>
         /// Runs a command as a specific user.
         /// </summary>
+        /// <param name="telemetryContext"></param>
+        /// <param name="cancellationToken"></param>
         /// <param name="user"></param>
         /// <param name="command"></param>
         /// <param name="output"></param>
         /// <param name="error"></param>
         /// <returns></returns>
-        protected bool RunCommandAsUser(string user, string command, out string output, out string error)
+        protected bool RunCommandAsUser(EventContext telemetryContext, CancellationToken cancellationToken, string user, string command, out string output, out string error)
         {
             return
                 this.RunCommand(
+                    telemetryContext,
+                    cancellationToken,
                     "/usr/bin/sudo",
                     string.IsNullOrEmpty(user) ? command : $"-u {user} -H bash {BuildBashScript(command)}",
                     out output,
@@ -274,15 +297,16 @@ namespace CRC.VirtualClient.Actions
         /// Runs a command as a specific user.
         /// </summary>
         /// <param name="telemetryContext"></param>
+        /// <param name="cancellationToken"></param>
         /// <param name="user"></param>
         /// <param name="key">Task identifier</param>
         /// <param name="command"></param>
         /// <param name="throwOnError"></param>
         /// <returns></returns>
         /// <exception cref="WorkloadException"></exception>
-        protected bool RunCommandAsUser(EventContext telemetryContext, string user, string key, string command, bool throwOnError = false)
+        protected bool RunCommandAsUser(EventContext telemetryContext, CancellationToken cancellationToken, string user, string key, string command, bool throwOnError = false)
         {
-            bool ok = this.RunCommandAsUser(user, command, out string output, out string error);
+            bool ok = this.RunCommandAsUser(telemetryContext, cancellationToken, user, command, out string output, out string error);
 
             this.HandleTelemetry(telemetryContext, key, command, throwOnError, ok, output, error);
 
@@ -292,31 +316,29 @@ namespace CRC.VirtualClient.Actions
         /// <summary>
         /// Runs a command.
         /// </summary>
+        /// <param name="telemetryContext"></param>
+        /// <param name="cancellationToken"></param>
         /// <param name="command"></param>
         /// <param name="arguments"></param>
         /// <param name="output"></param>
         /// <param name="error"></param>
         /// <returns></returns>
-        protected virtual bool RunCommand(string command, string arguments, out string output, out string error)
+        protected virtual bool RunCommand(EventContext telemetryContext, CancellationToken cancellationToken, string command, string arguments, out string output, out string error)
         {
             output = null;
             error = null;
 
-            var psi = new ProcessStartInfo
+            try
             {
-                FileName = command,
-                Arguments = arguments,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false
-            };
-
-            using (var p = Process.Start(psi))
-            {
-                p.WaitForExit();
-                output = p.StandardOutput.ReadToEnd().Trim();
-                error = p.StandardError.ReadToEnd().Trim();
+                IProcessProxy p = this.ExecuteCommandAsync(command, arguments, null, telemetryContext, cancellationToken).Result;
+                output = p.StandardOutput.ToString().Trim();
+                error = p.StandardError.ToString().Trim();
                 return p.ExitCode == 0;
+            }
+            catch (Exception ex)
+            {
+                error = ex.ToString();
+                return false;
             }
         }
 

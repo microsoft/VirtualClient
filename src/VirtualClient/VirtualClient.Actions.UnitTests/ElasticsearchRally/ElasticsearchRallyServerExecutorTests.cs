@@ -70,7 +70,7 @@ namespace VirtualClient.Actions
                 {
                     commandExecuted = true;
                 };
-                
+
                 Assert.ThrowsAsync<WorkloadException>(() => executor.InitializeAsync(EventContext.None, CancellationToken.None));
             }
 
@@ -103,6 +103,30 @@ namespace VirtualClient.Actions
         }
 
         [Test]
+        [TestCase(true)]
+        [TestCase(false)]
+        public async Task TestElasticsearchRallyServerExecutorInitializeUseDefaultElasticsearchPath(bool useWget)
+        {
+            SetupTest();
+
+            bool commandExecuted = false;
+
+            this.Parameters.Add("UseDefaultElasticsearchPath", useWget);
+
+            using (TestElasticsearchRallyServerExecutor executor = new TestElasticsearchRallyServerExecutor(this.Dependencies, this.Parameters))
+            {
+                executor.OnRunCommand = (command, arguments) =>
+                {
+                    commandExecuted = true;
+                };
+
+                executor.FileExists = true;
+                await executor.InitializeAsync(EventContext.None, CancellationToken.None);
+            }
+
+            Assert.IsTrue(commandExecuted);
+        }
+        [Test]
         public async Task TestElasticsearchRallyServerExecutorExpectedRun()
         {
             SetupTest();
@@ -130,6 +154,10 @@ namespace VirtualClient.Actions
             {
                 executor.FileExists = true;
                 executor.DataDirectory = this.Combine("C:", "nonexistent");
+                executor.OnCreateDirectory = (path) =>
+                {
+                    throw new WorkloadException("data directory could not be found", ErrorReason.WorkloadUnexpectedAnomaly);
+                };
 
                 var ex = Assert.ThrowsAsync<WorkloadException>(async () =>
                     await executor.TestStartElasticsearchWin(EventContext.None, CancellationToken.None));
@@ -250,7 +278,7 @@ namespace VirtualClient.Actions
                 executor.DataDirectory = this.Combine("C:", "data");
                 executor.OnRunCommand = (command, arguments) =>
                 {
-                    if (arguments.Contains("Set-NetFirewallProfile"))
+                    if (arguments.Contains("New-NetFirewallRule"))
                     {
                         firewallCommandExecuted = true;
                         firewallCommand = arguments;
@@ -262,8 +290,8 @@ namespace VirtualClient.Actions
 
             Assert.IsTrue(firewallCommandExecuted);
             Assert.IsNotNull(firewallCommand);
-            Assert.IsTrue(firewallCommand.Contains("Set-NetFirewallProfile"));
-            Assert.IsTrue(firewallCommand.Contains("Enabled False"));
+            Assert.IsTrue(firewallCommand.Contains("New-NetFirewallRule"));
+            Assert.IsTrue(firewallCommand.Contains("-Direction Inbound -Protocol TCP"));
         }
 
         [Test]
@@ -406,11 +434,13 @@ namespace VirtualClient.Actions
         {
             public Action<string, string> OnRunCommand { get; set; }
             public Action<string, string, bool> OnFileCopy { get; set; }
+            public Action<string> OnCreateDirectory { get; set; }
             public Func<string, string, CancellationToken, Task> OnDownloadFile { get; set; }
             public bool FileExists { get; set; }
             public bool DirectoryExists { get; set; }
             public string DataDirectory { get; set; }
             public string TestPlatformArchitectureName { get; set; }
+            public string MountPoint { get; set; }
 
             public TestElasticsearchRallyServerExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
                 : base(dependencies, parameters)
@@ -418,6 +448,7 @@ namespace VirtualClient.Actions
                 this.DataDirectory = "/data";
                 this.PackageName = "elasticsearchrally";
                 this.WaitForElasticsearchAvailabilityTimeout = 0;
+                this.MountPoint = "/mnt";
             }
 
             public new Task InitializeAsync(EventContext context, CancellationToken cancellationToken)
@@ -436,7 +467,7 @@ namespace VirtualClient.Actions
                     "StartElasticsearchWin",
                     System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
-                await (Task)method.Invoke(this, new object[] { context, cancellationToken });
+                await (Task)method.Invoke(this, new object[] { context, cancellationToken, MountPoint });
             }
 
             protected override Task<string> GetDataDirectoryAsync(CancellationToken cancellationToken)
@@ -444,7 +475,7 @@ namespace VirtualClient.Actions
                 return Task.FromResult(this.DataDirectory);
             }
 
-            protected override bool RunCommand(string command, string arguments, out string output, out string error)
+            protected override bool RunCommand(EventContext telemetryContext, CancellationToken cancellationToken, string command, string arguments, out string output, out string error)
             {
                 output = string.Empty;
                 error = string.Empty;
@@ -470,7 +501,7 @@ namespace VirtualClient.Actions
 
             protected override void WriteAllText(string path, string content)
             {
-                
+
             }
 
             protected override string ReadAllText(string path)
@@ -481,6 +512,11 @@ namespace VirtualClient.Actions
             protected override void FileCopy(string sourcePath, string destinationPath, bool overwrite)
             {
                 OnFileCopy?.Invoke(sourcePath, destinationPath, overwrite);
+            }
+
+            protected override void CreateDirectory(string path)
+            {
+                OnCreateDirectory?.Invoke(path);
             }
 
             protected override Task ParallelDownloadFile(string url, string destinationPath, CancellationToken cancellationToken)

@@ -31,7 +31,7 @@ namespace VirtualClient.Actions
             this.Setup(PlatformID.Unix);
 
             this.testUrl = "https://example.com/testfile.zip";
-            
+
             string tempPath = Path.GetTempPath();
 
             this.testDestinationPath = this.Combine(tempPath, "testfile.zip");
@@ -44,10 +44,10 @@ namespace VirtualClient.Actions
                 FileExists = false,
                 FileLength = 0
             };
-            
+
             this.File.Reset();
             this.File.Setup(f => f.Exists(It.IsAny<string>())).Returns(false);
-            
+
             this.Directory.Setup(d => d.Exists(It.IsAny<string>())).Returns(true);
             this.Directory.Setup(d => d.CreateDirectory(It.IsAny<string>())).Returns(this.DirectoryInfo.Object);
             this.Directory.Setup(d => d.Delete(It.IsAny<string>(), It.IsAny<bool>()));
@@ -86,7 +86,7 @@ namespace VirtualClient.Actions
                     {
                         return headResponse;
                     }
-                    
+
                     requestCount++;
                     return getResponse;
                 });
@@ -145,7 +145,7 @@ namespace VirtualClient.Actions
                     if (request.Headers.Range != null)
                     {
                         rangeRequests.Add(request.Headers.Range.ToString());
-                        
+
                         var range = request.Headers.Range.Ranges.GetEnumerator();
                         range.MoveNext();
                         long start = range.Current.From.Value;
@@ -290,7 +290,7 @@ namespace VirtualClient.Actions
                     {
                         return headResponse;
                     }
-                    
+
                     getRequestCount++;
                     return getResponse;
                 });
@@ -339,7 +339,7 @@ namespace VirtualClient.Actions
                     {
                         return headResponse;
                     }
-                    
+
                     getRequestCount++;
                     return getResponse;
                 });

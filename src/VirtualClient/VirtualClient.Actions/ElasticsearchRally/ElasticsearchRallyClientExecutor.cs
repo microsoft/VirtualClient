@@ -6,7 +6,6 @@ namespace CRC.VirtualClient.Actions
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Net;
     using System.Threading;
     using System.Threading.Tasks;
     using global::VirtualClient;
@@ -19,7 +18,7 @@ namespace CRC.VirtualClient.Actions
     /// <summary>
     /// The Elasticsearch Rally Client workload executor.
     /// </summary>
-    public class ElasticsearchRallyClientExecutor : ElasticsearchRallyBaseExecutor
+    public class ElasticsearchRallyClientExecutor : ElasticsearchRallyExecutor
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="ElasticsearchRallyClientExecutor"/> class.
@@ -46,11 +45,11 @@ namespace CRC.VirtualClient.Actions
         /// <summary>
         /// The track targeted for run by Rally.
         /// </summary>
-        public string TrackName
+        public string RallyTrackName
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(ElasticsearchRallyClientExecutor.TrackName));
+                return this.Parameters.GetValue<string>(nameof(ElasticsearchRallyClientExecutor.RallyTrackName));
             }
         }
 
@@ -61,7 +60,56 @@ namespace CRC.VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<bool>(nameof(ElasticsearchRallyClientExecutor.RallyTestMode));
+                return this.Parameters.GetValue<bool>(nameof(ElasticsearchRallyClientExecutor.RallyTestMode), false);
+            }
+        }
+
+        /// <summary>
+        /// A track consists of one or more challenges. With this flag you can specify which challenge should be run.
+        /// https://esrally.readthedocs.io/en/stable/command_line_reference.html#challenge
+        /// </summary>
+        public string RallyChallenge
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(ElasticsearchRallyClientExecutor.RallyChallenge), string.Empty);
+            }
+        }
+
+        /// <summary>
+        /// Each challenge consists of one or more tasks.
+        /// Use RallyIncludeTasks to specify a comma-separated list of tasks that you want to run.
+        /// Only the tasks that match will be executed.
+        /// https://esrally.readthedocs.io/en/stable/command_line_reference.html#include-tasks
+        /// </summary>
+        public string RallyIncludeTasks
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(ElasticsearchRallyClientExecutor.RallyIncludeTasks), string.Empty);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool RallyCollectAllMetrics
+        {
+            get
+            {
+                return this.Parameters.GetValue<bool>(nameof(ElasticsearchRallyClientExecutor.RallyCollectAllMetrics), false);
+            }
+        }
+
+        /// <summary>
+        /// Command arguments to control Rally
+        /// https://esrally.readthedocs.io/en/stable/command_line_reference.html
+        /// </summary>
+        public string RallyCommandLineArguments
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(ElasticsearchRallyClientExecutor.RallyCommandLineArguments), string.Empty);
             }
         }
 
@@ -83,7 +131,16 @@ namespace CRC.VirtualClient.Actions
                 }
 
                 ClientInstance clientInstance = this.GetLayoutClientInstances(ClientRole.Server).FirstOrDefault();
-                IPAddress.TryParse(clientInstance.IPAddress, out IPAddress serverIPAddress);
+
+                if (
+                    clientInstance == null ||
+                    string.IsNullOrEmpty(clientInstance.IPAddress))
+                {
+                    throw new WorkloadException(
+                        $"Elasticsearch Rally Client IP Address must be defined.",
+                        ErrorReason.LayoutInvalid);
+                }
+
                 string targetHost = clientInstance?.IPAddress;
                 if (string.IsNullOrEmpty(targetHost))
                 {
@@ -94,7 +151,7 @@ namespace CRC.VirtualClient.Actions
 
                 string user = this.PlatformSpecifics.GetLoggedInUser();
                 int port = this.Port;
-                string trackName = this.TrackName;
+                string trackName = this.RallyTrackName;
                 string dataDirectory = await this.GetDataDirectoryAsync(cancellationToken);
 
                 string rallySharedStoragePath = $"{dataDirectory}/esrally"; // Used for large, shareable, reusable data
@@ -119,29 +176,34 @@ namespace CRC.VirtualClient.Actions
                     }
                 }
 
+                this.CleanupElasticSearchCluster(
+                    telemetryContext.Clone(),
+                    cancellationToken,
+                    targetHost,
+                    port);
+
                 this.RunRallyClient(
+                    telemetryContext.Clone(),
+                    cancellationToken,
                     user,
                     targetHost,
                     port,
                     trackName,
                     rallySharedStoragePath,
-                    rallyUserHomePath,
-                    telemetryContext.Clone(),
-                    cancellationToken);
+                    rallyUserHomePath);
             });
 
             return;
         }
 
         /// <summary>
-        /// Reads all lines from the specified report file and returns them as an array of strings.
+        /// Reads the contents of the specified report file and returns it as a single string.
         /// </summary>
         /// <param name="reportPath">The full path to the report file to read. Cannot be null or an empty string.</param>
-        /// <returns>An array of strings, each representing a line from the report file. The array will be empty if the file
-        /// contains no lines.</returns>
-        protected virtual string[] ReadReportLines(string reportPath)
+        /// <returns>The contents of the report file as a single string.</returns>
+        protected virtual string ReadReportFile(string reportPath)
         {
-            return System.IO.File.ReadAllLines(reportPath);
+            return System.IO.File.ReadAllText(reportPath);
         }
 
         /// <summary>
@@ -150,19 +212,21 @@ namespace CRC.VirtualClient.Actions
         /// <remarks>This method waits up to timeout seconds before performing the availability check. Override
         /// this method to customize the server availability check logic in derived classes.</remarks>
         /// <param name="telemetryContext">The context for telemetry and logging associated with this operation.</param>
+        /// <param name="cancellationToken">The cancellation token to observe while waiting for the server to become available.</param>
         /// <param name="targetHost">The DNS name or IP address of the server to check for availability. Cannot be null or empty.</param>
         /// <param name="port">The network port number on the target server to check. Must be a valid TCP port number.</param>
         /// <param name="timeout">The amount of time in milliseconds to wait before performing the availability check. Default is 60000 ms.</param>
         /// <returns>true if the server at the specified host and port is available; otherwise, false.</returns>
         protected virtual bool CheckServerAvailable(
             EventContext telemetryContext,
+            CancellationToken cancellationToken,
             string targetHost,
             int port,
             int timeout = 60000)
         {
             Thread.Sleep(timeout); // wait for server to be available
 
-            return this.RunCommandAsRoot(telemetryContext, "RallyUrlServerCall", $"curl {targetHost}:{port}");
+            return this.RunCommandAsRoot(telemetryContext, cancellationToken, "RallyUrlServerCall", $"curl {targetHost}:{port}");
         }
 
         private void StartRallyClient(
@@ -176,11 +240,11 @@ namespace CRC.VirtualClient.Actions
             CancellationToken cancellationToken)
         {
             // install es rally
-            this.RunCommandAsRoot(telemetryContext, "RallyCheckPyhton3", $"python3 --version", true);
-            this.RunCommandAsRoot(telemetryContext, "RallyCheckPip3", $"pip3 --version", true);
+            this.RunCommandAsRoot(telemetryContext, cancellationToken, "RallyCheckPyhton3", $"python3 --version", true);
+            this.RunCommandAsRoot(telemetryContext, cancellationToken, "RallyCheckPip3", $"pip3 --version", true);
 
             // using pipx to install esrally, prepare the environment and avoid dependency conflicts
-            this.RunCommandAsRoot(telemetryContext, "RallySetPixPathRoot", $"pipx ensurepath", true);
+            this.RunCommandAsRoot(telemetryContext, cancellationToken, "RallySetPixPathRoot", $"pipx ensurepath", true);
 
             string esRallyInstallCommand = "pipx install esrally";
             if (!string.IsNullOrEmpty(this.RallyVersion))
@@ -188,24 +252,24 @@ namespace CRC.VirtualClient.Actions
                 esRallyInstallCommand = $"{esRallyInstallCommand}=={this.RallyVersion}";
             }
 
-            this.RunCommandAsRoot(telemetryContext, "RallyInstall", esRallyInstallCommand, true);
+            this.RunCommandAsRoot(telemetryContext, cancellationToken, "RallyInstall", esRallyInstallCommand, true);
 
-            this.RunCommandAsRoot(telemetryContext, "RallyMakeSharedStorage", $"mkdir -p {rallySharedStoragePath}");
+            this.RunCommandAsRoot(telemetryContext, cancellationToken, "RallyMakeSharedStorage", $"mkdir -p {rallySharedStoragePath}");
 
-            this.RunCommandAsRoot(telemetryContext, "RallyChown", $"chown -R {user}:{user} {rallySharedStoragePath}", true);
-            this.RunCommandAsRoot(telemetryContext, "RallySharedStorageCheck", $"ls -ld {rallySharedStoragePath}", true);
-            this.RunCommandAsUser(telemetryContext, user, "RallyUserTouch", $"echo ok > {rallySharedStoragePath}/test.txt", true);
+            this.RunCommandAsRoot(telemetryContext, cancellationToken, "RallyChown", $"chown -R {user}:{user} {rallySharedStoragePath}", true);
+            this.RunCommandAsRoot(telemetryContext, cancellationToken, "RallySharedStorageCheck", $"ls -ld {rallySharedStoragePath}", true);
+            this.RunCommandAsUser(telemetryContext, cancellationToken, user, "RallyUserTouch", $"echo ok > {rallySharedStoragePath}/test.txt", true);
 
-            this.RunCommandAsRoot(telemetryContext, "RallyChownUserHome", $"chown -R {user}:{user} {rallyUserHomePath}");
+            this.RunCommandAsRoot(telemetryContext, cancellationToken, "RallyChownUserHome", $"chown -R {user}:{user} {rallyUserHomePath}");
 
-            this.RunESRallyCommand(telemetryContext, user, rallyUserHomePath, rallySharedStoragePath, "RallyCheckEsrallyCheck", "--version");
-            this.RunESRallyCommand(telemetryContext, user, rallyUserHomePath, rallySharedStoragePath, "RallyInfo", $"info --track={trackName}");
-            this.RunESRallyCommand(telemetryContext, user, rallyUserHomePath, rallySharedStoragePath, "RallyListTracks", "list tracks");
+            this.RunESRallyCommand(telemetryContext, cancellationToken, user, rallyUserHomePath, rallySharedStoragePath, "RallyCheckEsrallyCheck", "--version");
+            this.RunESRallyCommand(telemetryContext, cancellationToken, user, rallyUserHomePath, rallySharedStoragePath, "RallyInfo", $"info --track={trackName}");
+            this.RunESRallyCommand(telemetryContext, cancellationToken, user, rallyUserHomePath, rallySharedStoragePath, "RallyListTracks", "list tracks");
 
             // client environment is ready, now we can connect to the Elasticsearch server
 
             int tries = 0;
-            while (!this.CheckServerAvailable(telemetryContext, targetHost, port))
+            while (!this.CheckServerAvailable(telemetryContext, cancellationToken, targetHost, port))
             {
                 int limit = 20;
                 if (tries++ >= limit)
@@ -221,40 +285,45 @@ namespace CRC.VirtualClient.Actions
             this.Logger.LogMessage($"{this.TypeName}.ElasticsearchServerIsReady", telemetryContext);
         }
 
+        private void CleanupElasticSearchCluster(EventContext telemetryContext, CancellationToken cancellationToken, string targetHost, int port)
+        {
+            this.RunCommandAsRoot(telemetryContext, cancellationToken, "RallyCleanupElasticSearch", $"curl -X DELETE {targetHost}:{port}/_all");
+        }
+
         private void RunRallyClient(
+            EventContext telemetryContext,
+            CancellationToken cancellationToken,
             string user,
             string targetHost,
             int port,
             string trackName,
             string rallySharedStoragePath,
-            string rallyUserHomePath,
-            EventContext telemetryContext,
-            CancellationToken cancellationToken)
+            string rallyUserHomePath)
         {
             DateTime start = DateTime.Now;
             string raceId = Guid.NewGuid().ToString();
             string reportPath = $"{rallySharedStoragePath}/report.csv";
 
-            string rallyCommand = string.Concat(
-                "race ",
-                $"--track={trackName} ",
-                $"--target-hosts={targetHost} ",
-                $"--race-id={raceId} ",
-                $"--target-hosts={targetHost}:{port} ",
-                $"--show-in-report=all ", // all, all-percentiles, available
-                $"--report-format=csv ",
-                $"--report-file={reportPath} ",
-                $"--pipeline=benchmark-only ",
-                $"--runtime-jdk=bundled");
-
-            if (this.RallyTestMode)
+            if (this.CheckFileExists(reportPath))
             {
-                rallyCommand = string.Concat(rallyCommand, " --test-mode");
+                this.RunCommandAsRoot(telemetryContext, cancellationToken, "RallyRemoveOldReport", $"rm -f {reportPath}", false);
             }
 
-            this.RunESRallyCommand(telemetryContext, user, rallyUserHomePath, rallySharedStoragePath, "RallyExecution", rallyCommand);
+            string rallyCommand = this.RallyCommandLineArguments;
 
-            this.RunESRallyCommand(telemetryContext, user, rallyUserHomePath, rallySharedStoragePath, "RallyListRaces", "list races");
+            if (string.IsNullOrEmpty(rallyCommand))
+            {
+                rallyCommand = this.BuildRallyCommandLineArguments(
+                    trackName,
+                    raceId,
+                    targetHost,
+                    port,
+                    reportPath);
+            }
+
+            this.RunESRallyCommand(telemetryContext, cancellationToken, user, rallyUserHomePath, rallySharedStoragePath, "RallyExecution", rallyCommand);
+
+            this.RunESRallyCommand(telemetryContext, cancellationToken, user, rallyUserHomePath, rallySharedStoragePath, "RallyListRaces", "list races");
 
             // race.json is undocumented and not present in esrally 2.5.0 and later versions by default, so we cannot depend on it.
             string resultsPath = $"{rallySharedStoragePath}/.rally/benchmarks/races/{raceId}/race.json";
@@ -271,17 +340,7 @@ namespace CRC.VirtualClient.Actions
             {
                 try
                 {
-                    string[] reportContents = this.ReadReportLines(reportPath);
-                    if (reportContents.Length < 2)
-                    {
-                        this.Logger.LogMessage($"{this.TypeName}.RallyReportCsvInsufficientData", telemetryContext);
-                        return;
-                    }
-
-                    telemetryContext.AddContext("RallyReportCsvContents", reportContents.Take(5));
-                    this.Logger.LogMessage($"{this.TypeName}.RallyReportCsv", telemetryContext);
-
-                    this.CaptureMetrics(reportContents, rallyCommand, raceId, start, DateTime.Now, telemetryContext, cancellationToken);
+                    this.CaptureMetrics(reportPath, rallyCommand, raceId, start, DateTime.Now, telemetryContext, cancellationToken);
                 }
                 catch (Exception ex)
                 {
@@ -293,7 +352,46 @@ namespace CRC.VirtualClient.Actions
             }
         }
 
-        private void RunESRallyCommand(EventContext telemetryContext, string user, string rallyUserHomePath, string rallySharedStoragePath, string key, string esRallyCommand)
+        private string BuildRallyCommandLineArguments(
+            string trackName,
+            string raceId,
+            string targetHost,
+            int port,
+            string reportPath)
+        {
+            // using report-file command line to capture results in CSV format
+            // https://esrally.readthedocs.io/en/stable/command_line_reference.html#report-file
+
+            string rallyCommand = string.Concat(
+                "race ",
+                $"--track={trackName} ",
+                $"--race-id={raceId} ",
+                $"--target-hosts={targetHost}:{port} ",
+                $"--show-in-report=available ", // all, all-percentiles, available : using available because "all" thrown null type error
+                $"--report-format=csv ",
+                $"--report-file={reportPath} ",
+                $"--pipeline=benchmark-only ",
+                $"--runtime-jdk=bundled");
+
+            if (!string.IsNullOrEmpty(this.RallyChallenge))
+            {
+                rallyCommand = string.Concat(rallyCommand, $" --challenge={this.RallyChallenge}");
+            }
+
+            if (!string.IsNullOrEmpty(this.RallyIncludeTasks))
+            {
+                rallyCommand = string.Concat(rallyCommand, $" --include-tasks={this.RallyIncludeTasks}");
+            }
+
+            if (this.RallyTestMode)
+            {
+                rallyCommand = string.Concat(rallyCommand, " --test-mode");
+            }
+
+            return rallyCommand;
+        }
+
+        private void RunESRallyCommand(EventContext telemetryContext, CancellationToken cancellationToken, string user, string rallyUserHomePath, string rallySharedStoragePath, string key, string esRallyCommand)
         {
             // hey points of this solution:
             // - avoids dotfiles which are very cumbersome to deal with .net process
@@ -316,15 +414,41 @@ namespace CRC.VirtualClient.Actions
                 "python3 -m pipx run esrally ", // esrally lives inside the pipx venv, not system Python.
                 esRallyCommand);
 
-            this.RunCommandAsRoot(telemetryContext, key, shellCommand, true);
+            this.RunCommandAsRoot(telemetryContext, cancellationToken, key, shellCommand, true);
         }
 
-        private void CaptureMetrics(string[] reportContents, string rallyExecutionArguments, string raceId, DateTime startTime, DateTime exitTime, EventContext telemetryContext, CancellationToken cancellationToken)
+        private void CaptureMetrics(string reportPath, string rallyExecutionArguments, string raceId, DateTime startTime, DateTime exitTime, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             if (cancellationToken.IsCancellationRequested)
             {
                 return;
             }
+
+            string reportContents = this.ReadReportFile(reportPath);
+
+            ElasticsearchRallyMetricsParser elasticsearchRallyMetricsParser = new ElasticsearchRallyMetricsParser(
+                reportContents,
+                new Dictionary<string, IConvertible>
+                {
+                    ["elasticsearchVersion"] = this.ElasticsearchVersion,
+                    ["rallyVersion"] = this.RallyVersion ?? "latest",
+                    ["rallyTrack"] = this.RallyTrackName,
+                    ["raceId"] = raceId,
+                    ["challenge"] = this.RallyChallenge,
+                    ["includeTasks"] = this.RallyIncludeTasks,
+                },
+                this.RallyCollectAllMetrics);
+
+            string[] reportLines = elasticsearchRallyMetricsParser.ReportLines;
+
+            if (reportLines.Length < 2)
+            {
+                this.Logger.LogMessage($"{this.TypeName}.RallyReportCsvInsufficientData", telemetryContext);
+                return;
+            }
+
+            telemetryContext.AddContext("RallyReportCsvContents", reportContents.Take(5));
+            this.Logger.LogMessage($"{this.TypeName}.RallyReportCsv", telemetryContext);
 
             this.MetadataContract.AddForScenario(
                 "ElasticsearchRally",
@@ -333,19 +457,11 @@ namespace CRC.VirtualClient.Actions
 
             this.MetadataContract.Apply(telemetryContext);
 
-            if (reportContents.Length > 0)
+            if (reportLines.Length > 0)
             {
                 try
                 {
-                    IList<Metric> metrics = ElasticsearchMetricReader.Read(
-                        reportContents,
-                        new Dictionary<string, IConvertible>
-                        {
-                            ["elasticsearchVersion"] = this.ElasticsearchVersion,
-                            ["rallyVersion"] = this.RallyVersion ?? "latest",
-                            ["rallyTrack"] = this.TrackName,
-                            ["raceId"] = raceId,
-                        });
+                    IList<Metric> metrics = elasticsearchRallyMetricsParser.Parse();
 
                     if (this.MetricFilters?.Any() == true)
                     {

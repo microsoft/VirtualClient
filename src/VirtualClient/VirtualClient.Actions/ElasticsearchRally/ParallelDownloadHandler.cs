@@ -50,8 +50,8 @@ namespace CRC.VirtualClient.Actions
         /// <param name="parallelDownloadHandler">An optional parallel download handler instance to use for the download. If not provided, a new HttpClient will be created.</param>
         /// <returns>A task representing the asynchronous download operation.</returns>
         public static async Task DownloadFile(
-            string url, 
-            string destinationPath, 
+            string url,
+            string destinationPath,
             CancellationToken cancellationToken,
             int parallel = 8,
             int timeout = 30,
@@ -65,7 +65,7 @@ namespace CRC.VirtualClient.Actions
             {
                 HttpClient? httpClient = parallelDownloadHandler?.HttpClient;
                 HttpClient http;
-                
+
                 if (httpClient == null)
                 {
                     // ---- Build a tuned SocketsHttpHandler ----
@@ -124,8 +124,8 @@ namespace CRC.VirtualClient.Actions
         }
 
         private static async Task DownloadSingleAsync(
-            HttpClient http, 
-            string url, 
+            HttpClient http,
+            string url,
             string destinationPath,
             CancellationToken ct,
             IParallelDownloadHandler? parallelDownloadHandler)
@@ -155,12 +155,12 @@ namespace CRC.VirtualClient.Actions
         }
 
         private static async Task DownloadParallelAsync(
-            HttpClient http, 
-            string url, 
+            HttpClient http,
+            string url,
             string destinationPath,
-            long totalLength, 
-            int chunkSize, 
-            int parallel, 
+            long totalLength,
+            int chunkSize,
+            int parallel,
             CancellationToken ct)
         {
             var ranges = BuildRanges(totalLength, chunkSize);
@@ -181,8 +181,8 @@ namespace CRC.VirtualClient.Actions
                     var success = await DownloadRangeWithRetryAsync(http, url, r, partPath, ct, progress: bytes => { /* in progress */ });
                     // if (!success) throw new Exception($"Failed to download range {r.start}-{r.end}");
                 }
-                finally 
-                { 
+                finally
+                {
                     throttler.Release();
                 }
             });
@@ -204,11 +204,11 @@ namespace CRC.VirtualClient.Actions
         }
 
         private static async Task<bool> DownloadRangeWithRetryAsync(
-            HttpClient http, 
-            string url, 
+            HttpClient http,
+            string url,
             (long start, long end) range,
-            string partPath, 
-            CancellationToken ct, 
+            string partPath,
+            CancellationToken ct,
             Action<long>? progress)
         {
             const int maxAttempts = 5;
