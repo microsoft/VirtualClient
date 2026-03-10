@@ -3,23 +3,20 @@
 
 namespace VirtualClient
 {
-    using Azure.Storage.Blobs;
-    using Microsoft.CodeAnalysis;
-    using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.Extensions.Logging;
-    using Newtonsoft.Json;
-    using Polly;
     using System;
     using System.Collections.Generic;
-    using System.ComponentModel;
     using System.Globalization;
     using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
     using System.Runtime.InteropServices;
+    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
-    using VirtualClient.Common;
+    using Microsoft.CodeAnalysis;
+    using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
+    using Newtonsoft.Json;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
@@ -35,12 +32,46 @@ namespace VirtualClient
     /// </summary>
     internal class ExecuteProfileCommand : CommandBase
     {
+        private const string ExecuteCommandProfile = "EXECUTE-COMMAND.json";
+        private const string ExecuteSshCommandProfile = "EXECUTE-SSH-COMMAND.json";
         private const string FileUploadMonitorProfile = "MONITORS-FILE-UPLOAD.json";
+
+        /// <summary>
+        /// When determining the name of the command, we want to exclude certain terms
+        /// that define the hosting/terminal environment (e.g. pwsh, python).
+        /// </summary>
+        /// <remarks>
+        /// Examples:
+        /// pwsh S:\any\Script.ps1 -> Script
+        /// pwsh -Command S:\any\Script.ps1 -> Script
+        /// </remarks>
+        private static readonly Regex CommandTerminalExpression = new Regex("pwsh|pwsh.exe|powershell|powershell.exe|python|python.exe|python3|python3.exe|-[a-z-_]");
+
+        private static readonly Regex PowerShellExpression = new Regex(
+            "pwsh.exe|pwsh|powershell.exe|powershell",
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+        /// <summary>
+        /// The full command line.
+        /// </summary>
+        public string Command { get; set; }
 
         /// <summary>
         /// True if VC should exit/crash on first/any error(s) regardless of their severity. Default = false.
         /// </summary>
         public bool? FailFast { get; set; }
+
+        /// <summary>
+        /// Returns true if the user command line arguments provided indicates a PowerShell (pwsh) 
+        /// command (vs. a profile execution).
+        /// </summary>
+        protected bool IsPowerShell
+        {
+            get
+            {
+                return ExecuteProfileCommand.PowerShellExpression.IsMatch(this.Command);
+            }
+        }
 
         /// <summary>
         /// True if the profile dependencies should be installed as the only operations. False if
@@ -84,33 +115,81 @@ namespace VirtualClient
         protected PlatformExtensions Extensions { get; set; }
 
         /// <summary>
+        /// Returns the name of the command being executed.
+        /// </summary>
+        /// <param name="commandArguments">The full command line arguments.</param>
+        protected static string GetCommandName(string[] commandArguments)
+        {
+            string commandName = null;
+            foreach (string argument in commandArguments)
+            {
+                if (String.Equals(commandName, "sudo"))
+                {
+                    continue;
+                }
+
+                // Find the first argument that is not a
+                if (!ExecuteProfileCommand.CommandTerminalExpression.IsMatch(argument))
+                {
+                    commandName = Path.GetFileNameWithoutExtension(argument.Trim());
+                    break;
+                }
+            }
+
+            return commandName;
+        }
+
+        /// <summary>
+        /// Normalizes the PowerShell command for execution in a non-interactive
+        /// environment.
+        /// </summary>
+        /// <param name="commandLine">The command line arguments provided by the user.</param>
+        /// <returns>A PowerShell command ready for non-interactive execution.</returns>
+        protected static string NormalizeForPowerShell(string commandLine)
+        {
+            string normalizedCommand = commandLine;
+            if (!Regex.IsMatch(commandLine, "-NonInteractive", RegexOptions.IgnoreCase))
+            {
+                int indexToInsert = -1;
+                List<string> commandArgs = commandLine.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
+
+                for (int i = 0; i < commandArgs.Count; i++)
+                {
+                    if (ExecuteProfileCommand.PowerShellExpression.IsMatch(commandArgs[i]))
+                    {
+                        indexToInsert = i + 1;
+                        break;
+                    }
+                }
+
+                if (indexToInsert >= 0)
+                {
+                    commandArgs.Insert(indexToInsert, "-NonInteractive");
+                }
+
+                normalizedCommand = string.Join(' ', commandArgs);
+            }
+
+            return normalizedCommand;
+        }
+
+        /// <summary>
         /// Executes the profile operations.
         /// </summary>
         /// <param name="args">The arguments provided to the application on the command line.</param>
+        /// <param name="dependencies">Dependencies/services created for the application.</param>
         /// <param name="cancellationTokenSource">Provides a token that can be used to cancel the command operations.</param>
         /// <returns>The exit code for the command operations.</returns>
-        public override async Task<int> ExecuteAsync(string[] args, CancellationTokenSource cancellationTokenSource)
+        protected override async Task<int> ExecuteAsync(string[] args, IServiceCollection dependencies, CancellationTokenSource cancellationTokenSource)
         {
             int exitCode = 0;
             ILogger logger = null;
             IPackageManager packageManager = null;
             ISystemManagement systemManagement = null;
-            IServiceCollection dependencies = null;
             CancellationToken cancellationToken = cancellationTokenSource.Token;
 
             try
             {
-                // When timing constraints/hints are not provided on the command line, we run the
-                // application until it is explicitly stopped by the user or automation.
-                if (this.Timeout == null && this.Iterations == null)
-                {
-                    this.Timeout = ProfileTiming.OneIteration();
-                }
-
-                this.SetGlobalTelemetryProperties(args);
-
-                // 1) Setup any dependencies required to execute the workload profile.
-                dependencies = this.InitializeDependencies(args);
                 logger = dependencies.GetService<ILogger>();
                 packageManager = dependencies.GetService<IPackageManager>();
                 systemManagement = dependencies.GetService<ISystemManagement>();
@@ -155,33 +234,6 @@ namespace VirtualClient
                     await this.ExecuteProfileAsync(effectiveProfiles, dependencies, cancellationTokenSource);
                 }
             }
-            catch (OperationCanceledException)
-            {
-                // Expected when the Ctrl-C is pressed to cancel operation.
-            }
-            catch (NotSupportedException exc)
-            {
-                Program.LogErrorMessage(logger, exc, EventContext.Persisted());
-                exitCode = (int)ErrorReason.NotSupported;
-            }
-            catch (StartupException exc)
-            {
-                // The type of exceptions are captured upstream by the profile
-                // execution components.
-                Program.LogErrorMessage(logger, exc, EventContext.Persisted());
-                exitCode = (int)exc.Reason;
-            }
-            catch (VirtualClientException exc)
-            {
-                // The type of exceptions are captured upstream by the profile
-                // execution components.
-                exitCode = (int)exc.Reason;
-            }
-            catch (Exception exc)
-            {
-                Program.LogErrorMessage(logger, exc, EventContext.Persisted());
-                exitCode = 1;
-            }
             finally
             {
                 // In order to include all of the experiment + agent etc... context, we need to
@@ -189,7 +241,7 @@ namespace VirtualClient
                 EventContext exitingContext = EventContext.Persisted();
 
                 // Allow components to handle any final exit operations.
-                VirtualClientRuntime.OnExiting();
+                VirtualClientRuntime.ExecuteExitActions();
 
                 if (VirtualClientRuntime.IsRebootRequested)
                 {
@@ -211,21 +263,20 @@ namespace VirtualClient
                 }
 
                 Program.LogMessage(logger, $"Flush Telemetry", exitingContext);
-                DependencyFactory.FlushTelemetry(remainingWait);
+                VirtualClientRuntime.ExecuteFlushActions(TimeSpan.FromSeconds(30));
 
                 Program.LogMessage(logger, $"Flushed", exitingContext);
-                DependencyFactory.FlushTelemetry(TimeSpan.FromMinutes(1));
+                VirtualClientRuntime.ExecuteFlushActions(TimeSpan.FromMinutes(1));
 
                 // Allow components to handle any final cleanup operations.
-                VirtualClientRuntime.OnCleanup();
+                VirtualClientRuntime.ExecuteCleanupActions();
 
                 // Reboots must happen after telemetry is flushed and just before the application is exiting. This ensures
                 // we capture all important telemetry and allow the profile execution operations to exit gracefully before
                 // we suddenly reboot the system.
                 if (VirtualClientRuntime.IsRebootRequested)
                 {
-                    await CommandBase.RebootSystemAsync(dependencies)
-                        .ConfigureAwait(false);
+                    await CommandBase.RebootSystemAsync(dependencies);
                 }
             }
 
@@ -292,11 +343,6 @@ namespace VirtualClient
                     string profileName = profileReference.ProfileName;
                     profileFullPath = systemManagement.PlatformSpecifics.GetProfilePath(profileName);
 
-                    if (BackwardsCompatibility.TryMapProfile(profileName, out string remappedProfile))
-                    {
-                        profileName = remappedProfile;
-                    }
-
                     // If the profile defined is not a full path to a profile located on the system, then we
                     // fallback to looking for the profile in the 'profiles' directory within the Virtual Client
                     // parent directory itself or in any platform extensions locations.
@@ -326,15 +372,78 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Initializes the command runtime before dependency initialization and execution.
+        /// </summary>
+        protected override void Initialize(string[] args, PlatformSpecifics platformSpecifics)
+        {
+            if (this.Profiles?.Any() != true && string.IsNullOrWhiteSpace(this.Command))
+            {
+                throw new NotSupportedException(
+                    "Command line usage is not supported. The intended command or profile execution intentions are unclear. " +
+                    "Use the --profile or --command options.");
+            }
+
+            if (this.Targets?.Any() == true && string.IsNullOrWhiteSpace(this.Command))
+            {
+                throw new NotSupportedException(
+                    "Command line usage is not supported. A command must be defined to execute on the target systems (via SSH). " +
+                    "Use the --command option.");
+            }
+
+            // When timing constraints/hints are not provided on the command line, we run the
+            // application until it is explicitly stopped by the user or automation.
+            if (this.Timeout == null && this.Iterations == null)
+            {
+                this.Timeout = ProfileTiming.OneIteration();
+            }
+
+            // 1) Local command execution.
+            if (!string.IsNullOrWhiteSpace(this.Command))
+            {
+                List<DependencyProfileReference> profiles = new List<DependencyProfileReference>();
+
+                if (this.Targets?.Any() == true)
+                {
+                    profiles.Add(new DependencyProfileReference(ExecuteProfileCommand.ExecuteSshCommandProfile));
+                }
+                else
+                {
+                    profiles.Add(new DependencyProfileReference(ExecuteProfileCommand.ExecuteCommandProfile));
+                }
+
+                if (this.Profiles?.Any() == true)
+                {
+                    profiles.AddRange(this.Profiles);
+                }
+
+                this.Profiles = profiles;
+                if (this.Parameters == null)
+                {
+                    this.Parameters = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
+                }
+
+                string[] commandArguments = this.Command?.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                string commandName = ExecuteProfileCommand.GetCommandName(commandArguments);
+
+                string fullCommand = this.Command;
+                if (this.IsPowerShell)
+                {
+                    fullCommand = ExecuteProfileCommand.NormalizeForPowerShell(this.Command);
+                }
+
+                this.Parameters["Command"] = fullCommand;
+                this.Parameters["Scenario"] = $"Execute_{commandName}";
+            }
+        }
+
+        /// <summary>
         /// Initializes dependencies required by Virtual Client application operations.
         /// </summary>
-        protected override IServiceCollection InitializeDependencies(string[] args)
+        protected override IServiceCollection InitializeDependencies(string[] args, PlatformSpecifics platformSpecifics)
         {
-            IServiceCollection dependencies = base.InitializeDependencies(args);
-            PlatformSpecifics platformSpecifics = dependencies.GetService<PlatformSpecifics>();
+            IServiceCollection dependencies = base.InitializeDependencies(args, platformSpecifics);
             ISystemManagement systemManagement = dependencies.GetService<ISystemManagement>();
             ILogger logger = dependencies.GetService<ILogger>();
-            Program.Logger = logger;
 
             dependencies.AddSingleton<ProfileTiming>(this.Timeout ?? this.Iterations);
 

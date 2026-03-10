@@ -3,15 +3,15 @@
     "Metadata": {
         "RecommendedMinimumExecutionTime": "00:30:00",
         "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64",
-        "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows,AwsLinux"
+        "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows,AwsLinux",
+        "Notes": "latte.exe workload UDP protocol support is removed due to constant hangs regardless of the use of iterations (-i) or timeout (-t)."
     },
     "Parameters": {
-        "ConfigureNetwork": true,
         "EnableBusyPoll": true,
-        "DisableFirewall": true,
         "CpsPort": 7201,
         "CpsDuration": "00:05:00",
         "LattePort": 6100,
+        "LatteDuration": "00:01:00",
         "NTttcpPort": 5500,
         "NTttcpDuration": "00:01:00",
         "SockPerfPort": 8201,
@@ -227,29 +227,15 @@
             }
         },
         {
-            "Type": "LatteClientExecutor2",
+            "Type": "NetworkingWorkloadExecutor",
             "Parameters": {
                 "Scenario": "Latte_TCP",
                 "ToolName": "Latte",
-                "Role": "Client",
                 "PackageName": "networking",
                 "Protocol": "TCP",
+                "TestDuration": "$.Parameters.LatteDuration",
                 "Port": "$.Parameters.LattePort",
                 "ProfilingScenario": "Latte_TCP",
-                "ProfilingEnabled": "$.Parameters.ProfilingEnabled",
-                "ProfilingMode": "$.Parameters.ProfilingMode"
-            }
-        },
-        {
-            "Type": "LatteClientExecutor2",
-            "Parameters": {
-                "Scenario": "Latte_UDP",
-                "ToolName": "Latte",
-                "Role": "Client",
-                "PackageName": "networking",
-                "Protocol": "UDP",
-                "Port": "$.Parameters.LattePort",
-                "ProfilingScenario": "Latte_UDP",
                 "ProfilingEnabled": "$.Parameters.ProfilingEnabled",
                 "ProfilingMode": "$.Parameters.ProfilingMode"
             }
@@ -347,6 +333,16 @@
         {
             "Type": "DependencyPackageInstallation",
             "Parameters": {
+                "Scenario": "InstallSystemConfigScriptPackage",
+                "BlobContainer": "packages",
+                "BlobName": "system_config.1.0.0.zip",
+                "PackageName": "system_config",
+                "Extract": true
+            }
+        },
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
                 "Scenario": "InstallNetworkToolsetPackage",
                 "BlobContainer": "packages",
                 "BlobName": "networking.3.1.0.zip",
@@ -362,13 +358,24 @@
             }
         },
         {
-            "Type": "NetworkConfigurationSetup",
+            "Type": "ExecuteCommand",
             "Parameters": {
                 "Scenario": "ConfigureNetwork",
-                "ConfigureNetwork": "$.Parameters.ConfigureNetwork",
+                "Command": "sudo chmod -R 2777 \"{ScriptPackage}\"&&sudo bash -c \"{ScriptPackage}/config_network.sh --disable-firewall=true --enable-busy-poll={EnableBusyPoll}\"",
                 "EnableBusyPoll": "$.Parameters.EnableBusyPoll",
-                "DisableFirewall": "$.Parameters.DisableFirewall",
-                "VisualStudioCRuntimePackageName": "visualstudiocruntime"
+                "LogFolderName": "configure_network",
+                "ScriptPackage": "{PackageDir/Platform:system_config}",
+                "SupportedPlatforms": "linux-x64,linux-arm64"
+            }
+        },
+        {
+            "Type": "ExecuteCommand",
+            "Parameters": {
+                "Scenario": "ConfigureNetwork",
+                "Command": "{ScriptPackage}/config_network.cmd",
+                "LogFolderName": "configure_network",
+                "ScriptPackage": "{PackageDir/Platform:system_config}",
+                "SupportedPlatforms": "win-x64,win-arm64"
             }
         },
         {

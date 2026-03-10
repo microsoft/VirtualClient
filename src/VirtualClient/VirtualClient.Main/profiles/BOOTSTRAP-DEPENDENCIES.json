@@ -1,8 +1,8 @@
 {
-    "Description": "Installs dependencies from a package store.",
+    "Description": "Installs dependencies from the package store.",
     "Parameters": {
-        "Package": "Undefined",
-        "RegisterAsName": "Undefined"
+        "Package": null,
+        "RegisterAsName": null
     },
     "Dependencies": [
         {

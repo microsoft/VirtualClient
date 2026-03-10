@@ -6,8 +6,11 @@ namespace VirtualClient.Contracts
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.IO;
+    using System.IO.Abstractions;
     using System.Linq;
     using System.Text;
+    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
@@ -44,6 +47,46 @@ namespace VirtualClient.Contracts
             // upload notification file (e.g. upload.json). We validate this separately.
             this.mockFixture.Dependencies.RemoveAll<IEnumerable<IBlobManager>>();
         }
+
+
+        [Test]
+        [TestCase("<Any Toolset?>", "ComponentlogfolderName", "anytoolset")]
+        [TestCase(null, "ComponentlogfolderName",  "componentlogfoldername")]
+        [TestCase(null, null, "testexecutor")]
+        public void GetLogDirectoryNameReturnsSafeNameAndPrefersToolNameOverComponentValues(string toolName, string logFolderName, string expected)
+        {
+            TestExecutor component = new TestExecutor(this.mockFixture);
+
+            component.Parameters[nameof(component.LogFolderName)] = logFolderName;
+            string actual = component.GetLogDirectoryName(toolName);
+
+            Assert.AreEqual(expected, actual, "ToolName should be preferred and sanitized into a safe folder name.");
+        }
+
+        [Test]
+        [TestCase("<Any Toolset?>", PlatformID.Unix, "/home/user/tools/VirtualClient/logs/anytoolset")]
+        [TestCase(null, PlatformID.Unix, "/home/user/tools/VirtualClient/logs/testexecutor")]
+        [TestCase("<Any Toolset?>", PlatformID.Win32NT, "C:\\users\\any\\tools\\VirtualClient\\logs\\anytoolset")]
+        [TestCase(null, PlatformID.Win32NT, "C:\\users\\any\\tools\\VirtualClient\\logs\\testexecutor")]
+        public void GetLogDirectoryReturnsSafeNameAndPrefersToolNameOverComponentValues(string toolName, PlatformID platformID, string expected)
+        {
+            this.mockFixture = new MockFixture();
+            this.mockFixture.Setup(platformID);
+            this.mockLogger = new Mock<ILogger>();
+            this.mockEventContext = new EventContext(Guid.NewGuid());
+
+            this.mockFixture.Parameters[nameof(TestExecutor.LogToFile)] = true;
+
+            // When there is a content manager, the application will also write a file
+            // upload notification file (e.g. upload.json). We validate this separately.
+            this.mockFixture.Dependencies.RemoveAll<IEnumerable<IBlobManager>>();
+            TestExecutor component = new TestExecutor(this.mockFixture);
+
+            string actual = component.GetLogDirectory(toolName);
+
+            Assert.AreEqual(expected, actual, "ToolName should be preferred and sanitized into a safe folder name.");
+        }
+
 
         [Test]
         [TestCase(0, null, null, null, null, null)]

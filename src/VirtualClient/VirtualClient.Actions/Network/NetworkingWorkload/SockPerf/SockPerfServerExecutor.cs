@@ -40,9 +40,9 @@ namespace VirtualClient.Actions.NetworkPerformance
         }
 
         /// <inheritdoc/>
-        protected override Task<IProcessProxy> ExecuteWorkloadAsync(string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken, TimeSpan? timeout = null)
+        protected override Task ExecuteWorkloadAsync(string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken, TimeSpan? timeout = null)
         {
-            IProcessProxy process = null;
+            ProcessManager processManager = this.SystemManagement.ProcessManager;
 
             EventContext relatedContext = telemetryContext.Clone()
                .AddContext("command", this.ExecutablePath)
@@ -56,38 +56,52 @@ namespace VirtualClient.Actions.NetworkPerformance
                     {
                         try
                         {
-                            using (process = this.SystemManagement.ProcessManager.CreateProcess(this.ExecutablePath, commandArguments))
+                            using (IProcessProxy process = processManager.CreateProcess(this.ExecutablePath, commandArguments))
                             {
-                                if (!process.Start())
-                                {
-                                    await this.LogProcessDetailsAsync(process, relatedContext, "SockPerf");
+                                int processId = -1;
 
-                                    // ************** Server will throw 137 sometimes
-                                    // PORT =  8201 # TCP sockperf: ERROR: Message received was larger than expected, message ignored. 
-                                    // ************** Need investigation
-                                    List<int> successCodes = new List<int>() { 0, 137 };
-                                    process.ThrowIfErrored<WorkloadException>(successCodes, errorReason: ErrorReason.WorkloadFailed);
-                                }
-                                else
+                                try
                                 {
-                                    try
+                                    if (!process.Start())
                                     {
-                                        // Wait until the cancellation token is signalled by the client.
-                                        await this.WaitAsync(cancellationToken);
-                                        process.Close();
-
-                                        await process.WaitForExitAsync(cancellationToken);
                                         await this.LogProcessDetailsAsync(process, relatedContext, "SockPerf");
+
+                                        // ************** Server will throw 137 sometimes
+                                        // PORT =  8201 # TCP sockperf: ERROR: Message received was larger than expected, message ignored. 
+                                        // ************** Need investigation
+                                        List<int> successCodes = new List<int>() { 0, 137 };
+                                        process.ThrowIfErrored<WorkloadException>(successCodes, errorReason: ErrorReason.WorkloadFailed);
                                     }
-                                    catch (OperationCanceledException)
+                                    else
                                     {
-                                        // Expected when the client signals a cancellation.
+                                        try
+                                        {
+                                            processId = process.Id;
+
+                                            // Wait until the cancellation token is signalled by the client.
+                                            await this.WaitAsync(cancellationToken);
+                                            process.Close();
+
+                                            await process.WaitForExitAsync(cancellationToken);
+                                            await this.LogProcessDetailsAsync(process, relatedContext, "SockPerf");
+                                        }
+                                        catch (InvalidOperationException)
+                                        {
+                                            // Can happen when the client signals a cancellation.
+                                        }
+                                        catch (OperationCanceledException)
+                                        {
+                                            // Expected when the client signals a cancellation.
+                                        }
                                     }
-                                    finally
+                                }
+                                finally
+                                {
+                                    if (processId > 0)
                                     {
                                         // SockPerf must be explicitly terminated given the current implementation. If it is not,
                                         // the process will remain running in the background.
-                                        process.SafeKill(this.Logger);
+                                        processManager.SafeKill(processId, this.Logger);
                                     }
                                 }
                             }
@@ -97,10 +111,8 @@ namespace VirtualClient.Actions.NetworkPerformance
                             this.Logger.LogMessage($"{this.GetType().Name}.WorkloadStartupError", LogLevel.Warning, relatedContext.AddError(exc));
                             throw;
                         }
-                    }).ConfigureAwait(false);
+                    });
                 }
-
-                return process;
             });
         }
 

@@ -62,15 +62,21 @@ namespace VirtualClient
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         // e.g.
+        // {StatePath}, {StateDir}
+        private static readonly Regex StatePathExpression = new Regex(
+            @"\{(?:StatePath|StateDir)\}",
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+        // e.g.
         // {TempPath}, {TempDir}
         private static readonly Regex TempPathExpression = new Regex(
             @"\{(?:TempPath|TempDir)\}",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         // e.g.
-        // {ScriptPath:redis}, {ScriptDir:redis}
+        // {ScriptPath}, {ScriptPath:redis}, {ScriptDir}, {ScriptDir:redis}
         private static readonly Regex ScriptPathExpression = new Regex(
-            @"\{(?:ScriptPath|ScriptDir)\:([a-z0-9-_\. ]+)\}",
+            @"\{(?:ScriptPath|ScriptDir)(?:\:([a-z0-9-_\. ]+))*\}",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         // e.g.
@@ -145,6 +151,30 @@ namespace VirtualClient
                     foreach (Match match in matches)
                     {
                         evaluatedExpression = Regex.Replace(evaluatedExpression, match.Value, platformSpecifics.LogsDirectory);
+                    }
+                }
+
+                return Task.FromResult(new EvaluationResult
+                {
+                    IsMatched = isMatched,
+                    Outcome = evaluatedExpression
+                });
+            }),
+            // Expression: {StatePath|StateDir}
+            // Resolves to the path to the state folder location (e.g. /home/users/virtualclient/state).
+            new Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>((dependencies, parameters, expression) =>
+            {
+                bool isMatched = false;
+                string evaluatedExpression = expression;
+                MatchCollection matches = ProfileExpressionEvaluator.StatePathExpression.Matches(expression);
+
+                if (matches?.Any() == true)
+                {
+                    isMatched = true;
+                    PlatformSpecifics platformSpecifics = dependencies.GetService<PlatformSpecifics>();
+                    foreach (Match match in matches)
+                    {
+                        evaluatedExpression = Regex.Replace(evaluatedExpression, match.Value, platformSpecifics.StateDirectory);
                     }
                 }
 
@@ -285,7 +315,7 @@ namespace VirtualClient
                     Outcome = evaluatedExpression
                 };
             }),
-            // Expression: {ScriptPath|ScriptDir:xyz}
+            // Expression: {ScriptPath|ScriptDir|ScriptPath:xyz|ScriptDir:xyz}
             // this.PlatformSpecifics.GetScriptPath("a","b");
             // Resolves to the path to the Script folder location (e.g. /home/users/virtualclient/scripts/redis).
             new Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>((dependencies, parameters, expression) =>
@@ -300,7 +330,16 @@ namespace VirtualClient
                     ISystemManagement systemManagement = dependencies.GetService<ISystemManagement>();
                     foreach (Match match in matches)
                     {
-                        string scriptFolderPath = systemManagement.PlatformSpecifics.GetScriptPath(match.Groups[1].Value);
+                        string scriptFolderPath = null;
+
+                        if (match.Groups.Count <= 1)
+                        {
+                            scriptFolderPath = systemManagement.PlatformSpecifics.GetScriptPath();
+                        }
+                        else
+                        {
+                            scriptFolderPath = systemManagement.PlatformSpecifics.GetScriptPath(match.Groups[1].Value?.Trim());
+                        }
 
                         if (scriptFolderPath == null)
                         {

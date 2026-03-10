@@ -17,19 +17,22 @@ namespace VirtualClient.Logging
     {
         private string filePath;
         private long maxFileSize;
+        private TimeSpan flushTimeout;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MetricsCsvFileLoggerProvider"/> class.
         /// <param name="csvFilePath">The path to the CSV file to which the metrics should be written.</param>
         /// <param name="maximumFileSizeBytes">The maximum size of each CSV file (in bytes) before a new file (rollover) will be created.</param>
+        /// <param name="flushTimeout">A timeout to apply to flush operations.</param>
         /// </summary>
-        public MetricsCsvFileLoggerProvider(string csvFilePath, long maximumFileSizeBytes)
+        public MetricsCsvFileLoggerProvider(string csvFilePath, long maximumFileSizeBytes, TimeSpan? flushTimeout = null)
         {
             csvFilePath.ThrowIfNullOrWhiteSpace(nameof(csvFilePath));
             maximumFileSizeBytes.ThrowIfInvalid(nameof(maximumFileSizeBytes), (size) => size > 0);
 
             this.filePath = csvFilePath;
             this.maxFileSize = maximumFileSizeBytes;
+            this.flushTimeout = flushTimeout ?? TimeSpan.FromSeconds(10);
         }
 
         /// <summary>
@@ -46,7 +49,7 @@ namespace VirtualClient.Logging
             MetricsCsvFileLogger logger = new MetricsCsvFileLogger(this.filePath, this.maxFileSize);
             VirtualClientRuntime.CleanupTasks.Add(new Action_(() =>
             {
-                logger.Flush();
+                logger.Flush(this.flushTimeout);
                 logger.Dispose();
             }));
 

@@ -261,6 +261,60 @@ namespace VirtualClient.Actions
         }
 
         [Test]
+        public async Task SuperBenchmarkExecutorExecutesTheCorrectCommandsWithInstallationAndDockerContainerPath()
+        {
+            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            {
+                { nameof(SuperBenchmarkExecutor.Version), "0.0.1" },
+                { nameof(SuperBenchmarkExecutor.ContainerVersion), "testContainer" },
+                { nameof(SuperBenchmarkExecutor.ConfigurationFile), "Test.yaml" },
+                { nameof(SuperBenchmarkExecutor.Username), "testuser" },
+                { nameof(SuperBenchmarkExecutor.DockerContainerPath), "/docker/path" }
+            };
+
+            ProcessStartInfo expectedInfo = new ProcessStartInfo();
+            List<string> expectedCommands = new List<string>
+            {
+                $"sudo chmod -R 2777 \"{this.mockFixture.PlatformSpecifics.CurrentDirectory}\"",
+                $"sudo git clone -b v0.0.1 https://github.com/microsoft/superbenchmark",
+                $"sudo bash initialize.sh testuser /docker/path",
+                $"sb deploy --host-list localhost -i testContainer",
+                $"sb run --host-list localhost -c Test.yaml"
+            };
+
+            int processCount = 0;
+            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            {
+                Assert.AreEqual(expectedCommands.ElementAt(processCount), $"{exe} {arguments}");
+                processCount++;
+
+                return new InMemoryProcess
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = exe,
+                        Arguments = arguments
+                    },
+                    ExitCode = 0,
+                    OnStart = () => true,
+                    OnHasExited = () => true
+                };
+            };
+
+            this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new SuperBenchmarkExecutor.SuperBenchmarkState()
+            {
+                SuperBenchmarkInitialized = false
+            }));
+
+            using (TestSuperBenchmarkExecutor superBenchmarkExecutor = new TestSuperBenchmarkExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                await superBenchmarkExecutor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+            }
+
+            Assert.IsTrue(processCount == expectedCommands.Count);
+        }
+
+        [Test]
         public async Task SuperBenchmarkExecutorSkipsInitializationOfTheWorkloadForExecutionAfterTheFirstRun()
         {
             ProcessStartInfo expectedInfo = new ProcessStartInfo();

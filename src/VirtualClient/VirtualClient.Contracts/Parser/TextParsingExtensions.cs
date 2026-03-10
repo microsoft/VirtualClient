@@ -59,6 +59,7 @@ namespace VirtualClient.Contracts
         public static readonly string EmailRegex = @"[\w\-\.]+@([\w -]+\.)+[\w-]{2,}";
 
         private static readonly Regex CommaDelimitedExpression = new Regex(",", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex NewLineExpression = new Regex("\r\n|\n", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex SemiColonDelimitedExpression = new Regex(";", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex TripleCommaDelimitedExpression = new Regex(",,,", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
@@ -70,7 +71,7 @@ namespace VirtualClient.Contracts
         public static string RemoveRows(string text, Regex delimiter)
         {
             List<string> result = new List<string>();
-            List<string> rows = text.Split(Environment.NewLine, StringSplitOptions.None).ToList();
+            List<string> rows = NewLineExpression.Split(text).ToList();
 
             foreach (string row in rows)
             {
@@ -91,17 +92,25 @@ namespace VirtualClient.Contracts
         public static IDictionary<string, string> Sectionize(string text, Regex delimiter)
         {
             IDictionary<string, string> result = new Dictionary<string, string>();
-            string[] sections = Regex.Split(text, delimiter.ToString(), delimiter.Options);
+            IEnumerable<string> sections = Regex.Split(text, delimiter.ToString(), delimiter.Options)
+                .Where(s => !string.IsNullOrWhiteSpace(s?.Trim()));
 
-            foreach (string section in sections)
+            if (sections?.Any() == true)
             {
-                if (!string.IsNullOrWhiteSpace(section))
+                foreach (string section in sections)
                 {
-                    List<string> rows = section.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries).ToList();
-                    string sectionName = rows.FirstOrDefault().Trim();
-                    rows.RemoveAt(0);
+                    string sectionInfo = section?.Trim();
+                    if (!string.IsNullOrWhiteSpace(sectionInfo))
+                    {
+                        List<string> rows = NewLineExpression.Split(sectionInfo).ToList();
+                        if (rows?.Any() == true)
+                        {
+                            string sectionName = rows.FirstOrDefault().Trim();
+                            rows.RemoveAt(0);
 
-                    result.Add(sectionName, string.Join(Environment.NewLine, rows.Select(r => r.Trim())));
+                            result.Add(sectionName, string.Join(Environment.NewLine, rows.Select(r => r.Trim())));
+                        }
+                    }
                 }
             }
 
@@ -389,7 +398,7 @@ namespace VirtualClient.Contracts
         public static IDictionary<string, string> Sectionize(string text, IDictionary<string, Regex> matchingRegexes)
         {
             IDictionary<string, string> result = new Dictionary<string, string>();
-            List<string> rows = text.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries).ToList();
+            List<string> rows = NewLineExpression.Split(text).ToList();
 
             foreach (KeyValuePair<string, Regex> section in matchingRegexes)
             {

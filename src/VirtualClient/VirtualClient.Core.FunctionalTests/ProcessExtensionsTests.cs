@@ -82,7 +82,7 @@ namespace VirtualClient
                         var processManager = new WindowsProcessManager();
                         using (IProcessProxy process = processManager.CreateProcess("ipconfig", "/all"))
                         {
-                            await process.StartAndWaitAsync(tokenSource.Token, withExitConfirmation: true);
+                            await process.StartAndWaitAsync(tokenSource.Token);
                             await executor.LogProcessDetailsAsync(process, EventContext.None, "ipconfig");
                         }
                     }
@@ -116,7 +116,7 @@ namespace VirtualClient
                         using (IProcessProxy process = processManager.CreateProcess("ipconfig", "/all"))
                         {
                             await tokenSource.CancelAsync();
-                            await process.StartAndWaitAsync(tokenSource.Token, withExitConfirmation: true);
+                            await process.StartAndWaitAsync(tokenSource.Token);
                             await executor.LogProcessDetailsAsync(process, EventContext.None, "ipconfig");
                         }
                     }
@@ -149,7 +149,7 @@ namespace VirtualClient
                         var processManager = new WindowsProcessManager();
                         using (IProcessProxy process = processManager.CreateProcess("ipconfig", "/all"))
                         {
-                            await process.StartAndWaitAsync(tokenSource.Token, timeout: TimeSpan.Zero, withExitConfirmation: true);
+                            await process.StartAndWaitAsync(tokenSource.Token, timeout: TimeSpan.Zero);
                         }
                     }
                 }
@@ -185,7 +185,7 @@ namespace VirtualClient
                         var processManager = new UnixProcessManager();
                         using (IProcessProxy process = processManager.CreateProcess("bash", "--version"))
                         {
-                            await process.StartAndWaitAsync(tokenSource.Token, withExitConfirmation: true);
+                            await process.StartAndWaitAsync(tokenSource.Token);
                             await executor.LogProcessDetailsAsync(process, EventContext.None, "bash");
                         }
                     }
@@ -219,7 +219,7 @@ namespace VirtualClient
                         using (IProcessProxy process = processManager.CreateProcess("bash", "--version"))
                         {
                             await tokenSource.CancelAsync();
-                            await process.StartAndWaitAsync(tokenSource.Token, withExitConfirmation: true);
+                            await process.StartAndWaitAsync(tokenSource.Token);
                             await executor.LogProcessDetailsAsync(process, EventContext.None, "bash");
                         }
                     }
@@ -252,7 +252,7 @@ namespace VirtualClient
                         var processManager = new UnixProcessManager();
                         using (IProcessProxy process = processManager.CreateProcess("bash", "--version"))
                         {
-                            await process.StartAndWaitAsync(tokenSource.Token, timeout: TimeSpan.Zero, withExitConfirmation: true);
+                            await process.StartAndWaitAsync(tokenSource.Token, timeout: TimeSpan.Zero);
                         }
                     }
                 }

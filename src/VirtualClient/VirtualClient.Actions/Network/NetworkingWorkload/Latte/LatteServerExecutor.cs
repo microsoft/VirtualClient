@@ -40,10 +40,8 @@ namespace VirtualClient.Actions.NetworkPerformance
         }
 
         /// <inheritdoc/>
-        protected override Task<IProcessProxy> ExecuteWorkloadAsync(string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken, TimeSpan? timeout = null)
+        protected override Task ExecuteWorkloadAsync(string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken, TimeSpan? timeout = null)
         {
-            IProcessProxy process = null;
-
             EventContext relatedContext = telemetryContext.Clone()
                .AddContext("command", this.ExecutablePath)
                .AddContext("commandArguments", commandArguments);
@@ -56,7 +54,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                     {
                         try
                         {
-                            using (process = this.SystemManagement.ProcessManager.CreateProcess(this.ExecutablePath, commandArguments))
+                            using (IProcessProxy process = this.SystemManagement.ProcessManager.CreateProcess(this.ExecutablePath, commandArguments))
                             {
                                 if (!process.Start())
                                 {
@@ -65,8 +63,12 @@ namespace VirtualClient.Actions.NetworkPerformance
                                 }
                                 else
                                 {
+                                    int processId = -1;
+
                                     try
                                     {
+                                        processId = process.Id;
+
                                         // Wait until the cancellation token is signalled by the client.
                                         await this.WaitAsync(cancellationToken);
                                         process.Close();
@@ -80,9 +82,12 @@ namespace VirtualClient.Actions.NetworkPerformance
                                     }
                                     finally
                                     {
-                                        // Latte must be explicitly terminated given the current implementation. If it is not,
-                                        // the process will remain running in the background.
-                                        process.SafeKill(this.Logger);
+                                        if (processId > 0)
+                                        {
+                                            // Latte must be explicitly terminated given the current implementation. If it is not,
+                                            // the process will remain running in the background.
+                                            this.SystemManagement.ProcessManager.SafeKill(processId, this.Logger);
+                                        }
                                     }
                                 }
                             }
@@ -94,8 +99,6 @@ namespace VirtualClient.Actions.NetworkPerformance
                         }
                     });
                 }
-
-                return process;
             });
         }
 
@@ -106,7 +109,7 @@ namespace VirtualClient.Actions.NetworkPerformance
         protected override string GetCommandLineArguments()
         {
             string serverIPAddress = this.GetLayoutClientInstances(ClientRole.Server).First().IPAddress;
-            return $"-a {serverIPAddress}:{this.Port} -rio -i {this.Iterations} -riopoll {this.RioPoll} -{this.Protocol.ToLowerInvariant()}";
+            return $"-a {serverIPAddress}:{this.Port} -t {this.TestDuration.TotalSeconds} -rio -riopoll {this.RioPoll} -{this.Protocol.ToLowerInvariant()}";
         }
     }
 }
