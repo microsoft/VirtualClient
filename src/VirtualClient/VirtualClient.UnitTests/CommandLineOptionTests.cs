@@ -429,6 +429,9 @@ namespace VirtualClient
         [Test]
         [TestCase("--client-id", "AgentID")]
         [TestCase("--api-port", "4501")]
+        [TestCase("-a", null)]
+        [TestCase("--archive-logs", null)]
+        [TestCase("--archive-logs", "C:\\Users\\AnyUser\\archive\\logs")]
         [TestCase("-c", null)]
         [TestCase("--clean", null)]
         [TestCase("--clean", "logs")]
@@ -766,43 +769,6 @@ namespace VirtualClient
                 });
 
                 Assert.AreEqual("The Azure tenant ID must be provided (--tenant-id) when installing a certificate.", error.Message);
-            }
-        }
-
-        [Test]
-        [TestCase("-c", null)]
-        [TestCase("--clean", null)]
-        [TestCase("--clean", "all")]
-        [TestCase("--clean", "logs")]
-        [TestCase("--clean", "packages")]
-        [TestCase("--clean", "state")]
-        [TestCase("--clean", "logs,packages,state")]
-        [TestCase("--log-dir", "C:\\any\\path\\to\\logs")]
-        [TestCase("--log-retention", "14400")]
-        [TestCase("--log-retention", "10.00:00:00")]
-        [TestCase("--package-dir", "C:\\any\\path\\to\\packages")]
-        [TestCase("--state-dir", "C:\\any\\path\\to\\state")]
-        [TestCase("--temp-dir", "C:\\any\\path\\to\\temp")]
-        public void VirtualClientCleanCommandSupportsAllExpectedOptions(string option, string value)
-        {
-            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
-            {
-                List<string> arguments = new List<string>()
-                {
-                    "clean"
-                };
-
-                arguments.Add(option);
-                if (value != null)
-                {
-                    arguments.Add(value);
-                }
-
-                Assert.DoesNotThrow(() =>
-                {
-                    ParseResult result = CommandLineParser.Create(arguments, tokenSource).Parse();
-                    Assert.IsFalse(result.Errors.Any());
-                }, $"Option '{option}' is not supported.");
             }
         }
 

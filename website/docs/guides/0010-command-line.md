@@ -26,8 +26,9 @@ on the system.
 | --profile=\<profile\>                                       | Conditional | string/path                  | Required if `--command` is not used. The execution profile which indicates the set of workloads to run. |
 | -C, --command=\<arguments\>                                 | Conditional | string/text                  | Required if `--profile` is not used. An identifier that can be used to uniquely identify the instance of the Virtual Client in telemetry separate from other instances. The default value is the name of the system if this option is not explicitly defined (i.e. the name as defined by the operating system). |
 | --api-port=\<port>                                          | No          | integer                      | The port to use for hosting the Virtual Client REST API service for profiles that allow multi-system, client/server operations (e.g. networking). Additionally, a port may be defined for each role associated with the profile operations using the format \{Port}/\{Role} with each port/role combination delimited by a comma (e.g. 4501/Client,4502/Server). |
+| -a, --archive-logs, --archive-logs=\<path\>                 | No          | string/path                  | Flag or path to which log files should be archived before execution. If a path is provided, log files will be archived to the specified path. If used as a flag, log files will be archived to the default directory noted below.<br/><br/>Default Locations:<br/><ul><li>Windows = %USERPROFILE%\archive\logs</li><li>Unix = $HOME/archive/logs</li></ul> |
 | --client-id=\<id\>                                          | No          | string/text                  | An identifier that can be used to uniquely identify the instance of the Virtual Client in telemetry separate from other instances. The default value is the name of the system if this option is not explicitly defined (i.e. the name as defined by the operating system). |
-| -c, --clean=\<target,target...\>                            | No          | string                       | Instructs the application to perform an initial clean before continuing to remove pre-existing files/content created by the application from the file system. This can include log files, packages previously downloaded, state management and temporary files. This option can be used as a flag (e.g. --clean) as well to clean all file content. Valid target resources include: logs, packages, state, temp, all (e.g. --clean=logs, --clean=packages). Multiple resources can be comma-delimited (e.g. --clean=logs,packages). To perform a full reset of the application state, use the option as a flag (e.g. --clean). This effectively sets the application back to a "first run" state. |
+| -c, --clean, --clean=\<target,target...\>                   | No          | string                       | Instructs the application to perform an initial clean before continuing to remove pre-existing files/content created by the application from the file system. This can include log files, packages previously downloaded, state management and temporary files. This option can be used as a flag (e.g. --clean) as well to clean all file content. Valid target resources include: logs, packages, state, temp, all (e.g. --clean=logs, --clean=packages). Multiple resources can be comma-delimited (e.g. --clean=logs,packages). To perform a full reset of the application state, use the option as a flag (e.g. --clean). This effectively sets the application back to a "first run" state. |
 | --content, --content-store=\<connection\>                   | No          | string/connection string/SAS | A full connection description for an [Azure Storage Account](./0600-integration-blob-storage.md) to use for uploading files/content (e.g. log files).<br/><br/>The following are supported identifiers for this option:<br/><ul><li>Storage Account blob service SAS URIs</li><li>Storage Account blob container SAS URIs</li><li>Microsoft Entra ID/Apps using a certificate</li><li>Microsoft Azure managed identities</li></ul>See [Azure Storage Account Integration](./0600-integration-blob-storage.md) for additional details on supported identifiers.<br/><br/><mark>Always surround connection descriptions with quotation marks.</mark> |
 | --content-path, --content-path-template=\<folderPattern\>   | No          | string/text                  | The content path format/structure to use when uploading content to target storage resources. When not defined the 'Default' structure is used. Default: "\{experimentId}/\{agentId}/\{toolName}/\{role}/\{scenario}" |
 | -d, --dependencies                                          | No          |                              | Flag indicates that only the dependencies defined in the profile should be executed/installed. |
@@ -80,6 +81,7 @@ VirtualClient.exe
     --metadata="Group=Group A,,,Intent=Performance Baseline,,,Specification=2025.08.01H"
     --parameters="Duration=00:05:00"
     --scenarios="SHA1,SHA256,SHA512"
+    --archive-logs
     --clean=logs,state
     --exit-wait=00:10:00
     --logger=csv
@@ -145,6 +147,23 @@ VirtualClient.exe
     --fail-fast
     --log-to-file
     --verbose
+
+# Clean everything (full reset)
+VirtualClient.exe clean
+
+# Clean/reset specific targets (e.g. log files, state tracking, packages downloaded)
+VirtualClient.exe clean --clean=logs
+VirtualClient.exe clean --clean=state
+VirtualClient.exe clean --clean=packages
+
+# Clean/reset multiple targets (e.g. log files and packages downloaded)
+VirtualClient.exe clean --clean=logs,packages
+
+# Archive log files to default location
+VirtualClient.exe --archive-logs
+
+# Archive log files to specific location
+VirtualClient.exe --archive-logs="C:\Users\User\archive\logs"
 ```
 
 ## Subcommands
@@ -179,12 +198,11 @@ The following tables describe the various subcommands that are supported by the 
 * ### bootstrap
   Command is used to bootstrap/install dependency packages and/or install a certificate on the system.
 
-  * **Package Bootstrapping**: Install an extensions/dependency package to the Virtual Client runtime.  
-    Requires `--package` (and typically `--package-store/--packages` to fetch it from storage).
+  * **Package Bootstrapping**:  
+    Install an extensions/dependency package to the Virtual Client runtime. Requires `--package` (and typically `--package-store/--packages` to fetch it from storage).
 
-  * **Certificate Bootstrapping**: Install a certificate to the system for use by workloads that require certificate-based authentication.  
-    Requires `--cert-name` **and** `--key-vault`.  
-    Optionally supports `--token` to provide an access token for Key Vault authentication (if not provided, the default Azure credential flow is used).
+  * **Certificate Bootstrapping**:  
+    Install a certificate to the system for use by workloads that require certificate-based authentication. Requires `--cert-name` **and** `--key-vault`. Optionally supports `--token` to provide an access token for Key Vault authentication (if not provided, the default Azure credential flow is used).
 
   | Option                                                    | Required    | Data Type                    | Description |
   |-----------------------------------------------------------|-------------|------------------------------|-------------|
@@ -287,35 +305,6 @@ The following tables describe the various subcommands that are supported by the 
       --key-vault="https://any.vault.azure.net" 
       --tenant-id="95a8ded1-8bec-48e2-923c-94ebf8e57e49"
       --output-file="C:\Users\Any\mycert123.pfx"
-  ```
-
-* ### clean
-  Command is used to perform a clean/reset on the system for Virtual Client 1) logs, 2) state or 3) packages. This is useful to force Virtual Client to process
-  all dependency installations as if it is a first run on the system. Note that some workloads may not perform a full set of clean/reset operations. Note that most
-  dependency handlers, workloads and monitors are designed to be idempotent but there may be outliers in more advanced workload scenarios.
-
-  | Option                                   | Required | Data Type            | Description |
-  |------------------------------------------|----------|----------------------|-------------|
-  | -c, --clean=\<target,target...\>         | No       | string               | Instructs the application to perform an initial clean before continuing to remove pre-existing files/content created by the application from the file system. This can include log files, packages previously downloaded, state management and temporary files. This option can be used as a flag (e.g. --clean) as well to clean all file content. Valid target resources include: logs, packages, state, temp, all (e.g. --clean=logs, --clean=packages). Multiple resources can be comma-delimited (e.g. --clean=logs,packages). To perform a full reset of the application state, use the option as a flag (e.g. --clean). This effectively sets the application back to a "first run" state. |
-  | --log-dir=\<path\>                       | No       | string/path          | Defines an alternate directory containing log files to be deleted. |
-  | --log-retention=\<mins_or_timespan\>     | No       | timespan or integer  | Defines the log retention period. This is a timespan or length of time (in minutes) to apply to cleaning up/deleting existing log files (e.g. 2880, 02.00:00:00). Log files with creation times older than the retention period will be deleted. |
-  | --package-dir=\<path\>                   | No       | string/path          | Defines an alternate directory containing packages to be deleted. |
-  | --state-dir=\<path\>                     | No       | string/path          | Defines an alternate directory containing state files/documents to be deleted. |
-  | --temp-dir=\<path\>                      | No       | string/path          | Defines an alternate directory containing temp files/documents to be deleted. |
-  | -?, -h, --help                           | No       |                      | Show help information. |
-  | --version                                | No       |                      | Show application version information. |
-
-  ``` bash
-  # Clean everything (full reset)
-  VirtualClient.exe clean
-
-  # Clean/reset specific targets (e.g. log files, state tracking, packages downloaded)
-  VirtualClient.exe clean --clean=logs
-  VirtualClient.exe clean --clean=state
-  VirtualClient.exe clean --clean=packages
-
-  # Clean/reset multiple targets (e.g. log files and packages downloaded)
-  VirtualClient.exe clean --clean=logs,packages
   ```
 
 * ### convert

@@ -62,6 +62,36 @@ namespace VirtualClient
         public IDictionary<string, int> ApiPorts { get; set; }
 
         /// <summary>
+        /// Used to create workaround for scenarios where we want to use an option as either
+        /// a flag or as one with a value (e.g. --archive-logs --archive-logs=/home/user/archive/logs).
+        /// </summary>
+        public IList<string> ArchiveLogTargets { get; set; }
+
+        /// <summary>
+        /// A path to archive any existing log files before execution. Default = the user profile/home directory.
+        /// </summary>
+        public string ArchiveLogsPath
+        {
+            get
+            {
+                string archivePath = null;
+                if (this.ArchiveLogTargets != null)
+                {
+                    if (this.ArchiveLogTargets.Count == 0)
+                    {
+                        archivePath = "{Default}";
+                    }
+                    else
+                    {
+                        archivePath = this.ArchiveLogTargets.FirstOrDefault();
+                    }
+                }
+
+                return archivePath;
+            }
+        }
+
+        /// <summary>
         /// A set of target resources to clean (e.g. logs, packages, state, all).
         /// </summary>
         public IList<string> CleanTargets { get; set; }
@@ -120,6 +150,17 @@ namespace VirtualClient
         /// The ID to use for the experiment and to include in telemetry output.
         /// </summary>
         public string ExperimentId { get; set; }
+
+        /// <summary>
+        /// True if a request to archive existing log files is provided.
+        /// </summary>
+        public bool IsArchiveLogsRequested
+        {
+            get
+            {
+                return !string.IsNullOrWhiteSpace(this.ArchiveLogsPath);
+            }
+        }
 
         /// <summary>
         /// True if a request to perform clean operations was requested on the
@@ -275,6 +316,7 @@ namespace VirtualClient
 
             try
             {
+                CancellationToken cancellationToken = cancellationTokenSource.Token;
                 PlatformID osPlatform = Environment.OSVersion.Platform;
                 Architecture cpuArchitecture = RuntimeInformation.ProcessArchitecture;
 
@@ -314,6 +356,16 @@ namespace VirtualClient
                 // Setup any dependencies required by the application.
                 IServiceCollection dependencies = this.InitializeDependencies(args, platformSpecifics);
                 logger = dependencies.GetService<ILogger>();
+
+                if (this.IsArchiveLogsRequested)
+                {
+                    await this.ArchiveLogsAsync(dependencies, cancellationToken, logger);
+                }
+
+                if (this.IsCleanRequested)
+                {
+                    await this.CleanAsync(dependencies, cancellationToken, logger);
+                }
 
                 exitCode = await this.ExecuteAsync(args, dependencies, cancellationTokenSource);
             }
@@ -358,21 +410,62 @@ namespace VirtualClient
         protected abstract Task<int> ExecuteAsync(string[] args, IServiceCollection dependencies, CancellationTokenSource cancellationTokenSource);
 
         /// <summary>
+        /// Archives any existing log files in the logs directory.
+        /// </summary>
+        /// <param name="dependencies">Provides system management functions required to execute the clean operations.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operations.</param>
+        /// <param name="logger"></param>
+        protected async Task ArchiveLogsAsync(IServiceCollection dependencies, CancellationToken cancellationToken, ILogger logger = null)
+        {
+            EventContext telemetryContext = EventContext.Persisted();
+            ISystemManagement systemManagement = dependencies.GetService<ISystemManagement>();
+            PlatformSpecifics platformSpecifics = systemManagement.PlatformSpecifics;
+
+            string archiveDirectory = this.ArchiveLogsPath;
+
+            if (archiveDirectory == "{Default}")
+            {
+                string rootDirectory = null;
+                if (systemManagement.Platform == PlatformID.Unix)
+                {
+                    rootDirectory = platformSpecifics.GetEnvironmentVariable(EnvironmentVariable.HOME);
+                }
+                else
+                {
+                    rootDirectory = platformSpecifics.GetEnvironmentVariable(EnvironmentVariable.USERPROFILE);
+                }
+
+                archiveDirectory = platformSpecifics.Combine(rootDirectory, "archive", "logs");
+            }
+
+            telemetryContext.AddContext("archivePath", archiveDirectory);
+
+            // The logging has to come at the end in case any of the loggers write
+            // log files to the /logs directory. These might get deleted by the clean
+            // operations. Having the logging last helps ensure we do not miss those logs.
+            (logger ?? NullLogger.Instance).LogMessage($"ArchiveLogs", LogLevel.Information, telemetryContext);
+
+
+            await systemManagement.ArchiveLogsDirectoryAsync(archiveDirectory, cancellationToken);
+        }
+
+        /// <summary>
         /// Executes clean/reset operations within the Virtual Client application folder. This is used to 
         /// cleanup resources such as the "logs", "packages" and "state" directories.
         /// </summary>
-        /// <param name="systemManagement">Provides system management functions required to execute the clean operations.</param>
+        /// <param name="dependencies">Provides system management functions required to execute the clean operations.</param>
         /// <param name="cancellationToken">A token that can be used to cancel the operations.</param>
         /// <param name="logger"></param>
-        protected async Task CleanAsync(ISystemManagement systemManagement, CancellationToken cancellationToken, ILogger logger = null)
+        protected async Task CleanAsync(IServiceCollection dependencies, CancellationToken cancellationToken, ILogger logger = null)
         {
             VirtualClient.Contracts.CleanTargets targets = null;
             DateTime? logRetentionDate = null;
             EventContext telemetryContext = EventContext.Persisted();
-            Type commandType = this.GetType();
 
             try
             {
+                ISystemManagement systemManagement = dependencies.GetService<ISystemManagement>();
+
                 if (this.LogRetention != null)
                 {
                     logRetentionDate = DateTime.UtcNow.Subtract(this.LogRetention.Value);
@@ -444,7 +537,7 @@ namespace VirtualClient
                 // The logging has to come at the end in case any of the loggers write
                 // log files to the /logs directory. These might get deleted by the clean
                 // operations. Having the logging last helps ensure we do not miss those logs.
-                (logger ?? NullLogger.Instance).LogMessage($"{commandType.Name}.CleanLogs", LogLevel.Trace, telemetryContext);
+                (logger ?? NullLogger.Instance).LogMessage($"CleanLogs", LogLevel.Information, telemetryContext);
             }
         }
 

@@ -20,6 +20,7 @@ namespace VirtualClient.Actions.NetworkPerformance
     /// <summary>
     /// NCPS(New Connections Per Second) Tool Executor. 
     /// </summary>
+    [SupportedPlatforms("linux-arm64,linux-x64,win-arm64,win-x64")]
     public class NCPSExecutor : NetworkingWorkloadToolExecutor
     {
         private IFileSystem fileSystem;

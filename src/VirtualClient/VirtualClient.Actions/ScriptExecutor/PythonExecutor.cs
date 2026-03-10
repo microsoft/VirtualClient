@@ -15,6 +15,7 @@ namespace VirtualClient.Actions
     /// <summary>
     /// The Generic Script executor for Python
     /// </summary>
+    [SupportedPlatforms("linux-arm64,linux-x64,win-arm64,win-x64")]
     public class PythonExecutor : ScriptExecutor
     {
         private ISystemManagement systemManagement;

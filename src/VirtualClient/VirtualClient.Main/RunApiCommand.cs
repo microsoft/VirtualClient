@@ -51,11 +51,6 @@ namespace VirtualClient
             IApiManager apiManager = dependencies.GetService<IApiManager>();
             IApiClientManager apiClientManager = dependencies.GetService<IApiClientManager>();
 
-            if (this.IsCleanRequested)
-            {
-                await this.CleanAsync(systemManagement, cancellationToken, logger);
-            }
-
             int localPort = apiClientManager.GetApiPort(new ClientInstance(
                 Environment.MachineName,
                 System.Net.IPAddress.Loopback.ToString(),

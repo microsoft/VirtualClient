@@ -65,6 +65,9 @@ namespace VirtualClient
                 // --api-port
                 OptionFactory.CreateApiPortOption(required: false),
 
+                // --archive-logs
+                OptionFactory.CreateArchiveLogsOption(required: false),
+
                 // --clean
                 OptionFactory.CreateCleanOption(required: false),
 
@@ -156,6 +159,7 @@ namespace VirtualClient
                 OptionFactory.CreateVerboseFlag(required: false, false)
             };
 
+            rootCommand.TreatUnmatchedTokensAsErrors = true;
             rootCommand.WithOptionValidation(commandLineArgs);
             rootCommand.Handler = CommandHandler.Create<ExecuteProfileCommand>(cmd => cmd.ExecuteAsync(commandLineArgs, cancellationTokenSource));
 
@@ -163,7 +167,6 @@ namespace VirtualClient
             {
                 CommandLineParser.CreateApiSubcommand(commandLineArgs, cancellationTokenSource),
                 CommandLineParser.CreateBootstrapSubcommand(commandLineArgs, cancellationTokenSource),
-                CommandLineParser.CreateCleanSubcommand(commandLineArgs, cancellationTokenSource),
                 CommandLineParser.CreateConvertSubcommand(commandLineArgs, cancellationTokenSource),
                 CommandLineParser.CreateGetTokenSubcommand(commandLineArgs, cancellationTokenSource),
                 CommandLineParser.CreateUploadFilesSubcommand(commandLineArgs, cancellationTokenSource),
@@ -433,39 +436,6 @@ namespace VirtualClient
             bootstrapCommand.Handler = CommandHandler.Create<BootstrapCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
 
             return bootstrapCommand;
-        }
-
-        private static Command CreateCleanSubcommand(string[] args, CancellationTokenSource cancellationTokenSource)
-        {
-            Command cleanCommand = new Command(
-                "clean",
-                "Resets the state of the Virtual Client for a 'first run' scenario.")
-            {
-                // OPTIONAL
-                // -------------------------------------------------------------------
-                // --clean
-                OptionFactory.CreateCleanOption(required: false),
-
-                // --log-dir
-                OptionFactory.CreateLogDirectoryOption(required: false),
-
-                // --log-retention
-                OptionFactory.CreateLogRetentionOption(required: false),
-
-                // --package-dir
-                OptionFactory.CreatePackageDirectoryOption(required: false),
-
-                 // --state-dir
-                OptionFactory.CreateStateDirectoryOption(required: false),
-
-                // --temp-dir
-                OptionFactory.CreateTempDirectoryOption(required: false)
-            };
-
-            cleanCommand.WithOptionValidation(args);
-            cleanCommand.Handler = CommandHandler.Create<CleanArtifactsCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
-
-            return cleanCommand;
         }
 
         private static Command CreateConvertSubcommand(string[] args, CancellationTokenSource cancellationTokenSource)

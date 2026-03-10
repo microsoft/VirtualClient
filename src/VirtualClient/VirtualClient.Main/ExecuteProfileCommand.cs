@@ -196,42 +196,41 @@ namespace VirtualClient
 
                 EventContext telemetryContext = EventContext.Persisted();
 
-                if (this.IsCleanRequested)
-                {
-                    await this.CleanAsync(systemManagement, cancellationToken, logger);
-                }
-
                 logger.LogMessage($"Platform.Initialize", telemetryContext);
-                this.LogContextToConsole(dependencies);
 
-                // Extracts and registers any packages that are pre-existing on the system (e.g. they exist in
-                // the 'packages' directory already).
-                await this.InitializePackagesAsync(packageManager, cancellationToken);
-
-                // Ensure all Virtual Client types are loaded from .dlls in the execution directory.
-                ComponentTypeCache.Instance.LoadComponentTypes(AppDomain.CurrentDomain.BaseDirectory);
-
-                // Installs any extensions that are pre-existing on the system (e.g. they exist in
-                // the 'packages' directory already).
-                this.Extensions = await this.DiscoverExtensionsAsync(packageManager, cancellationToken);
-                if (this.Extensions?.Binaries?.Any() == true)
+                if (this.Profiles?.Any() == true)
                 {
-                    await this.LoadExtensionsBinariesAsync(this.Extensions, cancellationToken);
-                }
+                    this.LogContextToConsole(dependencies);
 
-                IEnumerable<string> profileNames = await this.EvaluateProfilesAsync(dependencies);
-                this.SetGlobalTelemetryProperties(profileNames, dependencies);
-                this.SetHostMetadataTelemetryProperties(profileNames, dependencies);
+                    // Extracts and registers any packages that are pre-existing on the system (e.g. they exist in
+                    // the 'packages' directory already).
+                    await this.InitializePackagesAsync(packageManager, cancellationToken);
 
-                IEnumerable<string> effectiveProfiles = await this.EvaluateProfilesAsync(dependencies, true, cancellationToken);
+                    // Ensure all Virtual Client types are loaded from .dlls in the execution directory.
+                    ComponentTypeCache.Instance.LoadComponentTypes(AppDomain.CurrentDomain.BaseDirectory);
 
-                if (this.InstallDependencies)
-                {
-                    await this.ExecuteProfileDependenciesInstallationAsync(effectiveProfiles, dependencies, cancellationTokenSource);
-                }
-                else
-                {
-                    await this.ExecuteProfileAsync(effectiveProfiles, dependencies, cancellationTokenSource);
+                    // Installs any extensions that are pre-existing on the system (e.g. they exist in
+                    // the 'packages' directory already).
+                    this.Extensions = await this.DiscoverExtensionsAsync(packageManager, cancellationToken);
+                    if (this.Extensions?.Binaries?.Any() == true)
+                    {
+                        await this.LoadExtensionsBinariesAsync(this.Extensions, cancellationToken);
+                    }
+
+                    IEnumerable<string> profileNames = await this.EvaluateProfilesAsync(dependencies);
+                    this.SetGlobalTelemetryProperties(profileNames, dependencies);
+                    this.SetHostMetadataTelemetryProperties(profileNames, dependencies);
+
+                    IEnumerable<string> effectiveProfiles = await this.EvaluateProfilesAsync(dependencies, true, cancellationToken);
+
+                    if (this.InstallDependencies)
+                    {
+                        await this.ExecuteProfileDependenciesInstallationAsync(effectiveProfiles, dependencies, cancellationTokenSource);
+                    }
+                    else
+                    {
+                        await this.ExecuteProfileAsync(effectiveProfiles, dependencies, cancellationTokenSource);
+                    }
                 }
             }
             finally
@@ -248,7 +247,6 @@ namespace VirtualClient
                     Program.LogMessage(logger, $"{nameof(ExecuteProfileCommand)}.RebootingSystem", exitingContext);
                 }
 
-                Program.LogMessage(logger, $"{nameof(ExecuteProfileCommand)}.End", exitingContext);
                 Program.LogMessage(logger, $"Exit Code: {exitCode}", exitingContext);
 
                 TimeSpan remainingWait = TimeSpan.FromMinutes(2);
@@ -376,18 +374,21 @@ namespace VirtualClient
         /// </summary>
         protected override void Initialize(string[] args, PlatformSpecifics platformSpecifics)
         {
-            if (this.Profiles?.Any() != true && string.IsNullOrWhiteSpace(this.Command))
-            {
-                throw new NotSupportedException(
-                    "Command line usage is not supported. The intended command or profile execution intentions are unclear. " +
-                    "Use the --profile or --command options.");
-            }
-
             if (this.Targets?.Any() == true && string.IsNullOrWhiteSpace(this.Command))
             {
                 throw new NotSupportedException(
                     "Command line usage is not supported. A command must be defined to execute on the target systems (via SSH). " +
                     "Use the --command option.");
+            }
+
+            if (this.Profiles?.Any() != true 
+                && string.IsNullOrWhiteSpace(this.Command) 
+                && !this.IsArchiveLogsRequested 
+                && !this.IsCleanRequested)
+            {
+                throw new NotSupportedException(
+                    "Command line usage is not supported. The intended command or profile execution intentions are unclear. " +
+                    "Use the --profile or --command options.");
             }
 
             // When timing constraints/hints are not provided on the command line, we run the
@@ -397,42 +398,47 @@ namespace VirtualClient
                 this.Timeout = ProfileTiming.OneIteration();
             }
 
-            // 1) Local command execution.
-            if (!string.IsNullOrWhiteSpace(this.Command))
+            if (this.Profiles?.Any() == true || !string.IsNullOrWhiteSpace(this.Command))
             {
-                List<DependencyProfileReference> profiles = new List<DependencyProfileReference>();
+                
 
-                if (this.Targets?.Any() == true)
+                // 1) Local command execution.
+                if (!string.IsNullOrWhiteSpace(this.Command))
                 {
-                    profiles.Add(new DependencyProfileReference(ExecuteProfileCommand.ExecuteSshCommandProfile));
-                }
-                else
-                {
-                    profiles.Add(new DependencyProfileReference(ExecuteProfileCommand.ExecuteCommandProfile));
-                }
+                    List<DependencyProfileReference> profiles = new List<DependencyProfileReference>();
 
-                if (this.Profiles?.Any() == true)
-                {
-                    profiles.AddRange(this.Profiles);
+                    if (this.Targets?.Any() == true)
+                    {
+                        profiles.Add(new DependencyProfileReference(ExecuteProfileCommand.ExecuteSshCommandProfile));
+                    }
+                    else
+                    {
+                        profiles.Add(new DependencyProfileReference(ExecuteProfileCommand.ExecuteCommandProfile));
+                    }
+
+                    if (this.Profiles?.Any() == true)
+                    {
+                        profiles.AddRange(this.Profiles);
+                    }
+
+                    this.Profiles = profiles;
+                    if (this.Parameters == null)
+                    {
+                        this.Parameters = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
+                    }
+
+                    string[] commandArguments = this.Command?.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                    string commandName = ExecuteProfileCommand.GetCommandName(commandArguments);
+
+                    string fullCommand = this.Command;
+                    if (this.IsPowerShell)
+                    {
+                        fullCommand = ExecuteProfileCommand.NormalizeForPowerShell(this.Command);
+                    }
+
+                    this.Parameters["Command"] = fullCommand;
+                    this.Parameters["Scenario"] = $"Execute_{commandName}";
                 }
-
-                this.Profiles = profiles;
-                if (this.Parameters == null)
-                {
-                    this.Parameters = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
-                }
-
-                string[] commandArguments = this.Command?.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-                string commandName = ExecuteProfileCommand.GetCommandName(commandArguments);
-
-                string fullCommand = this.Command;
-                if (this.IsPowerShell)
-                {
-                    fullCommand = ExecuteProfileCommand.NormalizeForPowerShell(this.Command);
-                }
-
-                this.Parameters["Command"] = fullCommand;
-                this.Parameters["Scenario"] = $"Execute_{commandName}";
             }
         }
 
@@ -609,21 +615,24 @@ namespace VirtualClient
             // added on application startup.
             base.SetGlobalTelemetryProperties(args);
 
-            DependencyProfileReference profile = this.Profiles.First();
-            string profilePath = profile.ProfileName;
-            string profileName = Path.GetFileName(profilePath);
-            string platformSpecificProfileName = PlatformSpecifics.GetProfileName(profileName, Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture);
-
-            // Additional persistent/global telemetry properties in addition to the ones
-            // added on application startup.
-            EventContext.PersistentProperties.AddRange(new Dictionary<string, object>
+            if (this.Profiles?.Any() == true)
             {
-                // Ex: PERF-CPU-OPENSSL (win-x64)
-                [MetadataContract.ExecutionProfile] = platformSpecificProfileName,
+                DependencyProfileReference profile = this.Profiles.First();
+                string profilePath = profile.ProfileName;
+                string profileName = Path.GetFileName(profilePath);
+                string platformSpecificProfileName = PlatformSpecifics.GetProfileName(profileName, Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture);
 
-                // Ex: PERF-CPU-OPENSSL.json
-                [MetadataContract.ExecutionProfileName] = profileName
-            });
+                // Additional persistent/global telemetry properties in addition to the ones
+                // added on application startup.
+                EventContext.PersistentProperties.AddRange(new Dictionary<string, object>
+                {
+                    // Ex: PERF-CPU-OPENSSL (win-x64)
+                    [MetadataContract.ExecutionProfile] = platformSpecificProfileName,
+
+                    // Ex: PERF-CPU-OPENSSL.json
+                    [MetadataContract.ExecutionProfileName] = profileName
+                });
+            }
         }
 
         /// <summary>

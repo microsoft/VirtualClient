@@ -8,13 +8,14 @@ namespace VirtualClient.Contracts
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
+    using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
-    using VirtualClient.Contracts;
 
     /// <summary>
     /// Provides functionality to wait for given time.
     /// </summary>
+    [SupportedPlatforms("linux-arm64,linux-x64,win-arm64,win-x64")]
     public class WaitExecutor : VirtualClientComponent
     {
         private static readonly TimeSpan DefaultDuration = TimeSpan.FromMinutes(5);

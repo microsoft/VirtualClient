@@ -120,6 +120,40 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Command line option indicates existing logs should be archived before proceeding.
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateArchiveLogsOption(bool required = true, object defaultValue = null)
+        {
+            Option<IList<string>> option = new Option<IList<string>>(
+                new string[] { "-a", "--archive-logs" },
+                parseArgument: result =>
+                {
+                    string archivePath = null;
+                    if (result.Tokens?.Any() == true)
+                    {
+                        // e.g.
+                        // --archive-logs=/home/user/custom_archive/logs
+                        archivePath = OptionFactory.ToFullPath(result.Tokens[0].Value);
+                    }
+
+                    return new List<string> { archivePath };
+                })
+            {
+                Name = "ArchiveLogTargets",
+                Description = "Indicates any existing logs/log files should be archived. A path to the archive location can be provided. Default path is an '/archive/logs' folder in the user profile/home directory.",
+                ArgumentHelpName = "path",
+                AllowMultipleArgumentsPerToken = false,
+                Arity = new ArgumentArity(0, 2)
+            };
+
+            OptionFactory.SetOptionRequirements(option, required);
+
+            return option;
+        }
+
+        /// <summary>
         /// Command line option defines the certificate name to retrieve from Key Vault.
         /// </summary>
         /// <param name="required">Sets this option as required.</param>
@@ -1883,5 +1917,16 @@ namespace VirtualClient
                 throw new ArgumentException(errorMessage);
             }
         }
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public class ArchivePath
+    {
+        /// <summary>
+        /// 
+        /// </summary>
+        public string Path { get; set; }
     }
 }
