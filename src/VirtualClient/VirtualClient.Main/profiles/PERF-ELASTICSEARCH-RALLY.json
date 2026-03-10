@@ -1,0 +1,113 @@
+{
+    "Description": "Elasticsearch Rally Workload",
+    "Metadata": {
+        "RecommendedMinimumExecutionTime": "24:00:00",
+        "SupportedPlatforms": "win-x64,win-arm64,linux-x64,linux-arm64",
+        "SupportedOperatingSystems": "Debian,Ubuntu,Windows"
+    },
+    "Parameters": {
+        "DiskFilter": "osdisk:false&biggestsize",
+        "ElasticsearchVersion": "9.2.3",
+        "RallyVersion": "2.12.0",
+        "Port": "9200",
+        "RallyTestMode": false,
+        "UseWgetForElasticsearhDownloadOnLinux": false,
+        "UseWebRequestForElasticsearchDownloadOnWindows": false
+    },
+    "Actions": [
+        {
+            "Type": "ElasticsearchRallyServerExecutor",
+            "Parameters": {
+                "Scenario": "SetupElasticsearchRallyCluster",
+                "Port": "$.Parameters.Port",
+                "ElasticsearchVersion": "$.Parameters.ElasticsearchVersion",
+                "UseWgetForElasticsearhDownloadOnLinux": "$.Parameters.UseWgetForElasticsearhDownloadOnLinux",
+                "UseWebRequestForElasticsearchDownloadOnWindows": "$.Parameters.UseWebRequestForElasticsearchDownloadOnWindows",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "PackageName": "elasticsearchrally",
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "ElasticsearchRallyClientExecutor",
+            "Parameters": {
+                "Scenario": "ExecuteGeoNamesBenchmark",
+                "TrackName": "geonames",
+                "ElasticsearchVersion": "$.Parameters.ElasticsearchVersion",
+                "RallyVersion": "$.Parameters.RallyVersion",
+                "Port": "$.Parameters.Port",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "RallyTestMode": "$.Parameters.RallyTestMode",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "ElasticsearchRallyClientExecutor",
+            "Parameters": {
+                "Scenario": "ExecutePMCBenchmark",
+                "TrackName": "pmc",
+                "ElasticsearchVersion": "$.Parameters.ElasticsearchVersion",
+                "RallyVersion": "$.Parameters.RallyVersion",
+                "Port": "$.Parameters.Port",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "RallyTestMode": "$.Parameters.RallyTestMode",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "ElasticsearchRallyClientExecutor",
+            "Parameters": {
+                "Scenario": "ExecuteGeopointBenchmark",
+                "TrackName": "geopoint",
+                "ElasticsearchVersion": "$.Parameters.ElasticsearchVersion",
+                "RallyVersion": "$.Parameters.RallyVersion",
+                "Port": "$.Parameters.Port",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "RallyTestMode": "$.Parameters.RallyTestMode",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "ElasticsearchRallyClientExecutor",
+            "Parameters": {
+                "Scenario": "ExecuteHTTPLogsBenchmark",
+                "TrackName": "http_logs",
+                "ElasticsearchVersion": "$.Parameters.ElasticsearchVersion",
+                "RallyVersion": "$.Parameters.RallyVersion",
+                "Port": "$.Parameters.Port",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "RallyTestMode": "$.Parameters.RallyTestMode",
+                "Role": "Client"
+            }
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "FormatDisks",
+            "Parameters": {
+                "Scenario": "FormatDisks"
+            }
+        },
+        {
+            "Type": "MountDisks",
+            "Parameters": {
+                "Scenario": "CreateMountPoints"
+            }
+        },
+        {
+            "Type": "LinuxPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallLinuxPackages",
+                "Packages": "python3,python3-pip,python3-venv,pipx,git,pbzip2",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "ApiServer",
+            "Parameters": {
+                "Scenario": "StartAPIServer",
+                "Role": "Server"
+            }
+        }
+    ]
+}
