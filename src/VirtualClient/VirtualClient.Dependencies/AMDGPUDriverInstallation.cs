@@ -275,8 +275,8 @@ namespace VirtualClient.Dependencies
                     // Clean up any broken package state from previous failed installation attempts.
                     // The amdgpu-dkms package can be left in a half-configured state if the DKMS module
                     // build fails, which causes all subsequent apt-get commands to fail.
-                    commands.Add("bash -c 'dpkg --remove --force-remove-reinstreq amdgpu-dkms 2>/dev/null || true'");
-                    commands.Add("bash -c 'dpkg --configure -a 2>/dev/null || true'");
+                    commands.Add("bash -c \"dpkg --remove --force-remove-reinstreq amdgpu-dkms || true\"");
+                    commands.Add("bash -c \"dpkg --configure -a || true\"");
                     commands.Add("apt-get -yq update");
                     commands.Add("apt-get install -yq libpci3 libpci-dev doxygen unzip cmake git");
                     commands.Add("apt-get install -yq libnuma-dev libncurses5");

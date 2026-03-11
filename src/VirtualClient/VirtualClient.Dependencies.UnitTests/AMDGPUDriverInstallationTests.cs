@@ -96,8 +96,8 @@ namespace VirtualClient.Dependencies
 
             List<string> commands = new List<string>
             {
-                "sudo bash -c 'dpkg --remove --force-remove-reinstreq amdgpu-dkms 2>/dev/null || true'",
-                "sudo bash -c 'dpkg --configure -a 2>/dev/null || true'",
+                "sudo bash -c \"dpkg --remove --force-remove-reinstreq amdgpu-dkms || true\"",
+                "sudo bash -c \"dpkg --configure -a || true\"",
                 "apt-get -yq update",
                 "sudo apt-get install -yq libpci3 libpci-dev doxygen unzip cmake git",
                 "sudo apt-get install -yq libnuma-dev libncurses5",
