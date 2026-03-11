@@ -170,6 +170,7 @@ namespace VirtualClient.Contracts
         /// </summary>
         /// <param name="telemetryContext">Provides context information to include with telemetry events.</param>
         /// <param name="processDetails">The process whose details will be captured.</param>
+        /// <param name="results">The results to include with the telemetry events.</param>
         /// <param name="name">The property name to use for the process telemetry.</param>
         /// <param name="maxChars">
         /// The maximum number of characters that will be logged in the telemetry event from standard output + error. There are often limitations on the size 
@@ -177,7 +178,7 @@ namespace VirtualClient.Contracts
         /// without risking data loss during upload because the message exceeds thresholds. Default = 125,000 chars. In relativity
         /// there are about 3000 characters in an average single-spaced page of text.
         /// </param>
-        public static EventContext AddProcessResults(this EventContext telemetryContext, ProcessDetails processDetails, string name = null, int maxChars = 125000)
+        public static EventContext AddProcessResults(this EventContext telemetryContext, ProcessDetails processDetails, KeyValuePair<string, string> results, string name = null, int maxChars = 125000)
         {
             processDetails.ThrowIfNull(nameof(processDetails));
             telemetryContext.ThrowIfNull(nameof(telemetryContext));
@@ -189,67 +190,71 @@ namespace VirtualClient.Contracts
 
             try
             {
-                int? finalId = null;
-                int? finalExitCode = null;
-                string finalResults = null;
+                if (!string.IsNullOrWhiteSpace(results.Key))
+                {
+                    int? finalId = null;
+                    int? finalExitCode = null;
+                    string finalResults = null;
 
-                try
-                {
-                    finalId = processDetails.Id;
-                }
-                catch
-                {
-                }
-
-                try
-                {
-                    finalExitCode = processDetails.ExitCode;
-                }
-                catch
-                {
-                }
-
-                string fullCommand = $"{processDetails.CommandLine}".Trim();
-                if (!string.IsNullOrWhiteSpace(fullCommand))
-                {
-                    fullCommand = SensitiveData.ObscureSecrets(fullCommand);
-                }
-
-                if (processDetails.Results?.Any() == true)
-                {
-                    finalResults = string.Join($"{Environment.NewLine}{Environment.NewLine}", processDetails.Results);
-                }
-
-                // Note that 'totalOutputChars' represents the total # of characters in both the
-                // standard output and error.
-                if (finalResults != null && finalResults.Length > maxChars)
-                {
-                    // e.g.
-                    // Given Max Chars = 125,000, length of standard output = 130,000 and length of standard error = 500
-                    // Standard Output Substring Length = 130,000 - (130,500 - 125,000) = 130,000 - 5,500 = 124,500
-                    // 
-                    // And thus, the standard output will be 124,500 chars in length. The standard error will be 500 chars in length.
-                    // The total will be 125,000 chars, right at the max.
-                    int substringLength = finalResults.Length - (finalResults.Length - maxChars);
-                    if (substringLength > 0)
+                    try
                     {
-                        // Careful that we do not attempt to get an invalid substring (e.g. 0 to -5).
-                        finalResults = finalResults.Substring(0, finalResults.Length - (finalResults.Length - maxChars));
+                        finalId = processDetails.Id;
                     }
-                    else
+                    catch
                     {
-                        finalResults = string.Empty;
                     }
-                }
 
-                telemetryContext.Properties[name ?? "process"] = new
-                {
-                    id = finalId,
-                    command = fullCommand ?? string.Empty,
-                    workingDir = processDetails.WorkingDirectory ?? string.Empty,
-                    exitCode = finalExitCode,
-                    results = finalResults
-                };
+                    try
+                    {
+                        finalExitCode = processDetails.ExitCode;
+                    }
+                    catch
+                    {
+                    }
+
+                    string fullCommand = $"{processDetails.CommandLine}".Trim();
+                    if (!string.IsNullOrWhiteSpace(fullCommand))
+                    {
+                        fullCommand = SensitiveData.ObscureSecrets(fullCommand);
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(results.Value))
+                    {
+                        finalResults = results.Value;
+                    }
+
+                    // Note that 'totalOutputChars' represents the total # of characters in both the
+                    // standard output and error.
+                    if (finalResults != null && finalResults.Length > maxChars)
+                    {
+                        // e.g.
+                        // Given Max Chars = 125,000, length of standard output = 130,000 and length of standard error = 500
+                        // Standard Output Substring Length = 130,000 - (130,500 - 125,000) = 130,000 - 5,500 = 124,500
+                        // 
+                        // And thus, the standard output will be 124,500 chars in length. The standard error will be 500 chars in length.
+                        // The total will be 125,000 chars, right at the max.
+                        int substringLength = finalResults.Length - (finalResults.Length - maxChars);
+                        if (substringLength > 0)
+                        {
+                            // Careful that we do not attempt to get an invalid substring (e.g. 0 to -5).
+                            finalResults = finalResults.Substring(0, finalResults.Length - (finalResults.Length - maxChars));
+                        }
+                        else
+                        {
+                            finalResults = string.Empty;
+                        }
+                    }
+
+                    telemetryContext.Properties[name ?? "process"] = new
+                    {
+                        id = finalId,
+                        command = fullCommand ?? string.Empty,
+                        workingDir = processDetails.WorkingDirectory ?? string.Empty,
+                        exitCode = finalExitCode,
+                        filePath = results.Key,
+                        results = finalResults
+                    };
+                }
             }
             catch
             {
@@ -636,6 +641,7 @@ namespace VirtualClient.Contracts
         /// <param name="eventContext">Provided correlation identifiers and context properties for the event.</param>
         /// <param name="toolResults">The raw results produced by the workload/monitor etc. from which the metrics were parsed.</param>
         /// <param name="toolVersion">The version of the tool/toolset.</param>
+        /// <param name="metricLevel">A severity level to apply to the metric.</param>
         public static void LogMetrics(
             this ILogger logger,
             string toolName,
@@ -648,7 +654,8 @@ namespace VirtualClient.Contracts
             IEnumerable<string> tags,
             EventContext eventContext,
             string toolResults = null,
-            string toolVersion = null)
+            string toolVersion = null,
+            LogLevel metricLevel = LogLevel.Information)
         {
             logger.ThrowIfNull(nameof(logger));
 
@@ -677,6 +684,63 @@ namespace VirtualClient.Contracts
 
             // A specific message to inform logger end of logging metrics so that it can write metrics in one batch.
             VirtualClientLoggingExtensions.LogMessage(logger, $"{scenarioName}.LogMetricsEnd", LogLevel.Trace, LogType.MetricsCollection, eventContext);
+        }
+
+        /// <summary>
+        /// Logs the test metrics/results to the target telemetry data store(s).
+        /// </summary>
+        /// <param name="logger">The logger instance.</param>
+        /// <param name="metric">The metric to log.</param>
+        /// <param name="toolName">The name of the workload tool that produced the test metrics/results (e.g. GeekBench, FIO).</param>
+        /// <param name="scenarioName">The name of the test (e.g. fio_randwrite_4GB_4k_d1_th1_direct).</param>
+        /// <param name="scenarioStartTime">The time at which the test began.</param>
+        /// <param name="scenarioEndTime">The time at which the test ended.</param>
+        /// <param name="scenarioArguments">The command line parameters provided to the workload tool.</param>
+        /// <param name="eventContext">Provided correlation identifiers and context properties for the event.</param>
+        /// <param name="tags">Tags associated with the test.</param>
+        /// <param name="toolResults">The raw results produced by the workload/monitor etc. from which the metrics were parsed.</param>
+        /// <param name="toolVersion">The version of the tool/toolset.</param>
+        /// <param name="metricLevel">A severity level to apply to the metric.</param>
+        public static void LogMetric(
+            this ILogger logger,
+            Metric metric,
+            string toolName,
+            string scenarioName,
+            DateTime scenarioStartTime,
+            DateTime scenarioEndTime,
+            string scenarioArguments,
+            EventContext eventContext,
+            IEnumerable<string> tags = null,
+            string toolResults = null,
+            string toolVersion = null,
+            LogLevel metricLevel = LogLevel.Information)
+        {
+            logger.ThrowIfNull(nameof(logger));
+            metric.ThrowIfNull(nameof(metric));
+            scenarioName.ThrowIfNullOrWhiteSpace(nameof(scenarioName));
+            toolName.ThrowIfNullOrWhiteSpace(nameof(toolName));
+            eventContext.ThrowIfNull(nameof(eventContext));
+
+            VirtualClientLoggingExtensions.LogMetric(
+                logger,
+                toolName,
+                scenarioName,
+                scenarioStartTime,
+                scenarioEndTime,
+                metric.Name,
+                metric.Value,
+                metric.Unit,
+                metric.Categorization,
+                scenarioArguments,
+                tags,
+                eventContext,
+                metric.Relativity,
+                metric.Verbosity,
+                metric.Description,
+                toolResults,
+                toolVersion,
+                metric.Metadata,
+                metricLevel);
         }
 
         /// <summary>

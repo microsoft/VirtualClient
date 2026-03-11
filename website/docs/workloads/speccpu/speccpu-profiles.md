@@ -21,7 +21,6 @@ for evaluating the performance of the CPU for processing calculations.
   * win-arm64
 
   **Note**: On Windows platform, the **gcc** compiler version is required to be 10 or higher.  
-  **Note**: Not supported currently on Ubuntu 24.
 
 * **Supports Disconnected Scenarios**  
   * No. Internet connection required.
@@ -39,7 +38,7 @@ for evaluating the performance of the CPU for processing calculations.
   | Parameter                 | Purpose                                                                         | Default value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
   | CompilerName              | Optional. The name of the compiler to use for compiling CoreMark on the system. | gcc |
-  | CompilerVersion           | Optional. The version of the compiler to use.  | 10 |
+  | CompilerVersion           | Optional. The version of the compiler to use.  | The default version for the OS/distro.<br/><br/><ul><li>See [Linux Defaults](https://documentation.ubuntu.com/ubuntu-for-developers/reference/availability/gcc/).</li><li>See [Windows Defaults](https://cygwin.com/packages/summary/gcc-core.html)</li></ul> |
   | RunPeak                   | Optional. True to run the workload 'Peak' scenario, False to run the workload 'Base' scenario. | false (Base) |
   | Threads                   | Optional. Determines the number of threads to use for running the benchmark. | # logical processors |
   | Copies                    | Optional. Determines the number of copies of the benchmark to run concurrently. | # logical processors |
@@ -58,6 +57,9 @@ for evaluating the performance of the CPU for processing calculations.
 * **Usage Examples**  
   The following section provides a few basic examples of how to use the workload profile. Additional usage examples can be found in the
   'Usage Scenarios/Examples' link at the top.
+
+* **Notes**  
+  On Windows, only the following benchmarks are supported: 503.bwaves_r, 508.namd_r, 510.parest_r, 519.lbm_r, 544.nab_r, 549.fotonik3d_r, 554.roms_r.
 
   ``` csharp
   # Execute the workload profile
@@ -94,7 +96,7 @@ for evaluating the performance of the CPU for processing calculations.
   | Parameter                 | Purpose                                                                         | Default value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
   | CompilerName              | Optional. The name of the compiler to use for compiling CoreMark on the system. | gcc |
-  | CompilerVersion           | Optional. The version of the compiler to use.  | 10 |
+  | CompilerVersion           | Optional. The version of the compiler to use.  | The default version for the OS/distro.<br/><br/><ul><li>See [Linux Defaults](https://documentation.ubuntu.com/ubuntu-for-developers/reference/availability/gcc/).</li><li>See [Windows Defaults](https://cygwin.com/packages/summary/gcc-core.html)</li></ul> |
   | RunPeak                   | Optional. True to run the workload 'Peak' scenario, False to run the workload 'Base' scenario. | false (Base) |
   | Threads                   | Optional. Determines the number of threads to use for running the benchmark. | # logical processors |
   | Copies                    | Optional. Determines the number of copies of the benchmark to run concurrently. | # logical processors |
@@ -109,6 +111,9 @@ for evaluating the performance of the CPU for processing calculations.
   
 * **Usage Examples**  
   The following section provides a few basic examples of how to use the workload profile.
+
+* **Notes**  
+  On Windows, only the following benchmarks are supported: 603.bwaves_s, 619.lbm_s, 644.nab_s, 654.roms_s.
 
   ``` bash
   # Execute the workload profile
@@ -143,7 +148,7 @@ for evaluating the performance of the CPU for processing calculations.
   | Parameter                 | Purpose                                                                         | Default value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
   | CompilerName              | Optional. The name of the compiler to use for compiling CoreMark on the system. | gcc |
-  | CompilerVersion           | Optional. The version of the compiler to use.  | 10 |
+  | CompilerVersion           | Optional. The version of the compiler to use.  | The default version for the OS/distro.<br/><br/><ul><li>See [Linux Defaults](https://documentation.ubuntu.com/ubuntu-for-developers/reference/availability/gcc/).</li><li>See [Windows Defaults](https://cygwin.com/packages/summary/gcc-core.html)</li></ul> |
   | RunPeak                   | Optional. True to run the workload 'Peak' scenario, False to run the workload 'Base' scenario. | false (Base) |
   | Threads                   | Optional. Determines the number of threads to use for running the benchmark. | # logical processors |
   | Copies                    | Optional. Determines the number of copies of the benchmark to run concurrently. | # logical processors |
@@ -157,6 +162,9 @@ for evaluating the performance of the CPU for processing calculations.
 
 * **Usage Examples**  
   The following section provides a few basic examples of how to use the workload profile.
+
+* **Notes**  
+  On Windows, only the following benchmarks are supported: 505.mcf_r, 525.x264_r, 541.leela_r, 548.exchange2_r, 557.xz_r.
 
   ``` bash
   # Execute the workload profile
@@ -191,7 +199,7 @@ for evaluating the performance of the CPU for processing calculations.
   | Parameter                 | Purpose                                                                         | Default value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
   | CompilerName              | Optional. The name of the compiler to use for compiling CoreMark on the system. | gcc |
-  | CompilerVersion           | Optional. The version of the compiler to use.  | 10 |
+  | CompilerVersion           | Optional. The version of the compiler to use.  | The default version for the OS/distro.<br/><br/><ul><li>See [Linux Defaults](https://documentation.ubuntu.com/ubuntu-for-developers/reference/availability/gcc/).</li><li>See [Windows Defaults](https://cygwin.com/packages/summary/gcc-core.html)</li></ul> |
   | RunPeak                   | Optional. True to run the workload 'Peak' scenario, False to run the workload 'Base' scenario. | false (Base) |
   | Threads                   | Optional. Determines the number of threads to use for running the benchmark. | # logical processors |
   | Copies                    | Optional. Determines the number of copies of the benchmark to run concurrently. | # logical processors |
@@ -205,6 +213,9 @@ for evaluating the performance of the CPU for processing calculations.
 
 * **Usage Examples**  
   The following section provides a few basic examples of how to use the workload profile.
+
+* **Notes**  
+  On Windows, only the following benchmarks are supported: 641.leela_s.
 
   ``` bash
   # Execute the workload profile

@@ -220,6 +220,8 @@ namespace VirtualClient.Dependencies
 
             this.fileSystem.Directory.CreateDirectory(Path.GetDirectoryName(bashRcPath) !);
 
+            this.fileSystem.Directory.CreateDirectory(Path.GetDirectoryName(bashRcPath) !);
+
             // We hit a bug where the .bashrc file does not exist on the system. To prevent issues later
             // we are creating the file if it is missing.
             if (!this.fileSystem.File.Exists(bashRcPath))

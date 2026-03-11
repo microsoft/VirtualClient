@@ -40,8 +40,8 @@ namespace VirtualClient.Actions
                 .Returns(true);
 
             this.mockFixture.Parameters["PackageName"] = "networking";
-            this.mockFixture.Parameters["TestDuration"] = 300;
-            this.mockFixture.Parameters["WarmupTime"] = 300;
+            this.mockFixture.Parameters["TestDuration"] = "00:05:00";
+            this.mockFixture.Parameters["WarmupTime"] = "00:05:00";
             this.mockFixture.Parameters["Protocol"] = ProtocolType.Tcp.ToString();
             this.mockFixture.Parameters["ThreadCount"] = 1;
             this.mockFixture.Parameters["ClientBufferSize"] = "4k";
@@ -105,7 +105,7 @@ namespace VirtualClient.Actions
                     Assert.AreEqual(notification.Definition.Properties["Protocol"], ProtocolType.Tcp.ToString());
                     Assert.AreEqual(notification.Definition.Properties["ThreadCount"], 1);
                     Assert.AreEqual(notification.Definition.Properties["ClientBufferSize"], "4k");
-                    Assert.AreEqual(notification.Definition.Properties["TestDuration"], 300);
+                    Assert.AreEqual(notification.Definition.Properties["TestDuration"], "00:05:00");
                     Assert.AreEqual(notification.Definition.Properties["Port"], 5500);
                     Assert.AreEqual(notification.Definition.Properties["ReceiverMultiClientMode"], true);
                     Assert.AreEqual(notification.Definition.Properties["SenderLastClient"], true);

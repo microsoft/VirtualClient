@@ -327,9 +327,9 @@ namespace VirtualClient.Actions
                 this.mockFixture.File.Setup(fe => fe.Move(It.IsAny<string>(), It.IsAny<string>(), true))
                 .Callback<string, string, bool>((sourcePath, destinitionPath, overwrite) =>
                 {
-                    destinitionPathCorrect = Regex.IsMatch(
-                        destinitionPath,
-                        $"{logsDir}.{this.mockFixture.Parameters["ToolName"].ToString().ToLower()}.{this.mockFixture.Parameters["Scenario"].ToString().ToLower()}");
+                    destinitionPathCorrect = destinitionPath.StartsWith(this.mockFixture.Combine(
+                        logsDir,
+                        this.mockFixture.Parameters["ToolName"].ToString().ToLower()));
 
                     sourcePathCorrect = Regex.IsMatch(
                         sourcePath,
@@ -363,9 +363,9 @@ namespace VirtualClient.Actions
                 this.mockFixture.File.Setup(fe => fe.Move(It.IsAny<string>(), It.IsAny<string>(), true))
                 .Callback<string, string, bool>((sourcePath, destinitionPath, overwrite) =>
                 {
-                    destinitionPathCorrect = Regex.IsMatch(
-                        destinitionPath,
-                        $"{logsDir}.{this.mockFixture.Parameters["ToolName"].ToString().ToLower()}.{this.mockFixture.Parameters["Scenario"].ToString().ToLower()}");
+                    destinitionPathCorrect = destinitionPath.StartsWith(this.mockFixture.Combine(
+                        logsDir, 
+                        this.mockFixture.Parameters["ToolName"].ToString().ToLower()));
 
                     sourcePathCorrect = Regex.IsMatch(
                         sourcePath,
@@ -385,6 +385,22 @@ namespace VirtualClient.Actions
             public TestScriptExecutor(MockFixture fixture)
                 : base(fixture.Dependencies, fixture.Parameters)
             {
+            }
+
+            public new string ExecutablePath
+            {
+                get
+                {
+                    return base.ExecutablePath;
+                }
+            }
+
+            public new string ExecutableDirectory
+            {
+                get
+                {
+                    return base.ExecutableDirectory;
+                }
             }
 
             public new Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)

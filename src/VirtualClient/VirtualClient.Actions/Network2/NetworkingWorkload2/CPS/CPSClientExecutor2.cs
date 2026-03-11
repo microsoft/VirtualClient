@@ -60,27 +60,27 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Parameter defines the duration for running the CPS workload.
         /// </summary>
-        public int TestDuration
+        public TimeSpan TestDuration
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.TestDuration), 60);
+                return this.Parameters.GetTimeSpanValue(nameof(this.TestDuration), TimeSpan.FromSeconds(60));
             }
         }
 
         /// <summary>
-        /// Parameter defines the test warmup time values in seconds.
+        /// Parameter defines the test warmup time values.
         /// </summary>
-        public int WarmupTime
+        public TimeSpan WarmupTime
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(CPSClientExecutor2.WarmupTime), 8);
+                return this.Parameters.GetTimeSpanValue(nameof(CPSClientExecutor2.WarmupTime), TimeSpan.FromSeconds(8));
             }
 
             set
             {
-                this.Parameters[nameof(CPSClientExecutor2.WarmupTime)] = value;
+                this.Parameters[nameof(CPSClientExecutor2.WarmupTime)] = value.ToString();
             }
         }
 
@@ -151,13 +151,13 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// gets test delay time values in seconds.
+        /// gets test delay time values.
         /// </summary>
-        public int DelayTime
+        public TimeSpan DelayTime
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.DelayTime), 0);
+                return this.Parameters.GetTimeSpanValue(nameof(this.DelayTime), TimeSpan.Zero);
             }
         }
 
@@ -220,7 +220,7 @@ namespace VirtualClient.Actions
 
             if (!string.IsNullOrWhiteSpace(this.Results))
             {
-                MetricsParser parser = new CPSMetricsParser2(this.Results, this.ConfidenceLevel, this.WarmupTime);
+                MetricsParser parser = new CPSMetricsParser2(this.Results, this.ConfidenceLevel, this.WarmupTime.TotalSeconds);
                 IList<Metric> metrics = parser.Parse();
 
                 this.Logger.LogMetrics(
@@ -250,7 +250,7 @@ namespace VirtualClient.Actions
         {
             base.Validate();
 
-            if (this.TestDuration <= 0)
+            if (this.TestDuration <= TimeSpan.Zero)
             {
                 throw new WorkloadException($"'{nameof(this.TestDuration)}' cannot be less than or equal to zero.", ErrorReason.InstructionsNotValid);
             }
@@ -374,7 +374,7 @@ namespace VirtualClient.Actions
             // Note:
             // We found that certain of the workloads do not exit when they are supposed to. We enforce an
             // absolute timeout to ensure we do not waste too much time with a workload that is stuck.
-            TimeSpan workloadTimeout = TimeSpan.FromSeconds(this.WarmupTime + (this.TestDuration * 2));
+            TimeSpan workloadTimeout = TimeSpan.FromSeconds(this.WarmupTime.TotalSeconds + (this.TestDuration.TotalSeconds * 2));
 
             string commandArguments = this.GetCommandLineArguments();
             DateTime startTime = DateTime.UtcNow;
@@ -404,8 +404,8 @@ namespace VirtualClient.Actions
 
             return $"-c -r {this.Connections} " +
                 $"{clientIPAddress},0,{serverIPAddress},{this.Port},{this.ConnectionsPerThread},{this.MaxPendingRequestsPerThread},{this.ConnectionDuration},{this.DataTransferMode} " +
-                $"-i {this.DisplayInterval} -wt {this.WarmupTime} -t {this.TestDuration} " +
-                $"{((this.DelayTime != 0) ? $"-ds {this.DelayTime}" : string.Empty)}".Trim();
+                $"-i {this.DisplayInterval} -wt {this.WarmupTime.TotalSeconds} -t {this.TestDuration.TotalSeconds} " +
+                $"{((this.DelayTime != TimeSpan.Zero) ? $"-ds {this.DelayTime.TotalSeconds}" : string.Empty)}".Trim();
         }
 
         private class CPSWorkloadStateEqualityComparer : IEqualityComparer<JObject>

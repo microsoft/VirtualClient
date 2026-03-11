@@ -7,7 +7,6 @@ namespace VirtualClient.Actions
     using System.Collections.Generic;
     using System.IO;
     using System.IO.Abstractions;
-    using System.Linq;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
@@ -23,6 +22,7 @@ namespace VirtualClient.Actions
     /// <summary>
     /// The Geekbench executor.
     /// </summary>
+    [SupportedPlatforms("linux-arm64,linux-x64,win-arm64,win-x64")]
     public class GeekbenchExecutor : VirtualClientComponent
     {
         private IFileSystem fileSystem;
@@ -161,22 +161,20 @@ namespace VirtualClient.Actions
                 {
                     using (IProcessProxy process = this.processManager.CreateProcess(this.ExecutablePath, $"--unlock {email} {licenseKey}"))
                     {
-                        this.CleanupTasks.Add(() =>
+                        try
                         {
-                            // Note:
-                            // Issues were found on Linux/ARM64 systems with the process failing to be killed
-                            // using standard .NET logic. This happens on Ampere systems with lots of cores.
-                            // We are using the 'kill -9' option as a workaround.
-                            this.processManager.SafeKill(process, this.Logger);
-                        });
+                            await process.StartAndWaitAsync(cancellationToken);
 
-                        await process.StartAndWaitAsync(cancellationToken);
-
-                        if (!cancellationToken.IsCancellationRequested)
+                            if (!cancellationToken.IsCancellationRequested)
+                            {
+                                await this.LogProcessDetailsAsync(process, telemetryContext, this.PackageName);
+                                process.ThrowIfDependencyInstallationFailed();
+                            }
+                        }
+                        finally
                         {
-                            await this.LogProcessDetailsAsync(process, telemetryContext, this.PackageName, logToFile: true);
-
-                            process.ThrowIfDependencyInstallationFailed();
+                            process.Close();
+                            process.SafeKill(this.Logger, TimeSpan.FromSeconds(30));
                         }
                     }
                 }
@@ -213,6 +211,7 @@ namespace VirtualClient.Actions
                 // using workload name as testName
                 GeekBenchMetricsParser geekbenchMetricsParser = new GeekBenchMetricsParser(standardOutput);
                 IList<Metric> metrics = geekbenchMetricsParser.Parse();
+
                 foreach (Metric metric in metrics)
                 {
                     this.Logger.LogMetric(
@@ -259,24 +258,23 @@ namespace VirtualClient.Actions
                 {
                     using (IProcessProxy process = this.processManager.CreateProcess(pathToExe, commandLineArguments))
                     {
-                        this.CleanupTasks.Add(() =>
+                        try
                         {
-                            // Note:
-                            // Issues were found on Linux/ARM64 systems with the process failing to be killed
-                            // using standard .NET logic. This happens on Ampere systems with lots of cores.
-                            // We are using the 'kill -9' option as a workaround.
-                            this.processManager.SafeKill(process, this.Logger);
-                        });
+                            await process.StartAndWaitAsync(cancellationToken);
 
-                        await process.StartAndWaitAsync(cancellationToken);
+                            if (!cancellationToken.IsCancellationRequested)
+                            {
+                                await this.LogProcessDetailsAsync(process, telemetryContext, this.PackageName);
+                                process.ThrowIfWorkloadFailed();
 
-                        if (!cancellationToken.IsCancellationRequested)
+                                string standardOutput = process.StandardOutput.ToString();
+                                this.CaptureMetrics(process, standardOutput, commandLineArguments, telemetryContext, cancellationToken);
+                            }
+                        }
+                        finally
                         {
-                            await this.LogProcessDetailsAsync(process, telemetryContext, this.PackageName, logToFile: true);
-                            process.ThrowIfWorkloadFailed();
-
-                            string standardOutput = process.StandardOutput.ToString();
-                            this.CaptureMetrics(process, standardOutput, commandLineArguments, telemetryContext, cancellationToken);
+                            process.Close();
+                            process.SafeKill(this.Logger, TimeSpan.FromSeconds(30));
                         }
                     }
                 }

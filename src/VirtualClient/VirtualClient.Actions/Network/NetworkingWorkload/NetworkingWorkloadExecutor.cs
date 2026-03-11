@@ -16,6 +16,7 @@ namespace VirtualClient.Actions.NetworkPerformance
     using Polly;
     using VirtualClient;
     using VirtualClient.Api;
+    using VirtualClient.Common;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
@@ -24,6 +25,7 @@ namespace VirtualClient.Actions.NetworkPerformance
     /// <summary>
     /// Azure Networking Workload Executor tests networking between 2 VMs (client and server).
     /// </summary>
+    [SupportedPlatforms("linux-arm64,linux-x64,win-arm64,win-x64")]
     public class NetworkingWorkloadExecutor : VirtualClientComponent
     {
         private static readonly object LockObject = new object();
@@ -161,16 +163,16 @@ namespace VirtualClient.Actions.NetworkPerformance
         /// Parameter defines the test duration to use in the execution of the networking workload
         /// toolset tests.
         /// </summary>
-        public int TestDuration
+        public TimeSpan TestDuration
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(NetworkingWorkloadExecutor.TestDuration), 60);
+                return this.Parameters.GetTimeSpanValue(nameof(NetworkingWorkloadExecutor.TestDuration), TimeSpan.FromSeconds(60));
             }
 
             set
             {
-                this.Parameters[nameof(NetworkingWorkloadExecutor.TestDuration)] = value;
+                this.Parameters[nameof(NetworkingWorkloadExecutor.TestDuration)] = value.ToString();
             }
         }
 
@@ -205,7 +207,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                 this.Parameters[nameof(NetworkingWorkloadExecutor.MessageSize)] = value;
             }
         }
-
+        
         /// <summary>
         /// Parameter defines the number of connections to use in the workload toolset tests.
         /// </summary>
@@ -225,32 +227,32 @@ namespace VirtualClient.Actions.NetworkPerformance
         /// <summary>
         /// Parameter defines the warmup time to use in the workload toolset tests.
         /// </summary>
-        public int WarmupTime
+        public TimeSpan WarmupTime
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(NetworkingWorkloadExecutor.WarmupTime), 8);
+                return this.Parameters.GetTimeSpanValue(nameof(NetworkingWorkloadExecutor.WarmupTime), TimeSpan.FromSeconds(8));
             }
 
             set
             {
-                this.Parameters[nameof(NetworkingWorkloadExecutor.WarmupTime)] = value;
+                this.Parameters[nameof(NetworkingWorkloadExecutor.WarmupTime)] = value.ToString();
             }
         }
 
         /// <summary>
         /// Parameter defines the delay time to use in the workload toolset tests.
         /// </summary>
-        public int DelayTime
+        public TimeSpan DelayTime
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(NetworkingWorkloadExecutor.DelayTime), 0);
+                return this.Parameters.GetTimeSpanValue(nameof(NetworkingWorkloadExecutor.DelayTime), TimeSpan.Zero);
             }
 
             set
             {
-                this.Parameters[nameof(NetworkingWorkloadExecutor.DelayTime)] = value;
+                this.Parameters[nameof(NetworkingWorkloadExecutor.DelayTime)] = value.ToString();
             }
         }
 
@@ -611,6 +613,9 @@ namespace VirtualClient.Actions.NetworkPerformance
                 case "cps":
                     isSupported = this.Platform == PlatformID.Win32NT || this.Platform == PlatformID.Unix;
                     break;
+                case "ncps":
+                    isSupported = this.Platform == PlatformID.Win32NT || this.Platform == PlatformID.Unix;
+                    break;
 
                 case "latte":
                     isSupported = this.Platform == PlatformID.Win32NT;
@@ -668,6 +673,10 @@ namespace VirtualClient.Actions.NetworkPerformance
                         action = new CPSClientExecutor(this);
                         break;
 
+                    case NetworkingWorkloadTool.NCPS:
+                        action = new NCPSClientExecutor(this);
+                        break;
+
                     case NetworkingWorkloadTool.NTttcp:
                         action = new NTttcpClientExecutor(this);
                         break;
@@ -690,6 +699,10 @@ namespace VirtualClient.Actions.NetworkPerformance
                 {
                     case NetworkingWorkloadTool.CPS:
                         action = new CPSServerExecutor(this);
+                        break;
+
+                    case NetworkingWorkloadTool.NCPS:
+                        action = new NCPSServerExecutor(this);
                         break;
 
                     case NetworkingWorkloadTool.NTttcp:
@@ -869,6 +882,11 @@ namespace VirtualClient.Actions.NetworkPerformance
                 await this.ExecuteClientToolAsync(NetworkingWorkloadTool.CPS, telemetryContext, cancellationToken)
                     .ConfigureAwait(false);
             }
+            else if (string.Equals(this.ToolName, NetworkingWorkloadTool.NCPS.ToString(), ignoreCase))
+            {
+                await this.ExecuteClientToolAsync(NetworkingWorkloadTool.NCPS, telemetryContext, cancellationToken)
+                    .ConfigureAwait(false);
+            }
             else if (string.Equals(this.ToolName, NetworkingWorkloadTool.Latte.ToString(), ignoreCase))
             {
                 if (this.Platform != PlatformID.Win32NT)
@@ -949,9 +967,9 @@ namespace VirtualClient.Actions.NetworkPerformance
                             this.BufferSizeClient,
                             this.BufferSizeServer,
                             this.Connections,
-                            this.TestDuration,
-                            this.WarmupTime,
-                            this.DelayTime,
+                            this.TestDuration.ToString(),
+                            this.WarmupTime.ToString(),
+                            this.DelayTime.ToString(),
                             this.TestMode,
                             this.MessageSize,
                             this.Port,

@@ -35,7 +35,8 @@ namespace VirtualClient.Actions
             this.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(LMbenchExecutor.PackageName), "lmbench" },
-                { nameof(LMbenchExecutor.CompilerFlags), "CPPFLAGS=\"-I /usr/include/tirpc\"" }
+                { nameof(LMbenchExecutor.CompilerFlags), "CPPFLAGS=\"-I /usr/include/tirpc\"" },
+                { nameof(LMbenchExecutor.Scenario), "Scenario" }
             };
 
             this.ProcessManager.OnProcessCreated = (process) =>
@@ -61,14 +62,36 @@ namespace VirtualClient.Actions
         }
 
         [Test]
+        public async Task LMbenchExecutorExecutesTheExpectedCommandForLatMemRd()
+        {
+            this.Parameters[nameof(LMbenchExecutor.BinaryName)] = "lat_mem_rd";
+            this.Parameters[nameof(LMbenchExecutor.BinaryCommandLine)] = "4096 128";
+
+            this.ProcessManager.OnProcessCreated = (process) =>
+            {
+                string lmbenchOutput = System.IO.File.ReadAllText(this.Combine(LMbenchExecutorTests.Examples, "latmemrd_stride_64_example_results.txt"));
+                process.StandardOutput.Append(lmbenchOutput);
+            };
+
+            using (TestLMbenchExecutor lmbenchExecutor = new TestLMbenchExecutor(this.Dependencies, this.Parameters))
+            {
+                await lmbenchExecutor.ExecuteAsync(EventContext.None, CancellationToken.None);
+
+                Assert.IsTrue(this.ProcessManager.CommandsExecuted(
+                    $"sudo chmod -R 2777 \"/home/user/tools/VirtualClient/packages/lmbench/scripts\"",
+                    $"make build CPPFLAGS=\"-I /usr/include/tirpc\"",
+                    $"/home/user/tools/VirtualClient/packages/lmbench/bin/x86_64-Linux/lat_mem_rd"));
+            }
+        }
+
+        [Test]
         public async Task LMbenchExecutorExecutesTheExpectedLMbenchBenchmarks()
         {
             List<string> expectedBenchmarks = new List<string>
             {
                 "BENCHMARK_BCOPY",
                 "BENCHMARK_MEM",
-                "BENCHMARK_MMAP",
-                "BENCHMARK_FILE"
+                "BENCHMARK_MMAP"
             };
 
             using (TestLMbenchExecutor lmbenchExecutor = new TestLMbenchExecutor(this.Dependencies, this.Parameters))

@@ -33,7 +33,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public void GeekBench5ParserVerifyMetricsSingleCore()
+        public void GeekBench5ParserVerifyMetricsSingleCore_Test()
         {
             string outputPath = Path.Combine(workingDirectory, "Examples", "Geekbench", "GeekBench5Example.txt");
             this.rawText = File.ReadAllText(outputPath);

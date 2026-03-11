@@ -5,7 +5,6 @@ namespace VirtualClient
 {
     using System;
     using System.Collections.Generic;
-    using System.IO.Abstractions;
     using System.Linq;
     using System.Runtime.InteropServices;
     using System.Security.Cryptography;
@@ -200,11 +199,11 @@ namespace VirtualClient
 
                 store = EndpointUtility.CreateKeyVaultStoreReference(storeName, connectionParameters, certificateManager);
             }
-            else if (Uri.TryCreate(argumentValue, UriKind.Absolute, out Uri endpointUri) && EndpointUtility.IsCustomUri(endpointUri))
+            else if (Uri.TryCreate(argumentValue, UriKind.Absolute, out Uri endpointUri))
             {
                 // e.g.
+                // https://my-keyvault.vault.azure.net
                 // https://my-keyvault.vault.azure.net/?cid=985bbc17-e3a5-4fec-b0cb-40dbb8bc5959&tid=307591a4-abb2-4559-af59-b47177d140cf&crtt=123456789
-
                 store = EndpointUtility.CreateKeyVaultStoreReference(storeName, endpointUri, certificateManager);
             }
 
@@ -399,6 +398,26 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Tries to parse the Microsoft Entra reference information from the provided uri. If the uri does not contain the correctly formatted client ID
+        /// and tenant ID information the method will return false, and keep the two out parameters as null.
+        /// Ex. https://anystore.blob.core.windows.net?cid={clientId};tid={tenantId}
+        /// </summary>
+        /// <param name="uri">The uri to attempt to parse the values from.</param>
+        /// <param name="tenantId">The tenant ID from the Microsoft Entra reference.</param>
+        /// <returns>True/False if the method was able to successfully parse both the client ID and the tenant ID from the Microsoft Entra reference.</returns>
+        public static bool TryParseMicrosoftEntraTenantIdReference(Uri uri, out string tenantId)
+        {
+            string queryString = Uri.UnescapeDataString(uri.Query).Trim('?').Replace("&", ",,,");
+
+            IDictionary<string, string> queryParameters = TextParsingExtensions.ParseDelimitedValues(queryString)?.ToDictionary(
+                entry => entry.Key,
+                entry => entry.Value?.ToString(),
+                StringComparer.OrdinalIgnoreCase);
+
+            return TryGetMicrosoftEntraTenantId(queryParameters, out tenantId);
+        }
+
+        /// <summary>
         /// Returns the endpoint by verifying package uri checks.
         /// if the endpoint is a package uri without http or https protocols then append the protocol else return the endpoint value.
         /// </summary>
@@ -574,34 +593,6 @@ namespace VirtualClient
             return store;
         }
 
-        private static DependencyEventHubStore CreateEventHubStoreReference(string storeName, string connectionString)
-        {
-            storeName.ThrowIfNullOrWhiteSpace(nameof(storeName));
-            connectionString.ThrowIfNullOrWhiteSpace(nameof(connectionString));
-
-            DependencyEventHubStore store = null;
-
-            if (EndpointUtility.IsEventHubConnectionString(connectionString))
-            {
-                // #1 - Storage account-level or container-level connection string
-                store = new DependencyEventHubStore(storeName, connectionString);
-            }
-
-            if (store == null)
-            {
-                throw new SchemaException(
-                    $"The value provided for the Event Hub endpoint is invalid. The value must be one of the following supported identifiers:{Environment.NewLine}" +
-                    $"1) A valid Event Hub namespace access policy/connection string{Environment.NewLine}" +
-                    $"2) A URI with Microsoft Entra ID/App identity information(e.g. using certificate-based authentication){Environment.NewLine}" +
-                    $"3) A URI with Microsoft Azure Managed Identity information{Environment.NewLine}{Environment.NewLine}" +
-                    $"See the following documentation for additional details and examples:{Environment.NewLine}" +
-                    $"- https://microsoft.github.io/VirtualClient/docs/guides/0010-command-line/{Environment.NewLine}" +
-                    $"- https://microsoft.github.io/VirtualClient/docs/guides/0610-integration-event-hub/{Environment.NewLine}");
-            }
-
-            return store;
-        }
-
         private static DependencyEventHubStore CreateEventHubStoreReference(string storeName, Uri endpointUri, ICertificateManager certificateManager)
         {
             storeName.ThrowIfNullOrWhiteSpace(nameof(storeName));
@@ -728,7 +719,14 @@ namespace VirtualClient
 
             DependencyKeyVaultStore store = null;
 
-            if (EndpointUtility.IsCustomUri(endpointUri))
+            if (string.IsNullOrWhiteSpace(endpointUri.Query))
+            {
+                // Basic URI without any query parameters
+                // 1) If the given endpoint uri is a package uri (e.g. https://packages.virtualclient.microsoft.com ) then the package is retrieved from storage via CDN
+                // 2) If the given endpoint uri is a blob storage (e.g https://any.blob.core.windows.net) then the packages is retrieved from blob storage 
+                store = new DependencyKeyVaultStore(DependencyStore.KeyVault, endpointUri);
+            }
+            else if (EndpointUtility.IsCustomUri(endpointUri))
             {
                 // URI for Microsoft Entra or Managed Identity
                 // e.g. https://my-keyvault.vault.azure.net/?cid=307591a4-abb2-4559-af59-b47177d140cf&tid=985bbc17-e3a5-4fec-b0cb-40dbb8bc5959&crti=ABC&crts=any.service.com)
@@ -1285,6 +1283,24 @@ namespace VirtualClient
                     && !string.IsNullOrWhiteSpace(microsoftEntraTenantId))
                 {
                     clientId = microsoftEntraClientId;
+                    tenantId = microsoftEntraTenantId;
+                    parametersDefined = true;
+                }
+            }
+
+            return parametersDefined;
+        }
+
+        private static bool TryGetMicrosoftEntraTenantId(IDictionary<string, string> uriParameters, out string tenantId)
+        {
+            bool parametersDefined = false;
+            tenantId = null;
+
+            if (uriParameters?.Any() == true)
+            {
+                if (uriParameters.TryGetValue(UriParameter.TenantId, out string microsoftEntraTenantId)
+                    && !string.IsNullOrWhiteSpace(microsoftEntraTenantId))
+                {
                     tenantId = microsoftEntraTenantId;
                     parametersDefined = true;
                 }

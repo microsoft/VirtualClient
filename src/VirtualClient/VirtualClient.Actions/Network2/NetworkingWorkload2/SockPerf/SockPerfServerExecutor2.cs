@@ -62,13 +62,13 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// get test run duration value in seconds.
+        /// get test run duration value.
         /// </summary>
-        public int TestDuration
+        public TimeSpan TestDuration
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.TestDuration));
+                return this.Parameters.GetTimeSpanValue(nameof(this.TestDuration), TimeSpan.FromSeconds(60));
             }
         }
 
@@ -86,11 +86,11 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Parameter defines the warmup time to use in the workload toolset tests.
         /// </summary>
-        public int WarmupTime
+        public TimeSpan WarmupTime
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.WarmupTime), 8);
+                return this.Parameters.GetTimeSpanValue(nameof(this.WarmupTime), TimeSpan.FromSeconds(8));
             }
         }
 

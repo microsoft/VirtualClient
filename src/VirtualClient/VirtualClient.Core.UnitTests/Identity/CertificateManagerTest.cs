@@ -5,11 +5,9 @@ namespace VirtualClient.Identity
 {
     using System;
     using System.Collections.Generic;
-    using System.IO.Abstractions;
     using System.Linq;
     using System.Security.Cryptography;
     using System.Security.Cryptography.X509Certificates;
-    using System.Threading;
     using System.Threading.Tasks;
     using AutoFixture;
     using Moq;
@@ -35,7 +33,7 @@ namespace VirtualClient.Identity
         [Test]
         [TestCase("AME")]
         [TestCase("GBL")]
-        [TestCase("AME Infra CA 0")]
+        [TestCase("AME Infra Test CA 7")]
         [TestCase("DC=AME")]
         [TestCase("DC=GBL")]
         [TestCase("CN=AME")]
@@ -47,15 +45,15 @@ namespace VirtualClient.Identity
 
         [Test]
         [TestCase("ABC")]
-        [TestCase("AME Infra CA 06")]
+        [TestCase("AME Infra Test CA 06")]
         [TestCase("DC=ABC")]
         [TestCase("DC=GBB")]
-        [TestCase("DC=AME Infra CA 06")]
+        [TestCase("DC=Infra Test CA 777")]
         [TestCase("CN=ABC")]
-        [TestCase("CN=AME Infra CA 06")]
-        [TestCase("CN=ABC Infra CA 01, DC=AME, DC=GBL")]
-        [TestCase("CN=AME Infra CA 06, DC=ABC, DC=GBL")]
-        [TestCase("CN=AME Infra CA 06, DC=AME, DC=GBB")]
+        [TestCase("CN=AME Infra Test CA 06")]
+        [TestCase("CN=ABC Infra Test CA 777, DC=AME, DC=GBL")]
+        [TestCase("CN=AME Infra Test CA 777, DC=ABC, DC=GBL")]
+        [TestCase("CN=AME Infra Test CA 777, DC=AME, DC=GBB")]
         public void CertificateManagerDoesNotMismatchIssuersOnCertificates(string issuer)
         {
             X509Certificate2 certificate = this.mockFixture.Create<X509Certificate2>();
@@ -144,7 +142,7 @@ namespace VirtualClient.Identity
         [Test]
         [TestCase("AME", "virtualclient.test.corp.azure.com")]
         [TestCase("GBL", "virtualclient.test.corp.azure.com")]
-        [TestCase("AME Infra CA 0", "virtualclient")]
+        [TestCase("AME Infra Test CA 7", "virtualclient")]
         [TestCase("DC=AME", "corp.azure.com")]
         [TestCase("DC=GBL", "azure.com")]
         [TestCase("CN=AME", "virtualclient.test.corp.azure.com")]
@@ -154,7 +152,7 @@ namespace VirtualClient.Identity
             this.testCertificateManager = new TestCertificateManager(this.mockFixture);
 
             string expectedDirectory = string.Format(CertificateManager.DefaultUnixCertificateDirectory, Environment.UserName.ToLowerInvariant());
-            string expectedCertificateFile = this.mockFixture.Combine(expectedDirectory, "C3F4A77CAD588341B8D62EE4DA02D85E8F100EFA");
+            string expectedCertificateFile = this.mockFixture.Combine(expectedDirectory, "6E68322DBFF09EEB4CDB00AE94E00EF2037653EF");
             bool confirmedDir = false;
             bool confirmedFile = false;
 

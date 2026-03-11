@@ -20,6 +20,7 @@ namespace VirtualClient.Actions
     /// These have been split into subcomponents mainly for readability.
     /// There is coupling between them and the parent Action, but it's a worthwhile trade-off.
     /// </summary>
+    [SupportedPlatforms("linux-arm64,linux-x64,win-arm64,win-x64")]
     public abstract class SPECPowerProcess : VirtualClientComponent
     {
         /// <summary>

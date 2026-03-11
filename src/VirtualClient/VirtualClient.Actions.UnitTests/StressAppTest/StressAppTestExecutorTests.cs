@@ -49,7 +49,7 @@ namespace VirtualClient.Actions
                 { nameof(StressAppTestExecutor.PackageName), "stressapptest" },
                 { nameof(StressAppTestExecutor.CommandLine), "" },
                 { nameof(StressAppTestExecutor.Scenario), "ApplyStress" },
-                { nameof(StressAppTestExecutor.TimeInSeconds), "60" },
+                { nameof(StressAppTestExecutor.Duration), "00:01:00" },
                 { nameof(StressAppTestExecutor.UseCpuStressfulMemoryCopy), false }
             };
 
@@ -111,6 +111,45 @@ namespace VirtualClient.Actions
 
         [Test]
         [TestCase(PlatformID.Unix)]
+        public async Task StressAppTestExecutorExecutesAsExpectedWithIntegerDurationParameter(PlatformID platform)
+        {
+            this.SetupTest(platform);
+
+            this.mockFixture.Parameters[nameof(StressAppTestExecutor.Duration)] = 120;  // 120 seconds (integer)
+
+            using (TestStressAppTestExecutor executor = new TestStressAppTestExecutor(this.mockFixture))
+            {
+                Assert.AreEqual(TimeSpan.FromSeconds(120), executor.Duration);
+
+                bool commandExecuted = false;
+                string expectedCommand = $@"{this.mockPackage.Path}/linux-x64/stressapptest -s 120 -l stressapptestLogs";
+                this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
+                {
+                    if ($"{exe} {arguments}".Contains(expectedCommand))
+                    {
+                        commandExecuted = true;
+                    }
+
+                    return new InMemoryProcess
+                    {
+                        StartInfo = new ProcessStartInfo
+                        {
+                            FileName = exe,
+                            Arguments = arguments
+                        },
+                        ExitCode = 0,
+                        OnStart = () => true,
+                        OnHasExited = () => true
+                    };
+                };
+
+                await executor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+                Assert.IsTrue(commandExecuted);
+            }
+        }
+
+        [Test]
+        [TestCase(PlatformID.Unix)]
         public void StressAppTestExecutorThrowsOnInvalidProfileDefinition(PlatformID platform)
         {
             this.SetupTest(platform);
@@ -129,7 +168,7 @@ namespace VirtualClient.Actions
             }
 
             this.mockFixture.Parameters[nameof(StressAppTestExecutor.CommandLine)] = "";
-            this.mockFixture.Parameters[nameof(StressAppTestExecutor.TimeInSeconds)] = "0";
+            this.mockFixture.Parameters[nameof(StressAppTestExecutor.Duration)] = "00:00:00";
             using (TestStressAppTestExecutor executor = new TestStressAppTestExecutor(this.mockFixture))
             {
                 Assert.Throws<WorkloadException>(() => executor.Validate());
@@ -171,6 +210,35 @@ namespace VirtualClient.Actions
                 WorkloadResultsException exception = Assert.ThrowsAsync<WorkloadResultsException>(
                     () => executor.ExecuteAsync(CancellationToken.None));
             }
+        }
+
+        [Test]
+        [TestCase(PlatformID.Unix)]
+        public void StressAppTestExecutorSupportsIntegerAndTimeSpanDurationFormats(PlatformID platform)
+        {
+            this.SetupTest(platform);
+
+            this.mockFixture.Parameters[nameof(StressAppTestExecutor.Duration)] = 300;
+
+            TestStressAppTestExecutor executor = new TestStressAppTestExecutor(this.mockFixture);
+
+            Assert.AreEqual(TimeSpan.FromSeconds(300), executor.Duration);
+
+            this.mockFixture.Parameters[nameof(StressAppTestExecutor.Duration)] = "00:05:00";
+
+            executor = new TestStressAppTestExecutor(this.mockFixture);
+
+            Assert.AreEqual(TimeSpan.FromMinutes(5), executor.Duration);
+
+            this.mockFixture.Parameters[nameof(StressAppTestExecutor.Duration)] = 180;
+            executor = new TestStressAppTestExecutor(this.mockFixture);
+            TimeSpan integerBasedDuration = executor.Duration;
+
+            this.mockFixture.Parameters[nameof(StressAppTestExecutor.Duration)] = "00:03:00";
+            executor = new TestStressAppTestExecutor(this.mockFixture);
+            TimeSpan timespanBasedDuration = executor.Duration;
+
+            Assert.AreEqual(integerBasedDuration, timespanBasedDuration);
         }
 
         private class TestStressAppTestExecutor : StressAppTestExecutor

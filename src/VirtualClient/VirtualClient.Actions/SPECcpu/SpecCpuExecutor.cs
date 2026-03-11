@@ -19,7 +19,6 @@ namespace VirtualClient.Actions
     using global::VirtualClient.Contracts;
     using Microsoft.Extensions.DependencyInjection;
     using VirtualClient.Contracts.Metadata;
-    using VirtualClient.Metadata;
 
     /// <summary>
     /// The SpecCpu workload executor.
@@ -27,6 +26,7 @@ namespace VirtualClient.Actions
     [SupportedPlatforms("linux-arm64,linux-x64,win-arm64,win-x64")]
     public class SpecCpuExecutor : VirtualClientComponent
     {
+        private const string FeatureFlagUseCsvResults = "UseCsvResults";
         private const string SpecCpuRunShell = "runspeccpu.sh";
         private const string SpecCpuRunBat = "runspeccpu.bat";
 
@@ -61,6 +61,18 @@ namespace VirtualClient.Actions
             {
                 this.Parameters.TryGetValue(nameof(SpecCpuExecutor.SpecProfile), out IConvertible profileName);
                 return profileName?.ToString();
+            }
+        }
+
+        /// <summary>
+        /// List of benchmarks to run.
+        /// </summary>
+        public string Benchmarks
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(SpecCpuExecutor.Benchmarks), out IConvertible benchmarks);
+                return benchmarks?.ToString();
             }
         }
 
@@ -134,48 +146,76 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// A feature flag to apply. For example 'UseCsvResults' can be used to parse the CSV file results vs. the standard output. 
+        /// The CSV results have finer-grained results with additional significant figures.
+        /// </summary>
+        public string FeatureFlag
+        {
+            get
+            {
+                string featureFlag = SpecCpuExecutor.FeatureFlagUseCsvResults;
+                if (this.Parameters.TryGetValue(nameof(this.FeatureFlag), out IConvertible flag) && !string.IsNullOrWhiteSpace(flag?.ToString()))
+                {
+                    featureFlag = flag.ToString();
+                }
+
+                return featureFlag;
+            }
+        }
+
+        /// <summary>
         /// The path to the SPECcpu package.
         /// </summary>
         protected string PackageDirectory { get; set; }
+
+        /// <summary>
+        /// The path to the directory where SPECcpu writes results files.
+        /// </summary>
+        protected string ResultsDirectory { get; set; }
 
         /// <summary>
         /// Executes the SPECcpu workload.
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
+            try
             {
-                string commandLineArguments = this.GetCommandLineArguments();
-
-                string command = null;
-                string commandArguments = null;
-
-                if (this.Platform == PlatformID.Unix)
+                using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
-                    command = "bash";
-                    commandArguments = $"{SpecCpuExecutor.SpecCpuRunShell} \"{commandLineArguments}\"";
-                }
-                else
-                {
-                    command = "cmd";
-                    commandArguments = $"/c {SpecCpuExecutor.SpecCpuRunBat} {commandLineArguments}";
-                }
+                    string commandLineArguments = this.GetCommandLineArguments();
 
-                using (IProcessProxy process = await this.ExecuteCommandAsync(command, commandArguments, this.PackageDirectory, telemetryContext, cancellationToken, runElevated: true))
-                {
-                    if (!cancellationToken.IsCancellationRequested)
+                    string command = null;
+                    string commandArguments = null;
+
+                    if (this.Platform == PlatformID.Unix)
                     {
-                        await this.LogProcessDetailsAsync(process, telemetryContext, "SPECcpu", logToFile: true);
-                        process.ThrowIfWorkloadFailed();
+                        command = "bash";
+                        commandArguments = $"{SpecCpuExecutor.SpecCpuRunShell} \"{commandLineArguments}\"";
+                    }
+                    else
+                    {
+                        command = "cmd";
+                        commandArguments = $"/c {SpecCpuExecutor.SpecCpuRunBat} {commandLineArguments}";
+                    }
 
-                        await this.CaptureMetricsAsync(process, commandLineArguments, telemetryContext, cancellationToken);
+                    using (IProcessProxy process = await this.ExecuteCommandAsync(command, commandArguments, this.PackageDirectory, telemetryContext, cancellationToken, runElevated: false))
+                    {
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            await this.LogProcessDetailsAsync(process, telemetryContext, "SPECcpu", logToFile: true);
+                            process.ThrowIfWorkloadFailed();
+
+                            await this.CaptureMetricsAsync(process, commandLineArguments, telemetryContext, cancellationToken);
+                        }
                     }
                 }
             }
-
-            if (!cancellationToken.IsCancellationRequested)
+            finally
             {
-                await this.UploadSpecCpuLogsAsync(cancellationToken).ConfigureAwait(false);
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    await this.RequestLogUploadsAsync(cancellationToken);
+                }
             }
         }
 
@@ -194,6 +234,14 @@ namespace VirtualClient.Actions
             }
 
             this.PackageDirectory = workloadPackage.Path;
+            this.ResultsDirectory = this.Combine(this.PackageDirectory, "result");
+
+            // Clean any previous results from the system.
+            if (this.fileSystem.Directory.Exists(this.ResultsDirectory))
+            {
+                await this.fileSystem.Directory.DeleteAsync(this.ResultsDirectory);
+                this.fileSystem.Directory.CreateDirectory(this.ResultsDirectory);
+            }
 
             string imageFile = this.GetIsoFilePath(workloadPackage);
             telemetryContext.AddContext(nameof(imageFile), imageFile);
@@ -205,7 +253,6 @@ namespace VirtualClient.Actions
         {
             switch ((this.Platform, this.CpuArchitecture))
             {
-                // Windows is not supported. Modify this section if Windows is added.
                 case (PlatformID.Unix, Architecture.X64):
                     return "vc-linux-x64.cfg";
 
@@ -326,42 +373,54 @@ namespace VirtualClient.Actions
 
                 this.MetadataContract.Apply(telemetryContext);
 
-                // CPU2017.008.intrate.txt
-                string resultsDirectory = this.PlatformSpecifics.Combine(this.PackageDirectory, "result");
-                string[] outputFiles = this.fileSystem.Directory.GetFiles(resultsDirectory, "CPU2017.*.txt", SearchOption.TopDirectoryOnly);
+                // e.g.
+                // CPU2017.008.intrate.csv, CPU2017.008.intrate.txt
+                string[] outputFiles = null;
+                bool useCsv = false;
+
+                if (string.Equals(this.FeatureFlag, SpecCpuExecutor.FeatureFlagUseCsvResults, StringComparison.OrdinalIgnoreCase))
+                {
+                    outputFiles = this.fileSystem.Directory.GetFiles(this.ResultsDirectory, "CPU2017.*.csv", SearchOption.TopDirectoryOnly);
+                    useCsv = true;
+                }
+                else
+                {
+                    outputFiles = this.fileSystem.Directory.GetFiles(this.ResultsDirectory, "CPU2017.*.txt", SearchOption.TopDirectoryOnly);
+                }
 
                 foreach (string file in outputFiles)
                 {
-                    string results = await this.LoadResultsAsync(file, cancellationToken);
-                    await this.LogProcessDetailsAsync(process, telemetryContext, "SPECcpu", results: results.AsArray(), logToFile: true);
+                    KeyValuePair<string, string> results = await this.LoadResultsAsync(file, cancellationToken);
+                    await this.LogProcessDetailsAsync(process, telemetryContext, "SPECcpu", results: results);
 
-                    SpecCpuMetricsParser parser = new SpecCpuMetricsParser(results);
+                    SpecCpuMetricsParser parser = new SpecCpuMetricsParser(results.Value, csv: useCsv);
                     IList<Metric> metrics = parser.Parse();
+
                     metrics.LogConsole(this.Scenario, "SPECcpu");
+                    metrics.ToList().ForEach(m => m.Categorization = $"{this.SpecProfile}-{this.tuning}");
 
-                    this.Logger.LogMetrics(
-                        toolName: "SPECcpu",
-                        scenarioName: this.Scenario,
-                        process.StartTime,
-                        process.ExitTime,
-                        metrics,
-                        metricCategorization: $"{this.SpecProfile}-{this.tuning}",
-                        commandArguments,
-                        this.Tags,
-                        telemetryContext);
-
-                    await this.fileSystem.File.DeleteAsync(file);
+                    foreach (Metric metric in metrics)
+                    {
+                        this.Logger.LogMetric(
+                            metric,
+                            toolName: "SPECcpu",
+                            scenarioName: this.Scenario,
+                            process.StartTime,
+                            process.ExitTime,
+                            commandArguments,
+                            telemetryContext,
+                            this.Tags);
+                    }
                 }
             }
         }
 
-        private async Task UploadSpecCpuLogsAsync(CancellationToken cancellationToken)
+        private async Task RequestLogUploadsAsync(CancellationToken cancellationToken)
         {
             if (this.TryGetContentStoreManager(out IBlobManager blobManager))
             {
                 // CPU2017.001.log, CPU2017.001.log.debug, etc
-                string results = this.PlatformSpecifics.Combine(this.PackageDirectory, "result");
-                string[] outputFiles = this.fileSystem.Directory.GetFiles(results, "*CPU2017*", SearchOption.TopDirectoryOnly);
+                string[] outputFiles = this.fileSystem.Directory.GetFiles(this.ResultsDirectory, "*CPU2017*", SearchOption.TopDirectoryOnly);
 
                 if (outputFiles?.Any() == true)
                 {
@@ -380,23 +439,28 @@ namespace VirtualClient.Actions
                             null,
                             this.Roles?.FirstOrDefault())));
 
-                    await this.UploadFilesAsync(blobManager, this.fileSystem, descriptors, cancellationToken);
+                    foreach (FileUploadDescriptor descriptor in descriptors)
+                    {
+                        await this.RequestFileUploadAsync(descriptor);
+                    }
                 }
             }
         }
 
         private string GetCommandLineArguments()
         {
+            List<string> suites = new List<string> { "intrate", "intspeed", "fprate", "fpspeed" };
+
             // runcpu arguments document: https://www.spec.org/cpu2017/Docs/runcpu.html#strict
             string configurationFile = this.GetConfigurationFileName();
-
             string cmd = @$"--config {configurationFile} --iterations {this.Iterations} --copies {this.Copies} --threads {this.Threads} --tune {this.tuning}";
 
             // For linux runs we are doing reportable. For windows since not all benchmarks could be run, it will be noreportable.
             // Iterations has to be either 2 or 3 for reportable runs. https://www.spec.org/cpu2017/Docs/config.html#reportable
-            bool reportable = (this.Platform == PlatformID.Unix) && (this.Iterations == 2 || this.Iterations == 3);
+            bool reportable = (this.Platform == PlatformID.Unix && suites.Contains(this.Benchmarks.ToLower())) && (this.Iterations == 2 || this.Iterations == 3);
             cmd = reportable ? $"{cmd} --reportable" : $"{cmd} --noreportable";
-            cmd = $"{cmd} {this.SpecProfile}";
+            cmd = $"{cmd} {this.Benchmarks}";
+
             return cmd;
         }
 
@@ -422,16 +486,16 @@ namespace VirtualClient.Actions
                 }
 
                 templateText = templateText.Replace(
-                SpecCpuConfigPlaceHolder.Gcc10Workaround,
-                Convert.ToInt32(compilerVersion) >= 10 ? SpecCpuConfigPlaceHolder.Gcc10WorkaroundContent : string.Empty,
-                StringComparison.OrdinalIgnoreCase);
+                    SpecCpuConfigPlaceHolder.Gcc10Workaround,
+                    Convert.ToInt32(compilerVersion) >= 10 ? SpecCpuConfigPlaceHolder.Gcc10WorkaroundContent : string.Empty,
+                    StringComparison.OrdinalIgnoreCase);
             }
             else
             {
                 this.fileSystem.File.Copy(
-                this.PlatformSpecifics.GetScriptPath("speccpu", SpecCpuExecutor.SpecCpuRunBat),
-                this.Combine(this.PackageDirectory, SpecCpuExecutor.SpecCpuRunBat),
-                true);
+                    this.PlatformSpecifics.GetScriptPath("speccpu", SpecCpuExecutor.SpecCpuRunBat),
+                    this.Combine(this.PackageDirectory, SpecCpuExecutor.SpecCpuRunBat), 
+                    true);
 
                 templateText = templateText.Replace(
                 SpecCpuConfigPlaceHolder.Gcc10Workaround,
@@ -439,9 +503,20 @@ namespace VirtualClient.Actions
                 StringComparison.OrdinalIgnoreCase);
             }
 
-            templateText = templateText.Replace(SpecCpuConfigPlaceHolder.BaseOptimizingFlags, this.BaseOptimizingFlags, StringComparison.OrdinalIgnoreCase);
-            templateText = templateText.Replace(SpecCpuConfigPlaceHolder.PeakOptimizingFlags, this.PeakOptimizingFlags, StringComparison.OrdinalIgnoreCase);
-            await this.fileSystem.File.WriteAllTextAsync(this.Combine(this.PackageDirectory, "config", configurationFile), templateText, cancellationToken);
+            templateText = templateText.Replace(
+                SpecCpuConfigPlaceHolder.BaseOptimizingFlags, 
+                this.BaseOptimizingFlags, 
+                StringComparison.OrdinalIgnoreCase);
+
+            templateText = templateText.Replace(
+                SpecCpuConfigPlaceHolder.PeakOptimizingFlags, 
+                this.PeakOptimizingFlags, 
+                StringComparison.OrdinalIgnoreCase);
+
+            await this.fileSystem.File.WriteAllTextAsync(
+                this.Combine(this.PackageDirectory, "config", configurationFile), 
+                templateText, 
+                cancellationToken);
         }
 
         private async Task<string> GetInstalledCompilerDumpVersionAsync(string compilerName, CancellationToken cancellationToken)

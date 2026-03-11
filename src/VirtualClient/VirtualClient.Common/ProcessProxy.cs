@@ -8,8 +8,6 @@ namespace VirtualClient.Common
     using System.Collections.Specialized;
     using System.Diagnostics;
     using System.IO;
-    using System.Linq;
-    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using VirtualClient.Common.Extensions;
@@ -42,7 +40,7 @@ namespace VirtualClient.Common
             this.StandardError = new ConcurrentBuffer();
             this.StandardOutput = new ConcurrentBuffer();
             this.processDetails = new ProcessDetails();
-            this.processDetails.Results = new List<string>();
+            this.processDetails.Results = new List<KeyValuePair<string, string>>();
         }
 
         /// <inheritdoc />
@@ -313,6 +311,19 @@ namespace VirtualClient.Common
         }
 
         /// <summary>
+        /// Sets the processor affinity mask for the underlying process.
+        /// </summary>
+        /// <param name="affinityMask">The processor affinity bitmask.</param>
+        public virtual void SetProcessorAffinity(IntPtr affinityMask)
+        {
+#if WINDOWS 
+            this.UnderlyingProcess.ProcessorAffinity = affinityMask;
+#else
+            throw new PlatformNotSupportedException("Setting processor affinity is only supported on Windows platform.");
+#endif
+        }
+
+        /// <summary>
         /// Writes input/command to standard input.
         /// </summary>
         /// <param name="input">The input/command to send to standard input.</param>
@@ -338,18 +349,19 @@ namespace VirtualClient.Common
             {
                 if (timeout == null)
                 {
-                    await this.UnderlyingProcess.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
-                    this.exitTime = DateTime.UtcNow;
+                    await this.UnderlyingProcess.WaitForExitAsync(cancellationToken);
                 }
                 else
                 {
-                    await this.UnderlyingProcess.WaitForExitAsync(cancellationToken).WaitAsync(timeout.Value).ConfigureAwait(false);
-                    this.exitTime = DateTime.UtcNow;
+                    await this.UnderlyingProcess.WaitForExitAsync(cancellationToken).WaitAsync(timeout.Value);
                 }
+
+                await this.WaitForExitCodeConfirmationAsync(cancellationToken, timeout);
             }
-            catch (OperationCanceledException)
+            catch
             {
                 // Expected whenever the CancellationToken receives a cancellation request.
+                // May commonly be an OperationCanceledException or an InvalidOperationException.
             }
             finally
             {
@@ -389,6 +401,86 @@ namespace VirtualClient.Common
             {
                 this.StandardOutput.AppendLine(e.Data);
             }
+        }
+
+        /// <summary>
+        /// Waits for the process to exit having a valid exit code before returning.
+        /// </summary>
+        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+        /// <param name="timeout">A timeout to apply to the process exit confirmation.</param>
+        private async Task WaitForExitCodeConfirmationAsync(CancellationToken cancellationToken, TimeSpan? timeout = null)
+        {
+            TimeSpan effectiveTimeout = timeout ?? TimeSpan.FromMinutes(1);
+
+            // There is a race condition-style flaw in the .NET implementation of the
+            // WaitForExit() method. The race condition allows for the process to exit after
+            // completion but for a period of time to pass before the kernel completes all finalization
+            // and cleanup steps (e.g. setting an exit code). To help prevent downstream issues that
+            // happen when attempting to access properties on the process during this race condition period
+            // of time, we are adding in an extra check on the process HasExited.
+            //
+            // Example of error hit during race condition period of time:
+            // Process must exit before requested information can be determined.
+            DateTime exitTime = DateTime.UtcNow.Add(effectiveTimeout);
+            int exitCode = -1;
+            bool confirmed = false;
+
+            while (DateTime.UtcNow < exitTime)
+            {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    break;
+                }
+
+                try
+                {
+                    // If the exit code is not available, this line will throw an exception.
+                    exitCode = this.ExitCode;
+                    confirmed = true;
+                    break;
+                }
+                catch
+                {
+                    // Wait, but don't throttle the CPU.
+                    await Task.Delay(500);
+                }
+            }
+
+            if (!confirmed && !cancellationToken.IsCancellationRequested)
+            {
+                try
+                {
+                    string processName = null;
+                    ProcessProxy.TryGetValue<string>(() => $"{Path.GetFileName(this.StartInfo.FileName)} {this.StartInfo.Arguments}"?.Trim(), out processName);
+
+                    int processId = -1;
+                    ProcessProxy.TryGetValue<int>(() => this.Id, out processId);
+
+                    Console.Error.WriteLine($"Process exit confirmation failed for process '{processName} (id={processId})'.");
+                }
+                catch
+                {
+                    // Do not allow any exceptions to surface from here.
+                }
+            }
+        }
+
+        private static bool TryGetValue<T>(Func<T> reader, out T value)
+            where T : IConvertible
+        {
+            bool confirmed = false;
+            value = default(T);
+
+            try
+            {
+                value = reader.Invoke();
+                confirmed = true;
+            }
+            catch
+            {
+            }
+
+            return confirmed;
         }
     }
 }

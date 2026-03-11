@@ -1,0 +1,98 @@
+{
+    "Description": "LMbench Performance Workload",
+    "Metadata": {
+        "RecommendedMinimumExecutionTime": "00:30:00",
+        "SupportedPlatforms": "linux-x64,linux-arm64",
+        "SupportedOperatingSystems": "Azure Linux,CentOS,Debian,RedHat,Suse,Ubuntu"
+    },
+    "Parameters": {
+        "CompilerName": "gcc",
+        "CompilerVersion": "13",
+        "CompilerFlags": "CPPFLAGS=\" -O2 -Wall -march=native -I /usr/include/tirpc\"",
+        "MemoryThreshold": 4096
+    },
+    "ParameterDescriptions": {
+        "CompilerName": "The name of the source code compiler to use to compile LMBench on the system for most accurate testing. Supported options = gcc.",
+        "CompilerVersion": "The version of the source code compiler to use.",
+        "CompilerFlags": "Flags to pass into the source code compiler when compiling LMBench.",
+        "MemoryThreshold": "The total amount of memory (in megabytes) to sweep for each individual stride size in the profile actions. It is recommended to use no more than 25% of the total memory on the system."
+    },
+    "Notes": {
+        "MemorySizes": "L1 cache sizes are often 4 KB to 128 KB. L2 cache sizes are often 256 KB to 8 MB. L3 cache sizes are often 16 MB to 512 MB. Main RAM size is often 1GB+."
+    },
+    "Actions": [
+        {
+            "Type": "LMbenchExecutor",
+            "Parameters": {
+                "Scenario": "128byte_Stride",
+                "PackageName": "lmbench",
+                "CompilerFlags": "$.Parameters.CompilerFlags",
+                "BinaryName": "lat_mem_rd",
+                "BinaryCommandLine": "{MemoryThreshold} 128",
+                "MemoryThreshold": "$.Parameters.MemoryThreshold"
+            }
+        },
+        {
+            "Type": "LMbenchExecutor",
+            "Parameters": {
+                "Scenario": "256byte_Stride",
+                "PackageName": "lmbench",
+                "CompilerFlags": "$.Parameters.CompilerFlags",
+                "BinaryName": "lat_mem_rd",
+                "BinaryCommandLine": "{MemoryThreshold} 256",
+                "MemoryThreshold": "$.Parameters.MemoryThreshold"
+            }
+        },
+        {
+            "Type": "LMbenchExecutor",
+            "Parameters": {
+                "Scenario": "512byte_Stride",
+                "PackageName": "lmbench",
+                "CompilerFlags": "$.Parameters.CompilerFlags",
+                "BinaryName": "lat_mem_rd",
+                "BinaryCommandLine": "{MemoryThreshold} 512",
+                "MemoryThreshold": "$.Parameters.MemoryThreshold"
+            }
+        },
+        {
+            "Type": "LMbenchExecutor",
+            "Parameters": {
+                "Scenario": "1024byte_Stride",
+                "PackageName": "lmbench",
+                "CompilerFlags": "$.Parameters.CompilerFlags",
+                "BinaryName": "lat_mem_rd",
+                "BinaryCommandLine": "{MemoryThreshold} 1024",
+                "MemoryThreshold": "$.Parameters.MemoryThreshold"
+            }
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "LinuxPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallLinuxPackages",
+                "Packages-Apt": "libtirpc-dev",
+                "Packages-Yum": "libtirpc-devel",
+                "Packages-Dnf": "libtirpc-devel"
+            }
+        },
+        {
+            "Type": "CompilerInstallation",
+            "Parameters": {
+                "Scenario": "InstallCompiler",
+                "CompilerName": "$.Parameters.CompilerName",
+                "CompilerVersion": "$.Parameters.CompilerVersion"
+            }
+        },
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallLMbenchPackages",
+                "BlobContainer": "packages",
+                "BlobName": "lmbench.3.0-r1324.zip",
+                "PackageName": "lmbench",
+                "Extract": true
+            }
+        }
+    ]
+}

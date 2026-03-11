@@ -1,0 +1,53 @@
+{
+    "Description": "NVIDIA A100 GPU Driver Installation Dependency",
+    "Metadata": {
+        "RecommendedMinimumExecutionTime": "00:10:00",
+        "SupportedPlatforms": "linux-x64",
+        "SupportedOperatingSystems": "Linux",
+        "SupportedLinuxGpuModel": "NVIDIA A100",
+        "SupportedLinuxDistros": "Ubuntu20",
+        "SpecialRequirements": "This is an NVIDIA GPU Driver dependency. It can only be installed on the system having an NVIDIA A100 GPU card/chip."
+    },
+    "Parameters": {
+        "ConfigurationFile": "default.yaml",
+        "Username": "",
+        "LinuxCudaVersion": "12.0",
+        "LinuxDriverVersion": "525",
+        "LinuxLocalRunFile": "https://developer.download.nvidia.com/compute/cuda/12.0.0/local_installers/cuda_12.0.0_525.60.13_linux.run"
+    },
+    "Dependencies": [
+        {
+            "Type": "DockerInstallation",
+            "Parameters": {
+                "Scenario": "InstallDocker"
+            }
+        },
+        {
+            "Type": "NvidiaCudaInstallation",
+            "Parameters": {
+                "Scenario": "InstallNvidiaCuda",
+                "LinuxCudaVersion": "$.Parameters.LinuxCudaVersion",
+                "LinuxDriverVersion": "$.Parameters.LinuxDriverVersion",
+                "Username": "$.Parameters.Username",
+                "LinuxLocalRunFile": "$.Parameters.LinuxLocalRunFile"
+            }
+        },
+        {
+            "Type": "NvidiaContainerToolkitInstallation",
+            "Parameters": {
+                "Scenario": "InstallNvidiaContainerToolkit"
+            }
+        },
+        {
+            "Type": "LinuxPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallLinuxPackages",
+                "Packages": "sshpass,python3-pip",
+                "Packages-Apt": "nvidia-common",
+                "Packages-Dnf": "nvidia-driver",
+                "Packages-Yum": "nvidia-driver",
+                "Packages-Zypper": ""
+            }
+        }
+    ]
+}

@@ -292,6 +292,9 @@ namespace VirtualClient.Dependencies
             rcLocalContents.Add($"sysctl -w fs.file-max={NetworkConfigurationSetup.NoFileLimit}");
             rcLocalContents.Add("sysctl -w net.ipv4.tcp_tw_reuse=1 # TIME_WAIT work-around");
             rcLocalContents.Add("sysctl -w net.ipv4.ip_local_port_range=\"10000 60000\"  # ephemeral ports increased");
+            rcLocalContents.Add("sysctl -w net.ipv4.tcp_syncookies=0  # disable SYN cookies for CPS/NCPS");
+            rcLocalContents.Add("sysctl -w net.ipv4.tcp_max_syn_backlog=2048  # increase SYN backlog for CPS/NCPS");
+            rcLocalContents.Add("sysctl -w net.ipv4.conf.all.rp_filter=0  # disable reverse path filtering for CPS/NCPS");
 
             if (this.EnableBusyPoll)
             {
@@ -301,8 +304,9 @@ namespace VirtualClient.Dependencies
 
             if (this.DisableFirewall)
             {
-                rcLocalContents.Add("iptables -I OUTPUT -j NOTRACK  # disable connection tracking");
-                rcLocalContents.Add("iptables -I PREROUTING -j NOTRACK  # disable connection tracking");
+                rcLocalContents.Add("iptables -t raw -I OUTPUT -j NOTRACK  # disable connection tracking");
+                rcLocalContents.Add("iptables -t raw -I PREROUTING -j NOTRACK  # disable connection tracking");
+                rcLocalContents.Add("sysctl -w net.netfilter.nf_conntrack_max=0  # disable connection tracking (NCPS)");
                 rcLocalContents.Add("iptables -P INPUT ACCEPT  # accept all inbound traffic");
                 rcLocalContents.Add("iptables -P OUTPUT ACCEPT  # accept all outbound traffic");
                 rcLocalContents.Add("iptables -P FORWARD ACCEPT  # accept all forward traffic");

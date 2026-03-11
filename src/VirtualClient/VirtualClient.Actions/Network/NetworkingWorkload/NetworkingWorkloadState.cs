@@ -42,7 +42,12 @@ namespace VirtualClient.Actions.NetworkPerformance
         /// <summary>
         /// Socket Performance Tool.
         /// </summary>
-        SockPerf
+        SockPerf,
+
+        /// <summary>
+        /// NCPS Tool.
+        /// </summary>
+        NCPS
     }
 
     /// <summary>
@@ -112,9 +117,9 @@ namespace VirtualClient.Actions.NetworkPerformance
             string bufferSizeClient = null,
             string bufferSizeServer = null,
             int? connections = null,
-            int? testDuration = null,
-            int? warmupTime = null,
-            int? delayTime = null,
+            string testDuration = null,
+            string warmupTime = null,
+            string delayTime = null,
             string testMode = null,
             int? messageSize = null,
             int? port = null,
@@ -314,33 +319,33 @@ namespace VirtualClient.Actions.NetworkPerformance
         /// <summary>
         /// Test run duration (Parameter for Tools: NTttcp, CPS, SockPerf).
         /// </summary>
-        public int TestDuration
+        public TimeSpan TestDuration
         {
             get
             {
-                return this.Properties.GetValue<int>(nameof(this.TestDuration), 0);
+                return this.Properties.GetTimeSpanValue(nameof(this.TestDuration), TimeSpan.FromSeconds(60));
             }
         }
 
         /// <summary>
         /// Warmup Time (Parameter for Tools: CPS).
         /// </summary>
-        public int WarmupTime
+        public TimeSpan WarmupTime
         {
             get
             {
-                return this.Properties.GetValue<int>(nameof(this.WarmupTime), 0);
+                return this.Properties.GetTimeSpanValue(nameof(this.WarmupTime), TimeSpan.FromSeconds(8));
             }
         }
 
         /// <summary>
         /// Delay Time (Parameter for Tools: CPS).
         /// </summary>
-        public int DelayTime
+        public TimeSpan DelayTime
         {
             get
             {
-                return this.Properties.GetValue<int>(nameof(this.DelayTime), 0);
+                return this.Properties.GetTimeSpanValue(nameof(this.DelayTime), TimeSpan.Zero);
             }
         }
 

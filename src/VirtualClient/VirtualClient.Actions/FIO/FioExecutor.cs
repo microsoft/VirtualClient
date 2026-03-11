@@ -369,7 +369,10 @@ namespace VirtualClient.Actions
 
                     foreach (DiskWorkloadProcess workload in this.WorkloadProcesses)
                     {
-                        await this.DeleteTestVerificationFilesAsync(workload.TestFiles);
+                        if (workload.CommandArguments.Contains("do_verify=1"))
+                        {
+                            await this.DeleteTestVerificationFilesAsync();
+                        }
 
                         if (this.DeleteTestFilesOnFinish)
                         {
@@ -484,27 +487,14 @@ namespace VirtualClient.Actions
         /// Override allows FIO to handle the delete of additional files used in data integrity verification
         /// tests (e.g. *-verify.state files).
         /// </summary>
-        /// <param name="testFiles">The test files to delete.</param>
         /// <param name="retryPolicy">A retry policy to apply to file deletions to handle transient issues.</param>
-        protected Task DeleteTestVerificationFilesAsync(IEnumerable<string> testFiles, IAsyncPolicy retryPolicy = null)
+        protected Task DeleteTestVerificationFilesAsync(IAsyncPolicy retryPolicy = null)
         {
             List<string> filesToDelete = new List<string>();
-            if (testFiles?.Any() == true)
+            string[] verificationStateFiles = this.FileSystem.Directory.GetFiles(this.FileSystem.Directory.GetCurrentDirectory(), "*verify.state");
+            if (verificationStateFiles?.Any() == true)
             {
-                foreach (string file in testFiles)
-                {
-                    string fileDirectory = Path.GetDirectoryName(file);
-                    if (string.IsNullOrEmpty(fileDirectory))
-                    {
-                        continue;
-                    }
-
-                    string[] verificationStateFiles = this.FileSystem.Directory.GetFiles(fileDirectory, "*verify.state");
-                    if (verificationStateFiles?.Any() == true)
-                    {
-                        filesToDelete.AddRange(verificationStateFiles);
-                    }
-                }
+                filesToDelete.AddRange(verificationStateFiles);
             }
 
             return this.DeleteTestFilesAsync(filesToDelete, retryPolicy);
@@ -733,7 +723,6 @@ namespace VirtualClient.Actions
                 await this.Logger.LogMessageAsync($"{nameof(FioExecutor)}.ExecuteProcess", relatedContext, async () =>
                 {
                     await workload.Process.StartAndWaitAsync(cancellationToken).ConfigureAwait();
-
                     if (!cancellationToken.IsCancellationRequested)
                     {
                         await this.LogProcessDetailsAsync(workload.Process, telemetryContext, "FIO", logToFile: true);

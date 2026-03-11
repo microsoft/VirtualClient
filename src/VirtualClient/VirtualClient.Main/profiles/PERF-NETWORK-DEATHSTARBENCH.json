@@ -8,7 +8,7 @@
     "Parameters": {
         "ThreadCount": "20",
         "ConnectionCount": "1000",
-        "Duration": "300s",
+        "Duration": "00:05:00",
         "RequestPerSec": "1000",
         "GraphType": "socfb-Reed98"
     },

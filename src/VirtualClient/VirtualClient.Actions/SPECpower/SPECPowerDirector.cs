@@ -8,15 +8,16 @@ namespace VirtualClient.Actions
     using System.Threading;
     using System.Threading.Tasks;
     using global::VirtualClient.Common.Extensions;
-    using global::VirtualClient.Common.Platform;
     using global::VirtualClient.Common.Telemetry;
     using global::VirtualClient.Contracts;
     using global::VirtualClient.Contracts.Metadata;
     using Microsoft.Extensions.DependencyInjection;
+    using VirtualClient.Common;
 
     /// <summary>
     /// Manages the SPEC Power "Director" program.
     /// </summary>
+    [SupportedPlatforms("linux-arm64,linux-x64,win-arm64,win-x64")]
     public class SPECPowerDirector : SPECPowerProcess
     {
         private const string SSJFolder = "ssj";

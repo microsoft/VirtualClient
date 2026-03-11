@@ -1,0 +1,22 @@
+{
+    "Description": "Installs a certificate from a target Key Vault.",
+    "Parameters": {
+        "CertificateName": null,
+        "AccessToken": null,
+        "TenantId": null,
+        "FilePath": null
+    },
+    "Actions": [
+        {
+            "Type": "CertificateInstallation",
+            "Parameters": {
+                "Scenario": "InstallCertificate",
+                "CertificateName": "$.Parameters.CertificateName",
+                "AccessToken": "$.Parameters.AccessToken",
+                "FilePath": "$.Parameters.FilePath",
+                "TenantId": "$.Parameters.TenantId"
+            }
+        }
+    ]
+}
+  

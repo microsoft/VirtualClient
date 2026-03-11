@@ -354,7 +354,7 @@ namespace VirtualClient.Dependencies
                 standardError = $"{standardError.Substring(0, MaxOutputLength)}...";
             }
 
-            string eventType = !string.IsNullOrWhiteSpace(this.MonitorEventType) 
+            string eventType = !string.IsNullOrWhiteSpace(this.MonitorEventType)
                 ? this.MonitorEventType
                 : "system.monitor";
 

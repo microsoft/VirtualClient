@@ -9,12 +9,14 @@ namespace VirtualClient.Contracts
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
+    using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
 
     /// <summary>
     /// A component that executes a set of child components sequentially in a loop for a specified number of iterations.
     /// </summary>
+    [SupportedPlatforms("linux-arm64,linux-x64,win-arm64,win-x64")]
     public class SequentialExecution : VirtualClientComponentCollection
     {
         /// <summary>

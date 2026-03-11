@@ -125,9 +125,11 @@ namespace VirtualClient
                 }
             }
 
+            string safeArguments = SensitiveData.ObscureSecrets(commandArguments);
+
             EventContext relatedContext = telemetryContext.Clone()
                 .AddContext(nameof(command), command)
-                .AddContext(nameof(commandArguments), commandArguments)
+                .AddContext(nameof(commandArguments), safeArguments)
                 .AddContext(nameof(workingDirectory), workingDirectory)
                 .AddContext(nameof(runElevated), runElevated);
 
@@ -146,11 +148,10 @@ namespace VirtualClient
                 }
 
                 component.CleanupTasks.Add(() => process.SafeKill(component.Logger));
-                component.Logger.LogTraceMessage($"Executing: {command} {SensitiveData.ObscureSecrets(commandArguments)}".Trim(), relatedContext);
+                component.Logger.LogTraceMessage($"Executing: {command} {safeArguments}".Trim(), relatedContext);
 
                 beforeExecution?.Invoke(process);
-                await process.StartAndWaitAsync(cancellationToken)
-                    .ConfigureAwait(false);
+                await process.StartAndWaitAsync(cancellationToken);
             }
 
             return process;
@@ -200,12 +201,12 @@ namespace VirtualClient
         /// <param name="filePath">A paths to the results file to load.</param>
         /// <param name="cancellationToken">A token that can be used to cancel the operations.</param>
         /// <returns>The contents of the results file.</returns>
-        public static async Task<string> LoadResultsAsync(this VirtualClientComponent component, string filePath, CancellationToken cancellationToken)
+        public static async Task<KeyValuePair<string, string>> LoadResultsAsync(this VirtualClientComponent component, string filePath, CancellationToken cancellationToken)
         {
             component.ThrowIfNull(nameof(component));
             filePath.ThrowIfNullOrWhiteSpace(nameof(filePath));
 
-            string results = null;
+            KeyValuePair<string, string> results = default(KeyValuePair<string, string>);
             if (!cancellationToken.IsCancellationRequested)
             {
                 if (!component.Dependencies.TryGetService<IFileSystem>(out IFileSystem fileSystem))
@@ -220,7 +221,7 @@ namespace VirtualClient
                     throw new WorkloadResultsException($"Expected results file '{filePath}' not found.", ErrorReason.WorkloadResultsNotFound);
                 }
 
-                results = await fileSystem.File.ReadAllTextAsync(filePath);
+                results = new KeyValuePair<string, string>(filePath, await fileSystem.File.ReadAllTextAsync(filePath));
             }
 
             return results;
@@ -233,12 +234,12 @@ namespace VirtualClient
         /// <param name="filePaths">A set of one or more paths to results files to load.</param>
         /// <param name="cancellationToken">A token that can be used to cancel the operations.</param>
         /// <returns>The contents of the results files.</returns>
-        public static async Task<IEnumerable<string>> LoadResultsAsync(this VirtualClientComponent component, IEnumerable<string> filePaths, CancellationToken cancellationToken)
+        public static async Task<IEnumerable<KeyValuePair<string, string>>> LoadResultsAsync(this VirtualClientComponent component, IEnumerable<string> filePaths, CancellationToken cancellationToken)
         {
             component.ThrowIfNull(nameof(component));
             filePaths.ThrowIfNullOrEmpty(nameof(filePaths));
 
-            List<string> results = null;
+            List<KeyValuePair<string, string>> results = null;
             if (!cancellationToken.IsCancellationRequested)
             {
                 if (!component.Dependencies.TryGetService<IFileSystem>(out IFileSystem fileSystem))
@@ -248,7 +249,7 @@ namespace VirtualClient
                         ErrorReason.DependencyNotFound);
                 }
 
-                results = new List<string>();
+                results = new List<KeyValuePair<string, string>>();
                 foreach (string filePath in filePaths)
                 {
                     if (!cancellationToken.IsCancellationRequested)
@@ -258,7 +259,7 @@ namespace VirtualClient
                             throw new WorkloadResultsException($"Expected results file '{filePath}' not found.", ErrorReason.WorkloadResultsNotFound);
                         }
 
-                        results.Add(await fileSystem.File.ReadAllTextAsync(filePath));
+                        results.Add(filePath, await fileSystem.File.ReadAllTextAsync(filePath));
                     }
                 }
             }
@@ -448,7 +449,7 @@ namespace VirtualClient
         /// <summary>
         /// Returns true/false whether the content blob store is defined and exists in the dependencies.
         /// </summary>
-        /// <param name="dependencies">The dependencies to verify.</param>
+        /// <param name="dependencies">The dependencies containing the store managers.</param>
         /// <param name="store">The content blob store information if it exists.</param>
         /// <returns>True if the content blob store is defined. False if not.</returns>
         public static bool TryGetContentStoreManager(this IServiceCollection dependencies, out IBlobManager store)
@@ -461,7 +462,7 @@ namespace VirtualClient
         /// Returns true/false whether the content blob store is defined and exists in the dependencies
         /// for the component.
         /// </summary>
-        /// <param name="component">The component with dependencies to verify.</param>
+        /// <param name="component">The component in operation.</param>
         /// <param name="store">The packages blob store information if it exists.</param>
         /// <returns>True if the content blob store is defined. False if not.</returns>
         public static bool TryGetContentStoreManager(this VirtualClientComponent component, out IBlobManager store)
@@ -473,7 +474,7 @@ namespace VirtualClient
         /// <summary>
         /// Returns true/false whether the packages blob store is defined and exists in the dependencies.
         /// </summary>
-        /// <param name="dependencies">The dependencies to verify.</param>
+        /// <param name="dependencies">The dependencies containing the store managers.</param>
         /// <param name="store">The packages blob store information if it exists.</param>
         /// <returns>True if the packages blob store is defined. False if not.</returns>
         public static bool TryGetPackageStoreManager(this IServiceCollection dependencies, out IBlobManager store)
@@ -486,13 +487,42 @@ namespace VirtualClient
         /// Returns true/false whether the packages blob store is defined and exists in the dependencies
         /// for the component.
         /// </summary>
-        /// <param name="component">The component with dependencies to verify.</param>
+        /// <param name="component">The component in operation.</param>
         /// <param name="store">The packages blob store information if it exists.</param>
         /// <returns>True if the packages blob store is defined. False if not.</returns>
         public static bool TryGetPackageStoreManager(this VirtualClientComponent component, out IBlobManager store)
         {
             component.ThrowIfNull(nameof(component));
             return VirtualClientComponentExtensions.TryGetBlobStore(component.Dependencies, DependencyStore.Packages, out store);
+        }
+
+        /// <summary>
+        /// Returns true if a set target SSH clients exist in the dependencies.
+        /// </summary>
+        /// <param name="dependencies">The dependencies containing the clients.</param>
+        /// <param name="sshClients">Target SSH clients as defined on the command line.</param>
+        /// <returns>True if target SSH clients exist. False if not.</returns>
+        public static bool TryGetSshClients(this IServiceCollection dependencies, out IEnumerable<ISshClientProxy> sshClients)
+        {
+            sshClients = null;
+            if (dependencies.TryGetService<IEnumerable<ISshClientProxy>>(out IEnumerable<ISshClientProxy> client))
+            {
+                sshClients = client;
+            }
+
+            return sshClients != null;
+        }
+
+        /// <summary>
+        /// Returns true if a set target SSH clients exist in the dependencies for the component.
+        /// </summary>
+        /// <param name="component">The component in operation.</param>
+        /// <param name="sshClients">Target SSH clients as defined on the command line.</param>
+        /// <returns>True if target SSH clients exist. False if not.</returns>
+        public static bool TryGetSshClients(this VirtualClientComponent component, out IEnumerable<ISshClientProxy> sshClients)
+        {
+            sshClients = null;
+            return VirtualClientComponentExtensions.TryGetSshClients(component.Dependencies, out sshClients);
         }
 
         /// <summary>

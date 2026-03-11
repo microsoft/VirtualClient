@@ -1,0 +1,17 @@
+{
+    "Description": "Get access token for the user that can be used to authenticate.",
+    "Parameters": {
+        "TenantId": null,
+        "FilePath": null
+    },
+    "Dependencies": [
+        {
+            "Type": "GetAccessToken",
+            "Parameters": {
+                "Scenario": "GetKeyVaultToken",
+                "TenantId": "$.Parameters.TenantId",
+                "FilePath": "$.Parameters.FilePath"
+            }
+        }
+    ]
+}

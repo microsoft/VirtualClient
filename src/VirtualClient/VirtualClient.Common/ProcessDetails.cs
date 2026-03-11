@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace VirtualClient.Common
 {
@@ -52,7 +53,7 @@ namespace VirtualClient.Common
         /// <summary>
         /// Generated Results of the command.
         /// </summary>
-        public IEnumerable<string> Results { get; set; }
+        public IEnumerable<KeyValuePair<string, string>> Results { get; set; }
 
         /// <summary>
         /// Standard output of the command.
@@ -78,5 +79,36 @@ namespace VirtualClient.Common
         /// Working Directory.
         /// </summary>
         public string WorkingDirectory { get; set; }
+
+        /// <summary>
+        /// Returns a clone of the current instance.
+        /// </summary>
+        /// <returns>
+        /// A clone of the current instance.
+        /// </returns>
+        public virtual ProcessDetails Clone()
+        {
+            ProcessDetails clonedDetails = new ProcessDetails
+            {
+                Id = this.Id,
+                CommandLine = this.CommandLine,
+                ExitTime = this.ExitTime,
+                ExitCode = this.ExitCode,
+                StandardOutput = this.StandardOutput,
+                StandardError = this.StandardError,
+                StartTime = this.StartTime,
+                ToolName = this.ToolName,
+                WorkingDirectory = this.WorkingDirectory,
+                Results = new List<KeyValuePair<string, string>>()
+            };
+
+            // Always create a new collection instance when Results is non-null.
+            if (this.Results != null)
+            {                
+                clonedDetails.Results = this.Results.ToList();
+            }
+
+            return clonedDetails;
+        }
     }
 }

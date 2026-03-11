@@ -29,8 +29,9 @@ namespace VirtualClient.Actions.NetworkPerformance
         public SockPerfExecutor(VirtualClientComponent component)
            : base(component)
         {
-            this.ProcessStartRetryPolicy = Policy.Handle<Exception>(exc => exc.Message.Contains("sockwiz_tcp_listener_open bind"))
-               .WaitAndRetryAsync(5, retries => TimeSpan.FromSeconds(retries * 3));
+            this.ProcessStartRetryPolicy = Policy
+                .Handle<Exception>()
+                .WaitAndRetryAsync(3, retries => TimeSpan.FromSeconds(retries * 3));
         }
 
         /// <summary>
@@ -41,8 +42,9 @@ namespace VirtualClient.Actions.NetworkPerformance
         public SockPerfExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
            : base(dependencies, parameters)
         {
-            this.ProcessStartRetryPolicy = Policy.Handle<Exception>(exc => exc.Message.Contains("sockwiz_tcp_listener_open bind"))
-               .WaitAndRetryAsync(5, retries => TimeSpan.FromSeconds(retries * 3));
+            this.ProcessStartRetryPolicy = Policy
+                .Handle<Exception>()
+                .WaitAndRetryAsync(3, retries => TimeSpan.FromSeconds(retries * 3));
         }
 
         /// <summary>
@@ -57,13 +59,13 @@ namespace VirtualClient.Actions.NetworkPerformance
         }
 
         /// <summary>
-        /// Parameter defines the Duration (in seconds) for running the SockPerf workload.
+        /// Parameter defines the Duration for running the SockPerf workload.
         /// </summary>
-        public int TestDuration
+        public TimeSpan TestDuration
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.TestDuration), 60);
+                return this.Parameters.GetTimeSpanValue(nameof(this.TestDuration), TimeSpan.FromSeconds(60));
             }
         }
 

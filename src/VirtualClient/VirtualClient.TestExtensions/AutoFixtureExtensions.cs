@@ -56,7 +56,7 @@ namespace VirtualClient.TestExtensions
             {
                 certificate = X509CertificateLoader.LoadPkcs12(
                     File.ReadAllBytes(Path.Combine(resourcesDirectory, "test-certificate.private")),
-                    null,
+                    "CRC",
                     X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet);
             }
             else
@@ -69,7 +69,7 @@ namespace VirtualClient.TestExtensions
             {
                 certificate = new X509Certificate2(
                     File.ReadAllBytes(Path.Combine(resourcesDirectory, "test-certificate.private")),
-                    string.Empty,
+                    "CRC",
                     X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet);
             }
             else

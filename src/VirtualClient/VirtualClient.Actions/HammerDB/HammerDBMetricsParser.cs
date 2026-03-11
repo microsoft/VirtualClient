@@ -58,14 +58,14 @@ namespace VirtualClient.Actions
                     metrics.First(m => m.Name == "Operations/min").Value / 60,
                     MetricUnit.OperationsPerSec,
                     relativity: MetricRelativity.HigherIsBetter,
-                    verbosity: 0));
+                    verbosity: 1));
 
                 metrics.Add(new Metric(
                     "Transactions/sec",
                     metrics.First(m => m.Name == "Transactions/min").Value / 60,
                     MetricUnit.TransactionsPerSec,
                     relativity: MetricRelativity.HigherIsBetter,
-                    verbosity: 0));
+                    verbosity: 1));
 
                 return metrics;
             }

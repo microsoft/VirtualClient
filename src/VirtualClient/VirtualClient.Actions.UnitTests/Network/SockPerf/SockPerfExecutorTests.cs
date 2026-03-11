@@ -38,7 +38,7 @@ namespace VirtualClient.Actions
                 .Returns(true);
 
             this.mockFixture.Parameters["PackageName"] = "Networking";
-            this.mockFixture.Parameters["TestDuration"] = "300";
+            this.mockFixture.Parameters["TestDuration"] = "00:05:00";
             this.mockFixture.Parameters["Protocol"] = "TCP";
             this.mockFixture.Parameters["TestMode"] = "ping-pong";
             this.mockFixture.Parameters["MessageSize"] = "64";
