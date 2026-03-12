@@ -131,6 +131,11 @@ namespace VirtualClient.Contracts
     public static class EnvironmentVariable
     {
         /// <summary>
+        /// Name = HOME
+        /// </summary>
+        public const string HOME = nameof(HOME);
+
+        /// <summary>
         /// Name = JAVA_HOME
         /// </summary>
         public const string JAVA_HOME = nameof(JAVA_HOME);
@@ -159,6 +164,11 @@ namespace VirtualClient.Contracts
         /// Name = USER
         /// </summary>
         public const string USER = nameof(USER);
+
+        /// <summary>
+        /// Name = USERPROFILE
+        /// </summary>
+        public const string USERPROFILE = nameof(USERPROFILE);
 
         /// <summary>
         /// Name = VC_PASSWORD

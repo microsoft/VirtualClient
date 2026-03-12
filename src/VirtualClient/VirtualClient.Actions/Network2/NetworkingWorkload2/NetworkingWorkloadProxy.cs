@@ -5,14 +5,11 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
-    using System.Linq;
-    using System.Net;
-    using System.Net.Http;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
     using Newtonsoft.Json.Linq;
+    using VirtualClient.Common;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
@@ -20,6 +17,7 @@ namespace VirtualClient.Actions
     /// <summary>
     /// Server side execution
     /// </summary>
+    [SupportedPlatforms("linux-arm64,linux-x64,win-arm64,win-x64")]
     public class NetworkingWorkloadProxy : VirtualClientComponent
     {
         private static readonly object LockObject = new object();

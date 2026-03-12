@@ -3,10 +3,13 @@
 
 namespace VirtualClient.UnitTests
 {
+    using System;
     using System.Collections.Generic;
     using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
+    using System.Text.RegularExpressions;
+    using System.Threading;
     using System.Threading.Tasks;
     using Newtonsoft.Json;
     using NUnit.Framework;
@@ -52,6 +55,52 @@ namespace VirtualClient.UnitTests
             catch
             {
                 Assert.Fail($"Profile '{profileName}' does not meet the schema requirements.");
+            }
+        }
+
+        [Test]
+        public async Task WorkloadProfileDoNotHaveInlineParameterReferencingMistakes()
+        {
+            List<string> badApples = new List<string>();
+
+            IEnumerable<string> profiles = GetWorkloadProfileTestSource();
+            if (profiles?.Any() == true)
+            {
+                foreach (string profilePath in profiles)
+                {
+                    try
+                    {
+                        string profileString = File.ReadAllText(profilePath);
+                        ExecutionProfile profileObject = JsonConvert.DeserializeObject<ExecutionProfile>(profileString);
+                        if (profileObject.Parameters.Any())
+                        {
+                            profileObject.Inline();
+
+                            MockFixture fixture = new MockFixture();
+                            fixture.Setup(System.PlatformID.Win32NT);
+                            using (TestExecutor executor = new TestExecutor(fixture.Dependencies, profileObject.Parameters))
+                            {
+                                if (executor.Parameters?.Any() == true)
+                                {
+                                    await executor.EvaluateParametersAsync(CancellationToken.None);
+                                    Assert.IsFalse(executor.Parameters
+                                        .Any(p => !string.IsNullOrWhiteSpace(p.Value?.ToString()) && Regex.IsMatch(p.Value?.ToString(), "{[^{}]+}", RegexOptions.IgnoreCase)));
+                                }
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        badApples.Add(Path.GetFileName(profilePath));
+                    }
+                }
+            }
+
+            if (badApples.Any())
+            {
+                Assert.Fail(
+                    $"The following profiles have parameter reference inlining issues:{Environment.NewLine}" +
+                    $"{string.Join(Environment.NewLine, badApples.Select(a => $"- {a}"))}");
             }
         }
 

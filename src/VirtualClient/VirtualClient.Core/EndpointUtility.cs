@@ -5,7 +5,6 @@ namespace VirtualClient
 {
     using System;
     using System.Collections.Generic;
-    using System.IO.Abstractions;
     using System.Linq;
     using System.Runtime.InteropServices;
     using System.Security.Cryptography;
@@ -200,11 +199,11 @@ namespace VirtualClient
 
                 store = EndpointUtility.CreateKeyVaultStoreReference(storeName, connectionParameters, certificateManager);
             }
-            else if (Uri.TryCreate(argumentValue, UriKind.Absolute, out Uri endpointUri) && EndpointUtility.IsCustomUri(endpointUri))
+            else if (Uri.TryCreate(argumentValue, UriKind.Absolute, out Uri endpointUri))
             {
                 // e.g.
+                // https://my-keyvault.vault.azure.net
                 // https://my-keyvault.vault.azure.net/?cid=985bbc17-e3a5-4fec-b0cb-40dbb8bc5959&tid=307591a4-abb2-4559-af59-b47177d140cf&crtt=123456789
-
                 store = EndpointUtility.CreateKeyVaultStoreReference(storeName, endpointUri, certificateManager);
             }
 
@@ -594,34 +593,6 @@ namespace VirtualClient
             return store;
         }
 
-        private static DependencyEventHubStore CreateEventHubStoreReference(string storeName, string connectionString)
-        {
-            storeName.ThrowIfNullOrWhiteSpace(nameof(storeName));
-            connectionString.ThrowIfNullOrWhiteSpace(nameof(connectionString));
-
-            DependencyEventHubStore store = null;
-
-            if (EndpointUtility.IsEventHubConnectionString(connectionString))
-            {
-                // #1 - Storage account-level or container-level connection string
-                store = new DependencyEventHubStore(storeName, connectionString);
-            }
-
-            if (store == null)
-            {
-                throw new SchemaException(
-                    $"The value provided for the Event Hub endpoint is invalid. The value must be one of the following supported identifiers:{Environment.NewLine}" +
-                    $"1) A valid Event Hub namespace access policy/connection string{Environment.NewLine}" +
-                    $"2) A URI with Microsoft Entra ID/App identity information(e.g. using certificate-based authentication){Environment.NewLine}" +
-                    $"3) A URI with Microsoft Azure Managed Identity information{Environment.NewLine}{Environment.NewLine}" +
-                    $"See the following documentation for additional details and examples:{Environment.NewLine}" +
-                    $"- https://microsoft.github.io/VirtualClient/docs/guides/0010-command-line/{Environment.NewLine}" +
-                    $"- https://microsoft.github.io/VirtualClient/docs/guides/0610-integration-event-hub/{Environment.NewLine}");
-            }
-
-            return store;
-        }
-
         private static DependencyEventHubStore CreateEventHubStoreReference(string storeName, Uri endpointUri, ICertificateManager certificateManager)
         {
             storeName.ThrowIfNullOrWhiteSpace(nameof(storeName));
@@ -748,7 +719,14 @@ namespace VirtualClient
 
             DependencyKeyVaultStore store = null;
 
-            if (EndpointUtility.IsCustomUri(endpointUri))
+            if (string.IsNullOrWhiteSpace(endpointUri.Query))
+            {
+                // Basic URI without any query parameters
+                // 1) If the given endpoint uri is a package uri (e.g. https://packages.virtualclient.microsoft.com ) then the package is retrieved from storage via CDN
+                // 2) If the given endpoint uri is a blob storage (e.g https://any.blob.core.windows.net) then the packages is retrieved from blob storage 
+                store = new DependencyKeyVaultStore(DependencyStore.KeyVault, endpointUri);
+            }
+            else if (EndpointUtility.IsCustomUri(endpointUri))
             {
                 // URI for Microsoft Entra or Managed Identity
                 // e.g. https://my-keyvault.vault.azure.net/?cid=307591a4-abb2-4559-af59-b47177d140cf&tid=985bbc17-e3a5-4fec-b0cb-40dbb8bc5959&crti=ABC&crts=any.service.com)
