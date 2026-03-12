@@ -24,6 +24,7 @@ namespace VirtualClient.UnitTests
     using VirtualClient.TestExtensions;
 
     [TestFixture]
+    [Platform("Win", Reason = "Path.GetFullPath() behavior cannot be readily supported when running Linux-like paths.")]
     [Category("Unit")]
     internal class CommandBaseTests : CommandBase
     {
