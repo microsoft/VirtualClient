@@ -247,11 +247,8 @@ namespace VirtualClient.Actions
                     }
                 });
 
-                if (this.Action == ConfigurationAction.PopulateTables)
-                {
-                    state.DatabasePopulated = true;
-                    await this.stateManager.SaveStateAsync<HammerDBState>(nameof(HammerDBState), state, cancellationToken);
-                }
+                state.DatabasePopulated = true;
+                await this.stateManager.SaveStateAsync<HammerDBState>(nameof(HammerDBState), state, cancellationToken);
             }
         }
 
@@ -362,9 +359,7 @@ namespace VirtualClient.Actions
 
         private async Task ConfigureCreateHammerDBFile(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string command = $"python3";
-            string arguments = $"{this.HammerDBPackagePath}/configure-workload-generator.py --workload {this.Workload} --sqlServer {this.SQLServer} --port {this.Port}" +
-                    $" --virtualUsers {this.VirtualUsers} --warehouseCount {this.WarehouseCount} --password {this.SuperUserPassword} --dbName {this.DatabaseName} --hostIPAddress {this.ServerIpAddress}";
+            await this.GenerateCommandLineArguments(cancellationToken);
 
             using (IProcessProxy process = await this.ExecuteCommandAsync(
                 $"python3",
@@ -384,14 +379,18 @@ namespace VirtualClient.Actions
 
         private async Task GenerateCommandLineArguments(CancellationToken cancellationToken)
         {
-            string directories = await this.GetDataDirectoriesAsync(cancellationToken);
-
             string arguments = $"{this.PlatformSpecifics.Combine(this.HammerDBPackagePath, "configure-workload-generator.py")} --workload {this.Workload} --sqlServer {this.SQLServer} --port {this.Port}" +
-                    $" --virtualUsers {this.VirtualUsers} --password {this.SuperUserPassword} --dbName {this.DatabaseName} --hostIPAddress {this.ServerIpAddress} --directories {directories}";
+                    $" --virtualUsers {this.VirtualUsers} --password {this.SuperUserPassword} --dbName {this.DatabaseName} --hostIPAddress {this.ServerIpAddress}";
+
+            if (this.IsMultiRoleLayout() && this.GetLayoutClientInstance().Role == ClientRole.Server)
+            {
+                string directories = await this.GetDataDirectoriesAsync(cancellationToken);
+                arguments = $"{arguments} --directories {directories}";
+            }
 
             if (this.Workload.Equals("tpcc", StringComparison.OrdinalIgnoreCase))
             {
-                arguments += $" --warehouseCount {this.WarehouseCount} --duration {this.Duration.TotalMinutes}";
+                arguments = $"{arguments} --warehouseCount {this.WarehouseCount} --duration {this.Duration.TotalMinutes}";
             }
             else if (this.Workload.Equals("tpch", StringComparison.OrdinalIgnoreCase))
             {
@@ -403,7 +402,7 @@ namespace VirtualClient.Actions
                         ErrorReason.InvalidProfileDefinition);
                 }
 
-                arguments += $" --scaleFactor {this.ScaleFactor} --duration {Math.Round(this.Duration.TotalMinutes / 1.25)}";
+                arguments = $"{arguments} --scaleFactor {this.ScaleFactor} --duration {Math.Round(this.Duration.TotalMinutes / 1.25)}";
             }
 
             this.HammerDBScenarioArguments = arguments;
@@ -534,22 +533,6 @@ namespace VirtualClient.Actions
                     this.Properties[nameof(HammerDBState.DatabasePopulated)] = value;
                 }
             }
-        }
-
-        /// <summary>
-        /// Supported HammerDB Configuration actions.
-        /// </summary>
-        internal class ConfigurationAction
-        {
-            /// <summary>
-            /// Initializes the tables on the database.
-            /// </summary>
-            public const string CreateTables = nameof(CreateTables);
-
-            /// <summary>
-            /// Populates Database on server.
-            /// </summary>
-            public const string PopulateTables = nameof(PopulateTables);
         }
     }
 }

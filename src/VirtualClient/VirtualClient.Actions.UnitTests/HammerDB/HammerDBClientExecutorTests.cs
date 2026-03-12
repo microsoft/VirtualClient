@@ -44,15 +44,22 @@ namespace VirtualClient.Actions
         {
             this.SetupDefaultBehavior(platform, architecture);
 
-            string[] expectedCommands =
+            List<string> expectedCommands = new List<string>();
+
+            if (platform == PlatformID.Unix)
             {
-                $"python3 {this.fixture.PlatformSpecifics.Combine(this.mockPackagePath, "configure-workload-generator.py")} --workload tpcc --sqlServer postgresql --port 5432 --virtualUsers 1 --password [A-Za-z0-9+/=]+ --dbName hammerdbtest --hostIPAddress [0-9.]+ --warehouseCount 1 --duration 1",
-                $"python3 {this.fixture.PlatformSpecifics.Combine(this.mockPackagePath, "run-workload.py")} --runTransactionsTCLFilePath runTransactions.tcl"
-            };
+                expectedCommands.Add($"sudo python3 {this.fixture.PlatformSpecifics.Combine(this.mockPackagePath, "configure-workload-generator.py")} --workload tpcc --sqlServer postgresql --port 5432 --virtualUsers 1 --password [A-Za-z0-9+/=]+ --dbName hammerdbtest --hostIPAddress [0-9.]+ --directories /home/user/mnt_dev_sdc1/postgresql:/home/user/mnt_dev_sdd1/postgresql:/home/user/mnt_dev_sde1/postgresql: --warehouseCount 1 --duration 1");
+                expectedCommands.Add($"python3 {this.fixture.PlatformSpecifics.Combine(this.mockPackagePath, "run-workload.py")} --runTransactionsTCLFilePath runTransactions.tcl");
+            }
+            else
+            {
+                expectedCommands.Add($"python3 {this.fixture.PlatformSpecifics.Combine(this.mockPackagePath, "configure-workload-generator.py")} --workload tpcc --sqlServer postgresql --port 5432 --virtualUsers 1 --password [A-Za-z0-9+/=]+ --dbName hammerdbtest --hostIPAddress [0-9.]+ --directories D:\\postgresql:E:\\postgresql:F:\\postgresql: --warehouseCount 1 --duration 1");
+                expectedCommands.Add($"python3 {this.fixture.PlatformSpecifics.Combine(this.mockPackagePath, "run-workload.py")} --runTransactionsTCLFilePath runTransactions.tcl");
+            }
 
             if (this.fixture.Platform == PlatformID.Win32NT)
             {
-                for (int i = 0; i < expectedCommands.Length; i++)
+                for (int i = 0; i < expectedCommands.Count; i++)
                 {
                     expectedCommands[i] = expectedCommands[i].Replace(@"\", @"\\");
                 }
@@ -137,6 +144,10 @@ namespace VirtualClient.Actions
 
                 this.fixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
                     .ReturnsAsync(new CpuInfo("cpu", "description", 4, 8, 4, 4, false));
+
+                IEnumerable<Disk> disks;
+                disks = this.fixture.CreateDisks(platform, true);
+                this.fixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>())).ReturnsAsync(() => disks);
             }
         }
 
