@@ -93,12 +93,19 @@ namespace VirtualClient.Actions
             this.mockPackage = new DependencyPath("hammerdb", this.fixture.PlatformSpecifics.GetPackagePath("hammerdb"));
             this.fixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPackage);
 
+            IEnumerable<Disk> disks;
+            disks = this.fixture.CreateDisks(platform, true);
+            this.fixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>())).ReturnsAsync(() => disks);
+
             this.fixture.File.Setup(f => f.Exists(It.IsAny<string>())).Returns(true);
             this.fixture.Directory.Setup(d => d.Exists(It.IsAny<string>())).Returns(true);
 
-            this.fixture.Parameters["PackageName"] = "hammerdb";
-            this.fixture.Parameters["Port"] = 5432;
-            this.fixture.Parameters["DatabaseName"] = "hammerdbtest";
+            this.fixture.Parameters[nameof(HammerDBClientExecutor.PackageName)] = "hammerdb";
+            this.fixture.Parameters[nameof(HammerDBClientExecutor.Port)] = 5432;
+            this.fixture.Parameters[nameof(HammerDBClientExecutor.DatabaseName)] = "hammerdbtest";
+            this.fixture.Parameters[nameof(HammerDBClientExecutor.SQLServer)] = "postgresql";
+            this.fixture.Parameters[nameof(HammerDBClientExecutor.Duration)] = "00:01:00";
+            this.fixture.Parameters[nameof(HammerDBClientExecutor.Workload)] = "TPCC";
         }
 
         private class TestHammerDBServerExecutor : HammerDBServerExecutor

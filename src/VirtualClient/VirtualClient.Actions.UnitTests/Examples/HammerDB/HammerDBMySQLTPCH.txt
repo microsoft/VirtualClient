@@ -1,0 +1,808 @@
+HammerDB CLI v4.12
+Copyright (C) 2003-2024 Steve Shaw
+Type "help" for a list of commands
+Initialized Jobs on-disk database /tmp/hammer.DB using existing tables (462,848 bytes)
+SETTING CONFIGURATION
+Database set to MySQL
+Benchmark set to TPC-H for MySQL
+Value 127.0.0.1 for connection:mysql_host is the same as existing value 127.0.0.1, no change made
+Value 3306 for connection:mysql_port is the same as existing value 3306, no change made
+Value /var/run/mysqld/mysqld.sock for connection:mysql_socket is the same as existing value /var/run/mysqld/mysqld.sock, no change made
+Value 1 for tpch:mysql_scale_fact is the same as existing value 1, no change made
+Value root for tpcc:mysql_user is the same as existing value root, no change made
+Value hammerdb_tpch for tpcc:mysql_dbase is the same as existing value hammerdb_tpch, no change made
+Value innodb for tpch:mysql_tpch_storage_engine is the same as existing value innodb, no change made
+Changed tpch:mysql_total_querysets from 10 to 2 for MySQL
+TPROC-H Driver Script
+Script loaded, Type "print script" to view
+SEQUENCE STARTED
+8 VU TEST
+Vuser 1 created - WAIT IDLE
+Vuser 2 created - WAIT IDLE
+Vuser 3 created - WAIT IDLE
+Vuser 4 created - WAIT IDLE
+Vuser 5 created - WAIT IDLE
+Vuser 6 created - WAIT IDLE
+Vuser 7 created - WAIT IDLE
+Vuser 8 created - WAIT IDLE
+8 Virtual Users Created
+Vuser 1:RUNNING
+Vuser 1:login_command mysqlconnect -socket /var/run/mysqld/mysqld.sock -ssl false -user root -password mysql
+Vuser 1:Ssl_cipher
+Vuser 1:Verifying the scale factor of the existing schema...
+Vuser 1:Executing Query 21 (1 of 22)
+Vuser 2:RUNNING
+Vuser 2:login_command mysqlconnect -socket /var/run/mysqld/mysqld.sock -ssl false -user root -password mysql
+Vuser 2:Ssl_cipher
+Vuser 2:Verifying the scale factor of the existing schema...
+Vuser 2:Executing Query 6 (1 of 22)
+Vuser 3:RUNNING
+Vuser 3:login_command mysqlconnect -socket /var/run/mysqld/mysqld.sock -ssl false -user root -password mysql
+Vuser 3:Ssl_cipher
+Vuser 3:Verifying the scale factor of the existing schema...
+Vuser 3:Executing Query 8 (1 of 22)
+Vuser 4:RUNNING
+Vuser 4:login_command mysqlconnect -socket /var/run/mysqld/mysqld.sock -ssl false -user root -password mysql
+Vuser 4:Ssl_cipher
+Vuser 4:Verifying the scale factor of the existing schema...
+Vuser 4:Executing Query 5 (1 of 22)
+Vuser 5:RUNNING
+Vuser 5:login_command mysqlconnect -socket /var/run/mysqld/mysqld.sock -ssl false -user root -password mysql
+Vuser 5:Ssl_cipher
+Vuser 5:Verifying the scale factor of the existing schema...
+Vuser 5:Executing Query 21 (1 of 22)
+Vuser 2:query 6 completed in 1.488 seconds
+Vuser 2:Executing Query 17 (2 of 22)
+Vuser 6:RUNNING
+Vuser 6:login_command mysqlconnect -socket /var/run/mysqld/mysqld.sock -ssl false -user root -password mysql
+Vuser 6:Ssl_cipher
+Vuser 6:Verifying the scale factor of the existing schema...
+Vuser 6:Executing Query 10 (1 of 22)
+Vuser 4:query 5 completed in 1.036 seconds
+Vuser 4:Executing Query 21 (2 of 22)
+Vuser 2:query 17 completed in 0.787 seconds
+Vuser 2:Executing Query 14 (3 of 22)
+Vuser 7:RUNNING
+Vuser 7:login_command mysqlconnect -socket /var/run/mysqld/mysqld.sock -ssl false -user root -password mysql
+Vuser 7:Ssl_cipher
+Vuser 7:Verifying the scale factor of the existing schema...
+Vuser 7:Executing Query 18 (1 of 22)
+Vuser 8:RUNNING
+Vuser 8:login_command mysqlconnect -socket /var/run/mysqld/mysqld.sock -ssl false -user root -password mysql
+Vuser 8:Ssl_cipher
+Vuser 8:Verifying the scale factor of the existing schema...
+Vuser 3:query 8 completed in 2.516 seconds
+Vuser 8:Executing Query 19 (1 of 22)
+Vuser 3:Executing Query 5 (2 of 22)
+Vuser 8:query 19 completed in 0.222 seconds
+Vuser 8:Executing Query 1 (2 of 22)
+Vuser 3:query 5 completed in 1.417 seconds
+Vuser 6:query 10 completed in 2.485 seconds
+Vuser 3:Executing Query 4 (3 of 22)
+Vuser 6:Executing Query 3 (2 of 22)
+Vuser 3:query 4 completed in 1.019 seconds
+Vuser 3:Executing Query 6 (4 of 22)
+Vuser 2:query 14 completed in 3.618 seconds
+Vuser 2:Executing Query 16 (4 of 22)
+Vuser 2:query 16 completed in 0.416 seconds
+Vuser 2:Executing Query 19 (5 of 22)
+Vuser 6:query 3 completed in 1.892 seconds
+Vuser 6:Executing Query 15 (3 of 22)
+Vuser 1:query 21 completed in 7.174 seconds
+Vuser 2:query 19 completed in 0.233 seconds
+Vuser 1:Executing Query 3 (2 of 22)
+Vuser 2:Executing Query 10 (6 of 22)
+Vuser 7:query 18 completed in 4.543 seconds
+Vuser 7:Executing Query 8 (2 of 22)
+Vuser 1:query 3 completed in 1.752 seconds
+Vuser 1:Executing Query 18 (3 of 22)
+Vuser 3:query 6 completed in 3.226 seconds
+Vuser 3:Executing Query 17 (5 of 22)
+Vuser 2:query 10 completed in 2.567 seconds
+Vuser 2:Executing Query 9 (7 of 22)
+Vuser 3:query 17 completed in 0.915 seconds
+Vuser 3:Executing Query 7 (6 of 22)
+Vuser 5:query 21 completed in 9.401 seconds
+Vuser 5:Executing Query 15 (2 of 22)
+Vuser 4:query 21 completed in 9.062 seconds
+Vuser 4:Executing Query 14 (3 of 22)
+Vuser 3:query 7 completed in 1.474 seconds
+Vuser 3:Executing Query 1 (7 of 22)
+Vuser 7:query 8 completed in 4.598 seconds
+Vuser 7:Executing Query 20 (3 of 22)
+Vuser 7:query 20 completed in 0.557 seconds
+Vuser 7:Executing Query 21 (4 of 22)
+Vuser 2:query 9 completed in 3.023 seconds
+Vuser 2:Executing Query 2 (8 of 22)
+Vuser 2:query 2 completed in 0.19 seconds
+Vuser 2:Executing Query 15 (9 of 22)
+Vuser 1:query 18 completed in 4.514 seconds
+Vuser 1:Executing Query 5 (4 of 22)
+Vuser 1:query 5 completed in 1.364 seconds
+Vuser 1:Executing Query 11 (5 of 22)
+Vuser 4:query 14 completed in 3.392 seconds
+Vuser 4:Executing Query 19 (4 of 22)
+Vuser 1:query 11 completed in 0.166 seconds
+Vuser 1:Executing Query 7 (6 of 22)
+Vuser 4:query 19 completed in 0.227 seconds
+Vuser 4:Executing Query 15 (5 of 22)
+Vuser 6:query 15 completed in 8.543 seconds
+Vuser 6:Executing Query 13 (4 of 22)
+Vuser 1:query 7 completed in 1.351 seconds
+Vuser 1:Executing Query 6 (7 of 22)
+Vuser 1:query 6 completed in 3.53 seconds
+Vuser 1:Executing Query 20 (8 of 22)
+Vuser 6:query 13 completed in 4.706 seconds
+Vuser 6:Executing Query 6 (5 of 22)
+Vuser 5:query 15 completed in 8.917 seconds
+Vuser 5:Executing Query 4 (3 of 22)
+Vuser 1:query 20 completed in 0.444 seconds
+Vuser 1:Executing Query 17 (9 of 22)
+Vuser 1:query 17 completed in 0.815 seconds
+Vuser 1:Executing Query 12 (10 of 22)
+Vuser 5:query 4 completed in 1.14 seconds
+Vuser 5:Executing Query 6 (4 of 22)
+Vuser 2:query 15 completed in 8.662 seconds
+Vuser 2:Executing Query 8 (10 of 22)
+Vuser 7:query 21 completed in 9.268 seconds
+Vuser 7:Executing Query 2 (5 of 22)
+Vuser 7:query 2 completed in 0.193 seconds
+Vuser 7:Executing Query 4 (6 of 22)
+Vuser 8:query 1 completed in 18.72 seconds
+Vuser 8:Executing Query 15 (3 of 22)
+Vuser 7:query 4 completed in 1.068 seconds
+Vuser 7:Executing Query 22 (7 of 22)
+Vuser 7:query 22 completed in 0.212 seconds
+Vuser 7:Executing Query 17 (8 of 22)
+Vuser 6:query 6 completed in 3.454 seconds
+Vuser 6:Executing Query 8 (6 of 22)
+Vuser 4:query 15 completed in 8.74 seconds
+Vuser 4:Executing Query 17 (6 of 22)
+Vuser 7:query 17 completed in 0.866 seconds
+Vuser 7:Executing Query 1 (9 of 22)
+Vuser 4:query 17 completed in 0.808 seconds
+Vuser 4:Executing Query 12 (7 of 22)
+Vuser 5:query 6 completed in 3.566 seconds
+Vuser 5:Executing Query 7 (5 of 22)
+Vuser 1:query 12 completed in 4.564 seconds
+Vuser 1:Executing Query 16 (11 of 22)
+Vuser 1:query 16 completed in 0.397 seconds
+Vuser 1:Executing Query 15 (12 of 22)
+Vuser 2:query 8 completed in 4.625 seconds
+Vuser 2:Executing Query 5 (11 of 22)
+Vuser 5:query 7 completed in 1.298 seconds
+Vuser 5:Executing Query 16 (6 of 22)
+Vuser 5:query 16 completed in 0.425 seconds
+Vuser 5:Executing Query 19 (7 of 22)
+Vuser 5:query 19 completed in 0.231 seconds
+Vuser 5:Executing Query 18 (8 of 22)
+Vuser 2:query 5 completed in 1.386 seconds
+Vuser 2:Executing Query 22 (12 of 22)
+Vuser 2:query 22 completed in 0.218 seconds
+Vuser 2:Executing Query 12 (13 of 22)
+Vuser 6:query 8 completed in 4.384 seconds
+Vuser 6:Executing Query 9 (7 of 22)
+Vuser 4:query 12 completed in 4.274 seconds
+Vuser 4:Executing Query 6 (8 of 22)
+Vuser 3:query 1 completed in 18.431 seconds
+Vuser 3:Executing Query 18 (8 of 22)
+Vuser 8:query 15 completed in 8.347 seconds
+Vuser 8:Executing Query 17 (4 of 22)
+Vuser 8:query 17 completed in 0.724 seconds
+Vuser 8:Executing Query 5 (5 of 22)
+Vuser 6:query 9 completed in 3.713 seconds
+Vuser 6:Executing Query 7 (8 of 22)
+Vuser 5:query 18 completed in 4.791 seconds
+Vuser 5:Executing Query 14 (9 of 22)
+Vuser 4:query 6 completed in 3.464 seconds
+Vuser 4:Executing Query 4 (9 of 22)
+Vuser 2:query 12 completed in 4.677 seconds
+Vuser 2:Executing Query 7 (14 of 22)
+Vuser 8:query 5 completed in 1.811 seconds
+Vuser 8:Executing Query 8 (6 of 22)
+Vuser 6:query 7 completed in 1.621 seconds
+Vuser 6:Executing Query 4 (9 of 22)
+Vuser 4:query 4 completed in 1.177 seconds
+Vuser 4:Executing Query 9 (10 of 22)
+Vuser 2:query 7 completed in 1.657 seconds
+Vuser 2:Executing Query 13 (15 of 22)
+Vuser 3:query 18 completed in 4.333 seconds
+Vuser 3:Executing Query 22 (9 of 22)
+Vuser 3:query 22 completed in 0.211 seconds
+Vuser 6:query 4 completed in 1.216 seconds
+Vuser 3:Executing Query 14 (10 of 22)
+Vuser 6:Executing Query 11 (10 of 22)
+Vuser 1:query 15 completed in 8.51 seconds
+Vuser 1:Executing Query 13 (13 of 22)
+Vuser 6:query 11 completed in 0.202 seconds
+Vuser 6:Executing Query 22 (11 of 22)
+Vuser 6:query 22 completed in 0.215 seconds
+Vuser 6:Executing Query 18 (12 of 22)
+Vuser 5:query 14 completed in 3.438 seconds
+Vuser 5:Executing Query 22 (10 of 22)
+Vuser 5:query 22 completed in 0.192 seconds
+Vuser 5:Executing Query 11 (11 of 22)
+Vuser 5:query 11 completed in 0.173 seconds
+Vuser 5:Executing Query 13 (12 of 22)
+Vuser 4:query 9 completed in 3.032 seconds
+Vuser 4:Executing Query 8 (11 of 22)
+Vuser 3:query 14 completed in 3.582 seconds
+Vuser 3:Executing Query 9 (11 of 22)
+Vuser 8:query 8 completed in 5.092 seconds
+Vuser 8:Executing Query 9 (7 of 22)
+Vuser 6:query 18 completed in 4.601 seconds
+Vuser 6:Executing Query 12 (13 of 22)
+Vuser 2:query 13 completed in 5.499 seconds
+Vuser 2:Executing Query 18 (16 of 22)
+Vuser 1:query 13 completed in 5.45 seconds
+Vuser 1:Executing Query 10 (14 of 22)
+Vuser 5:query 13 completed in 5.418 seconds
+Vuser 5:Executing Query 3 (13 of 22)
+Vuser 4:query 8 completed in 4.614 seconds
+Vuser 4:Executing Query 16 (12 of 22)
+Vuser 3:query 9 completed in 3.202 seconds
+Vuser 3:Executing Query 10 (12 of 22)
+Vuser 8:query 9 completed in 3.317 seconds
+Vuser 8:Executing Query 12 (8 of 22)
+Vuser 4:query 16 completed in 0.426 seconds
+Vuser 4:Executing Query 11 (13 of 22)
+Vuser 4:query 11 completed in 0.21 seconds
+Vuser 4:Executing Query 2 (14 of 22)
+Vuser 4:query 2 completed in 0.191 seconds
+Vuser 4:Executing Query 10 (15 of 22)
+Vuser 1:query 10 completed in 2.211 seconds
+Vuser 1:Executing Query 2 (15 of 22)
+Vuser 1:query 2 completed in 0.18 seconds
+Vuser 1:Executing Query 8 (16 of 22)
+Vuser 7:query 1 completed in 18.462 seconds
+Vuser 7:Executing Query 11 (10 of 22)
+Vuser 7:query 11 completed in 0.206 seconds
+Vuser 7:Executing Query 9 (11 of 22)
+Vuser 5:query 3 completed in 1.982 seconds
+Vuser 5:Executing Query 1 (14 of 22)
+Vuser 6:query 12 completed in 4.358 seconds
+Vuser 6:Executing Query 1 (14 of 22)
+Vuser 3:query 10 completed in 2.751 seconds
+Vuser 3:Executing Query 15 (13 of 22)
+Vuser 2:query 18 completed in 4.408 seconds
+Vuser 2:Executing Query 1 (17 of 22)
+Vuser 4:query 10 completed in 2.579 seconds
+Vuser 4:Executing Query 18 (16 of 22)
+Vuser 7:query 9 completed in 2.903 seconds
+Vuser 7:Executing Query 19 (12 of 22)
+Vuser 8:query 12 completed in 4.208 seconds
+Vuser 8:Executing Query 14 (9 of 22)
+Vuser 7:query 19 completed in 0.218 seconds
+Vuser 7:Executing Query 3 (13 of 22)
+Vuser 1:query 8 completed in 4.47 seconds
+Vuser 1:Executing Query 14 (17 of 22)
+Vuser 7:query 3 completed in 2.045 seconds
+Vuser 7:Executing Query 13 (14 of 22)
+Vuser 8:query 14 completed in 3.296 seconds
+Vuser 8:Executing Query 7 (10 of 22)
+Vuser 4:query 18 completed in 4.838 seconds
+Vuser 4:Executing Query 1 (17 of 22)
+Vuser 1:query 14 completed in 3.702 seconds
+Vuser 8:query 7 completed in 1.469 seconds
+Vuser 1:Executing Query 19 (18 of 22)
+Vuser 8:Executing Query 4 (11 of 22)
+Vuser 1:query 19 completed in 0.23 seconds
+Vuser 1:Executing Query 9 (19 of 22)
+Vuser 8:query 4 completed in 1.08 seconds
+Vuser 8:Executing Query 3 (12 of 22)
+Vuser 7:query 13 completed in 4.564 seconds
+Vuser 7:Executing Query 5 (15 of 22)
+Vuser 3:query 15 completed in 9.433 seconds
+Vuser 3:Executing Query 11 (14 of 22)
+Vuser 3:query 11 completed in 0.188 seconds
+Vuser 3:Executing Query 20 (15 of 22)
+Vuser 8:query 3 completed in 2.011 seconds
+Vuser 8:Executing Query 20 (13 of 22)
+Vuser 7:query 5 completed in 1.397 seconds
+Vuser 1:query 9 completed in 3.154 seconds
+Vuser 7:Executing Query 7 (16 of 22)
+Vuser 1:Executing Query 22 (20 of 22)
+Vuser 3:query 20 completed in 0.501 seconds
+Vuser 3:Executing Query 2 (16 of 22)
+Vuser 8:query 20 completed in 0.443 seconds
+Vuser 8:Executing Query 16 (14 of 22)
+Vuser 1:query 22 completed in 0.217 seconds
+Vuser 1:Executing Query 1 (21 of 22)
+Vuser 3:query 2 completed in 0.195 seconds
+Vuser 3:Executing Query 21 (17 of 22)
+Vuser 8:query 16 completed in 0.396 seconds
+Vuser 8:Executing Query 6 (15 of 22)
+Vuser 7:query 7 completed in 1.358 seconds
+Vuser 7:Executing Query 10 (17 of 22)
+Vuser 7:query 10 completed in 2.626 seconds
+Vuser 7:Executing Query 16 (18 of 22)
+Vuser 8:query 6 completed in 3.639 seconds
+Vuser 8:Executing Query 22 (16 of 22)
+Vuser 7:query 16 completed in 0.424 seconds
+Vuser 7:Executing Query 6 (19 of 22)
+Vuser 8:query 22 completed in 0.207 seconds
+Vuser 8:Executing Query 10 (17 of 22)
+Vuser 8:query 10 completed in 2.59 seconds
+Vuser 8:Executing Query 13 (18 of 22)
+Vuser 5:query 1 completed in 18.983 seconds
+Vuser 5:Executing Query 2 (15 of 22)
+Vuser 7:query 6 completed in 3.46 seconds
+Vuser 7:Executing Query 14 (20 of 22)
+Vuser 5:query 2 completed in 0.198 seconds
+Vuser 5:Executing Query 5 (16 of 22)
+Vuser 6:query 1 completed in 19.211 seconds
+Vuser 6:Executing Query 5 (15 of 22)
+Vuser 3:query 21 completed in 9.003 seconds
+Vuser 3:Executing Query 19 (18 of 22)
+Vuser 3:query 19 completed in 0.21 seconds
+Vuser 3:Executing Query 13 (19 of 22)
+Vuser 5:query 5 completed in 1.855 seconds
+Vuser 5:Executing Query 8 (17 of 22)
+Vuser 2:query 1 completed in 20.102 seconds
+Vuser 2:Executing Query 4 (18 of 22)
+Vuser 6:query 5 completed in 1.589 seconds
+Vuser 6:Executing Query 16 (16 of 22)
+Vuser 6:query 16 completed in 0.425 seconds
+Vuser 6:Executing Query 2 (17 of 22)
+Vuser 2:query 4 completed in 1.137 seconds
+Vuser 2:Executing Query 20 (19 of 22)
+Vuser 6:query 2 completed in 0.204 seconds
+Vuser 6:Executing Query 14 (18 of 22)
+Vuser 7:query 14 completed in 3.361 seconds
+Vuser 7:Executing Query 15 (21 of 22)
+Vuser 2:query 20 completed in 0.496 seconds
+Vuser 2:Executing Query 3 (20 of 22)
+Vuser 8:query 13 completed in 4.994 seconds
+Vuser 8:Executing Query 2 (19 of 22)
+Vuser 8:query 2 completed in 0.178 seconds
+Vuser 8:Executing Query 21 (20 of 22)
+Vuser 2:query 3 completed in 2.002 seconds
+Vuser 2:Executing Query 11 (21 of 22)
+Vuser 2:query 11 completed in 0.197 seconds
+Vuser 2:Executing Query 21 (22 of 22)
+Vuser 5:query 8 completed in 4.378 seconds
+Vuser 5:Executing Query 20 (18 of 22)
+Vuser 3:query 13 completed in 4.978 seconds
+Vuser 3:Executing Query 16 (20 of 22)
+Vuser 5:query 20 completed in 0.498 seconds
+Vuser 5:Executing Query 12 (19 of 22)
+Vuser 6:query 14 completed in 3.703 seconds
+Vuser 6:Executing Query 19 (19 of 22)
+Vuser 3:query 16 completed in 0.412 seconds
+Vuser 3:Executing Query 12 (21 of 22)
+Vuser 4:query 1 completed in 19.57 seconds
+Vuser 4:Executing Query 13 (18 of 22)
+Vuser 6:query 19 completed in 0.233 seconds
+Vuser 6:Executing Query 20 (20 of 22)
+Vuser 6:query 20 completed in 0.508 seconds
+Vuser 6:Executing Query 17 (21 of 22)
+Vuser 6:query 17 completed in 0.938 seconds
+Vuser 6:Executing Query 21 (22 of 22)
+Vuser 1:query 1 completed in 19.092 seconds
+Vuser 1:Executing Query 4 (22 of 22)
+Vuser 5:query 12 completed in 4.683 seconds
+Vuser 5:Executing Query 17 (20 of 22)
+Vuser 3:query 12 completed in 4.487 seconds
+Vuser 3:Executing Query 3 (22 of 22)
+Vuser 4:query 13 completed in 4.688 seconds
+Vuser 7:query 15 completed in 8.457 seconds
+Vuser 4:Executing Query 7 (19 of 22)
+Vuser 7:Executing Query 12 (22 of 22)
+Vuser 1:query 4 completed in 1.11 seconds
+Vuser 5:query 17 completed in 0.897 seconds
+Vuser 1:Completed 1 query set(s) in 75 seconds
+Vuser 5:Executing Query 10 (21 of 22)
+Vuser 1:Geometric mean of query times returning rows (22) is 1.62046
+Vuser 1:Executing Query 21 (1 of 22)
+Vuser 4:query 7 completed in 1.399 seconds
+Vuser 4:Executing Query 22 (20 of 22)
+Vuser 4:query 22 completed in 0.2 seconds
+Vuser 4:Executing Query 3 (21 of 22)
+Vuser 8:query 21 completed in 9.175 seconds
+Vuser 3:query 3 completed in 1.922 seconds
+Vuser 8:Executing Query 18 (21 of 22)
+Vuser 3:Completed 1 query set(s) in 75 seconds
+Vuser 3:Geometric mean of query times returning rows (22) is 1.63330
+Vuser 3:Executing Query 8 (1 of 22)
+Vuser 2:query 21 completed in 8.918 seconds
+Vuser 2:Completed 1 query set(s) in 77 seconds
+Vuser 2:Geometric mean of query times returning rows (22) is 1.64223
+Vuser 2:Executing Query 6 (1 of 22)
+Vuser 5:query 10 completed in 2.572 seconds
+Vuser 5:Executing Query 9 (22 of 22)
+Vuser 4:query 3 completed in 1.776 seconds
+Vuser 4:Executing Query 20 (22 of 22)
+Vuser 4:query 20 completed in 0.502 seconds
+Vuser 4:Completed 1 query set(s) in 77 seconds
+Vuser 4:Geometric mean of query times returning rows (22) is 1.64977
+Vuser 4:Executing Query 5 (1 of 22)
+Vuser 7:query 12 completed in 4.311 seconds
+Vuser 7:Completed 1 query set(s) in 76 seconds
+Vuser 7:Geometric mean of query times returning rows (22) is 1.67255
+Vuser 7:Executing Query 18 (1 of 22)
+Vuser 4:query 5 completed in 1.525 seconds
+Vuser 4:Executing Query 21 (2 of 22)
+Vuser 8:query 18 completed in 4.37 seconds
+Vuser 8:Executing Query 11 (22 of 22)
+Vuser 6:query 21 completed in 9.181 seconds
+Vuser 6:Completed 1 query set(s) in 78 seconds
+Vuser 6:Geometric mean of query times returning rows (22) is 1.73428
+Vuser 6:Executing Query 10 (1 of 22)
+Vuser 3:query 8 completed in 4.473 seconds
+Vuser 2:query 6 completed in 3.069 seconds
+Vuser 3:Executing Query 5 (2 of 22)
+Vuser 2:Executing Query 17 (2 of 22)
+Vuser 8:query 11 completed in 0.156 seconds
+Vuser 8:Completed 1 query set(s) in 78 seconds
+Vuser 8:Geometric mean of query times returning rows (22) is 1.65453
+Vuser 8:Executing Query 19 (1 of 22)
+Vuser 5:query 9 completed in 3.094 seconds
+Vuser 5:Completed 1 query set(s) in 79 seconds
+Vuser 5:Geometric mean of query times returning rows (22) is 1.70765
+Vuser 5:Executing Query 21 (1 of 22)
+Vuser 8:query 19 completed in 0.212 seconds
+Vuser 8:Executing Query 1 (2 of 22)
+Vuser 2:query 17 completed in 0.818 seconds
+Vuser 2:Executing Query 14 (3 of 22)
+Vuser 3:query 5 completed in 1.357 seconds
+Vuser 3:Executing Query 4 (3 of 22)
+Vuser 3:query 4 completed in 1.036 seconds
+Vuser 3:Executing Query 6 (4 of 22)
+Vuser 7:query 18 completed in 4.428 seconds
+Vuser 7:Executing Query 8 (2 of 22)
+Vuser 6:query 10 completed in 2.721 seconds
+Vuser 6:Executing Query 3 (2 of 22)
+Vuser 1:query 21 completed in 9.059 seconds
+Vuser 1:Executing Query 3 (2 of 22)
+Vuser 2:query 14 completed in 3.385 seconds
+Vuser 2:Executing Query 16 (4 of 22)
+Vuser 6:query 3 completed in 1.934 seconds
+Vuser 6:Executing Query 15 (3 of 22)
+Vuser 2:query 16 completed in 0.395 seconds
+Vuser 2:Executing Query 19 (5 of 22)
+Vuser 2:query 19 completed in 0.219 seconds
+Vuser 2:Executing Query 10 (6 of 22)
+Vuser 1:query 3 completed in 1.909 seconds
+Vuser 1:Executing Query 18 (3 of 22)
+Vuser 3:query 6 completed in 3.042 seconds
+Vuser 3:Executing Query 17 (5 of 22)
+Vuser 3:query 17 completed in 0.844 seconds
+Vuser 3:Executing Query 7 (6 of 22)
+Vuser 7:query 8 completed in 4.599 seconds
+Vuser 7:Executing Query 20 (3 of 22)
+Vuser 2:query 10 completed in 2.57 seconds
+Vuser 2:Executing Query 9 (7 of 22)
+Vuser 7:query 20 completed in 0.481 seconds
+Vuser 7:Executing Query 21 (4 of 22)
+Vuser 3:query 7 completed in 1.417 seconds
+Vuser 3:Executing Query 1 (7 of 22)
+Vuser 4:query 21 completed in 9.109 seconds
+Vuser 4:Executing Query 14 (3 of 22)
+Vuser 5:query 21 completed in 9.025 seconds
+Vuser 5:Executing Query 15 (2 of 22)
+Vuser 1:query 18 completed in 4.576 seconds
+Vuser 1:Executing Query 5 (4 of 22)
+Vuser 2:query 9 completed in 3.071 seconds
+Vuser 2:Executing Query 2 (8 of 22)
+Vuser 2:query 2 completed in 0.198 seconds
+Vuser 2:Executing Query 15 (9 of 22)
+Vuser 1:query 5 completed in 1.433 seconds
+Vuser 1:Executing Query 11 (5 of 22)
+Vuser 1:query 11 completed in 0.185 seconds
+Vuser 1:Executing Query 7 (6 of 22)
+Vuser 4:query 14 completed in 3.626 seconds
+Vuser 4:Executing Query 19 (4 of 22)
+Vuser 4:query 19 completed in 0.226 seconds
+Vuser 4:Executing Query 15 (5 of 22)
+Vuser 6:query 15 completed in 8.352 seconds
+Vuser 6:Executing Query 13 (4 of 22)
+Vuser 1:query 7 completed in 1.378 seconds
+Vuser 1:Executing Query 6 (7 of 22)
+Vuser 7:query 21 completed in 9.12 seconds
+Vuser 7:Executing Query 2 (5 of 22)
+Vuser 1:query 6 completed in 3.809 seconds
+Vuser 1:Executing Query 20 (8 of 22)
+Vuser 7:query 2 completed in 0.182 seconds
+Vuser 7:Executing Query 4 (6 of 22)
+Vuser 1:query 20 completed in 0.492 seconds
+Vuser 1:Executing Query 17 (9 of 22)
+Vuser 6:query 13 completed in 4.55 seconds
+Vuser 6:Executing Query 6 (5 of 22)
+Vuser 5:query 15 completed in 8.475 seconds
+Vuser 5:Executing Query 4 (3 of 22)
+Vuser 7:query 4 completed in 1.095 seconds
+Vuser 7:Executing Query 22 (7 of 22)
+Vuser 1:query 17 completed in 0.773 seconds
+Vuser 1:Executing Query 12 (10 of 22)
+Vuser 7:query 22 completed in 0.214 seconds
+Vuser 7:Executing Query 17 (8 of 22)
+Vuser 8:query 1 completed in 18.634 seconds
+Vuser 8:Executing Query 15 (3 of 22)
+Vuser 5:query 4 completed in 1.224 seconds
+Vuser 5:Executing Query 6 (4 of 22)
+Vuser 7:query 17 completed in 0.795 seconds
+Vuser 7:Executing Query 1 (9 of 22)
+Vuser 2:query 15 completed in 9.269 seconds
+Vuser 2:Executing Query 8 (10 of 22)
+Vuser 6:query 6 completed in 3.29 seconds
+Vuser 6:Executing Query 8 (6 of 22)
+Vuser 4:query 15 completed in 8.818 seconds
+Vuser 4:Executing Query 17 (6 of 22)
+Vuser 4:query 17 completed in 0.8 seconds
+Vuser 4:Executing Query 12 (7 of 22)
+Vuser 5:query 6 completed in 3.512 seconds
+Vuser 5:Executing Query 7 (5 of 22)
+Vuser 1:query 12 completed in 4.581 seconds
+Vuser 1:Executing Query 16 (11 of 22)
+Vuser 1:query 16 completed in 0.415 seconds
+Vuser 1:Executing Query 15 (12 of 22)
+Vuser 5:query 7 completed in 1.365 seconds
+Vuser 5:Executing Query 16 (6 of 22)
+Vuser 5:query 16 completed in 0.424 seconds
+Vuser 5:Executing Query 19 (7 of 22)
+Vuser 2:query 8 completed in 4.399 seconds
+Vuser 2:Executing Query 5 (11 of 22)
+Vuser 5:query 19 completed in 0.242 seconds
+Vuser 5:Executing Query 18 (8 of 22)
+Vuser 2:query 5 completed in 1.108 seconds
+Vuser 2:Executing Query 22 (12 of 22)
+Vuser 6:query 8 completed in 4.783 seconds
+Vuser 6:Executing Query 9 (7 of 22)
+Vuser 2:query 22 completed in 0.216 seconds
+Vuser 2:Executing Query 12 (13 of 22)
+Vuser 4:query 12 completed in 4.449 seconds
+Vuser 3:query 1 completed in 18.693 seconds
+Vuser 4:Executing Query 6 (8 of 22)
+Vuser 3:Executing Query 18 (8 of 22)
+Vuser 8:query 15 completed in 9.326 seconds
+Vuser 8:Executing Query 17 (4 of 22)
+Vuser 8:query 17 completed in 0.796 seconds
+Vuser 8:Executing Query 5 (5 of 22)
+Vuser 6:query 9 completed in 3.607 seconds
+Vuser 6:Executing Query 7 (8 of 22)
+Vuser 5:query 18 completed in 4.767 seconds
+Vuser 5:Executing Query 14 (9 of 22)
+Vuser 4:query 6 completed in 3.672 seconds
+Vuser 4:Executing Query 4 (9 of 22)
+Vuser 8:query 5 completed in 1.133 seconds
+Vuser 8:Executing Query 8 (6 of 22)
+Vuser 2:query 12 completed in 4.677 seconds
+Vuser 2:Executing Query 7 (14 of 22)
+Vuser 6:query 7 completed in 1.599 seconds
+Vuser 6:Executing Query 4 (9 of 22)
+Vuser 1:query 15 completed in 7.993 seconds
+Vuser 3:query 18 completed in 4.765 seconds
+Vuser 1:Executing Query 13 (13 of 22)
+Vuser 3:Executing Query 22 (9 of 22)
+Vuser 4:query 4 completed in 1.306 seconds
+Vuser 4:Executing Query 9 (10 of 22)
+Vuser 3:query 22 completed in 0.192 seconds
+Vuser 3:Executing Query 14 (10 of 22)
+Vuser 2:query 7 completed in 1.637 seconds
+Vuser 2:Executing Query 13 (15 of 22)
+Vuser 6:query 4 completed in 1.306 seconds
+Vuser 6:Executing Query 11 (10 of 22)
+Vuser 6:query 11 completed in 0.2 seconds
+Vuser 6:Executing Query 22 (11 of 22)
+Vuser 6:query 22 completed in 0.218 seconds
+Vuser 5:query 14 completed in 3.37 seconds
+Vuser 6:Executing Query 18 (12 of 22)
+Vuser 5:Executing Query 22 (10 of 22)
+Vuser 5:query 22 completed in 0.194 seconds
+Vuser 5:Executing Query 11 (11 of 22)
+Vuser 5:query 11 completed in 0.175 seconds
+Vuser 5:Executing Query 13 (12 of 22)
+Vuser 8:query 8 completed in 3.936 seconds
+Vuser 8:Executing Query 9 (7 of 22)
+Vuser 4:query 9 completed in 3.1 seconds
+Vuser 4:Executing Query 8 (11 of 22)
+Vuser 3:query 14 completed in 3.215 seconds
+Vuser 3:Executing Query 9 (11 of 22)
+Vuser 1:query 13 completed in 5.425 seconds
+Vuser 1:Executing Query 10 (14 of 22)
+Vuser 8:query 9 completed in 3.218 seconds
+Vuser 8:Executing Query 12 (8 of 22)
+Vuser 7:query 1 completed in 18.404 seconds
+Vuser 6:query 18 completed in 4.845 seconds
+Vuser 7:Executing Query 11 (10 of 22)
+Vuser 6:Executing Query 12 (13 of 22)
+Vuser 7:query 11 completed in 0.177 seconds
+Vuser 7:Executing Query 9 (11 of 22)
+Vuser 2:query 13 completed in 5.662 seconds
+Vuser 2:Executing Query 18 (16 of 22)
+Vuser 3:query 9 completed in 3.173 seconds
+Vuser 3:Executing Query 10 (12 of 22)
+Vuser 4:query 8 completed in 4.101 seconds
+Vuser 5:query 13 completed in 5.569 seconds
+Vuser 4:Executing Query 16 (12 of 22)
+Vuser 5:Executing Query 3 (13 of 22)
+Vuser 4:query 16 completed in 0.383 seconds
+Vuser 4:Executing Query 11 (13 of 22)
+Vuser 4:query 11 completed in 0.177 seconds
+Vuser 4:Executing Query 2 (14 of 22)
+Vuser 1:query 10 completed in 2.648 seconds
+Vuser 1:Executing Query 2 (15 of 22)
+Vuser 4:query 2 completed in 0.184 seconds
+Vuser 4:Executing Query 10 (15 of 22)
+Vuser 1:query 2 completed in 0.198 seconds
+Vuser 1:Executing Query 8 (16 of 22)
+Vuser 3:query 10 completed in 2.772 seconds
+Vuser 3:Executing Query 15 (13 of 22)
+Vuser 5:query 3 completed in 2.112 seconds
+Vuser 5:Executing Query 1 (14 of 22)
+Vuser 7:query 9 completed in 3.14 seconds
+Vuser 7:Executing Query 19 (12 of 22)
+Vuser 7:query 19 completed in 0.232 seconds
+Vuser 7:Executing Query 3 (13 of 22)
+Vuser 6:query 12 completed in 4.118 seconds
+Vuser 6:Executing Query 1 (14 of 22)
+Vuser 8:query 12 completed in 4.359 seconds
+Vuser 8:Executing Query 14 (9 of 22)
+Vuser 4:query 10 completed in 2.666 seconds
+Vuser 4:Executing Query 18 (16 of 22)
+Vuser 2:query 18 completed in 4.572 seconds
+Vuser 2:Executing Query 1 (17 of 22)
+Vuser 7:query 3 completed in 2.149 seconds
+Vuser 7:Executing Query 13 (14 of 22)
+Vuser 1:query 8 completed in 4.392 seconds
+Vuser 1:Executing Query 14 (17 of 22)
+Vuser 8:query 14 completed in 3.514 seconds
+Vuser 8:Executing Query 7 (10 of 22)
+Vuser 8:query 7 completed in 1.69 seconds
+Vuser 8:Executing Query 4 (11 of 22)
+Vuser 4:query 18 completed in 4.779 seconds
+Vuser 4:Executing Query 1 (17 of 22)
+Vuser 1:query 14 completed in 3.32 seconds
+Vuser 1:Executing Query 19 (18 of 22)
+Vuser 1:query 19 completed in 0.233 seconds
+Vuser 1:Executing Query 9 (19 of 22)
+Vuser 8:query 4 completed in 1.078 seconds
+Vuser 8:Executing Query 3 (12 of 22)
+Vuser 7:query 13 completed in 4.779 seconds
+Vuser 7:Executing Query 5 (15 of 22)
+Vuser 3:query 15 completed in 8.64 seconds
+Vuser 3:Executing Query 11 (14 of 22)
+Vuser 3:query 11 completed in 0.181 seconds
+Vuser 3:Executing Query 20 (15 of 22)
+Vuser 7:query 5 completed in 1.597 seconds
+Vuser 7:Executing Query 7 (16 of 22)
+Vuser 3:query 20 completed in 0.517 seconds
+Vuser 3:Executing Query 2 (16 of 22)
+Vuser 8:query 3 completed in 2.026 seconds
+Vuser 8:Executing Query 20 (13 of 22)
+Vuser 3:query 2 completed in 0.198 seconds
+Vuser 3:Executing Query 21 (17 of 22)
+Vuser 1:query 9 completed in 2.892 seconds
+Vuser 1:Executing Query 22 (20 of 22)
+Vuser 8:query 20 completed in 0.461 seconds
+Vuser 8:Executing Query 16 (14 of 22)
+Vuser 1:query 22 completed in 0.175 seconds
+Vuser 1:Executing Query 1 (21 of 22)
+Vuser 8:query 16 completed in 0.391 seconds
+Vuser 8:Executing Query 6 (15 of 22)
+Vuser 7:query 7 completed in 1.521 seconds
+Vuser 7:Executing Query 10 (17 of 22)
+Vuser 7:query 10 completed in 2.703 seconds
+Vuser 7:Executing Query 16 (18 of 22)
+Vuser 7:query 16 completed in 0.424 seconds
+Vuser 7:Executing Query 6 (19 of 22)
+Vuser 8:query 6 completed in 3.559 seconds
+Vuser 8:Executing Query 22 (16 of 22)
+Vuser 8:query 22 completed in 0.216 seconds
+Vuser 8:Executing Query 10 (17 of 22)
+Vuser 8:query 10 completed in 2.738 seconds
+Vuser 8:Executing Query 13 (18 of 22)
+Vuser 7:query 6 completed in 3.675 seconds
+Vuser 7:Executing Query 14 (20 of 22)
+Vuser 6:query 1 completed in 18.319 seconds
+Vuser 6:Executing Query 5 (15 of 22)
+Vuser 3:query 21 completed in 10.416 seconds
+Vuser 3:Executing Query 19 (18 of 22)
+Vuser 5:query 1 completed in 20.15 seconds
+Vuser 5:Executing Query 2 (15 of 22)
+Vuser 3:query 19 completed in 0.235 seconds
+Vuser 3:Executing Query 13 (19 of 22)
+Vuser 5:query 2 completed in 0.19 seconds
+Vuser 5:Executing Query 5 (16 of 22)
+Vuser 6:query 5 completed in 1.261 seconds
+Vuser 6:Executing Query 16 (16 of 22)
+Vuser 7:query 14 completed in 3.435 seconds
+Vuser 7:Executing Query 15 (21 of 22)
+Vuser 6:query 16 completed in 0.401 seconds
+Vuser 6:Executing Query 2 (17 of 22)
+Vuser 6:query 2 completed in 0.194 seconds
+Vuser 6:Executing Query 14 (18 of 22)
+Vuser 2:query 1 completed in 19.897 seconds
+Vuser 2:Executing Query 4 (18 of 22)
+Vuser 8:query 13 completed in 5.122 seconds
+Vuser 8:Executing Query 2 (19 of 22)
+Vuser 5:query 5 completed in 1.623 seconds
+Vuser 5:Executing Query 8 (17 of 22)
+Vuser 8:query 2 completed in 0.205 seconds
+Vuser 8:Executing Query 21 (20 of 22)
+Vuser 2:query 4 completed in 1.018 seconds
+Vuser 2:Executing Query 20 (19 of 22)
+Vuser 2:query 20 completed in 0.474 seconds
+Vuser 2:Executing Query 3 (20 of 22)
+Vuser 6:query 14 completed in 3.55 seconds
+Vuser 6:Executing Query 19 (19 of 22)
+Vuser 4:query 1 completed in 18.692 seconds
+Vuser 4:Executing Query 13 (18 of 22)
+Vuser 6:query 19 completed in 0.241 seconds
+Vuser 6:Executing Query 20 (20 of 22)
+Vuser 2:query 3 completed in 1.985 seconds
+Vuser 2:Executing Query 11 (21 of 22)
+Vuser 2:query 11 completed in 0.255 seconds
+Vuser 2:Executing Query 21 (22 of 22)
+Vuser 3:query 13 completed in 5.285 seconds
+Vuser 6:query 20 completed in 0.514 seconds
+Vuser 3:Executing Query 16 (20 of 22)
+Vuser 6:Executing Query 17 (21 of 22)
+Vuser 3:query 16 completed in 0.389 seconds
+Vuser 3:Executing Query 12 (21 of 22)
+Vuser 5:query 8 completed in 4.211 seconds
+Vuser 5:Executing Query 20 (18 of 22)
+Vuser 6:query 17 completed in 0.936 seconds
+Vuser 6:Executing Query 21 (22 of 22)
+Vuser 5:query 20 completed in 0.483 seconds
+Vuser 5:Executing Query 12 (19 of 22)
+Vuser 1:query 1 completed in 18.738 seconds
+Vuser 1:Executing Query 4 (22 of 22)
+Vuser 7:query 15 completed in 8.681 seconds
+Vuser 7:Executing Query 12 (22 of 22)
+Vuser 4:query 13 completed in 4.639 seconds
+Vuser 4:Executing Query 7 (19 of 22)
+Vuser 1:query 4 completed in 1.036 seconds
+Vuser 1:Completed 2 query set(s) in 76 seconds
+Vuser 1:Geometric mean of query times returning rows (22) is 1.64940
+Vuser 1:FINISHED SUCCESS
+Vuser 3:query 12 completed in 4.67 seconds
+Vuser 3:Executing Query 3 (22 of 22)
+Vuser 8:query 21 completed in 8.721 seconds
+Vuser 4:query 7 completed in 1.341 seconds
+Vuser 8:Executing Query 18 (21 of 22)
+Vuser 4:Executing Query 22 (20 of 22)
+Vuser 4:query 22 completed in 0.209 seconds
+Vuser 4:Executing Query 3 (21 of 22)
+Vuser 5:query 12 completed in 4.495 seconds
+Vuser 5:Executing Query 17 (20 of 22)
+Vuser 5:query 17 completed in 0.886 seconds
+Vuser 5:Executing Query 10 (21 of 22)
+Vuser 3:query 3 completed in 1.994 seconds
+Vuser 3:Completed 2 query set(s) in 78 seconds
+Vuser 3:Geometric mean of query times returning rows (22) is 1.67337
+Vuser 3:FINISHED SUCCESS
+Vuser 8:query 18 completed in 2.054 seconds
+Vuser 8:Executing Query 11 (22 of 22)
+Vuser 4:query 3 completed in 1.907 seconds
+Vuser 4:Executing Query 20 (22 of 22)
+Vuser 8:query 11 completed in 0.131 seconds
+Vuser 8:Completed 2 query set(s) in 74 seconds
+Vuser 8:Geometric mean of query times returning rows (22) is 1.57616
+Vuser 8:FINISHED SUCCESS
+Vuser 7:query 12 completed in 3.699 seconds
+Vuser 7:Completed 2 query set(s) in 76 seconds
+Vuser 7:Geometric mean of query times returning rows (22) is 1.67365
+Vuser 7:FINISHED SUCCESS
+Vuser 4:query 20 completed in 0.307 seconds
+Vuser 4:Completed 2 query set(s) in 77 seconds
+Vuser 4:Geometric mean of query times returning rows (22) is 1.63415
+Vuser 4:FINISHED SUCCESS
+Vuser 5:query 10 completed in 1.835 seconds
+Vuser 5:Executing Query 9 (22 of 22)
+Vuser 2:query 21 completed in 8.72 seconds
+Vuser 2:Completed 2 query set(s) in 79 seconds
+Vuser 2:Geometric mean of query times returning rows (22) is 1.68300
+Vuser 2:FINISHED SUCCESS
+Vuser 6:query 21 completed in 7.774 seconds
+Vuser 6:Completed 2 query set(s) in 76 seconds
+Vuser 6:Geometric mean of query times returning rows (22) is 1.70073
+Vuser 6:FINISHED SUCCESS
+Vuser 5:query 9 completed in 2.045 seconds
+Vuser 5:Completed 2 query set(s) in 77 seconds
+Vuser 5:Geometric mean of query times returning rows (22) is 1.64344
+Vuser 5:FINISHED SUCCESS
+ALL VIRTUAL USERS COMPLETE
+TPROC-H Driver Script
+vudestroy success
+TEST SEQUENCE COMPLETE

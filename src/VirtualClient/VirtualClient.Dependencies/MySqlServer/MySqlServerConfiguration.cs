@@ -313,7 +313,7 @@ namespace VirtualClient.Dependencies.MySqlServer
                 }
             }
 
-            return diskPaths;
+            return diskPaths.TrimEnd(';');
         }
         
         private async Task<string> GetMySQLInMemoryCapacityAsync(CancellationToken cancellationToken)

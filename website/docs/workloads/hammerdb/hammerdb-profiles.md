@@ -46,21 +46,51 @@ idea. The name of the client must match the name of the system or the value of t
 
 ## Configuring the TPCC Scenario
 
-A tuned scenario may be selected by denoting it in the HammerDBExecutor.
+The TPCC scenario uses HammerDB to create and populate a PostgreSQL database with transactional workload patterns. Database creation and population can only be performed on the Server side.
+
+**Important**: HammerDB will automatically distribute and populate the database tables across the target disks you specify. Make sure to provide the `DiskFilter` parameter to point to your target disks for optimal performance.
 
 ``` bash
 {
   "Type": "HammerDBExecutor",
   "Parameters": 
   {
-    "Scenario": "CreatePostgreSQLDatabase",
+    "Scenario": "PopulatePostgreSQLDatabase",
+    "Action": "PopulateTables",
     "DatabaseName": "$.Parameters.DatabaseName",
+    "DiskFilter": "$.Parameters.DiskFilter",
     "Workload": "tpcc",
     "SQLServer": "postgresql",
     "PackageName": "hammerdb",
-    "VirtualUsers": "1",
-    "WarehouseCount": "1",
+    "VirtualUsers": "{calculate({LogicalCoreCount})}",
+    "WarehouseCount": "{calculate({SystemMemoryMegabytes} * 15 / 800)}",
     "Port": "$.Parameters.Port",
+    "Role": "Server"
+  }
+},
+```
+
+## Configuring the TPCH Scenario
+
+The TPCH scenario uses HammerDB to create and populate a PostgreSQL database with analytical workload patterns (decision support queries). Like TPCC, database creation and population can only be performed on the Server side.
+
+**Important**: HammerDB will automatically distribute and populate the database tables across the target disks you specify. Make sure to provide the `DiskFilter` parameter to point to your target disks for optimal performance.
+
+``` bash
+{
+  "Type": "HammerDBExecutor",
+  "Parameters": 
+  {
+    "Scenario": "PopulatePostgreSQLDatabase",
+    "DatabaseName": "$.Parameters.DatabaseName",
+    "DiskFilter": "$.Parameters.DiskFilter",
+    "Workload": "tpch",
+    "SQLServer": "postgresql",
+    "PackageName": "hammerdb",
+    "VirtualUsers": "{calculate({LogicalCoreCount})}",
+    "ScaleFactor": "10",
+    "Port": "$.Parameters.Port",
+    "Duration": "$.Parameters.Duration",
     "Role": "Server"
   }
 },
@@ -79,60 +109,24 @@ There are a lot of moving parts to this workload that allows for both out-of-box
 
 ### Actions
 
-* **HammerDBExecutor**: Populates the PostgreSQL database using the HammerDB tool. The below setup creates the database with 1 warehouse, then distributes the the various tables onto different data disks mounted on the system, as it copies the tables and their schemas into new tables. From there, HammerDB can add additional warehouses to further populate the database tables. Once populated, VC persists the state, and it will not drop or recreate tables.
+* **HammerDBExecutor**: Creates and populates the PostgreSQL database using the HammerDB tool. HammerDB automatically handles the distribution of database tables across the target disks specified by the `DiskFilter` parameter. The database creation and population must be performed on the Server side. Once populated, VC persists the state, and it will not drop or recreate tables. The workload supports both TPCC (transactional) and TPCH (analytical) scenarios.
 
-``` bash
-{
-  "Type": "HammerDBExecutor",
-  "Parameters": 
-  {
-    "Scenario": "CreatePostgreSQLDatabase",
-    "DatabaseName": "$.Parameters.DatabaseName",
-    "Workload": "tpcc",
-    "SQLServer": "postgresql",
-    "PackageName": "hammerdb",
-    "VirtualUsers": "1",
-    "WarehouseCount": "1",
-    "Port": "$.Parameters.Port",
-    "Role": "Server"
-  }
-},
-{
-  "Type": "PostgreSQLServerConfiguration",
-  "Parameters": 
-  {
-    "Scenario": "DistributePostgreSQLDatabase",
-    "Action": "DistributeDatabase",
-    "DatabaseName": "$.Parameters.DatabaseName",
-    "PackageName": "postgresql",
-    "Port": "$.Parameters.Port",
-    "Role": "Server"
-  }
-},
-{
-  "Type": "HammerDBExecutor",
-  "Parameters": 
-  {
-    "Scenario": "PopulatePostgreSQLDatabase",
-    "DatabaseName": "$.Parameters.DatabaseName",
-    "Workload": "tpcc",
-    "SQLServer": "postgresql",
-    "PackageName": "hammerdb",
-    "VirtualUsers": "$.Parameters.VirtualUsers",
-    "WarehouseCount": "$.Parameters.WarehouseCount",
-    "Port": "$.Parameters.Port",
-    "Role": "Server"
-  }
-},
-```
+* **HammerDBServerExecutor**: Manages the server-side execution of HammerDB workloads, handling the database operations and serving client requests.
+
+* **HammerDBClientExecutor**: Runs the workload from the client-side, generating load against the server database. This executor connects to the server and executes the specified workload (TPCC or TPCH) scenarios.
 
 * **SysbenchClientExecutor**: Runs a given workload from the client-side on the server database. Note that this action can run with different arguments from HammerDBExecutor. VC does not support dropping and recreating a new database or table configuration within the same profile or system.
 * **SysbenchServerExecutor**: Sets the server online for client interaction.
 
 ## PERF-POSTGRESQL-HAMMERDB-TPCC.json
-Runs the Postgresql workload against to HammerDB tool which generate various network traffic patterns against a Postgresql server. Although this is the default client workload.
+Runs the PostgreSQL workload against the HammerDB tool which generates various transactional traffic patterns against a PostgreSQL server using the TPCC (Transaction Processing Performance Council) benchmark.
 
-* [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-POSTGRESQL-HAMMERDB-TPCC.json) 
+* [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-POSTGRESQL-HAMMERDB-TPCC.json)
+
+## PERF-POSTGRESQL-HAMMERDB-TPCH.json
+Runs the PostgreSQL workload against the HammerDB tool which generates analytical workload patterns against a PostgreSQL server using the TPCH (Transaction Processing Performance Council Benchmark H) for decision support scenarios.
+
+* [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-POSTGRESQL-HAMMERDB-TPCH.json) 
 
 * **Supported Platform/Architectures**
   * linux-x64
@@ -155,14 +149,16 @@ Runs the Postgresql workload against to HammerDB tool which generate various net
 
   | Parameter                 | Purpose                                                                         | Default value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
-  | DatabaseName     | Optional. Provide the name of the database under test. | "tpcc" |
+  | DatabaseName     | Optional. Provide the name of the database under test. | "hammerdb_tpcc" or "hammerdb_tpch" |
   | Port     | Optional. Provide the port number that PostgreSQL server will listen on. | 5432 |
-  | Workload              | Required. Normally "tpcc"                                          | N/A          |
+  | DiskFilter     | Optional. Filter to specify target disks for database distribution. | "osdisk:false&sizegreaterthan:256g" |
+  | Duration     | Optional. Duration for the workload execution. | "00:20:00" |
+  | Workload              | Required. Either "tpcc" or "tpch"                                          | N/A          |
   | SQLServer              | Required. Normally "postgresql"                                          | N/A          |
-  | Port              | Required. Normally "5432"                                          | N/A          |
-  | VirtualUsers              | Optional. Number of virtual users (threads) for the TPCC workload setup           |   vCPU    |
-  | WarehouseCount             | Optional. Number of warehouses created.                         |  mem*15/800    |
-  | SharedMemoryBuffer             | Optional. Number of warehouses created.                         |  mem*85/100   |
+  | VirtualUsers              | Optional. Number of virtual users (threads) for the workload setup           |   vCPU    |
+  | WarehouseCount             | Optional. Number of warehouses created (TPCC only).                         |  mem*15/800    |
+  | ScaleFactor             | Optional. Scale factor for TPCH workload.                         |  10    |
+  | SharedMemoryBuffer             | Optional. PostgreSQL shared memory buffer size.                         |  mem*85/100   |
 
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile actions. These timings can be used to determine minimum required runtimes for the Virtual Client in order to get results. These are often estimates based on the

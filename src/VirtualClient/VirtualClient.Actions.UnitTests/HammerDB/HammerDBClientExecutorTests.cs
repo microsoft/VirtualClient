@@ -44,22 +44,27 @@ namespace VirtualClient.Actions
         {
             this.SetupDefaultBehavior(platform, architecture);
 
-            string tempPackagePath;
+            List<string> expectedCommands = new List<string>();
 
-            if (platform == PlatformID.Win32NT)
+            if (platform == PlatformID.Unix)
             {
-                tempPackagePath = this.mockPackagePath.Replace(@"\", @"\\");
+                expectedCommands.Add($"sudo python3 {this.fixture.PlatformSpecifics.Combine(this.mockPackagePath, "configure-workload-generator.py")} --workload tpcc --sqlServer postgresql --port 5432 --virtualUsers 1 --password [A-Za-z0-9+/=]+ --dbName hammerdbtest --hostIPAddress [0-9.]+ --warehouseCount 1 --duration 1");
+                expectedCommands.Add($"python3 {this.fixture.PlatformSpecifics.Combine(this.mockPackagePath, "run-workload.py")} --runTransactionsTCLFilePath runTransactions.tcl");
             }
             else
             {
-                tempPackagePath = this.mockPackagePath;
+                expectedCommands.Add($"python3 {this.fixture.PlatformSpecifics.Combine(this.mockPackagePath, "configure-workload-generator.py")} --workload tpcc --sqlServer postgresql --port 5432 --virtualUsers 1 --password [A-Za-z0-9+/=]+ --dbName hammerdbtest --hostIPAddress [0-9.]+ --warehouseCount 1 --duration 1");
+                expectedCommands.Add($"python3 {this.fixture.PlatformSpecifics.Combine(this.mockPackagePath, "run-workload.py")} --runTransactionsTCLFilePath runTransactions.tcl");
             }
 
-            string[] expectedCommands =
+            if (this.fixture.Platform == PlatformID.Win32NT)
             {
-                $"python3 {tempPackagePath}/configure-workload-generator.py --workload tpcc --sqlServer postgresql --port 5432 --virtualUsers 1 --warehouseCount 1 --password [A-Za-z0-9+/=]+ --dbName hammerdbtest --hostIPAddress [0-9.]+",
-                $"python3 {tempPackagePath}/run-workload.py --runTransactionsTCLFilePath runTransactions.tcl"
-        };
+                for (int i = 0; i < expectedCommands.Count; i++)
+                {
+                    expectedCommands[i] = expectedCommands[i].Replace(@"\", @"\\");
+                }
+            }
+
             int commandNumber = 0;
             this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
@@ -107,6 +112,7 @@ namespace VirtualClient.Actions
                 { nameof(HammerDBClientExecutor.SQLServer), "postgresql" },
                 { nameof(HammerDBClientExecutor.VirtualUsers), "1"},
                 { nameof(HammerDBClientExecutor.WarehouseCount), "1"},
+                { nameof(HammerDBClientExecutor.Duration), "00:01:00" },
                 { "ServerIpAddress", "localhost"},
                 { nameof(HammerDBClientExecutor.PackageName), "hammerdb" },
             };
@@ -138,6 +144,10 @@ namespace VirtualClient.Actions
 
                 this.fixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
                     .ReturnsAsync(new CpuInfo("cpu", "description", 4, 8, 4, 4, false));
+
+                IEnumerable<Disk> disks;
+                disks = this.fixture.CreateDisks(platform, true);
+                this.fixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>())).ReturnsAsync(() => disks);
             }
         }
 

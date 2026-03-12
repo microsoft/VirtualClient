@@ -26,6 +26,7 @@ namespace VirtualClient.Actions
     public class HammerDBExecutor : VirtualClientComponent
     {
         private readonly IStateManager stateManager;
+        private static readonly List<int> Factors = new List<int> { 1, 10, 30, 100, 300, 1000, 3000, 10000, 30000, 100000 };
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HammerDBExecutor"/> class.
@@ -137,14 +138,25 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Number of threads.
+        /// Disk filter specified
         /// </summary>
-        public int? Threads
+        public string DiskFilter
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(HammerDBClientExecutor.Threads), out IConvertible threads);
-                return threads?.ToInt32(CultureInfo.InvariantCulture);
+                // and 256G
+                return this.Parameters.GetValue<string>(nameof(this.DiskFilter), "osdisk:false&sizegreaterthan:256g");
+            }
+        }
+
+        /// <summary>
+        /// Workload duration.
+        /// </summary>
+        public TimeSpan Duration
+        {
+            get
+            {
+                return this.Parameters.GetTimeSpanValue(nameof(this.Duration));
             }
         }
 
@@ -157,6 +169,19 @@ namespace VirtualClient.Actions
             {
                 this.Parameters.TryGetValue(nameof(HammerDBClientExecutor.Workload), out IConvertible workload);
                 return workload?.ToString();
+            }
+        }
+
+        /// <summary>
+        /// The scale factor option passed to HammerDB (TPCH only).
+        /// 1 = 1GB, 10 = 10GB, etc.
+        /// </summary>
+        public string ScaleFactor
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(HammerDBClientExecutor.ScaleFactor), out IConvertible scaleFactor);
+                return scaleFactor?.ToString();
             }
         }
 
@@ -194,6 +219,11 @@ namespace VirtualClient.Actions
         protected string HammerDBPackagePath { get; set; }
 
         /// <summary>
+        /// The true HammerDB scenario arguments used to prepare the database.
+        /// </summary>
+        protected string HammerDBScenarioArguments { get; set; }
+
+        /// <summary>
         /// An interface that can be used to communicate with the underlying system.
         /// </summary>
         protected ISystemManagement SystemManager => this.Dependencies.GetService<ISystemManagement>();
@@ -218,11 +248,8 @@ namespace VirtualClient.Actions
                     }
                 });
 
-                if (this.Action == ConfigurationAction.PopulateTables)
-                {
-                    state.DatabasePopulated = true;
-                    await this.stateManager.SaveStateAsync<HammerDBState>(nameof(HammerDBState), state, cancellationToken);
-                }
+                state.DatabasePopulated = true;
+                await this.stateManager.SaveStateAsync<HammerDBState>(nameof(HammerDBState), state, cancellationToken);
             }
         }
 
@@ -314,9 +341,8 @@ namespace VirtualClient.Actions
         private async Task PrepareSQLDatabase(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             string command = "python3";
-
-            string arguments = $"{this.HammerDBPackagePath}/populate-database.py --createDBTCLPath {this.CreateDBTclName}";
-
+            string arguments = $"{this.PlatformSpecifics.Combine(this.HammerDBPackagePath, "populate-database.py")} --createDBTCLPath {this.CreateDBTclName}";
+            
             using (IProcessProxy process = await this.ExecuteCommandAsync(
                 command,
                 arguments,
@@ -334,27 +360,15 @@ namespace VirtualClient.Actions
 
         private async Task ConfigureCreateHammerDBFile(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string warehouseCount = this.WarehouseCount;
-            string virtualUsers = this.VirtualUsers;
-
-            // For CreateTables action, we set warehouse count and virtual users to 1
-            // Then will run populate again to fill up the tables in entirety.
-            if (this.Action == ConfigurationAction.CreateTables)
-            {
-                warehouseCount = "1";
-                virtualUsers = "1";
-            }
-
-            string command = $"python3";
-            string arguments = $"{this.HammerDBPackagePath}/configure-workload-generator.py --workload {this.Workload} --sqlServer {this.SQLServer} --port {this.Port}" +
-                    $" --virtualUsers {virtualUsers} --warehouseCount {warehouseCount} --password {this.SuperUserPassword} --dbName {this.DatabaseName} --hostIPAddress {this.ServerIpAddress}";
+            await this.GenerateCommandLineArguments(cancellationToken);
 
             using (IProcessProxy process = await this.ExecuteCommandAsync(
-                command,
-                arguments,
+                $"python3",
+                this.HammerDBScenarioArguments,
                 this.HammerDBPackagePath,
                 telemetryContext,
-                cancellationToken))
+                cancellationToken,
+                runElevated: true))
             {
                 if (!cancellationToken.IsCancellationRequested)
                 {
@@ -362,6 +376,81 @@ namespace VirtualClient.Actions
                     process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
                 }
             }
+        }
+
+        private async Task GenerateCommandLineArguments(CancellationToken cancellationToken)
+        {
+            string arguments = $"{this.PlatformSpecifics.Combine(this.HammerDBPackagePath, "configure-workload-generator.py")} --workload {this.Workload} --sqlServer {this.SQLServer} --port {this.Port}" +
+                    $" --virtualUsers {this.VirtualUsers} --password {this.SuperUserPassword} --dbName {this.DatabaseName} --hostIPAddress {this.ServerIpAddress}";
+
+            if (this.IsMultiRoleLayout() && this.GetLayoutClientInstance().Role == ClientRole.Server)
+            {
+                string directories = await this.GetDataDirectoriesAsync(cancellationToken);
+                arguments = $"{arguments} --directories {directories}";
+            }
+
+            if (this.Workload.Equals("tpcc", StringComparison.OrdinalIgnoreCase))
+            {
+                arguments = $"{arguments} --warehouseCount {this.WarehouseCount} --duration {this.Duration.TotalMinutes}";
+            }
+            else if (this.Workload.Equals("tpch", StringComparison.OrdinalIgnoreCase))
+            {
+                if (!Factors.Contains(Convert.ToInt32(this.ScaleFactor)))
+                {
+                    throw new WorkloadException(
+                        $"The scale factor '{this.ScaleFactor}' is not supported. Supported scale factors include: " +
+                        $"{string.Join(", ", Factors)}",
+                        ErrorReason.InvalidProfileDefinition);
+                }
+
+                arguments = $"{arguments} --scaleFactor {this.ScaleFactor} --duration {Math.Round(this.Duration.TotalMinutes / 1.25)}";
+            }
+
+            this.HammerDBScenarioArguments = arguments;
+        }
+
+        private async Task<string> GetDataDirectoriesAsync(CancellationToken cancellationToken)
+        {
+            string diskPaths = string.Empty;
+
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                IEnumerable<Disk> disks = await this.SystemManager.DiskManager.GetDisksAsync(cancellationToken)
+                        .ConfigureAwait(false);
+
+                if (disks?.Any() != true)
+                {
+                    throw new WorkloadException(
+                        "Unexpected scenario. The disks defined for the system could not be properly enumerated.",
+                        ErrorReason.WorkloadUnexpectedAnomaly);
+                }
+
+                IEnumerable<Disk> disksToTest = DiskFilters.FilterDisks(disks, this.DiskFilter, this.Platform).ToList();
+
+                if (disksToTest?.Any() != true)
+                {
+                    throw new WorkloadException(
+                        "Expected disks to test not found. Given the parameters defined for the profile action/step or those passed " +
+                        "in on the command line, the requisite disks do not exist on the system or could not be identified based on the properties " +
+                        "of the existing disks.",
+                        ErrorReason.DependencyNotFound);
+                }
+
+                foreach (Disk disk in disksToTest)
+                {
+                    string path = this.Combine(disk.GetPreferredAccessPath(this.Platform), $"{this.SQLServer.ToLower()}");
+
+                    // Create the directory if it doesn't exist
+                    if (!this.SystemManager.FileSystem.Directory.Exists(path))
+                    {
+                        this.SystemManager.FileSystem.Directory.CreateDirectory(path);
+                    }
+
+                    diskPaths += $"{path}:";
+                }
+            }
+
+            return diskPaths;
         }
 
         private static Task OpenFirewallPortsAsync(int port, IFirewallManager firewallManager, CancellationToken cancellationToken)
@@ -445,22 +534,6 @@ namespace VirtualClient.Actions
                     this.Properties[nameof(HammerDBState.DatabasePopulated)] = value;
                 }
             }
-        }
-
-        /// <summary>
-        /// Supported HammerDB Configuration actions.
-        /// </summary>
-        internal class ConfigurationAction
-        {
-            /// <summary>
-            /// Initializes the tables on the database.
-            /// </summary>
-            public const string CreateTables = nameof(CreateTables);
-
-            /// <summary>
-            /// Populates Database on server.
-            /// </summary>
-            public const string PopulateTables = nameof(PopulateTables);
         }
     }
 }
