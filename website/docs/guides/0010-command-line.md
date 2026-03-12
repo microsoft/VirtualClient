@@ -5,7 +5,6 @@ The following sections describe the command line options available on the Virtua
   * [default](#default-command)
   * [api](#api)
   * [bootstrap](#bootstrap)
-  * [clean](#clean)
   * [convert](#convert)
   * [get-token](#get-token)
   * [upload-files](#upload-files)
