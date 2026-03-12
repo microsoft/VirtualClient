@@ -449,8 +449,8 @@ namespace VirtualClient
         [TestCase("--exit-wait", "00:10:00")]
         [TestCase("--iterations", "3")]
         [TestCase("--key-vault", "https://anyvault.vault.windows.net")]
-        [TestCase("--layout-path", "C:\\any\\path\\to\\layout.json")]
-        [TestCase("--layout", "C:\\any\\path\\to\\layout.json")]
+        [TestCase("--layout-path", "client01,10.1.0.1,Client;client02,10.1.0.2,Server")]
+        [TestCase("--layout", "client01,10.1.0.1,Client;client02,10.1.0.2,Server")]
         [TestCase("--logger", "file")]
         [TestCase("--log-dir", "C:\\any\\path\\to\\logs")]
         [TestCase("--log-level", "2")]
@@ -703,7 +703,7 @@ namespace VirtualClient
                     "--package", "anypackage.1.0.0.zip",
                     "--package-store", "https://anystorageaccount.blob.core.windows.net/?sv=2020-08-04&ss=b",
                     "--iterations", "1",
-                    "--layout-path", "/home/user/any/layout.json"
+                    "--layout", "client01,10.1.2.3,Client;client02,10.1.2.4,Server"
                 };
 
                 Assert.DoesNotThrow(() =>

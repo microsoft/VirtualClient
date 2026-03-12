@@ -9,6 +9,7 @@ namespace VirtualClient
     using System.CommandLine.Builder;
     using System.CommandLine.Parsing;
     using System.IO;
+    using System.IO.Abstractions;
     using System.Linq;
     using System.Security;
     using System.Security.Cryptography;
@@ -17,6 +18,8 @@ namespace VirtualClient
     using Microsoft.Extensions.Logging;
     using Moq;
     using NUnit.Framework;
+    using VirtualClient.Common.Contracts;
+    using VirtualClient.Contracts;
     using VirtualClient.Contracts.Extensibility;
     using VirtualClient.Identity;
 
@@ -813,11 +816,69 @@ namespace VirtualClient
         [Test]
         [TestCase("--layout-path")]
         [TestCase("--layout")]
-        public void LayoutPathOptionSupportsExpectedAliases(string alias)
+        public void LayoutOptionSupportsExpectedAliases(string alias)
         {
-            Option option = OptionFactory.CreateLayoutPathOption();
+            Mock<IFileSystem> mockFileSystem = new Mock<IFileSystem>();
+            EnvironmentLayout expectedLayout = new EnvironmentLayout(new List<ClientInstance>
+            {
+                new ClientInstance("client01", "10.1.2.3", "Client"),
+                new ClientInstance("client02", "10.1.2.5", "Server"),
+            });
+
+            mockFileSystem.Setup(fs => fs.File.Exists(It.IsAny<string>())).Returns(true);
+            mockFileSystem.Setup(fs => fs.File.ReadAllText(It.IsAny<string>())).Returns(expectedLayout.ToJson());
+
+            Option option = OptionFactory.CreateLayoutOption(fileSystem: mockFileSystem.Object);
             ParseResult result = option.Parse($"{alias}=C:\\any\\path");
             Assert.IsFalse(result.Errors.Any());
+        }
+
+        [Test]
+        public void LayoutOptionSupportsInlineDefinitions()
+        {
+            Option option = OptionFactory.CreateLayoutOption();
+            ParseResult result = option.Parse($"--layout=client01,10.1.0.1,Client;client02,10.1.0.2,Server");
+            Assert.IsFalse(result.Errors.Any());
+
+            EnvironmentLayout layout = result.ValueForOption("--layout") as EnvironmentLayout;
+
+            Assert.IsNotNull(layout);
+            Assert.IsTrue(layout.Clients.Count() == 2);
+            Assert.AreEqual("client01", layout.Clients.ElementAt(0).Name);
+            Assert.AreEqual("10.1.0.1", layout.Clients.ElementAt(0).IPAddress);
+            Assert.AreEqual("Client", layout.Clients.ElementAt(0).Role);
+            Assert.AreEqual("client02", layout.Clients.ElementAt(1).Name);
+            Assert.AreEqual("10.1.0.2", layout.Clients.ElementAt(1).IPAddress);
+            Assert.AreEqual("Server", layout.Clients.ElementAt(1).Role);
+        }
+
+        [Test]
+        public void LayoutOptionSupportsPathDefinitions()
+        {
+            Mock<IFileSystem> mockFileSystem = new Mock<IFileSystem>();
+            EnvironmentLayout expectedLayout = new EnvironmentLayout(new List<ClientInstance>
+            {
+                new ClientInstance("client01", "10.1.2.3", "Client"),
+                new ClientInstance("client02", "10.1.2.5", "Server"),
+            });
+
+            mockFileSystem.Setup(fs => fs.File.Exists(It.IsAny<string>())).Returns(true);
+            mockFileSystem.Setup(fs => fs.File.ReadAllText(It.IsAny<string>())).Returns(expectedLayout.ToJson());
+
+            Option option = OptionFactory.CreateLayoutOption(fileSystem: mockFileSystem.Object);
+            ParseResult result = option.Parse($"--layout-path=/any/path/to/layout.json");
+            Assert.IsFalse(result.Errors.Any());
+
+            EnvironmentLayout layout = result.ValueForOption("--layout-path") as EnvironmentLayout;
+
+            Assert.IsNotNull(layout);
+            Assert.IsTrue(layout.Clients.Count() == 2);
+            Assert.AreEqual("client01", layout.Clients.ElementAt(0).Name);
+            Assert.AreEqual("10.1.2.3", layout.Clients.ElementAt(0).IPAddress);
+            Assert.AreEqual("Client", layout.Clients.ElementAt(0).Role);
+            Assert.AreEqual("client02", layout.Clients.ElementAt(1).Name);
+            Assert.AreEqual("10.1.2.5", layout.Clients.ElementAt(1).IPAddress);
+            Assert.AreEqual("Server", layout.Clients.ElementAt(1).Role);
         }
 
         [Test]

@@ -12,9 +12,11 @@ namespace VirtualClient
     using System.IO.Abstractions;
     using System.Linq;
     using System.Net;
+    using System.Runtime.InteropServices;
     using System.Text.RegularExpressions;
     using Microsoft.CodeAnalysis;
     using Microsoft.Extensions.Logging;
+    using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Contracts;
     using VirtualClient.Contracts.Extensibility;
@@ -29,6 +31,7 @@ namespace VirtualClient
         internal const string HtmlQuote = "&quot;";
         private static readonly ICertificateManager defaultCertificateManager = new CertificateManager();
         private static readonly IFileSystem defaultFileSystem = new FileSystem();
+        private static readonly PlatformSpecifics defaultPlatformSpecifics = new PlatformSpecifics(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture);
         private static readonly char[] argumentTrimChars = new char[] { '\'', '"', ' ' };
 
         /// <summary>
@@ -671,21 +674,28 @@ namespace VirtualClient
         }
 
         /// <summary>
-        /// Command line option defines the path to the environment layout file.
+        /// Command line option defines the environment layout or a path to the layout file.
         /// </summary>
         /// <param name="required">Sets this option as required.</param>
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
-        public static Option CreateLayoutPathOption(bool required = true, object defaultValue = null)
+        /// <param name="fileSystem">Optional parameter to use to validate file system paths.</param>
+        /// <param name="platformSpecifics">Optional parameter defines the certificate manager to use for accessing certificates on the system.</param>
+        public static Option CreateLayoutOption(bool required = true, object defaultValue = null, IFileSystem fileSystem = null, PlatformSpecifics platformSpecifics = null)
         {
             // Note:
             // Only the first 3 of these will display in help output (i.e. --help).
-            Option<string> option = new Option<string>(new string[] { "--layout", "--layout-path",  })
+            Option<EnvironmentLayout> option = new Option<EnvironmentLayout>(
+                new string[] { "--layout", "--layout-path",  },
+                parseArgument: result => OptionFactory.ParseEnvironmentLayout(
+                    result, 
+                    fileSystem ?? OptionFactory.defaultFileSystem, 
+                    platformSpecifics ?? OptionFactory.defaultPlatformSpecifics))
             {
-                Name = "LayoutPath",
-                Description = "The path to the environment layout .json file required for client/server operations. The contents of this " +
-                    "file are used by the self-hosted API service for example to enable individual instances of the application running on different " +
-                    "systems to synchronize with each other.",
-                ArgumentHelpName = "path",
+                Name = "Layout",
+                Description = 
+                    "An environment layout definition or path to a *.json file defining the set of systems associated with client/server operations. This definition " +
+                    "enable individual instances of the application running on different systems to synchronize with each other.",
+                ArgumentHelpName = "definition",
                 AllowMultipleArgumentsPerToken = false
             };
 
@@ -1680,6 +1690,65 @@ namespace VirtualClient
             }
 
             return store;
+        }
+
+        private static EnvironmentLayout ParseEnvironmentLayout(ArgumentResult parsedResult, IFileSystem fileSystem, PlatformSpecifics platformSpecifics)
+        {
+            EnvironmentLayout layout = null;
+
+            // A layout can be a path to a file or an inline definition:
+            //
+            // e.g. inline
+            // --layout "client01,10.1.0.1,Client;client02,10.1.0.2,Server"
+            //
+            // e.g. file path
+            // --layout-path="C:\Users\Any\VirtualClient\layout.json"
+            //
+            string layoutValue = parsedResult.Tokens?.FirstOrDefault()?.Value;
+            if (!string.IsNullOrWhiteSpace(layoutValue) && Regex.IsMatch(layoutValue, "[,;]+"))
+            {
+                List<ClientInstance> clientsInstances = new List<ClientInstance>();
+                string[] clients = layoutValue.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+                if (clients?.Any() == true)
+                {
+                    foreach (string client in clients)
+                    {
+                        // e.g.
+                        // client01,10.1.0.1,Client
+                        // client02,10.1.0.2,Server
+                        string[] clientParts = client.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+                        if (clientParts?.Length == 3)
+                        {
+                            clientsInstances.Add(new ClientInstance(clientParts[0], ipAddress: clientParts[1], role:clientParts[2]));
+                        }
+                    }
+                }
+
+                if (!clientsInstances.Any())
+                {
+                    throw new ArgumentException(
+                        "Invalid layout definition. The environment layout definition provided is not in a valid format: " +
+                        "{client_name},{ip_address},{role};{client_name},{ip_address},{role} (e.g. client01,10.1.0.1,Client;client02,10.1.0.2,Server).");
+                }
+
+                layout = new EnvironmentLayout(clientsInstances);
+            }
+            else
+            {
+                string layoutFullPath = platformSpecifics.StandardizePath(Path.GetFullPath(layoutValue));
+
+                if (!fileSystem.File.Exists(layoutFullPath))
+                {
+                    throw new ArgumentException($"Invalid path specified. An environment layout file does not exist at path '{layoutFullPath}'.");
+                }
+
+                string layoutContent = RetryPolicies.Synchronous.FileOperations.Execute(() => fileSystem.File.ReadAllText(layoutFullPath));
+                layout = layoutContent.FromJson<EnvironmentLayout>();
+            }
+
+            return layout;
         }
 
         private static DependencyStore ParseKeyVaultStore(ArgumentResult parsedResult, string storeName, ICertificateManager certificateManager, IFileSystem fileSystem)

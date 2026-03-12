@@ -80,9 +80,9 @@ namespace VirtualClient
         public bool InstallDependencies { get; set; }
 
         /// <summary>
-        /// The path to the environment layout .json file.
+        /// The environment layout definition.
         /// </summary>
-        public string LayoutPath { get; set; }
+        public EnvironmentLayout Layout { get; set; }
 
         /// <summary>
         /// A seed that can be used to guarantee identical randomization bases for workloads that
@@ -533,42 +533,6 @@ namespace VirtualClient
         }
 
         /// <summary>
-        /// Loads/Reads the environment layout file provided to the Virtual Client on the command line.
-        /// </summary>
-        protected async Task<EnvironmentLayout> ReadEnvironmentLayoutAsync(IServiceCollection dependencies, CancellationToken cancellationToken)
-        {
-            EnvironmentLayout layout = null;
-
-            if (!cancellationToken.IsCancellationRequested)
-            {
-                if (!string.IsNullOrWhiteSpace(this.LayoutPath))
-                {
-                    ISystemManagement systemManagement = dependencies.GetService<ISystemManagement>();
-                    ILogger logger = dependencies.GetService<ILogger>();
-
-                    string layoutFullPath = systemManagement.PlatformSpecifics.StandardizePath(Path.GetFullPath(this.LayoutPath));
-
-                    if (!systemManagement.FileSystem.File.Exists(layoutFullPath))
-                    {
-                        throw new StartupException(
-                            $"Invalid path specified. An environment layout file does not exist at path '{layoutFullPath}'.",
-                            ErrorReason.LayoutInvalid);
-                    }
-
-                    string layoutContent = await RetryPolicies.FileOperations
-                        .ExecuteAsync(() =>
-                        {
-                             return systemManagement.FileSystem.File.ReadAllTextAsync(layoutFullPath);
-                        });
-
-                    layout = layoutContent.FromJson<EnvironmentLayout>();
-                }
-            }
-
-            return layout;
-        }
-
-        /// <summary>
         /// Loads/reads the execution profile file provided to the Virtual Client on the command line.
         /// </summary>
         protected async Task<ExecutionProfile> ReadExecutionProfileAsync(string path, IServiceCollection dependencies, CancellationToken cancellationToken)
@@ -705,7 +669,7 @@ namespace VirtualClient
                 new Dictionary<string, object>
                 {
                     { "exitWait", this.ExitWait },
-                    { "layout", this.LayoutPath },
+                    { "layout", this.Layout.ToString() },
                     { "logToFile", this.LogToFile },
                     { "iterations", this.Iterations?.ProfileIterations },
                     { "profiles", string.Join(",", profiles.Select(p => Path.GetFileName(p))) },
@@ -755,16 +719,10 @@ namespace VirtualClient
 
             this.SetGlobalTelemetryProperties(profile);
 
-            // The environment layout provides information for other Virtual Client instances
-            // that may be a part of the workload execution. This enables support for client/server
-            // workload requirements.
-            EnvironmentLayout environmentLayout = await this.ReadEnvironmentLayoutAsync(dependencies, cancellationToken)
-                .ConfigureAwait(false);
-
-            if (environmentLayout != null)
+            if (this.Layout != null)
             {
-                dependencies.AddSingleton<EnvironmentLayout>(environmentLayout);
-                telemetryContext.AddContext("layout", environmentLayout);
+                dependencies.AddSingleton<EnvironmentLayout>(this.Layout);
+                telemetryContext.AddContext("layout", this.Layout);
             }
 
             logger.LogMessage($"ProfileExecution.Begin", telemetryContext);
@@ -846,16 +804,10 @@ namespace VirtualClient
 
             this.SetGlobalTelemetryProperties(profile);
 
-            // The environment layout provides information for other Virtual Client instances
-            // that may be a part of the workload execution. This enables support for client/server
-            // workload requirements.
-            EnvironmentLayout environmentLayout = await this.ReadEnvironmentLayoutAsync(dependencies, cancellationToken)
-                .ConfigureAwait(false);
-
-            if (environmentLayout != null)
+            if (this.Layout != null)
             {
-                dependencies.AddSingleton<EnvironmentLayout>(environmentLayout);
-                telemetryContext.AddContext("layout", environmentLayout);
+                dependencies.AddSingleton<EnvironmentLayout>(this.Layout);
+                telemetryContext.AddContext("layout", this.Layout);
             }
 
             logger.LogMessage($"ProfileExecution.Begin", telemetryContext);
@@ -956,10 +908,9 @@ namespace VirtualClient
             ConsoleLogger.Default.LogMessage($"State Directory: {platformSpecifics.StateDirectory}", telemetryContext);
             ConsoleLogger.Default.LogMessage($"Temp Directory: {platformSpecifics.TempDirectory}", telemetryContext);
 
-            if (!string.IsNullOrWhiteSpace(this.LayoutPath))
+            if (this.Layout != null)
             {
-                string layoutFullPath = platformSpecifics.StandardizePath(Path.GetFullPath(this.LayoutPath));
-                ConsoleLogger.Default.LogMessage($"Environment Layout: {layoutFullPath}", telemetryContext);
+                ConsoleLogger.Default.LogMessage($"Environment Layout: {this.Layout}", telemetryContext);
             }
 
             if (this.Timeout?.Duration != null)

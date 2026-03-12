@@ -105,7 +105,7 @@ namespace VirtualClient
                 OptionFactory.CreateKeyVaultStoreOption(required: false),
 
                 // --layout-path
-                OptionFactory.CreateLayoutPathOption(required: false),
+                OptionFactory.CreateLayoutOption(required: false),
 
                 // --log-dir
                 OptionFactory.CreateLogDirectoryOption(required: false),
@@ -344,7 +344,7 @@ namespace VirtualClient
                 OptionFactory.CreateIterationsOption(required: false),
 
                 // --layout-path (for integration only. not used.)
-                OptionFactory.CreateLayoutPathOption(required: false),
+                OptionFactory.CreateLayoutOption(required: false),
 
                 // --log-dir
                 OptionFactory.CreateLogDirectoryOption(required: false),
