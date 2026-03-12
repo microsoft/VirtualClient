@@ -1,0 +1,22 @@
+{
+    "Description": "Executes a command on a target system via SSH.",
+    "Parameters": {
+        "Command": null,
+        "Scenario": "ExecuteSSH",
+        "LogFileName": null,
+        "LogFolderName": null,
+        "LogTimestamped": true
+    },
+    "Actions": [
+        {
+            "Type": "ExecuteSshCommand",
+            "Parameters": {
+                "Scenario": "$.Parameters.Scenario",
+                "Command": "$.Parameters.Command",
+                "LogFileName": "$.Parameters.LogFileName",
+                "LogFolderName": "$.Parameters.LogFolderName",
+                "LogTimestamped": "$.Parameters.LogTimestamped"
+            }
+        }
+    ]
+}

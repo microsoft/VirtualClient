@@ -5,7 +5,6 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.IO.Abstractions;
     using System.Threading;
     using System.Threading.Tasks;
@@ -19,6 +18,7 @@ namespace VirtualClient.Actions
     /// An example Virtual Client component responsible for executing a workload or a test on
     /// the system.
     /// </summary>
+    [SupportedPlatforms("linux-arm64,linux-x64,win-arm64,win-x64")]
     public class ExampleWorkloadClientExecutor : VirtualClientMultiRoleComponent
     {
         private IFileSystem fileSystem;

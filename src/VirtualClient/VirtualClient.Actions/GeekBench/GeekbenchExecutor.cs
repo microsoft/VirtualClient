@@ -5,10 +5,8 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.IO;
     using System.IO.Abstractions;
-    using System.Linq;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
@@ -24,6 +22,7 @@ namespace VirtualClient.Actions
     /// <summary>
     /// The Geekbench executor.
     /// </summary>
+    [SupportedPlatforms("linux-arm64,linux-x64,win-arm64,win-x64")]
     public class GeekbenchExecutor : VirtualClientComponent
     {
         private IFileSystem fileSystem;

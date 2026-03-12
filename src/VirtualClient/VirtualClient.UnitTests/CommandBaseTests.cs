@@ -24,6 +24,7 @@ namespace VirtualClient.UnitTests
     using VirtualClient.TestExtensions;
 
     [TestFixture]
+    [Platform("Win", Reason = "Path.GetFullPath() behavior cannot be readily supported when running Linux-like paths.")]
     [Category("Unit")]
     internal class CommandBaseTests : CommandBase
     {
@@ -400,7 +401,7 @@ namespace VirtualClient.UnitTests
         /// <summary>
         /// Not implemented yet.
         /// </summary>
-        public override Task<int> ExecuteAsync(string[] args, CancellationTokenSource cancellationTokenSource)
+        protected override Task<int> ExecuteAsync(string[] args, IServiceCollection dependencies, CancellationTokenSource cancellationTokenSource)
         {
             throw new NotImplementedException();
         }
@@ -423,7 +424,7 @@ namespace VirtualClient.UnitTests
                 return base.InitializeLoggerProviders(dependencies, null);
             }
 
-            public override Task<int> ExecuteAsync(string[] args, CancellationTokenSource cancellationTokenSource)
+            protected override Task<int> ExecuteAsync(string[] args, IServiceCollection dependencies, CancellationTokenSource cancellationTokenSource)
             {
                 throw new NotImplementedException();
             }

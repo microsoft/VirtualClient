@@ -23,6 +23,7 @@ namespace VirtualClient.Actions
     /// <summary>
     /// The Generic Script executor for Powershell, Bash etc scripts.
     /// </summary>
+    [SupportedPlatforms("linux-arm64,linux-x64,win-arm64,win-x64")]
     public class ScriptExecutor : VirtualClientComponent
     {
         private const string MetricsFileName = "test-metrics.json";

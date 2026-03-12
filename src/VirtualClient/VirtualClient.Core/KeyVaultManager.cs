@@ -5,6 +5,7 @@ namespace VirtualClient
 {
     using System;
     using System.Net;
+    using System.Runtime.ConstrainedExecution;
     using System.Security.Cryptography.X509Certificates;
     using System.Threading;
     using System.Threading.Tasks;
@@ -192,7 +193,7 @@ namespace VirtualClient
         /// <param name="certName">The name of the certificate to be retrieved</param>
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
         /// <param name="keyVaultUri">The URI of the Azure Key Vault.</param>
-        /// <param name="retrieveWithPrivateKey">flag to decode whether to retrieve certificate with private key</param>
+        /// <param name="withPrivateKey">flag to decode whether to retrieve certificate with private key</param>
         /// <param name="retryPolicy">A policy to use for handling retries when transient errors/failures happen.</param>
         /// <returns>
         /// A <see cref="X509Certificate2"/> containing the certificate 
@@ -204,7 +205,7 @@ namespace VirtualClient
             string certName,
             CancellationToken cancellationToken,
             string keyVaultUri = null,
-            bool retrieveWithPrivateKey = false,
+            bool withPrivateKey = false,
             IAsyncPolicy retryPolicy = null)
         {
             this.ValidateKeyVaultStore();
@@ -223,11 +224,14 @@ namespace VirtualClient
                 return await (retryPolicy ?? KeyVaultManager.DefaultRetryPolicy).ExecuteAsync(async () =>
                 {
                     // Get the full certificate with private key (PFX) if requested
-                    if (retrieveWithPrivateKey)
+                    if (withPrivateKey)
                     {
-                        X509Certificate2 privateKeyCert = await client
-                            .DownloadCertificateAsync(certName, cancellationToken: cancellationToken)
-                            .ConfigureAwait(false);
+                        X509Certificate2 privateKeyCert = await client.DownloadCertificateAsync(
+                            new DownloadCertificateOptions(certName)
+                            {
+                                KeyStorageFlags = X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable
+                            },
+                            cancellationToken: cancellationToken);
 
                         if (privateKeyCert is null || !privateKeyCert.HasPrivateKey)
                         {
