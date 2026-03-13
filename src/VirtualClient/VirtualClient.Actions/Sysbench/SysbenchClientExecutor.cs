@@ -179,69 +179,28 @@ namespace VirtualClient.Actions
             {
                 using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
-                    switch (this.Benchmark)
+                    this.sysbenchLoggingArguments = this.BuildSysbenchLoggingArguments(SysbenchMode.Run);
+                    this.sysbenchExecutionArguments = $"{this.sysbenchLoggingArguments} --workload {this.Workload} --hostIpAddress {this.ServerIpAddress} --durationSecs {this.Duration.TotalSeconds} --password {this.SuperUserPassword}";
+
+                    string script = $"{this.SysbenchPackagePath}/run-workload.py ";
+
+                    using (IProcessProxy process = await this.ExecuteCommandAsync(
+                        SysbenchExecutor.PythonCommand,
+                        script + this.sysbenchExecutionArguments,
+                        this.SysbenchPackagePath,
+                        telemetryContext,
+                        cancellationToken))
                     {
-                        case BenchmarkName.OLTP:
-                            await this.RunOLTPWorkloadAsync(telemetryContext, cancellationToken);
-                            break;
-                        case BenchmarkName.TPCC:
-                            await this.RunTPCCWorkloadAsync(telemetryContext, cancellationToken);
-                            break;
-                        default:
-                            throw new DependencyException(
-                                $"The '{this.Benchmark}' benchmark is not supported with the Sysbench workload. Supported options include: \"OLTP, TPCC\".", 
-                                ErrorReason.NotSupported);
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            await this.LogProcessDetailsAsync(process, telemetryContext, "Sysbench", logToFile: true);
+                            process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadFailed);
+
+                            this.CaptureMetrics(process, telemetryContext, cancellationToken);
+                        }
                     }
                 }
             });
-        }
-
-        private async Task RunOLTPWorkloadAsync(EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            this.sysbenchLoggingArguments = this.BuildSysbenchLoggingArguments(prepare: false);
-            this.sysbenchExecutionArguments = $"{this.sysbenchLoggingArguments} --workload {this.Workload} --hostIpAddress {this.ServerIpAddress} --durationSecs {this.Duration.TotalSeconds} --password {this.SuperUserPassword}";
-
-            string script = $"{this.SysbenchPackagePath}/run-workload.py ";
-
-            using (IProcessProxy process = await this.ExecuteCommandAsync(
-                SysbenchExecutor.PythonCommand,
-                script + this.sysbenchExecutionArguments,
-                this.SysbenchPackagePath,
-                telemetryContext,
-                cancellationToken))
-            {
-                if (!cancellationToken.IsCancellationRequested)
-                {
-                    await this.LogProcessDetailsAsync(process, telemetryContext, "Sysbench", logToFile: true);
-                    process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadFailed);
-
-                    this.CaptureMetrics(process, telemetryContext, cancellationToken);
-                }
-            }
-        }
-
-        private async Task RunTPCCWorkloadAsync(EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            this.sysbenchLoggingArguments = this.BuildSysbenchLoggingArguments(prepare: false);
-            this.sysbenchExecutionArguments = $"{this.sysbenchLoggingArguments} --workload {this.Workload} --hostIpAddress {this.ServerIpAddress} --durationSecs {this.Duration.TotalSeconds} --password {this.SuperUserPassword}";
-
-            string script = $"{this.SysbenchPackagePath}/run-workload.py ";
-
-            using (IProcessProxy process = await this.ExecuteCommandAsync(
-                SysbenchExecutor.PythonCommand,
-                script + this.sysbenchExecutionArguments,
-                this.SysbenchPackagePath,
-                telemetryContext,
-                cancellationToken))
-            {
-                if (!cancellationToken.IsCancellationRequested)
-                {
-                    await this.LogProcessDetailsAsync(process, telemetryContext, "Sysbench", logToFile: true);
-                    process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadFailed);
-
-                    this.CaptureMetrics(process, telemetryContext, cancellationToken);
-                }
-            }
         }
     }
 }

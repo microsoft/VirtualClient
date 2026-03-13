@@ -60,26 +60,10 @@ namespace VirtualClient.Actions
                         await this.CleanUpDatabase(telemetryContext, cancellationToken);
                         break;
                     case ConfigurationAction.CreateTables:
-                        if (this.Benchmark.Equals("oltp", StringComparison.OrdinalIgnoreCase))
-                        {
-                            await this.PrepareOLTPDatabase(telemetryContext, cancellationToken);
-                        }
-                        else if (this.Benchmark.Equals("tpcc", StringComparison.OrdinalIgnoreCase))
-                        {
-                            await this.PrepareTPCCDatabase(telemetryContext, cancellationToken);
-                        }
-
+                        await this.PrepareDatabase(telemetryContext, cancellationToken);
                         break;
                     case ConfigurationAction.PopulateTables:
-                        if (this.Benchmark.Equals("oltp", StringComparison.OrdinalIgnoreCase))
-                        {
-                            await this.PopulateOLTPDatabase(telemetryContext, cancellationToken);
-                        }
-                        else if (this.Benchmark.Equals("tpcc", StringComparison.OrdinalIgnoreCase))
-                        {
-                            await this.PopulateTPCCDatabase(telemetryContext, cancellationToken);
-                        }
-
+                        await this.PopulateDatabase(telemetryContext, cancellationToken);
                         break;
                     default:
                         throw new DependencyException(
@@ -99,8 +83,7 @@ namespace VirtualClient.Actions
                 int tableCount = GetTableCount(this.DatabaseScenario, this.TableCount, this.Workload);
 
                 string serverIp = (this.IsMultiRoleLayout() && this.IsInRole(ClientRole.Client)) ? this.ServerIpAddress : "localhost";
-
-                string sysbenchCleanupArguments = $"--dbName {this.DatabaseName} --databaseSystem {this.DatabaseSystem} --benchmark {this.Benchmark} --tableCount {tableCount}  --hostIpAddress \"{serverIp}\"";
+                string sysbenchCleanupArguments = $"--dbName {this.DatabaseName} --databaseSystem {this.DatabaseSystem} --benchmark {this.Benchmark} --tableCount {tableCount} --hostIpAddress \"{serverIp}\"";
 
                 string script = $"{this.SysbenchPackagePath}/cleanup-database.py";
 
@@ -123,7 +106,7 @@ namespace VirtualClient.Actions
             await this.stateManager.SaveStateAsync<SysbenchState>(nameof(SysbenchState), state, cancellationToken);
         }
 
-        private async Task PrepareOLTPDatabase(EventContext telemetryContext, CancellationToken cancellationToken)
+        private async Task PrepareDatabase(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             SysbenchState state = await this.stateManager.GetStateAsync<SysbenchState>(nameof(SysbenchState), cancellationToken)
                ?? new SysbenchState();
@@ -131,8 +114,8 @@ namespace VirtualClient.Actions
             if (!state.DatabasePopulated)
             {
                 string serverIp = (this.IsMultiRoleLayout() && this.IsInRole(ClientRole.Client)) ? this.ServerIpAddress : "localhost";
-                string sysbenchPrepareArguments = $"{this.BuildSysbenchLoggingArguments(prepare: true)} --password {this.SuperUserPassword} --host \"{serverIp}\"";
-  
+                string sysbenchPrepareArguments = $"{this.BuildSysbenchLoggingArguments(SysbenchMode.Prepare)} --password {this.SuperUserPassword} --host \"{serverIp}\"";
+
                 string command = $"{this.SysbenchPackagePath}/populate-database.py";
 
                 using (IProcessProxy process = await this.ExecuteCommandAsync(
@@ -158,42 +141,7 @@ namespace VirtualClient.Actions
             }
         }
 
-        private async Task PrepareTPCCDatabase(EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            SysbenchState state = await this.stateManager.GetStateAsync<SysbenchState>(nameof(SysbenchState), cancellationToken)
-               ?? new SysbenchState();
-
-            if (!state.DatabasePopulated)
-            {
-                string serverIp = (this.IsMultiRoleLayout() && this.IsInRole(ClientRole.Client)) ? this.ServerIpAddress : "localhost";
-                string sysbenchPrepareArguments = $"{this.BuildSysbenchLoggingArguments(prepare: true)} --password {this.SuperUserPassword} --host \"{serverIp}\"";
-
-                string script = $"{this.SysbenchPackagePath}/populate-database.py";
-
-                using (IProcessProxy process = await this.ExecuteCommandAsync(
-                    SysbenchExecutor.PythonCommand,
-                    $"{script} {sysbenchPrepareArguments}",
-                    this.SysbenchPackagePath,
-                    telemetryContext,
-                    cancellationToken))
-                {
-                    if (!cancellationToken.IsCancellationRequested)
-                    {
-                        await this.LogProcessDetailsAsync(process, telemetryContext, "Sysbench", logToFile: true);
-                        process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
-                    }
-                }
-            }
-            else
-            {
-                throw new DependencyException(
-                            $"Database preparation failed. A database has already been populated on the system. Please drop the tables, or run \"{ConfigurationAction.Cleanup}\" Action" +
-                            $"before attempting to create new tables on this database.",
-                            ErrorReason.NotSupported);
-            }
-        }
-
-        private async Task PopulateOLTPDatabase(EventContext telemetryContext, CancellationToken cancellationToken)
+        private async Task PopulateDatabase(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             SysbenchState state = await this.stateManager.GetStateAsync<SysbenchState>(nameof(SysbenchState), cancellationToken)
                ?? new SysbenchState();
@@ -204,7 +152,7 @@ namespace VirtualClient.Actions
                 {
                     string serverIp = (this.IsMultiRoleLayout() && this.IsInRole(ClientRole.Client)) ? this.ServerIpAddress : "localhost";
 
-                    string sysbenchLoggingArguments = this.BuildSysbenchLoggingArguments(prepare: false);
+                    string sysbenchLoggingArguments = this.BuildSysbenchLoggingArguments(SysbenchMode.Populate);
                     this.sysbenchPopulationArguments = $"{sysbenchLoggingArguments} --password {this.SuperUserPassword} --host \"{serverIp}\"";
 
                     string script = $"{this.SysbenchPackagePath}/populate-database.py";
@@ -222,56 +170,11 @@ namespace VirtualClient.Actions
                             process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
 
                             this.AddPopulationDurationMetric(sysbenchLoggingArguments, process, telemetryContext, cancellationToken);
+
+                            state.DatabasePopulated = true;
+                            await this.stateManager.SaveStateAsync<SysbenchState>(nameof(SysbenchState), state, cancellationToken);
                         }
                     }
-
-                    state.DatabasePopulated = true;
-                    await this.stateManager.SaveStateAsync<SysbenchState>(nameof(SysbenchState), state, cancellationToken);
-                });
-            }
-            else
-            {
-                throw new DependencyException(
-                            $"Database preparation failed. A database has already been populated on the system. Please drop the tables, or run \"{ConfigurationAction.Cleanup}\" Action" +
-                            $"before attempting to add new records to the populated tables.",
-                            ErrorReason.NotSupported);
-            }
-        }
-
-        private async Task PopulateTPCCDatabase(EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            SysbenchState state = await this.stateManager.GetStateAsync<SysbenchState>(nameof(SysbenchState), cancellationToken)
-               ?? new SysbenchState();
-
-            if (!state.DatabasePopulated)
-            {
-                await this.Logger.LogMessageAsync($"{this.TypeName}.PopulateDatabase", telemetryContext.Clone(), async () =>
-                {
-                    string serverIp = (this.IsMultiRoleLayout() && this.IsInRole(ClientRole.Client)) ? this.ServerIpAddress : "localhost";
-
-                    string sysbenchLoggingArguments = this.BuildSysbenchLoggingArguments(prepare: false);
-                    this.sysbenchPopulationArguments = $"{sysbenchLoggingArguments} --password {this.SuperUserPassword} --host \"{serverIp}\"";
-
-                    string script = $"{this.SysbenchPackagePath}/populate-database.py";
-
-                    using (IProcessProxy process = await this.ExecuteCommandAsync(
-                        SysbenchExecutor.PythonCommand,
-                        $"{script} {this.sysbenchPopulationArguments}",
-                        this.SysbenchPackagePath,
-                        telemetryContext,
-                        cancellationToken))
-                    {
-                        if (!cancellationToken.IsCancellationRequested)
-                        {
-                            await this.LogProcessDetailsAsync(process, telemetryContext, "Sysbench", logToFile: true);
-                            process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
-
-                            this.AddPopulationDurationMetric(sysbenchLoggingArguments, process, telemetryContext, cancellationToken);
-                        }
-                    }
-
-                    state.DatabasePopulated = true;
-                    await this.stateManager.SaveStateAsync<SysbenchState>(nameof(SysbenchState), state, cancellationToken);
                 });
             }
             else
