@@ -145,12 +145,6 @@ namespace VirtualClient
                         "The Azure tenant ID must be provided on the command line (--tenant-id) to install a certificate.");
                 }
             }
-
-            if (!string.IsNullOrWhiteSpace(this.PackageName) && this.PackageStore == null)
-            {
-                throw new ArgumentException(
-                    "A package store must be provided on the command line (--package-store) when installing packages.");
-            }
         }
     }
 }

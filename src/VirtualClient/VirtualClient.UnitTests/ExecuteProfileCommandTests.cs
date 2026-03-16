@@ -538,5 +538,18 @@ namespace VirtualClient
 
             return new Tuple<string, string>(decodedOriginalBytes, decodedObscuredBytes);
         }
+
+        [Test]
+        public void SetHostMetadataTelemetryPropertiesDoesNotThrowWhenLayoutIsNull()
+        {
+            // Layout is not mandatory for setting host metadata properties. 
+            this.command.Layout = null;
+
+            string profile = "TEST-WORKLOAD-PROFILE.json";
+            List<string> profiles = new List<string> { this.mockFixture.GetProfilesPath(profile) };
+
+            // Act & Assert - Should not throw expection
+            Assert.DoesNotThrow(() => this.command.SetHostMetadataTelemetryProperties(profiles, this.mockFixture.Dependencies));
+        }
     }
 }

@@ -55,15 +55,12 @@ namespace VirtualClient
         }
 
         [Test]
-        public void BootstrapCommandValidatesRequiredParametersForPackageDownloads()
+        public void BootstrapCommandDoesNotRequirePackageStoredParameterForPackageDownloads()
         {
+            // It will use default vc package store.
             var command = new TestBootstrapCommand();
             command.PackageName = "any-package.zip";
-            Exception error = Assert.Throws<ArgumentException>(() => command.Validate());
-
-            Assert.AreEqual(
-                "A package store must be provided on the command line (--package-store) when installing packages.",
-                error.Message);
+            Assert.DoesNotThrow(() => command.Validate());
         }
 
         [Test]
@@ -116,7 +113,7 @@ namespace VirtualClient
                 var command = new TestBootstrapCommand
                 {
                     PackageName = "any-package.zip",
-                    PackageStore = new DependencyBlobStore(DependencyStore.Packages, "https://any.storage"),
+                    // PackageStore is no longer required
                     Name = "any-package"
                 };
 
@@ -145,6 +142,41 @@ namespace VirtualClient
                 Assert.IsNotEmpty(command.Parameters);
                 Assert.IsTrue(command.Parameters.TryGetValue("Package", out IConvertible packageName) && packageName.ToString() == command.PackageName);
                 Assert.IsTrue(command.Parameters.TryGetValue("RegisterAsName", out IConvertible name) && name.ToString() == command.Name);
+            }
+        }
+
+        [Test]
+        public void BootstrapCommandDoesNotRequirePackageStoreForPackageInstallation()
+        {
+            // Arrange - Create command with only package name, no package store
+            var command = new TestBootstrapCommand
+            {
+                PackageName = "any-package.zip"
+            };
+
+            // Act & Assert - Should not throw ArgumentException
+            Assert.DoesNotThrow(() => command.Validate());
+        }
+
+        [Test]
+        public void BootstrapCommandExecutesTheExpectedProfileToBootstrapPackagesWithoutPackageStore()
+        {
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+            {
+                // Arrange - No PackageStore provided
+                var command = new TestBootstrapCommand
+                {
+                    PackageName = "any-package.zip",
+                    Name = "any-package"
+                };
+
+                // Act
+                command.Initialize(Array.Empty<string>(), this.mockFixture.PlatformSpecifics);
+
+                // Assert - Profile should still be set up correctly
+                Assert.IsNotEmpty(command.Profiles);
+                Assert.AreEqual(1, command.Profiles.Count());
+                Assert.AreEqual(1, command.Profiles.Count(p => p.ProfileName == "BOOTSTRAP-PACKAGE.json"));
             }
         }
 
