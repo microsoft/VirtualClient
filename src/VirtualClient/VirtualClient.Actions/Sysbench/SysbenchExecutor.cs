@@ -61,6 +61,27 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// Defines the mode in which Sysbench is operating.
+        /// </summary>
+        protected internal enum SysbenchMode
+        {
+            /// <summary>
+            /// Creates the database schema with minimal data.
+            /// </summary>
+            Prepare,
+
+            /// <summary>
+            /// Populates the database with the full dataset.
+            /// </summary>
+            Populate,
+
+            /// <summary>
+            /// Runs the benchmark workload.
+            /// </summary>
+            Run
+        }
+
+        /// <summary>
         /// The benchmark (e.g. OLTP, TPCC).
         /// </summary>
         public string Benchmark
@@ -247,13 +268,21 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Method to determine the record count for the given run.
+        /// Method to determine the warehouse count for the given run.
+        /// Warehouses are scaled from the record count using the TPC-C sizing ratio:
+        /// 1 warehouse ≈ 100 MB (~500K rows), 1 OLTP record ≈ 200 bytes across 10 tables,
+        /// so 1 warehouse ≈ 50,000 OLTP records.
         /// </summary>
         /// <returns></returns>
-        public static int GetWarehouseCount(string databaseScenario, int? warehouses)
+        public static int GetWarehouseCount(ISystemManagement systemManagement, string databaseScenario, int? warehouses)
         {
-            int warehouseCount = warehouses.GetValueOrDefault(100);
-            warehouseCount = (databaseScenario == SysbenchScenario.Configure || warehouseCount == 1) ? warehouseCount : 100;
+            const int RecordsPerWarehouse = 50000;
+
+            int recordEstimate = GetRecordCount(systemManagement, databaseScenario, records: null);
+            int warehouseEstimate = Math.Max(1, recordEstimate / RecordsPerWarehouse);
+
+            int warehouseCount = warehouses.GetValueOrDefault(warehouseEstimate);
+            warehouseCount = (databaseScenario == SysbenchScenario.Configure || warehouseCount == 1) ? warehouseCount : warehouseEstimate;
 
             return warehouseCount;
         }
@@ -380,7 +409,7 @@ namespace VirtualClient.Actions
         /// dbName, databaseSystem, benchmark and tableCount.
         /// </summary>
         /// <returns></returns>
-        protected string BuildSysbenchLoggingArguments(bool prepare)
+        protected string BuildSysbenchLoggingArguments(SysbenchMode mode)
         {
             int tableCount = GetTableCount(this.DatabaseScenario, this.TableCount, this.Workload);
             int threadCount = GetThreadCount(this.SystemManager, this.DatabaseScenario, this.Threads);
@@ -390,11 +419,19 @@ namespace VirtualClient.Actions
             switch (this.Benchmark)
             {
                 case BenchmarkName.OLTP:
-                    int recordCount = GetRecordCount(this.SystemManager, this.DatabaseScenario, this.RecordCount);
+                    int recordCount = mode == SysbenchMode.Prepare ? 1 : GetRecordCount(this.SystemManager, this.DatabaseScenario, this.RecordCount);
                     loggingArguments = $"{loggingArguments} --recordCount {recordCount}";
                     break;
                 case BenchmarkName.TPCC:
-                    int warehouseCount = GetWarehouseCount(this.DatabaseScenario, this.WarehouseCount);
+                    int warehouseEstimate = GetWarehouseCount(this.SystemManager, this.DatabaseScenario, this.WarehouseCount);
+                    int warehouseCount = mode switch
+                    {
+                        SysbenchMode.Prepare => 1,
+                        SysbenchMode.Populate => warehouseEstimate - 1,
+                        SysbenchMode.Run => warehouseEstimate,
+                        _ => warehouseEstimate
+                    };
+
                     loggingArguments = $"{loggingArguments} --warehouses {warehouseCount}";
                     break;
                 default:

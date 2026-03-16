@@ -266,7 +266,7 @@ namespace VirtualClient.Actions
             this.fixture.Parameters[nameof(SysbenchClientExecutor.Benchmark)] = "TPCC";
             this.fixture.Parameters[nameof(SysbenchClientExecutor.Workload)] = "tpcc";
 
-            string expectedCommand = $"python3 {this.mockPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark TPCC --threadCount 8 --tableCount 10 --warehouses 100 --workload tpcc --hostIpAddress 1.2.3.5 --durationSecs 10 --password [A-Za-z0-9+/=]+";
+            string expectedCommand = $"python3 {this.mockPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark TPCC --threadCount 8 --tableCount 10 --warehouses 1 --workload tpcc --hostIpAddress 1.2.3.5 --durationSecs 10 --password [A-Za-z0-9+/=]+";
             bool commandExecuted = false;
 
             this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
@@ -354,7 +354,7 @@ namespace VirtualClient.Actions
             this.fixture.Parameters[nameof(SysbenchClientExecutor.Benchmark)] = "TPCC";
             this.fixture.Parameters[nameof(SysbenchClientExecutor.Workload)] = "tpcc";
 
-            string expectedCommand = $"python3 {this.mockPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark TPCC --threadCount 8 --tableCount 10 --warehouses 100 --workload tpcc --hostIpAddress 1.2.3.5 --durationSecs 10 --password [A-Za-z0-9+/=]+";
+            string expectedCommand = $"python3 {this.mockPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark TPCC --threadCount 8 --tableCount 10 --warehouses 1 --workload tpcc --hostIpAddress 1.2.3.5 --durationSecs 10 --password [A-Za-z0-9+/=]+";
             bool commandExecuted = false;
 
             this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
