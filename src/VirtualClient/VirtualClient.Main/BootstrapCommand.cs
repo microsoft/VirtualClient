@@ -136,14 +136,20 @@ namespace VirtualClient
                 //
                 // e.g.
                 // --key-vault="https://any.vault.azure.net?cid=8cdebecc...&tid=42005d4d...&crti=ANY&crts=any.corp.azure.com"
-                if (string.IsNullOrWhiteSpace(this.AccessToken) 
+                if (string.IsNullOrWhiteSpace(this.AccessToken)
                     && string.IsNullOrWhiteSpace(this.TokenFilePath)
-                    && string.IsNullOrWhiteSpace(this.TenantId) 
+                    && string.IsNullOrWhiteSpace(this.TenantId)
                     && (this.KeyVaultStore as DependencyKeyVaultStore)?.Credentials == null)
                 {
                     throw new ArgumentException(
                         "The Azure tenant ID must be provided on the command line (--tenant-id) to install a certificate.");
                 }
+            }
+
+            if (!string.IsNullOrWhiteSpace(this.PackageName) && this.PackageStore == null)
+            {
+                throw new ArgumentException(
+                    "A package store must be provided on the command line (--package-store) when installing packages.");
             }
         }
     }

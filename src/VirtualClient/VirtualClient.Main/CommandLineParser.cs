@@ -395,6 +395,11 @@ namespace VirtualClient
                         "Use --package to install a package or --cert-name to install a certificate.");
                 }
 
+                if (package != null && packageStore == null)
+                {
+                    throw new ArgumentException("The package store URI must be provided (--package-store) when installing a package.");
+                }
+
                 // Certificate installation requires both --cert-name and --key-vault.
                 if (certName != null)
                 {
