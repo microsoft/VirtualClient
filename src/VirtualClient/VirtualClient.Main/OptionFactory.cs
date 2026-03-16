@@ -26,7 +26,7 @@ namespace VirtualClient
     /// Provides a factory for the creation of Command Options used by application command line operations.
     /// </summary>
     [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1118:Parameter should not span multiple lines", Justification = "Allow for longer description text.")]
-    public static class OptionFactory
+    public static partial class OptionFactory
     {
         internal const string HtmlQuote = "&quot;";
         private static readonly ICertificateManager defaultCertificateManager = new CertificateManager();

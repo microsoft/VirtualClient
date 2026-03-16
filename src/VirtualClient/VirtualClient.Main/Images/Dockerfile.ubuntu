@@ -1,0 +1,55 @@
+# VirtualClient Ubuntu Base Image
+# This image provides a Linux environment for running workloads from Windows hosts
+
+FROM ubuntu:22.04
+
+LABEL maintainer="VirtualClient Team"
+LABEL description="Ubuntu base image for VirtualClient containerized workload execution"
+
+# Prevent interactive prompts during package installation
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install common dependencies needed for most workloads
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    # Build essentials
+    build-essential \
+    gcc \
+    g++ \
+    make \
+    cmake \
+    # Common utilities
+    curl \
+    wget \
+    git \
+    unzip \
+    tar \
+    gzip \
+    # Python (many workloads need it)
+    python3 \
+    python3-pip \
+    # Libraries
+    libc6-dev \
+    libssl-dev \
+    libffi-dev \
+    libnuma-dev \
+    # Debugging tools
+    strace \
+    htop \
+    procps \
+    # Cleanup
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create standard VC directories
+RUN mkdir -p /vc/packages /vc/logs /vc/state /vc/temp /vc/output
+
+# Set working directory
+WORKDIR /vc
+
+# Default environment variables
+ENV VC_CONTAINER_MODE=true
+ENV LC_ALL=C.UTF-8
+ENV LANG=C.UTF-8
+
+# Default command (can be overridden)
+CMD ["/bin/bash"]

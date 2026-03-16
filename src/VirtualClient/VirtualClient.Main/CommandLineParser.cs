@@ -156,7 +156,15 @@ namespace VirtualClient
                 OptionFactory.CreateTimeoutOption(required: false),
 
                 // --verbose
-                OptionFactory.CreateVerboseFlag(required: false, false)
+                OptionFactory.CreateVerboseFlag(required: false, false),
+
+                // CONTAINER OPTIONS
+                // -------------------------------------------------------------------
+                // --image
+                OptionFactory.CreateImageOption(required: false),
+
+                // --pull-policy
+                OptionFactory.CreatePullPolicyOption(required: false)
             };
 
             rootCommand.TreatUnmatchedTokensAsErrors = true;

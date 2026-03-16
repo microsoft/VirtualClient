@@ -109,7 +109,7 @@ namespace VirtualClient.Contracts
             this.Metadata = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
             this.MetadataContract = new MetadataContract();
             this.PlatformSpecifics = this.systemInfo.PlatformSpecifics;
-            this.Platform = this.systemInfo.Platform;
+            // this.Platform = this.systemInfo.Platform;
             this.SupportedRoles = new List<string>();
             this.CleanupTasks = new List<Action>();
             this.Extensions = new Dictionary<string, JToken>();
@@ -400,7 +400,19 @@ namespace VirtualClient.Contracts
         /// <summary>
         /// The OS/system platform (e.g. Windows, Unix).
         /// </summary>
-        public PlatformID Platform { get; }
+        public PlatformID Platform
+        {
+            get
+            {
+                // If container mode is active, report container platform
+                if (ContainerExecutionContext.Current.IsContainerMode)
+                {
+                    return ContainerExecutionContext.Current.ContainerPlatform;
+                }
+                
+                return this.systemInfo.Platform;
+            }
+        }
 
         /// <summary>
         /// Provides OS/system platform specific information.
@@ -637,6 +649,19 @@ namespace VirtualClient.Contracts
         {
             get
             {
+                // If container mode is active, report container platform/architecture
+                if (ContainerExecutionContext.Current.IsContainerMode)
+                {
+                    string os = ContainerExecutionContext.Current.ContainerPlatform == PlatformID.Unix ? "linux" : "win";
+                    string arch = ContainerExecutionContext.Current.ContainerArchitecture switch
+                    {
+                        Architecture.X64 => "x64",
+                        Architecture.Arm64 => "arm64",
+                        _ => "x64"
+                    };
+                    return $"{os}-{arch}";
+                }
+
                 return this.PlatformSpecifics.PlatformArchitectureName;
             }
         }
