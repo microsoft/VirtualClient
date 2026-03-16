@@ -114,7 +114,7 @@ namespace VirtualClient.Actions
             if (!state.DatabasePopulated)
             {
                 string serverIp = (this.IsMultiRoleLayout() && this.IsInRole(ClientRole.Client)) ? this.ServerIpAddress : "localhost";
-                string sysbenchPrepareArguments = $"{this.BuildSysbenchLoggingArguments(SysbenchMode.Prepare)} --password {this.SuperUserPassword} --host \"{serverIp}\"";
+                string sysbenchPrepareArguments = $"{this.BuildSysbenchLoggingArguments(SysbenchMode.Prepare)} --password {this.SuperUserPassword} --hostIpAddress \"{serverIp}\"";
 
                 string command = $"{this.SysbenchPackagePath}/populate-database.py";
 
@@ -153,7 +153,7 @@ namespace VirtualClient.Actions
                     string serverIp = (this.IsMultiRoleLayout() && this.IsInRole(ClientRole.Client)) ? this.ServerIpAddress : "localhost";
 
                     string sysbenchLoggingArguments = this.BuildSysbenchLoggingArguments(SysbenchMode.Populate);
-                    this.sysbenchPopulationArguments = $"{sysbenchLoggingArguments} --password {this.SuperUserPassword} --host \"{serverIp}\"";
+                    this.sysbenchPopulationArguments = $"{sysbenchLoggingArguments} --password {this.SuperUserPassword} --hostIpAddress \"{serverIp}\"";
 
                     string script = $"{this.SysbenchPackagePath}/populate-database.py";
 

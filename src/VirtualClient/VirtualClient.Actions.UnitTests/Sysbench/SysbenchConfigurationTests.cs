@@ -78,7 +78,7 @@ namespace VirtualClient.Actions
 
             string[] expectedCommands =
             {
-                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --password [A-Za-z0-9+/=]+ --host \"1.2.3.5\"",
+                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --password [A-Za-z0-9+/=]+ --hostIpAddress \"1.2.3.5\"",
             };
 
             int commandNumber = 0;
@@ -276,7 +276,7 @@ namespace VirtualClient.Actions
 
             string[] expectedCommands =
             {
-                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --databaseSystem MySQL --benchmark TPCC --threadCount 8 --tableCount 10 --warehouses 0 --password [A-Za-z0-9+/=]+ --host \"1.2.3.5\""
+                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --databaseSystem MySQL --benchmark TPCC --threadCount 8 --tableCount 10 --warehouses 0 --password [A-Za-z0-9+/=]+ --hostIpAddress \"1.2.3.5\""
             };
 
             int commandNumber = 0;
@@ -332,7 +332,7 @@ namespace VirtualClient.Actions
 
             string[] expectedCommands =
             {
-                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --databaseSystem MySQL --benchmark TPCC --threadCount 16 --tableCount 40 --warehouses 999 --password [A-Za-z0-9+/=]+ --host \"1.2.3.5\""
+                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --databaseSystem MySQL --benchmark TPCC --threadCount 16 --tableCount 40 --warehouses 999 --password [A-Za-z0-9+/=]+ --hostIpAddress \"1.2.3.5\""
             };
 
             int commandNumber = 0;
@@ -446,7 +446,7 @@ namespace VirtualClient.Actions
 
             string[] expectedCommands =
             {
-                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --databaseSystem PostgreSQL --benchmark TPCC --threadCount 16 --tableCount 40 --warehouses 999 --password [A-Za-z0-9+/=]+ --host \"1.2.3.5\""
+                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --databaseSystem PostgreSQL --benchmark TPCC --threadCount 16 --tableCount 40 --warehouses 999 --password [A-Za-z0-9+/=]+ --hostIpAddress \"1.2.3.5\""
             };
 
             int commandNumber = 0;
