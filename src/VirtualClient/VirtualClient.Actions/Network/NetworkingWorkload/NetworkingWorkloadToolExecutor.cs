@@ -49,7 +49,7 @@ namespace VirtualClient.Actions.NetworkPerformance
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(this.CommandLineLinuxClient));
+                return this.Parameters.GetValue<string>(nameof(this.CommandLineLinuxClient), string.Empty);
             }
 
             set
@@ -65,7 +65,7 @@ namespace VirtualClient.Actions.NetworkPerformance
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(this.CommandLineLinuxServer));
+                return this.Parameters.GetValue<string>(nameof(this.CommandLineLinuxServer), string.Empty);
             }
 
             set
@@ -81,7 +81,7 @@ namespace VirtualClient.Actions.NetworkPerformance
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(this.CommandLineWindowsClient));
+                return this.Parameters.GetValue<string>(nameof(this.CommandLineWindowsClient), string.Empty);
             }
 
             set
@@ -97,7 +97,7 @@ namespace VirtualClient.Actions.NetworkPerformance
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(this.CommandLineWindowsServer));
+                return this.Parameters.GetValue<string>(nameof(this.CommandLineWindowsServer), string.Empty);
             }
 
             set

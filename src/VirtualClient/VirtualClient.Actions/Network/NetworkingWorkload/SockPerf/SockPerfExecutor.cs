@@ -132,15 +132,6 @@ namespace VirtualClient.Actions.NetworkPerformance
         protected IAsyncPolicy ProcessStartRetryPolicy { get; set; }
 
         /// <summary>
-        /// Produces powershell script parameters using the workload parameters provided.
-        /// </summary>
-        /// <returns>Powershell script parameters as a string.</returns>
-        protected override string GetCommandLineArguments()
-        {
-            return string.Empty;
-        }
-
-        /// <summary>
         /// Initializes the environment and dependencies for running the tool.
         /// </summary>
         protected override Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
