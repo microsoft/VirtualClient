@@ -669,7 +669,7 @@ namespace VirtualClient
                 new Dictionary<string, object>
                 {
                     { "exitWait", this.ExitWait },
-                    { "layout", this.Layout.ToString() },
+                    { "layout", this.Layout?.ToString() },
                     { "logToFile", this.LogToFile },
                     { "iterations", this.Iterations?.ProfileIterations },
                     { "profiles", string.Join(",", profiles.Select(p => Path.GetFileName(p))) },

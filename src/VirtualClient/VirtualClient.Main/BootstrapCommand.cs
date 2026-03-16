@@ -136,9 +136,9 @@ namespace VirtualClient
                 //
                 // e.g.
                 // --key-vault="https://any.vault.azure.net?cid=8cdebecc...&tid=42005d4d...&crti=ANY&crts=any.corp.azure.com"
-                if (string.IsNullOrWhiteSpace(this.AccessToken) 
+                if (string.IsNullOrWhiteSpace(this.AccessToken)
                     && string.IsNullOrWhiteSpace(this.TokenFilePath)
-                    && string.IsNullOrWhiteSpace(this.TenantId) 
+                    && string.IsNullOrWhiteSpace(this.TenantId)
                     && (this.KeyVaultStore as DependencyKeyVaultStore)?.Credentials == null)
                 {
                     throw new ArgumentException(
