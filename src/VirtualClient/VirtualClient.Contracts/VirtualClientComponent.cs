@@ -109,7 +109,6 @@ namespace VirtualClient.Contracts
             this.Metadata = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
             this.MetadataContract = new MetadataContract();
             this.PlatformSpecifics = this.systemInfo.PlatformSpecifics;
-            this.Platform = this.systemInfo.Platform;
             this.SupportedRoles = new List<string>();
             this.CleanupTasks = new List<Action>();
             this.Extensions = new Dictionary<string, JToken>();
@@ -735,7 +734,7 @@ namespace VirtualClient.Contracts
         /// </summary>
         public async Task ExecuteAsync(CancellationToken cancellationToken)
         {
-           this.StartTime = DateTime.UtcNow;
+            this.StartTime = DateTime.UtcNow;
 
             try
             {
