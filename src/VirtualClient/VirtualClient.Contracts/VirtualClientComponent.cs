@@ -109,7 +109,7 @@ namespace VirtualClient.Contracts
             this.Metadata = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
             this.MetadataContract = new MetadataContract();
             this.PlatformSpecifics = this.systemInfo.PlatformSpecifics;
-            // this.Platform = this.systemInfo.Platform;
+            this.Platform = this.systemInfo.Platform;
             this.SupportedRoles = new List<string>();
             this.CleanupTasks = new List<Action>();
             this.Extensions = new Dictionary<string, JToken>();
@@ -398,13 +398,19 @@ namespace VirtualClient.Contracts
         public bool ParametersEvaluated { get; protected set; }
 
         /// <summary>
-        /// The OS/system platform (e.g. Windows, Unix).
+        /// The OS/system platform (e.g. Windows, Unix) where VirtualClient is running.
+        /// This is the HOST platform, not the container platform.
         /// </summary>
-        public PlatformID Platform
+        public PlatformID Platform => this.systemInfo.Platform;
+
+        /// <summary>
+        /// The target platform for workload execution. When in container mode,
+        /// this returns the container platform. Used for workload selection.
+        /// </summary>
+        public PlatformID TargetPlatform
         {
             get
             {
-                // If container mode is active, report container platform
                 if (ContainerExecutionContext.Current.IsContainerMode)
                 {
                     return ContainerExecutionContext.Current.ContainerPlatform;
@@ -649,7 +655,7 @@ namespace VirtualClient.Contracts
         {
             get
             {
-                // If container mode is active, report container platform/architecture
+                // Use TARGET platform for workload selection
                 if (ContainerExecutionContext.Current.IsContainerMode)
                 {
                     string os = ContainerExecutionContext.Current.ContainerPlatform == PlatformID.Unix ? "linux" : "win";
@@ -662,7 +668,7 @@ namespace VirtualClient.Contracts
                     return $"{os}-{arch}";
                 }
 
-                return this.PlatformSpecifics.PlatformArchitectureName;
+                return this.systemInfo.PlatformArchitectureName;
             }
         }
 
@@ -729,7 +735,7 @@ namespace VirtualClient.Contracts
         /// </summary>
         public async Task ExecuteAsync(CancellationToken cancellationToken)
         {
-            this.StartTime = DateTime.UtcNow;
+           this.StartTime = DateTime.UtcNow;
 
             try
             {
@@ -783,7 +789,7 @@ namespace VirtualClient.Contracts
 
                     this.MetadataContract.Apply(telemetryContext);
 
-                    await this.Logger.LogMessageAsync($"{this.TypeName}.Execute", telemetryContext, async () =>
+                    await this.Logger.LogMessageAsync($"{this.ComponentType}.Execute", telemetryContext, async () =>
                     {
                         bool succeeded = true;
 

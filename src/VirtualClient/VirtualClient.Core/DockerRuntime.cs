@@ -75,7 +75,7 @@ namespace VirtualClient
             this.logger?.LogInformation("Pulling Docker image: {Image}", image);
 
             using IProcessProxy process = this.processManager.CreateProcess("docker", $"pull {image}");
-            await process.StartAndWaitAsync(cancellationToken);
+            await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
 
             if (process.ExitCode != 0)
             {
@@ -119,6 +119,65 @@ namespace VirtualClient
             this.logger?.LogDebug("Container {ContainerName} exited with code {ExitCode}", containerName, result.ExitCode);
 
             return result;
+        }
+
+        /// <summary>
+        /// Builds an image from a Dockerfile in the specified directory.
+        /// </summary>
+        /// <param name="dockerfilePath">Full path to the Dockerfile.</param>
+        /// <param name="imageName">Name and tag for the image (e.g., vc-ubuntu:22.04).</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        public async Task BuildImageAsync(string dockerfilePath, string imageName, CancellationToken cancellationToken)
+        {
+            if (!System.IO.File.Exists(dockerfilePath))
+            {
+                throw new DependencyException(
+                    $"Dockerfile not found at '{dockerfilePath}'",
+                    ErrorReason.DependencyNotFound);
+            }
+
+            string contextDir = System.IO.Path.GetDirectoryName(dockerfilePath);
+            string dockerfileName = System.IO.Path.GetFileName(dockerfilePath);
+
+            this.logger?.LogInformation("Building Docker image '{Image}' from {Dockerfile}", imageName, dockerfilePath);
+
+            string args = $"build -t {imageName} -f \"{dockerfileName}\" .";
+            
+            using IProcessProxy process = this.processManager.CreateProcess("docker", args, contextDir);
+            await process.StartAndWaitAsync(cancellationToken);
+
+            if (process.ExitCode != 0)
+            {
+                throw new DependencyException(
+                    $"Failed to build Docker image '{imageName}': {process.StandardError}",
+                    ErrorReason.DependencyInstallationFailed);
+            }
+
+            this.logger?.LogInformation("Successfully built Docker image '{Image}'", imageName);
+        }
+
+        /// <summary>
+        /// Gets the path to a built-in Dockerfile for the given image name.
+        /// </summary>
+        /// <param name="imageName">Image name (e.g., vc-ubuntu:22.04).</param>
+        /// <returns>Path to Dockerfile if found, null otherwise.</returns>
+        public static string GetBuiltInDockerfilePath(string imageName)
+        {
+            // Extract base name (vc-ubuntu:22.04 -> ubuntu)
+            string baseName = imageName.Split(':')[0].Replace("vc-", string.Empty);
+            
+            // Look in the Images folder relative to the executable
+            string exeDir = AppDomain.CurrentDomain.BaseDirectory;
+            string imagesDir = System.IO.Path.Combine(exeDir, "Images");
+            
+            string dockerfilePath = System.IO.Path.Combine(imagesDir, $"Dockerfile.{baseName}");
+            
+            if (System.IO.File.Exists(dockerfilePath))
+            {
+                return dockerfilePath;
+            }
+
+            return null;
         }
 
         private string BuildDockerRunArgs(

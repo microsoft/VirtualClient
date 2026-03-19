@@ -3,6 +3,10 @@
 
 namespace VirtualClient
 {
+    using Microsoft.CodeAnalysis;
+    using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
+    using Newtonsoft.Json;
     using System;
     using System.Collections.Generic;
     using System.Globalization;
@@ -13,10 +17,7 @@ namespace VirtualClient
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.CodeAnalysis;
-    using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.Extensions.Logging;
-    using Newtonsoft.Json;
+    using VirtualClient.Common;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
@@ -194,6 +195,15 @@ namespace VirtualClient
                 packageManager = dependencies.GetService<IPackageManager>();
                 systemManagement = dependencies.GetService<ISystemManagement>();
 
+                // =====================================================
+                // CONTAINER MODE INITIALIZATION - ADD THIS BLOCK
+                // =====================================================
+                if (!string.IsNullOrWhiteSpace(this.Image))
+                {
+                    await this.InitializeContainerModeAsync(dependencies, logger, cancellationToken);
+                }
+                // =====================================================
+
                 EventContext telemetryContext = EventContext.Persisted();
 
                 logger.LogMessage($"Platform.Initialize", telemetryContext);
@@ -232,6 +242,10 @@ namespace VirtualClient
                         await this.ExecuteProfileAsync(effectiveProfiles, dependencies, cancellationTokenSource);
                     }
                 }
+            }
+            catch(Exception exc)
+            {
+                Console.Write($"Error: {exc.Message}.\nStacktrace:{exc.StackTrace}.");
             }
             finally
             {
@@ -992,6 +1006,108 @@ namespace VirtualClient
                     $"Iterations not supported. One or more of the profiles supplied on the command line have metadata indicating that " +
                     "iterations (e.g. --iterations) is not supported.");
             }
+        }
+
+        /// <summary>
+        /// Initializes container execution mode when --image is provided.
+        /// </summary>
+        private async Task InitializeContainerModeAsync(IServiceCollection dependencies, ILogger logger, CancellationToken cancellationToken)
+        {
+            logger.LogMessage($"Container.Initialize", EventContext.Persisted()
+                .AddContext("image", this.Image)
+                .AddContext("pullPolicy", this.PullPolicy ?? "IfNotPresent"));
+
+            // Get platform specifics for path resolution
+            ISystemInfo systemInfo = dependencies.GetService<ISystemInfo>();
+            ProcessManager processManager = dependencies.GetService<ISystemManagement>().ProcessManager;
+
+            // Create Docker runtime
+            var dockerRuntime = new DockerRuntime(processManager, systemInfo.PlatformSpecifics, logger);
+
+            // Check if Docker is available
+            if (!await dockerRuntime.IsAvailableAsync(cancellationToken))
+            {
+                throw new DependencyException(
+                    "Docker is not available or not configured for Linux containers. " +
+                    "Please ensure Docker Desktop is installed and set to use Linux containers.",
+                    ErrorReason.DependencyNotFound);
+            }
+
+            string pullPolicy = this.PullPolicy ?? "IfNotPresent";
+            bool imageExists = await dockerRuntime.ImageExistsAsync(this.Image, cancellationToken);
+
+            // Try to auto-build if image doesn't exist and it's a vc-* image
+            if (!imageExists && this.Image.StartsWith("vc-", StringComparison.OrdinalIgnoreCase))
+            {
+                string dockerfilePath = DockerRuntime.GetBuiltInDockerfilePath(this.Image);
+                
+                if (dockerfilePath != null)
+                {
+                    logger.LogMessage($"Container.BuildImage", EventContext.Persisted()
+                        .AddContext("image", this.Image)
+                        .AddContext("dockerfile", dockerfilePath));
+
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.WriteLine($"[Container] Building image '{this.Image}' from {dockerfilePath}...");
+                    Console.ResetColor();
+
+                    await dockerRuntime.BuildImageAsync(dockerfilePath, this.Image, cancellationToken);
+                    imageExists = true;
+                }
+            }
+
+            bool shouldPull = pullPolicy switch
+            {
+                "Always" => true,
+                "Never" => false,
+                "IfNotPresent" => !imageExists,
+                _ => !imageExists
+            };
+
+            if (shouldPull)
+            {
+                logger.LogMessage($"Container.PullImage", EventContext.Persisted()
+                    .AddContext("image", this.Image));
+
+                await dockerRuntime.PullImageAsync(this.Image, cancellationToken);
+            }
+            else if (pullPolicy == "Never" && !imageExists)
+            {
+                throw new DependencyException(
+                    $"Container image '{this.Image}' not found locally and pull policy is 'Never'.",
+                    ErrorReason.DependencyNotFound);
+            }
+
+            // Set up the container execution context
+            ContainerExecutionContext.Current = new ContainerExecutionContext
+            {
+                IsContainerMode = true,
+                Image = this.Image,
+                ContainerPlatform = PlatformID.Unix,  // Linux containers
+                ContainerArchitecture = systemInfo.CpuArchitecture, // Match host architecture
+                Configuration = new ContainerConfiguration
+                {
+                    Image = this.Image,
+                    PullPolicy = pullPolicy,
+                    Mounts = new ContainerMountConfig
+                    {
+                        Packages = true,
+                        Logs = true,
+                        State = true,
+                        Temp = true
+                    }
+                }
+            };
+
+            logger.LogMessage($"Container.ModeEnabled", EventContext.Persisted()
+                .AddContext("image", this.Image)
+                .AddContext("effectivePlatform", ContainerExecutionContext.Current.EffectivePlatform)
+                .AddContext("effectiveArchitecture", ContainerExecutionContext.Current.EffectiveArchitecture));
+
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine($"[Container Mode] Image: {this.Image}");
+            Console.WriteLine($"[Container Mode] Platform: linux-{ContainerExecutionContext.Current.ContainerArchitecture.ToString().ToLower()}");
+            Console.ResetColor();
         }
     }
 }

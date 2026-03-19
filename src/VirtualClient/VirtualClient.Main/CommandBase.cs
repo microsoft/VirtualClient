@@ -152,6 +152,18 @@ namespace VirtualClient
         public string ExperimentId { get; set; }
 
         /// <summary>
+        /// Docker image for containerized workload execution.
+        /// When provided, workloads run inside the specified container.
+        /// </summary>
+        public string Image { get; set; }
+
+        /// <summary>
+        /// Image pull policy: Always, IfNotPresent, Never.
+        /// Default is IfNotPresent.
+        /// </summary>
+        public string PullPolicy { get; set; }
+
+        /// <summary>
         /// True if a request to archive existing log files is provided.
         /// </summary>
         public bool IsArchiveLogsRequested
