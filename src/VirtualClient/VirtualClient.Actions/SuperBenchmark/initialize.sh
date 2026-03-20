@@ -33,17 +33,18 @@ if [[ -n "${2:-}" ]]; then
   # Start Docker back up
   sudo systemctl start docker
 
-  # (Optional) Warm-up/check NVIDIA devices as you had in the commented section
-  # sudo docker run --rm --gpus all nvidia/cuda:11.0.3-base nvidia-smi
 else
   echo "No second argument provided; skipping Docker data-root configuration."
 fi
 
-# Command to install sb dependencies.
-python3 -m pip install .
+# create a new virtual environment
+python3 -m venv ./venv
+# activate the virtual environment
+source ./venv/bin/activate
 
-# Command to build sb.
-make postinstall 
+# Commands to build sb.
+python3 -m pip install .
+make postinstall
 
 # This command initiates /dev/nvidiactl and /dev/nvidia-uvm directories, which sb checks before running.
-sudo docker run --rm --gpus all nvidia/cuda:11.0.3-base nvidia-smi 
+sudo docker run --rm --gpus all nvidia/cuda:12.4.1-base-ubuntu22.04 nvidia-smi
