@@ -84,7 +84,7 @@
             "Parameters": {
                 "Scenario": "DownloadHammerDBPackage",
                 "BlobContainer": "packages",
-                "BlobName": "hammerdb.4.12.0.rev3.zip",
+                "BlobName": "hammerdb.4.12.0.rev4.zip",
                 "PackageName": "hammerdb",
                 "Extract": true
             }

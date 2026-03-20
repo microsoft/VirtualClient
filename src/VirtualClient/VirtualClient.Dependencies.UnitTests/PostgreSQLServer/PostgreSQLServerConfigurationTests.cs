@@ -174,60 +174,6 @@ namespace VirtualClient.Dependencies
             Assert.AreEqual(0, commandsExecuted);
         }
 
-        [Test]
-        [TestCase(PlatformID.Unix, Architecture.X64)]
-        [TestCase(PlatformID.Win32NT, Architecture.X64)]
-        public async Task PostgreSQLServerConfigurationExecutesTheExpectedProcessForDistributeDatabaseCommand(PlatformID platform, Architecture architecture)
-        {
-            this.SetupTest(platform, architecture);
-            this.mockFixture.Parameters["Action"] = "DistributeDatabase";
-            string expectedCommand;
-
-            if (platform == PlatformID.Unix)
-            {
-                expectedCommand = 
-                    $"python3 {this.packagePath}/distribute-database.py " +
-                    $"--dbName hammerdbtest " +
-                    $"--directories \"/home/user/mnt_dev_sdc1/postgresql;/home/user/mnt_dev_sdd1/postgresql;/home/user/mnt_dev_sde1/postgresql;\" " +
-                    $"--password [A-Za-z0-9+/=]+";
-            }
-            else
-            {
-                string tempPackagePath = this.packagePath.Replace(@"\", @"\\");
-                expectedCommand = $"python3 {tempPackagePath}/distribute-database.py --dbName hammerdbtest --directories \"D:\\\\postgresql;E:\\\\postgresql;F:\\\\postgresql;\" --password [A-Za-z0-9+/=]+";
-            }
-
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
-            {
-                string executedCommand = $"{exe} {arguments}";
-                Assert.IsTrue(Regex.IsMatch(executedCommand, expectedCommand));
-
-                InMemoryProcess process = new InMemoryProcess
-                {
-                    StartInfo = new ProcessStartInfo
-                    {
-                        FileName = exe,
-                        Arguments = arguments
-                    },
-                    ExitCode = 0,
-                    OnStart = () => true,
-                    OnHasExited = () => true
-                };
-
-                return process;
-            };
-
-            this.mockFixture.StateManager.OnSaveState((stateId, state) =>
-            {
-                Assert.IsNotNull(state);
-            });
-
-            using (TestPostgreSQLServerConfiguration component = new TestPostgreSQLServerConfiguration(this.mockFixture))
-            {
-                await component.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
-            }
-        }
-
         private class TestPostgreSQLServerConfiguration : PostgreSQLServerConfiguration
         {
             public TestPostgreSQLServerConfiguration(MockFixture fixture)

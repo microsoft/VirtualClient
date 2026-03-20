@@ -25,6 +25,7 @@ namespace VirtualClient.Actions
     [SupportedPlatforms("linux-x64")]
     public class HammerDBExecutor : VirtualClientComponent
     {
+        private static string createDBTclName = "createDB.tcl";
         private readonly IStateManager stateManager;
         private static readonly List<int> Factors = new List<int> { 1, 10, 30, 100, 300, 1000, 3000, 10000, 30000, 100000 };
 
@@ -54,28 +55,6 @@ namespace VirtualClient.Actions
             {
                 this.Parameters.TryGetValue(nameof(this.Action), out IConvertible action);
                 return action?.ToString();
-            }
-        }
-
-        /// <summary>
-        /// Defines the name of the createDB TCL file.
-        /// </summary>
-        public string CreateDBTclName
-        {
-            get
-            {
-                return "createDB.tcl";
-            }
-        }
-
-        /// <summary>
-        /// Defines the name of the runTransactions TCL file.
-        /// </summary>
-        public string RunTransactionsTclName
-        {
-            get
-            {
-                return "runTransactions.tcl";
             }
         }
 
@@ -134,18 +113,6 @@ namespace VirtualClient.Actions
             {
                 this.Parameters.TryGetValue(nameof(this.WarehouseCount), out IConvertible warehouseCount);
                 return warehouseCount?.ToString();
-            }
-        }
-
-        /// <summary>
-        /// Disk filter specified
-        /// </summary>
-        public string DiskFilter
-        {
-            get
-            {
-                // and 256G
-                return this.Parameters.GetValue<string>(nameof(this.DiskFilter), "osdisk:false&sizegreaterthan:256g");
             }
         }
 
@@ -341,7 +308,7 @@ namespace VirtualClient.Actions
         private async Task PrepareSQLDatabase(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             string command = "python3";
-            string arguments = $"{this.PlatformSpecifics.Combine(this.HammerDBPackagePath, "populate-database.py")} --createDBTCLPath {this.CreateDBTclName}";
+            string arguments = $"{this.PlatformSpecifics.Combine(this.HammerDBPackagePath, "populate-database.py")} --createDBTCLPath {createDBTclName}";
             
             using (IProcessProxy process = await this.ExecuteCommandAsync(
                 command,
@@ -383,12 +350,6 @@ namespace VirtualClient.Actions
             string arguments = $"{this.PlatformSpecifics.Combine(this.HammerDBPackagePath, "configure-workload-generator.py")} --workload {this.Workload} --sqlServer {this.SQLServer} --port {this.Port}" +
                     $" --virtualUsers {this.VirtualUsers} --password {this.SuperUserPassword} --dbName {this.DatabaseName} --hostIPAddress {this.ServerIpAddress}";
 
-            if (this.IsMultiRoleLayout() && this.GetLayoutClientInstance().Role == ClientRole.Server)
-            {
-                string directories = await this.GetDataDirectoriesAsync(cancellationToken);
-                arguments = $"{arguments} --directories {directories}";
-            }
-
             if (this.Workload.Equals("tpcc", StringComparison.OrdinalIgnoreCase))
             {
                 arguments = $"{arguments} --warehouseCount {this.WarehouseCount} --duration {this.Duration.TotalMinutes}";
@@ -407,50 +368,6 @@ namespace VirtualClient.Actions
             }
 
             this.HammerDBScenarioArguments = arguments;
-        }
-
-        private async Task<string> GetDataDirectoriesAsync(CancellationToken cancellationToken)
-        {
-            string diskPaths = string.Empty;
-
-            if (!cancellationToken.IsCancellationRequested)
-            {
-                IEnumerable<Disk> disks = await this.SystemManager.DiskManager.GetDisksAsync(cancellationToken)
-                        .ConfigureAwait(false);
-
-                if (disks?.Any() != true)
-                {
-                    throw new WorkloadException(
-                        "Unexpected scenario. The disks defined for the system could not be properly enumerated.",
-                        ErrorReason.WorkloadUnexpectedAnomaly);
-                }
-
-                IEnumerable<Disk> disksToTest = DiskFilters.FilterDisks(disks, this.DiskFilter, this.Platform).ToList();
-
-                if (disksToTest?.Any() != true)
-                {
-                    throw new WorkloadException(
-                        "Expected disks to test not found. Given the parameters defined for the profile action/step or those passed " +
-                        "in on the command line, the requisite disks do not exist on the system or could not be identified based on the properties " +
-                        "of the existing disks.",
-                        ErrorReason.DependencyNotFound);
-                }
-
-                foreach (Disk disk in disksToTest)
-                {
-                    string path = this.Combine(disk.GetPreferredAccessPath(this.Platform), $"{this.SQLServer.ToLower()}");
-
-                    // Create the directory if it doesn't exist
-                    if (!this.SystemManager.FileSystem.Directory.Exists(path))
-                    {
-                        this.SystemManager.FileSystem.Directory.CreateDirectory(path);
-                    }
-
-                    diskPaths += $"{path}:";
-                }
-            }
-
-            return diskPaths;
         }
 
         private static Task OpenFirewallPortsAsync(int port, IFirewallManager firewallManager, CancellationToken cancellationToken)

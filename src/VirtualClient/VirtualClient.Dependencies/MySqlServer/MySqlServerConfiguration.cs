@@ -161,10 +161,6 @@ namespace VirtualClient.Dependencies.MySqlServer
                             await this.CreateMySQLServerDatabaseAsync(telemetryContext, cancellationToken)
                                 .ConfigureAwait(false);
                             break;
-                        case ConfigurationAction.DistributeDatabase:
-                            await this.DistributeMySQLDatabaseAsync(telemetryContext, cancellationToken)
-                                .ConfigureAwait(false);
-                            break;
                         case ConfigurationAction.SetGlobalVariables:
                             await this.SetMySQLGlobalVariableAsync(telemetryContext, cancellationToken)
                                 .ConfigureAwait(false);
@@ -235,27 +231,6 @@ namespace VirtualClient.Dependencies.MySqlServer
         private async Task SetMySQLGlobalVariableAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             string arguments = $"{this.packageDirectory}/set-global-variables.py --variables \"{this.Variables}\"";
-
-            using (IProcessProxy process = await this.ExecuteCommandAsync(
-                    PythonCommand,
-                    arguments,
-                    Environment.CurrentDirectory,
-                    telemetryContext,
-                    cancellationToken))
-            {
-                if (!cancellationToken.IsCancellationRequested)
-                {
-                    await this.LogProcessDetailsAsync(process, telemetryContext, "MySQLServerConfiguration", logToFile: true);
-                    process.ThrowIfDependencyInstallationFailed(process.StandardError.ToString());
-                }
-            }
-        }
-
-        private async Task DistributeMySQLDatabaseAsync(EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            string innoDbDirs = await this.GetMySQLInnodbDirectoriesAsync(cancellationToken);
-
-            string arguments = $"{this.packageDirectory}/distribute-database.py --dbName {this.DatabaseName} --directories \"{innoDbDirs}\"";
 
             using (IProcessProxy process = await this.ExecuteCommandAsync(
                     PythonCommand,
@@ -360,11 +335,6 @@ namespace VirtualClient.Dependencies.MySqlServer
             /// ie. "MAX_PREPARED_STMT_COUNT=1000000;MAX_CONNECTIONS=1024"
             /// </summary>
             public const string SetGlobalVariables = nameof(SetGlobalVariables);
-
-            /// <summary>
-            /// Distributes existing database to disks on the system
-            /// </summary>
-            public const string DistributeDatabase = nameof(DistributeDatabase);   
         }
 
         internal class ConfigurationState

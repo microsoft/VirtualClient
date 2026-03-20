@@ -163,10 +163,6 @@ namespace VirtualClient.Dependencies
                             await this.SetupPostgreSQLDatabaseAsync(telemetryContext, cancellationToken)
                                 .ConfigureAwait(false);
                             break;
-                        case ConfigurationAction.DistributeDatabase:
-                            await this.DistributePostgreSQLDatabaseAsync(telemetryContext, cancellationToken)
-                                .ConfigureAwait(false);
-                            break;
                     }
 
                     await this.stateManager.SaveStateAsync(stateId, new ConfigurationState(this.Action), cancellationToken);
@@ -216,71 +212,6 @@ namespace VirtualClient.Dependencies
             }
         }
 
-        private async Task DistributePostgreSQLDatabaseAsync(EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            string innoDbDirs = await this.GetPostgreSQLInnodbDirectoriesAsync(cancellationToken);
-
-            string arguments = $"{this.packageDirectory}/distribute-database.py --dbName {this.DatabaseName} --directories \"{innoDbDirs}\" --password {this.SuperUserPassword}";
-
-            using (IProcessProxy process = await this.ExecuteCommandAsync(
-                    PythonCommand,
-                    arguments,
-                    Environment.CurrentDirectory,
-                    telemetryContext,
-                    cancellationToken))
-            {
-                if (!cancellationToken.IsCancellationRequested)
-                {
-                    await this.LogProcessDetailsAsync(process, telemetryContext, "PostgreSQLServerConfiguration", logToFile: true);
-                    process.ThrowIfDependencyInstallationFailed(process.StandardError.ToString());
-                }
-            }
-        }
-
-        private async Task<string> GetPostgreSQLInnodbDirectoriesAsync(CancellationToken cancellationToken)
-        {
-            string diskPaths = string.Empty;
-
-            if (!cancellationToken.IsCancellationRequested)
-            {
-                IEnumerable<Disk> disks = await this.SystemManager.DiskManager.GetDisksAsync(cancellationToken)
-                        .ConfigureAwait(false);
-
-                if (disks?.Any() != true)
-                {
-                    throw new WorkloadException(
-                        "Unexpected scenario. The disks defined for the system could not be properly enumerated.",
-                        ErrorReason.WorkloadUnexpectedAnomaly);
-                }
-
-                IEnumerable<Disk> disksToTest = DiskFilters.FilterDisks(disks, this.DiskFilter, this.Platform).ToList();
-
-                if (disksToTest?.Any() != true)
-                {
-                    throw new WorkloadException(
-                        "Expected disks to test not found. Given the parameters defined for the profile action/step or those passed " +
-                        "in on the command line, the requisite disks do not exist on the system or could not be identified based on the properties " +
-                        "of the existing disks.",
-                        ErrorReason.DependencyNotFound);
-                }
-
-                foreach (Disk disk in disksToTest)
-                {
-                    string postgresqlPath = this.Combine(disk.GetPreferredAccessPath(this.Platform), "postgresql");
-
-                    // Create the directory if it doesn't exist
-                    if (!this.SystemManager.FileSystem.Directory.Exists(postgresqlPath))
-                    {
-                        this.SystemManager.FileSystem.Directory.CreateDirectory(postgresqlPath);
-                    }
-
-                    diskPaths += $"{postgresqlPath};";
-                }
-            }
-
-            return diskPaths;
-        }
-
         /// <summary>
         /// Supported PostgreSQL Server configuration actions.
         /// </summary>
@@ -295,12 +226,6 @@ namespace VirtualClient.Dependencies
             /// Creates Database on PostgreSQL server and Users on Server and any Clients.
             /// </summary>
             public const string SetupDatabase = nameof(SetupDatabase);
-
-            /// <summary>
-            /// Distributes existing database to disks on the system
-            /// </summary>
-            public const string DistributeDatabase = nameof(DistributeDatabase);
-
         }
 
         internal class ConfigurationState

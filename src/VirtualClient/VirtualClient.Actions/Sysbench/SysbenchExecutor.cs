@@ -61,27 +61,6 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Defines the mode in which Sysbench is operating.
-        /// </summary>
-        protected internal enum SysbenchMode
-        {
-            /// <summary>
-            /// Creates the database schema with minimal data.
-            /// </summary>
-            Prepare,
-
-            /// <summary>
-            /// Populates the database with the full dataset.
-            /// </summary>
-            Populate,
-
-            /// <summary>
-            /// Runs the benchmark workload.
-            /// </summary>
-            Run
-        }
-
-        /// <summary>
         /// The benchmark (e.g. OLTP, TPCC).
         /// </summary>
         public string Benchmark
@@ -409,7 +388,7 @@ namespace VirtualClient.Actions
         /// dbName, databaseSystem, benchmark and tableCount.
         /// </summary>
         /// <returns></returns>
-        protected string BuildSysbenchLoggingArguments(SysbenchMode mode)
+        protected string BuildSysbenchLoggingArguments()
         {
             int tableCount = GetTableCount(this.DatabaseScenario, this.TableCount, this.Workload);
             int threadCount = GetThreadCount(this.SystemManager, this.DatabaseScenario, this.Threads);
@@ -419,19 +398,11 @@ namespace VirtualClient.Actions
             switch (this.Benchmark)
             {
                 case BenchmarkName.OLTP:
-                    int recordCount = mode == SysbenchMode.Prepare ? 1 : GetRecordCount(this.SystemManager, this.DatabaseScenario, this.RecordCount);
+                    int recordCount = GetRecordCount(this.SystemManager, this.DatabaseScenario, this.RecordCount);
                     loggingArguments = $"{loggingArguments} --recordCount {recordCount}";
                     break;
                 case BenchmarkName.TPCC:
-                    int warehouseEstimate = GetWarehouseCount(this.SystemManager, this.DatabaseScenario, this.WarehouseCount);
-                    int warehouseCount = mode switch
-                    {
-                        SysbenchMode.Prepare => 1,
-                        SysbenchMode.Populate => warehouseEstimate - 1,
-                        SysbenchMode.Run => warehouseEstimate,
-                        _ => warehouseEstimate
-                    };
-
+                    int warehouseCount = GetWarehouseCount(this.SystemManager, this.DatabaseScenario, this.WarehouseCount);
                     loggingArguments = $"{loggingArguments} --warehouses {warehouseCount}";
                     break;
                 default:
