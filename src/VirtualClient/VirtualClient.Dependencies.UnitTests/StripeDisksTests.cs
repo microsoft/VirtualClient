@@ -17,7 +17,9 @@ namespace VirtualClient.Dependencies
     [Category("Unit")]
     public class StripeDisksTests
     {
+        private const string PackageName = "system_config";
         private MockFixture mockFixture;
+        private DependencyPath systemConfigPackage;
 
         [SetUp]
         public void SetupTest()
@@ -25,6 +27,8 @@ namespace VirtualClient.Dependencies
             this.mockFixture = new MockFixture();
             this.mockFixture.Setup(PlatformID.Unix);
             this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>())).Returns(true);
+            this.mockFixture.Parameters["PackageName"] = PackageName;
+            this.SetupSystemConfigPackage();
         }
 
         [Test]
@@ -32,13 +36,13 @@ namespace VirtualClient.Dependencies
         {
             this.mockFixture.Parameters["DiskFilter"] = "OSDisk:false&SizeGreaterThan:256GB";
 
-            string expectedScriptPath = this.mockFixture.GetScriptPath("stripedisks", "striping.py");
+            string expectedScriptPath = this.GetExpectedScriptPath("stripe_disks.sh");
             string expectedMountDir = $"/home/{Environment.UserName}/mnt_raid0";
 
             bool confirmed = false;
             this.mockFixture.ProcessManager.OnProcessCreated = (process) =>
             {
-                string expectedCommand = $"sudo python3 {expectedScriptPath} --sizeGreaterThan 256 --mountDirectory {expectedMountDir}";
+                string expectedCommand = $"sudo bash {expectedScriptPath} --sizeGreaterThan 256 --mountDirectory {expectedMountDir} --diskCount 0";
                 if (process.FullCommand() == expectedCommand)
                 {
                     confirmed = true;
@@ -58,13 +62,13 @@ namespace VirtualClient.Dependencies
         {
             this.mockFixture.Parameters["DiskFilter"] = "OSDisk:false";
 
-            string expectedScriptPath = this.mockFixture.GetScriptPath("stripedisks", "striping.py");
+            string expectedScriptPath = this.GetExpectedScriptPath("stripe_disks.sh");
             string expectedMountDir = $"/home/{Environment.UserName}/mnt_raid0";
 
             bool confirmed = false;
             this.mockFixture.ProcessManager.OnProcessCreated = (process) =>
             {
-                string expectedCommand = $"sudo python3 {expectedScriptPath} --sizeGreaterThan 0 --mountDirectory {expectedMountDir}";
+                string expectedCommand = $"sudo bash {expectedScriptPath} --sizeGreaterThan 0 --mountDirectory {expectedMountDir} --diskCount 0";
                 if (process.FullCommand() == expectedCommand)
                 {
                     confirmed = true;
@@ -226,6 +230,88 @@ namespace VirtualClient.Dependencies
         {
             int result = StripeDisks.ParseSizeGreaterThan(diskFilter);
             Assert.AreEqual(expectedSizeGreaterThan, result);
+        }
+
+        [Test]
+        public async Task StripeDisksExecutesTheExpectedCommandOnWindows()
+        {
+            this.mockFixture = new MockFixture();
+            this.mockFixture.Setup(PlatformID.Win32NT);
+            this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>())).Returns(true);
+            this.mockFixture.Parameters["PackageName"] = PackageName;
+            this.SetupSystemConfigPackage();
+            this.mockFixture.Parameters["DiskFilter"] = "OSDisk:false&SizeGreaterThan:256GB";
+
+            string expectedScriptPath = this.GetExpectedScriptPath("stripe_disks.cmd");
+
+            bool confirmed = false;
+            this.mockFixture.ProcessManager.OnProcessCreated = (process) =>
+            {
+                string expectedCommand = $"cmd /c {expectedScriptPath} --sizeGreaterThan 256 --diskCount 0";
+                if (process.FullCommand() == expectedCommand)
+                {
+                    confirmed = true;
+                }
+            };
+
+            using (StripeDisks component = new StripeDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                await component.ExecuteAsync(CancellationToken.None);
+            }
+
+            Assert.IsTrue(confirmed);
+        }
+
+        [Test]
+        public async Task StripeDisksExecutesTheExpectedCommandOnWindowsWithCustomParameters()
+        {
+            this.mockFixture = new MockFixture();
+            this.mockFixture.Setup(PlatformID.Win32NT);
+            this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>())).Returns(true);
+            this.mockFixture.Parameters["PackageName"] = PackageName;
+            this.SetupSystemConfigPackage();
+            this.mockFixture.Parameters["DiskFilter"] = "OSDisk:false&SizeGreaterThan:512GB";
+            this.mockFixture.Parameters["DriveLetter"] = "D";
+            this.mockFixture.Parameters["FsType"] = "ReFS";
+            this.mockFixture.Parameters["PoolName"] = "MyPool";
+            this.mockFixture.Parameters["VdName"] = "MyVD";
+            this.mockFixture.Parameters["DiskCount"] = 4;
+
+            string expectedScriptPath = this.GetExpectedScriptPath("stripe_disks.cmd");
+
+            bool confirmed = false;
+            this.mockFixture.ProcessManager.OnProcessCreated = (process) =>
+            {
+                string expectedCommand = $"cmd /c {expectedScriptPath} --sizeGreaterThan 512 --diskCount 4";
+                if (process.FullCommand() == expectedCommand)
+                {
+                    confirmed = true;
+                }
+            };
+
+            using (StripeDisks component = new StripeDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                await component.ExecuteAsync(CancellationToken.None);
+            }
+
+            Assert.IsTrue(confirmed);
+        }
+
+        private void SetupSystemConfigPackage()
+        {
+            this.systemConfigPackage = new DependencyPath(
+                PackageName,
+                this.mockFixture.GetPackagePath(PackageName));
+
+            this.mockFixture.SetupPackage(this.systemConfigPackage);
+        }
+
+        private string GetExpectedScriptPath(string scriptFileName)
+        {
+            return this.mockFixture.Combine(
+                this.systemConfigPackage.Path,
+                this.mockFixture.PlatformSpecifics.PlatformArchitectureName,
+                scriptFileName);
         }
     }
 }

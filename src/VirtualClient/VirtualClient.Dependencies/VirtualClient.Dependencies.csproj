@@ -18,7 +18,6 @@
         -->
 		<ScriptFiles Include="DotNet\*.sh;DotNet\*.ps1" />
 		<ScriptFiles Include="Network\*.sh;Network\*.cmd" />
-		<ScriptFiles Include="StripeDisks\*.py" />
     </ItemGroup>
 
     <Target Name="CopyDependencyScriptsToOutput" AfterTargets="Build">

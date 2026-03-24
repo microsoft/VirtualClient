@@ -6,7 +6,6 @@ namespace VirtualClient.Dependencies
     using System;
     using System.Collections.Generic;
     using System.IO.Abstractions;
-    using System.Linq;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
@@ -17,14 +16,15 @@ namespace VirtualClient.Dependencies
     using VirtualClient.Contracts;
 
     /// <summary>
-    /// A dependency that stripes disks using a Python script.
+    /// A dependency that stripes disks using a platform-specific script.
     /// </summary>
-    [SupportedPlatforms("linux-arm64,linux-x64")]
+    [SupportedPlatforms("linux-arm64,linux-x64,win-arm64,win-x64")]
     public class StripeDisks : VirtualClientComponent
     {
-        private const string ScriptFileName = "striping.py";
-        private ISystemManagement systemManagement;
-        private IFileSystem fileSystem;
+        private const string LinuxScriptFileName = "stripe_disks.sh";
+        private const string WindowsScriptFileName = "stripe_disks.cmd";
+        private readonly ISystemManagement systemManagement;
+        private readonly IFileSystem fileSystem;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="StripeDisks"/> class.
@@ -38,6 +38,17 @@ namespace VirtualClient.Dependencies
         {
             this.systemManagement = this.Dependencies.GetService<ISystemManagement>();
             this.fileSystem = this.systemManagement.FileSystem;
+        }
+
+        /// <summary>
+        /// The number of disks to stripe. Default is 0, which means all eligible disks.
+        /// </summary>
+        public int DiskCount
+        {
+            get
+            {
+                return this.Parameters.GetValue<int>(nameof(this.DiskCount), 0);
+            }
         }
 
         /// <summary>
@@ -125,13 +136,19 @@ namespace VirtualClient.Dependencies
         }
 
         /// <summary>
-        /// Initializes the component by locating the striping script in the package directory.
+        /// Initializes the component by locating the striping script in the system_config package.
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             await this.EvaluateParametersAsync(cancellationToken);
 
-            this.ScriptPath = this.PlatformSpecifics.GetScriptPath("stripedisks", StripeDisks.ScriptFileName);
+            DependencyPath package = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken);
+
+            string scriptFileName = this.Platform == PlatformID.Win32NT
+                ? StripeDisks.WindowsScriptFileName
+                : StripeDisks.LinuxScriptFileName;
+
+            this.ScriptPath = this.Combine(package.Path, scriptFileName);
 
             if (!this.fileSystem.File.Exists(this.ScriptPath))
             {
@@ -143,19 +160,31 @@ namespace VirtualClient.Dependencies
 
             this.ScriptDirectory = this.fileSystem.Path.GetDirectoryName(this.ScriptPath);
             this.SizeGreaterThan = StripeDisks.ParseSizeGreaterThan(this.DiskFilter);
-            this.MountDirectory = this.ResolveMountDirectory();
+
+            if (this.Platform != PlatformID.Win32NT)
+            {
+                this.MountDirectory = this.ResolveMountDirectory();
+            }
         }
 
         /// <summary>
-        /// Executes the striping script using python3.
+        /// Executes the striping script.
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string command = "python3";
-            // The following arguments are omitted and use the script's defaults:
-            // --devicePath (default: /dev/md0) - the RAID device path to create
-            // --diskCount (default: 0) - number of disks to stripe; 0 means all eligible disks
-            string commandArguments = $"{this.ScriptPath} --sizeGreaterThan {this.SizeGreaterThan} --mountDirectory {this.MountDirectory}";
+            string command;
+            string commandArguments;
+
+            if (this.Platform == PlatformID.Win32NT)
+            {
+                command = "cmd";
+                commandArguments = $"/c {this.ScriptPath} --sizeGreaterThan {this.SizeGreaterThan} --diskCount {this.DiskCount}";
+            }
+            else
+            {
+                command = "bash";
+                commandArguments = $"{this.ScriptPath} --sizeGreaterThan {this.SizeGreaterThan} --mountDirectory {this.MountDirectory} --diskCount {this.DiskCount}";
+            }
 
             telemetryContext
                 .AddContext("command", command)
