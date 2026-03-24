@@ -158,11 +158,6 @@ namespace VirtualClient.Actions.NetworkPerformance
                 this.CommandLineWindowsClient += this.Protocol.ToLowerInvariant() == "tcp" ? " --tcp" : string.Empty;
             }
 
-            if (!this.CommandLineWindowsClient.Contains("-i", StringComparison.OrdinalIgnoreCase) && this.Iterations != 0)
-            {
-                this.CommandLineWindowsClient += $" -i {this.Iterations} ";
-            }
-
             if (!this.CommandLineWindowsClient.Contains("-riopoll", StringComparison.OrdinalIgnoreCase) && this.RioPoll != 0)
             {
                 this.CommandLineWindowsClient += $" -riopoll {this.RioPoll}";

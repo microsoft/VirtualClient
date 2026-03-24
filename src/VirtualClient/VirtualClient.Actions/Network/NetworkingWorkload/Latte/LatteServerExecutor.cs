@@ -114,11 +114,6 @@ namespace VirtualClient.Actions.NetworkPerformance
                 this.CommandLineWindowsServer += " ";
             }
 
-            if (!this.CommandLineWindowsServer.Contains("-i", StringComparison.OrdinalIgnoreCase) && this.Iterations != 0)
-            {
-                this.CommandLineWindowsServer += $" -i {this.Iterations} ";
-            }
-
             if (!this.CommandLineWindowsServer.Contains("-riopoll", StringComparison.OrdinalIgnoreCase) && this.RioPoll != 0)
             {
                 this.CommandLineWindowsServer += $" -riopoll {this.RioPoll}";
