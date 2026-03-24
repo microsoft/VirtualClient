@@ -287,7 +287,9 @@ namespace VirtualClient.Dependencies
             string[] packages =
             {
                 "gcc",
-                "gfortran"
+                "gfortran",
+                "g++",
+                "gcov"
             };
 
             // due to the following error:
