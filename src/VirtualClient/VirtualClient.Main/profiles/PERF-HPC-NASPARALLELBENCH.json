@@ -65,9 +65,9 @@
         {
             "Type": "NASParallelBenchExecutor",
             "Parameters": {
-                "Scenario": "is.C.x",
+                "Scenario": "is.{Benchmarkclass}.x",
                 "PackageName": "nasparallelbench",
-                "Benchmark": "is.C.x",
+                "Benchmark": "is.{Benchmarkclass}.x",
                 "Benchmarkclass": "$.Parameters.Benchmarkclass",
                 "Username": "$.Parameters.Username",
                 "ThreadCount": "$.Parameters.ThreadCount"
