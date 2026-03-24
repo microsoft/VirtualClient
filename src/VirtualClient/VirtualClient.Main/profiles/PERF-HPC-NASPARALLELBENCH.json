@@ -142,17 +142,6 @@
         {
             "Type": "NASParallelBenchExecutor",
             "Parameters": {
-                "Scenario": "dc.B.x",
-                "PackageName": "nasparallelbench",
-                "Benchmark": "dc.B.x",
-                "Benchmarkclass": "$.Parameters.Benchmarkclass",
-                "Username": "$.Parameters.Username",
-                "ThreadCount": "$.Parameters.ThreadCount"
-            }
-        },
-        {
-            "Type": "NASParallelBenchExecutor",
-            "Parameters": {
                 "Scenario": "ua.{Benchmarkclass}.x",
                 "PackageName": "nasparallelbench",
                 "Benchmark": "ua.{Benchmarkclass}.x",
