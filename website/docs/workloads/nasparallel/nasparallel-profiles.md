@@ -164,10 +164,45 @@ multiple nodes performance.
   | ThreadCount               | Optional. The number of threads for OpenMP parallelism (OMP_NUM_THREADS). On systems with 2 or fewer cores, this is automatically set to 1. | Logical core count - 2 |
 
   :::note
-  The **IS** (Integer Sort) and **DC** (Data Cube) benchmarks are pinned to specific classes in the profile regardless of the `Benchmarkclass` parameter.
-  IS is pinned to class **C** and DC is pinned to class **B** because these benchmarks do not support the full range of NPB problem classes
-  (IS supports up to class E; DC supports only classes S, W, A, and B).
+  The **DC** (Data Cube) benchmark is pinned to class **B** in the profile regardless of the `Benchmarkclass` parameter
+  because DC only supports classes S, W, A, and B.
   :::
+= 8).
+
+For the full table of problem sizes and grid dimensions for each benchmark and class, see the
+[NPB Problem Sizes](https://www.nas.nasa.gov/software/npb_problem_sizes.html) reference on the NASA website.
+
+## PERF-HPC-NASPARALLELBENCH.json
+Runs a set of HPC workloads using NAS Parallel Benchmarks to the parallel computing performance. This profile is designed to test both single and 
+multiple nodes performance.
+
+* [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-HPC-NASPARALLELBENCH.json) 
+
+* **Supported Platform/Architectures**
+  * linux-x64
+  * linux-arm64
+
+* **Supports Disconnected Scenarios**  
+  * No. Internet connection required.
+
+* **Dependencies**  
+  The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively. 
+  * Internet connection.
+  * For multi-system scenarios, communications over SSH port 22 must be allowed.
+  * The IP addresses defined in the environment layout (see above) for the Client and Server systems must be correct.
+  * The name of the Client and Server instances defined in the environment layout must match the agent/client IDs supplied on the command line (e.g. --agentId)
+    or must match the name of the system as defined by the operating system itself.
+    
+  Additional information on individual components that exist within the 'Dependencies' section of the profile can be found in the following locations:
+  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/).
+
+* **Profile Parameters**  
+  The following parameters can be optionally supplied on the command line to modify the behaviors of the workload.
+
+  | Parameter                 | Purpose                                                                         | Default Value |
+  |---------------------------|---------------------------------------------------------------------------------|---------------|
+  | Username                  | Required. See 'SSH Requirements' above                                          | No default, must be supplied |
+  | ThreadCount               | Optional. The number of threads for OpenMP parallelism (OMP_NUM_THREADS). On systems with 2 or fewer cores, this is automatically set to 1. | Logical core count - 2 |
 
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
