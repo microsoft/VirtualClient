@@ -84,6 +84,52 @@ client machine. Here is an example [blog post](https://linuxize.com/post/how-to-
 - On client, store server fingprints in ~/.ssh/known_hosts 
 - Last when running the profile, supply the username whos .ssh directory contains all of the files just created/edited. 
 
+## Resource Requirements
+NPB defines problem classes that control the size of the workload. Classes range from **S** (smallest) to **F** (largest). The default class used in this
+profile is **C** (configurable via the `Benchmarkclass` parameter). Larger classes require significantly more memory and compute time.
+
+The table below provides estimated **minimum memory required per node** for each class. These estimates are driven by the most memory-intensive benchmarks
+in the profile (FT and BT/SP/LU). Lighter benchmarks such as EP, IS, and CG require substantially less memory.
+
+| Class | Size Category | Estimated Min. Memory per Node | Typical Use Case |
+|-------|---------------|-------------------------------|------------------|
+| S | Sample | < 200 MB | Quick smoke testing and validation |
+| W | Workstation | < 1 GB | Basic workstation testing |
+| A | Small | ~1 GB | Small-scale testing |
+| B | Medium | ~4 GB | Standard testing |
+| **C** | **Large (default)** | **~8 GB** | **Performance benchmarking** |
+| D | Extra Large | ~128 GB | Large-system benchmarking |
+| E | Huge | ~1 TB | Supercomputer-scale testing |
+| F | Extreme | ~8 TB | Extreme-scale testing |
+
+### How to Estimate Memory
+The most memory-intensive benchmark in the profile is **FT** (3D Fast Fourier Transform), which stores complex double-precision arrays. A simple formula to
+estimate FT memory is:
+
+```
+Memory ≈ 3 × grid_x × grid_y × grid_z × 16 bytes
+```
+
+For example, FT at Class C uses a 512 × 512 × 512 grid:
+```
+3 × 512 × 512 × 512 × 16 bytes ≈ 6.4 GB
+```
+
+The **BT**, **SP**, and **LU** benchmarks (3D fluid dynamics solvers) use the formula:
+```
+Memory ≈ 5 × grid_size³ × 8 bytes × 4 (working copies)
+```
+
+For example, BT at Class C uses a 162 × 162 × 162 grid:
+```
+5 × 162³ × 8 × 4 ≈ 680 MB
+```
+
+As a rule of thumb, memory requirements increase by roughly **8x between consecutive classes** because grid dimensions double in each spatial direction (2³ = 8).
+
+For the full table of problem sizes and grid dimensions for each benchmark and class, see the
+[NPB Problem Sizes](https://www.nas.nasa.gov/software/npb_problem_sizes.html) reference on the NASA website.
+
 ## PERF-HPC-NASPARALLELBENCH.json
 Runs a set of HPC workloads using NAS Parallel Benchmarks to the parallel computing performance. This profile is designed to test both single and 
 multiple nodes performance.
@@ -114,6 +160,14 @@ multiple nodes performance.
   | Parameter                 | Purpose                                                                         | Default Value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
   | Username                  | Required. See 'SSH Requirements' above                                          | No default, must be supplied |
+  | Benchmarkclass            | Optional. The NPB problem class size (S, W, A, B, C, D, E, F). Larger classes require more memory and compute time. See [Resource Requirements](#resource-requirements). | C |
+  | ThreadCount               | Optional. The number of threads for OpenMP parallelism (OMP_NUM_THREADS). On systems with 2 or fewer cores, this is automatically set to 1. | Logical core count - 2 |
+
+  :::note
+  The **IS** (Integer Sort) and **DC** (Data Cube) benchmarks are pinned to specific classes in the profile regardless of the `Benchmarkclass` parameter.
+  IS is pinned to class **C** and DC is pinned to class **B** because these benchmarks do not support the full range of NPB problem classes
+  (IS supports up to class E; DC supports only classes S, W, A, and B).
+  :::
 
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
