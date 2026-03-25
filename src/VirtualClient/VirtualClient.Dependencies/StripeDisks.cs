@@ -6,7 +6,7 @@ namespace VirtualClient.Dependencies
     using System;
     using System.Collections.Generic;
     using System.IO.Abstractions;
-    using System.Text.RegularExpressions;
+    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
@@ -87,12 +87,6 @@ namespace VirtualClient.Dependencies
         }
 
         /// <summary>
-        /// The minimum disk size in GB parsed from the DiskFilter's SizeGreaterThan value,
-        /// or 0 if not specified.
-        /// </summary>
-        protected int SizeGreaterThan { get; set; }
-
-        /// <summary>
         /// The resolved mount directory path for the striped volume.
         /// </summary>
         protected string MountDirectory { get; set; }
@@ -106,34 +100,6 @@ namespace VirtualClient.Dependencies
         /// The directory containing the striping script.
         /// </summary>
         protected string ScriptDirectory { get; set; }
-
-        /// <summary>
-        /// Parses the minimum disk size in GB from the DiskFilter's SizeGreaterThan value.
-        /// Returns 0 if SizeGreaterThan is not present in the filter.
-        /// </summary>
-        /// <param name="diskFilter">The disk filter string (e.g. "OSDisk:false&amp;SizeGreaterThan:256GB").</param>
-        /// <returns>The minimum size in GB, or 0 if not specified.</returns>
-        internal static int ParseSizeGreaterThan(string diskFilter)
-        {
-            foreach (string filter in diskFilter.Split("&", StringSplitOptions.RemoveEmptyEntries))
-            {
-                int colonIndex = filter.IndexOf(':');
-                if (colonIndex < 0)
-                {
-                    continue;
-                }
-
-                string filterName = filter.Substring(0, colonIndex).Trim();
-                if (string.Equals(filterName, "SizeGreaterThan", StringComparison.OrdinalIgnoreCase))
-                {
-                    string filterValue = filter.Substring(colonIndex + 1).Trim();
-                    Match match = Regex.Match(filterValue, @"^(\d+)");
-                    return match.Success ? int.Parse(match.Groups[1].Value) : 0;
-                }
-            }
-
-            return 0;
-        }
 
         /// <summary>
         /// Initializes the component by locating the striping script in the system_config package.
@@ -159,7 +125,6 @@ namespace VirtualClient.Dependencies
             }
 
             this.ScriptDirectory = this.fileSystem.Path.GetDirectoryName(this.ScriptPath);
-            this.SizeGreaterThan = StripeDisks.ParseSizeGreaterThan(this.DiskFilter);
 
             if (this.Platform != PlatformID.Win32NT)
             {
@@ -172,18 +137,45 @@ namespace VirtualClient.Dependencies
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
+            IEnumerable<Disk> allDisks = await this.systemManagement.DiskManager.GetDisksAsync(cancellationToken);
+            IEnumerable<Disk> filteredDisks = DiskFilters.FilterDisks(allDisks, this.DiskFilter, this.Platform);
+
+            if (!filteredDisks.Any())
+            {
+                throw new DependencyException(
+                    $"No disks matching the filter '{this.DiskFilter}' were found on the system. The disk striping operation cannot proceed.",
+                    ErrorReason.DependencyNotFound);
+            }
+
+            if (this.DiskCount > 0)
+            {
+                if (filteredDisks.Count() < this.DiskCount)
+                {
+                    throw new DependencyException(
+                        $"The requested disk count ({this.DiskCount}) exceeds the number of eligible disks ({filteredDisks.Count()}) " +
+                        $"matching the filter '{this.DiskFilter}'.",
+                        ErrorReason.DependencyNotFound);
+                }
+
+                filteredDisks = filteredDisks
+                    .OrderByDescending(d => d.SizeInBytes(this.Platform))
+                    .Take(this.DiskCount);
+            }
+
+            string diskPaths = string.Join(",", filteredDisks.Select(d => d.DevicePath));
+
             string command;
             string commandArguments;
 
             if (this.Platform == PlatformID.Win32NT)
             {
                 command = "cmd";
-                commandArguments = $"/c {this.ScriptPath} --sizeGreaterThan {this.SizeGreaterThan} --diskCount {this.DiskCount}";
+                commandArguments = $"/c {this.ScriptPath} --disks \"{diskPaths}\"";
             }
             else
             {
                 command = "bash";
-                commandArguments = $"{this.ScriptPath} --sizeGreaterThan {this.SizeGreaterThan} --mountDirectory {this.MountDirectory} --diskCount {this.DiskCount}";
+                commandArguments = $"{this.ScriptPath} --disks \"{diskPaths}\" --mountDirectory {this.MountDirectory}";
             }
 
             telemetryContext

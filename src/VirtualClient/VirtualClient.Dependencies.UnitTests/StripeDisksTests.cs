@@ -5,6 +5,7 @@ namespace VirtualClient.Dependencies
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using Moq;
@@ -20,6 +21,7 @@ namespace VirtualClient.Dependencies
         private const string PackageName = "system_config";
         private MockFixture mockFixture;
         private DependencyPath systemConfigPackage;
+        private IEnumerable<Disk> linuxDisks;
 
         [SetUp]
         public void SetupTest()
@@ -29,20 +31,24 @@ namespace VirtualClient.Dependencies
             this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>())).Returns(true);
             this.mockFixture.Parameters["PackageName"] = PackageName;
             this.SetupSystemConfigPackage();
+
+            this.linuxDisks = this.mockFixture.CreateDisks(PlatformID.Unix);
+            this.mockFixture.SetupDisks(this.linuxDisks.ToArray());
         }
 
         [Test]
         public async Task StripeDisksExecutesTheExpectedCommand()
         {
-            this.mockFixture.Parameters["DiskFilter"] = "OSDisk:false&SizeGreaterThan:256GB";
+            this.mockFixture.Parameters["DiskFilter"] = "OSDisk:false";
 
             string expectedScriptPath = this.GetExpectedScriptPath("stripe_disks.sh");
             string expectedMountDir = $"/home/{Environment.UserName}/mnt_raid0";
+            string expectedDiskPaths = string.Join(",", this.linuxDisks.Where(d => !d.IsOperatingSystem()).Select(d => d.DevicePath));
 
             bool confirmed = false;
             this.mockFixture.ProcessManager.OnProcessCreated = (process) =>
             {
-                string expectedCommand = $"sudo bash {expectedScriptPath} --sizeGreaterThan 256 --mountDirectory {expectedMountDir} --diskCount 0";
+                string expectedCommand = $"sudo bash {expectedScriptPath} --disks \"{expectedDiskPaths}\" --mountDirectory {expectedMountDir}";
                 if (process.FullCommand() == expectedCommand)
                 {
                     confirmed = true;
@@ -58,17 +64,20 @@ namespace VirtualClient.Dependencies
         }
 
         [Test]
-        public async Task StripeDisksExecutesTheExpectedCommandWhenNoSizeGreaterThanFilterIsProvided()
+        public async Task StripeDisksLimitsDisksByDiskCount()
         {
             this.mockFixture.Parameters["DiskFilter"] = "OSDisk:false";
+            this.mockFixture.Parameters["DiskCount"] = 2;
 
             string expectedScriptPath = this.GetExpectedScriptPath("stripe_disks.sh");
             string expectedMountDir = $"/home/{Environment.UserName}/mnt_raid0";
+            IEnumerable<Disk> nonOsDisks = this.linuxDisks.Where(d => !d.IsOperatingSystem());
+            string expectedDiskPaths = string.Join(",", nonOsDisks.OrderByDescending(d => d.SizeInBytes(PlatformID.Unix)).Take(2).Select(d => d.DevicePath));
 
             bool confirmed = false;
             this.mockFixture.ProcessManager.OnProcessCreated = (process) =>
             {
-                string expectedCommand = $"sudo bash {expectedScriptPath} --sizeGreaterThan 0 --mountDirectory {expectedMountDir} --diskCount 0";
+                string expectedCommand = $"sudo bash {expectedScriptPath} --disks \"{expectedDiskPaths}\" --mountDirectory {expectedMountDir}";
                 if (process.FullCommand() == expectedCommand)
                 {
                     confirmed = true;
@@ -220,16 +229,30 @@ namespace VirtualClient.Dependencies
         }
 
         [Test]
-        [TestCase("OSDisk:false&SizeGreaterThan:256GB", 256)]
-        [TestCase("OSDisk:false&SizeGreaterThan:512GB", 512)]
-        [TestCase("OSDisk:false&SizeGreaterThan:1024GB", 1024)]
-        [TestCase("OSDisk:false", 0)]
-        [TestCase("SizeGreaterThan:128GB&OSDisk:false", 128)]
-        [TestCase("BiggestSize", 0)]
-        public void ParseSizeGreaterThanReturnsTheExpectedValue(string diskFilter, int expectedSizeGreaterThan)
+        public void StripeDisksThrowsWhenNoDisksMatchFilter()
         {
-            int result = StripeDisks.ParseSizeGreaterThan(diskFilter);
-            Assert.AreEqual(expectedSizeGreaterThan, result);
+            this.mockFixture.Parameters["DiskFilter"] = "OSDisk:false";
+            this.mockFixture.SetupDisks(this.linuxDisks.Where(d => d.IsOperatingSystem()).ToArray());
+
+            using (StripeDisks component = new StripeDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                DependencyException exc = Assert.ThrowsAsync<DependencyException>(() => component.ExecuteAsync(CancellationToken.None));
+                Assert.AreEqual(ErrorReason.DependencyNotFound, exc.Reason);
+            }
+        }
+
+        [Test]
+        public void StripeDisksThrowsWhenDiskCountExceedsAvailableDisks()
+        {
+            this.mockFixture.Parameters["DiskFilter"] = "OSDisk:false";
+            int nonOsDiskCount = this.linuxDisks.Count(d => !d.IsOperatingSystem());
+            this.mockFixture.Parameters["DiskCount"] = nonOsDiskCount + 1;
+
+            using (StripeDisks component = new StripeDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                DependencyException exc = Assert.ThrowsAsync<DependencyException>(() => component.ExecuteAsync(CancellationToken.None));
+                Assert.AreEqual(ErrorReason.DependencyNotFound, exc.Reason);
+            }
         }
 
         [Test]
@@ -240,49 +263,18 @@ namespace VirtualClient.Dependencies
             this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>())).Returns(true);
             this.mockFixture.Parameters["PackageName"] = PackageName;
             this.SetupSystemConfigPackage();
-            this.mockFixture.Parameters["DiskFilter"] = "OSDisk:false&SizeGreaterThan:256GB";
+            this.mockFixture.Parameters["DiskFilter"] = "OSDisk:false";
+
+            IEnumerable<Disk> windowsDisks = this.mockFixture.CreateDisks(PlatformID.Win32NT);
+            this.mockFixture.SetupDisks(windowsDisks.ToArray());
+            string expectedDiskPaths = string.Join(",", windowsDisks.Where(d => !d.IsOperatingSystem()).Select(d => d.DevicePath));
 
             string expectedScriptPath = this.GetExpectedScriptPath("stripe_disks.cmd");
 
             bool confirmed = false;
             this.mockFixture.ProcessManager.OnProcessCreated = (process) =>
             {
-                string expectedCommand = $"cmd /c {expectedScriptPath} --sizeGreaterThan 256 --diskCount 0";
-                if (process.FullCommand() == expectedCommand)
-                {
-                    confirmed = true;
-                }
-            };
-
-            using (StripeDisks component = new StripeDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
-            {
-                await component.ExecuteAsync(CancellationToken.None);
-            }
-
-            Assert.IsTrue(confirmed);
-        }
-
-        [Test]
-        public async Task StripeDisksExecutesTheExpectedCommandOnWindowsWithCustomParameters()
-        {
-            this.mockFixture = new MockFixture();
-            this.mockFixture.Setup(PlatformID.Win32NT);
-            this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>())).Returns(true);
-            this.mockFixture.Parameters["PackageName"] = PackageName;
-            this.SetupSystemConfigPackage();
-            this.mockFixture.Parameters["DiskFilter"] = "OSDisk:false&SizeGreaterThan:512GB";
-            this.mockFixture.Parameters["DriveLetter"] = "D";
-            this.mockFixture.Parameters["FsType"] = "ReFS";
-            this.mockFixture.Parameters["PoolName"] = "MyPool";
-            this.mockFixture.Parameters["VdName"] = "MyVD";
-            this.mockFixture.Parameters["DiskCount"] = 4;
-
-            string expectedScriptPath = this.GetExpectedScriptPath("stripe_disks.cmd");
-
-            bool confirmed = false;
-            this.mockFixture.ProcessManager.OnProcessCreated = (process) =>
-            {
-                string expectedCommand = $"cmd /c {expectedScriptPath} --sizeGreaterThan 512 --diskCount 4";
+                string expectedCommand = $"cmd /c {expectedScriptPath} --disks \"{expectedDiskPaths}\"";
                 if (process.FullCommand() == expectedCommand)
                 {
                     confirmed = true;
