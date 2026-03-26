@@ -3,127 +3,151 @@
     "Metadata": {
         "RecommendedMinimumExecutionTime": "05:00:00",
         "SupportedPlatforms": "linux-x64,linux-arm64",
-        "SupportedOperatingSystems": "Ubuntu"
+        "SupportedOperatingSystems": "Ubuntu",
+        "DocumentationUri": "https://microsoft.github.io/VirtualClient/docs/workloads/nasparallel/nasparallel-profiles/"
     },
     "Parameters": {
-        "Username": ""
+        "Username": "",
+        "Benchmarkclass": "C",
+        "ThreadCount": "{calculate({LogicalCoreCount} - 2)}"
     },
+    "ParametersOn": [
+        {
+            "Condition": "{calculate({LogicalCoreCount} <= 2)}",
+            "ThreadCount": "1"
+        }
+    ],
     "Actions": [
         {
             "Type": "NASParallelBenchExecutor",
             "Parameters": {
-                "Scenario": "bt.D.x",
+                "Scenario": "bt.{Benchmarkclass}.x",
                 "PackageName": "nasparallelbench",
-                "Benchmark": "bt.D.x",
-                "Username": "$.Parameters.Username"
+                "Benchmark": "bt.{Benchmarkclass}.x",
+                "Benchmarkclass": "$.Parameters.Benchmarkclass",
+                "Username": "$.Parameters.Username",
+                "ThreadCount": "$.Parameters.ThreadCount"
             }
         },
         {
             "Type": "NASParallelBenchExecutor",
             "Parameters": {
-                "Scenario": "cg.D.x",
+                "Scenario": "cg.{Benchmarkclass}.x",
                 "PackageName": "nasparallelbench",
-                "Benchmark": "cg.D.x",
-                "Username": "$.Parameters.Username"
+                "Benchmark": "cg.{Benchmarkclass}.x",
+                "Benchmarkclass": "$.Parameters.Benchmarkclass",
+                "Username": "$.Parameters.Username",
+                "ThreadCount": "$.Parameters.ThreadCount"
             }
         },
         {
             "Type": "NASParallelBenchExecutor",
             "Parameters": {
-                "Scenario": "ep.D.x",
+                "Scenario": "ep.{Benchmarkclass}.x",
                 "PackageName": "nasparallelbench",
-                "Benchmark": "ep.D.x",
-                "Username": "$.Parameters.Username"
+                "Benchmark": "ep.{Benchmarkclass}.x",
+                "Benchmarkclass": "$.Parameters.Benchmarkclass",
+                "Username": "$.Parameters.Username",
+                "ThreadCount": "$.Parameters.ThreadCount"
             }
         },
         {
             "Type": "NASParallelBenchExecutor",
             "Parameters": {
-                "Scenario": "ft.D.x",
+                "Scenario": "ft.{Benchmarkclass}.x",
                 "PackageName": "nasparallelbench",
-                "Benchmark": "ft.D.x",
-                "Username": "$.Parameters.Username"
+                "Benchmark": "ft.{Benchmarkclass}.x",
+                "Benchmarkclass": "$.Parameters.Benchmarkclass",
+                "Username": "$.Parameters.Username",
+                "ThreadCount": "$.Parameters.ThreadCount"
             }
         },
         {
             "Type": "NASParallelBenchExecutor",
             "Parameters": {
-                "Scenario": "is.C.x",
+                "Scenario": "is.{Benchmarkclass}.x",
                 "PackageName": "nasparallelbench",
-                "Benchmark": "is.C.x",
-                "Username": "$.Parameters.Username"
+                "Benchmark": "is.{Benchmarkclass}.x",
+                "Benchmarkclass": "$.Parameters.Benchmarkclass",
+                "Username": "$.Parameters.Username",
+                "ThreadCount": "$.Parameters.ThreadCount"
             }
         },
         {
             "Type": "NASParallelBenchExecutor",
             "Parameters": {
-                "Scenario": "lu.D.x",
+                "Scenario": "lu.{Benchmarkclass}.x",
                 "PackageName": "nasparallelbench",
-                "Benchmark": "lu.D.x",
-                "Username": "$.Parameters.Username"
+                "Benchmark": "lu.{Benchmarkclass}.x",
+                "Benchmarkclass": "$.Parameters.Benchmarkclass",
+                "Username": "$.Parameters.Username",
+                "ThreadCount": "$.Parameters.ThreadCount"
             }
         },
         {
             "Type": "NASParallelBenchExecutor",
             "Parameters": {
-                "Scenario": "mg.D.x",
+                "Scenario": "mg.{Benchmarkclass}.x",
                 "PackageName": "nasparallelbench",
-                "Benchmark": "mg.D.x",
-                "Username": "$.Parameters.Username"
+                "Benchmark": "mg.{Benchmarkclass}.x",
+                "Benchmarkclass": "$.Parameters.Benchmarkclass",
+                "Username": "$.Parameters.Username",
+                "ThreadCount": "$.Parameters.ThreadCount"
             }
         },
         {
             "Type": "NASParallelBenchExecutor",
             "Parameters": {
-                "Scenario": "sp.D.x",
+                "Scenario": "sp.{Benchmarkclass}.x",
                 "PackageName": "nasparallelbench",
-                "Benchmark": "sp.D.x",
-                "Username": "$.Parameters.Username"
+                "Benchmark": "sp.{Benchmarkclass}.x",
+                "Benchmarkclass": "$.Parameters.Benchmarkclass",
+                "Username": "$.Parameters.Username",
+                "ThreadCount": "$.Parameters.ThreadCount"
             }
         },
         {
             "Type": "NASParallelBenchExecutor",
             "Parameters": {
-                "Scenario": "dt.D.x",
+                "Scenario": "dt.{Benchmarkclass}.x",
                 "PackageName": "nasparallelbench",
-                "Benchmark": "dt.D.x WH",
-                "Username": "$.Parameters.Username"
+                "Benchmark": "dt.{Benchmarkclass}.x WH",
+                "Benchmarkclass": "$.Parameters.Benchmarkclass",
+                "Username": "$.Parameters.Username",
+                "ThreadCount": "$.Parameters.ThreadCount"
             }
         },
         {
             "Type": "NASParallelBenchExecutor",
             "Parameters": {
-                "Scenario": "dt.D.x",
+                "Scenario": "dt.{Benchmarkclass}.x",
                 "PackageName": "nasparallelbench",
-                "Benchmark": "dt.D.x BH",
-                "Username": "$.Parameters.Username"
+                "Benchmark": "dt.{Benchmarkclass}.x BH",
+                "Benchmarkclass": "$.Parameters.Benchmarkclass",
+                "Username": "$.Parameters.Username",
+                "ThreadCount": "$.Parameters.ThreadCount"
             }
         },
         {
             "Type": "NASParallelBenchExecutor",
             "Parameters": {
-                "Scenario": "dt.D.x",
+                "Scenario": "dt.{Benchmarkclass}.x",
                 "PackageName": "nasparallelbench",
-                "Benchmark": "dt.D.x SH",
-                "Username": "$.Parameters.Username"
+                "Benchmark": "dt.{Benchmarkclass}.x SH",
+                "Benchmarkclass": "$.Parameters.Benchmarkclass",
+                "Username": "$.Parameters.Username",
+                "ThreadCount": "$.Parameters.ThreadCount"
             }
         },
         {
             "Type": "NASParallelBenchExecutor",
             "Parameters": {
-                "Scenario": "dc.B.x",
+                "Scenario": "ua.{Benchmarkclass}.x",
                 "PackageName": "nasparallelbench",
-                "Benchmark": "dc.B.x",
-                "Username": "$.Parameters.Username"
-            }
-        },
-        {
-            "Type": "NASParallelBenchExecutor",
-            "Parameters": {
-                "Scenario": "ua.D.x",
-                "PackageName": "nasparallelbench",
-                "Benchmark": "ua.D.x",
-                "Username": "$.Parameters.Username"
+                "Benchmark": "ua.{Benchmarkclass}.x",
+                "Benchmarkclass": "$.Parameters.Benchmarkclass",
+                "Username": "$.Parameters.Username",
+                "ThreadCount": "$.Parameters.ThreadCount"
             }
         }
     ],

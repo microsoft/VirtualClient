@@ -40,7 +40,8 @@ namespace VirtualClient.Actions.NASParallelBench
             {
                 ["PackageName"] = this.mockPackage.Name,
                 ["Benchmark"] = NASParallelBenchClientExecutorTests.ExampleBenchmark,
-                ["Username"] = NASParallelBenchClientExecutorTests.ExampleUsername
+                ["Username"] = NASParallelBenchClientExecutorTests.ExampleUsername,
+                ["ThreadCount"] = Environment.ProcessorCount
             };
 
             this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>())).Returns(true);
@@ -140,6 +141,29 @@ namespace VirtualClient.Actions.NASParallelBench
             {
                 Assert.AreEqual(cmd, "sudo");
                 Assert.AreEqual(args, $"bash -c \"export OMP_NUM_THREADS={Environment.ProcessorCount} " +
+                    $"&& {this.mockFixture.GetPackagePath()}/nasparallelbench/linux-x64/NPB-OMP/bin/" +
+                    $"bt.S.x\"");
+                return this.mockFixture.Process;
+            };
+
+            using NASParallelBenchClientExecutor executor = new NASParallelBenchClientExecutor(
+                this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            {
+                await executor.ExecuteAsync(CancellationToken.None);
+            }
+        }
+
+        [Test]
+        public async Task NASParallelBenchClientExecutorUsesCustomThreadCountWhenSpecified()
+        {
+            this.SetupTest(PlatformID.Unix);
+
+            this.mockFixture.Layout = null;
+            this.mockFixture.Parameters["ThreadCount"] = 8;
+            this.mockFixture.ProcessManager.OnCreateProcess = (cmd, args, wd) =>
+            {
+                Assert.AreEqual(cmd, "sudo");
+                Assert.AreEqual(args, $"bash -c \"export OMP_NUM_THREADS=8 " +
                     $"&& {this.mockFixture.GetPackagePath()}/nasparallelbench/linux-x64/NPB-OMP/bin/" +
                     $"bt.S.x\"");
                 return this.mockFixture.Process;
