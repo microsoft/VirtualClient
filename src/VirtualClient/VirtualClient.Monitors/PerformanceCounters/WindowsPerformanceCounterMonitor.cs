@@ -72,6 +72,19 @@ namespace VirtualClient.Monitors
         }
 
         /// <summary>
+        /// Defines the counter provider to use. Supported values: "Default" (legacy .NET PerformanceCounter API)
+        /// and "WMI" (wmic.exe subprocess, required on systems with >64 logical processors where the legacy API fails).
+        /// Default value is "Default".
+        /// </summary>
+        public string CounterProvider
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.CounterProvider), "Default");
+            }
+        }
+
+        /// <summary>
         /// The list of performance counter categories to capture.
         /// </summary>
         protected IEnumerable<string> Categories
@@ -137,6 +150,11 @@ namespace VirtualClient.Monitors
                         {
                             foreach (WindowsPerformanceCounter counter in this.Counters.Values)
                             {
+                                if (counter.IsDisabled)
+                                {
+                                    continue;
+                                }
+
                                 try
                                 {
                                     counter.Capture();
@@ -266,6 +284,12 @@ namespace VirtualClient.Monitors
         /// <exception cref="DependencyException">No performance counter categories were found on the system.</exception>
         protected virtual void LoadCounters(EventContext telemetryContext, CancellationToken cancellationToken)
         {
+            if (string.Equals(this.CounterProvider, "WMI", StringComparison.OrdinalIgnoreCase))
+            {
+                this.LoadWmiCounters(telemetryContext, cancellationToken);
+                return;
+            }
+
             if (this.categories?.Any() != true)
             {
                 IEnumerable<PerformanceCounterCategory> existingCategories = PerformanceCounterCategory.GetCategories()
@@ -396,6 +420,78 @@ namespace VirtualClient.Monitors
                     {
                         this.Counters[counterName] = new WindowsPerformanceCounter(counter, CaptureStrategy.Average);
                     }
+                }
+            }
+        }
+
+        private void LoadWmiCounters(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            foreach (string category in this.Categories.Distinct())
+            {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    break;
+                }
+
+                string wmiClass = WindowsWmiPerformanceCounter.GetWmiClassName(category);
+                if (wmiClass == null)
+                {
+                    this.Logger.LogMessage(
+                        $"{this.TypeName}.WmiCategoryNotSupported",
+                        LogLevel.Warning,
+                        telemetryContext.Clone().AddContext("category", category));
+                    continue;
+                }
+
+                try
+                {
+                    var allInstances = WindowsWmiPerformanceCounter.QueryAllInstances(category);
+                    if (!allInstances.Any())
+                    {
+                        continue;
+                    }
+
+                    int added = 0;
+                    foreach (var instance in allInstances)
+                    {
+                        foreach (var prop in instance.Value)
+                        {
+                            // Map WMI property back to original counter name format
+                            string originalCounterName = WindowsWmiPerformanceCounter.MapWmiPropertyToCounterName(prop.Key);
+                            string counterName = WindowsPerformanceCounter.GetCounterName(
+                                category, originalCounterName, instance.Key);
+
+                            if (!this.Counters.ContainsKey(counterName) && this.IsSupportedCounter(category, counterName))
+                            {
+                                var wmiCounter = new WindowsWmiPerformanceCounter(
+                                    category, prop.Key, instance.Key, CaptureStrategy.Average);
+
+                                // Override the metric name to use original counter name format
+                                wmiCounter.MetricName = counterName;
+                                this.Counters[counterName] = wmiCounter;
+                                added++;
+                            }
+                        }
+                    }
+
+                    if (added > 0)
+                    {
+                        this.Logger.LogMessage(
+                            $"{this.TypeName}.WmiCountersLoaded",
+                            LogLevel.Information,
+                            telemetryContext.Clone()
+                                .AddContext("category", category)
+                                .AddContext("wmiClass", wmiClass)
+                                .AddContext("countersAdded", added)
+                                .AddContext("wmiInstances", allInstances.Count));
+                    }
+                }
+                catch (Exception exc)
+                {
+                    this.Logger.LogMessage(
+                        $"{this.TypeName}.WmiDiscoveryError",
+                        LogLevel.Warning,
+                        telemetryContext.Clone().AddError(exc));
                 }
             }
         }
