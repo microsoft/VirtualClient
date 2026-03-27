@@ -1,5 +1,5 @@
 {
-    "Description": ".NET benchmarking Workload",
+    "Description": ".NET benchmarking Workload with CPU Core Affinity",
     "Metadata": {
         "RecommendedMinimumExecutionTime": "00:05:00",
         "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64",
@@ -8,29 +8,35 @@
     "Parameters": {
         "DotNetVersion": "8.0.204",
         "TargetFramework": "net8.0",
-        "ServerPort": 9876
+        "ServerPort": 9876,
+        "ServerCoreAffinity": "0-7",
+        "ClientCoreAffinity": "8-15"
     },
     "Actions": [
         {
             "Type": "AspNetServerExecutor",
             "Parameters": {
                 "Role": "Server",
-                "Scenario": "ExecuteJsonSerializationBenchmark",
+                "Scenario": "ExecuteJsonSerializationBenchmarkWithAffinity",
                 "PackageName": "aspnetbenchmarks",
                 "DotNetSdkPackageName": "dotnetsdk",
                 "TargetFramework": "$.Parameters.TargetFramework",
-                "ServerPort": "$.Parameters.ServerPort"
+                "ServerPort": "$.Parameters.ServerPort",
+                "BindToCores": true,
+                "CoreAffinity": "$.Parameters.ServerCoreAffinity"
             }
         },
         {
             "Type": "BombardierExecutor",
             "Parameters": {
                 "Role": "Client",
-                "Scenario": "ExecuteJsonSerializationBenchmark",
+                "Scenario": "ExecuteJsonSerializationBenchmarkWithAffinity",
                 "PackageName": "bombardier",
                 "CommandArguments": "--duration 15s --connections 256 --timeout 10s --fasthttp --insecure -l http://{ServerIp}:9876/json --print r --format json",
                 "WarmUp": false,
-                "Timeout": "00:05:00"
+                "Timeout": "00:05:00",
+                "BindToCores": true,
+                "CoreAffinity": "$.Parameters.ClientCoreAffinity"
             }
         }
     ],

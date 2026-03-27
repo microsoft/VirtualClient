@@ -1,16 +1,18 @@
 {
     "Description": ".NET benchmarking Workload",
     "Metadata": {
-        "RecommendedMinimumExecutionTime": "00:05:00",
+        "RecommendedMinimumExecutionTime": "00:10:00",
         "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64",
         "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows"
     },
     "Parameters": {
-        "DotNetVersion": "8.0.204",
-        "TargetFramework": "net8.0",
-        "EnvironmentVariables": "ASPNETCORE_threadCount=1;DOTNET_SYSTEM_NET_SOCKETS_THREAD_COUNT=1",
-        "AspNetCoreThreadCount": 1,
-        "DotNetSystemNetSocketsThreadCount": 1
+        "DotNetVersion": "9.0.101",
+        "TargetFramework": "net9.0",
+        "ServerPort": 9876,
+        "TestDuration": "00:00:15",
+        "Timeout": "00:10:00",
+        "EmitLatencySpectrum": false,
+        "CommandArguments": "--latency --threads {ThreadCount} --connections {Connection} --duration {TestDuration.TotalSeconds}s --timeout 10s http://{serverip}:{ServerPort}/json --header \"Accept: application/json,text/html;q=0.9,application/xhtml+xml;q=0.9,application/xml;q=0.8,*/*;q=0.7\""
     },
     "Actions": [
         {
@@ -21,36 +23,62 @@
                 "PackageName": "aspnetbenchmarks",
                 "DotNetSdkPackageName": "dotnetsdk",
                 "TargetFramework": "$.Parameters.TargetFramework",
-                "ServerPort": "9876",
-                "AspNetCoreThreadCount": "$.Parameters.AspNetCoreThreadCount",
-                "DotNetSystemNetSocketsThreadCount": "$.Parameters.DotNetSystemNetSocketsThreadCount"
+                "ServerPort": "$.Parameters.ServerPort"
             }
         },
         {
             "Type": "WrkExecutor",
             "Parameters": {
-                "Role": "Client",
-                "Scenario": "ExecuteJsonSerializationBenchmarkWarmUp",
                 "PackageName": "wrk",
-                "CommandArguments": "-t 256 -c 256 -d 45s --timeout 10s http://{ServerIp}:9876/json --header \"Accept: application/json,text/html;q=0.9,application/xhtml+xml;q=0.9,application/xml;q=0.8,*/*;q=0.7\"",
-                "WarmUp": true,
-                "Timeout": "00:05:00"
+                "Scenario": "Warmup",
+                "MetricScenario": "Warmup_ASP.NET-WRK_t{ThreadCount}_c{Connection}_d{TestDuration.TotalSeconds}s",
+                "CommandArguments": "$.Parameters.CommandArguments",
+                "ServerPort": "$.Parameters.ServerPort",
+                "ThreadCount": "64",
+                "Connection": 4096,
+                "TestDuration": "00:00:45",
+                "WarmUp": "true",
+                "EmitLatencySpectrum": "$.Parameters.EmitLatencySpectrum",
+                "Role": "Client",
+                "Timeout": "$.Parameters.Timeout",
+                "Tags": "ASP.NET,WRK"
             }
         },
         {
             "Type": "WrkExecutor",
             "Parameters": {
-                "Role": "Client",
-                "Scenario": "ExecuteJsonSerializationBenchmark",
                 "PackageName": "wrk",
-                "CommandArguments": "-t 256 -c 256 -d 15s --timeout 10s http://{ServerIp}:9876/json --header \"Accept: application/json,text/html;q=0.9,application/xhtml+xml;q=0.9,application/xml;q=0.8,*/*;q=0.7\"",
-                "WarmUp": false,
-                "Timeout": "00:05:00"
+                "Scenario": "Benchmark Measurement",
+                "MetricScenario": "ASP.NET-WRK_t{ThreadCount}_c{Connection}_d{TestDuration.TotalSeconds}s",
+                "CommandArguments": "$.Parameters.CommandArguments",
+                "ServerPort": "$.Parameters.ServerPort",
+                "ThreadCount": "64",
+                "Connection": 4096,
+                "TestDuration": "$.Parameters.TestDuration",
+                "EmitLatencySpectrum": "$.Parameters.EmitLatencySpectrum",
+                "Role": "Client",
+                "Timeout": "$.Parameters.Timeout",
+                "Tags": "ASP.NET,WRK"
             }
         }
-
     ],
     "Dependencies": [
+        {
+            "Type": "LinuxPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallLinuxPackages",
+                "Packages-Apt": "openssl make gcc zlib1g-dev libssl-dev unzip",
+                "Packages-Yum": "zlib-devel,pcre-devel,libevent-devel,openssl-devel,git,gcc-c++,make,autoconf,automake",
+                "Packages-Dnf": "git,make,gcc,zlib-devel,openssl-devel,icu,glibc-devel,kernel-headers,binutils,perl,unzip"
+            }
+        },
+        {
+            "Type": "ExecuteCommand",
+            "Parameters": {
+                "Scenario": "DisableFirewall",
+                "Command": "sudo iptables -P INPUT ACCEPT"
+            }
+        },
         {
             "Type": "ChocolateyInstallation",
             "Parameters": {
@@ -71,16 +99,8 @@
             "Parameters": {
                 "Scenario": "CloneAspNetBenchmarksRepo",
                 "RepoUri": "https://github.com/aspnet/Benchmarks.git",
-                "Commit": "cf5b6ee",
-                "PackageName": "aspnetbenchmarks"
-            }
-        },
-        {
-            "Type": "LinuxPackageInstallation",
-            "Parameters": {
-                "Scenario": "InstallLinuxPackages",
-                "Packages-Apt": "build-essential,unzip",
-                "Role": "Client"
+                "PackageName": "aspnetbenchmarks",
+                "Role": "Server"
             }
         },
         {
@@ -97,8 +117,8 @@
         {
             "Type": "GitRepoClone",
             "Parameters": {
-                "Scenario": "CloneWrkRepo",
-                "RepoUri": "https://github.com/wg/wrk.git",
+                "Scenario": "CloneWrk",
+                "RepoUri": "https://github.com/wg/wrk",
                 "PackageName": "wrk",
                 "Role": "Client"
             }
@@ -124,14 +144,6 @@
             "Type": "ApiServer",
             "Parameters": {
                 "Scenario": "StartAPIServer"
-            }
-        },
-        {
-            "Type": "SetEnvironmentVariable",
-            "Parameters": {
-                "Scenario": "SetEnvironmentVariableForAspNet",
-                "EnvironmentVariables": "$.Parameters.EnvironmentVariables",
-                "Role": "Server"
             }
         }
     ]
