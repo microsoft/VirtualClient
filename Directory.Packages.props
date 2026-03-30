@@ -33,6 +33,7 @@
 		<PackageVersion Include="StyleCop.Analyzers" Version="1.1.118" />
 		<PackageVersion Include="System.CommandLine" Version="2.0.0-beta1.21308.1" />
 		<PackageVersion Include="System.Diagnostics.EventLog" Version="9.0.9" />
+		<PackageVersion Include="Microsoft.Management.Infrastructure" Version="3.0.0" />
 		<PackageVersion Include="System.Diagnostics.PerformanceCounter" Version="9.0.9" />
 		<PackageVersion Include="System.IO.Abstractions" Version="22.0.14" />
 		<PackageVersion Include="System.IO.FileSystem.AccessControl" Version="5.0.0" />

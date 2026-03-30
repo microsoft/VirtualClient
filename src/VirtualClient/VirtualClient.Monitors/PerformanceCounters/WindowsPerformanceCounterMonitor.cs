@@ -72,15 +72,40 @@ namespace VirtualClient.Monitors
         }
 
         /// <summary>
-        /// Defines the counter provider to use. Supported values: "Default" (legacy .NET PerformanceCounter API)
-        /// and "WMI" (wmic.exe subprocess, required on systems with >64 logical processors where the legacy API fails).
-        /// Default value is "Default".
+        /// Defines the counter provider to use. Supported values: "Default" and "WMI".
+        /// When set to "Default", the monitor auto-selects WMI on systems with more than
+        /// 64 logical processors where the legacy .NET PerformanceCounter API fails.
+        /// When set to "WMI", the WMI provider is always used regardless of LP count.
         /// </summary>
         public string CounterProvider
         {
             get
             {
                 return this.Parameters.GetValue<string>(nameof(this.CounterProvider), "Default");
+            }
+        }
+
+        /// <summary>
+        /// The name of the counter provider for telemetry labeling.
+        /// </summary>
+        protected virtual string CounterProviderName => this.UseWmiProvider ? "WMI" : ".NET SDK";
+
+        /// <summary>
+        /// Returns true when the WMI provider should be used, based on the CounterProvider
+        /// parameter and the system's logical processor count.
+        /// </summary>
+        protected bool UseWmiProvider
+        {
+            get
+            {
+                if (string.Equals(this.CounterProvider, "WMI", StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+
+                // Auto-select WMI when the system has >64 logical processors.
+                // The legacy .NET PerformanceCounter API fails on these systems.
+                return Environment.ProcessorCount > 64;
             }
         }
 
@@ -284,7 +309,7 @@ namespace VirtualClient.Monitors
         /// <exception cref="DependencyException">No performance counter categories were found on the system.</exception>
         protected virtual void LoadCounters(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            if (string.Equals(this.CounterProvider, "WMI", StringComparison.OrdinalIgnoreCase))
+            if (this.UseWmiProvider)
             {
                 this.LoadWmiCounters(telemetryContext, cancellationToken);
                 return;
@@ -377,7 +402,7 @@ namespace VirtualClient.Monitors
 
                             if (metrics.Any())
                             {
-                                this.Logger.LogPerformanceCounters(".NET SDK", metrics, metrics.Min(m => m.StartTime), DateTime.UtcNow, telemetryContext);
+                                this.Logger.LogPerformanceCounters(this.CounterProviderName, metrics, metrics.Min(m => m.StartTime), DateTime.UtcNow, telemetryContext);
                             }
                         }
                     }
@@ -408,23 +433,11 @@ namespace VirtualClient.Monitors
             }
         }
 
-        private void AddSupportedCounters(IEnumerable<PerformanceCounter> counters)
-        {
-            if (counters?.Any() == true)
-            {
-                foreach (PerformanceCounter counter in counters)
-                {
-                    string counterName = WindowsPerformanceCounter.GetCounterName(counter.CategoryName, counter.CounterName, counter.InstanceName);
-
-                    if (!this.Counters.ContainsKey(counterName) && this.IsSupportedCounter(counter.CategoryName, counterName))
-                    {
-                        this.Counters[counterName] = new WindowsPerformanceCounter(counter, CaptureStrategy.Average);
-                    }
-                }
-            }
-        }
-
-        private void LoadWmiCounters(EventContext telemetryContext, CancellationToken cancellationToken)
+        /// <summary>
+        /// Loads performance counters via WMI (CimSession) for categories that have
+        /// a known WMI class mapping. Called when <see cref="UseWmiProvider"/> is true.
+        /// </summary>
+        protected void LoadWmiCounters(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             foreach (string category in this.Categories.Distinct())
             {
@@ -454,19 +467,19 @@ namespace VirtualClient.Monitors
                     int added = 0;
                     foreach (var instance in allInstances)
                     {
+                        string instanceKey = string.IsNullOrEmpty(instance.Key) ? null : instance.Key;
+
                         foreach (var prop in instance.Value)
                         {
-                            // Map WMI property back to original counter name format
                             string originalCounterName = WindowsWmiPerformanceCounter.MapWmiPropertyToCounterName(prop.Key);
                             string counterName = WindowsPerformanceCounter.GetCounterName(
-                                category, originalCounterName, instance.Key);
+                                category, originalCounterName, instanceKey);
 
                             if (!this.Counters.ContainsKey(counterName) && this.IsSupportedCounter(category, counterName))
                             {
                                 var wmiCounter = new WindowsWmiPerformanceCounter(
-                                    category, prop.Key, instance.Key, CaptureStrategy.Average);
+                                    category, prop.Key, instanceKey ?? string.Empty, CaptureStrategy.Average);
 
-                                // Override the metric name to use original counter name format
                                 wmiCounter.MetricName = counterName;
                                 this.Counters[counterName] = wmiCounter;
                                 added++;
@@ -492,6 +505,22 @@ namespace VirtualClient.Monitors
                         $"{this.TypeName}.WmiDiscoveryError",
                         LogLevel.Warning,
                         telemetryContext.Clone().AddError(exc));
+                }
+            }
+        }
+
+        private void AddSupportedCounters(IEnumerable<PerformanceCounter> counters)
+        {
+            if (counters?.Any() == true)
+            {
+                foreach (PerformanceCounter counter in counters)
+                {
+                    string counterName = WindowsPerformanceCounter.GetCounterName(counter.CategoryName, counter.CounterName, counter.InstanceName);
+
+                    if (!this.Counters.ContainsKey(counterName) && this.IsSupportedCounter(counter.CategoryName, counterName))
+                    {
+                        this.Counters[counterName] = new WindowsPerformanceCounter(counter, CaptureStrategy.Average);
+                    }
                 }
             }
         }
