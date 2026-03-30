@@ -1562,9 +1562,9 @@ namespace VirtualClient
             return fullPath;
         }
 
-        private static string GetValue(ArgumentResult result, bool normalize = false, bool trim = false)
+        private static string GetValue(Token token, bool normalize = false, bool trim = false)
         {
-            string value = result?.Tokens?.FirstOrDefault()?.Value;
+            string value = token?.Value;
             if (normalize && !string.IsNullOrWhiteSpace(value))
             {
                 // System.CommandLine Quirk:
@@ -1586,6 +1586,11 @@ namespace VirtualClient
             }
 
             return value;
+        }
+
+        private static string GetValue(ArgumentResult result, bool normalize = false, bool trim = false)
+        {
+            return OptionFactory.GetValue(result?.Tokens?.FirstOrDefault(), normalize, trim);
         }
 
         private static IList<string> ParseDelimitedValues(string parsedResult)
@@ -1652,7 +1657,8 @@ namespace VirtualClient
                 {
                     if (!string.IsNullOrWhiteSpace(token.Value))
                     {
-                        delimitedValues.AddRange(TextParsingExtensions.ParseDelimitedValues(token.Value));
+                        string normalizedValue = OptionFactory.GetValue(token, normalize: true);
+                        delimitedValues.AddRange(TextParsingExtensions.ParseDelimitedValues(normalizedValue));
                     }
                 }
             }
