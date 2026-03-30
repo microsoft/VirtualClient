@@ -232,6 +232,176 @@ namespace VirtualClient
         }
 
         [Test]
+        public async Task VirtualClientHandlesParametersThatHaveQuotationMarkEscaping_Scenario_1()
+        {
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+            {
+                // System.CommandLine Quirk:
+                // The library parsing logic will strip the \" from the end of the command line
+                // vs. treating it as an explicit quotation mark to leave in place. There are no
+                // hooks in the library implementation to override this behavior.
+                //
+                // To workaround this we replace the quotes with the HTML encoding. Each option can
+                // then handle the HTML decoding as required. This happens in the preprocessing logic.
+
+                bool confirmed = false;
+                string parameters = "CompilerFlags=CPPFLAGS=\"-O3 -Wall -march=native -l /usr/include/tirpc\"";
+
+                string[] args = new string[]
+                {
+                    $"--profile=ANY-PROFILE.json",
+                    $"--parameters={parameters}"
+                };
+
+                CommandLineParser parser = CommandLineParser.Create(args, tokenSource);
+                parser.Builder.Command.Handler = CommandHandler.Create<TestExecuteProfileCommand>(cmd =>
+                {
+                    cmd.OnExecute = () => confirmed = true;
+
+                    Assert.IsNotEmpty(cmd.Parameters);
+                    Assert.IsTrue(cmd.Parameters.TryGetValue("CompilerFlags", out IConvertible flags));
+                    Assert.AreEqual("CPPFLAGS=\"-O3 -Wall -march=native -l /usr/include/tirpc\"", flags.ToString());
+
+                    return cmd.ExecuteAsync(args, tokenSource);
+                });
+
+                ParseResult parseResult = parser.Parse();
+                await parseResult.InvokeAsync();
+
+                Assert.IsTrue(confirmed);
+            }
+        }
+
+        [Test]
+        public async Task VirtualClientHandlesParametersThatHaveQuotationMarkEscaping_Scenario_2()
+        {
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+            {
+                // System.CommandLine Quirk:
+                // The library parsing logic will strip the \" from the end of the command line
+                // vs. treating it as an explicit quotation mark to leave in place. There are no
+                // hooks in the library implementation to override this behavior.
+                //
+                // To workaround this we replace the quotes with the HTML encoding. Each option can
+                // then handle the HTML decoding as required. This happens in the preprocessing logic.
+
+                bool confirmed = false;
+                string parameters = "CompilerFlags=CPPFLAGS=\"-O3 -Wall -march=native -l /usr/include/tirpc\",,,CompilerVersion=13";
+
+                string[] args = new string[]
+                {
+                    $"--profile=ANY-PROFILE.json",
+                    $"--parameters={parameters}"
+                };
+
+                CommandLineParser parser = CommandLineParser.Create(args, tokenSource);
+                parser.Builder.Command.Handler = CommandHandler.Create<TestExecuteProfileCommand>(cmd =>
+                {
+                    cmd.OnExecute = () => confirmed = true;
+
+                    Assert.IsNotEmpty(cmd.Parameters);
+                    Assert.IsTrue(cmd.Parameters.TryGetValue("CompilerFlags", out IConvertible flags));
+                    Assert.AreEqual("CPPFLAGS=\"-O3 -Wall -march=native -l /usr/include/tirpc\"", flags.ToString());
+                    Assert.IsTrue(cmd.Parameters.TryGetValue("CompilerVersion", out IConvertible version));
+                    Assert.AreEqual("13", version.ToString());
+
+                    return cmd.ExecuteAsync(args, tokenSource);
+                });
+
+                ParseResult parseResult = parser.Parse();
+                await parseResult.InvokeAsync();
+
+                Assert.IsTrue(confirmed);
+            }
+        }
+
+        [Test]
+        public async Task VirtualClientHandlesParametersThatHaveQuotationMarkEscaping_Scenario_3()
+        {
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+            {
+                // System.CommandLine Quirk:
+                // The library parsing logic will strip the \" from the end of the command line
+                // vs. treating it as an explicit quotation mark to leave in place. There are no
+                // hooks in the library implementation to override this behavior.
+                //
+                // To workaround this we replace the quotes with the HTML encoding. Each option can
+                // then handle the HTML decoding as required. This happens in the preprocessing logic.
+
+                bool confirmed = false;
+                string parameters = "CompilerFlags=CPPFLAGS=\"-O3\\ -Wall\\ -march=native\\ -l /usr/include/tirpc\",,,CompilerVersion=13";
+
+                string[] args = new string[]
+                {
+                    $"--profile=ANY-PROFILE.json",
+                    $"--parameters={parameters}"
+                };
+
+                CommandLineParser parser = CommandLineParser.Create(args, tokenSource);
+                parser.Builder.Command.Handler = CommandHandler.Create<TestExecuteProfileCommand>(cmd =>
+                {
+                    cmd.OnExecute = () => confirmed = true;
+
+                    Assert.IsNotEmpty(cmd.Parameters);
+                    Assert.IsTrue(cmd.Parameters.TryGetValue("CompilerFlags", out IConvertible flags));
+                    Assert.AreEqual("CPPFLAGS=\"-O3\\ -Wall\\ -march=native\\ -l /usr/include/tirpc\"", flags.ToString());
+                    Assert.IsTrue(cmd.Parameters.TryGetValue("CompilerVersion", out IConvertible version));
+                    Assert.AreEqual("13", version.ToString());
+
+                    return cmd.ExecuteAsync(args, tokenSource);
+                });
+
+                ParseResult parseResult = parser.Parse();
+                await parseResult.InvokeAsync();
+
+                Assert.IsTrue(confirmed);
+            }
+        }
+
+        [Test]
+        public async Task VirtualClientHandlesMetadataThatHaveQuotationMarkEscaping_Scenario_1()
+        {
+            using (CancellationTokenSource tokenSource = new CancellationTokenSource())
+            {
+                // System.CommandLine Quirk:
+                // The library parsing logic will strip the \" from the end of the command line
+                // vs. treating it as an explicit quotation mark to leave in place. There are no
+                // hooks in the library implementation to override this behavior.
+                //
+                // To workaround this we replace the quotes with the HTML encoding. Each option can
+                // then handle the HTML decoding as required. This happens in the preprocessing logic.
+
+                bool confirmed = false;
+                string parameters = "CompilerFlags=CPPFLAGS=\"-O3 -Wall -march=native -l /usr/include/tirpc\",,,CompilerVersion=13";
+
+                string[] args = new string[]
+                {
+                    $"--profile=ANY-PROFILE.json",
+                    $"--metadata={parameters}"
+                };
+
+                CommandLineParser parser = CommandLineParser.Create(args, tokenSource);
+                parser.Builder.Command.Handler = CommandHandler.Create<TestExecuteProfileCommand>(cmd =>
+                {
+                    cmd.OnExecute = () => confirmed = true;
+
+                    Assert.IsNotEmpty(cmd.Metadata);
+                    Assert.IsTrue(cmd.Metadata.TryGetValue("CompilerFlags", out IConvertible flags));
+                    Assert.AreEqual("CPPFLAGS=\"-O3 -Wall -march=native -l /usr/include/tirpc\"", flags.ToString());
+                    Assert.IsTrue(cmd.Metadata.TryGetValue("CompilerVersion", out IConvertible version));
+                    Assert.AreEqual("13", version.ToString());
+
+                    return cmd.ExecuteAsync(args, tokenSource);
+                });
+
+                ParseResult parseResult = parser.Parse();
+                await parseResult.InvokeAsync();
+
+                Assert.IsTrue(confirmed);
+            }
+        }
+
+        [Test]
         public async Task VirtualClientHandlesCommandExecutionScenariosWithProfilesAdditionallyReferencedAsExpected()
         {
             using (CancellationTokenSource tokenSource = new CancellationTokenSource())
