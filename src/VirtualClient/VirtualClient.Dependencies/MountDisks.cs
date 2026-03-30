@@ -191,10 +191,29 @@ namespace VirtualClient.Dependencies
                             this.fileSystem.Directory.CreateDirectory(newMountPoint);
                         }
 
-                        await this.diskManager.CreateMountPointAsync(
+                        try
+                        {
+                            await this.diskManager.CreateMountPointAsync(
                             volume, 
                             newMountPoint, 
                             CancellationToken.None);
+
+                        }
+                        catch (ProcessException exc) when (exc.Message.Contains("OEM") || exc.Message.Contains("ESP") || exc.Message.Contains("recovery partition"))
+                        {
+                            // DiskPart cannot assign a mount point to an OEM, ESP, or recovery partition.
+                            // These partitions are special system partitions that should be skipped.
+                            this.Logger.LogTraceMessage(
+                                $"Skipping mount point assignment for volume '{volume.Index}' on disk '{disk.DevicePath}'. " +
+                                $"DiskPart cannot assign a mount point to an OEM, ESP, or recovery partition.");
+
+                            if (this.fileSystem.Directory.Exists(newMountPoint))
+                            {
+                                this.fileSystem.Directory.Delete(newMountPoint, recursive: false);
+                            }
+
+                            continue;
+                        }
 
                         // We want the mount point and directory structure to be owned by the user executing
                         // the application. This helps to prevent permissions issues.
