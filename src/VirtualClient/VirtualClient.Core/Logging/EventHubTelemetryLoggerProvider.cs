@@ -18,6 +18,7 @@ namespace VirtualClient.Logging
     {
         private EventHubTelemetryChannel telemetryChannel;
         private LogLevel minumumLogLevel;
+        private TimeSpan flushTimeout;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="EventHubTelemetryLoggerProvider"/> class.
@@ -26,11 +27,13 @@ namespace VirtualClient.Logging
         /// The telemetry channel used to handle buffering events for transmission to the Azure Event Hub.
         /// </param>
         /// <param name="level">The minimum logging severity level.</param>
-        public EventHubTelemetryLoggerProvider(EventHubTelemetryChannel channel, LogLevel level)
+        /// <param name="flushTimeout">A timeout to apply to flush operations.</param>
+        public EventHubTelemetryLoggerProvider(EventHubTelemetryChannel channel, LogLevel level, TimeSpan? flushTimeout = null)
         {
             channel.ThrowIfNull(nameof(channel));
             this.telemetryChannel = channel;
             this.minumumLogLevel = level;
+            this.flushTimeout = flushTimeout ?? TimeSpan.FromMinutes(1);
         }
 
         /// <summary>
@@ -44,7 +47,14 @@ namespace VirtualClient.Logging
         /// </returns>
         public ILogger CreateLogger(string categoryName)
         {
-            return new EventHubTelemetryLogger(this.telemetryChannel, this.minumumLogLevel);
+            EventHubTelemetryLogger logger = new EventHubTelemetryLogger(this.telemetryChannel, this.minumumLogLevel);
+            VirtualClientRuntime.CleanupTasks.Add(new Action_(() =>
+            {
+                this.telemetryChannel.Flush(this.flushTimeout);
+                this.telemetryChannel.Dispose();
+            }));
+
+            return logger;
         }
 
         /// <summary>

@@ -8,9 +8,7 @@ namespace VirtualClient.Contracts
     using System.Linq;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.Extensions.Logging;
     using VirtualClient.Common.Extensions;
-    using VirtualClient.Common.Telemetry;
 
     /// <summary>
     /// Extension methods for <see cref="ExecutionProfile"/>
@@ -25,7 +23,8 @@ namespace VirtualClient.Contracts
         {
             profile.ThrowIfNull(nameof(profile));
 
-            List<ExecutionProfileElement> elements = new List<ExecutionProfileElement>(profile.Dependencies);
+            List<ExecutionProfileElement> elements = new List<ExecutionProfileElement>();
+            elements.AddRange(profile.Dependencies);
             elements.AddRange(profile.Actions);
             elements.AddRange(profile.Monitors);
 
@@ -45,20 +44,20 @@ namespace VirtualClient.Contracts
                 const string conditionKey = "Condition";
                 var evaluator = dependencies.GetService<IExpressionEvaluator>();
 
-                IDictionary<string, IConvertible> profileParameters = new Dictionary<string, IConvertible>(profile.Parameters, StringComparer.OrdinalIgnoreCase);
+                var profileParameters = new Dictionary<string, IConvertible>(profile.Parameters, StringComparer.OrdinalIgnoreCase);
                 await evaluator.EvaluateAsync(dependencies, profileParameters);
 
-                foreach (var parametersSection in profile.ParametersOn)
+                foreach (var profileConditionalParameters in profile.ParametersOn)
                 {
-                    if (!parametersSection.TryGetValue(conditionKey, out IConvertible condition))
+                    if (!profileConditionalParameters.TryGetValue(conditionKey, out IConvertible condition))
                     {
                         throw new SchemaException(
                             $"Invalid '{nameof(profile.ParametersOn)}' configuration. A '{conditionKey}' must be defined in each '{nameof(profile.ParametersOn)}' section.");
                     }
 
                     // Parameters in ParametersOn sections take priority over the profile's default parameters.
-                    IDictionary<string, IConvertible> conditionalParameters = new Dictionary<string, IConvertible>(parametersSection, StringComparer.OrdinalIgnoreCase);
-                    conditionalParameters.AddRange(profileParameters, true);
+                    var conditionalParameters = new Dictionary<string, IConvertible>(profileParameters, StringComparer.OrdinalIgnoreCase);
+                    conditionalParameters.AddRange(profileConditionalParameters, true);
 
                     await evaluator.EvaluateAsync(dependencies, conditionalParameters);
 
@@ -70,8 +69,7 @@ namespace VirtualClient.Contracts
 
                     if (conditionMatches)
                     {
-                        IDictionary<string, IConvertible> conditionalParameterSet = new Dictionary<string, IConvertible>(parametersSection, StringComparer.OrdinalIgnoreCase);
-                        profile.Parameters.AddRange(conditionalParameterSet, true);
+                        profile.Parameters.AddRange(conditionalParameters.Where(p => p.Key != conditionKey), true);
                         break;
                     }
                 }
