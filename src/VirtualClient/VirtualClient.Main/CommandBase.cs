@@ -155,7 +155,7 @@ namespace VirtualClient
         /// Docker image for containerized workload execution.
         /// When provided, workloads run inside the specified container.
         /// </summary>
-        public string Image { get; set; }
+        public DependencyContainerStore Image { get; set; }
 
         /// <summary>
         /// Image pull policy: Always, IfNotPresent, Never.

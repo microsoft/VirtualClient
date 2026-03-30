@@ -3,6 +3,8 @@
 
 namespace VirtualClient
 {
+    using Microsoft.CodeAnalysis;
+    using Microsoft.Extensions.Logging;
     using System;
     using System.Collections.Generic;
     using System.CommandLine;
@@ -13,9 +15,10 @@ namespace VirtualClient
     using System.Linq;
     using System.Net;
     using System.Runtime.InteropServices;
+    using System.Security.Cryptography.X509Certificates;
     using System.Text.RegularExpressions;
-    using Microsoft.CodeAnalysis;
-    using Microsoft.Extensions.Logging;
+    using System.Threading;
+    using VirtualClient.Common;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Contracts;
@@ -26,12 +29,13 @@ namespace VirtualClient
     /// Provides a factory for the creation of Command Options used by application command line operations.
     /// </summary>
     [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1118:Parameter should not span multiple lines", Justification = "Allow for longer description text.")]
-    public static partial class OptionFactory
+    public static class OptionFactory
     {
         internal const string HtmlQuote = "&quot;";
         private static readonly ICertificateManager defaultCertificateManager = new CertificateManager();
         private static readonly IFileSystem defaultFileSystem = new FileSystem();
         private static readonly PlatformSpecifics defaultPlatformSpecifics = new PlatformSpecifics(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture);
+        private static readonly ProcessManager defaultProcessManager = ProcessManager.Create(Environment.OSVersion.Platform);
         private static readonly char[] argumentTrimChars = new char[] { '\'', '"', ' ' };
 
         /// <summary>
@@ -1504,6 +1508,57 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Container image for workload execution.
+        /// When provided, VC runs workloads inside this container.
+        /// </summary>
+        public static Option CreateImageOption(bool required = false, object defaultValue = null, ICertificateManager certificateManager = null, IFileSystem fileSystem = null)
+        {
+            // The logic on the command line will handle downloading docker.
+            // Creating Image and running on container 
+
+            Option<DependencyContainerStore> option = new Option<DependencyContainerStore>(
+                new string[] { "--image" },
+                new ParseArgument<DependencyContainerStore>(result => OptionFactory.ParseDockerImageStore(
+                    result,
+                    DependencyStore.Content,
+                    certificateManager ?? OptionFactory.defaultCertificateManager,
+                    fileSystem ?? OptionFactory.defaultFileSystem)))
+
+            {
+                Name = "DockerImage",
+                Description = "Docker image for containerized execution. When provided, workloads run inside the container.",
+                AllowMultipleArgumentsPerToken = false
+            };
+
+            OptionFactory.SetOptionRequirements(option, required);
+
+            return option;
+        }
+
+        /// <summary>
+        /// Image Pull Policy controls whether Docker should download (pull) a container image from a registry before running it.
+        /// </summary>
+        public static Option CreatePullPolicyOption(bool required = false)
+        {
+            //// Policy 
+            //// : IfNotPresent (default)	- Pull the image from the registry only if it does not exist locally	- Avoid unnecessary network calls and speed up execution when the image is already available
+            //// : Never	- Never pull the image from the registry, even if it does not exist locally	- Ensure you always use the locally available image
+            //// : Always	- Always pull the image from the registry, even if it exists locally	- Ensure you always have the latest version
+
+            Option<bool> option = new Option<bool>(new string[] { "--pull-policy" })
+            {
+                Name = "DockerImagePullPolicy",
+                Description = "Image pull policy: Always, IfNotPresent, Never. Default: IfNotPresent",
+                AllowMultipleArgumentsPerToken = false
+            };
+
+            OptionFactory.SetOptionRequirements(option, required);
+
+            return option;
+        }
+
+
+        /// <summary>
         /// Applies backwards compatibility to the set of command line arguments.
         /// </summary>
         /// <param name="args">Command line arguments to assess.</param>
@@ -1691,6 +1746,24 @@ namespace VirtualClient
 
             return store;
         }
+
+        private static DependencyContainerStore ParseDockerImageStore(ArgumentResult parsedResult, string imageName, ICertificateManager certificateManager, IFileSystem fileSystem)
+        {
+            string endpoint = OptionFactory.GetValue(parsedResult);
+            DependencyContainerStore store = DockerUtility.CreateDockerContainerReference(imageName, OptionFactory.defaultPlatformSpecifics, OptionFactory.defaultProcessManager, OptionFactory.defaultFileSystem, CancellationToken.None).GetAwaiter().GetResult();
+
+            // If the certificate is not found, the certificate manager will throw and exception. The logic that follows
+            // here would happen if the user provided invalid information that precedes the search for the actual certificate.
+            if (store == null)
+            {
+                // todo: add better error. The value provided could be in an invalid format, the image may not exist, or there may be an issue with the docker service on the system. .
+                // We should attempt to detect these different cases and provide better error messages to the user.
+                throw new SchemaException($"The value provided for docker Image is invalid. More errors to add later");
+            }
+
+            return store;
+        }
+
 
         private static EnvironmentLayout ParseEnvironmentLayout(ArgumentResult parsedResult, IFileSystem fileSystem, PlatformSpecifics platformSpecifics)
         {

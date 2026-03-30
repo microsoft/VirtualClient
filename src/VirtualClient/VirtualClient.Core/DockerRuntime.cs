@@ -3,13 +3,15 @@
 
 namespace VirtualClient
 {
+    using Microsoft.Extensions.Logging;
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Runtime.InteropServices;
     using System.Text;
+    using System.Text.Json.Nodes;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Contracts;
@@ -22,6 +24,7 @@ namespace VirtualClient
         private readonly ProcessManager processManager;
         private readonly PlatformSpecifics platformSpecifics;
         private readonly ILogger logger;
+        private bool dependenciesInitialized;
 
         /// <summary>
         /// 
@@ -29,32 +32,38 @@ namespace VirtualClient
         /// <param name="processManager"></param>
         /// <param name="platformSpecifics"></param>
         /// <param name="logger"></param>
-        public DockerRuntime(ProcessManager processManager, PlatformSpecifics platformSpecifics, ILogger logger = null)
+        public DockerRuntime(string imageName, ProcessManager processManager, PlatformSpecifics platformSpecifics, ILogger logger = null)
         {
             processManager.ThrowIfNull(nameof(processManager));
             platformSpecifics.ThrowIfNull(nameof(platformSpecifics));
             this.processManager = processManager;
             this.platformSpecifics = platformSpecifics;
             this.logger = logger;
+            this.dependenciesInitialized = false;
         }
 
         /// <summary>
-        /// Checks if Docker is available and configured for Linux containers.
+        /// Gets platform-specific configuration settings for Docker environments.
         /// </summary>
-        public async Task<bool> IsAvailableAsync(CancellationToken cancellationToken)
+        public PlatformSpecifics DockerPlatformSpecifics { get; internal set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public async InitializeDependencies(CancellationToken cancellationToken)
         {
             try
             {
-                using IProcessProxy process = this.processManager.CreateProcess("docker", "info --format {{.OSType}}");
-                await process.StartAndWaitAsync(cancellationToken);
 
-                string osType = process.StandardOutput.ToString().Trim().ToLowerInvariant();
-                return process.ExitCode == 0 && osType.Contains("linux");
             }
-            catch
+            catch ()
             {
-                return false;
+
             }
+
+            this.dependenciesInitialized = true;
         }
 
         /// <summary>

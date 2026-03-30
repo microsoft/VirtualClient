@@ -191,18 +191,17 @@ namespace VirtualClient
 
             try
             {
-                logger = dependencies.GetService<ILogger>();
-                packageManager = dependencies.GetService<IPackageManager>();
-                systemManagement = dependencies.GetService<ISystemManagement>();
-
                 // =====================================================
-                // CONTAINER MODE INITIALIZATION - ADD THIS BLOCK
+                // CONTAINER MODE INITIALIZATION
                 // =====================================================
                 if (!string.IsNullOrWhiteSpace(this.Image))
                 {
                     await this.InitializeContainerModeAsync(dependencies, logger, cancellationToken);
                 }
-                // =====================================================
+
+                logger = dependencies.GetService<ILogger>();
+                packageManager = dependencies.GetService<IPackageManager>();
+                systemManagement = dependencies.GetService<ISystemManagement>();
 
                 EventContext telemetryContext = EventContext.Persisted();
 
