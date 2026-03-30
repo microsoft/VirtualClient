@@ -882,6 +882,32 @@ namespace VirtualClient
         }
 
         [Test]
+        public void LayoutOptionReturnsNullWhenNoValueProvided()
+        {
+            // When --layout is not provided at all, parsing should succeed and
+            // the resolved value should be null (layout is optional for single-VM workloads).
+            Option option = OptionFactory.CreateLayoutOption(required: false);
+            ParseResult result = option.Parse(string.Empty);
+            Assert.IsFalse(result.Errors.Any());
+        }
+
+        [Test]
+        public void LayoutOptionThrowsWhenFileDoesNotExist()
+        {
+            // When --layout-path points to a non-existent file, an ArgumentException
+            // should be thrown with a clear message rather than a DirectoryNotFoundException.
+            Mock<IFileSystem> mockFileSystem = new Mock<IFileSystem>();
+            mockFileSystem.Setup(fs => fs.File.Exists(It.IsAny<string>())).Returns(false);
+
+            Option option = OptionFactory.CreateLayoutOption(fileSystem: mockFileSystem.Object);
+
+            ArgumentException ex = Assert.Throws<ArgumentException>(
+                () => option.Parse("--layout-path=/nonexistent/path/layout.json"));
+
+            Assert.IsTrue(ex.Message.Contains("Invalid path specified"));
+        }
+
+        [Test]
         [TestCase("--log-dir")]
         public void LogDirectoryOptionSupportsExpectedAliases(string alias)
         {

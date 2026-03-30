@@ -1705,7 +1705,12 @@ namespace VirtualClient
             // --layout-path="C:\Users\Any\VirtualClient\layout.json"
             //
             string layoutValue = parsedResult.Tokens?.FirstOrDefault()?.Value;
-            if (!string.IsNullOrWhiteSpace(layoutValue) && Regex.IsMatch(layoutValue, "[,;]+"))
+            if (string.IsNullOrWhiteSpace(layoutValue))
+            {
+                return null;
+            }
+
+            if (Regex.IsMatch(layoutValue, "[,;]+"))
             {
                 List<ClientInstance> clientsInstances = new List<ClientInstance>();
                 string[] clients = layoutValue.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
