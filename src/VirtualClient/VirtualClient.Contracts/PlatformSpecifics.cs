@@ -165,6 +165,22 @@ namespace VirtualClient.Contracts
         public bool UseUnixStylePathsOnly { get; }
 
         /// <summary>
+        /// Gets the effective platform for workload execution.
+        /// Returns the container platform when in container mode, otherwise the host platform.
+        /// </summary>
+        public PlatformID EffectivePlatform => PlatformSpecifics.IsRunningInContainer()
+            ? ContainerExecutionContext.Current.ContainerPlatform
+            : this.Platform;
+
+        /// <summary>
+        /// Gets the effective CPU architecture for workload execution.
+        /// Returns the container architecture when in container mode, otherwise the host architecture.
+        /// </summary>
+        public Architecture EffectiveCpuArchitecture => PlatformSpecifics.IsRunningInContainer()
+            ? ContainerExecutionContext.Current.ContainerArchitecture
+            : this.CpuArchitecture;
+
+        /// <summary>
         /// Whether VC is running in the context of docker container.
         /// </summary>
         internal static bool RunningInContainer { get; set; } = PlatformSpecifics.IsRunningInContainer();
@@ -260,8 +276,10 @@ namespace VirtualClient.Contracts
         /// <returns></returns>
         public static bool IsRunningInContainer()
         {
+            return ContainerExecutionContext.Current.IsContainerMode;
+
             // DOTNET does not properly recognize some containers. Adding /.dockerenv file as back up.
-            return (Convert.ToBoolean(Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER")) == true || File.Exists("/.dockerenv"));
+            // return (Convert.ToBoolean(Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER")) == true || File.Exists("/.dockerenv"));
         }
 
         /// <summary>

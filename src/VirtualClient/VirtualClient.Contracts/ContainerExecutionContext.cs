@@ -6,6 +6,7 @@ namespace VirtualClient.Contracts
     using System;
     using System.Collections.Generic;
     using System.Runtime.InteropServices;
+    using VirtualClient.Common.Extensions;
 
     /// <summary>
     /// Tracks whether execution is happening inside a container context
@@ -30,19 +31,30 @@ namespace VirtualClient.Contracts
         public bool IsContainerMode { get; set; }
 
         /// <summary>
-        /// The container image being used.
+        /// Docker image name for containerized workload execution.
+        /// When provided, workloads run inside the specified container.
         /// </summary>
         public string Image { get; set; }
 
         /// <summary>
-        /// The platform inside the container (typically Linux).
+        /// Gets or sets the unique identifier of the container associated with this instance.
         /// </summary>
-        public PlatformID ContainerPlatform { get; set; } = PlatformID.Unix;
+        public string ContainerId { get; set; }
+
+        /// <summary>
+        /// Working directory inside the container. This is where workloads will be executed and where mounts are rooted.
+        /// </summary>
+        public string ContainerWorkingDirectory { get; set; }
+
+        /// <summary>
+        /// The platform inside the container.
+        /// </summary>
+        public PlatformID ContainerPlatform { get; set; }
 
         /// <summary>
         /// The CPU architecture inside the container.
         /// </summary>
-        public Architecture ContainerArchitecture { get; set; } = Architecture.X64;
+        public Architecture ContainerArchitecture { get; set; }
 
         /// <summary>
         /// Gets the effective platform - container platform if in container mode,

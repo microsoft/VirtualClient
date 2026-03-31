@@ -1511,27 +1511,17 @@ namespace VirtualClient
         /// Container image for workload execution.
         /// When provided, VC runs workloads inside this container.
         /// </summary>
-        public static Option CreateImageOption(bool required = false, object defaultValue = null, ICertificateManager certificateManager = null, IFileSystem fileSystem = null)
+        public static Option CreateImageOption(bool required = false, object defaultValue = null)
         {
-            // The logic on the command line will handle downloading docker.
-            // Creating Image and running on container 
-
-            Option<DependencyContainerStore> option = new Option<DependencyContainerStore>(
-                new string[] { "--image" },
-                new ParseArgument<DependencyContainerStore>(result => OptionFactory.ParseDockerImageStore(
-                    result,
-                    DependencyStore.Content,
-                    certificateManager ?? OptionFactory.defaultCertificateManager,
-                    fileSystem ?? OptionFactory.defaultFileSystem)))
-
+            Option<string> option = new Option<string>(new string[] { "--image" })
             {
-                Name = "DockerImage",
+                Name = "Image",
                 Description = "Docker image for containerized execution. When provided, workloads run inside the container.",
+                ArgumentHelpName = "Image",
                 AllowMultipleArgumentsPerToken = false
             };
 
-            OptionFactory.SetOptionRequirements(option, required);
-
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
             return option;
         }
 
@@ -1547,7 +1537,7 @@ namespace VirtualClient
 
             Option<bool> option = new Option<bool>(new string[] { "--pull-policy" })
             {
-                Name = "DockerImagePullPolicy",
+                Name = "PullPolicy",
                 Description = "Image pull policy: Always, IfNotPresent, Never. Default: IfNotPresent",
                 AllowMultipleArgumentsPerToken = false
             };
@@ -1746,24 +1736,6 @@ namespace VirtualClient
 
             return store;
         }
-
-        private static DependencyContainerStore ParseDockerImageStore(ArgumentResult parsedResult, string imageName, ICertificateManager certificateManager, IFileSystem fileSystem)
-        {
-            string endpoint = OptionFactory.GetValue(parsedResult);
-            DependencyContainerStore store = DockerUtility.CreateDockerContainerReference(imageName, OptionFactory.defaultPlatformSpecifics, OptionFactory.defaultProcessManager, OptionFactory.defaultFileSystem, CancellationToken.None).GetAwaiter().GetResult();
-
-            // If the certificate is not found, the certificate manager will throw and exception. The logic that follows
-            // here would happen if the user provided invalid information that precedes the search for the actual certificate.
-            if (store == null)
-            {
-                // todo: add better error. The value provided could be in an invalid format, the image may not exist, or there may be an issue with the docker service on the system. .
-                // We should attempt to detect these different cases and provide better error messages to the user.
-                throw new SchemaException($"The value provided for docker Image is invalid. More errors to add later");
-            }
-
-            return store;
-        }
-
 
         private static EnvironmentLayout ParseEnvironmentLayout(ArgumentResult parsedResult, IFileSystem fileSystem, PlatformSpecifics platformSpecifics)
         {

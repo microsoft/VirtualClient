@@ -152,10 +152,10 @@ namespace VirtualClient
         public string ExperimentId { get; set; }
 
         /// <summary>
-        /// Docker image for containerized workload execution.
+        /// Docker image name for containerized workload execution.
         /// When provided, workloads run inside the specified container.
         /// </summary>
-        public DependencyContainerStore Image { get; set; }
+        public string Image { get; set; }
 
         /// <summary>
         /// Image pull policy: Always, IfNotPresent, Never.

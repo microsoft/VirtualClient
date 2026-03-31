@@ -41,10 +41,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Create standard VC directories
-RUN mkdir -p /vc/packages /vc/logs /vc/state /vc/temp /vc/output
+# RUN mkdir -p /vc/packages /vc/logs /vc/state /vc/temp /vc/output
 
 # Set working directory
-WORKDIR /vc
+WORKDIR /agent
 
 # Default environment variables
 ENV VC_CONTAINER_MODE=true

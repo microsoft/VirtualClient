@@ -3,15 +3,18 @@
 
 namespace VirtualClient
 {
-    using Microsoft.Extensions.Logging;
     using System;
     using System.Collections.Generic;
+    using System.ComponentModel;
+    using System.IO;
+    using System.IO.Abstractions;
     using System.Linq;
     using System.Runtime.InteropServices;
-    using System.Text;
     using System.Text.Json.Nodes;
+    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Contracts;
@@ -21,49 +24,179 @@ namespace VirtualClient
     /// </summary>
     public class DockerRuntime
     {
+        private static readonly Regex DockerfilePattern = new Regex(
+            @"^Dockerfile(\.[a-zA-Z0-9_-]+)?$|\.dockerfile$",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
         private readonly ProcessManager processManager;
         private readonly PlatformSpecifics platformSpecifics;
         private readonly ILogger logger;
-        private bool dependenciesInitialized;
+        private readonly IFileSystem fileSystem;
 
         /// <summary>
-        /// 
+        /// Initializes a new instance of the <see cref="DockerRuntime"/> class.
         /// </summary>
-        /// <param name="processManager"></param>
-        /// <param name="platformSpecifics"></param>
-        /// <param name="logger"></param>
-        public DockerRuntime(string imageName, ProcessManager processManager, PlatformSpecifics platformSpecifics, ILogger logger = null)
+        /// <param name="processManager">The process manager for executing Docker commands.</param>
+        /// <param name="platformSpecifics">Platform-specific configuration settings.</param>
+        /// <param name="fileSystem"></param>
+        /// <param name="logger">Optional logger for diagnostic output.</param>
+        public DockerRuntime(ProcessManager processManager, PlatformSpecifics platformSpecifics, IFileSystem fileSystem, ILogger logger = null)
         {
             processManager.ThrowIfNull(nameof(processManager));
             platformSpecifics.ThrowIfNull(nameof(platformSpecifics));
+            fileSystem.ThrowIfNull(nameof(fileSystem));
             this.processManager = processManager;
             this.platformSpecifics = platformSpecifics;
+            this.fileSystem = fileSystem;
             this.logger = logger;
-            this.dependenciesInitialized = false;
         }
 
         /// <summary>
-        /// Gets platform-specific configuration settings for Docker environments.
+        /// Determines if the provided value is a Dockerfile path rather than an image name.
         /// </summary>
-        public PlatformSpecifics DockerPlatformSpecifics { get; internal set; }
+        /// <param name="imageOrPath">The image name or Dockerfile path.</param>
+        /// <returns>True if the value appears to be a Dockerfile path.</returns>
+        public static bool IsDockerfilePath(string imageOrPath)
+        {
+            if (string.IsNullOrWhiteSpace(imageOrPath))
+            {
+                return false;
+            }
+
+            // Check if it's a full path that exists
+            if (File.Exists(imageOrPath))
+            {
+                string fileName = Path.GetFileName(imageOrPath);
+                return DockerfilePattern.IsMatch(fileName);
+            }
+
+            // Check if the filename matches Dockerfile pattern
+            string name = Path.GetFileName(imageOrPath);
+            return DockerfilePattern.IsMatch(name);
+        }
 
         /// <summary>
-        /// 
+        /// Generates an image name from a Dockerfile path.
         /// </summary>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        public async InitializeDependencies(CancellationToken cancellationToken)
+        /// <param name="dockerfilePath">The path to the Dockerfile.</param>
+        /// <returns>A generated image name (e.g., "vc-ubuntu:latest" from "Dockerfile.ubuntu").</returns>
+        public static string GenerateImageNameFromDockerfile(string dockerfilePath)
+        {
+            string fileName = Path.GetFileName(dockerfilePath);
+            string baseName;
+
+            if (fileName.StartsWith("Dockerfile.", StringComparison.OrdinalIgnoreCase))
+            {
+                // Dockerfile.ubuntu -> ubuntu
+                baseName = fileName.Substring("Dockerfile.".Length);
+            }
+            else if (fileName.EndsWith(".dockerfile", StringComparison.OrdinalIgnoreCase))
+            {
+                // ubuntu.dockerfile -> ubuntu
+                baseName = fileName.Substring(0, fileName.Length - ".dockerfile".Length);
+            }
+            else
+            {
+                // Dockerfile -> default
+                baseName = "custom";
+            }
+
+            // Sanitize the name for Docker (lowercase, alphanumeric and hyphens)
+            baseName = Regex.Replace(baseName.ToLowerInvariant(), @"[^a-z0-9-]", "-");
+
+            return $"vc-{baseName}:latest";
+        }
+
+        /// <summary>
+        /// Resolves a Dockerfile path to search in standard locations.
+        /// </summary>
+        /// <param name="dockerfileReference">The Dockerfile reference (can be filename or full path).</param>
+        /// <returns>The full path to the Dockerfile, or null if not found.</returns>
+        public string ResolveDockerfilePath(string dockerfileReference)
+        {
+            // If it's already a full path and exists, return it
+            if (Path.IsPathRooted(dockerfileReference) && File.Exists(dockerfileReference))
+            {
+                return dockerfileReference;
+            }
+
+            // Search in standard locations
+            string[] searchPaths = new[]
+            {
+                // Current directory
+                Path.Combine(Environment.CurrentDirectory, dockerfileReference),
+                // Images folder in executable directory
+                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Images", dockerfileReference),
+                // Images folder relative to current directory
+                Path.Combine(Environment.CurrentDirectory, "Images", dockerfileReference)
+            };
+
+            foreach (string path in searchPaths)
+            {
+                if (File.Exists(path))
+                {
+                    return Path.GetFullPath(path);
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Resolves the image reference - builds from Dockerfile if needed, returns image name.
+        /// </summary>
+        /// <param name="imageOrDockerfilePath">Either an image name or a Dockerfile path.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>The image name to use for container execution.</returns>
+        public async Task<string> ResolveImageAsync(string imageOrDockerfilePath, CancellationToken cancellationToken)
+        {
+            if (!IsDockerfilePath(imageOrDockerfilePath))
+            {
+                // It's already an image name
+                return imageOrDockerfilePath;
+            }
+
+            // It's a Dockerfile path - resolve and build
+            string dockerfilePath = this.ResolveDockerfilePath(imageOrDockerfilePath);
+
+            if (string.IsNullOrEmpty(dockerfilePath))
+            {
+                throw new DependencyException(
+                    $"Dockerfile not found: '{imageOrDockerfilePath}'. Searched in current directory and Images folder.",
+                    ErrorReason.DependencyNotFound);
+            }
+
+            string imageName = GenerateImageNameFromDockerfile(dockerfilePath);
+
+            this.logger?.LogInformation(
+                "Building image '{ImageName}' from Dockerfile: {DockerfilePath}",
+                imageName,
+                dockerfilePath);
+
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine($"[Container] Building image '{imageName}' from {dockerfilePath}...");
+            Console.ResetColor();
+
+            await this.BuildImageAsync(dockerfilePath, imageName, cancellationToken).ConfigureAwait(false);
+
+            return imageName;
+        }
+
+        /// <summary>
+        /// Checks if Docker is available and running.
+        /// </summary>
+        public async Task<bool> IsAvailableAsync(CancellationToken cancellationToken)
         {
             try
             {
-
+                using IProcessProxy process = this.processManager.CreateProcess("docker", "version");
+                await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
+                return process.ExitCode == 0;
             }
-            catch ()
+            catch
             {
-
+                return false;
             }
-
-            this.dependenciesInitialized = true;
         }
 
         /// <summary>
@@ -72,12 +205,12 @@ namespace VirtualClient
         public async Task<bool> ImageExistsAsync(string image, CancellationToken cancellationToken)
         {
             using IProcessProxy process = this.processManager.CreateProcess("docker", $"image inspect {image}");
-            await process.StartAndWaitAsync(cancellationToken);
+            await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
             return process.ExitCode == 0;
         }
 
         /// <summary>
-        /// Pulls an image.
+        /// Pulls an image from a registry.
         /// </summary>
         public async Task PullImageAsync(string image, CancellationToken cancellationToken)
         {
@@ -95,65 +228,28 @@ namespace VirtualClient
         }
 
         /// <summary>
-        /// Executes a command inside a container.
+        /// Builds an image from a Dockerfile.
         /// </summary>
-        public async Task<DockerRunResult> RunAsync(
-            string image,
-            string command,
-            ContainerConfiguration config,
-            PlatformSpecifics hostPlatformSpecifics,
-            CancellationToken cancellationToken)
-        {
-            string containerName = $"vc-{Guid.NewGuid():N}"[..32];
-            string args = this.BuildDockerRunArgs(image, command, config, containerName, hostPlatformSpecifics);
-
-            this.logger?.LogInformation("Running container: {ContainerName}", containerName);
-            this.logger?.LogDebug("Docker command: docker {Args}", args);
-
-            var result = new DockerRunResult
-            {
-                ContainerName = containerName,
-                StartTime = DateTime.UtcNow
-            };
-
-            using IProcessProxy process = this.processManager.CreateProcess("docker", args);
-
-            await process.StartAndWaitAsync(cancellationToken);
-
-            result.EndTime = DateTime.UtcNow;
-            result.ExitCode = process.ExitCode;
-            result.StandardOutput = process.StandardOutput.ToString();
-            result.StandardError = process.StandardError.ToString();
-
-            this.logger?.LogDebug("Container {ContainerName} exited with code {ExitCode}", containerName, result.ExitCode);
-
-            return result;
-        }
-
-        /// <summary>
-        /// Builds an image from a Dockerfile in the specified directory.
-        /// </summary>
-        /// <param name="dockerfilePath">Full path to the Dockerfile.</param>
-        /// <param name="imageName">Name and tag for the image (e.g., vc-ubuntu:22.04).</param>
-        /// <param name="cancellationToken">Cancellation token.</param>
         public async Task BuildImageAsync(string dockerfilePath, string imageName, CancellationToken cancellationToken)
         {
-            if (!System.IO.File.Exists(dockerfilePath))
+            if (!File.Exists(dockerfilePath))
             {
                 throw new DependencyException(
                     $"Dockerfile not found at '{dockerfilePath}'",
                     ErrorReason.DependencyNotFound);
             }
 
-            string contextDir = System.IO.Path.GetDirectoryName(dockerfilePath);
-            string dockerfileName = System.IO.Path.GetFileName(dockerfilePath);
+            string contextDir = Path.GetDirectoryName(dockerfilePath);
+            string dockerfileName = Path.GetFileName(dockerfilePath);
 
             this.logger?.LogInformation("Building Docker image '{Image}' from {Dockerfile}", imageName, dockerfilePath);
 
-            string args = $"build -t {imageName} -f \"{dockerfileName}\" .";
-            
-            using IProcessProxy process = this.processManager.CreateProcess("docker", args, contextDir);
-            await process.StartAndWaitAsync(cancellationToken);
+            using IProcessProxy process = this.processManager.CreateProcess(
+                "docker",
+                $"build -t {imageName} -f \"{dockerfileName}\" .",
+                contextDir);
+
+            await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
 
             if (process.ExitCode != 0)
             {
@@ -166,99 +262,165 @@ namespace VirtualClient
         }
 
         /// <summary>
-        /// Gets the path to a built-in Dockerfile for the given image name.
+        /// Gets platform information from a Docker image.
         /// </summary>
-        /// <param name="imageName">Image name (e.g., vc-ubuntu:22.04).</param>
-        /// <returns>Path to Dockerfile if found, null otherwise.</returns>
-        public static string GetBuiltInDockerfilePath(string imageName)
+        public async Task<(PlatformID Platform, Architecture Architecture)> GetImagePlatformAsync(string imageName, CancellationToken cancellationToken)
         {
-            // Extract base name (vc-ubuntu:22.04 -> ubuntu)
-            string baseName = imageName.Split(':')[0].Replace("vc-", string.Empty);
-            
-            // Look in the Images folder relative to the executable
-            string exeDir = AppDomain.CurrentDomain.BaseDirectory;
-            string imagesDir = System.IO.Path.Combine(exeDir, "Images");
-            
-            string dockerfilePath = System.IO.Path.Combine(imagesDir, $"Dockerfile.{baseName}");
-            
-            if (System.IO.File.Exists(dockerfilePath))
+            using IProcessProxy process = this.processManager.CreateProcess("docker", $"image inspect {imageName}");
+            await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
+
+            if (process.ExitCode != 0)
             {
-                return dockerfilePath;
+                throw new DependencyException(
+                    $"Failed to inspect Docker image '{imageName}': {process.StandardError}",
+                    ErrorReason.DependencyNotFound);
             }
 
-            return null;
+            return DockerRuntime.ParsePlatformFromInspectJson(process.StandardOutput.ToString());
         }
 
-        private string BuildDockerRunArgs(
+        /// <summary>
+        /// Parses platform info from 'docker image inspect' JSON output.
+        /// </summary>
+        public static (PlatformID Platform, Architecture Architecture) ParsePlatformFromInspectJson(string inspectJson)
+        {
+            var array = JsonNode.Parse(inspectJson)?.AsArray()
+                ?? throw new ArgumentException("Invalid docker inspect JSON output.");
+
+            var root = array[0]
+                ?? throw new ArgumentException("Docker inspect output is empty.");
+
+            string os = root["Os"]?.GetValue<string>() ?? string.Empty;
+            string arch = root["Architecture"]?.GetValue<string>() ?? string.Empty;
+            string variant = root["Variant"]?.GetValue<string>() ?? string.Empty;
+
+            PlatformID platform = os.ToLowerInvariant() switch
+            {
+                "linux" => PlatformID.Unix,
+                "windows" => PlatformID.Win32NT,
+                _ => throw new NotSupportedException($"Unsupported container OS: '{os}'")
+            };
+
+            Architecture architecture = arch.ToLowerInvariant() switch
+            {
+                "amd64" or "x86_64" => Architecture.X64,
+                "arm64" or "aarch64" => Architecture.Arm64,
+                "arm" when variant.ToLowerInvariant() == "v8" => Architecture.Arm64,
+                "arm" => Architecture.Arm,
+                "386" or "i386" => Architecture.X86,
+                _ => throw new NotSupportedException($"Unsupported architecture: '{arch}'")
+            };
+
+            return (platform, architecture);
+        }
+
+        /// <summary>
+        /// Gets the path to a built-in Dockerfile for the given image name.
+        /// </summary>
+        public static string GetBuiltInDockerfilePath(string imageName)
+        {
+            string baseName = imageName.Split(':')[0].Replace("vc-", string.Empty);
+            string exeDir = AppDomain.CurrentDomain.BaseDirectory;
+            string imagesDir = Path.Combine(exeDir, "Images");
+            string dockerfilePath = Path.Combine(imagesDir, $"Dockerfile.{baseName}");
+
+            return File.Exists(dockerfilePath) ? dockerfilePath : null;
+        }
+
+        /// <summary>
+        /// Stops a running container by ID or name. 
+        /// </summary>
+        public async Task StopContainer(string containerId, CancellationToken cancellationToken)
+        {
+            // Graceful => 'docker stop {containerId}'
+            // Forceful => 'docker kill {containerId}'
+            using IProcessProxy process = this.processManager.CreateProcess("docker", $"stop {containerId}");
+            await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Start a container in detached mode with the specified image and mounting paths. Returns the container ID.
+        /// mountingPaths format: each entry is "C:\host\path:/container/path" or "C:\host\path:/container/path:ro"
+        /// </summary>
+        public async Task<string> StartContainerInDetachedMode(string imageName, CancellationToken cancellationToken, string workingDirectory, params string[] mountPaths)
+        {
+            string readonlyMounts = $"-v \"{workingDirectory}:/agent:ro\"";
+
+            // example: -v "C:\repos\VirtualClient\out\bin\Release\x64\VirtualClient.Main\net9.0\win-x64\state:/agent/state"
+            IEnumerable<string> readWriteMounts = mountPaths.Select(p => $"-v \"{p}:/{this.fileSystem.Path.GetFileName(p)}:rw\"");
+
+            string args = string.Join(
+                " ",
+                new[] { "run", "-d", "--rm", "--name vc-container", readonlyMounts, string.Join(" ", readWriteMounts), imageName, "sleep infinity" });
+
+            using IProcessProxy process = this.processManager.CreateProcess("docker", args);
+            await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
+
+            // 'docker run -d' outputs the full container ID on stdout
+            string containerId = process.StandardOutput.ToString().Trim();
+            return containerId;
+        }
+
+        /// <summary>
+        /// Executes a command inside a container.
+        /// </summary>
+        public async Task<DockerRunResult> RunAsync(
             string image,
             string command,
             ContainerConfiguration config,
-            string containerName,
-            PlatformSpecifics hostPlatformSpecifics)
+            PlatformSpecifics hostPlatformSpecifics,
+            CancellationToken cancellationToken)
         {
-            var args = new List<string>
-            {
-                "run",
-                "--rm",
-                $"--name {containerName}"
-            };
+            string containerName = $"vc-{Guid.NewGuid():N}"[..32];
+            string args = this.BuildDockerRunArgs(image, command, config, containerName, hostPlatformSpecifics);
 
-            // Working directory
-            string workDir = config?.WorkingDirectory ?? "/vc";
-            args.Add($"-w {workDir}");
+            this.logger?.LogDebug("Docker command: docker {Args}", args);
 
-            // Standard mounts
+            var result = new DockerRunResult { ContainerName = containerName, StartTime = DateTime.UtcNow };
+
+            using IProcessProxy process = this.processManager.CreateProcess("docker", args);
+            await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
+
+            result.EndTime = DateTime.UtcNow;
+            result.ExitCode = process.ExitCode;
+            result.StandardOutput = process.StandardOutput.ToString();
+            result.StandardError = process.StandardError.ToString();
+
+            return result;
+        }
+
+        private string BuildDockerRunArgs(string image, string command, ContainerConfiguration config, string containerName, PlatformSpecifics hostPlatformSpecifics)
+        {
+            var args = new List<string> { "run", "--rm", $"--name {containerName}" };
+
+            args.Add($"-w {config?.WorkingDirectory ?? "/vc"}");
+
             ContainerMountConfig mounts = config?.Mounts ?? new ContainerMountConfig();
-
             if (mounts.Packages)
             {
-                string hostPath = this.ToDockerPath(hostPlatformSpecifics.PackagesDirectory);
-                args.Add($"-v \"{hostPath}:/vc/packages\"");
+                args.Add($"-v \"{this.ToDockerPath(hostPlatformSpecifics.PackagesDirectory)}:/vc/packages\"");
             }
 
             if (mounts.Logs)
             {
-                string hostPath = this.ToDockerPath(hostPlatformSpecifics.LogsDirectory);
-                args.Add($"-v \"{hostPath}:/vc/logs\"");
+                args.Add($"-v \"{this.ToDockerPath(hostPlatformSpecifics.LogsDirectory)}:/vc/logs\"");
             }
 
             if (mounts.State)
             {
-                string hostPath = this.ToDockerPath(hostPlatformSpecifics.StateDirectory);
-                args.Add($"-v \"{hostPath}:/vc/state\"");
+                args.Add($"-v \"{this.ToDockerPath(hostPlatformSpecifics.StateDirectory)}:/vc/state\"");
             }
 
             if (mounts.Temp)
             {
-                string hostPath = this.ToDockerPath(hostPlatformSpecifics.TempDirectory);
-                args.Add($"-v \"{hostPath}:/vc/temp\"");
+                args.Add($"-v \"{this.ToDockerPath(hostPlatformSpecifics.TempDirectory)}:/vc/temp\"");
             }
 
-            // Additional mounts
-            if (config?.AdditionalMounts?.Any() == true)
-            {
-                foreach (string mount in config.AdditionalMounts)
-                {
-                    args.Add($"-v \"{mount}\"");
-                }
-            }
+            config?.AdditionalMounts?.ToList().ForEach(m => args.Add($"-v \"{m}\""));
+            config?.EnvironmentVariables?.ToList().ForEach(e => args.Add($"-e \"{e.Key}={e.Value}\""));
 
-            // Environment variables
-            if (config?.EnvironmentVariables?.Any() == true)
-            {
-                foreach (KeyValuePair<string, string> env in config.EnvironmentVariables)
-                {
-                    args.Add($"-e \"{env.Key}={env.Value}\"");
-                }
-            }
-
-            // Always pass these VC context vars
             args.Add("-e \"VC_CONTAINER_MODE=true\"");
-
-            // Image
             args.Add(image);
-
-            // Command (if provided)
             if (!string.IsNullOrWhiteSpace(command))
             {
                 args.Add(command);
@@ -267,16 +429,11 @@ namespace VirtualClient
             return string.Join(" ", args);
         }
 
-        /// <summary>
-        /// Converts Windows path to Docker-compatible format.
-        /// C:\path\to\dir -> /c/path/to/dir
-        /// </summary>
         private string ToDockerPath(string path)
         {
             if (this.platformSpecifics.Platform == PlatformID.Win32NT && path.Length >= 2 && path[1] == ':')
             {
-                char drive = char.ToLower(path[0]);
-                return $"/{drive}{path[2..].Replace('\\', '/')}";
+                return $"/{char.ToLower(path[0])}{path[2..].Replace('\\', '/')}";
             }
 
             return path;
@@ -288,28 +445,44 @@ namespace VirtualClient
     /// </summary>
     public class DockerRunResult
     {
-        /// <summary>Container name.</summary>
+        /// <summary>
+        /// Gets or sets the name of the container.
+        /// </summary>
         public string ContainerName { get; set; }
 
-        /// <summary>Exit code from the container.</summary>
+        /// <summary>
+        /// Gets or sets the exit code returned by the process.
+        /// </summary>
         public int ExitCode { get; set; }
 
-        /// <summary>Standard output from the container.</summary>
+        /// <summary>
+        /// Gets or sets the standard output from the process.
+        /// </summary>
         public string StandardOutput { get; set; }
 
-        /// <summary>Standard error from the container.</summary>
+        /// <summary>
+        /// Gets or sets the standard error output.
+        /// </summary>
         public string StandardError { get; set; }
 
-        /// <summary>When the container started.</summary>
+        /// <summary>
+        /// Gets or sets the start time.
+        /// </summary>
         public DateTime StartTime { get; set; }
 
-        /// <summary>When the container exited.</summary>
+        /// <summary>
+        /// Gets or sets the end time.
+        /// </summary>
         public DateTime EndTime { get; set; }
 
-        /// <summary>Duration of execution.</summary>
+        /// <summary>
+        /// Gets the duration.
+        /// </summary>
         public TimeSpan Duration => this.EndTime - this.StartTime;
 
-        /// <summary>True if exit code was 0.</summary>
+        /// <summary>
+        /// Gets a value indicating whether the operation succeeded.
+        /// </summary>
         public bool Succeeded => this.ExitCode == 0;
     }
 }
