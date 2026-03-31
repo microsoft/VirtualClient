@@ -5,6 +5,7 @@ namespace VirtualClient.Dependencies
 {
     using System;
     using System.Collections.Generic;
+    using System.IO;
     using System.Linq;
     using System.Runtime.InteropServices;
     using System.Threading;
@@ -80,6 +81,112 @@ namespace VirtualClient.Dependencies
                 Assert.AreEqual(true, component.Intrinsic);
                 Assert.AreEqual(DataFormat.Json, component.Format);
                 Assert.AreEqual(DataSchema.Metrics, component.Schema);
+            }
+        }
+
+        [Test]
+        public void ConstructorSetsPropertiesToExpectedValues_3()
+        {
+            this.SetupTest(PlatformID.Unix);
+
+            this.Parameters = new Dictionary<string, IConvertible>
+            {
+                { nameof(UploadTelemetry.TargetDirectory), "/home/user/logs" },
+                { nameof(UploadTelemetry.Intrinsic), true },
+                { nameof(UploadTelemetry.Format), DataFormat.Csv.ToString() },
+                { nameof(UploadTelemetry.Schema), DataSchema.Events.ToString() }
+            };
+
+            using (var component = new TestUploadTelemetry(this))
+            {
+                Assert.AreEqual("/home/user/logs", component.TargetDirectory);
+                Assert.AreEqual(true, component.Intrinsic);
+                Assert.AreEqual(DataFormat.Csv, component.Format);
+                Assert.AreEqual(DataSchema.Events, component.Schema);
+            }
+        }
+
+        [Test]
+        public void UploadTelemetryComponentValidatesRequiredParameters()
+        {
+            this.SetupTest(PlatformID.Unix);
+
+            this.Parameters = new Dictionary<string, IConvertible>
+            {
+                { nameof(UploadTelemetry.Intrinsic), true },
+                { nameof(UploadTelemetry.Format), DataFormat.Csv.ToString() },
+                { nameof(UploadTelemetry.Schema), DataSchema.Events.ToString() }
+            };
+
+            using (var component = new TestUploadTelemetry(this))
+            {
+                Assert.Throws<DependencyException>(() => component.Validate());
+            }
+        }
+
+        [Test]
+        public void UploadTelemetryIdentifiesTheExpectedFilesForATargetDirectory_Scenario1()
+        {
+            // Scenario:
+            // This test is designed to evaluate parsing logic from an actual file containing
+            // CSV events.
+            //
+            // Note that the results being verified below are defined in the example file below.
+            // Any changes to this file can invalidate the test.
+            string expectedDirectory = "/home/user/any/path";
+            string expectedFile1 = this.Combine(expectedDirectory, "1.events.csv");
+            string expectedFile2 = this.Combine(expectedDirectory, "2.events.csv");
+
+            this.SetupTest(PlatformID.Unix);
+
+            this.Parameters = new Dictionary<string, IConvertible>
+            {
+                { nameof(UploadTelemetry.TargetDirectory), expectedDirectory },
+                { nameof(UploadTelemetry.Format), DataFormat.Csv.ToString() },
+                { nameof(UploadTelemetry.Schema), DataSchema.Events.ToString() }
+            };
+
+            this.Directory.Setup(dir => dir.EnumerateFiles(expectedDirectory, "*.*", It.IsAny<SearchOption>()))
+                .Returns(new string[] { expectedFile1, expectedFile2 });
+
+            using (var component = new TestUploadTelemetry(this))
+            {
+                IEnumerable<string> targetFiles = component.GetTargetFiles();
+                Assert.AreEqual(expectedFile1, targetFiles.ElementAt(0));
+                Assert.AreEqual(expectedFile2, targetFiles.ElementAt(1));
+            }
+        }
+
+        [Test]
+        public void UploadTelemetryIdentifiesTheExpectedFilesForATargetDirectory_Scenario2()
+        {
+            // Scenario:
+            // This test is designed to evaluate parsing logic from an actual file containing
+            // CSV events.
+            //
+            // Note that the results being verified below are defined in the example file below.
+            // Any changes to this file can invalidate the test.
+            string expectedDirectory = "/home/user/any/path";
+            string expectedFile1 = this.Combine(expectedDirectory, "1.metrics.csv");
+            string expectedFile2 = this.Combine(expectedDirectory, "2.metrics.csv");
+
+            this.SetupTest(PlatformID.Unix);
+
+            this.Parameters = new Dictionary<string, IConvertible>
+            {
+                { nameof(UploadTelemetry.TargetDirectory), expectedDirectory },
+                { nameof(UploadTelemetry.Format), DataFormat.Csv.ToString() },
+                { nameof(UploadTelemetry.Schema), DataSchema.Metrics.ToString() }
+            };
+
+            this.Directory.Setup(dir => dir.EnumerateFiles(expectedDirectory, "*.*", It.IsAny<SearchOption>()))
+                .Returns(new string[] { expectedFile1, expectedFile2 });
+
+            using (var component = new TestUploadTelemetry(this))
+            {
+                IEnumerable<string> targetFiles = component.GetTargetFiles();
+                Assert.AreEqual(expectedFile1, targetFiles.ElementAt(0));
+                Assert.AreEqual(expectedFile2, targetFiles.ElementAt(1));
             }
         }
 
@@ -776,6 +883,11 @@ namespace VirtualClient.Dependencies
                 return base.CreateContext(dataPoint, ingestionTimestamp);
             }
 
+            public new IEnumerable<string> GetTargetFiles()
+            {
+                return base.GetTargetFiles();
+            }
+
             public new Task ProcessEventDataAsync(string filePath, DateTime ingestionTimestamp, EventContext telemetryContext)
             {
                 return base.ProcessEventDataAsync(filePath, ingestionTimestamp, telemetryContext);
@@ -784,6 +896,11 @@ namespace VirtualClient.Dependencies
             public new Task ProcessMetricsDataAsync(string filePath, DateTime ingestionTimestamp, EventContext telemetryContext)
             {
                 return base.ProcessMetricsDataAsync(filePath, ingestionTimestamp, telemetryContext);
+            }
+
+            public new void Validate()
+            {
+                base.Validate();
             }
         }
     }

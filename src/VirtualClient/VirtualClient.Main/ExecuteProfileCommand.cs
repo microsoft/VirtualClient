@@ -261,10 +261,7 @@ namespace VirtualClient
                 }
 
                 Program.LogMessage(logger, $"Flush Telemetry", exitingContext);
-                VirtualClientRuntime.ExecuteFlushActions(TimeSpan.FromSeconds(30));
-
                 Program.LogMessage(logger, $"Flushed", exitingContext);
-                VirtualClientRuntime.ExecuteFlushActions(TimeSpan.FromMinutes(1));
 
                 // Allow components to handle any final cleanup operations.
                 VirtualClientRuntime.ExecuteCleanupActions();
@@ -862,11 +859,11 @@ namespace VirtualClient
                 profile.Parameters.AddRange(this.Parameters, true);
             }
 
-            ValidationResult result = ExecutionProfileValidation.Instance.Validate(profile);
-            result.ThrowIfInvalid();
-
             // Process conditional parameters (ParametersOn feature)
             await profile.EvaluateConditionalParametersAsync(dependencies);
+
+            ValidationResult result = ExecutionProfileValidation.Instance.Validate(profile);
+            result.ThrowIfInvalid();
 
             profile.Inline();
         }

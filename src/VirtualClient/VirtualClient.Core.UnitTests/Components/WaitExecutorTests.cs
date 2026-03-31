@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace VirtualClient.Contracts
+namespace VirtualClient
 {
     using System;
     using System.Runtime.InteropServices;

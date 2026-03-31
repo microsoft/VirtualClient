@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace VirtualClient.Contracts
+namespace VirtualClient
 {
     using System;
     using System.Collections.Generic;
@@ -11,6 +11,7 @@ namespace VirtualClient.Contracts
     using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
     using VirtualClient.Common.Telemetry;
+    using VirtualClient.Contracts;
 
     /// <summary>
     /// A component that executes a set of child components in parallel.
@@ -42,19 +43,15 @@ namespace VirtualClient.Contracts
             {
                 if (!VirtualClientComponent.IsSupported(component))
                 {
-                    this.Logger.LogMessage($"{nameof(ParallelExecution)} {component.TypeName} not supported on current platform: {this.PlatformArchitectureName}", LogLevel.Information, telemetryContext);
+                    this.Logger.LogMessage(
+                        $"{nameof(ParallelExecution)} {component.TypeName} not supported on current platform: {this.PlatformArchitectureName}", 
+                        LogLevel.Information, 
+                        telemetryContext);
+
                     continue;
                 }
 
-                if (!string.IsNullOrWhiteSpace(component.Scenario))
-                {
-                    this.Logger.LogMessage($"{nameof(ParallelExecution)} Component = {component.TypeName} (scenario={component.Scenario})", LogLevel.Information, telemetryContext);
-                }
-                else
-                {
-                    this.Logger.LogMessage($"{nameof(ParallelExecution)} Component = {component.TypeName}", LogLevel.Information, telemetryContext);
-                }
-
+                component.OutputComponentStart();
                 componentTasks.Add(component.ExecuteAsync(cancellationToken));
             }
 

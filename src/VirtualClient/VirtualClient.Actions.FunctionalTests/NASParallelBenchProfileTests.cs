@@ -38,7 +38,7 @@ namespace VirtualClient.Actions
                 WorkloadAssert.ParameterReferencesInlined(executor.Profile);
             }
         }
-        
+
         [Test]
         [TestCase("PERF-HPC-NASPARALLELBENCH.json", PlatformID.Unix, Architecture.X64)]
         [TestCase("PERF-HPC-NASPARALLELBENCH.json", PlatformID.Unix, Architecture.Arm64)]
@@ -73,8 +73,14 @@ namespace VirtualClient.Actions
             {
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
 
-                var expectedCommands = this.GetProfileExpectedCommands(platform, architecture);
-                
+                // The profile uses {calculate({LogicalCoreCount} - 2)} for ThreadCount.
+                // Read the mock CpuInfo to derive the expected value dynamically.
+                CpuInfo cpuInfo = await this.mockFixture.SystemManagement.Object
+                    .GetCpuInfoAsync(CancellationToken.None).ConfigureAwait(false);
+
+                int expectedThreadCount = cpuInfo.LogicalProcessorCount - 2;
+                var expectedCommands = this.GetProfileExpectedCommands(expectedThreadCount, platform, architecture);
+
                 WorkloadAssert.CommandsExecuted(this.mockFixture, expectedCommands.ToArray());
             }
         }
@@ -86,7 +92,7 @@ namespace VirtualClient.Actions
         {
             this.SetupDefaultMockBehavior(platform, architecture);
             // We ensure the workload package does not exist.
-           
+
             this.mockFixture.PackageManager.Clear();
 
             using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
@@ -97,41 +103,22 @@ namespace VirtualClient.Actions
             }
         }
 
-        private IEnumerable<string> GetProfileExpectedCommands(PlatformID platform = PlatformID.Unix, Architecture architecture = Architecture.X64)
+        private IEnumerable<string> GetProfileExpectedCommands(int expectedThreadCount, PlatformID platform = PlatformID.Unix, Architecture architecture = Architecture.X64)
         {
-            List<string> commands = null;
-            if (architecture == Architecture.X64)
+            string platformDir = architecture == Architecture.X64 ? "linux-x64" : "linux-arm64";
+
+            List<string> commands = new List<string>
             {
-                commands = new List<string>
-                {
-                    $"bash -c \"export OMP_NUM_THREADS={Environment.ProcessorCount} && /home/user/tools/VirtualClient/packages/nasparallelbench/linux-x64/NPB-OMP/bin/bt.D.x\"",
-                    $"bash -c \"export OMP_NUM_THREADS={Environment.ProcessorCount} && /home/user/tools/VirtualClient/packages/nasparallelbench/linux-x64/NPB-OMP/bin/cg.D.x\"",
-                    $"bash -c \"export OMP_NUM_THREADS={Environment.ProcessorCount} && /home/user/tools/VirtualClient/packages/nasparallelbench/linux-x64/NPB-OMP/bin/ep.D.x\"",
-                    $"bash -c \"export OMP_NUM_THREADS={Environment.ProcessorCount} && /home/user/tools/VirtualClient/packages/nasparallelbench/linux-x64/NPB-OMP/bin/ft.D.x\"",
-                    $"bash -c \"export OMP_NUM_THREADS={Environment.ProcessorCount} && /home/user/tools/VirtualClient/packages/nasparallelbench/linux-x64/NPB-OMP/bin/is.C.x\"",
-                    $"bash -c \"export OMP_NUM_THREADS={Environment.ProcessorCount} && /home/user/tools/VirtualClient/packages/nasparallelbench/linux-x64/NPB-OMP/bin/lu.D.x\"",
-                    $"bash -c \"export OMP_NUM_THREADS={Environment.ProcessorCount} && /home/user/tools/VirtualClient/packages/nasparallelbench/linux-x64/NPB-OMP/bin/mg.D.x\"",
-                    $"bash -c \"export OMP_NUM_THREADS={Environment.ProcessorCount} && /home/user/tools/VirtualClient/packages/nasparallelbench/linux-x64/NPB-OMP/bin/sp.D.x\"",
-                    $"bash -c \"export OMP_NUM_THREADS={Environment.ProcessorCount} && /home/user/tools/VirtualClient/packages/nasparallelbench/linux-x64/NPB-OMP/bin/ua.D.x\"",
-                    $"bash -c \"export OMP_NUM_THREADS={Environment.ProcessorCount} && /home/user/tools/VirtualClient/packages/nasparallelbench/linux-x64/NPB-OMP/bin/dc.B.x\"",
-                };
-            }
-            else
-            {
-                commands = new List<string>
-                {
-                    $"bash -c \"export OMP_NUM_THREADS={Environment.ProcessorCount} && /home/user/tools/VirtualClient/packages/nasparallelbench/linux-arm64/NPB-OMP/bin/bt.D.x",
-                    $"bash -c \"export OMP_NUM_THREADS={Environment.ProcessorCount} && /home/user/tools/VirtualClient/packages/nasparallelbench/linux-arm64/NPB-OMP/bin/cg.D.x\"",
-                    $"bash -c \"export OMP_NUM_THREADS={Environment.ProcessorCount} && /home/user/tools/VirtualClient/packages/nasparallelbench/linux-arm64/NPB-OMP/bin/ep.D.x\"",
-                    $"bash -c \"export OMP_NUM_THREADS={Environment.ProcessorCount} && /home/user/tools/VirtualClient/packages/nasparallelbench/linux-arm64/NPB-OMP/bin/ft.D.x\"",
-                    $"bash -c \"export OMP_NUM_THREADS={Environment.ProcessorCount} && /home/user/tools/VirtualClient/packages/nasparallelbench/linux-arm64/NPB-OMP/bin/is.C.x\"",
-                    $"bash -c \"export OMP_NUM_THREADS={Environment.ProcessorCount} && /home/user/tools/VirtualClient/packages/nasparallelbench/linux-arm64/NPB-OMP/bin/lu.D.x\"",
-                    $"bash -c \"export OMP_NUM_THREADS={Environment.ProcessorCount} && /home/user/tools/VirtualClient/packages/nasparallelbench/linux-arm64/NPB-OMP/bin/mg.D.x\"",
-                    $"bash -c \"export OMP_NUM_THREADS={Environment.ProcessorCount} && /home/user/tools/VirtualClient/packages/nasparallelbench/linux-arm64/NPB-OMP/bin/sp.D.x\"",
-                    $"bash -c \"export OMP_NUM_THREADS={Environment.ProcessorCount} && /home/user/tools/VirtualClient/packages/nasparallelbench/linux-arm64/NPB-OMP/bin/ua.D.x\"",
-                    $"bash -c \"export OMP_NUM_THREADS={Environment.ProcessorCount} && /home/user/tools/VirtualClient/packages/nasparallelbench/linux-arm64/NPB-OMP/bin/dc.B.x\"",
-                };
-            }
+                $"bash -c \"export OMP_NUM_THREADS={expectedThreadCount} && /home/user/tools/VirtualClient/packages/nasparallelbench/{platformDir}/NPB-OMP/bin/bt.C.x\"",
+                $"bash -c \"export OMP_NUM_THREADS={expectedThreadCount} && /home/user/tools/VirtualClient/packages/nasparallelbench/{platformDir}/NPB-OMP/bin/cg.C.x\"",
+                $"bash -c \"export OMP_NUM_THREADS={expectedThreadCount} && /home/user/tools/VirtualClient/packages/nasparallelbench/{platformDir}/NPB-OMP/bin/ep.C.x\"",
+                $"bash -c \"export OMP_NUM_THREADS={expectedThreadCount} && /home/user/tools/VirtualClient/packages/nasparallelbench/{platformDir}/NPB-OMP/bin/ft.C.x\"",
+                $"bash -c \"export OMP_NUM_THREADS={expectedThreadCount} && /home/user/tools/VirtualClient/packages/nasparallelbench/{platformDir}/NPB-OMP/bin/is.C.x\"",
+                $"bash -c \"export OMP_NUM_THREADS={expectedThreadCount} && /home/user/tools/VirtualClient/packages/nasparallelbench/{platformDir}/NPB-OMP/bin/lu.C.x\"",
+                $"bash -c \"export OMP_NUM_THREADS={expectedThreadCount} && /home/user/tools/VirtualClient/packages/nasparallelbench/{platformDir}/NPB-OMP/bin/mg.C.x\"",
+                $"bash -c \"export OMP_NUM_THREADS={expectedThreadCount} && /home/user/tools/VirtualClient/packages/nasparallelbench/{platformDir}/NPB-OMP/bin/sp.C.x\"",
+                $"bash -c \"export OMP_NUM_THREADS={expectedThreadCount} && /home/user/tools/VirtualClient/packages/nasparallelbench/{platformDir}/NPB-OMP/bin/ua.C.x\"",
+            };
 
             return commands;
         }
@@ -139,42 +126,21 @@ namespace VirtualClient.Actions
         private void SetupDefaultMockBehavior(PlatformID platform = PlatformID.Unix, Architecture architecture = Architecture.X64)
         {
             this.mockFixture.Setup(platform, architecture);
-            string[] expectedFiles = null;
+            string platformDir = architecture == Architecture.X64 ? "linux-x64" : "linux-arm64";
 
-            if (architecture == Architecture.X64)
+            string[] expectedFiles = new string[]
             {
-                expectedFiles = new string[]
-                {
-                        @"linux-x64/NPB-OMP/bin/bt.D.x",
-                        @"linux-x64/NPB-OMP/bin/cg.D.x",
-                        @"linux-x64/NPB-OMP/bin/ep.D.x",
-                        @"linux-x64/NPB-OMP/bin/ft.D.x",
-                        @"linux-x64/NPB-OMP/bin/is.C.x",
-                        @"linux-x64/NPB-OMP/bin/lu.D.x",
-                        @"linux-x64/NPB-OMP/bin/mg.D.x",
-                        @"linux-x64/NPB-OMP/bin/sp.D.x",
-                        @"linux-x64/NPB-OMP/bin/ua.D.x",
-                        @"linux-x64/NPB-OMP/bin/dc.B.x",
-                        @"linux-x64/NPB-OMP/bin/dt.D.x"
-                };
-            }
-            else
-            {
-                expectedFiles = new string[]
-                {
-                        @"linux-arm64/NPB-OMP/bin/bt.D.x",
-                        @"linux-arm64/NPB-OMP/bin/cg.D.x",
-                        @"linux-arm64/NPB-OMP/bin/ep.D.x",
-                        @"linux-arm64/NPB-OMP/bin/ft.D.x",
-                        @"linux-arm64/NPB-OMP/bin/is.C.x",
-                        @"linux-arm64/NPB-OMP/bin/lu.D.x",
-                        @"linux-arm64/NPB-OMP/bin/mg.D.x",
-                        @"linux-arm64/NPB-OMP/bin/sp.D.x",
-                        @"linux-arm64/NPB-OMP/bin/ua.D.x",
-                        @"linux-arm64/NPB-OMP/bin/dc.B.x",
-                        @"linux-arm64/NPB-OMP/bin/dt.D.x"
-                };
-            }
+                $@"{platformDir}/NPB-OMP/bin/bt.C.x",
+                $@"{platformDir}/NPB-OMP/bin/cg.C.x",
+                $@"{platformDir}/NPB-OMP/bin/ep.C.x",
+                $@"{platformDir}/NPB-OMP/bin/ft.C.x",
+                $@"{platformDir}/NPB-OMP/bin/is.C.x",
+                $@"{platformDir}/NPB-OMP/bin/lu.C.x",
+                $@"{platformDir}/NPB-OMP/bin/mg.C.x",
+                $@"{platformDir}/NPB-OMP/bin/sp.C.x",
+                $@"{platformDir}/NPB-OMP/bin/ua.C.x",
+                $@"{platformDir}/NPB-OMP/bin/dt.C.x"
+            };
 
             this.mockFixture.SetupPackage("nasparallelbench", expectedFiles: expectedFiles);
         }

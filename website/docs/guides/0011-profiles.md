@@ -34,10 +34,10 @@ are part of the 'Actions', 'Monitors' or 'Dependencies' sections. In general, Vi
 for how to utilize resources and work a given system. Whereas any number of parameters can be defined in the 'Parameters' section, it is common practice to allow overrides to a minimum
 set. This helps to ensure the purpose and consistency of the profile operations on the system cannnot diverge too far from the original intentions.
 
-```
+``` json
 "Parameters": {
     "CompilerName": "gcc",
-    "CompilerVersion": "10",
+    "CompilerVersion": 10,
     "ThreadCount": null
 },
  "Actions": [
@@ -49,6 +49,45 @@ set. This helps to ensure the purpose and consistency of the profile operations 
         }
     }
 ]
+```
+
+## ParametersOn
+The section 'ParametersOn' within a profile defines a sets of parameters each with a "condition" that when evaluated to true will cause that specific set of parameters
+to be added to the profile parameters and used. Any parameters with keys matching in the conditional set will override those in the profile. Note that this
+section is not required and is used primarily in conjunction with "calculated parameters/values". See the section below on `Inline Parameter References -> Calculations`.
+
+``` json
+"Parameters": {
+    "CompilerName": "gcc",
+    "CompilerVersion": 10,
+    "ThreadCount": null
+},
+"ParametersOn": [
+    {
+        "Condition": "{calculate(\"{Platform}\" == \"linux-x64\")},
+        "CompilerVersion": "13"
+    },
+    {
+        "Condition": "{calculate(\"{Platform}\" == \"linux-arm64\")},
+        "CompilerVersion": "12"
+    }
+]
+
+# Will result in the following parameters being used when running 
+# on a linux-x64 system:
+"Parameters": {
+    "CompilerName": "gcc",
+    "CompilerVersion": 13,
+    "ThreadCount": null
+}
+
+# Will result in the following parameters being used when running 
+# on a linux-arm64 system:
+"Parameters": {
+    "CompilerName": "gcc",
+    "CompilerVersion": 12,
+    "ThreadCount": null
+}
 ```
 
 ## Well-Known Parameters
@@ -332,13 +371,18 @@ to translate string literals into mathematical calculations.
 
 ```
 Calculations in parameter values should use the following format:  
-{calculate(<expression>)}
+{calculate(<expression>)} or {fn(<expression>)}
 
 e.g.
 {calculate(100 / {TotalThreads})}
 {calculate({LogicalProcessorCount} - 2)}
 {calculate(({LogicalProcessorCount} - 2) / 512)}
 {calculate(\"{Platform}\".StartsWith(\"linux\") ? \"libaio\" : \"windowsaio\")}
+
+{fn(100 / {TotalThreads})}
+{fn({LogicalProcessorCount} - 2)}
+{fn(({LogicalProcessorCount} - 2) / 512)}
+{fn(\"{Platform}\".StartsWith(\"linux\") ? \"libaio\" : \"windowsaio\")}
 ```
 
 ``` json
