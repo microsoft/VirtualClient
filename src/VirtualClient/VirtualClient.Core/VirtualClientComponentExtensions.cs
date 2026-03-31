@@ -20,6 +20,7 @@ namespace VirtualClient
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Logging;
 
     /// <summary>
     /// Extension methods for common operations in <see cref="VirtualClientComponent"/> derived
@@ -532,9 +533,8 @@ namespace VirtualClient
         /// <param name="blobManager">Handles the upload of the blob/file content to the store.</param>
         /// <param name="fileSystem">IFileSystem interface, required to distinguish paths between linux and windows. Provides access to the file system for reading the contents of the files.</param>
         /// <param name="descriptor">The defined blob descriptor</param>
-        /// <param name="cancellationToken">The cancellationToken.</param>
-        /// <param name="uploadManifest">True to upload a manifest alongside the file that contains metadata about the file. Default = true.</param>
-        /// <param name="deleteFile">Whether to delete file after upload. Default = false.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operations.</param>
+        /// <param name="includeManifest">True/false whether manifest files should be included with the file uploads.</param>
         /// <param name="retryPolicy">A retry policy to apply for handling transient upload issues.</param>
         /// <param name="telemetryContext">Context to include with telemetry information related to files uploaded to the blob store.</param>
         /// <returns></returns>
@@ -544,8 +544,7 @@ namespace VirtualClient
             IFileSystem fileSystem,
             FileUploadDescriptor descriptor,
             CancellationToken cancellationToken,
-            bool uploadManifest = true,
-            bool deleteFile = false,
+            bool includeManifest = false,
             IAsyncPolicy retryPolicy = null,
             EventContext telemetryContext = null)
         {
@@ -562,7 +561,6 @@ namespace VirtualClient
 
             try
             {
-                bool uploaded = false;
                 IAsyncPolicy asyncPolicy = retryPolicy ?? VirtualClientComponentExtensions.FileSystemAccessRetryPolicy;
 
                 await (retryPolicy ?? VirtualClientComponentExtensions.FileSystemAccessRetryPolicy).ExecuteAsync(async () =>
@@ -592,7 +590,7 @@ namespace VirtualClient
                                         BlobDescriptor fileDescriptor = descriptor.ToBlobDescriptor();
                                         await blobManager.UploadBlobAsync(fileDescriptor, uploadStream, cancellationToken, component.Metadata);
 
-                                        if (uploadManifest && descriptor.Manifest?.Any() == true)
+                                        if (includeManifest && descriptor.Manifest?.Any() == true)
                                         {
                                             BlobDescriptor manifestDescriptor = descriptor.ToBlobManifestDescriptor(out Stream manifestStream);
                                             using (manifestStream)
@@ -600,22 +598,12 @@ namespace VirtualClient
                                                 await blobManager.UploadBlobAsync(manifestDescriptor, manifestStream, cancellationToken);
                                             }
                                         }
-
-                                        uploaded = true;
                                     });
                                 }
                             }
                         }
                     }
                 });
-
-                // Delete ONLY if uploaded successfully. We DO use the cancellation token supplied to the method
-                // here to ensure we cycle around quickly to uploading files while Virtual Client is trying to shut
-                // down to have the best chance of getting them off the system.
-                if (deleteFile && uploaded)
-                {
-                    await fileSystem.File.DeleteAsync(descriptor.FilePath);
-                }
             }
             catch (IOException exc) when (exc.Message.Contains("being used by another process", StringComparison.OrdinalIgnoreCase))
             {
@@ -637,9 +625,8 @@ namespace VirtualClient
         /// <param name="blobManager">Handles the upload of the blob/file content to the store.</param>
         /// <param name="fileSystem">IFileSystem interface, required to distinguish paths between linux and windows. Provides access to the file system for reading the contents of the files.</param>
         /// <param name="descriptors">A set of file path and descriptor pairs that each define a blob/file to upload and the target location in the store.</param>
-        /// <param name="cancellationToken">The cancellationToken.</param>
-        /// <param name="uploadManifest">True to upload a manifest alongside the file that contains metadata about the file. Default = true.</param>
-        /// <param name="deleteFile">Whether to delete file after upload. Default = false.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operations.</param>
+        /// <param name="includeManifest">True/false whether manifest files should be included with the file uploads.</param>
         /// <param name="retryPolicy">A retry policy to apply for handling transient upload issues.</param>
         /// <param name="telemetryContext">Context to include with telemetry information related to files uploaded to the blob store.</param>
         /// <returns></returns>
@@ -649,14 +636,13 @@ namespace VirtualClient
             IFileSystem fileSystem,
             IEnumerable<FileUploadDescriptor> descriptors,
             CancellationToken cancellationToken,
-            bool uploadManifest = true,
-            bool deleteFile = false,
+            bool includeManifest = false,
             IAsyncPolicy retryPolicy = null,
             EventContext telemetryContext = null)
         {
             foreach (FileUploadDescriptor descriptor in descriptors)
             {
-                await component.UploadFileAsync(blobManager, fileSystem, descriptor, cancellationToken, uploadManifest, deleteFile, retryPolicy, telemetryContext);
+                await component.UploadFileAsync(blobManager, fileSystem, descriptor, cancellationToken, includeManifest, retryPolicy, telemetryContext);
             }
         }
 

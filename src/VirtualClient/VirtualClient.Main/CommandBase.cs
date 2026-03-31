@@ -17,20 +17,17 @@ namespace VirtualClient
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
-    using Azure;
-    using Azure.Core;
-    using Azure.Identity;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Logging.Abstractions;
+    using Org.BouncyCastle.Asn1.X509;
     using VirtualClient.Cleanup;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Configuration;
     using VirtualClient.Contracts;
-    using VirtualClient.Contracts.Extensibility;
     using VirtualClient.Contracts.Metadata;
     using VirtualClient.Contracts.Proxy;
     using VirtualClient.Identity;
@@ -43,6 +40,7 @@ namespace VirtualClient
     public abstract class CommandBase
     {
         private const string defaultPackageStoreUri = "https://packages.virtualclient.microsoft.com";
+        private static DateTime executionStartTimestamp = DateTime.UtcNow;
         private IDictionary<string, IConvertible> pathReplacements;
 
         /// <summary>
@@ -175,11 +173,9 @@ namespace VirtualClient
         }
 
         /// <summary>
-        /// True if the application should run with isolation in place. This flag causes
-        /// the application to use logs, packages, state and temp directories that are unique
-        /// to the experiment ID defined.
+        /// A set of target resources to keep isolated (e.g. logs, packages, state, all).
         /// </summary>
-        public bool Isolated { get; set; }
+        public IList<string> IsolationTargets { get; set; }
 
         /// <summary>
         /// Describes the target Key Vault store where secrets and certificates should be accessed.
@@ -458,7 +454,7 @@ namespace VirtualClient
         /// <param name="logger"></param>
         protected async Task CleanAsync(IServiceCollection dependencies, CancellationToken cancellationToken, ILogger logger = null)
         {
-            VirtualClient.Contracts.CleanTargets targets = null;
+            VirtualClient.Contracts.ResourceTargets targets = null;
             DateTime? logRetentionDate = null;
             EventContext telemetryContext = EventContext.Persisted();
 
@@ -476,11 +472,11 @@ namespace VirtualClient
                     if (this.CleanTargets?.Any() != true)
                     {
                         // --clean used as a flag
-                        targets = VirtualClient.Contracts.CleanTargets.Create();
+                        targets = VirtualClient.Contracts.ResourceTargets.Create();
                     }
                     else
                     {
-                        targets = VirtualClient.Contracts.CleanTargets.Create(this.CleanTargets);
+                        targets = VirtualClient.Contracts.ResourceTargets.Create(this.CleanTargets);
                     }
 
                     telemetryContext.AddContext("cleanTargets", this.CleanTargets);
@@ -490,7 +486,7 @@ namespace VirtualClient
                         telemetryContext.AddContext("logRetention", this.LogRetention);
                     }
 
-                    if (targets.CleanLogs)
+                    if (targets.TargetLogs)
                     {
                         try
                         {
@@ -503,17 +499,17 @@ namespace VirtualClient
                         }
                     }
 
-                    if (targets.CleanPackages)
+                    if (targets.TargetPackages)
                     {
                         await systemManagement.CleanPackagesDirectoryAsync(cancellationToken);
                     }
 
-                    if (targets.CleanState)
+                    if (targets.TargetState)
                     {
                         await systemManagement.CleanStateDirectoryAsync(cancellationToken);
                     }
 
-                    if (targets.CleanTemp)
+                    if (targets.TargetTemp)
                     {
                         await systemManagement.CleanTempDirectoryAsync(cancellationToken);
                     }
@@ -549,13 +545,27 @@ namespace VirtualClient
         /// <param name="platformSpecifics">Defines the fundamental directory paths for the application.</param>
         protected void EvaluateDirectoryPathOverrides(PlatformSpecifics platformSpecifics)
         {
+            ResourceTargets isolationTargets = null;
+            if (this.IsolationTargets != null)
+            {
+                if (this.IsolationTargets?.Any() != true)
+                {
+                    // --isolated used as a flag
+                    isolationTargets = ResourceTargets.Create();
+                }
+                else
+                {
+                    isolationTargets = ResourceTargets.Create(this.IsolationTargets);
+                }
+            }
+
             // Logs Directory
             // -------------------------------------------------
             // Priority (logs directory):
             // 1) --log-dir command line option
             // 2) VC_LOGS_DIR environment variable
             // 3) Default location
-            string logDirectory = platformSpecifics.LogsDirectory;
+                string logDirectory = platformSpecifics.LogsDirectory;
             if (!string.IsNullOrWhiteSpace(this.LogDirectory))
             {
                 // Users can override on the command line with the --log-dir option.
@@ -577,7 +587,13 @@ namespace VirtualClient
                 logDirectory = Path.GetFullPath(logDirectory);
             }
 
+            if (isolationTargets?.TargetLogs == true)
+            {
+                logDirectory = platformSpecifics.Combine(logDirectory, CommandBase.executionStartTimestamp.ToString("yyyy.MM.dd_hh.mm.ss"));
+            }
+
             platformSpecifics.LogsDirectory = this.EvaluatePathReplacements(logDirectory, platformSpecifics);
+
 
             // Packages Directory
             // -------------------------------------------------
@@ -605,6 +621,11 @@ namespace VirtualClient
             if (!Path.IsPathRooted(packageDirectory))
             {
                 packageDirectory = Path.GetFullPath(packageDirectory);
+            }
+
+            if (isolationTargets?.TargetPackages == true)
+            {
+                packageDirectory = platformSpecifics.Combine(packageDirectory, CommandBase.executionStartTimestamp.ToString("yyyy.MM.dd_hh.mm.ss"));
             }
 
             platformSpecifics.PackagesDirectory = this.EvaluatePathReplacements(packageDirectory, platformSpecifics);
@@ -637,6 +658,11 @@ namespace VirtualClient
                 stateDirectory = OptionFactory.ToFullPath(stateDirectory);
             }
 
+            if (isolationTargets?.TargetState == true)
+            {
+                stateDirectory = platformSpecifics.Combine(stateDirectory, CommandBase.executionStartTimestamp.ToString("yyyy.MM.dd_hh.mm.ss"));
+            }
+
             platformSpecifics.StateDirectory = this.EvaluatePathReplacements(stateDirectory, platformSpecifics);
 
             // Temp Directory
@@ -665,6 +691,11 @@ namespace VirtualClient
             if (!Path.IsPathRooted(tempDirectory))
             {
                 tempDirectory = Path.GetFullPath(tempDirectory);
+            }
+
+            if (isolationTargets?.TargetTemp == true)
+            {
+                tempDirectory = platformSpecifics.Combine(tempDirectory, CommandBase.executionStartTimestamp.ToString("yyyy.MM.dd_hh.mm.ss"));
             }
 
             platformSpecifics.TempDirectory = this.EvaluatePathReplacements(tempDirectory, platformSpecifics);
@@ -757,11 +788,25 @@ namespace VirtualClient
                 this.LoggingLevel = LogLevel.Information;
             }
 
+            ResourceTargets isolationTargets = null;
+            if (this.IsolationTargets != null)
+            {
+                if (this.IsolationTargets?.Any() != true)
+                {
+                    // --isolated used as a flag
+                    isolationTargets = ResourceTargets.Create();
+                }
+                else
+                {
+                    isolationTargets = ResourceTargets.Create(this.IsolationTargets);
+                }
+            }
+
             IConfiguration configuration = Program.LoadAppSettings();
             IConvertible telemetrySource = null;
             this.Parameters?.TryGetValue(GlobalParameter.TelemetrySource, out telemetrySource);
 
-            ISystemManagement systemManagement = DependencyFactory.CreateSystemManager(this.ClientId, this.ExperimentId, platformSpecifics, this.Isolated);
+            ISystemManagement systemManagement = DependencyFactory.CreateSystemManager(this.ClientId, this.ExperimentId, platformSpecifics, isolationTargets.TargetPackages);
             IApiManager apiManager = new ApiManager(systemManagement.FirewallManager);
             IAuthorizationManager authorizationManager = new AuthorizationManager();
             IProfileManager profileManager = new ProfileManager();
@@ -882,7 +927,7 @@ namespace VirtualClient
             foreach (string loggerDefinition in loggerDefinitions)
             {
                 string loggerName = loggerDefinition;
-                string loggerParameters = string.Empty;
+                string loggerParameters = null;
 
                 // e.g.
                 // --logger=eventhub;sb://anynamespace.servicebus.net?cid=4F93d5a6-7833-4434-8a93-27b0d2ae624c&tid=77ab...
@@ -894,7 +939,10 @@ namespace VirtualClient
                     loggerParameters = loggerDefinition.Substring(indexOfDelimiter + 1).Trim();
                 }
 
-                loggerParameters = this.EvaluatePathReplacements(loggerParameters, platformSpecifics);
+                if (!string.IsNullOrWhiteSpace(loggerParameters))
+                {
+                    loggerParameters = this.EvaluatePathReplacements(loggerParameters, platformSpecifics);
+                }
 
                 switch (loggerName.ToLowerInvariant())
                 {
@@ -903,11 +951,11 @@ namespace VirtualClient
                         break;
 
                     case "csv":
-                        CommandBase.AddCsvLogging(loggingProviders, platformSpecifics);
+                        CommandBase.AddCsvLogging(loggingProviders, loggerParameters ?? platformSpecifics.LogsDirectory);
                         break;
 
                     case "file":
-                        CommandBase.AddFileLogging(loggingProviders, configuration, platformSpecifics, loggingLevel);
+                        CommandBase.AddFileLogging(loggingProviders, loggerParameters ?? platformSpecifics.LogsDirectory, configuration, loggingLevel);
                         break;
 
                     case "eventhub":
@@ -995,9 +1043,9 @@ namespace VirtualClient
                 .HandleTraces());
         }
 
-        private static void AddCsvLogging(List<ILoggerProvider> loggingProviders, PlatformSpecifics platformSpecifics)
+        private static void AddCsvLogging(List<ILoggerProvider> loggingProviders, string logDirectory)
         {
-            IEnumerable<ILoggerProvider> logProviders = DependencyFactory.CreateCsvFileLoggerProviders(platformSpecifics.LogsDirectory);
+            IEnumerable<ILoggerProvider> logProviders = DependencyFactory.CreateCsvFileLoggerProviders(logDirectory);
 
             if (logProviders?.Any() == true)
             {
@@ -1074,10 +1122,10 @@ namespace VirtualClient
             }
         }
 
-        private static void AddFileLogging(List<ILoggerProvider> loggingProviders, IConfiguration configuration, PlatformSpecifics platformSpecifics, LogLevel level)
+        private static void AddFileLogging(List<ILoggerProvider> loggingProviders, string logDirectory, IConfiguration configuration, LogLevel level)
         {
             IEnumerable<ILoggerProvider> logProviders = DependencyFactory.CreateFileLoggerProviders(
-                platformSpecifics.LogsDirectory, 
+                logDirectory, 
                 FileLogSettings.Default(), 
                 level);
 
@@ -1109,9 +1157,9 @@ namespace VirtualClient
             }
         }
 
-        private static void AddSummaryLogging(List<ILoggerProvider> loggingProviders, string loggerParameters)
+        private static void AddSummaryLogging(List<ILoggerProvider> loggingProviders, string logFilePath)
         {
-            ILoggerProvider summaryLoggerProvider = new SummaryFileLoggerProvider(loggerParameters);
+            ILoggerProvider summaryLoggerProvider = new SummaryFileLoggerProvider(logFilePath);
             loggingProviders.Add(summaryLoggerProvider);
         }
 
@@ -1155,6 +1203,7 @@ namespace VirtualClient
                     { "packageDir", platformSpecifics.PackagesDirectory },
                     { "stateDir", platformSpecifics.StateDirectory },
                     { "tempDir", platformSpecifics.TempDirectory },
+                    { "timestamp", CommandBase.executionStartTimestamp.ToString("yyyy.MM.dd_hh.mm.ss") }
                 };
 
                 if (this.Metadata?.Any() == true)

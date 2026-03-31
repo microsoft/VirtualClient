@@ -249,6 +249,32 @@ namespace VirtualClient.Contracts
     }
 
     /// <summary>
+    /// Logging options.
+    /// </summary>
+    public static class LogOption
+    {
+        /// <summary>
+        /// DeleteOnUpload
+        /// </summary>
+        public const string DeleteOnUpload = nameof(DeleteOnUpload);
+
+        /// <summary>
+        /// Upload
+        /// </summary>
+        public const string Upload = nameof(Upload);
+
+        /// <summary>
+        /// UploadManifest
+        /// </summary>
+        public const string UploadManifest = nameof(UploadManifest);
+
+        /// <summary>
+        /// Timestamped
+        /// </summary>
+        public const string Timestamped = nameof(Timestamped);
+    }
+
+    /// <summary>
     /// Common profile metadata property names.
     /// </summary>
     public class ProfileMetadata
