@@ -1,15 +1,17 @@
 {
-    "Description": "High Performance Linpack Workload",
+    "Description": "High Performance Linpack Workload w/ARM64 Performance Libraries",
     "Metadata": {
-        "RecommendedMinimumExecutionTime": "00:01:00",
-        "SupportedPlatforms": "linux-x64,linux-arm64",
-        "SupportedOperatingSystems": "Ubuntu"
+        "RecommendedMinimumExecutionTime": "00:30:00",
+        "SupportedPlatforms": "linux-arm64",
+        "SupportedOperatingSystems": "Ubuntu",
+        "SupportedPerformanceLibraries": "23.04.1, 24.10, 25.04.1"
     },
     "Parameters": {
         "CompilerVersion": null,
         "ProblemSizeN": null,
         "BlockSizeNB": "256",
         "NumberOfProcesses": "{LogicalCoreCount}",
+        "PerformanceLibraryVersion": "25.04.1",
         "BindToCores": false,
         "CCFLAGS": "-O3 -march=native"
     },
@@ -23,11 +25,19 @@
                 "NumberOfProcesses": "$.Parameters.NumberOfProcesses",
                 "CCFLAGS": "$.Parameters.CCFLAGS",
                 "BindToCores": "$.Parameters.BindToCores",
-                "PackageName": "hplinpack"
+                "PackageName": "hplinpack",
+                "PerformanceLibrary": "ARM",
+                "PerformanceLibraryVersion": "$.Parameters.PerformanceLibraryVersion"
             }
         }
     ],
     "Dependencies": [
+        {
+            "Type": "CompilerInstallation",
+            "Parameters": {
+                "CompilerVersion": "$.Parameters.CompilerVersion"
+            }
+        },
         {
             "Type": "LinuxPackageInstallation",
             "Parameters": {
@@ -39,18 +49,23 @@
             }
         },
         {
-            "Type": "CompilerInstallation",
+            "Type": "DependencyPackageInstallation",
             "Parameters": {
-                "CompilerVersion": "$.Parameters.CompilerVersion"
+                "Scenario": "InstallHPLinpackPackage",
+                "BlobContainer": "packages",
+                "BlobName": "hplinpack.2.3.zip",
+                "PackageName": "hplinpack",
+                "Extract": true
             }
         },
         {
             "Type": "DependencyPackageInstallation",
             "Parameters": {
-                "Scenario": "InstallHPLinpackPackage",
+                "Scenario": "InstallHPLinpackPerformanceLibrariesPackage",
                 "BlobContainer": "packages",
-                "BlobName": "hpl.2.3.zip",
-                "PackageName": "hplinpack",
+                "BlobName": "hplinpack_performance_libraries_arm.{PerformanceLibraryVersion}.zip",
+                "PackageName": "hplperformancelibraries",
+                "PerformanceLibraryVersion": "$.Parameters.PerformanceLibraryVersion",
                 "Extract": true
             }
         }
