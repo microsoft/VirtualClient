@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace VirtualClient.Dependencies
+namespace VirtualClient
 {
     using System;
     using System.Collections.Generic;
@@ -80,34 +80,62 @@ namespace VirtualClient.Dependencies
         }
 
         [Test]
-        [TestCase("/home/user/anycommand&&/home/user/anyothercommand", "/home/user/anycommand;/home/user/anyothercommand")]
-        [TestCase("/home/user/anycommand --argument=value&&/home/user/anyothercommand --argument2=value2", "/home/user/anycommand --argument=value;/home/user/anyothercommand --argument2=value2")]
-        [TestCase("sudo anycommand&&anyothercommand", "sudo anycommand;sudo anyothercommand")]
-        [TestCase("sudo /home/user/anycommand&&/home/user/anyothercommand", "sudo /home/user/anycommand;sudo /home/user/anyothercommand")]
-        [TestCase("sudo /home/user/anycommand --argument=value&&/home/user/anyothercommand --argument2=value2", "sudo /home/user/anycommand --argument=value;sudo /home/user/anyothercommand --argument2=value2")]
+        [TestCase("bash -c \"/home/user/anycommand&&/home/user/anyothercommand\"", "bash -c \"/home/user/anycommand&&/home/user/anyothercommand\"")]
+        [TestCase("bash -c \"/home/user/anycommand --argument=value&&/home/user/anyothercommand --argument2=value2\"", "bash -c \"/home/user/anycommand --argument=value&&/home/user/anyothercommand --argument2=value2\"")]
+        [TestCase("sudo bash -c \"/home/user/anycommand&&/home/user/anyothercommand\"", "sudo bash -c \"/home/user/anycommand&&/home/user/anyothercommand\"")]
+        [TestCase("sudo bash -c \"/home/user/anycommand --argument=value&&sudo /home/user/anyothercommand --argument2=value2\"", "sudo bash -c \"/home/user/anycommand --argument=value&&sudo /home/user/anyothercommand --argument2=value2\"")]
+        [TestCase("bash -c \"/home/user/anycommand --log-dir='home/user/log dir'&&/home/user/anyothercommand --log-dir='home/user/log dir'\"", "bash -c \"/home/user/anycommand --log-dir='home/user/log dir'&&/home/user/anyothercommand --log-dir='home/user/log dir'\"")]
+        [TestCase("bash -c '/home/user/anycommand --log-dir=\"home/user/log dir\"&&/home/user/anyothercommand --log-dir=\"home/user/log dir\"'", "bash -c '/home/user/anycommand --log-dir=\"home/user/log dir\"&&/home/user/anyothercommand --log-dir=\"home/user/log dir\"'")]
         public async Task ExecuteCommandSupportsCommandChainingOnUnixSystems(string fullCommand, string expectedCommandExecuted)
         {
             this.SetupDefaults(PlatformID.Unix);
+            bool confirmed = false;
 
             using (TestExecuteCommand command = new TestExecuteCommand(this.mockFixture))
             {
                 command.Parameters[nameof(ExecuteCommand.Command)] = fullCommand;
-                List<string> expectedCommands = new List<string>(expectedCommandExecuted.Split(';'));
 
                 this.mockFixture.ProcessManager.OnProcessCreated = (process) =>
                 {
-                    expectedCommands.Remove(process.FullCommand());
+                    Assert.AreEqual(expectedCommandExecuted, process.FullCommand());
+                    confirmed = true;
                 };
 
                 await command.ExecuteAsync(CancellationToken.None);
-                Assert.IsEmpty(expectedCommands);
+                Assert.IsTrue(confirmed);
+            }
+        }
+
+        [Test]
+        [TestCase("/home/user/anycommand&&/home/user/anyothercommand", "bash -c \"/home/user/anycommand&&/home/user/anyothercommand\"")]
+        [TestCase("/home/user/anycommand --argument=value&&/home/user/anyothercommand --argument2=value2", "bash -c \"/home/user/anycommand --argument=value&&/home/user/anyothercommand --argument2=value2\"")]
+        [TestCase("sudo /home/user/anycommand&&/home/user/anyothercommand", "bash -c \"sudo /home/user/anycommand&&/home/user/anyothercommand\"")]
+        [TestCase("sudo /home/user/anycommand --argument=value&&sudo /home/user/anyothercommand --argument2=value2", "bash -c \"sudo /home/user/anycommand --argument=value&&sudo /home/user/anyothercommand --argument2=value2\"")]
+        public async Task ExecuteCommandSupportsCommandChainingOnUnixSystems_With_UseShell(string fullCommand, string expectedCommandExecuted)
+        {
+            this.SetupDefaults(PlatformID.Unix);
+            this.mockFixture.Parameters[nameof(ExecuteCommand.UseShell)] = true;
+            bool confirmed = false;
+
+            using (TestExecuteCommand command = new TestExecuteCommand(this.mockFixture))
+            {
+                command.Parameters[nameof(ExecuteCommand.Command)] = fullCommand;
+
+                this.mockFixture.ProcessManager.OnProcessCreated = (process) =>
+                {
+                    Assert.AreEqual(expectedCommandExecuted, process.FullCommand());
+                    confirmed = true;
+                };
+
+                await command.ExecuteAsync(CancellationToken.None);
+                Assert.IsTrue(confirmed);
             }
         }
 
         [Test]
         [TestCase(
             "sudo dmesg && sudo lsblk && sudo mount && sudo df -h && sudo find /sys -name scheduler -print",
-            "sudo dmesg;sudo lsblk;sudo mount;sudo df -h;sudo find /sys -name scheduler -print")]
+            "bash -c \"sudo dmesg && sudo lsblk && sudo mount && sudo df -h && sudo find /sys -name scheduler -print\"")]
         public async Task ExecuteCommandSupportsCommandChainingOnUnixSystems_Bug_1(string fullCommand, string expectedCommandExecuted)
         {
             // Bug Scenario:
@@ -118,26 +146,28 @@ namespace VirtualClient.Dependencies
             // "sudo dmesg && sudo lsblk " resulting in the command being identified as "sudo o lsblk"
 
             this.SetupDefaults(PlatformID.Unix);
+            this.mockFixture.Parameters[nameof(ExecuteCommand.UseShell)] = true;
+            bool confirmed = false;
 
             using (TestExecuteCommand command = new TestExecuteCommand(this.mockFixture))
             {
                 command.Parameters[nameof(ExecuteCommand.Command)] = fullCommand;
-                List<string> expectedCommands = new List<string>(expectedCommandExecuted.Split(';'));
 
                 this.mockFixture.ProcessManager.OnProcessCreated = (process) =>
                 {
-                    expectedCommands.Remove(process.FullCommand());
+                    Assert.AreEqual(expectedCommandExecuted, process.FullCommand());
+                    confirmed = true;
                 };
 
                 await command.ExecuteAsync(CancellationToken.None);
-                Assert.IsEmpty(expectedCommands);
+                Assert.IsTrue(confirmed);
             }
         }
 
         [Test]
         [TestCase(
             "dos2unix install-packages.sh&&dos2unix install-python.sh&&dos2unix install-pwsh.sh&&dos2unix install-docker.sh",
-            "dos2unix install-packages.sh;dos2unix install-python.sh;dos2unix install-pwsh.sh;dos2unix install-docker.sh")]
+            "bash -c \"dos2unix install-packages.sh&&dos2unix install-python.sh&&dos2unix install-pwsh.sh&&dos2unix install-docker.sh\"")]
         public async Task ExecuteCommandSupportsCommandChainingOnUnixSystems_Bug_2(string fullCommand, string expectedCommandExecuted)
         {
             // Bug Scenario:
@@ -152,8 +182,9 @@ namespace VirtualClient.Dependencies
             // the working 
 
             this.SetupDefaults(PlatformID.Unix, Architecture.Arm64);
-
+            this.mockFixture.Parameters[nameof(ExecuteCommand.UseShell)] = true;
             this.mockFixture.Parameters[nameof(ExecuteCommand.WorkingDirectory)] = "{PackagePath/Platform:system_setup}";
+            bool confirmed = false;
 
             this.mockFixture.PackageManager.OnGetPackage("system_setup")
                 .ReturnsAsync(new DependencyPath("system_setup", "/microsoft-labs/VirtualClient/content/linux-arm64/packages/system_setup.1.0.0"));
@@ -163,11 +194,10 @@ namespace VirtualClient.Dependencies
             using (TestExecuteCommand command = new TestExecuteCommand(this.mockFixture))
             {
                 command.Parameters[nameof(ExecuteCommand.Command)] = fullCommand;
-                List<string> expectedCommands = new List<string>(expectedCommandExecuted.Split(';'));
 
                 this.mockFixture.ProcessManager.OnProcessCreated = (process) =>
                 {
-                    expectedCommands.Remove(process.FullCommand());
+                    Assert.AreEqual(expectedCommandExecuted, process.FullCommand());
 
                     // Expect:
                     // The working directory of the process should be set.
@@ -176,19 +206,22 @@ namespace VirtualClient.Dependencies
                     // Expect:
                     // The working directory should be added to the PATH environment variable.
                     Assert.IsTrue(this.mockFixture.PlatformSpecifics.EnvironmentVariables[EnvironmentVariable.PATH].Contains(expectedWorkingDirectory));
+                    confirmed = true;
                 };
 
                 await command.ExecuteAsync(CancellationToken.None);
-                Assert.IsEmpty(expectedCommands);
+                Assert.IsTrue(confirmed);
             }
         }
 
         [Test]
-        [TestCase("C:\\\\Users\\User\\anycommand&&C:\\\\home\\user\\anyothercommand", "C:\\\\Users\\User\\anycommand;C:\\\\home\\user\\anyothercommand")]
-        [TestCase("C:\\\\Users\\User\\anycommand --argument=1&&C:\\\\home\\user\\anyothercommand --argument=2", "C:\\\\Users\\User\\anycommand --argument=1;C:\\\\home\\user\\anyothercommand --argument=2")]
+        [TestCase("C:\\\\Users\\User\\anycommand&&C:\\\\home\\user\\anyothercommand", "cmd /C \"C:\\\\Users\\User\\anycommand&&C:\\\\home\\user\\anyothercommand\"")]
+        [TestCase("C:\\\\Users\\User\\anycommand --argument=1&&C:\\\\home\\user\\anyothercommand --argument=2\"", "cmd /C \"C:\\\\Users\\User\\anycommand --argument=1&&C:\\\\home\\user\\anyothercommand --argument=2\"")]
         public async Task ExecuteCommandSupportsCommandChainingOnWindowsSystems(string fullCommand, string expectedCommandExecuted)
         {
             this.SetupDefaults(PlatformID.Win32NT);
+            this.mockFixture.Parameters[nameof(ExecuteCommand.UseShell)] = true;
+            bool confirmed = false;
 
             using (TestExecuteCommand command = new TestExecuteCommand(this.mockFixture))
             {
@@ -197,11 +230,12 @@ namespace VirtualClient.Dependencies
 
                 this.mockFixture.ProcessManager.OnProcessCreated = (process) =>
                 {
-                    expectedCommands.Remove(process.FullCommand());
+                    Assert.AreEqual(expectedCommandExecuted, process.FullCommand());
+                    confirmed = true;
                 };
 
                 await command.ExecuteAsync(CancellationToken.None);
-                Assert.IsEmpty(expectedCommands);
+                Assert.IsTrue(confirmed);
             }
         }
 
@@ -459,21 +493,18 @@ namespace VirtualClient.Dependencies
 
             // The component uses the {PackagePath} referencing expression in both command and
             // working directory parameters.
+            this.mockFixture.Parameters[nameof(ExecuteCommand.UseShell)] = true;
             this.mockFixture.Parameters[nameof(ExecuteCommand.Command)] = "{PackagePath:anypackage}\\build.exe&&{PackagePath:anypackage}\\build.exe install";
             this.mockFixture.Parameters[nameof(ExecuteCommand.WorkingDirectory)] = "{PackagePath:anypackage}";
 
-            List<string> expectedCommands = new List<string>
-            {
-                $"{packagePath}\\build.exe",
-                $"{packagePath}\\build.exe install"
-            };
+            string expectedCommand = $"cmd /C \"{packagePath}\\build.exe&&{packagePath}\\build.exe install\"";;
 
             bool confirmed = false;
             using (var command = new TestExecuteCommand(this.mockFixture))
             {
                 this.mockFixture.ProcessManager.OnProcessCreated = (process) =>
                 {
-                    expectedCommands.Remove(process.FullCommand());
+                    Assert.AreEqual(expectedCommand, process.FullCommand());
                     Assert.AreEqual(packagePath, process.StartInfo.WorkingDirectory);
                     confirmed = true;
                 };
@@ -481,7 +512,6 @@ namespace VirtualClient.Dependencies
                 await command.ExecuteAsync(CancellationToken.None);
 
                 Assert.IsTrue(confirmed);
-                Assert.IsEmpty(expectedCommands);
             }
         }
 
@@ -496,21 +526,18 @@ namespace VirtualClient.Dependencies
 
             // The component uses the {PackagePath} referencing expression in both command and
             // working directory parameters.
+            this.mockFixture.Parameters[nameof(ExecuteCommand.UseShell)] = true;
             this.mockFixture.Parameters[nameof(ExecuteCommand.Command)] = "{PackagePath:anypackage}/configure&&{PackagePath:anypackage}/make";
             this.mockFixture.Parameters[nameof(ExecuteCommand.WorkingDirectory)] = "{PackagePath:anypackage}";
 
-            List<string> expectedCommands = new List<string>
-            {
-                $"{packagePath}/configure",
-                $"{packagePath}/make"
-            };
-
+            string expectedCommand = $"bash -c \"{packagePath}/configure&&{packagePath}/make\"";
             bool confirmed = false;
+
             using (var command = new TestExecuteCommand(this.mockFixture))
             {
                 this.mockFixture.ProcessManager.OnProcessCreated = (process) =>
                 {
-                    expectedCommands.Remove(process.FullCommand());
+                    Assert.AreEqual(expectedCommand, process.FullCommand());
                     Assert.AreEqual(packagePath, process.StartInfo.WorkingDirectory);
                     confirmed = true;
                 };
@@ -518,7 +545,6 @@ namespace VirtualClient.Dependencies
                 await command.ExecuteAsync(CancellationToken.None);
 
                 Assert.IsTrue(confirmed);
-                Assert.IsEmpty(expectedCommands);
             }
         }
 

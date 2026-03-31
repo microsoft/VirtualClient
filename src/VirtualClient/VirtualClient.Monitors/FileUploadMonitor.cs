@@ -41,6 +41,17 @@ namespace VirtualClient.Monitors
         }
 
         /// <summary>
+        /// True/false whether log files should be deleted once uploaded. Default = false.
+        /// </summary>
+        public bool DeleteLogs
+        {
+            get
+            {
+                return this.Parameters.GetValue<bool>(nameof(this.DeleteLogs), false);
+            }
+        }
+
+        /// <summary>
         /// The source directory to watch for content upload requests/notifications.
         /// </summary>
         public string RequestsDirectory
@@ -48,6 +59,17 @@ namespace VirtualClient.Monitors
             get
             {
                 return this.Parameters.GetValue<string>(nameof(this.RequestsDirectory), this.PlatformSpecifics.ContentUploadsDirectory);
+            }
+        }
+
+        /// <summary>
+        /// True/false whether log uploaded should have a manifest included. Default = false.
+        /// </summary>
+        public bool IncludeManifest
+        {
+            get
+            {
+                return this.Parameters.GetValue<bool>(nameof(this.IncludeManifest), false);
             }
         }
 
@@ -166,12 +188,12 @@ namespace VirtualClient.Monitors
 
                     if (filesFound)
                     {
-                        foreach (var uploadDescriptor in uploadDescriptorFiles)
+                        foreach (var uploadDescriptorFile in uploadDescriptorFiles)
                         {
                             try
                             {
                                 bool deleteFile = false;
-                                string uploadDescriptorContent = await this.fileSystem.File.ReadAllTextAsync(uploadDescriptor, CancellationToken.None);
+                                string uploadDescriptorContent = await this.fileSystem.File.ReadAllTextAsync(uploadDescriptorFile, CancellationToken.None);
                                 FileUploadDescriptor descriptor = uploadDescriptorContent.FromJson<FileUploadDescriptor>();
 
                                 // Do not assume the file still exists. Check to see if the file remains on the
@@ -179,16 +201,22 @@ namespace VirtualClient.Monitors
                                 // does not exist.
                                 if (!this.fileSystem.File.Exists(descriptor.FilePath))
                                 {
-                                    await this.fileSystem.File.DeleteAsync(uploadDescriptor);
+                                    await this.fileSystem.File.DeleteAsync(uploadDescriptorFile);
                                     continue;
                                 }
 
                                 try
                                 {
-                                    await this.UploadFileAsync(blobManager, this.fileSystem, descriptor, CancellationToken.None);
-                                    deleteFile = descriptor.DeleteOnUpload;
+                                    await this.UploadFileAsync(
+                                        blobManager, 
+                                        this.fileSystem,
+                                        descriptor, 
+                                        CancellationToken.None, 
+                                        includeManifest: this.IncludeManifest);
 
-                                    await this.fileSystem.File.DeleteAsync(uploadDescriptor);
+                                    deleteFile = this.DeleteLogs;
+
+                                    await this.fileSystem.File.DeleteAsync(uploadDescriptorFile);
                                 }
                                 catch (Exception exc)
                                 {
@@ -210,7 +238,7 @@ namespace VirtualClient.Monitors
                             catch (JsonSerializationException)
                             {
                                 // Invalid file in the directory.
-                                await this.fileSystem.File.DeleteAsync(uploadDescriptor);
+                                await this.fileSystem.File.DeleteAsync(uploadDescriptorFile);
                             }
                             catch (IOException exc) when (exc.Message.Contains("being used by another process", StringComparison.OrdinalIgnoreCase))
                             {
@@ -253,9 +281,20 @@ namespace VirtualClient.Monitors
                                         MimeUtility.GetMimeMapping(filePath),
                                         Encoding.UTF8.WebName,
                                         this.ExperimentId,
-                                        this.AgentId));
+                                        this.AgentId),
+                                    timestamped: true);
 
-                                await this.UploadFileAsync(blobManager, this.fileSystem, descriptor, CancellationToken.None);
+                                await this.UploadFileAsync(
+                                    blobManager, 
+                                    this.fileSystem, 
+                                    descriptor, 
+                                    CancellationToken.None,
+                                    includeManifest: this.IncludeManifest);
+
+                                if (this.DeleteLogs)
+                                {
+                                    await this.fileSystem.File.DeleteAsync(filePath);
+                                }
                             }
                             catch (IOException exc) when (exc.Message.Contains("being used by another process", StringComparison.OrdinalIgnoreCase))
                             {

@@ -78,6 +78,7 @@ namespace VirtualClient.Contracts
             // The following information should be copied from the original component to the new component:
             //
             // Properties
+            originalComponent.Parameters[nameof(VirtualClientComponent.ContentPathTemplate)] = "any/path/template";
             originalComponent.Parameters[nameof(VirtualClientComponent.Seed)] = 7777;
             originalComponent.Parameters[nameof(VirtualClientComponent.FailFast)] = true;
             originalComponent.Parameters[nameof(VirtualClientComponent.LogToFile)] = true;
@@ -99,10 +100,14 @@ namespace VirtualClient.Contracts
             VirtualClientComponent component = new TestVirtualClientComponent(originalComponent);
 
             Assert.IsTrue(object.ReferenceEquals(originalComponent.Dependencies, component.Dependencies));
+            Assert.AreEqual(originalComponent.AgentId, component.AgentId);
             Assert.AreEqual(originalComponent.ClientRequestId, component.ClientRequestId);
-            Assert.AreEqual(originalComponent.Seed, component.Seed);
-            Assert.AreEqual(originalComponent.FailFast, component.FailFast);
-            Assert.AreEqual(originalComponent.LogToFile, component.LogToFile);
+            Assert.AreEqual(originalComponent.ComponentType, component.ComponentType);
+            Assert.AreEqual(originalComponent.CpuArchitecture, component.CpuArchitecture);
+            Assert.AreEqual(originalComponent.ExperimentId, component.ExperimentId);
+            Assert.AreEqual(originalComponent.ParametersEvaluated, component.ParametersEvaluated);
+            Assert.AreEqual(originalComponent.Platform, component.Platform);
+            Assert.AreEqual(originalComponent.PlatformSpecifics, component.PlatformSpecifics);
             CollectionAssert.AreEquivalent(originalComponent.SupportedPlatforms, component.SupportedPlatforms);
             CollectionAssert.AreEquivalent(originalComponent.SupportedRoles, component.SupportedRoles);
 

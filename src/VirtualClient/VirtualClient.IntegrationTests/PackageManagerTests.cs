@@ -5,6 +5,7 @@ namespace VirtualClient
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.IO;
     using System.IO.Abstractions;
     using System.Runtime.InteropServices;
@@ -14,6 +15,7 @@ namespace VirtualClient
     using NUnit.Framework;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Contracts;
+    using VirtualClient.Identity;
 
     [TestFixture]
     [Category("Integration")]
@@ -156,14 +158,171 @@ namespace VirtualClient
             }
         }
 
-        private void CleanupPackagesDirectory()
+        [Test]
+        [Order(4)]
+        public void PackageManagerFolderIsolationWorksAsExpected()
         {
-            if (this.fileSystem.Directory.Exists(this.packagesDirectory))
+            try
+            {
+                this.CleanupPackagesDirectory();
+                string connection = Environment.GetEnvironmentVariable("PACKAGE_STORE");
+
+                if (string.IsNullOrWhiteSpace(connection))
+                {
+                    Assert.Inconclusive("The 'PACKAGE_STORE' environment variable must be set. This environment variable is required to run this test.");
+                }
+
+                int parallelism = 100;
+                DateTime timeout = DateTime.UtcNow.AddMinutes(10);
+
+                PlatformSpecifics platformSpecifics = new PlatformSpecifics(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture);
+                List<Tuple<IPackageManager, IBlobManager, string>> packageManagers = new List<Tuple<IPackageManager, IBlobManager, string>>();
+
+                for (int i = 0; i < parallelism; i++)
+                {
+                    string installationPath = Path.Combine(this.packagesDirectory, $"installation_{i}");
+                    DependencyBlobStore blobStore = EndpointUtility.CreateBlobStoreReference(
+                        DependencyStore.Packages,
+                        connection,
+                        new CertificateManager());
+
+                    IBlobManager blobManager = DependencyFactory.CreateBlobManager(blobStore);
+                    packageManagers.Add(new Tuple<IPackageManager, IBlobManager, string>(
+                        new PackageManager(platformSpecifics, new FileSystem()),
+                        blobManager,
+                        installationPath));
+                }
+
+                string targetPackage = "example_package_kb.zip";
+                while (DateTime.UtcNow < timeout)
+                {
+                    Parallel.ForEach(packageManagers, async (entry) =>
+                    {
+                        string installationPath = entry.Item3;
+
+                        try
+                        {
+                            BlobDescriptor descriptor = new BlobDescriptor
+                            {
+                                Name = targetPackage,
+                                ContainerName = "packages",
+                                PackageName = "example_package",
+                                ArchiveType = ArchiveType.Zip,
+                                Extract = true
+                            };
+
+                            IPackageManager packageManager = entry.Item1;
+                            IBlobManager blobManager = entry.Item2;
+
+                            string actualInstallationPath = await packageManager.InstallPackageAsync(blobManager, descriptor, CancellationToken.None, installationPath: installationPath);
+                            Debug.WriteLine($"Package Installation Complete");
+                            Assert.IsTrue(this.fileSystem.Directory.Exists(actualInstallationPath));
+                        }
+                        catch (Exception exc)
+                        {
+                            Assert.Fail($"Package manager failed to install package due to exception: {exc}");
+                        }
+                        finally
+                        {
+                            this.CleanupPackagesDirectory(installationPath);
+                        }
+                    });
+                }
+            }
+            finally
+            {
+                this.CleanupPackagesDirectory();
+            }
+        }
+
+
+        [Test]
+        [Order(5)]
+        public void PackageManagerMutexIsolationLockingWorksAsExpected()
+        {
+            try
+            {
+                this.CleanupPackagesDirectory();
+                string connection = Environment.GetEnvironmentVariable("PACKAGE_STORE");
+
+                if (string.IsNullOrWhiteSpace(connection))
+                {
+                    Assert.Inconclusive("The 'PACKAGE_STORE' environment variable must be set. This environment variable is required to run this test.");
+                }
+
+                int parallelism = 100;
+                DateTime timeout = DateTime.UtcNow.AddMinutes(20);
+
+                PlatformSpecifics platformSpecifics = new PlatformSpecifics(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture);
+                List<Tuple<IPackageManager, IBlobManager>> packageManagers = new List<Tuple<IPackageManager, IBlobManager>>();
+
+                for (int i = 0; i < parallelism; i++)
+                {
+                    DependencyBlobStore blobStore = EndpointUtility.CreateBlobStoreReference(
+                        DependencyStore.Packages,
+                        connection,
+                        new CertificateManager());
+
+                    IBlobManager blobManager = DependencyFactory.CreateBlobManager(blobStore);
+                    packageManagers.Add(new Tuple<IPackageManager, IBlobManager>(
+                        new IsolatedPackageManager(new PackageManager(platformSpecifics, new FileSystem())),
+                        blobManager));
+                }
+
+                string targetPackage = "example_package_kb.zip";
+                while (DateTime.UtcNow < timeout)
+                {
+                    try
+                    {
+                        Parallel.ForEach(packageManagers, async (entry) =>
+                        {
+                            try
+                            {
+                                BlobDescriptor descriptor = new BlobDescriptor
+                                {
+                                    Name = targetPackage,
+                                    ContainerName = "packages",
+                                    PackageName = "example_package",
+                                    ArchiveType = ArchiveType.Zip,
+                                    Extract = true
+                                };
+
+                                IPackageManager packageManager = entry.Item1;
+                                IBlobManager blobManager = entry.Item2;
+
+                                string installationPath = await packageManager.InstallPackageAsync(blobManager, descriptor, CancellationToken.None);
+                                Debug.WriteLine($"Package Installation Complete");
+                                Assert.IsTrue(this.fileSystem.Directory.Exists(installationPath));
+                            }
+                            catch (Exception exc)
+                            {
+                                Assert.Fail($"Package manager failed to install package due to exception: {exc}");
+                            }
+                        });
+                    }
+                    finally
+                    {
+                        this.CleanupPackagesDirectory();
+                    }
+                }
+            }
+            finally
+            {
+                this.CleanupPackagesDirectory();
+            }
+        }
+
+        private void CleanupPackagesDirectory(string targetDirectory = null)
+        {
+            if (!string.IsNullOrWhiteSpace(targetDirectory) && this.fileSystem.Directory.Exists(targetDirectory))
+            {
+                this.fileSystem.Directory.Delete(targetDirectory, true);
+            }
+            else if (this.fileSystem.Directory.Exists(this.packagesDirectory))
             {
                 this.fileSystem.Directory.Delete(this.packagesDirectory, true);
+                this.fileSystem.Directory.CreateDirectory(this.packagesDirectory);
             }
-
-            this.fileSystem.Directory.CreateDirectory(this.packagesDirectory);
         }
 
         private void CopyPackagesIntoPackagesDirectory()

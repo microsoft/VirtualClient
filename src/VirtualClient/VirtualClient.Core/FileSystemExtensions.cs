@@ -4,11 +4,8 @@
 namespace VirtualClient
 {
     using System;
-    using System.Collections;
-    using System.Collections.Generic;
     using System.IO;
     using System.IO.Abstractions;
-    using System.Linq;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
@@ -22,26 +19,6 @@ namespace VirtualClient
     /// </summary>
     public static class FileSystemExtensions
     {
-        private const string SettingsBeginComment = "# VC Settings Begin";
-        private const string SettingsEndComment = "# VC Settings End";
-
-        /// <summary>
-        /// Evaluates if the given fully qualified file can be found in the file system, throws if can not be found.
-        /// </summary>
-        /// <param name="fileHandler">Interface to interact with files in the file system.</param>
-        /// <param name="file">A fully qualified path to a file (i.e C:\App\Tools\MyTool\mytool.exe)</param>
-        /// <param name="errorMessage">An error message to use instead of the default message.</param>
-        public static void ThrowIfFileDoesNotExist(this IFile fileHandler, string file, string errorMessage = null)
-        {
-            fileHandler.ThrowIfNull(nameof(fileHandler));
-            file.ThrowIfNullOrWhiteSpace(nameof(file));
-
-            if (!fileHandler.Exists(file))
-            {
-                throw new FileNotFoundException(errorMessage ?? $"The file '{file}' could not be found.");
-            }
-        }
-
         /// <summary>
         /// Attempts to delete a file with transient issue retry handling.
         /// </summary>
@@ -163,13 +140,27 @@ namespace VirtualClient
         public static async Task ReplaceInFileAsync(this IFile fileHandler, string file, string pattern, string replacement, CancellationToken cancellationToken, RegexOptions options = RegexOptions.None)
         {
             FileSystemExtensions.ThrowIfFileDoesNotExist(fileHandler, file);
-            string fileContent = await fileHandler.ReadAllTextAsync(file, cancellationToken)
-                .ConfigureAwait(false);
-
+            string fileContent = await fileHandler.ReadAllTextAsync(file, cancellationToken);
             fileContent = Regex.Replace(fileContent, pattern, replacement, options);
 
-            await fileHandler.WriteAllTextAsync(file, fileContent, cancellationToken)
-                .ConfigureAwait(false);
+            await fileHandler.WriteAllTextAsync(file, fileContent, cancellationToken);
+        }
+
+        /// <summary>
+        /// Evaluates if the given fully qualified file can be found in the file system, throws if can not be found.
+        /// </summary>
+        /// <param name="fileHandler">Interface to interact with files in the file system.</param>
+        /// <param name="file">A fully qualified path to a file (i.e C:\App\Tools\MyTool\mytool.exe)</param>
+        /// <param name="errorMessage">An error message to use instead of the default message.</param>
+        public static void ThrowIfFileDoesNotExist(this IFile fileHandler, string file, string errorMessage = null)
+        {
+            fileHandler.ThrowIfNull(nameof(fileHandler));
+            file.ThrowIfNullOrWhiteSpace(nameof(file));
+
+            if (!fileHandler.Exists(file))
+            {
+                throw new FileNotFoundException(errorMessage ?? $"The file '{file}' could not be found.");
+            }
         }
     }
 }

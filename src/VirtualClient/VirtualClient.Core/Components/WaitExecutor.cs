@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace VirtualClient.Contracts
+namespace VirtualClient
 {
     using System;
     using System.Collections.Generic;
@@ -11,6 +11,7 @@ namespace VirtualClient.Contracts
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
+    using VirtualClient.Contracts;
 
     /// <summary>
     /// Provides functionality to wait for given time.
@@ -47,10 +48,9 @@ namespace VirtualClient.Contracts
         /// <param name="telemetryContext">Provides context information that will be captured with telemetry events.</param>
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
         /// <returns></returns>
-        protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        protected override Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            await Task.Delay(this.Duration, cancellationToken).ConfigureAwait();
-            return;
+            return Task.Delay(this.Duration, cancellationToken);
         }
     }
 }

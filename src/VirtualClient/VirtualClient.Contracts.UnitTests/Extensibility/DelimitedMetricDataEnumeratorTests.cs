@@ -77,6 +77,32 @@ namespace VirtualClient.Contracts.Extensibility
         }
 
         [Test]
+        public void DelimitedMetricDataEnumeratorParsesExpectedMetricsFromFilesInQuotedCsvFormat_Sdk_Scenario()
+        {
+            this.SetupTest(PlatformID.Unix);
+
+            // Scenario:
+            // This test is designed to evaluate parsing logic from an actual file produced by the 
+            // SDK (e.g. Export-MetricCsv).
+
+            string csvContent = System.IO.File.ReadAllText(this.Combine(DelimitedMetricDataEnumeratorTests.Examples, "csv_for_sdk.metrics"));
+            List<MetricDataPoint> dataPoints = new List<MetricDataPoint>();
+
+            Assert.DoesNotThrow(() =>
+            {
+                using (var enumerator = new DelimitedMetricDataEnumerator(csvContent, DataFormat.Csv))
+                {
+                    while (enumerator.MoveNext())
+                    {
+                        dataPoints.Add(enumerator.Current);
+                    }
+                }
+            });
+
+            Assert.AreEqual(5, dataPoints.Count);
+        }
+
+        [Test]
         public void DelimitedMetricDataEnumeratorParsesExpectedMetricsFromFilesInJsonFormat()
         {
             this.SetupTest(PlatformID.Unix);
