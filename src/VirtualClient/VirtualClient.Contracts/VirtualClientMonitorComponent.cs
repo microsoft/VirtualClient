@@ -54,7 +54,9 @@ namespace VirtualClient.Contracts
         {
             get
             {
-                return this.Parameters.GetTimeSpanValue(nameof(this.MonitorFrequency));
+                return this.Parameters.ContainsKey(nameof(this.MonitorFrequency))
+                    ? this.Parameters.GetTimeSpanValue(nameof(this.MonitorFrequency))
+                    : null;
             }
 
             protected set
@@ -71,7 +73,9 @@ namespace VirtualClient.Contracts
         {
             get
             {
-                return this.Parameters.GetValue<long>(nameof(this.MonitorIterations));
+                return this.Parameters.ContainsKey(nameof(this.MonitorIterations))
+                    ? this.Parameters.GetValue<long>(nameof(this.MonitorIterations))
+                    : null;
             }
 
             protected set
@@ -104,7 +108,9 @@ namespace VirtualClient.Contracts
         {
             get
             {
-                return this.Parameters.GetTimeSpanValue(nameof(this.MonitorWarmupPeriod));
+                return this.Parameters.ContainsKey(nameof(this.MonitorWarmupPeriod))
+                    ? this.Parameters.GetTimeSpanValue(nameof(this.MonitorWarmupPeriod))
+                    : null;
             }
 
             protected set
@@ -163,29 +169,73 @@ namespace VirtualClient.Contracts
         protected abstract Task ExecuteMonitorAsync(EventContext telemetryContext, CancellationToken cancellationToken);
 
         /// <summary>
-        /// Executes the monitor on an interval as defined by the 'MonitorFrequency' parameter.
+        /// Executes the monitor on an interval as defined by the 'MonitorFrequency', 'MonitorIterations',
+        /// or 'MonitorStrategy' parameters.
         /// </summary>
         /// <param name="telemetryContext">Provides information to include with telemetry.</param>
         /// <param name="cancellationToken">A token that can be used to cancel the operations.</param>
-        protected Task ExecuteMonitorOnIntervalAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        protected async Task ExecuteMonitorOnIntervalAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            while (!cancellationToken.IsCancellationRequested)
+            try
             {
-                try
+                long iterations = 0;
+                while (!cancellationToken.IsCancellationRequested)
                 {
+                    try
+                    {
+                        iterations++;
+                        if (this.MonitorStrategy != null)
+                        {
+                            if (iterations <= 1)
+                            {
+                                switch (this.MonitorStrategy)
+                                {
+                                    case VirtualClient.MonitorStrategy.Once:
+                                    case VirtualClient.MonitorStrategy.OnceAtBeginAndEnd:
+                                    await this.ExecuteMonitorAsync(telemetryContext, cancellationToken);
+                                    break;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            if (this.IsIterationComplete(iterations))
+                            {
+                                break;
+                            }
+
+                            await this.ExecuteMonitorAsync(telemetryContext, cancellationToken);
+                        }
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        // Expected on ctrl-c or a cancellation is requested.
+                    }
+                    catch (Exception exc)
+                    {
+                        // Do not let the monitor operations crash the application.
+                        this.Logger.LogErrorMessage(exc, telemetryContext, LogLevel.Warning);
+                    }
+                    finally
+                    {
+                        await this.WaitAsync(this.MonitorFrequency ?? TimeSpan.Zero, cancellationToken);
+                    }
                 }
-                catch (OperationCanceledException)
+
+                if (this.MonitorStrategy == VirtualClient.MonitorStrategy.OnceAtBeginAndEnd)
                 {
-                    // Expected on ctrl-c or a cancellation is requested.
-                }
-                catch (Exception exc)
-                {
-                    // Do not let the monitor operations crash the application.
-                    this.Logger.LogErrorMessage(exc, telemetryContext, LogLevel.Warning);
+                    await this.ExecuteMonitorAsync(telemetryContext, CancellationToken.None);
                 }
             }
-
-            return Task.CompletedTask;
+            catch (OperationCanceledException)
+            {
+                // Expected on ctrl-c or a cancellation is requested.
+            }
+            catch (Exception exc)
+            {
+                // Do not let the monitor operations crash the application.
+                this.Logger.LogErrorMessage(exc, telemetryContext, LogLevel.Warning);
+            }
         }
 
         /// <summary>

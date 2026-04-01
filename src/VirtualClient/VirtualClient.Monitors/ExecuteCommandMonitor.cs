@@ -21,7 +21,7 @@ namespace VirtualClient.Dependencies
     /// package installed.
     /// </summary>
     [SupportedPlatforms("linux-arm64,linux-x64,win-arm64,win-x64")]
-    public class ExecuteCommandMonitor : VirtualClientIntervalBasedMonitor
+    public class ExecuteCommandMonitor : VirtualClientMonitorComponent
     {
         private const int MaxOutputLength = 125000;
         private ProcessManager processManager;
@@ -138,78 +138,15 @@ namespace VirtualClient.Dependencies
         }
 
         /// <summary>
-        /// Execute the monitor to run the command on intervals.
+        /// Executes the command(s) as the monitor operation.
         /// </summary>
-        protected override Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        protected override Task ExecuteMonitorAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            // All background monitor ExecuteAsync methods should be either 'async' or should use a Task.Run() if running a 'while' loop or the
-            // logic will block without returning. Monitors are typically expected to be fire-and-forget.
+            telemetryContext.AddContext("command", SensitiveData.ObscureSecrets(this.Command));
+            telemetryContext.AddContext("workingDirectory", SensitiveData.ObscureSecrets(this.WorkingDirectory));
+            telemetryContext.AddContext("platforms", string.Join(VirtualClientComponent.CommonDelimiters.First(), this.SupportedPlatforms));
 
-            return Task.Run(async () =>
-            {
-                try
-                {
-                    telemetryContext.AddContext("command", SensitiveData.ObscureSecrets(this.Command));
-                    telemetryContext.AddContext("workingDirectory", SensitiveData.ObscureSecrets(this.WorkingDirectory));
-                    telemetryContext.AddContext("platforms", string.Join(VirtualClientComponent.CommonDelimiters.First(), this.SupportedPlatforms));
-
-                    await this.WaitAsync(this.MonitorWarmupPeriod, cancellationToken);
-
-                    int iterations = 0;
-                    while (!cancellationToken.IsCancellationRequested)
-                    {
-                        try
-                        {
-                            iterations++;
-                            if (this.MonitorStrategy != null)
-                            {
-                                if (iterations <= 1)
-                                {
-                                    switch (this.MonitorStrategy)
-                                    {
-                                        case VirtualClient.MonitorStrategy.Once:
-                                        case VirtualClient.MonitorStrategy.OnceAtBeginAndEnd:
-                                            await this.ExecuteCommandAsync(telemetryContext, cancellationToken);
-                                            break;
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                if (this.IsIterationComplete(iterations))
-                                {
-                                    break;
-                                }
-
-                                await this.ExecuteCommandAsync(telemetryContext, cancellationToken);
-                            }
-                        }
-                        catch (Exception exc)
-                        {
-                            // Do not let the monitor operations crash the application.
-                            this.Logger.LogErrorMessage(exc, telemetryContext, LogLevel.Warning);
-                        }
-                        finally
-                        {
-                            await this.WaitAsync(this.MonitorFrequency, cancellationToken);
-                        }
-                    }
-
-                    if (this.MonitorStrategy == VirtualClient.MonitorStrategy.OnceAtBeginAndEnd)
-                    {
-                        await this.ExecuteCommandAsync(telemetryContext, CancellationToken.None);
-                    }
-                }
-                catch (OperationCanceledException)
-                {
-                    // Expected on ctrl-c or a cancellation is requested.
-                }
-                catch (Exception exc)
-                {
-                    // Do not let the monitor operations crash the application.
-                    this.Logger.LogErrorMessage(exc, telemetryContext, LogLevel.Warning);
-                }
-            });
+            return this.ExecuteCommandAsync(telemetryContext, cancellationToken);
         }
 
         /// <summary>
