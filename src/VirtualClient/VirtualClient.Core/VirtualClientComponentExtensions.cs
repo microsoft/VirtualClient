@@ -20,7 +20,6 @@ namespace VirtualClient
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
-    using VirtualClient.Logging;
 
     /// <summary>
     /// Extension methods for common operations in <see cref="VirtualClientComponent"/> derived

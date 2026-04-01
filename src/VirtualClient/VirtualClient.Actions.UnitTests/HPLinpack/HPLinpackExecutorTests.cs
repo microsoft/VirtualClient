@@ -37,6 +37,7 @@ namespace VirtualClient.Actions
             this.mockFixture.SetupPackage(this.mockPackage);
             this.mockFixture.SetupPackage(this.mockPerformanceLibraryPackage);
 
+            this.mockFixture.FileSystem.Setup(fe => fe.Directory.Exists(It.IsAny<string>())).Returns(true);
             this.mockFixture.FileSystem.Setup(fe => fe.File.Exists(It.IsAny<string>())).Returns(true);
             this.mockFixture.FileSystem.Setup(fe => fe.File.Exists(null)).Returns(false);
 
@@ -121,7 +122,7 @@ namespace VirtualClient.Actions
                 List<string> expectedCommands = new List<string>()
                 {
                     $"sudo chmod -R 2777 \"/home/user/tools/VirtualClient/packages/hplinpack/{this.mockFixture.PlatformArchitectureName}\"",
-                    $"sudo bash -c \"source make_generic\"",
+                    $"bash -c \"source make_generic\"",
                     $"mv Make.UNKNOWN Make.Linux_GCC",
                     $"ln -s {this.mockFixture.Combine(this.mockPackage.Path, this.mockFixture.PlatformArchitectureName, "setup", "Make.Linux_GCC" )} Make.Linux_GCC",
                     $"make arch=Linux_GCC",
@@ -166,10 +167,10 @@ namespace VirtualClient.Actions
                 {
                     $"sudo chmod -R 2777 \"{this.mockPackage.Path}/linux-arm64\"",
                     $"sudo chmod -R 2777 \"{this.mockPerformanceLibraryPackage.Path}\"",
-                    $"sudo ./{performanceLibraryScript} -a",
-                    $"sudo bash -c \"source make_generic\"",
+                    $"sudo {this.mockPerformanceLibraryPackage.Path}/linux-arm64/{performanceLibraryScript} -a",
+                    $"bash -c \"source make_generic\"",
                     $"mv Make.UNKNOWN Make.Linux_GCC",
-                    $"ln -s {this.mockFixture.Combine(this.mockPackage.Path, "linux-arm64", "setup", "Make.Linux_GCC" )} Make.Linux_GCC",
+                    $"ln -s {this.mockPackage.Path}/linux-arm64/setup/Make.Linux_GCC Make.Linux_GCC",
                     $"make arch=Linux_GCC",
                     $"sudo runuser -u {Environment.UserName} -- mpirun --use-hwthread-cpus -np {numProcesses} --allow-run-as-root --bind-to core ./xhpl"
                 };
@@ -212,10 +213,10 @@ namespace VirtualClient.Actions
                 {
                     $"sudo chmod -R 2777 \"{this.mockPackage.Path}/linux-x64\"",
                     $"sudo chmod -R 2777 \"{this.mockPerformanceLibraryPackage.Path}\"",
-                    $"sudo ./install.sh -t {this.mockPackage.Path}/linux-x64 -i lp64",
-                    $"sudo bash -c \"source make_generic\"",
+                    $"sudo {this.mockPerformanceLibraryPackage.Path}/linux-x64/install.sh -t {this.mockPackage.Path}/linux-x64 -i lp64",
+                    $"bash -c \"source make_generic\"",
                     $"mv Make.UNKNOWN Make.Linux_GCC",
-                    $"ln -s {this.mockFixture.Combine(this.mockPackage.Path, "linux-x64", "setup", "Make.Linux_GCC" )} Make.Linux_GCC",
+                    $"ln -s {this.mockPackage.Path}/linux-x64/setup/Make.Linux_GCC Make.Linux_GCC",
                     $"make arch=Linux_GCC",
                     $"sudo runuser -u {Environment.UserName} -- mpirun --use-hwthread-cpus -np {numProcesses} --allow-run-as-root --bind-to core ./xhpl"
                 };
@@ -268,6 +269,7 @@ namespace VirtualClient.Actions
             this.SetupTest(platform, architecture);
             this.mockFixture.Parameters["PerformanceLibrary"] = "INTEL";
             this.mockFixture.Parameters["PerformanceLibraryVersion"] = $"{performanceLibraryVersion}";
+            this.mockFixture.PlatformSpecifics.EnvironmentVariables.Add("HOME", "/home/user");
 
             // Setup CPU info with socket count for Intel execution path
             this.mockFixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
@@ -279,11 +281,14 @@ namespace VirtualClient.Actions
                 {
                     $"sudo chmod -R 2777 \"{this.mockPackage.Path}/linux-x64\"",
                     $"sudo chmod -R 2777 \"{this.mockPerformanceLibraryPackage.Path}\"",
-                    $"sudo ./intel-onemkl-2025.1.0.803_offline.sh -a --silent --eula accept",
-                    $"sudo ./intel-oneapi-hpc-toolkit-2025.1.3.10_offline.sh -a --silent --eula accept",
-                    $"cp -r ~/intel/oneapi/mkl/2025.1/share/mkl/benchmarks/mp_linpack {this.mockPerformanceLibraryPackage.Path}/linux-x64",
+                    $"sudo {this.mockPerformanceLibraryPackage.Path}/linux-x64/intel-onemkl-2025.1.0.803_offline.sh -a --silent --eula accept",
+                    $"sudo {this.mockPerformanceLibraryPackage.Path}/linux-x64/intel-oneapi-hpc-toolkit-2025.1.3.10_offline.sh -a --silent --eula accept",
+                    $"bash -c \"source make_generic\"",
+                    $"sudo chmod -R 2777 \"{this.mockPackage.Path}/linux-x64/setup\"",
+                    $"mv Make.UNKNOWN Make.Linux_GCC",
+                    $"ln -s {this.mockPackage.Path}/linux-x64/setup/Make.Linux_GCC Make.Linux_GCC",
                     $"make arch=Linux_GCC",
-                    $"sudo bash -c \". /opt/intel/oneapi/mpi/latest/env/vars.sh && ./runme_intel64_dynamic\""
+                    $"sudo bash -c \"/home/user/intel/oneapi/mpi/latest/env/vars.sh && {this.mockPerformanceLibraryPackage.Path}/linux-x64/mp_linpack/runme_intel64_dynamic\""
                 };
 
                 this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
@@ -293,7 +298,7 @@ namespace VirtualClient.Actions
                         expectedCommands.RemoveAt(0);
                     }
 
-                    if (arguments.StartsWith($"-c \". /opt/intel/oneapi/mpi/latest/env/vars.sh && ./runme_intel64_dynamic\""))
+                    if (arguments.Contains("vars.sh"))
                     {
                         this.mockFixture.Process.StandardOutput.Append(this.exampleResults);
                     }
@@ -325,11 +330,14 @@ namespace VirtualClient.Actions
                 {
                     $"sudo chmod -R 2777 \"{this.mockPackage.Path}/linux-x64\"",
                     $"sudo chmod -R 2777 \"{this.mockPerformanceLibraryPackage.Path}\"",
-                    $"sudo ./l_onemkl_p_2024.2.2.17_offline.sh -a --silent --eula accept",
-                    $"sudo ./l_HPCKit_p_2024.2.1.79_offline.sh -a --silent --eula accept",
-                    $"cp -r /opt/intel/oneapi/mkl/2024.2/share/mkl/benchmarks/mp_linpack {this.mockPerformanceLibraryPackage.Path}/linux-x64",
+                    $"sudo {this.mockPerformanceLibraryPackage.Path}/linux-x64/l_onemkl_p_2024.2.2.17_offline.sh -a --silent --eula accept",
+                    $"sudo {this.mockPerformanceLibraryPackage.Path}/linux-x64/l_HPCKit_p_2024.2.1.79_offline.sh -a --silent --eula accept",
+                    $"bash -c \"source make_generic\"",          
+                    $"sudo chmod -R 2777 \"{this.mockPackage.Path}/linux-x64/setup\"",
+                    $"mv Make.UNKNOWN Make.Linux_GCC",
+                    $"ln -s {this.mockPackage.Path}/linux-x64/setup/Make.Linux_GCC Make.Linux_GCC",
                     $"make arch=Linux_GCC",
-                    $"sudo bash -c \". /opt/intel/oneapi/mpi/latest/env/vars.sh && ./runme_intel64_dynamic\""
+                    $"sudo bash -c \"/opt/intel/oneapi/mpi/latest/env/vars.sh && {this.mockPerformanceLibraryPackage.Path}/linux-x64/mp_linpack/runme_intel64_dynamic\""
                 };
 
                 this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
@@ -339,7 +347,7 @@ namespace VirtualClient.Actions
                         expectedCommands.RemoveAt(0);
                     }
 
-                    if (arguments.StartsWith($"-c \". /opt/intel/oneapi/mpi/latest/env/vars.sh && ./runme_intel64_dynamic\""))
+                    if (arguments.Contains("vars.sh"))
                     {
                         this.mockFixture.Process.StandardOutput.Append(this.exampleResults);
                     }
