@@ -165,13 +165,14 @@ namespace VirtualClient.Contracts
         /// True to use a flattened blob virtual path structure for file uploads (e.g. no subdirectories). False to preserve the 
         /// relative subpaths for directories on the file system in the blob virtual paths. Default = true.
         /// </param>
-        public static IEnumerable<FileUploadDescriptor> CreateFileUploadDescriptors(this VirtualClientComponent component, string targetDirectory, string toolName = null, IDictionary<string, IConvertible> parameters = null, IDictionary<string, IConvertible> metadata = null, bool timestamped = true, bool flatten = true)
+        /// <param name="recursive">True to include files in subdirectories. False to include only files in the specified directory. Default = true.</param>
+        public static IEnumerable<FileUploadDescriptor> CreateFileUploadDescriptors(this VirtualClientComponent component, string targetDirectory, string toolName = null, IDictionary<string, IConvertible> parameters = null, IDictionary<string, IConvertible> metadata = null, bool timestamped = true, bool flatten = true, bool recursive = true)
         {
             component.ThrowIfNull(nameof(component));
             targetDirectory.ThrowIfNullOrWhiteSpace(nameof(targetDirectory));
 
             IFileSystem fileSystem = component.Dependencies.GetService<IFileSystem>();
-            IEnumerable<string> filesToUpload = fileSystem.Directory.GetFiles(targetDirectory, "*.*", SearchOption.AllDirectories);
+            IEnumerable<string> filesToUpload = fileSystem.Directory.GetFiles(targetDirectory, "*.*", recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
             List<FileUploadDescriptor> descriptors = new List<FileUploadDescriptor>();
 
             if (filesToUpload?.Any() == true)

@@ -94,6 +94,7 @@ namespace VirtualClient
             using (TestExecuteCommand command = new TestExecuteCommand(this.mockFixture))
             {
                 command.Parameters[nameof(ExecuteCommand.Command)] = fullCommand;
+                command.Parameters["FeatureFlag"] = "ShellSupport";
 
                 this.mockFixture.ProcessManager.OnProcessCreated = (process) =>
                 {

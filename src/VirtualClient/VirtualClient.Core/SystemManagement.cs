@@ -35,6 +35,11 @@ namespace VirtualClient
         public string AgentId { get; internal set; }
 
         /// <summary>
+        /// The name of the execution system launching the application.
+        /// </summary>
+        public string ExecutionSystem { get; internal set; }
+
+        /// <summary>
         /// The ID of the larger experiment in operation.
         /// </summary>
         public string ExperimentId { get; internal set; }

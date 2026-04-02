@@ -195,6 +195,26 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Returns true/false whether the component has a feature flag defined with the name provided and that it matches the value provided.
+        /// </summary>
+        public static bool HasFeatureFlag(this VirtualClientComponent component, string featureFlag)
+        {
+            component.ThrowIfNull(nameof(component));
+            featureFlag.ThrowIfNullOrWhiteSpace(nameof(featureFlag));
+
+            bool hasFlag = false;
+            if (component.Parameters?.TryGetValue("FeatureFlag", out IConvertible flag) == true && flag != null)
+            {
+                hasFlag = string.Equals(
+                    featureFlag.Trim(), 
+                    flag.ToString().Trim(), 
+                    StringComparison.OrdinalIgnoreCase);
+            }
+
+            return hasFlag;
+        }
+
+        /// <summary>
         /// Loads results from the file system for the file provided.
         /// </summary>
         /// <param name="component">The component that is loading the results.</param>

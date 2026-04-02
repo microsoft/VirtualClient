@@ -126,8 +126,11 @@ namespace VirtualClient
 
         // e.g.
         // {ExperimentId}
-        private static readonly Regex ExperimentIdExpression = new Regex(
-            @"\{ExperimentId\}",
+        // {ExecutionSystem}
+        // {AgentId}
+        // {ClientId}
+        private static readonly Regex RuntimeInfoExpression = new Regex(
+            @"\{(AgentId|ClientId|ExperimentId|ExecutionSystem)\}",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         /// <summary>
@@ -383,23 +386,43 @@ namespace VirtualClient
                     Outcome = evaluatedExpression
                 });
             }),
-            // Expression: {ExperimentId}
-            // Resolves to the runtime value of ExperimentId.
+            // Expression: {AgentId}, {ClientId}, {ExperimentId}, {System}
+            // Resolves to the runtime values for the current experiment, agent, client, system, or timestamp depending on the expression reference used.
             new Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>((dependencies, parameters, expression) =>
             {
                 bool isMatched = false;
                 string evaluatedExpression = expression;
-                MatchCollection matches = ProfileExpressionEvaluator.ExperimentIdExpression.Matches(expression);
+                MatchCollection matches = ProfileExpressionEvaluator.RuntimeInfoExpression.Matches(expression);
 
                 if (matches?.Any() == true)
                 {
                     isMatched = true;
                     ISystemInfo systemInfo = dependencies.GetService<ISystemInfo>();
-                    string experimentId = systemInfo.ExperimentId;
 
                     foreach (Match match in matches)
                     {
-                        evaluatedExpression = Regex.Replace(evaluatedExpression, match.Value, experimentId);
+                        string replacementValue = null;
+                        string runtimeValue = match.Value.ToLowerInvariant();
+                        switch (runtimeValue)
+                        {
+                            case "{agentid}":
+                            case "{clientid}":
+                                replacementValue = systemInfo.AgentId;
+                                break;
+
+                            case "{experimentid}":
+                                replacementValue = systemInfo.ExperimentId;
+                                break;
+
+                            case "{executionsystem}":
+                                replacementValue = systemInfo.ExecutionSystem ?? string.Empty;
+                                break;
+                        }
+
+                        if (replacementValue != null)
+                        {
+                            evaluatedExpression = Regex.Replace(evaluatedExpression, match.Value, replacementValue);
+                        }
                     }
                 }
 
