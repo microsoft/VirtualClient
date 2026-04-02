@@ -1,11 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace VirtualClient.Monitors
+namespace VirtualClient
 {
     using System;
     using System.Collections.Generic;
-    using System.IO;
     using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
@@ -13,7 +12,6 @@ namespace VirtualClient.Monitors
     using Polly;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
-    using VirtualClient.Dependencies;
 
     [TestFixture]
     [Category("Unit")]

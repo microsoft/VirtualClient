@@ -1,0 +1,87 @@
+{
+    "Description": "Executes scripts from a package.",
+    "MinimumExecutionInterval": "00:00:05",
+    "Metadata": {
+        "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64"
+    },
+    "Parameters": {
+        "Command": null,
+        "Scenario": "ExecuteScript",
+        "Package": null,
+        "TelemetryFileFormat": "Csv",
+        "LogFileName": null,
+        "LogFolderName": null,
+        "IncludeTimestampOnUpload": false
+    },
+    "Actions": [
+        {
+            "Type": "SequentialExecution",
+            "Parameters": {
+                "ExecutionStrategy": "Deterministic"
+            },
+            "Notes":  "Deterministic execution strategy ensures that each component in the sequential flow execute at least once regardless of individual failures.",
+            "Components": [
+                {
+                    "Type": "ExecuteCommand",
+                    "Parameters": {
+                        "Scenario": "$.Parameters.Scenario",
+                        "Command": "$.Parameters.Command",
+                        "DeferUploads": true,
+                        "EnvironmentVariables": "EXPERIMENT_ID={ExperimentId},EXECUTION_SYSTEM={ExecutionSystem}",
+                        "LogFileName": "$.Parameters.LogFileName",
+                        "LogFolderName": "$.Parameters.LogFolderName",
+                        "WorkingDirectory": "{PackageDir:script_package}",
+                        "FeatureFlag": "ShellSupport",
+                        "Tags": "CRC,SDK,Script"
+                    }
+                },
+                {
+                    "Type": "UploadFiles",
+                    "Parameters": {
+                        "Scenario": "UploadFiles",
+                        "TargetDirectory": "{LogDir}",
+                        "Exclude": "[\\\\/]metrics(?:_[0-9]+)*.csv",
+                        "Flatten": false,
+                        "Recursive": true,
+                        "Timestamped": "$.Parameters.IncludeTimestampOnUpload",
+                        "Tags": "CRC,SDK,Script"
+                    }
+                },
+                {
+                    "Type": "UploadTelemetry",
+                    "Parameters": {
+                        "Scenario": "UploadEventsTelemetry",
+                        "Format": "$.Parameters.TelemetryFileFormat",
+                        "Intrinsic": true,
+                        "Recursive": true,
+                        "Schema": "Events",
+                        "TargetDirectory": "{LogDir}"
+                    }
+                },
+                {
+                    "Type": "UploadTelemetry",
+                    "Parameters": {
+                        "Scenario": "UploadMetricsTelemetry",
+                        "Format": "$.Parameters.TelemetryFileFormat",
+                        "Intrinsic": true,
+                        "Recursive": true,
+                        "Schema": "Metrics",
+                        "TargetDirectory": "{LogDir}"
+                    }
+                }
+            ]
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallSdkPackage",
+                "BlobContainer": "packages",
+                "BlobName": "$.Parameters.Package",
+                "PackageName": "script_package",
+                "Extract": true
+            }
+        }
+    ]
+}

@@ -994,6 +994,30 @@ namespace VirtualClient
         }
 
         [Test]
+        public async Task ProfileExpressionEvaluatorSupportsClientIdReferences()
+        {
+            this.SetupDefaults(PlatformID.Win32NT);
+
+            Dictionary<string, string> expressions = new Dictionary<string, string>
+            {
+                { "{AgentId}", "system01" },
+                { "{ClientId}", "system01" },
+                { "--port=1234 --agent={AgentId}", $"--port=1234 --agent=system01" },
+                { "--port=1234 --agent={ClientId}", $"--port=1234 --agent=system01" }
+            };
+
+            this.mockFixture.SystemManagement.Setup(mgr => mgr.AgentId)
+                .Returns($"system01");
+
+            foreach (var entry in expressions)
+            {
+                string expectedExpression = entry.Value;
+                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, entry.Key);
+                Assert.AreEqual(expectedExpression, actualExpression);
+            }
+        }
+
+        [Test]
         public async Task ProfileExpressionEvaluatorSupportsExperimentIdReferences()
         {
             this.SetupDefaults(PlatformID.Win32NT);
@@ -1006,6 +1030,28 @@ namespace VirtualClient
 
             this.mockFixture.SystemManagement.Setup(mgr => mgr.ExperimentId)
                 .Returns($"abcde-12345");
+
+            foreach (var entry in expressions)
+            {
+                string expectedExpression = entry.Value;
+                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, entry.Key);
+                Assert.AreEqual(expectedExpression, actualExpression);
+            }
+        }
+
+        [Test]
+        public async Task ProfileExpressionEvaluatorSupportsExecutionSystemReferences()
+        {
+            this.SetupDefaults(PlatformID.Win32NT);
+
+            Dictionary<string, string> expressions = new Dictionary<string, string>
+            {
+                { "{ExecutionSystem}", "ansible" },
+                { "--port=1234 --agent={ExecutionSystem}", $"--port=1234 --agent=ansible" }
+            };
+
+            this.mockFixture.SystemManagement.Setup(mgr => mgr.ExecutionSystem)
+                .Returns($"ansible");
 
             foreach (var entry in expressions)
             {
@@ -1666,6 +1712,50 @@ namespace VirtualClient
 
             await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters);
             Assert.AreEqual(expectedValue, parameters["Flags"]);
+        }
+
+        [Test]
+        public async Task ProfileExpressionEvaluatorSupportsPathBasedFunctionAndComparisonOperations_Scenario_1()
+        {
+            this.SetupDefaults(PlatformID.Win32NT);
+            Dictionary<string, IConvertible> parameters = new Dictionary<string, IConvertible>
+            {
+                {
+                    "Condition",
+                    "{calculate(@\"{Command}\".IndexOf(\".ps1\") > 0)}"
+                },
+                {
+                    "Command",
+                    ".\\demo\\Invoke-PreTest.ps1 -LogDirectory C:\\tools\\virtualclient\\win-x64\\logs"
+                }
+            };
+
+            string expectedValue = "true";
+
+            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters);
+            Assert.AreEqual(expectedValue, parameters["Condition"]);
+        }
+
+        [Test]
+        public async Task ProfileExpressionEvaluatorSupportsPathBasedFunctionAndComparisonOperations_Scenario_2()
+        {
+            this.SetupDefaults(PlatformID.Unix);
+            Dictionary<string, IConvertible> parameters = new Dictionary<string, IConvertible>
+            {
+                {
+                    "Condition",
+                    "{calculate(@\"{Command}\".IndexOf(\".py\") > 0)}"
+                },
+                {
+                    "Command",
+                    "./demo/execute_something.py -LogDirectory /home/user/tools/virtualclient/linux-arm64//logs"
+                }
+            };
+
+            string expectedValue = "true";
+
+            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters);
+            Assert.AreEqual(expectedValue, parameters["Condition"]);
         }
 
         [Test]

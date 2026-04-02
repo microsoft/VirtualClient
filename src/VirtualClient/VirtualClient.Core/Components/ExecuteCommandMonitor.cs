@@ -1,7 +1,7 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace VirtualClient.Dependencies
+namespace VirtualClient
 {
     using System;
     using System.Collections.Generic;
@@ -9,6 +9,7 @@ namespace VirtualClient.Dependencies
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
     using Polly;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
@@ -20,16 +21,18 @@ namespace VirtualClient.Dependencies
     /// package installed.
     /// </summary>
     [SupportedPlatforms("linux-arm64,linux-x64,win-arm64,win-x64")]
-    public class ExecuteCommand : VirtualClientComponent
+    public partial class ExecuteCommandMonitor : VirtualClientIntervalBasedMonitor
     {
+        private const int MaxOutputLength = 125000;
+        private static readonly char[] Quotes = new char[] { '"', '\'' };
         private ProcessManager processManager;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ExecuteCommand"/> class.
+        /// Initializes a new instance of the <see cref="ExecuteCommandMonitor"/> class.
         /// </summary>
         /// <param name="dependencies">Provides all of the required dependencies to the Virtual Client component</param>
         /// <param name="parameters">A series of key value pairs that dictate runtime execution.</param>
-        public ExecuteCommand(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
+        public ExecuteCommandMonitor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
             : base(dependencies, parameters)
         {
             this.processManager = dependencies.GetService<ProcessManager>();
@@ -83,9 +86,60 @@ namespace VirtualClient.Dependencies
         }
 
         /// <summary>
+        /// Parameter defines the event ID (e.g. eventlog.journalctl)
+        /// </summary>
+        public string MonitorEventId
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(this.MonitorEventId), out IConvertible eventId);
+                return eventId?.ToString();
+            }
+        }
+
+        /// <summary>
+        /// Parameter defines the event source (e.g. ipconfig). 
+        /// </summary>
+        public string MonitorEventSource
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.MonitorEventSource));
+            }
+        }
+
+        /// <summary>
+        /// Parameter defines the event type (e.g. system_info).
+        /// </summary>
+        public string MonitorEventType
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.MonitorEventType));
+            }
+        }
+
+        /// <summary>
         /// A policy that defines how the component will retry when it experiences transient issues.
         /// </summary>
         public IAsyncPolicy RetryPolicy { get; set; }
+
+        /// <summary>
+        /// True/false to indicate that a shell (bash, cmd) should be used to execute the command. The user can also simply define the 
+        /// shell that they want to use in the command line directly. This supports backwards compatibility scenarios. Default = false.
+        /// </summary>
+        public bool UseShell
+        {
+            get
+            {
+                return this.Parameters.GetValue<bool>(nameof(this.UseShell), false);
+            }
+
+            private set
+            {
+                this.Parameters[nameof(this.UseShell)] = value;
+            }
+        }
 
         /// <summary>
         /// Parameter defines the working directory from which the command should be executed. When the
@@ -102,15 +156,94 @@ namespace VirtualClient.Dependencies
         }
 
         /// <summary>
+        /// Execute the monitor to run the command on intervals.
+        /// </summary>
+        protected override Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            // All background monitor ExecuteAsync methods should be either 'async' or should use a Task.Run() if running a 'while' loop or the
+            // logic will block without returning. Monitors are typically expected to be fire-and-forget.
+
+            return Task.Run(async () =>
+            {
+                try
+                {
+                    telemetryContext.AddContext("command", SensitiveData.ObscureSecrets(this.Command));
+                    telemetryContext.AddContext("workingDirectory", SensitiveData.ObscureSecrets(this.WorkingDirectory));
+                    telemetryContext.AddContext("platforms", string.Join(VirtualClientComponent.CommonDelimiters.First(), this.SupportedPlatforms));
+
+                    await this.WaitAsync(this.MonitorWarmupPeriod, cancellationToken);
+
+                    int iterations = 0;
+                    while (!cancellationToken.IsCancellationRequested)
+                    {
+                        try
+                        {
+                            iterations++;
+                            if (this.MonitorStrategy != null)
+                            {
+                                if (iterations <= 1)
+                                {
+                                    switch (this.MonitorStrategy)
+                                    {
+                                        case VirtualClient.MonitorStrategy.Once:
+                                        case VirtualClient.MonitorStrategy.OnceAtBeginAndEnd:
+                                            await this.ExecuteCommandAsync(telemetryContext, cancellationToken);
+                                            break;
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                if (this.IsIterationComplete(iterations))
+                                {
+                                    break;
+                                }
+
+                                await this.ExecuteCommandAsync(telemetryContext, cancellationToken);
+                            }
+                        }
+                        catch (Exception exc)
+                        {
+                            // Do not let the monitor operations crash the application.
+                            this.Logger.LogErrorMessage(exc, telemetryContext, LogLevel.Warning);
+                        }
+                        finally
+                        {
+                            await this.WaitAsync(this.MonitorFrequency, cancellationToken);
+                        }
+                    }
+
+                    if (this.MonitorStrategy == VirtualClient.MonitorStrategy.OnceAtBeginAndEnd)
+                    {
+                        await this.ExecuteCommandAsync(telemetryContext, CancellationToken.None);
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    // Expected on ctrl-c or a cancellation is requested.
+                }
+                catch (Exception exc)
+                {
+                    // Do not let the monitor operations crash the application.
+                    this.Logger.LogErrorMessage(exc, telemetryContext, LogLevel.Warning);
+                }
+            });
+        }
+
+        /// <summary>
         /// Execute the command(s) logic on the system.
         /// </summary>
-        protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        protected async Task ExecuteCommandAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             telemetryContext.AddContext("command", SensitiveData.ObscureSecrets(this.Command));
             telemetryContext.AddContext("workingDirectory", SensitiveData.ObscureSecrets(this.WorkingDirectory));
             telemetryContext.AddContext("platforms", string.Join(VirtualClientComponent.CommonDelimiters.First(), this.SupportedPlatforms));
 
-            if (!cancellationToken.IsCancellationRequested)
+            if (this.UseShell || this.HasFeatureFlag(ExecuteCommand.FeatureFlagShellSupport))
+            {
+                await this.ExecuteCommandWithShellSupportAsync(telemetryContext, cancellationToken);
+            }
+            else
             {
                 IEnumerable<string> commandsToExecute = this.GetCommandsToExecute();
 
@@ -151,8 +284,15 @@ namespace VirtualClient.Dependencies
 
                                         if (!cancellationToken.IsCancellationRequested)
                                         {
-                                            await this.LogProcessDetailsAsync(process, telemetryContext, logFileName: this.LogFileName, timestamped: this.LogTimestamped);
-                                            process.ThrowIfComponentOperationFailed(this.ComponentType);
+                                            string logFolder = this.LogFolderName;
+                                            if (string.IsNullOrWhiteSpace(logFolder) && PlatformSpecifics.TryGetCommandName(originalCommand, out string commandName))
+                                            {
+                                                logFolder = commandName;
+                                            }
+
+                                            await this.LogProcessDetailsAsync(process, telemetryContext, toolName: logFolder, logFileName: this.LogFileName);
+                                            process.ThrowIfMonitorFailed();
+                                            this.CaptureEventInformation(process, telemetryContext);
                                         }
                                     }
                                 });
@@ -169,6 +309,26 @@ namespace VirtualClient.Dependencies
         protected override Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             return this.EvaluateParametersAsync(cancellationToken);
+        }
+
+        /// <summary>
+        /// Validates the parameters supplied to the monitor.
+        /// </summary>
+        protected override void Validate()
+        {
+            base.Validate();
+            if (this.MonitorStrategy != null)
+            {
+                switch (this.MonitorStrategy)
+                {
+                    case VirtualClient.MonitorStrategy.Once:
+                    case VirtualClient.MonitorStrategy.OnceAtBeginAndEnd:
+                        break;
+
+                    default:
+                        throw new NotSupportedException($"The monitoring strategy '{this.MonitorStrategy}' is not supported.");
+                }
+            }
         }
 
         /// <summary>
@@ -213,6 +373,52 @@ namespace VirtualClient.Dependencies
                     }
                 }
             }
+        }
+
+        private void CaptureEventInformation(IProcessProxy process, EventContext telemetryContext)
+        {
+            string standardOutput = process.StandardOutput?.ToString();
+            if (!string.IsNullOrWhiteSpace(standardOutput) && standardOutput.Length > MaxOutputLength)
+            {
+                standardOutput = $"{standardOutput.Substring(0, MaxOutputLength)}...";
+            }
+
+            string standardError = process.StandardError?.ToString();
+            if (!string.IsNullOrWhiteSpace(standardError) && standardError.Length > MaxOutputLength)
+            {
+                standardError = $"{standardError.Substring(0, MaxOutputLength)}...";
+            }
+
+            string eventType = !string.IsNullOrWhiteSpace(this.MonitorEventType)
+                ? this.MonitorEventType
+                : "system.monitor";
+
+            string eventSource = !string.IsNullOrWhiteSpace(this.MonitorEventSource)
+                ? this.MonitorEventSource
+                : "system";
+
+            string eventId = !string.IsNullOrWhiteSpace(this.MonitorEventId)
+                ? this.MonitorEventId
+
+                // Give the same command, the hashcode will be the same every time and is sufficient
+                // to use for an identifier (e.g. system.monitor.173564897).
+                : $"{eventType}.{this.Command.ToLowerInvariant().Replace("-", string.Empty).RemoveWhitespace().GetHashCode()}";
+
+            this.Logger.LogSystemEvent(
+                eventType,
+                eventSource,
+                eventId,
+                LogLevel.Information,
+                telemetryContext,
+                eventCode: process.ExitCode,
+                eventInfo: new Dictionary<string, object>
+                {
+                    { "command", SensitiveData.ObscureSecrets(process.FullCommand()) },
+                    { "exitCode", process.ExitCode },
+                    { "workingDirectory", process.StartInfo?.WorkingDirectory },
+                    { "standardOutput", standardOutput },
+                    { "standardError", standardError }
+                });
         }
 
         private IEnumerable<string> GetCommandsToExecute()

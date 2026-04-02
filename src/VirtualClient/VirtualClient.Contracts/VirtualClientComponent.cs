@@ -56,12 +56,8 @@ namespace VirtualClient.Contracts
         protected VirtualClientComponent(VirtualClientComponent component)
             : this(component?.Dependencies, component?.Parameters)
         {
-            this.ClientRequestId = component.ClientRequestId;
-            this.Seed = component.Seed;
-            this.FailFast = component.FailFast;
-            this.LogToFile = component.LogToFile;
+            this.ComponentType = component.ComponentType;
             this.MetadataContract = component.MetadataContract;
-            this.ContentPathTemplate = component.ContentPathTemplate;
 
             if (component.Metadata?.Any() == true)
             {
@@ -180,12 +176,41 @@ namespace VirtualClient.Contracts
         /// The content path template to use when uploading content
         /// to target storage resources. When not defined the default template will be used.
         /// </summary>
-        public string ContentPathTemplate { get; set; }
+        public string ContentPathTemplate
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(VirtualClientComponent.ContentPathTemplate), out IConvertible template);
+                return template?.ToString();
+            }
+
+            set
+            {
+                this.Parameters[nameof(this.ContentPathTemplate)] = value;
+            }
+        }
 
         /// <summary>
         /// The CPU/processor architecture (e.g. amd64, arm).
         /// </summary>
         public Architecture CpuArchitecture { get; }
+
+        /// <summary>
+        /// True/false whether log files upload request processing should be deferred
+        /// for handling later when a content store is defined. Default = false.
+        /// </summary>
+        public bool DeferUploads
+        {
+            get
+            {
+                return this.Parameters.GetValue<bool>(nameof(this.DeferUploads), false);
+            }
+
+            protected set
+            {
+                this.Parameters[nameof(this.DeferUploads)] = false;
+            }
+        }
 
         /// <summary>
         /// Provides all of the required dependencies to the component.
@@ -296,23 +321,6 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
-        /// True/false whether log files written will have timestamps appended to the 
-        /// file names (e.g. 2023-02-01-100530635478-geekbench.log). Default = true.
-        /// </summary>
-        public bool LogTimestamped
-        {
-            get
-            {
-                return this.Parameters.GetValue<bool>(nameof(this.LogTimestamped), true);
-            }
-
-            protected set
-            {
-                this.Parameters[nameof(this.LogTimestamped)] = value;
-            }
-        }
-
-        /// <summary>
         /// Metadata provided to the application on the command line.
         /// </summary>
         public IDictionary<string, IConvertible> Metadata { get; }
@@ -345,7 +353,7 @@ namespace VirtualClient.Contracts
                     : Array.Empty<string>();
             }
 
-            protected set
+            set
             {
                 this.Parameters[nameof(this.MetricFilters)] = string.Join(VirtualClientComponent.CommonDelimiters.First(), value);
             }
