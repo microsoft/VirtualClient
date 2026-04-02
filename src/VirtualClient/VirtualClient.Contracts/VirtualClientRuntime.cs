@@ -75,6 +75,11 @@ namespace VirtualClient
         public static string ExecutableName { get; } = Process.GetCurrentProcess().MainModule.FileName;
 
         /// <summary>
+        /// The time at which the Virtual Client application started execution.
+        /// </summary>
+        public static DateTime ExecutionStartTime { get; } = DateTime.UtcNow;
+
+        /// <summary>
         /// A set of one or more tasks (exit) registered to execute before the application
         /// exits completely. The dictionary key can be used to determine if a particular task exists
         /// in the set of not.

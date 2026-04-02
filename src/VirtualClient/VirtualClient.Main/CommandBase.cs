@@ -40,7 +40,6 @@ namespace VirtualClient
     public abstract class CommandBase
     {
         private const string defaultPackageStoreUri = "https://packages.virtualclient.microsoft.com";
-        private static DateTime executionStartTimestamp = DateTime.UtcNow;
         private IDictionary<string, IConvertible> pathReplacements;
 
         /// <summary>
@@ -792,7 +791,7 @@ namespace VirtualClient
             IConvertible telemetrySource = null;
             this.Parameters?.TryGetValue(GlobalParameter.TelemetrySource, out telemetrySource);
 
-            ISystemManagement systemManagement = DependencyFactory.CreateSystemManager(this.ClientId, this.ExperimentId, platformSpecifics);
+            ISystemManagement systemManagement = DependencyFactory.CreateSystemManager(this.ClientId, this.ExperimentId, platformSpecifics, this.ExecutionSystem);
             IApiManager apiManager = new ApiManager(systemManagement.FirewallManager);
             IAuthorizationManager authorizationManager = new AuthorizationManager();
             IProfileManager profileManager = new ProfileManager();
@@ -1189,7 +1188,7 @@ namespace VirtualClient
                     { "packageDir", platformSpecifics.PackagesDirectory },
                     { "stateDir", platformSpecifics.StateDirectory },
                     { "tempDir", platformSpecifics.TempDirectory },
-                    { "timestamp", CommandBase.executionStartTimestamp.ToString("yyyy.MM.dd_hh.mm.ss") }
+                    { "timestamp", VirtualClientRuntime.ExecutionStartTime.ToString("yyyy.MM.dd_hh.mm.ss") }
                 };
 
                 if (this.Metadata?.Any() == true)

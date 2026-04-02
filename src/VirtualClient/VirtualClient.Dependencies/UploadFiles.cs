@@ -61,6 +61,17 @@ namespace VirtualClient.Dependencies
         }
 
         /// <summary>
+        /// True/false whether to search for files in subdirectories. Default = true.
+        /// </summary>
+        public bool Recursive
+        {
+            get
+            {
+                return this.Parameters.GetValue<bool>(nameof(this.Recursive), true);
+            }
+        }
+
+        /// <summary>
         /// The directory for which to request log uploads. 
         /// </summary>
         public string TargetDirectory
