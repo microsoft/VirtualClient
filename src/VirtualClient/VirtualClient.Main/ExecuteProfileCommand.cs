@@ -33,19 +33,9 @@ namespace VirtualClient
     internal class ExecuteProfileCommand : CommandBase
     {
         private const string ExecuteCommandProfile = "EXECUTE-COMMAND.json";
+        private const string ExecuteScriptProfile = "EXECUTE-SCRIPT.json";
         private const string ExecuteSshCommandProfile = "EXECUTE-SSH-COMMAND.json";
         private const string FileUploadMonitorProfile = "MONITORS-FILE-UPLOAD.json";
-
-        /// <summary>
-        /// When determining the name of the command, we want to exclude certain terms
-        /// that define the hosting/terminal environment (e.g. pwsh, python).
-        /// </summary>
-        /// <remarks>
-        /// Examples:
-        /// pwsh S:\any\Script.ps1 -> Script
-        /// pwsh -Command S:\any\Script.ps1 -> Script
-        /// </remarks>
-        private static readonly Regex CommandTerminalExpression = new Regex("pwsh|pwsh.exe|powershell|powershell.exe|python|python.exe|python3|python3.exe|-[a-z-_]");
 
         private static readonly Regex PowerShellExpression = new Regex(
             "pwsh.exe|pwsh|powershell.exe|powershell",
@@ -113,31 +103,6 @@ namespace VirtualClient
         /// Platform extensions discovered at runtime (e.g. binaries/.dlls, profiles).
         /// </summary>
         protected PlatformExtensions Extensions { get; set; }
-
-        /// <summary>
-        /// Returns the name of the command being executed.
-        /// </summary>
-        /// <param name="commandArguments">The full command line arguments.</param>
-        protected static string GetCommandName(string[] commandArguments)
-        {
-            string commandName = null;
-            foreach (string argument in commandArguments)
-            {
-                if (String.Equals(commandName, "sudo"))
-                {
-                    continue;
-                }
-
-                // Find the first argument that is not a
-                if (!ExecuteProfileCommand.CommandTerminalExpression.IsMatch(argument))
-                {
-                    commandName = Path.GetFileNameWithoutExtension(argument.Trim());
-                    break;
-                }
-            }
-
-            return commandName;
-        }
 
         /// <summary>
         /// Normalizes the PowerShell command for execution in a non-interactive
@@ -397,20 +362,20 @@ namespace VirtualClient
 
             if (this.Profiles?.Any() == true || !string.IsNullOrWhiteSpace(this.Command))
             {
-                
-
                 // 1) Local command execution.
                 if (!string.IsNullOrWhiteSpace(this.Command))
                 {
                     List<DependencyProfileReference> profiles = new List<DependencyProfileReference>();
+                    IConvertible package = null;
+                    this.Parameters?.TryGetValue("Package", out package);
 
                     if (this.Targets?.Any() == true)
                     {
                         profiles.Add(new DependencyProfileReference(ExecuteProfileCommand.ExecuteSshCommandProfile));
                     }
-                    else
+                    else if (package != null)
                     {
-                        profiles.Add(new DependencyProfileReference(ExecuteProfileCommand.ExecuteCommandProfile));
+                        profiles.Add(new DependencyProfileReference(ExecuteProfileCommand.ExecuteScriptProfile));
                     }
 
                     if (this.Profiles?.Any() == true)
@@ -425,7 +390,7 @@ namespace VirtualClient
                     }
 
                     string[] commandArguments = this.Command?.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-                    string commandName = ExecuteProfileCommand.GetCommandName(commandArguments);
+                    PlatformSpecifics.TryGetCommandName(commandArguments, out string commandName);
 
                     string fullCommand = this.Command;
                     if (this.IsPowerShell)
@@ -434,7 +399,7 @@ namespace VirtualClient
                     }
 
                     this.Parameters["Command"] = fullCommand;
-                    this.Parameters["Scenario"] = $"Execute_{commandName}";
+                    this.Parameters["Scenario"] = $"Execute_{Regex.Replace(commandName, "[^a-zA-Z0-9]", "_")}";
                 }
             }
         }

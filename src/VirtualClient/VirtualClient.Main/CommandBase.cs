@@ -40,7 +40,6 @@ namespace VirtualClient
     public abstract class CommandBase
     {
         private const string defaultPackageStoreUri = "https://packages.virtualclient.microsoft.com";
-        private static DateTime executionStartTimestamp = DateTime.UtcNow;
         private IDictionary<string, IConvertible> pathReplacements;
 
         /// <summary>
@@ -545,7 +544,7 @@ namespace VirtualClient
         /// <param name="platformSpecifics">Defines the fundamental directory paths for the application.</param>
         protected void EvaluateDirectoryPathOverrides(PlatformSpecifics platformSpecifics)
         {
-            ResourceTargets isolationTargets = null;
+            ResourceTargets isolationTargets = ResourceTargets.None;
             if (this.IsolationTargets != null)
             {
                 if (this.IsolationTargets?.Any() != true)
@@ -565,7 +564,7 @@ namespace VirtualClient
             // 1) --log-dir command line option
             // 2) VC_LOGS_DIR environment variable
             // 3) Default location
-                string logDirectory = platformSpecifics.LogsDirectory;
+            string logDirectory = platformSpecifics.LogsDirectory;
             if (!string.IsNullOrWhiteSpace(this.LogDirectory))
             {
                 // Users can override on the command line with the --log-dir option.
@@ -587,9 +586,9 @@ namespace VirtualClient
                 logDirectory = Path.GetFullPath(logDirectory);
             }
 
-            if (isolationTargets?.TargetLogs == true)
+            if (isolationTargets.TargetLogs && !logDirectory.EndsWith(this.ExperimentId, StringComparison.OrdinalIgnoreCase))
             {
-                logDirectory = platformSpecifics.Combine(logDirectory, CommandBase.executionStartTimestamp.ToString("yyyy.MM.dd_hh.mm.ss"));
+                logDirectory = platformSpecifics.Combine(logDirectory, this.ExperimentId);
             }
 
             platformSpecifics.LogsDirectory = this.EvaluatePathReplacements(logDirectory, platformSpecifics);
@@ -623,9 +622,9 @@ namespace VirtualClient
                 packageDirectory = Path.GetFullPath(packageDirectory);
             }
 
-            if (isolationTargets?.TargetPackages == true)
+            if (isolationTargets.TargetPackages && !packageDirectory.EndsWith(this.ExperimentId, StringComparison.OrdinalIgnoreCase))
             {
-                packageDirectory = platformSpecifics.Combine(packageDirectory, CommandBase.executionStartTimestamp.ToString("yyyy.MM.dd_hh.mm.ss"));
+                packageDirectory = platformSpecifics.Combine(packageDirectory, this.ExperimentId);
             }
 
             platformSpecifics.PackagesDirectory = this.EvaluatePathReplacements(packageDirectory, platformSpecifics);
@@ -658,9 +657,9 @@ namespace VirtualClient
                 stateDirectory = OptionFactory.ToFullPath(stateDirectory);
             }
 
-            if (isolationTargets?.TargetState == true)
+            if (isolationTargets.TargetState && !stateDirectory.EndsWith(this.ExperimentId, StringComparison.OrdinalIgnoreCase))
             {
-                stateDirectory = platformSpecifics.Combine(stateDirectory, CommandBase.executionStartTimestamp.ToString("yyyy.MM.dd_hh.mm.ss"));
+                stateDirectory = platformSpecifics.Combine(stateDirectory, this.ExperimentId);
             }
 
             platformSpecifics.StateDirectory = this.EvaluatePathReplacements(stateDirectory, platformSpecifics);
@@ -693,9 +692,9 @@ namespace VirtualClient
                 tempDirectory = Path.GetFullPath(tempDirectory);
             }
 
-            if (isolationTargets?.TargetTemp == true)
+            if (isolationTargets.TargetTemp && !tempDirectory.EndsWith(this.ExperimentId, StringComparison.OrdinalIgnoreCase))
             {
-                tempDirectory = platformSpecifics.Combine(tempDirectory, CommandBase.executionStartTimestamp.ToString("yyyy.MM.dd_hh.mm.ss"));
+                tempDirectory = platformSpecifics.Combine(tempDirectory, this.ExperimentId);
             }
 
             platformSpecifics.TempDirectory = this.EvaluatePathReplacements(tempDirectory, platformSpecifics);
@@ -788,25 +787,11 @@ namespace VirtualClient
                 this.LoggingLevel = LogLevel.Information;
             }
 
-            ResourceTargets isolationTargets = null;
-            if (this.IsolationTargets != null)
-            {
-                if (this.IsolationTargets?.Any() != true)
-                {
-                    // --isolated used as a flag
-                    isolationTargets = ResourceTargets.Create();
-                }
-                else
-                {
-                    isolationTargets = ResourceTargets.Create(this.IsolationTargets);
-                }
-            }
-
             IConfiguration configuration = Program.LoadAppSettings();
             IConvertible telemetrySource = null;
             this.Parameters?.TryGetValue(GlobalParameter.TelemetrySource, out telemetrySource);
 
-            ISystemManagement systemManagement = DependencyFactory.CreateSystemManager(this.ClientId, this.ExperimentId, platformSpecifics, isolationTargets.TargetPackages);
+            ISystemManagement systemManagement = DependencyFactory.CreateSystemManager(this.ClientId, this.ExperimentId, platformSpecifics, this.ExecutionSystem);
             IApiManager apiManager = new ApiManager(systemManagement.FirewallManager);
             IAuthorizationManager authorizationManager = new AuthorizationManager();
             IProfileManager profileManager = new ProfileManager();
@@ -1203,7 +1188,7 @@ namespace VirtualClient
                     { "packageDir", platformSpecifics.PackagesDirectory },
                     { "stateDir", platformSpecifics.StateDirectory },
                     { "tempDir", platformSpecifics.TempDirectory },
-                    { "timestamp", CommandBase.executionStartTimestamp.ToString("yyyy.MM.dd_hh.mm.ss") }
+                    { "timestamp", VirtualClientRuntime.ExecutionStartTime.ToString("yyyy.MM.dd_hh.mm.ss") }
                 };
 
                 if (this.Metadata?.Any() == true)

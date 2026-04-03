@@ -110,6 +110,31 @@ namespace VirtualClient.UnitTests
         }
 
         [Test]
+        [Order(20)]
+        [TestCase(PlatformID.Unix, Architecture.X64)]
+        [TestCase(PlatformID.Unix, Architecture.Arm64)]
+        [TestCase(PlatformID.Win32NT, Architecture.X64)]
+        [TestCase(PlatformID.Win32NT, Architecture.Arm64)]
+        public void ApplicationUsesTheExpectedLogDirectoryLocationWhenIsolationRequested(PlatformID platform, Architecture architecture)
+        {
+            this.SetupTest(platform, architecture);
+
+            // Scenario:
+            // --isolated or --isolated=logs defined on the command line.
+            string experimentId = Guid.NewGuid().ToString();
+            string logDirectory = this.mockFixture.Combine(this.mockFixture.PlatformSpecifics.CurrentDirectory, "logs");
+            this.ExperimentId = experimentId;
+            this.LogDirectory = logDirectory;
+            this.IsolationTargets = new List<string> { "logs" };
+
+            this.EvaluateDirectoryPathOverrides(this.mockFixture.PlatformSpecifics);
+            string expectedDirectory = this.mockFixture.Combine(logDirectory, experimentId);
+            string actualDirectory = this.mockFixture.PlatformSpecifics.LogsDirectory;
+
+            Assert.AreEqual(expectedDirectory, actualDirectory);
+        }
+
+        [Test]
         [Order(3)]
         [TestCase(PlatformID.Unix, Architecture.X64)]
         [TestCase(PlatformID.Unix, Architecture.Arm64)]
@@ -168,6 +193,30 @@ namespace VirtualClient.UnitTests
             this.EvaluateDirectoryPathOverrides(this.mockFixture.PlatformSpecifics);
             string actualDirectory = this.mockFixture.PlatformSpecifics.PackagesDirectory;
 
+            Assert.AreEqual(expectedDirectory, actualDirectory);
+        }
+
+        [Test]
+        [Order(21)]
+        [TestCase(PlatformID.Unix, Architecture.X64)]
+        [TestCase(PlatformID.Unix, Architecture.Arm64)]
+        [TestCase(PlatformID.Win32NT, Architecture.X64)]
+        [TestCase(PlatformID.Win32NT, Architecture.Arm64)]
+        public void ApplicationUsesTheExpectedPackagesDirectoryLocationWhenIsolationRequested(PlatformID platform, Architecture architecture)
+        {
+            this.SetupTest(platform, architecture);
+
+            // Scenario:
+            // --isolated or --isolated=packages defined on the command line.
+            string experimentId = Guid.NewGuid().ToString();
+            string packageDirectory = this.mockFixture.Combine(this.mockFixture.PlatformSpecifics.CurrentDirectory, "packages");
+            this.ExperimentId = experimentId;
+            this.PackageDirectory = packageDirectory;
+            this.IsolationTargets = new List<string> { "packages" };
+
+            this.EvaluateDirectoryPathOverrides(this.mockFixture.PlatformSpecifics);
+            string expectedDirectory = this.mockFixture.Combine(packageDirectory, experimentId);
+            string actualDirectory = this.mockFixture.PlatformSpecifics.PackagesDirectory;
             Assert.AreEqual(expectedDirectory, actualDirectory);
         }
 
@@ -235,6 +284,31 @@ namespace VirtualClient.UnitTests
         }
 
         [Test]
+        [Order(22)]
+        [TestCase(PlatformID.Unix, Architecture.X64)]
+        [TestCase(PlatformID.Unix, Architecture.Arm64)]
+        [TestCase(PlatformID.Win32NT, Architecture.X64)]
+        [TestCase(PlatformID.Win32NT, Architecture.Arm64)]
+        public void ApplicationUsesTheExpectedStateDirectoryLocationWhenIsolationRequested(PlatformID platform, Architecture architecture)
+        {
+            this.SetupTest(platform, architecture);
+
+            // Scenario:
+            // --isolated or --isolated=state defined on the command line.
+            string experimentId = Guid.NewGuid().ToString();
+            string stateDirectory = this.mockFixture.Combine(this.mockFixture.PlatformSpecifics.CurrentDirectory, "state");
+            this.ExperimentId = experimentId;
+            this.StateDirectory = stateDirectory;
+            this.IsolationTargets = new List<string> { "state" };
+
+            this.EvaluateDirectoryPathOverrides(this.mockFixture.PlatformSpecifics);
+            string expectedDirectory = this.mockFixture.Combine(stateDirectory, experimentId);
+            string actualDirectory = this.mockFixture.PlatformSpecifics.StateDirectory;
+
+            Assert.AreEqual(expectedDirectory, actualDirectory);
+        }
+
+        [Test]
         [Order(9)]
         [TestCase(PlatformID.Unix, Architecture.X64)]
         [TestCase(PlatformID.Unix, Architecture.Arm64)]
@@ -294,6 +368,30 @@ namespace VirtualClient.UnitTests
             this.EvaluateDirectoryPathOverrides(this.mockFixture.PlatformSpecifics);
             string actualDirectory = this.mockFixture.PlatformSpecifics.TempDirectory;
 
+            Assert.AreEqual(expectedDirectory, actualDirectory);
+        }
+
+        [Test]
+        [Order(22)]
+        [TestCase(PlatformID.Unix, Architecture.X64)]
+        [TestCase(PlatformID.Unix, Architecture.Arm64)]
+        [TestCase(PlatformID.Win32NT, Architecture.X64)]
+        [TestCase(PlatformID.Win32NT, Architecture.Arm64)]
+        public void ApplicationUsesTheExpectedTempDirectoryLocationWhenIsolationRequested(PlatformID platform, Architecture architecture)
+        {
+            this.SetupTest(platform, architecture);
+
+            // Scenario:
+            // --isolated or --isolated=temp defined on the command line.
+            string experimentId = Guid.NewGuid().ToString();
+            string tempDirectory = this.mockFixture.Combine(this.mockFixture.PlatformSpecifics.CurrentDirectory, "temp");
+            this.ExperimentId = experimentId;
+            this.TempDirectory = tempDirectory;
+            this.IsolationTargets = new List<string> { "temp" };
+
+            this.EvaluateDirectoryPathOverrides(this.mockFixture.PlatformSpecifics);
+            string expectedDirectory = this.mockFixture.Combine(tempDirectory, experimentId);
+            string actualDirectory = this.mockFixture.PlatformSpecifics.TempDirectory;
             Assert.AreEqual(expectedDirectory, actualDirectory);
         }
 

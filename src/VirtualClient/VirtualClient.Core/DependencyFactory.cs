@@ -591,8 +591,9 @@ namespace VirtualClient
         /// <param name="agentId">The ID of the agent as part of the larger experiment in operation.</param>
         /// <param name="experimentId">The ID of the larger experiment in operation.</param>
         /// <param name="platformSpecifics">Provides features for platform-specific operations (e.g. Windows, Unix).</param>
+        /// <param name="executionSystem">The name of the execution system launching the application.</param>
         /// <param name="isolated">Instructs the factory to construct dependencies for cross-process/isolated runs.</param>
-        public static ISystemManagement CreateSystemManager(string agentId, string experimentId, PlatformSpecifics platformSpecifics, bool isolated = false)
+        public static ISystemManagement CreateSystemManager(string agentId, string experimentId, PlatformSpecifics platformSpecifics, string executionSystem = null, bool isolated = false)
         {
             agentId.ThrowIfNullOrWhiteSpace(nameof(agentId));
             experimentId.ThrowIfNullOrWhiteSpace(nameof(experimentId));
@@ -616,6 +617,7 @@ namespace VirtualClient
             return new SystemManagement
             {
                 AgentId = agentId,
+                ExecutionSystem = executionSystem,
                 ExperimentId = experimentId.ToLowerInvariant(),
                 DiskManager = diskManager,
                 FileSystem = fileSystem,

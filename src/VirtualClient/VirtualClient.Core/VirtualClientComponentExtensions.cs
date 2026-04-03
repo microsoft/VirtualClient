@@ -20,7 +20,6 @@ namespace VirtualClient
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
-    using VirtualClient.Logging;
 
     /// <summary>
     /// Extension methods for common operations in <see cref="VirtualClientComponent"/> derived
@@ -193,6 +192,26 @@ namespace VirtualClient
 
             ISystemManagement systemManagement = component.Dependencies.GetService<ISystemManagement>();
             return systemManagement.GetPlatformSpecificPackageAsync(packageName, cancellationToken, throwIfNotfound);
+        }
+
+        /// <summary>
+        /// Returns true/false whether the component has a feature flag defined with the name provided and that it matches the value provided.
+        /// </summary>
+        public static bool HasFeatureFlag(this VirtualClientComponent component, string featureFlag)
+        {
+            component.ThrowIfNull(nameof(component));
+            featureFlag.ThrowIfNullOrWhiteSpace(nameof(featureFlag));
+
+            bool hasFlag = false;
+            if (component.Parameters?.TryGetValue("FeatureFlag", out IConvertible flag) == true && flag != null)
+            {
+                hasFlag = string.Equals(
+                    featureFlag.Trim(), 
+                    flag.ToString().Trim(), 
+                    StringComparison.OrdinalIgnoreCase);
+            }
+
+            return hasFlag;
         }
 
         /// <summary>

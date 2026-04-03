@@ -6,12 +6,14 @@ namespace VirtualClient
     using System;
     using System.IO;
     using System.IO.Abstractions;
+    using System.Linq;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using Polly;
     using Polly.Retry;
     using VirtualClient.Common.Extensions;
+    using VirtualClient.Contracts;
 
     /// <summary>
     /// Methods for extending the functionality of the 
@@ -19,6 +21,47 @@ namespace VirtualClient
     /// </summary>
     public static class FileSystemExtensions
     {
+        /// <summary>
+        /// Copies the contents of a directory to a new location.
+        /// </summary>
+        /// <param name="fileSystem">The file system interface.</param>
+        /// <param name="sourceDirectory">The source directory to copy from.</param>
+        /// <param name="destinationDirectory">The destination directory to copy to.</param>
+        /// <param name="recursive">Indicates whether to copy directories recursively.</param>
+        public static Task CopyDirectoryAsync(this IFileSystem fileSystem, string sourceDirectory, string destinationDirectory, bool recursive = true)
+        {
+            fileSystem.ThrowIfNull(nameof(fileSystem));
+            sourceDirectory.ThrowIfNullOrWhiteSpace(nameof(sourceDirectory));
+            destinationDirectory.ThrowIfNullOrWhiteSpace(nameof(destinationDirectory));
+
+            return Task.Run(() =>
+            {
+                string[] files = fileSystem.Directory.GetFiles(sourceDirectory, "*.*", recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
+                if (files?.Any() == true)
+                {
+                    if (!fileSystem.Directory.Exists(destinationDirectory))
+                    {
+                        fileSystem.Directory.CreateDirectory(destinationDirectory);
+                    }
+
+                    foreach (string file in files)
+                    {
+                        string fileName = fileSystem.Path.GetFileName(file);
+                        string relativeSubdirectory = fileSystem.GetRelativeSubdirectory(sourceDirectory, file);
+
+                        if (!string.IsNullOrWhiteSpace(relativeSubdirectory))
+                        {
+                            fileSystem.File.Copy(file, fileSystem.Path.Combine(destinationDirectory, relativeSubdirectory, fileName));
+                        }
+                        else
+                        {
+                            fileSystem.File.Copy(file, fileSystem.Path.Combine(destinationDirectory, fileName));
+                        }
+                    }
+                }
+            });
+        }
+
         /// <summary>
         /// Attempts to delete a file with transient issue retry handling.
         /// </summary>

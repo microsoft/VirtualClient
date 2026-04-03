@@ -53,6 +53,11 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
+        /// No targets.
+        /// </summary>
+        public static ResourceTargets None { get; } = new ResourceTargets(targetLogs: false, targetPackages: false, targetState: false, targetTemp: false);
+
+        /// <summary>
         /// True if the "logs" directory should be targeted.
         /// </summary>
         public bool TargetLogs { get; }

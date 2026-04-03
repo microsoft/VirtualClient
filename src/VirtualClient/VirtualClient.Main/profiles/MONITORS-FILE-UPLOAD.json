@@ -5,7 +5,6 @@
         "SupportedOperatingSystems": "Azure Linux,CentOS,Debian,RedHat,Suse,Ubuntu,Windows"
     },
     "Parameters": {
-        "DeleteLogs": false,
         "IncludeManifest": false
     },
     "Monitors": [
@@ -13,7 +12,7 @@
             "Type": "FileUploadMonitor",
             "Parameters": {
                 "Scenario": "UploadContent",
-                "DeleteLogs": "$.Parameters.DeleteLogs",
+                "DeleteLogs": false,
                 "IncludeManifest": "$.Parameters.IncludeManifest"
             }
         }

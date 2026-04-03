@@ -314,9 +314,12 @@ namespace VirtualClient
 
         private void CleanupPackagesDirectory(string targetDirectory = null)
         {
-            if (!string.IsNullOrWhiteSpace(targetDirectory) && this.fileSystem.Directory.Exists(targetDirectory))
+            if (!string.IsNullOrWhiteSpace(targetDirectory))
             {
-                this.fileSystem.Directory.Delete(targetDirectory, true);
+                if (this.fileSystem.Directory.Exists(targetDirectory))
+                {
+                    this.fileSystem.Directory.Delete(targetDirectory, true);
+                }
             }
             else if (this.fileSystem.Directory.Exists(this.packagesDirectory))
             {
