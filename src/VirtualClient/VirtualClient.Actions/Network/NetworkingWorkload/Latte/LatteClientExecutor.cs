@@ -38,6 +38,7 @@ namespace VirtualClient.Actions.NetworkPerformance
         public LatteClientExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
            : base(dependencies, parameters)
         {
+            this.InitializeWindowsClientCommandline();  
         }
 
         /// <inheritdoc/>
@@ -139,6 +140,35 @@ namespace VirtualClient.Actions.NetworkPerformance
                     telemetryContext,
                     results);
             }
+        }
+
+        private void InitializeWindowsClientCommandline()
+        {
+            string serverIPAddress = this.GetLayoutClientInstances(ClientRole.Server).First().IPAddress;
+
+            this.CommandLineWindowsClient ??= string.Empty;
+
+            if (this.CommandLineWindowsClient.Length > 0 && !char.IsWhiteSpace(this.CommandLineWindowsClient[^1]))
+            {
+                this.CommandLineWindowsClient += " ";
+            }
+
+            if (!this.CommandLineWindowsClient.Contains("--tcp", StringComparison.OrdinalIgnoreCase))
+            {
+                this.CommandLineWindowsClient += this.Protocol.ToLowerInvariant() == "tcp" ? " --tcp" : string.Empty;
+            }
+
+            if (!this.CommandLineWindowsClient.Contains("-riopoll", StringComparison.OrdinalIgnoreCase) && this.RioPoll != 0)
+            {
+                this.CommandLineWindowsClient += $" -riopoll {this.RioPoll}";
+            }
+
+            if (this.Protocol != null && !this.CommandLineWindowsClient.Contains($"-{this.Protocol.ToString().ToLowerInvariant()}"))
+            {
+                this.CommandLineWindowsClient += $" -{this.Protocol.ToString().ToLowerInvariant()}";
+            }
+
+            this.CommandLineWindowsClient = this.CommandLineWindowsClient.Trim();
         }
     }
 }

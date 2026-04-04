@@ -425,6 +425,11 @@ namespace VirtualClient.Contracts
                 this.Parameters.TryGetValue(nameof(this.ProfileIteration), out IConvertible profileIteration);
                 return profileIteration != null ? (int)Convert.ChangeType(profileIteration, typeof(int)) : 0;
             }
+
+            protected set
+            {
+                this.Parameters[nameof(this.ProfileIteration)] = value;
+            }
         }
 
         /// <summary>
