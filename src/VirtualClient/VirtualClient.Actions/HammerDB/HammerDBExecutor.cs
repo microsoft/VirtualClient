@@ -345,7 +345,7 @@ namespace VirtualClient.Actions
             }
         }
 
-        private async Task GenerateCommandLineArguments(CancellationToken cancellationToken)
+        private Task GenerateCommandLineArguments(CancellationToken cancellationToken)
         {
             string arguments = $"{this.PlatformSpecifics.Combine(this.HammerDBPackagePath, "configure-workload-generator.py")} --workload {this.Workload} --sqlServer {this.SQLServer} --port {this.Port}" +
                     $" --virtualUsers {this.VirtualUsers} --password {this.SuperUserPassword} --dbName {this.DatabaseName} --hostIPAddress {this.ServerIpAddress}";
@@ -368,6 +368,8 @@ namespace VirtualClient.Actions
             }
 
             this.HammerDBScenarioArguments = arguments;
+
+            return Task.CompletedTask;
         }
 
         private static Task OpenFirewallPortsAsync(int port, IFirewallManager firewallManager, CancellationToken cancellationToken)

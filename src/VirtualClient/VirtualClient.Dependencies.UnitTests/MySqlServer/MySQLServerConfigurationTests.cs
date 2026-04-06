@@ -58,7 +58,7 @@ namespace VirtualClient.Dependencies.MySqlServer
 
             string[] expectedCommands =
             {
-                $"python3 {this.packagePath}/configure.py --serverIp 1.2.3.4 --innoDbDirs \"/home/user/mnt_dev_sdc1/mysql;/home/user/mnt_dev_sdd1/mysql;/home/user/mnt_dev_sde1/mysql\"",
+                $"python3 {this.packagePath}/configure.py --serverIp 1.2.3.4 --innoDbDirs \"/home/user/mnt_dev_sdc1/mysql\"",
             };
 
             int commandNumber = 0;
@@ -115,7 +115,7 @@ namespace VirtualClient.Dependencies.MySqlServer
 
             string[] expectedCommands =
             {
-                $"python3 {this.packagePath}/configure.py --serverIp 1.2.3.4 --innoDbDirs \"/home/user/mnt_dev_sdc1/mysql;/home/user/mnt_dev_sdd1/mysql;/home/user/mnt_dev_sde1/mysql\" " +
+                $"python3 {this.packagePath}/configure.py --serverIp 1.2.3.4 --innoDbDirs \"/home/user/mnt_dev_sdc1/mysql\" " +
                     $"--inMemory 8192",
             };
 

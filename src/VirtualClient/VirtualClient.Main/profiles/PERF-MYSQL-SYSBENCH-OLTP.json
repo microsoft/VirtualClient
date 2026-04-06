@@ -154,13 +154,17 @@
             "Type": "LinuxPackageInstallation",
             "Parameters": {
                 "Scenario": "InstallLinuxPackages",
-                "Packages": "python3,python3-pyudev,python3-psutil"
+                "Packages": "python3"
             }
         },
         {
-            "Type": "FormatDisks",
+            "Type": "DependencyPackageInstallation",
             "Parameters": {
-                "Scenario": "FormatDisks",
+                "Scenario": "DownloadSystemConfigPackage",
+                "BlobContainer": "packages",
+                "BlobName": "system_config.1.1.0.zip",
+                "PackageName": "system_config",
+                "Extract": true,
                 "Role": "Server"
             }
         },
@@ -168,6 +172,8 @@
             "Type": "StripeDisks",
             "Parameters": {
                 "Scenario": "StripeAndMountDisks",
+                "PackageName": "system_config",
+                "DiskFilter": "$.Parameters.DiskFilter",
                 "Role": "Server"
             }
         },
@@ -176,7 +182,7 @@
             "Parameters": {
                 "Scenario": "DownloadMySqlServerPackage",
                 "BlobContainer": "packages",
-                "BlobName": "mysql-server-8.0.36.rev0.zip",
+                "BlobName": "mysql-server-8.0.36-v5.zip",
                 "PackageName": "mysql-server",
                 "Extract": true,
                 "Role": "Server"
@@ -187,7 +193,7 @@
             "Parameters": {
                 "Scenario": "DownloadSysbenchPackage",
                 "BlobContainer": "packages",
-                "BlobName": "sysbench-1.0.20.rev3.zip",
+                "BlobName": "sysbench-1.0.20.rev5.zip",
                 "PackageName": "sysbench",
                 "Extract": true
             }

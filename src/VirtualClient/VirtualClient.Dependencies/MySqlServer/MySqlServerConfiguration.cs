@@ -64,29 +64,12 @@ namespace VirtualClient.Dependencies.MySqlServer
         }
 
         /// <summary>
-        /// stripedisk mount point.
-        /// </summary>
-        public string StripeDiskMountPoint
-        {
-            get
-            {
-                if (this.Parameters.TryGetValue(nameof(this.StripeDiskMountPoint), out IConvertible stripediskmountpoint) && stripediskmountpoint != null)
-                {
-                    return stripediskmountpoint.ToString();
-                }
-
-                return string.Empty;
-            }
-        }
-
-        /// <summary>
         /// Disk filter specified
         /// </summary>
         public string DiskFilter
         {
             get
             {
-                // and 256G
                 return this.Parameters.GetValue<string>(nameof(this.DiskFilter), "osdisk:false&sizegreaterthan:256g");
             }
         }
@@ -134,7 +117,6 @@ namespace VirtualClient.Dependencies.MySqlServer
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            ProcessManager manager = this.SystemManager.ProcessManager;
             string stateId = $"{nameof(MySQLServerConfiguration)}-{this.Action}-action-success";
             ConfigurationState configurationState = await this.stateManager.GetStateAsync<ConfigurationState>(stateId, cancellationToken)
                 .ConfigureAwait(false);
@@ -178,7 +160,7 @@ namespace VirtualClient.Dependencies.MySqlServer
                                     .FirstOrDefault()?.IPAddress
                                     ?? IPAddress.Loopback.ToString();
 
-            string innoDbDirs = !string.IsNullOrEmpty(this.StripeDiskMountPoint) ? this.StripeDiskMountPoint : await this.GetMySQLInnodbDirectoriesAsync(cancellationToken);
+            string innoDbDirs = await this.GetMySQLInnodbDirectoriesAsync(cancellationToken);
 
             string arguments = $"{this.packageDirectory}/configure.py --serverIp {serverIp} --innoDbDirs \"{innoDbDirs}\"";
 
@@ -249,46 +231,93 @@ namespace VirtualClient.Dependencies.MySqlServer
 
         private async Task<string> GetMySQLInnodbDirectoriesAsync(CancellationToken cancellationToken)
         {
-            string diskPaths = string.Empty;
+            IEnumerable<Disk> disks = await this.SystemManager.DiskManager.GetDisksAsync(cancellationToken)
+                .ConfigureAwait(false);
 
-            if (!cancellationToken.IsCancellationRequested)
+            IEnumerable<Disk> filteredDisks = DiskFilters.FilterDisks(disks, this.DiskFilter, this.Platform);
+
+            this.Logger.LogTraceMessage($"{this.TypeName}: Total disks discovered: {disks.Count()}. Disks after filtering ('{this.DiskFilter}'): {filteredDisks.Count()}.");
+
+            // Search ALL disks for a raid0 mount point. After StripeDisks creates an LVM
+            // striped volume from the filtered physical disks, the mount point appears on
+            // the logical volume device, which is a separate disk entry from the originals.
+            string raidAccessPath = disks
+                .SelectMany(d => d.Volumes)
+                .SelectMany(v => v.AccessPaths)
+                .FirstOrDefault(p => p.Contains("raid0", StringComparison.OrdinalIgnoreCase));
+
+            // lshw may not report LVM logical volumes at all. Fall back to reading
+            // /proc/mounts which always lists every active mount point.
+            if (string.IsNullOrEmpty(raidAccessPath) && this.Platform != PlatformID.Win32NT)
             {
-                IEnumerable<Disk> disks = await this.SystemManager.DiskManager.GetDisksAsync(cancellationToken)
+                try
+                {
+                    string procMounts = await this.SystemManager.FileSystem.File.ReadAllTextAsync("/proc/mounts", cancellationToken)
                         .ConfigureAwait(false);
 
-                if (disks?.Any() != true)
-                {
-                    throw new WorkloadException(
-                        "Unexpected scenario. The disks defined for the system could not be properly enumerated.",
-                        ErrorReason.WorkloadUnexpectedAnomaly);
-                }
-
-                IEnumerable<Disk> disksToTest = DiskFilters.FilterDisks(disks, this.DiskFilter, this.Platform).ToList();
-
-                if (disksToTest?.Any() != true)
-                {
-                    throw new WorkloadException(
-                        "Expected disks to test not found. Given the parameters defined for the profile action/step or those passed " +
-                        "in on the command line, the requisite disks do not exist on the system or could not be identified based on the properties " +
-                        "of the existing disks.",
-                        ErrorReason.DependencyNotFound);
-                }
-
-                foreach (Disk disk in disksToTest)
-                {
-                    string mysqlPath = this.Combine(disk.GetPreferredAccessPath(this.Platform), "mysql");
-                    
-                    // Create the directory if it doesn't exist
-                    if (!this.SystemManager.FileSystem.Directory.Exists(mysqlPath))
+                    foreach (string line in procMounts.Split('\n', StringSplitOptions.RemoveEmptyEntries))
                     {
-                        this.SystemManager.FileSystem.Directory.CreateDirectory(mysqlPath);
+                        string[] parts = line.Split(' ');
+                        if (parts.Length >= 2 && parts[1].Contains("raid0", StringComparison.OrdinalIgnoreCase))
+                        {
+                            raidAccessPath = parts[1];
+                            this.Logger.LogTraceMessage($"{this.TypeName}: Found raid0 mount from /proc/mounts: '{raidAccessPath}'.");
+                            break;
+                        }
                     }
-                    
-                    diskPaths += $"{mysqlPath};";
+                }
+                catch (Exception ex)
+                {
+                    this.Logger.LogTraceMessage($"{this.TypeName}: Could not read /proc/mounts: {ex.Message}");
                 }
             }
 
-            return diskPaths.TrimEnd(';');
+            string accessPath = raidAccessPath;
+
+            // Last resort: use the first filtered disk's preferred access path.
+            // GetPreferredAccessPath throws when the disk has no eligible volumes
+            // (e.g. a raw device consumed by LVM), so we catch and continue.
+            if (string.IsNullOrEmpty(accessPath))
+            {
+                try
+                {
+                    accessPath = filteredDisks.FirstOrDefault()?.GetPreferredAccessPath(this.Platform);
+                }
+                catch (Exception)
+                {
+                    // The disk may not have any eligible volumes.
+                }
+            }
+
+            if (raidAccessPath != null)
+            {
+                this.Logger.LogTraceMessage($"{this.TypeName}: Found raid0 access path '{raidAccessPath}'.");
+            }
+            else
+            {
+                this.Logger.LogTraceMessage($"{this.TypeName}: No raid0 access path found. Using fallback access path '{accessPath}'.");
+            }
+
+            if (string.IsNullOrEmpty(accessPath))
+            {
+                throw new DependencyException(
+                    "Expected disks not found. Given the parameters defined for the profile action/step or those passed " +
+                    "in on the command line, the requisite disks do not exist on the system or could not be identified based on the properties " +
+                    "of the existing disks.",
+                    ErrorReason.DependencyNotFound);
+            }
+
+            string mysqlPath = this.Combine(accessPath, "mysql");
+
+            if (!this.SystemManager.FileSystem.Directory.Exists(mysqlPath))
+            {
+                this.Logger.LogTraceMessage($"{this.TypeName}: Creating MySQL InnoDB directory '{mysqlPath}'.");
+                this.SystemManager.FileSystem.Directory.CreateDirectory(mysqlPath);
+            }
+
+            this.Logger.LogTraceMessage($"{this.TypeName}: MySQL InnoDB directory resolved to '{mysqlPath}'.");
+
+            return mysqlPath;
         }
         
         private async Task<string> GetMySQLInMemoryCapacityAsync(CancellationToken cancellationToken)

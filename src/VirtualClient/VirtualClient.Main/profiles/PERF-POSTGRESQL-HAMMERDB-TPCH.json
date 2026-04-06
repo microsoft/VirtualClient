@@ -12,7 +12,7 @@
         "Port": "5432",
         "Duration": "00:20:00",
         "VirtualUsers": "{calculate({LogicalCoreCount})}",
-        "ScaleFactor": "10",
+        "ScaleFactor": "1",
         "SharedMemoryBuffer": "{calculate({SystemMemoryMegabytes} * 85 / 100)}"
     },
     "Actions": [
@@ -49,20 +49,6 @@
     ],
     "Dependencies": [
         {
-            "Type": "FormatDisks",
-            "Parameters": {
-                "Scenario": "FormatDisks",
-                "Role": "Server"
-            }
-        },
-        {
-            "Type": "MountDisks",
-            "Parameters": {
-                "Scenario": "CreateMountPoints",
-                "Role": "Server"
-            }
-        },
-        {
             "Type": "LinuxPackageInstallation",
             "Parameters": {
                 "Scenario": "InstallLinuxPackages",
@@ -72,9 +58,29 @@
         {
             "Type": "DependencyPackageInstallation",
             "Parameters": {
+                "Scenario": "DownloadSystemConfigPackage",
+                "BlobContainer": "packages",
+                "BlobName": "system_config.1.1.0.zip",
+                "PackageName": "system_config",
+                "Extract": true,
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "StripeDisks",
+            "Parameters": {
+                "Scenario": "StripeAndMountDisks",
+                "PackageName": "system_config",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
                 "Scenario": "DownloadPostgreSQLPackage",
                 "BlobContainer": "packages",
-                "BlobName": "postgresql.14.0.0.rev3.zip",
+                "BlobName": "postgresql.14.0.0.rev4.zip",
                 "PackageName": "postgresql",
                 "Extract": true
             }

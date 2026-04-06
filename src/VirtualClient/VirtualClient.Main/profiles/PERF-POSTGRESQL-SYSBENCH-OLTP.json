@@ -152,16 +152,29 @@
     ],
     "Dependencies": [
         {
-            "Type": "FormatDisks",
+            "Type": "LinuxPackageInstallation",
             "Parameters": {
-                "Scenario": "FormatDisks",
+                "Scenario": "InstallLinuxPackages",
+                "Packages": "python3"
+            }
+        },
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "DownloadSystemConfigPackage",
+                "BlobContainer": "packages",
+                "BlobName": "system_config.1.1.0.zip",
+                "PackageName": "system_config",
+                "Extract": true,
                 "Role": "Server"
             }
         },
         {
-            "Type": "MountDisks",
+            "Type": "StripeDisks",
             "Parameters": {
-                "Scenario": "CreateMountPoints",
+                "Scenario": "StripeAndMountDisks",
+                "PackageName": "system_config",
+                "DiskFilter": "$.Parameters.DiskFilter",
                 "Role": "Server"
             }
         },
@@ -181,16 +194,9 @@
             "Parameters": {
                 "Scenario": "DownloadSysbenchPackage",
                 "BlobContainer": "packages",
-                "BlobName": "sysbench-1.0.20.rev3.zip",
+                "BlobName": "sysbench-1.0.20.rev5.zip",
                 "PackageName": "sysbench",
                 "Extract": true
-            }
-        },
-        {
-            "Type": "LinuxPackageInstallation",
-            "Parameters": {
-                "Scenario": "InstallLinuxPackages",
-                "Packages": "python3"
             }
         },
         {
@@ -224,31 +230,6 @@
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "Port": "$.Parameters.Port",
                 "SharedMemoryBuffer": "$.Parameters.SharedMemoryBuffer"
-            }
-        },
-        {
-            "Type": "SysbenchConfiguration",
-            "Parameters": {
-                "Scenario": "PreparePostgreSQLDatabase",
-                "Action": "CreateTables",
-                "DatabaseSystem": "PostgreSQL",
-                "Benchmark": "OLTP",
-                "DatabaseName": "$.Parameters.DatabaseName",
-                "DatabaseScenario": "$.Parameters.DatabaseScenario",
-                "PackageName": "sysbench",
-                "Role": "Server"
-            }
-        },
-        {
-            "Type": "PostgreSQLServerConfiguration",
-            "Parameters": {
-                "Scenario": "DistributePostgreSQLDatabase",
-                "Action": "DistributeDatabase",
-                "DatabaseName": "$.Parameters.DatabaseName",
-                "DiskFilter": "$.Parameters.DiskFilter",
-                "PackageName": "postgresql",
-                "Port": "$.Parameters.Port",
-                "Role": "Server"
             }
         },
         {
