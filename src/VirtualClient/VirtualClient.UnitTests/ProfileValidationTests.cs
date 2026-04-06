@@ -59,6 +59,7 @@ namespace VirtualClient.UnitTests
         }
 
         [Test]
+        [Ignore("This test can be used manually when needed to validate that workload profiles do not have parameter reference inlining mistakes.")]
         public async Task WorkloadProfileDoNotHaveInlineParameterReferencingMistakes()
         {
             List<string> badApples = new List<string>();

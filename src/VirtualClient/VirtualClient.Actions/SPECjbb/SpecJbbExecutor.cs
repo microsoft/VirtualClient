@@ -236,7 +236,7 @@ namespace VirtualClient.Actions
             return jbbArgument;
         }
 
-        private Task UploadGcLogAsync(IBlobManager blobManager, string gcLogPath, DateTime logTime, CancellationToken cancellationToken)
+        private async Task UploadGcLogAsync(IBlobManager blobManager, string gcLogPath, DateTime logTime, CancellationToken cancellationToken)
         {
             // Example Blob Store Structure:
             // /7dfae74c-06c0-49fc-ade6-987534bb5169/anyagentid/specjbb/2022-04-30T20:13:23.3768938Z-gc.log
@@ -252,8 +252,8 @@ namespace VirtualClient.Actions
                     null,
                     this.Roles?.FirstOrDefault()));
 
-            return this.UploadFileAsync(blobManager, this.fileSystem, descriptor, cancellationToken, deleteFile: true);
-
+            await this.UploadFileAsync(blobManager, this.fileSystem, descriptor, cancellationToken);
+            await this.fileSystem.File.DeleteAsync(gcLogPath);
         }
 
         private async Task ValidateProcessExitedAsync(int processId, TimeSpan timeout, CancellationToken cancellationToken)

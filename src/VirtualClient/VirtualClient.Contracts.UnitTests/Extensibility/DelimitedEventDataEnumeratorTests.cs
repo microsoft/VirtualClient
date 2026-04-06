@@ -77,6 +77,32 @@ namespace VirtualClient.Contracts.Extensibility
         }
 
         [Test]
+        public void DelimitedEventDataEnumeratorParsesExpectedEventsFromFilesInQuotedCsvFormat_Sdk_Scenario()
+        {
+            this.SetupTest(PlatformID.Unix);
+
+            // Scenario:
+            // This test is designed to evaluate parsing logic from an actual file produced by the 
+            // SDK (e.g. Export-EventCsv).
+
+            string csvContent = System.IO.File.ReadAllText(this.Combine(DelimitedEventDataEnumeratorTests.Examples, "csv_for_sdk.events"));
+            List<EventDataPoint> dataPoints = new List<EventDataPoint>();
+
+            Assert.DoesNotThrow(() =>
+            {
+                using (var enumerator = new DelimitedEventDataEnumerator(csvContent, DataFormat.Csv))
+                {
+                    while (enumerator.MoveNext())
+                    {
+                        dataPoints.Add(enumerator.Current);
+                    }
+                }
+            });
+
+            Assert.AreEqual(1, dataPoints.Count);
+        }
+
+        [Test]
         public void DelimitedEventDataEnumeratorParsesExpectedEventsFromFilesInJsonFormat()
         {
             this.SetupTest(PlatformID.Unix);

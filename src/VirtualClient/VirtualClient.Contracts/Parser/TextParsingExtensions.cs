@@ -133,7 +133,7 @@ namespace VirtualClient.Contracts
             // 3) Comma Delimited        (e.g. key1=value1,key2=value2)
 
             string[] delimitedKeyValuePairs = null;
-            string normalizedText = text.Trim(new char[] { '\'', '"' });
+            string normalizedText = text.Trim();
 
             if (TextParsingExtensions.TripleCommaDelimitedExpression.IsMatch(normalizedText))
             {

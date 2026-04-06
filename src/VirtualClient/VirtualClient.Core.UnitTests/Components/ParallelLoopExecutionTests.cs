@@ -1,15 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace VirtualClient.Contracts
+namespace VirtualClient
 {
-    using Microsoft.Extensions.DependencyInjection;
-    using Moq;
-    using NUnit.Framework;
     using System;
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.Extensions.DependencyInjection;
+    using NUnit.Framework;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
 
@@ -25,14 +24,15 @@ namespace VirtualClient.Contracts
             this.fixture = new MockFixture();
             this.fixture.Parameters = new Dictionary<string, IConvertible>
             {
-                { "Duration", "00:00:01" }, // Default duration for tests
-                { "MinimumIterations", 0 } // Default minimum iterations
+                { "Duration", "00:00:01" }, // Default duration of 1 second
+                { "MinimumIterations", 1 } // Default minimum iterations
             };
         }
 
         [Test]
         public async Task ParallelLoopExecution_RespectsDurationParameter()
         {
+            this.fixture.Parameters["Duration"] = "00:00:01"; // 1 second
             var component = new TestComponent(this.fixture.Dependencies, this.fixture.Parameters, async token =>
             {
                 await Task.Delay(5000, token); // Simulate long-running task
@@ -104,7 +104,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public void ParallelLoopExecution_ThrowsWorkloadException_WhenComponentThrows()
+        public void ParallelLoopExecutionHandlesExceptionsAsExpected()
         {
             var component = new TestComponent(this.fixture.Dependencies, this.fixture.Parameters, token =>
             {
@@ -114,10 +114,9 @@ namespace VirtualClient.Contracts
             var collection = new TestParallelLoopExecution(this.fixture);
             collection.Add(component);
 
-            var ex = Assert.ThrowsAsync<WorkloadException>(
-                () => collection.ExecuteAsync(EventContext.None, CancellationToken.None));
-            Assert.That(ex.Message, Does.Contain("task execution failed"));
-            Assert.IsInstanceOf<InvalidOperationException>(ex.InnerException);
+            var ex = Assert.ThrowsAsync<InvalidOperationException>(() => collection.ExecuteAsync(EventContext.None, CancellationToken.None));
+
+            Assert.That(ex.Message, Does.Contain("Test exception"));
         }
 
         private class TestComponent : VirtualClientComponent

@@ -267,7 +267,7 @@ namespace VirtualClient.Actions
             this.SetEnvironmentVariable(EnvironmentVariable.PATH, visualStudioCRuntimeDllPath, EnvironmentVariableTarget.Machine, append: true);
         }
 
-        private Task UploadSpecviewLogAsync(IBlobManager blobManager, string specviewLogPath, DateTime logTime, CancellationToken cancellationToken)
+        private async Task UploadSpecviewLogAsync(IBlobManager blobManager, string specviewLogPath, DateTime logTime, CancellationToken cancellationToken)
         {
             // Example Blob Store Structure:
             // 9ed58814-435b-4900-8eb2-af86393e0059/my-vc/specview/specviewperf/2023-10-11T22-07-41-73235Z-log.txt
@@ -282,7 +282,9 @@ namespace VirtualClient.Actions
                     this.Scenario,
                     null,
                     this.Roles?.FirstOrDefault()));
-            return this.UploadFileAsync(blobManager, this.fileSystem, descriptor, cancellationToken, deleteFile: false);
+
+            await this.UploadFileAsync(blobManager, this.fileSystem, descriptor, cancellationToken);
+            await this.fileSystem.File.DeleteAsync(specviewLogPath);
         }
     }
 }

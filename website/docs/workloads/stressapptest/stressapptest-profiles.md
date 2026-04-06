@@ -28,8 +28,11 @@ to the system if desired.
 
   | Parameter | Purpose | Acceptable Range | Default Value |
   |-----------|---------|------------------|---------------|
-  | TimeInSeconds | Time (in seconds) to run StressAppTest Memory Workload | >0 | 60 |
-  | UseCpuStressfulMemoryCopy | Switch to toggle StressAppTest built-in CPU Stressful Memory Copy option. If enabled (true), CPU Usage should increase | true/false | false |
+  | Duration | Time to run StressAppTest Memory Workload. Accepts seconds (e.g. 60) or TimeSpan (e.g. 00:01:00) | >0 | 60 seconds |
+  | UseCpuStressfulMemoryCopy | Switch to toggle StressAppTest built-in CPU Stressful Memory Copy option (-W flag). If enabled (true), CPU Usage should increase | true/false | false |
+  | MemoryInMB | Megabytes of RAM to test (-M flag). When not specified, stressapptest auto-detects (~94% of system memory) | >0 | not set (auto-detect) |
+  | ThreadCount | Number of memory copy threads to run (-m flag). When not specified, stressapptest defaults to 2 threads per CPU | >0 | not set (auto-detect) |
+  | CpuStressThreadCount | Number of CPU stress threads to run (-C flag). When not specified, no CPU stress threads are added | >=0 | not set (none) |
 
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
@@ -44,8 +47,11 @@ to the system if desired.
   ./VirtualClient --profile=PERF-MEM-STRESSAPPTEST.json --system=Demo --timeout=90 --packageStore="{BlobConnectionString|SAS Uri}"
 
   # Override the default parameters to run the workload for a longer period of time
-  ./VirtualClient --profile=PERF-MEM-STRESSAPPTEST.json --system=Demo --timeout=90 --packageStore="{BlobConnectionString|SAS Uri}" --parameters="TimeInSeconds=240"
+  ./VirtualClient --profile=PERF-MEM-STRESSAPPTEST.json --system=Demo --timeout=90 --packageStore="{BlobConnectionString|SAS Uri}" --parameters="Duration=240"
 
   # Override the default parameters to change the "torture settings" when running the workload.
-  ./VirtualClient --profile=PERF-MEM-STRESSAPPTEST.json --system=Demo --timeout=90 --packageStore="{BlobConnectionString|SAS Uri}" --parameters="TimeInSeconds=240,,,UseCpuStressfulMemoryCopy=true"
+  ./VirtualClient --profile=PERF-MEM-STRESSAPPTEST.json --system=Demo --timeout=90 --packageStore="{BlobConnectionString|SAS Uri}" --parameters="Duration=240,,,UseCpuStressfulMemoryCopy=true"
+
+  # Limit memory to 2048 MB with 8 memory threads and 4 CPU stress threads
+  ./VirtualClient --profile=PERF-MEM-STRESSAPPTEST.json --system=Demo --timeout=90 --packageStore="{BlobConnectionString|SAS Uri}" --parameters="Duration=240,,,MemoryInMB=2048,,,ThreadCount=8,,,CpuStressThreadCount=4"
   ```
