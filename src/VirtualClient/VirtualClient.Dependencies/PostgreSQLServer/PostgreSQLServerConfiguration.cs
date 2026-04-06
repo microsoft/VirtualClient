@@ -206,6 +206,13 @@ namespace VirtualClient.Dependencies
                 .SelectMany(v => v.AccessPaths)
                 .FirstOrDefault();
 
+            // lshw typically does not report LVM logical volumes (/dev/dm-*, /dev/mapper/*).
+            // Check /proc/mounts directly for any LVM-backed mount point as a fallback.
+            if (string.IsNullOrEmpty(accessPath) && this.Platform != PlatformID.Win32NT)
+            {
+                accessPath = await this.FindLvmMountPathAsync(cancellationToken).ConfigureAwait(false);
+            }
+
             // No logical volume found — fall back to the biggest non-OS physical disk.
             if (string.IsNullOrEmpty(accessPath))
             {
@@ -239,6 +246,37 @@ namespace VirtualClient.Dependencies
             }
 
             return directory;
+        }
+
+        /// <summary>
+        /// Reads /proc/mounts to find a mount point backed by an LVM device (/dev/mapper/* or /dev/dm-*).
+        /// Returns the mount path (e.g. /home/user/mnt_raid0) or null if none is found.
+        /// </summary>
+        private async Task<string> FindLvmMountPathAsync(CancellationToken cancellationToken)
+        {
+            try
+            {
+                string procMounts = await this.SystemManager.FileSystem.File.ReadAllTextAsync("/proc/mounts", cancellationToken)
+                    .ConfigureAwait(false);
+
+                foreach (string line in procMounts.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+                {
+                    string[] parts = line.Split(' ');
+                    if (parts.Length >= 2
+                        && (parts[0].StartsWith("/dev/mapper/", StringComparison.OrdinalIgnoreCase)
+                            || parts[0].StartsWith("/dev/dm-", StringComparison.OrdinalIgnoreCase)))
+                    {
+                        this.Logger.LogTraceMessage($"{this.TypeName}: Found LVM mount from /proc/mounts: device='{parts[0]}', path='{parts[1]}'.");
+                        return parts[1];
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                this.Logger.LogTraceMessage($"{this.TypeName}: Could not read /proc/mounts: {ex.Message}");
+            }
+
+            return null;
         }
 
         private async Task SetupPostgreSQLDatabaseAsync(EventContext telemetryContext, CancellationToken cancellationToken)
