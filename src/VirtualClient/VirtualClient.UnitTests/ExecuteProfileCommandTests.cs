@@ -8,17 +8,13 @@ namespace VirtualClient
     using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
-    using System.Net.Http;
-    using System.Net;
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
-    using Azure.Storage.Blobs;
     using Microsoft.Extensions.DependencyInjection;
     using Moq;
     using NUnit.Framework;
     using VirtualClient.Contracts;
-    using VirtualClient.TestExtensions;
 
     [TestFixture]
     [Category("Unit")]
@@ -374,7 +370,7 @@ namespace VirtualClient
         }
 
         [Test]
-        public async Task RunProfileCommandSupportsParametersOnListInProfileFirstConditionMatches()
+        public async Task RunProfileCommandSupportsParametersOnListInProfile_Scenario1_FirstConditionMatches()
         {
             // Create a new profile with ParametersOn list for testing
             string testWorkloadProfile3 = "TEST-WORKLOAD-PROFILE-3.json";
@@ -406,7 +402,7 @@ namespace VirtualClient
         }
 
         [Test]
-        public async Task RunProfileCommandSupportsParametersOnListInProfileSecondConditionMatches()
+        public async Task RunProfileCommandSupportsParametersOnListInProfile_Scenario2_SecondConditionMatches()
         {
             // Create a new profile with ParametersOn list for testing
             string testWorkloadProfile3 = "TEST-WORKLOAD-PROFILE-3.json";
@@ -438,7 +434,7 @@ namespace VirtualClient
         }
 
         [Test]
-        public async Task RunProfileCommandSupportsParametersOnListInProfileThirdConditionMatches()
+        public async Task RunProfileCommandSupportsParametersOnListInProfile_Scenario3_ThirdConditionMatches()
         {
             // Create a new profile with ParametersOn list for testing
             string testWorkloadProfile3 = "TEST-WORKLOAD-PROFILE-3.json";
@@ -448,6 +444,39 @@ namespace VirtualClient
 
             // User providing a parameter through command line to override the profile value
             this.command.Parameters.Add("Parameter2", "base4");
+
+            // Setup:
+            // Read the actual profile content from the local file system.
+            this.mockFixture.File
+                .Setup(file => file.ReadAllTextAsync(It.Is<string>(file => file.EndsWith(testWorkloadProfile3)), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(File.ReadAllText(this.mockFixture.Combine(ExecuteProfileCommandTests.ProfilesDirectory, testWorkloadProfile3)));
+
+            this.command.Profiles = new List<DependencyProfileReference>
+            {
+                new DependencyProfileReference("TEST-WORKLOAD-PROFILE-3.json")
+            };
+
+            IEnumerable<string> profilePaths = await this.command.EvaluateProfilesAsync(this.mockFixture.Dependencies);
+            ExecutionProfile profile = await this.command.InitializeProfilesAsync(profilePaths, this.mockFixture.Dependencies, CancellationToken.None);
+
+            Assert.IsFalse((bool)profile.Parameters["Parameter1"]);
+            Assert.AreEqual("base4", profile.Parameters["Parameter2"].ToString());
+            Assert.AreEqual("conditional4", profile.Parameters["Parameter3"].ToString());
+            Assert.AreEqual("conditionalA", profile.Parameters["Parameter4"].ToString());
+        }
+
+        [Test]
+        public async Task RunProfileCommandSupportsParametersOnListInProfile_Scenario4_Precalculations()
+        {
+            // Create a new profile with ParametersOn list for testing
+            string testWorkloadProfile3 = "TEST-WORKLOAD-PROFILE-3.json";
+            List<string> profiles = new List<string> { this.mockFixture.GetProfilesPath(testWorkloadProfile3) };
+
+            this.command.Parameters = new Dictionary<string, IConvertible>();
+
+            // The profile parameters contain calculations that must be resolved before
+            // conditional comparisons.
+            this.command.Parameters.Add("Parameter2", "{calculate({LogicalCoreCount} > 0 ? \"base4\" : \"base3\")}");
 
             // Setup:
             // Read the actual profile content from the local file system.

@@ -20,8 +20,9 @@ namespace VirtualClient
     /// package installed.
     /// </summary>
     [SupportedPlatforms("linux-arm64,linux-x64,win-arm64,win-x64")]
-    public class ExecuteCommand : VirtualClientComponent
+    public partial class ExecuteCommand : VirtualClientComponent
     {
+        internal const string FeatureFlagShellSupport = "ShellSupport";
         private static readonly char[] Quotes = new char[] { '"', '\'' };
         private ProcessManager processManager;
 
@@ -98,6 +99,11 @@ namespace VirtualClient
             {
                 return this.Parameters.GetValue<bool>(nameof(this.UseShell), false);
             }
+
+            private set
+            {
+                this.Parameters[nameof(this.UseShell)] = value;
+            }
         }
 
         /// <summary>
@@ -123,52 +129,65 @@ namespace VirtualClient
             telemetryContext.AddContext("workingDirectory", SensitiveData.ObscureSecrets(this.WorkingDirectory));
             telemetryContext.AddContext("platforms", string.Join(VirtualClientComponent.CommonDelimiters.First(), this.SupportedPlatforms));
 
-            if (!cancellationToken.IsCancellationRequested)
+            if (this.UseShell || this.HasFeatureFlag(ExecuteCommand.FeatureFlagShellSupport))
             {
-                IEnumerable<string> commandsToExecute = this.GetCommandsToExecute();
-
-                if (commandsToExecute?.Any() == true)
+                await this.ExecuteWithShellSupportAsync(telemetryContext, cancellationToken);
+            }
+            else
+            {
+                if (!cancellationToken.IsCancellationRequested)
                 {
-                    IDictionary<string, IConvertible> environmentVariables = this.EnvironmentVariables;
-                    foreach (string originalCommand in commandsToExecute)
+                    IEnumerable<string> commandsToExecute = this.GetCommandsToExecute();
+
+                    if (commandsToExecute?.Any() == true)
                     {
-                        if (!cancellationToken.IsCancellationRequested)
+                        IDictionary<string, IConvertible> environmentVariables = this.EnvironmentVariables;
+                        foreach (string originalCommand in commandsToExecute)
                         {
-                            if (PlatformSpecifics.TryGetCommandParts(originalCommand, out string effectiveCommand, out string effectiveCommandArguments))
+                            if (!cancellationToken.IsCancellationRequested)
                             {
-                                await (this.RetryPolicy ?? Policy.NoOpAsync()).ExecuteAsync(async () =>
+                                if (PlatformSpecifics.TryGetCommandParts(originalCommand, out string effectiveCommand, out string effectiveCommandArguments))
                                 {
-                                    // There appears to be an unfortunate implementation choice in .NET causing a Win32Exception similar to the following when
-                                    // referencing a binary and setting the working directory.
-                                    //
-                                    // System.ComponentModel.Win32Exception:
-                                    // 'An error occurred trying to start process 'Coreinfo64.exe' with working directory 'S:\microsoft\virtualclient\out\bin\Debug\AnyCPU\VirtualClient.Main\net9.0\packages\system_tools\win-x64'.
-                                    // The system cannot find the file specified.
-                                    //
-                                    // The .NET Process class does not reference the 'WorkingDirectory' when looking for the 'FileName' when UseShellExecute = false. The workaround
-                                    // for this is to add the working directory to the PATH environment variable.
-                                    string effectiveWorkingDirectory = this.WorkingDirectory;
-                                    if (!string.IsNullOrWhiteSpace(effectiveWorkingDirectory))
+                                    await (this.RetryPolicy ?? Policy.NoOpAsync()).ExecuteAsync(async () =>
                                     {
-                                        this.PlatformSpecifics.SetEnvironmentVariable(
-                                            EnvironmentVariable.PATH,
-                                            effectiveWorkingDirectory,
-                                            EnvironmentVariableTarget.Process,
-                                            append: true);
-                                    }
-
-                                    using (IProcessProxy process = this.processManager.CreateProcess(effectiveCommand, effectiveCommandArguments, effectiveWorkingDirectory))
-                                    {
-                                        this.AddEnvironmentVariables(process, environmentVariables);
-                                        await process.StartAndWaitAsync(cancellationToken);
-
-                                        if (!cancellationToken.IsCancellationRequested)
+                                        // There appears to be an unfortunate implementation choice in .NET causing a Win32Exception similar to the following when
+                                        // referencing a binary and setting the working directory.
+                                        //
+                                        // System.ComponentModel.Win32Exception:
+                                        // 'An error occurred trying to start process 'Coreinfo64.exe' with working directory 'S:\microsoft\virtualclient\out\bin\Debug\AnyCPU\VirtualClient.Main\net9.0\packages\system_tools\win-x64'.
+                                        // The system cannot find the file specified.
+                                        //
+                                        // The .NET Process class does not reference the 'WorkingDirectory' when looking for the 'FileName' when UseShellExecute = false. The workaround
+                                        // for this is to add the working directory to the PATH environment variable.
+                                        string effectiveWorkingDirectory = this.WorkingDirectory;
+                                        if (!string.IsNullOrWhiteSpace(effectiveWorkingDirectory))
                                         {
-                                            await this.LogProcessDetailsAsync(process, telemetryContext, logFileName: this.LogFileName);
-                                            process.ThrowIfComponentOperationFailed(this.ComponentType);
+                                            this.PlatformSpecifics.SetEnvironmentVariable(
+                                                EnvironmentVariable.PATH,
+                                                effectiveWorkingDirectory,
+                                                EnvironmentVariableTarget.Process,
+                                                append: true);
                                         }
-                                    }
-                                });
+
+                                        using (IProcessProxy process = this.processManager.CreateProcess(effectiveCommand, effectiveCommandArguments, effectiveWorkingDirectory))
+                                        {
+                                            this.AddEnvironmentVariables(process, environmentVariables);
+                                            await process.StartAndWaitAsync(cancellationToken);
+
+                                            if (!cancellationToken.IsCancellationRequested)
+                                            {
+                                                string logFolder = this.LogFolderName;
+                                                if (string.IsNullOrWhiteSpace(logFolder) && PlatformSpecifics.TryGetCommandName(originalCommand, out string commandName))
+                                                {
+                                                    logFolder = commandName;
+                                                }
+
+                                                await this.LogProcessDetailsAsync(process, telemetryContext, toolName: logFolder, logFileName: this.LogFileName);
+                                                process.ThrowIfComponentOperationFailed(this.ComponentType);
+                                            }
+                                        }
+                                    });
+                                }
                             }
                         }
                     }
@@ -212,9 +231,12 @@ namespace VirtualClient
                     string variableName = entry.Key.Trim();
                     string variableValue = entry.Value?.ToString().Trim();
 
-                    if (string.IsNullOrWhiteSpace(variableValue) && process.EnvironmentVariables.ContainsKey(variableName))
+                    if (string.IsNullOrWhiteSpace(variableValue))
                     {
-                        process.EnvironmentVariables.Remove(variableName);
+                        if (process.EnvironmentVariables.ContainsKey(variableName))
+                        {
+                            process.EnvironmentVariables.Remove(variableName);
+                        }
                     }
                     else if (variableValue.StartsWith("+"))
                     {
@@ -230,31 +252,10 @@ namespace VirtualClient
 
         private IEnumerable<string> GetCommandsToExecute()
         {
-            if (this.UseShell)
-            {
-                // When using a shell (e.g. bash, cmd), the entire command is passed to the shell as a single
-                // process and the shell handles any chaining (e.g. &&).
-                string targetCommand = this.Command;
-                switch (this.Platform)
-                {
-                    case PlatformID.Unix:
-                        targetCommand = $"bash -c \"{targetCommand.Trim(ExecuteCommand.Quotes)}\"";
-                        break;
-
-                    case PlatformID.Win32NT:
-                        targetCommand = $"cmd /C \"{targetCommand.Trim(ExecuteCommand.Quotes)}\"";
-                        break;
-                }
-
-                return new List<string> { targetCommand };
-            }
-
-            // When not using a shell, split on '&&' and execute each command sequentially as separate processes.
-            // The split is quote-aware: '&&' inside single or double quotes is not treated as a delimiter.
             List<string> commandsToExecute = new List<string>();
             bool sudo = this.Command.StartsWith("sudo", StringComparison.OrdinalIgnoreCase);
 
-            IEnumerable<string> commands = ExecuteCommand.SplitOnChainOperator(this.Command);
+            IEnumerable<string> commands = this.Command.Split("&&", StringSplitOptions.RemoveEmptyEntries)?.Select(cmd => cmd.Trim());
 
             foreach (string fullCommand in commands)
             {
@@ -269,49 +270,6 @@ namespace VirtualClient
             }
 
             return commandsToExecute;
-        }
-
-        private static IEnumerable<string> SplitOnChainOperator(string command)
-        {
-            List<string> parts = new List<string>();
-            char? quoteChar = null;
-            int segmentStart = 0;
-
-            for (int i = 0; i < command.Length; i++)
-            {
-                char c = command[i];
-
-                if (quoteChar != null)
-                {
-                    if (c == quoteChar)
-                    {
-                        quoteChar = null;
-                    }
-                }
-                else if (c == '"' || c == '\'')
-                {
-                    quoteChar = c;
-                }
-                else if (c == '&' && i + 1 < command.Length && command[i + 1] == '&')
-                {
-                    string segment = command.Substring(segmentStart, i - segmentStart).Trim();
-                    if (segment.Length > 0)
-                    {
-                        parts.Add(segment);
-                    }
-
-                    i++;
-                    segmentStart = i + 1;
-                }
-            }
-
-            string lastSegment = command.Substring(segmentStart).Trim();
-            if (lastSegment.Length > 0)
-            {
-                parts.Add(lastSegment);
-            }
-
-            return parts;
         }
     }
 }

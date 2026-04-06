@@ -47,7 +47,7 @@
       "Parameters": {
         "Scenario": "InstallBlenderBenchmarkCliPackage",
         "BlobContainer": "packages",
-        "BlobName": "blenderbenchmarkcli-3.1.0.zip",
+        "BlobName": "blenderbenchmarkcli-3.3.0.zip",
         "PackageName": "blenderbenchmark",
         "Extract": true
       }
