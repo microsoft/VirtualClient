@@ -46,8 +46,24 @@ namespace VirtualClient.Dependencies.MySqlServer
 
             this.fixture.Directory.Setup(d => d.Exists(It.IsAny<string>())).Returns(true);
 
-            IEnumerable<Disk> disks;
-            disks = this.fixture.CreateDisks(PlatformID.Unix, true);
+            // Simulate the LVM striped volume that StripeDisks creates, with a raid0 access path.
+            Disk stripedDisk = new Disk(
+                4,
+                "/dev/dm-0",
+                new List<DiskVolume>
+                {
+                    new DiskVolume(
+                        0,
+                        "/dev/dm-0",
+                        new List<string> { "/home/user/mnt_raid0" },
+                        properties: new Dictionary<string, IConvertible>
+                        {
+                            { "size", "1234567890123" }
+                        })
+                });
+
+            List<Disk> disks = new List<Disk>(this.fixture.CreateDisks(PlatformID.Unix, true));
+            disks.Add(stripedDisk);
             this.fixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>())).ReturnsAsync(() => disks);
         }
 
@@ -58,7 +74,7 @@ namespace VirtualClient.Dependencies.MySqlServer
 
             string[] expectedCommands =
             {
-                $"python3 {this.packagePath}/configure.py --serverIp 1.2.3.4 --innoDbDirs \"/home/user/mnt_dev_sdc1/mysql\"",
+                $"python3 {this.packagePath}/configure.py --serverIp 1.2.3.4 --innoDbDirs \"/home/user/mnt_raid0/mysql\"",
             };
 
             int commandNumber = 0;
@@ -115,7 +131,7 @@ namespace VirtualClient.Dependencies.MySqlServer
 
             string[] expectedCommands =
             {
-                $"python3 {this.packagePath}/configure.py --serverIp 1.2.3.4 --innoDbDirs \"/home/user/mnt_dev_sdc1/mysql\" " +
+                $"python3 {this.packagePath}/configure.py --serverIp 1.2.3.4 --innoDbDirs \"/home/user/mnt_raid0/mysql\" " +
                     $"--inMemory 8192",
             };
 

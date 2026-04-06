@@ -73,7 +73,7 @@ namespace VirtualClient.Dependencies
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(this.DiskFilter), "osdisk:false&sizegreaterthan:256g");
+                return this.Parameters.GetValue<string>(nameof(this.DiskFilter), "Logical");
             }
         }
 
@@ -201,49 +201,20 @@ namespace VirtualClient.Dependencies
 
             IEnumerable<Disk> filteredDisks = DiskFilters.FilterDisks(disks, this.DiskFilter, this.Platform);
 
-            // Search ALL disks for a raid0 mount point. After StripeDisks creates an LVM
-            // striped volume from the filtered physical disks, the mount point appears on
-            // the logical volume device, which is a separate disk entry from the originals.
-            string raidAccessPath = disks
+            string accessPath = filteredDisks
                 .SelectMany(d => d.Volumes)
                 .SelectMany(v => v.AccessPaths)
-                .FirstOrDefault(p => p.Contains("raid0", StringComparison.OrdinalIgnoreCase));
+                .FirstOrDefault();
 
-            // lshw may not report LVM logical volumes at all. Fall back to reading
-            // /proc/mounts which always lists every active mount point.
-            if (string.IsNullOrEmpty(raidAccessPath) && this.Platform != PlatformID.Win32NT)
-            {
-                try
-                {
-                    string procMounts = await this.SystemManager.FileSystem.File.ReadAllTextAsync("/proc/mounts", cancellationToken)
-                        .ConfigureAwait(false);
-
-                    foreach (string line in procMounts.Split('\n', StringSplitOptions.RemoveEmptyEntries))
-                    {
-                        string[] parts = line.Split(' ');
-                        if (parts.Length >= 2 && parts[1].Contains("raid0", StringComparison.OrdinalIgnoreCase))
-                        {
-                            raidAccessPath = parts[1];
-                            break;
-                        }
-                    }
-                }
-                catch (Exception)
-                {
-                    // /proc/mounts may not be available.
-                }
-            }
-
-            string accessPath = raidAccessPath;
-
-            // Last resort: use the first filtered disk's preferred access path.
-            // GetPreferredAccessPath throws when the disk has no eligible volumes
-            // (e.g. a raw device consumed by LVM), so we catch and continue.
+            // No logical volume found — fall back to the biggest non-OS physical disk.
             if (string.IsNullOrEmpty(accessPath))
             {
+                const string physicalDiskFilter = "OsDisk:false&BiggestSize";
+                IEnumerable<Disk> physicalDisks = DiskFilters.FilterDisks(disks, physicalDiskFilter, this.Platform);
+
                 try
                 {
-                    accessPath = filteredDisks.FirstOrDefault()?.GetPreferredAccessPath(this.Platform);
+                    accessPath = physicalDisks.FirstOrDefault()?.GetPreferredAccessPath(this.Platform);
                 }
                 catch (Exception)
                 {

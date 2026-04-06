@@ -70,7 +70,7 @@ namespace VirtualClient.Dependencies.MySqlServer
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(this.DiskFilter), "osdisk:false&sizegreaterthan:256g");
+                return this.Parameters.GetValue<string>(nameof(this.DiskFilter), "Logical");
             }
         }
 
@@ -238,64 +238,27 @@ namespace VirtualClient.Dependencies.MySqlServer
 
             this.Logger.LogTraceMessage($"{this.TypeName}: Total disks discovered: {disks.Count()}. Disks after filtering ('{this.DiskFilter}'): {filteredDisks.Count()}.");
 
-            // Search ALL disks for a raid0 mount point. After StripeDisks creates an LVM
-            // striped volume from the filtered physical disks, the mount point appears on
-            // the logical volume device, which is a separate disk entry from the originals.
-            string raidAccessPath = disks
+            string accessPath = filteredDisks
                 .SelectMany(d => d.Volumes)
                 .SelectMany(v => v.AccessPaths)
-                .FirstOrDefault(p => p.Contains("raid0", StringComparison.OrdinalIgnoreCase));
+                .FirstOrDefault();
 
-            // lshw may not report LVM logical volumes at all. Fall back to reading
-            // /proc/mounts which always lists every active mount point.
-            if (string.IsNullOrEmpty(raidAccessPath) && this.Platform != PlatformID.Win32NT)
-            {
-                try
-                {
-                    string procMounts = await this.SystemManager.FileSystem.File.ReadAllTextAsync("/proc/mounts", cancellationToken)
-                        .ConfigureAwait(false);
-
-                    foreach (string line in procMounts.Split('\n', StringSplitOptions.RemoveEmptyEntries))
-                    {
-                        string[] parts = line.Split(' ');
-                        if (parts.Length >= 2 && parts[1].Contains("raid0", StringComparison.OrdinalIgnoreCase))
-                        {
-                            raidAccessPath = parts[1];
-                            this.Logger.LogTraceMessage($"{this.TypeName}: Found raid0 mount from /proc/mounts: '{raidAccessPath}'.");
-                            break;
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    this.Logger.LogTraceMessage($"{this.TypeName}: Could not read /proc/mounts: {ex.Message}");
-                }
-            }
-
-            string accessPath = raidAccessPath;
-
-            // Last resort: use the first filtered disk's preferred access path.
-            // GetPreferredAccessPath throws when the disk has no eligible volumes
-            // (e.g. a raw device consumed by LVM), so we catch and continue.
+            // No logical volume found — fall back to the biggest non-OS physical disk.
             if (string.IsNullOrEmpty(accessPath))
             {
+                const string physicalDiskFilter = "OsDisk:false&BiggestSize";
+                IEnumerable<Disk> physicalDisks = DiskFilters.FilterDisks(disks, physicalDiskFilter, this.Platform);
+
+                this.Logger.LogTraceMessage($"{this.TypeName}: No logical volume found. Falling back to physical disk filter ('{physicalDiskFilter}'): {physicalDisks.Count()} disk(s).");
+
                 try
                 {
-                    accessPath = filteredDisks.FirstOrDefault()?.GetPreferredAccessPath(this.Platform);
+                    accessPath = physicalDisks.FirstOrDefault()?.GetPreferredAccessPath(this.Platform);
                 }
                 catch (Exception)
                 {
                     // The disk may not have any eligible volumes.
                 }
-            }
-
-            if (raidAccessPath != null)
-            {
-                this.Logger.LogTraceMessage($"{this.TypeName}: Found raid0 access path '{raidAccessPath}'.");
-            }
-            else
-            {
-                this.Logger.LogTraceMessage($"{this.TypeName}: No raid0 access path found. Using fallback access path '{accessPath}'.");
             }
 
             if (string.IsNullOrEmpty(accessPath))

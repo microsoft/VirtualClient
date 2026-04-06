@@ -49,8 +49,24 @@ namespace VirtualClient.Dependencies
             this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPackage);
             this.packagePath = this.mockFixture.ToPlatformSpecificPath(this.mockPackage, platform, architecture).Path;
 
-            IEnumerable<Disk> disks;
-            disks = this.mockFixture.CreateDisks(platform, true);
+            // Simulate the LVM striped volume that StripeDisks creates, with a raid0 access path.
+            Disk stripedDisk = new Disk(
+                4,
+                "/dev/dm-0",
+                new List<DiskVolume>
+                {
+                    new DiskVolume(
+                        0,
+                        "/dev/dm-0",
+                        new List<string> { "/home/user/mnt_raid0" },
+                        properties: new Dictionary<string, IConvertible>
+                        {
+                            { "size", "1234567890123" }
+                        })
+                });
+
+            List<Disk> disks = new List<Disk>(this.mockFixture.CreateDisks(platform, true));
+            disks.Add(stripedDisk);
             this.mockFixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>())).ReturnsAsync(() => disks);
         }
 
