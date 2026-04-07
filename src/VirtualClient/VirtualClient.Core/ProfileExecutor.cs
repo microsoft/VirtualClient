@@ -16,6 +16,7 @@ namespace VirtualClient
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts.Extensions;
     using VirtualClient.Contracts.Metadata;
+    using VirtualClient.Logging;
 
     /// <summary>
     /// This is the main class that will take an execution profile and execute it
@@ -31,13 +32,10 @@ namespace VirtualClient
         /// </summary>
         /// <param name="profile">The profile to execute.</param>
         /// <param name="dependencies">Shared platform dependencies to pass along to individual components in the profile.</param>
+        /// <param name="settings">Settings to apply to each individual component and the flow of the profile execution.</param>
         /// <param name="scenarios">A specific set of profile scenarios to execute or to exclude.</param>
         /// <param name="logger">A logger to use for capturing telemetry.</param>
-        public ProfileExecutor(
-            ExecutionProfile profile, 
-            IServiceCollection dependencies, 
-            IEnumerable<string> scenarios = null, 
-            ILogger logger = null)
+        public ProfileExecutor(ExecutionProfile profile, IServiceCollection dependencies, ComponentSettings settings = null, IEnumerable<string> scenarios = null, ILogger logger = null)
         {
             profile.ThrowIfNull(nameof(profile));
             dependencies.ThrowIfNull(nameof(dependencies));
@@ -45,12 +43,13 @@ namespace VirtualClient
             this.Profile = profile;
             this.Dependencies = dependencies;
             this.Scenarios = scenarios;
+            this.Settings = settings ?? new ComponentSettings();
             this.ExecuteActions = true;
             this.ExecuteMonitors = true;
             this.ExecuteDependencies = true;
-            this.ExitWait = TimeSpan.FromSeconds(10);
-            this.RandomizationSeed = 777;
             this.Logger = logger ?? NullLogger.Instance;
+            this.ExitWait = this.Settings.ExitWait ?? TimeSpan.FromMinutes(10);
+            this.FailFast = this.Settings.FailFast ?? false;
 
             this.metadataContract = new MetadataContract();
             this.ExecutionMinimumInterval = profile.MinimumExecutionInterval;
@@ -131,13 +130,13 @@ namespace VirtualClient
         /// Defines an explicit time for which the application will wait before exiting. This is correlated with
         /// the exit/flush wait supplied by the user on the command line.
         /// </summary>
-        public TimeSpan ExitWait { get; set; }
+        public TimeSpan ExitWait { get; }
 
         /// <summary>
         /// True if VC should exit/crash on first/any error(s) regardless of 
         /// their severity. Default = false.
         /// </summary>
-        public bool? FailFast { get; set; }
+        public bool FailFast { get; }
 
         /// <summary>
         /// Logs things to various sources
@@ -145,25 +144,20 @@ namespace VirtualClient
         public ILogger Logger { get; }
 
         /// <summary>
-        /// True if VC should log output to file.
-        /// </summary>
-        public bool? LogToFile { get; set; }
-
-        /// <summary>
         /// The profile to execute.
         /// </summary>
         public ExecutionProfile Profile { get; }
-
-        /// <summary>
-        /// A seed to use with profile actions to ensure consistency.
-        /// </summary>
-        public int RandomizationSeed { get; set; }
 
         /// <summary>
         /// A set of scenarios to execute from the workload profile (vs. the entire
         /// profile).
         /// </summary>
         public IEnumerable<string> Scenarios { get; }
+
+        /// <summary>
+        /// Settings to apply to individual component operations.
+        /// </summary>
+        public ComponentSettings Settings { get; }
 
         /// <summary>
         /// The set of actions to execute as defined in the profile.
@@ -385,93 +379,92 @@ namespace VirtualClient
                                 actionExecutionContext.AddContext("iterationNextExecutionTime", nextRoundOfExecution);
                             }
 
-                            await this.Logger.LogMessageAsync($"{nameof(ProfileExecutor)}.ExecuteActions", LogLevel.Debug, actionExecutionContext, async () =>
+                            this.Logger.LogMessage($"{nameof(ProfileExecutor)}.ExecuteActions", LogLevel.Debug, actionExecutionContext);
+
+                            // When we have one of the actions fail, we do not want to reset the workflow. We will move
+                            // forward with the next action.
+                            for (int i = 0; i < this.ProfileActions.Count(); i++)
                             {
-                                // When we have one of the actions fail, we do not want to reset the workflow. We will move
-                                // forward with the next action.
-                                for (int i = 0; i < this.ProfileActions.Count(); i++)
+                                // Note:
+                                // Any component can request a system reboot. The system reboot itself is handled just before the Virtual Client
+                                // application itself exits to ensure all telemetry is captured before reboot.
+                                if (VirtualClientRuntime.IsRebootRequested)
                                 {
-                                    // Note:
-                                    // Any component can request a system reboot. The system reboot itself is handled just before the Virtual Client
-                                    // application itself exits to ensure all telemetry is captured before reboot.
-                                    if (VirtualClientRuntime.IsRebootRequested)
+                                    break;
+                                }
+
+                                if (timing.IsTimedOut)
+                                {
+                                    break;
+                                }
+
+                                if (!isFirstAction && nextRoundOfExecution != null)
+                                {
+                                    while (!timing.IsTimedOut && DateTime.UtcNow < nextRoundOfExecution)
                                     {
-                                        break;
+                                        await Task.Delay(TimeSpan.FromMilliseconds(500), cancellationToken)
+                                            .ConfigureAwait(false);
                                     }
+                                }
 
-                                    if (timing.IsTimedOut)
+                                isFirstAction = false;
+
+                                if (!cancellationToken.IsCancellationRequested)
+                                {
+                                    VirtualClientComponent action = null;
+
+                                    try
                                     {
-                                        break;
-                                    }
+                                        // The context persisted here will be picked up by the individual component. This allows
+                                        // the telemetry for each round of execution of components to be correlated together while
+                                        // also being correlated with each round of profile actions processing.
+                                        EventContext.Persist(Guid.NewGuid(), actionExecutionContext.ActivityId);
 
-                                    if (!isFirstAction && nextRoundOfExecution != null)
-                                    {
-                                        while (!timing.IsTimedOut && DateTime.UtcNow < nextRoundOfExecution)
-                                        {
-                                            await Task.Delay(TimeSpan.FromMilliseconds(500), cancellationToken)
-                                                .ConfigureAwait(false);
-                                        }
-                                    }
+                                        action = this.ProfileActions.ElementAt(i);
+                                        action.Parameters[nameof(VirtualClientComponent.ProfileIteration)] = currentIteration;
+                                        action.Parameters[nameof(VirtualClientComponent.ProfileIterationStartTime)] = startTime;
 
-                                    isFirstAction = false;
-
-                                    if (!cancellationToken.IsCancellationRequested)
-                                    {
-                                        VirtualClientComponent action = null;
+                                        this.ActionBegin?.Invoke(this, new ComponentEventArgs(action));
 
                                         try
                                         {
-                                            // The context persisted here will be picked up by the individual component. This allows
-                                            // the telemetry for each round of execution of components to be correlated together while
-                                            // also being correlated with each round of profile actions processing.
-                                            EventContext.Persist(Guid.NewGuid(), actionExecutionContext.ActivityId);
-
-                                            action = this.ProfileActions.ElementAt(i);
-                                            action.Parameters[nameof(VirtualClientComponent.ProfileIteration)] = currentIteration;
-                                            action.Parameters[nameof(VirtualClientComponent.ProfileIterationStartTime)] = startTime;
-                                            
-                                            this.ActionBegin?.Invoke(this, new ComponentEventArgs(action));
-
-                                            try
-                                            {
-                                                ProfileExecutor.OutputComponentStart("Action", action);
-                                                await action.ExecuteAsync(cancellationToken).ConfigureAwait(false);
-                                            }
-                                            finally
-                                            {
-                                                this.ActionEnd?.Invoke(this, new ComponentEventArgs(action));
-                                            }
+                                            action.OutputComponentStart();
+                                            await action.ExecuteAsync(cancellationToken).ConfigureAwait(false);
                                         }
-                                        catch (VirtualClientException exc) when ((int)exc.Reason >= 500 || this.FailFast.Value || action?.FailFast == true)
+                                        finally
                                         {
-                                            // Error reasons have numeric/integer values that indicate their severity. Error reasons
-                                            // with a value >= 500 are terminal situations where the workload cannot run successfully
-                                            // regardless of how many times we attempt it.
-                                            throw;
-                                        }
-                                        catch (VirtualClientException)
-                                        {
-                                            // Exceptions with error reasons < 500 are potentially transient issues. We do not want to 
-                                            // cause VC to exit in these cases but to give it a chance to retry the logic that failed on
-                                            // subsequent rounds of processing.
-                                            //
-                                            // Exceptions having error reasons with a value between 400 - 499 are serious errors but they represent
-                                            // issues that may be transient and that can be resolve after a period of time. When
-                                            // we catch these type of errors, we may want to reset and start over in the test workflow.
-                                        }
-                                        catch (MissingMemberException exc)
-                                        {
-                                            throw new DependencyException(
-                                                "Assembly/.dll mismatch. This can occur when an extensions assembly exists in the application directory that was compiled " +
-                                                "against a version of the Virtual Client that has breaking changes. Verify the version of the extensions assemblies in the " +
-                                                "application directory can be used with the current application version. Valid extensions assemblies typically have the same " +
-                                                "major version as the application.",
-                                                exc,
-                                                ErrorReason.ExtensionAssemblyInvalid);
+                                            this.ActionEnd?.Invoke(this, new ComponentEventArgs(action));
                                         }
                                     }
+                                    catch (VirtualClientException exc) when ((int)exc.Reason >= 500 || this.FailFast || action?.FailFast == true)
+                                    {
+                                        // Error reasons have numeric/integer values that indicate their severity. Error reasons
+                                        // with a value >= 500 are terminal situations where the workload cannot run successfully
+                                        // regardless of how many times we attempt it.
+                                        throw;
+                                    }
+                                    catch (VirtualClientException)
+                                    {
+                                        // Exceptions with error reasons < 500 are potentially transient issues. We do not want to 
+                                        // cause VC to exit in these cases but to give it a chance to retry the logic that failed on
+                                        // subsequent rounds of processing.
+                                        //
+                                        // Exceptions having error reasons with a value between 400 - 499 are serious errors but they represent
+                                        // issues that may be transient and that can be resolve after a period of time. When
+                                        // we catch these type of errors, we may want to reset and start over in the test workflow.
+                                    }
+                                    catch (MissingMemberException exc)
+                                    {
+                                        throw new DependencyException(
+                                            "Assembly/.dll mismatch. This can occur when an extensions assembly exists in the application directory that was compiled " +
+                                            "against a version of the Virtual Client that has breaking changes. Verify the version of the extensions assemblies in the " +
+                                            "application directory can be used with the current application version. Valid extensions assemblies typically have the same " +
+                                            "major version as the application.",
+                                            exc,
+                                            ErrorReason.ExtensionAssemblyInvalid);
+                                    }
                                 }
-                            }).ConfigureAwait(false);
+                            }
                         }
                         finally
                         {
@@ -485,11 +478,11 @@ namespace VirtualClient
         /// <summary>
         /// Executes monitors defined in the profile.
         /// </summary>
-        protected Task ExecuteMonitorsAsync(EventContext parentContext, CancellationToken cancellationToken)
+        protected async Task ExecuteMonitorsAsync(EventContext parentContext, CancellationToken cancellationToken)
         {
             if (!this.ExecuteMonitors || this.ProfileMonitors?.Any() != true)
             {
-                return Task.CompletedTask;
+                return;
             }
 
             List<Task> monitoringTasks = new List<Task>();
@@ -502,59 +495,71 @@ namespace VirtualClient
                     parameters = d.Parameters?.ObscureSecrets()
                 }));
 
-            return this.Logger.LogMessageAsync($"{nameof(ProfileExecutor)}.ExecuteMonitors", LogLevel.Debug, monitorExecutionContext, async () =>
+            this.Logger.LogMessage($"{nameof(ProfileExecutor)}.ExecuteMonitors", LogLevel.Debug, monitorExecutionContext);
+
+            foreach (VirtualClientComponent monitor in this.ProfileMonitors)
             {
-                foreach (VirtualClientComponent monitor in this.ProfileMonitors)
+                try
                 {
-                    try
+                    // Note:
+                    // Any component can request a system reboot. The system reboot itself is handled just before the Virtual Client
+                    // application itself exits to ensure all telemetry is captured before reboot.
+                    if (VirtualClientRuntime.IsRebootRequested)
                     {
-                        // Note:
-                        // Any component can request a system reboot. The system reboot itself is handled just before the Virtual Client
-                        // application itself exits to ensure all telemetry is captured before reboot.
-                        if (VirtualClientRuntime.IsRebootRequested)
-                        {
-                            break;
-                        }
+                        break;
+                    }
 
-                        // The context persisted here will be picked up by the individual component. This allows
-                        // the telemetry for each round of execution of components to be correlated together while
-                        // also being correlated with the parent context defined at the beginning of the profile execution.
-                        EventContext.Persist(Guid.NewGuid(), parentContext.ActivityId);
+                    // The context persisted here will be picked up by the individual component. This allows
+                    // the telemetry for each round of execution of components to be correlated together while
+                    // also being correlated with the parent context defined at the beginning of the profile execution.
+                    EventContext.Persist(Guid.NewGuid(), parentContext.ActivityId);
 
-                        if (!cancellationToken.IsCancellationRequested)
-                        {
-                            ProfileExecutor.OutputComponentStart("Monitor", monitor);
-                            monitoringTasks.Add(monitor.ExecuteAsync(cancellationToken));
-                        }
-                    }
-                    catch (VirtualClientException)
+                    if (!cancellationToken.IsCancellationRequested)
                     {
-                        throw;
-                    }
-                    catch (MissingMemberException exc)
-                    {
-                        throw new DependencyException(
-                            "Assembly/.dll mismatch. This can occur when an extensions assembly exists in the application directory that was compiled " +
-                            "against a version of the Virtual Client that has breaking changes. Verify the version of the extensions assemblies in the " +
-                            "application directory can be used with the current application version. Valid extensions assemblies typically have the same " +
-                            "major version as the application.",
-                            exc,
-                            ErrorReason.ExtensionAssemblyInvalid);
-                    }
-                    catch (Exception exc)
-                    {
-                        // Error reasons have numeric/integer values that indicate their severity. Error reasons
-                        // with a value >= 500 are terminal situations where the workload cannot run successfully
-                        // regardless of how many times we attempt it.
-                        throw new MonitorException(
-                            $"Monitor execution failed for component '{monitor.TypeName}'.",
-                            exc,
-                            ErrorReason.DependencyInstallationFailed);
+                        monitor.OutputComponentStart();
+                        monitoringTasks.Add(monitor.ExecuteAsync(cancellationToken));
                     }
                 }
+                catch (VirtualClientException exc) when ((int)exc.Reason >= 500 || this.FailFast || monitor?.FailFast == true)
+                {
+                    // Error reasons have numeric/integer values that indicate their severity. Error reasons
+                    // with a value >= 500 are terminal situations where the workload cannot run successfully
+                    // regardless of how many times we attempt it.
+                    throw;
+                }
+                catch (VirtualClientException)
+                {
+                    // Exceptions with error reasons < 500 are potentially transient issues. We do not want to 
+                    // cause VC to exit in these cases but to give it a chance to retry the logic that failed on
+                    // subsequent rounds of processing.
+                    //
+                    // Exceptions having error reasons with a value between 400 - 499 are serious errors but they represent
+                    // issues that may be transient and that can be resolve after a period of time. When
+                    // we catch these type of errors, we may want to reset and start over in the test workflow.
+                }
+                catch (MissingMemberException exc)
+                {
+                    throw new DependencyException(
+                        "Assembly/.dll mismatch. This can occur when an extensions assembly exists in the application directory that was compiled " +
+                        "against a version of the Virtual Client that has breaking changes. Verify the version of the extensions assemblies in the " +
+                        "application directory can be used with the current application version. Valid extensions assemblies typically have the same " +
+                        "major version as the application.",
+                        exc,
+                        ErrorReason.ExtensionAssemblyInvalid);
+                }
+                catch (Exception exc)
+                {
+                    // Error reasons have numeric/integer values that indicate their severity. Error reasons
+                    // with a value >= 500 are terminal situations where the workload cannot run successfully
+                    // regardless of how many times we attempt it.
+                    throw new MonitorException(
+                        $"Monitor execution failed for component '{monitor.TypeName}'.",
+                        exc,
+                        ErrorReason.DependencyInstallationFailed);
+                }
+            }
 
-                await Task.WhenAll(monitoringTasks);
-            });
+            await Task.WhenAll(monitoringTasks);
         }
 
         /// <summary>
@@ -607,69 +612,55 @@ namespace VirtualClient
                         parameters = d.Parameters?.ObscureSecrets()
                     }));
 
-                await this.Logger.LogMessageAsync($"{nameof(ProfileExecutor)}.InstallDependencies", LogLevel.Debug, dependencyInstallationContext, async () =>
-                {
-                    foreach (VirtualClientComponent dependency in this.ProfileDependencies)
-                    {
-                        if (!cancellationToken.IsCancellationRequested && !VirtualClientRuntime.IsRebootRequested)
-                        {
-                            try
-                            {
-                                // The context persisted here will be picked up by the individual component. This allows
-                                // the telemetry for each round of execution of components to be correlated together while
-                                // also being correlated with the parent context defined at the beginning of the profile execution.
-                                EventContext.Persist(Guid.NewGuid(), parentContext.ActivityId);
+                this.Logger.LogMessage($"{nameof(ProfileExecutor)}.InstallDependencies", LogLevel.Debug, dependencyInstallationContext);
 
-                                ProfileExecutor.OutputComponentStart("Dependency", dependency);
-                                await dependency.ExecuteAsync(cancellationToken).ConfigureAwait(false);
-                            }
-                            catch (VirtualClientException)
-                            {
-                                // Error reasons have numeric/integer values that indicate their severity. Error reasons
-                                // with a value >= 500 are terminal situations where the workload cannot run successfully
-                                // regardless of how many times we attempt it.
-                                throw;
-                            }
-                            catch (MissingMemberException exc)
-                            {
-                                throw new DependencyException(
-                                    "Assembly/.dll mismatch. This can occur when an extensions assembly exists in the application directory that was compiled " +
-                                    "against a version of the Virtual Client that has breaking changes. Verify the version of the extensions assemblies in the " +
-                                    "application directory can be used with the current application version. Valid extensions assemblies typically have the same " +
-                                    "major version as the application.",
-                                    exc,
-                                    ErrorReason.ExtensionAssemblyInvalid);
-                            }
-                            catch (Exception exc)
-                            {
-                                // Error reasons have numeric/integer values that indicate their severity. Error reasons
-                                // with a value >= 500 are terminal situations where the workload cannot run successfully
-                                // regardless of how many times we attempt it.
-                                throw new DependencyException(
-                                    $"Dependency installation failed for component '{dependency.TypeName}'.",
-                                    exc,
-                                    ErrorReason.DependencyInstallationFailed);
-                            }
+                foreach (VirtualClientComponent dependency in this.ProfileDependencies)
+                {
+                    if (!cancellationToken.IsCancellationRequested && !VirtualClientRuntime.IsRebootRequested)
+                    {
+                        try
+                        {
+                            // The context persisted here will be picked up by the individual component. This allows
+                            // the telemetry for each round of execution of components to be correlated together while
+                            // also being correlated with the parent context defined at the beginning of the profile execution.
+                            EventContext.Persist(Guid.NewGuid(), parentContext.ActivityId);
+
+                            dependency.OutputComponentStart();
+                            await dependency.ExecuteAsync(cancellationToken).ConfigureAwait(false);
+                        }
+                        catch (VirtualClientException)
+                        {
+                            // Error reasons have numeric/integer values that indicate their severity. Error reasons
+                            // with a value >= 500 are terminal situations where the workload cannot run successfully
+                            // regardless of how many times we attempt it.
+                            throw;
+                        }
+                        catch (MissingMemberException exc)
+                        {
+                            throw new DependencyException(
+                                "Assembly/.dll mismatch. This can occur when an extensions assembly exists in the application directory that was compiled " +
+                                "against a version of the Virtual Client that has breaking changes. Verify the version of the extensions assemblies in the " +
+                                "application directory can be used with the current application version. Valid extensions assemblies typically have the same " +
+                                "major version as the application.",
+                                exc,
+                                ErrorReason.ExtensionAssemblyInvalid);
+                        }
+                        catch (Exception exc)
+                        {
+                            // Error reasons have numeric/integer values that indicate their severity. Error reasons
+                            // with a value >= 500 are terminal situations where the workload cannot run successfully
+                            // regardless of how many times we attempt it.
+                            throw new DependencyException(
+                                $"Dependency installation failed for component '{dependency.TypeName}'.",
+                                exc,
+                                ErrorReason.DependencyInstallationFailed);
                         }
                     }
-                });
+                }
             }
         }
 
-        private static void OutputComponentStart(string componentType, VirtualClientComponent component)
-        {
-            if (!string.IsNullOrWhiteSpace(component.Scenario))
-            {
-                ConsoleLogger.Default.LogInformation($"Profile: {componentType} = {component.TypeName} (scenario={component.Scenario})");
-            }
-            else
-            {
-                ConsoleLogger.Default.LogInformation($"Profile: {componentType} = {component.TypeName}");
-            }
-        }
-
-        private List<VirtualClientComponent> CreateComponents(
-            IEnumerable<ExecutionProfileElement> profileComponents, IEnumerable<string> includeScenarios = null, IEnumerable<string> excludeScenarios = null)
+        private List<VirtualClientComponent> CreateComponents(IEnumerable<ExecutionProfileElement> profileComponents, IEnumerable<string> includeScenarios = null, IEnumerable<string> excludeScenarios = null)
         {
             List<VirtualClientComponent> components = new List<VirtualClientComponent>();
 
@@ -705,20 +696,14 @@ namespace VirtualClient
 
                     if (ComponentTypeCache.Instance.TryGetComponentType(component.Type, out Type componentType))
                     {
-                        bool executeComponent = true;
                         VirtualClientComponent runtimeComponent = ComponentFactory.CreateComponent(
                             component,
                             this.Dependencies,
-                            this.RandomizationSeed,
-                            this.FailFast,
-                            this.LogToFile);
+                            this.Settings,
+                            includeScenarios,
+                            excludeScenarios);
 
-                        if (!VirtualClientComponent.IsSupported(runtimeComponent))
-                        {
-                            executeComponent = false;
-                        }
-
-                        if (executeComponent)
+                        if (VirtualClientComponent.IsSupported(runtimeComponent))
                         {
                             components.Add(runtimeComponent);
                             this.ComponentCreated?.Invoke(this, new ComponentEventArgs(runtimeComponent));

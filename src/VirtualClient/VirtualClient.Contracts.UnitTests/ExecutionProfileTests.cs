@@ -94,6 +94,20 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
+        [TestCase("TEST-PROFILE-1-SEQUENTIAL.json")]
+        public void ExecutionProfileCanDeserializeProfileFilesWithSequentialExecutionComponents(string profileName)
+        {
+            ExecutionProfile profile = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, "Resources", profileName))
+                .FromJson<ExecutionProfile>();
+
+            Assert.IsNotEmpty(profile.Actions);
+            Assert.IsTrue(profile.Actions.Count == 2);
+
+            Assert.IsNotEmpty(profile.Actions[1].Components);
+            Assert.IsTrue(profile.Actions[1].Components.Count() == 2);
+        }
+
+        [Test]
         public void ExecutionProfileImplementsHashCodeSemanticsCorrectly()
         {
             ExecutionProfile profile = this.mockFixture.Create<ExecutionProfile>();

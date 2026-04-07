@@ -4,7 +4,6 @@
 namespace VirtualClient.Contracts
 {
     using System;
-    using System.Collections;
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
@@ -67,6 +66,49 @@ namespace VirtualClient.Contracts
                     Assert.IsNotEmpty(component.Dependencies);
                     Assert.IsNotNull(component.Parameters);
                 });
+            }
+        }
+
+        [Test]
+        [TestCase("TEST-PROFILE-1.json")]
+        public void ComponentFactorySetsComponentPropertiesToExpectedDefaults(string profileName)
+        {
+            ExecutionProfile profile = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, "Resources", profileName))
+                .FromJson<ExecutionProfile>();
+
+            foreach (ExecutionProfileElement action in profile.Actions)
+            {
+                VirtualClientComponent component = ComponentFactory.CreateComponent(action, this.mockFixture.Dependencies);
+                Assert.IsNotNull(component);
+                Assert.IsNotNull(component.Parameters);
+                Assert.IsFalse(component.LogToFile);
+                Assert.IsNull(component.ContentPathTemplate);
+                Assert.IsNull(component.LogFileName);
+                Assert.IsNull(component.LogFolderName);
+            }
+        }
+
+        [Test]
+        [TestCase("TEST-PROFILE-5.json")]
+        public void ComponentFactoryDoesNotInadvertentlyOverwriteComponentLevelProperties(string profileName)
+        {
+            ExecutionProfile profile = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, "Resources", profileName))
+                .FromJson<ExecutionProfile>();
+
+            ComponentSettings settings = new ComponentSettings
+            {
+                ContentPathTemplate = "content/path/template/A",
+                LogToFile = false
+            };
+
+            foreach (ExecutionProfileElement action in profile.Actions)
+            {
+                VirtualClientComponent component = ComponentFactory.CreateComponent(action, this.mockFixture.Dependencies, settings);
+                Assert.IsNotNull(component);
+                Assert.IsNotNull(component.Parameters);
+                Assert.IsTrue(component.LogToFile);
+                Assert.AreEqual("test.log", component.LogFileName);
+                Assert.AreEqual("test", component.LogFolderName);
             }
         }
 
@@ -199,6 +241,41 @@ namespace VirtualClient.Contracts
                         Assert.IsTrue(parallelExecutionComponent.ElementAt(1) is TestExecutor);
                         Assert.IsTrue(parallelExecutionComponent.ElementAt(0).Parameters["Scenario"].ToString() == "Scenario2");
                         Assert.IsTrue(parallelExecutionComponent.ElementAt(1).Parameters["Scenario"].ToString() == "Scenario3");
+                        confirmed = true;
+                    }
+                });
+            }
+
+            Assert.IsTrue(confirmed);
+        }
+
+        [Test]
+        [TestCase("TEST-PROFILE-1-SEQUENTIAL.json")]
+        public void ComponentFactoryCreatesExpectedSequentialExecutionComponentsFromAnExecutionProfile(string profileName)
+        {
+            ExecutionProfile profile = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, "Resources", profileName))
+                .FromJson<ExecutionProfile>();
+
+            bool confirmed = false;
+            foreach (ExecutionProfileElement action in profile.Actions)
+            {
+                Assert.DoesNotThrow(() =>
+                {
+                    VirtualClientComponent component = ComponentFactory.CreateComponent(action, this.mockFixture.Dependencies);
+                    Assert.IsNotNull(component);
+                    Assert.IsNotEmpty(component.Dependencies);
+                    Assert.IsNotNull(component.Parameters);
+
+                    SequentialExecution sequentialExecutionComponent = component as SequentialExecution;
+                    if (sequentialExecutionComponent != null)
+                    {
+                        Assert.IsNotEmpty(sequentialExecutionComponent);
+                        Assert.IsTrue(sequentialExecutionComponent.Count() == 2);
+                        Assert.IsTrue(sequentialExecutionComponent.ElementAt(0) is TestExecutor);
+                        Assert.IsTrue(sequentialExecutionComponent.ElementAt(1) is TestExecutor);
+                        Assert.IsTrue(sequentialExecutionComponent.ElementAt(0).Parameters["Scenario"].ToString() == "ScenarioA");
+                        Assert.IsTrue(sequentialExecutionComponent.ElementAt(1).Parameters["Scenario"].ToString() == "ScenarioB");
+                        Assert.AreEqual(2, sequentialExecutionComponent.LoopCount);
                         confirmed = true;
                     }
                 });
@@ -370,6 +447,35 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
+        [TestCase("TEST-PROFILE-EXTENSIONS-1-PARALLEL.json")]
+        public void ComponentFactoryHandlesComponentLevelExtensionAnomalies_1(string profileName)
+        {
+            // Scenario:
+            // A partner team is trying to pass in extensions objects to components within side
+            // of a parallel execution block. The information in the extensions objects for the first component
+            // in the parallel execution block seems to be overriding the ones that come afterwards.
+            ExecutionProfile profile = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, "Resources", profileName))
+                .FromJson<ExecutionProfile>();
+
+            ExecutionProfileElement parallelLoop = profile.Actions.First();
+            IEnumerable<ExecutionProfileElement> parallelLoopComponents = parallelLoop.Components;
+
+            Assert.IsTrue(parallelLoopComponents?.Count() == 2);
+
+            VirtualClientComponentCollection parallelExecution = ComponentFactory.CreateComponent(parallelLoop, this.mockFixture.Dependencies) as VirtualClientComponentCollection;
+
+            for (int i = 0; i < parallelLoopComponents.Count(); i++)
+            {
+                ExecutionProfileElement profileElement = parallelLoopComponents.ElementAt(i);
+                VirtualClientComponent runtimeComponent = parallelExecution.ElementAt(i);
+
+                Assert.IsTrue(profileElement.Extensions.TryGetValue("ActionCustomParameters", out JToken expectedExtensions));
+                Assert.IsTrue(runtimeComponent.Extensions.TryGetValue("ActionCustomParameters", out JToken actualExtensions));
+                Assert.AreEqual(expectedExtensions.ToJson().RemoveWhitespace(), actualExtensions.ToJson().RemoveWhitespace());
+            }
+        }
+
+        [Test]
         public void ComponentFactoryAddsExpectedComponentLevelExtensionsToSubComponents_Deep_Nesting()
         {
             // Setup:
@@ -521,12 +627,15 @@ namespace VirtualClient.Contracts
                 VirtualClientComponent component = ComponentFactory.CreateComponent(
                     action,
                     this.mockFixture.Dependencies,
-                    randomizationSeed: 123,
-                    failFast: true,
-                    logToFile: true);
+                    new ComponentSettings
+                    {
+                        FailFast = true,
+                        LogToFile = true,
+                        Seed = 123
+                    });
 
                 Assert.IsNotNull(component);
-                Assert.AreEqual(123, component.ExecutionSeed);
+                Assert.AreEqual(123, component.Seed);
                 Assert.IsTrue(component.FailFast);
                 Assert.IsTrue(component.LogToFile);
             }
@@ -544,18 +653,21 @@ namespace VirtualClient.Contracts
                 VirtualClientComponent component = ComponentFactory.CreateComponent(
                     action,
                     this.mockFixture.Dependencies,
-                    randomizationSeed: 123,
-                    failFast: true,
-                    logToFile: true);
+                    new ComponentSettings
+                    {
+                        FailFast = true,
+                        LogToFile = true,
+                        Seed = 123
+                    });
 
                 Assert.IsNotNull(component);
-                Assert.AreEqual(123, component.ExecutionSeed);
+                Assert.AreEqual(123, component.Seed);
                 Assert.IsTrue(component.FailFast);
                 Assert.IsTrue(component.LogToFile);
 
                 foreach (VirtualClientComponent subComponent in component as VirtualClientComponentCollection)
                 {
-                    Assert.AreEqual(123, subComponent.ExecutionSeed);
+                    Assert.AreEqual(123, subComponent.Seed);
                     Assert.IsTrue(subComponent.FailFast);
                     Assert.IsTrue(subComponent.LogToFile);
                 }

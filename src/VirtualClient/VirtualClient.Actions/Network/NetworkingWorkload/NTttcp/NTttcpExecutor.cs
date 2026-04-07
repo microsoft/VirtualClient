@@ -34,6 +34,9 @@ namespace VirtualClient.Actions.NetworkPerformance
         public NTttcpExecutor(VirtualClientComponent component)
            : base(component)
         {
+            this.ProcessStartRetryPolicy = Policy
+                .Handle<Exception>()
+                .WaitAndRetryAsync(3, retries => TimeSpan.FromSeconds(retries * 3));
         }
 
         /// <summary>
@@ -44,11 +47,9 @@ namespace VirtualClient.Actions.NetworkPerformance
         public NTttcpExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
            : base(dependencies, parameters)
         {
-            this.ProcessStartRetryPolicy = Policy.Handle<Exception>(exc => exc.Message.Contains("sockwiz_tcp_listener_open bind"))
-               .WaitAndRetryAsync(5, retries => TimeSpan.FromSeconds(retries * 3));
-
-            this.Parameters.SetIfNotDefined(nameof(this.ThreadCount), 1);
-            this.Parameters.SetIfNotDefined(nameof(this.TestDuration), 60);
+            this.ProcessStartRetryPolicy = Policy
+                .Handle<Exception>()
+                .WaitAndRetryAsync(3, retries => TimeSpan.FromSeconds(retries * 3));
         }
 
         /// <summary>
@@ -87,13 +88,13 @@ namespace VirtualClient.Actions.NetworkPerformance
         }
 
         /// <summary>
-        /// Parameter defines the duration (in seconds) for running the NTttcp workload.
+        /// Parameter defines the duration for running the NTttcp workload.
         /// </summary>
-        public int TestDuration
+        public TimeSpan TestDuration
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.TestDuration), 60);
+                return this.Parameters.GetTimeSpanValue(nameof(this.TestDuration), TimeSpan.FromSeconds(60));
             }
         }
 
@@ -183,6 +184,19 @@ namespace VirtualClient.Actions.NetworkPerformance
             get
             {
                 return this.Parameters.GetValue<string>(nameof(this.Protocol));
+            }
+        }
+
+        /// <summary>
+        /// NoSyncEnabled is only for client/sender role.
+        /// The NoSyncEnabled indicates that synchronization is disabled for the client.
+        /// </summary>
+        public bool? NoSyncEnabled
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(NetworkingWorkloadExecutor.NoSyncEnabled), out IConvertible noSyncEnabled);
+                return noSyncEnabled?.ToBoolean(CultureInfo.InvariantCulture);
             }
         }
 
@@ -288,7 +302,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                     }
                     finally
                     {
-                        process.SafeKill();
+                        process.SafeKill(this.Logger);
                     }
                 }
 
@@ -297,10 +311,8 @@ namespace VirtualClient.Actions.NetworkPerformance
         }
 
         /// <inheritdoc/>
-        protected override Task<IProcessProxy> ExecuteWorkloadAsync(string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken, TimeSpan? timeout = null)
+        protected override Task ExecuteWorkloadAsync(string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken, TimeSpan? timeout = null)
         {
-            IProcessProxy process = null;
-
             EventContext relatedContext = telemetryContext.Clone()
                .AddContext("command", this.ExecutablePath)
                .AddContext("commandArguments", commandArguments);
@@ -313,11 +325,10 @@ namespace VirtualClient.Actions.NetworkPerformance
                     {
                         await this.DeleteResultsFileAsync();
 
-                        using (process = this.SystemManagement.ProcessManager.CreateProcess(this.ExecutablePath, commandArguments))
+                        using (IProcessProxy process = this.SystemManagement.ProcessManager.CreateProcess(this.ExecutablePath, commandArguments))
                         {
                             try
                             {
-                                this.CleanupTasks.Add(() => process.SafeKill());
                                 await process.StartAndWaitAsync(cancellationToken, timeout);
 
                                 if (process.IsErrored())
@@ -328,7 +339,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                                 else
                                 {
                                     string results = await this.WaitForResultsAsync(TimeSpan.FromMinutes(1), relatedContext);
-                                    await this.LogProcessDetailsAsync(process, relatedContext, "NTttcp", results: results.AsArray());
+                                    await this.LogProcessDetailsAsync(process, relatedContext, "NTttcp", results: new KeyValuePair<string, string>(this.ResultsPath, results));
 
                                     this.CaptureMetrics(
                                         results,
@@ -347,19 +358,19 @@ namespace VirtualClient.Actions.NetworkPerformance
                                 // We give this a best effort but do not want it to prevent the next workload
                                 // from executing.
                                 this.Logger.LogMessage($"{this.TypeName}.WorkloadTimeout", LogLevel.Warning, relatedContext.AddError(exc));
-                                process.SafeKill();
                             }
                             catch (Exception exc)
                             {
                                 this.Logger.LogMessage($"{this.TypeName}.WorkloadStartupError", LogLevel.Warning, relatedContext.AddError(exc));
-                                process.SafeKill();
                                 throw;
+                            }
+                            finally
+                            {
+                                process.SafeKill(this.Logger);
                             }
                         }
                     });
                 }
-
-                return process;
             });
         }
 
@@ -383,7 +394,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                 {
                     this.MetadataContract.Add(
                         parser.Metadata.ToDictionary(entry => entry.Key, entry => entry.Value as object),
-                        MetadataContractCategory.Scenario,
+                        MetadataContract.ScenarioCategory,
                         true);
 
                     foreach (var entry in parser.Metadata)
@@ -437,11 +448,12 @@ namespace VirtualClient.Actions.NetworkPerformance
                 $"-m {this.ThreadCount},*,{serverIPAddress} " +
                 $"-wu {NTttcpExecutor.DefaultWarmupTime.TotalSeconds} " +
                 $"-cd {NTttcpExecutor.DefaultCooldownTime.TotalSeconds} " +
-                $"-t {this.TestDuration} " +
+                $"-t {this.TestDuration.TotalSeconds} " +
                 $"-l {(this.IsInClientRole ? $"{this.BufferSizeClient}" : $"{this.BufferSizeServer}")} " +
                 $"-p {this.Port} " +
                 $"-xml {this.ResultsPath} " +
                 $"{(this.Protocol.ToLowerInvariant() == "udp" ? "-u" : string.Empty)} " +
+                $"{(this.NoSyncEnabled == true ? "-ns" : string.Empty)} " +
                 $"{(this.IsInClientRole ? $"-nic {clientIPAddress}" : string.Empty)}".Trim();
         }
 
@@ -453,7 +465,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                 $"-m {this.ThreadCount},*,{serverIPAddress} " +
                 $"-W {NTttcpExecutor.DefaultWarmupTime.TotalSeconds} " +
                 $"-C {NTttcpExecutor.DefaultCooldownTime.TotalSeconds} " +
-                $"-t {this.TestDuration} " +
+                $"-t {this.TestDuration.TotalSeconds} " +
                 $"-b {(this.IsInClientRole ? $"{this.BufferSizeClient}" : $"{this.BufferSizeServer}")} " +
                 $"-x {this.ResultsPath} " +
                 $"-p {this.Port} " +
@@ -462,6 +474,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                 $"{((this.IsInServerRole && this.ReceiverMultiClientMode == true) ? "-M" : string.Empty)} " +
                 $"{((this.IsInClientRole && this.ThreadsPerServerPort != null) ? $"-n {this.ThreadsPerServerPort}" : string.Empty)} " +
                 $"{((this.IsInClientRole && this.ConnectionsPerThread != null) ? $"-l {this.ConnectionsPerThread}" : string.Empty)} " +
+                $"{(this.NoSyncEnabled == true ? "-N" : string.Empty)} " +
                 $"{((this.DevInterruptsDifferentiator != null) ? $"--show-dev-interrupts {this.DevInterruptsDifferentiator}" : string.Empty)}".Trim();
         }
     }

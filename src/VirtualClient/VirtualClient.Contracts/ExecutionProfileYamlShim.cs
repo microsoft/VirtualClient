@@ -30,6 +30,7 @@ namespace VirtualClient.Contracts
             this.Monitors = new List<ExecutionProfileElementYamlShim>();
             this.Metadata = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
             this.Parameters = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
+            this.ParametersOn = new List<IDictionary<string, IConvertible>>();
         }
 
         /// <summary>
@@ -67,6 +68,26 @@ namespace VirtualClient.Contracts
             {
                 this.Parameters.AddRange(other.Parameters);
             }
+
+            if (other?.ParametersOn?.Any() == true)
+            {
+                this.ParametersOn.AddRange(other.ParametersOn);
+            }
+
+            if (this.Actions?.Any() == true)
+            {
+                this.Actions.ForEach(action => action.ComponentType = ComponentType.Action);
+            }
+
+            if (this.Dependencies?.Any() == true)
+            {
+                this.Dependencies.ForEach(dependency => dependency.ComponentType = ComponentType.Dependency);
+            }
+
+            if (this.Monitors?.Any() == true)
+            {
+                this.Monitors.ForEach(monitor => monitor.ComponentType = ComponentType.Monitor);
+            }
         }
 
         /// <summary>
@@ -92,6 +113,12 @@ namespace VirtualClient.Contracts
         /// </summary>
         [YamlMember(Alias = "parameters", Order = 20, ScalarStyle = ScalarStyle.Plain)]
         public IDictionary<string, IConvertible> Parameters { get; set; }
+
+        /// <summary>
+        /// Collection of parameters that are associated with the profile.
+        /// </summary>
+        [YamlMember(Alias = "parameters_on", Order = 25, ScalarStyle = ScalarStyle.Plain)]
+        public List<IDictionary<string, IConvertible>> ParametersOn { get; set; }
 
         /// <summary>
         /// Workload actions to run as part of the profile execution.

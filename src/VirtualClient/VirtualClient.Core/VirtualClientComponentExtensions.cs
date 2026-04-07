@@ -5,7 +5,6 @@ namespace VirtualClient
 {
     using System;
     using System.Collections.Generic;
-    using System.Drawing;
     using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
@@ -14,7 +13,6 @@ namespace VirtualClient
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.CodeAnalysis;
-    using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Polly;
@@ -127,9 +125,11 @@ namespace VirtualClient
                 }
             }
 
+            string safeArguments = SensitiveData.ObscureSecrets(commandArguments);
+
             EventContext relatedContext = telemetryContext.Clone()
                 .AddContext(nameof(command), command)
-                .AddContext(nameof(commandArguments), commandArguments)
+                .AddContext(nameof(commandArguments), safeArguments)
                 .AddContext(nameof(workingDirectory), workingDirectory)
                 .AddContext(nameof(runElevated), runElevated);
 
@@ -147,12 +147,11 @@ namespace VirtualClient
                     process = processManager.CreateElevatedProcess(component.Platform, command, commandArguments, workingDirectory, username);
                 }
 
-                component.CleanupTasks.Add(() => process.SafeKill());
-                component.Logger.LogTraceMessage($"Executing: {command} {SensitiveData.ObscureSecrets(commandArguments)}".Trim(), relatedContext);
+                component.CleanupTasks.Add(() => process.SafeKill(component.Logger));
+                component.Logger.LogTraceMessage($"Executing: {command} {safeArguments}".Trim(), relatedContext);
 
                 beforeExecution?.Invoke(process);
-                await process.StartAndWaitAsync(cancellationToken)
-                    .ConfigureAwait(false);
+                await process.StartAndWaitAsync(cancellationToken);
             }
 
             return process;
@@ -191,8 +190,28 @@ namespace VirtualClient
             component.ThrowIfNull(nameof(component));
             packageName.ThrowIfNullOrWhiteSpace(nameof(packageName));
 
-            IPackageManager packageManager = component.Dependencies.GetService<IPackageManager>();
-            return packageManager.GetPlatformSpecificPackageAsync(packageName, component.Platform, component.CpuArchitecture, cancellationToken, throwIfNotfound);
+            ISystemManagement systemManagement = component.Dependencies.GetService<ISystemManagement>();
+            return systemManagement.GetPlatformSpecificPackageAsync(packageName, cancellationToken, throwIfNotfound);
+        }
+
+        /// <summary>
+        /// Returns true/false whether the component has a feature flag defined with the name provided and that it matches the value provided.
+        /// </summary>
+        public static bool HasFeatureFlag(this VirtualClientComponent component, string featureFlag)
+        {
+            component.ThrowIfNull(nameof(component));
+            featureFlag.ThrowIfNullOrWhiteSpace(nameof(featureFlag));
+
+            bool hasFlag = false;
+            if (component.Parameters?.TryGetValue("FeatureFlag", out IConvertible flag) == true && flag != null)
+            {
+                hasFlag = string.Equals(
+                    featureFlag.Trim(), 
+                    flag.ToString().Trim(), 
+                    StringComparison.OrdinalIgnoreCase);
+            }
+
+            return hasFlag;
         }
 
         /// <summary>
@@ -202,12 +221,12 @@ namespace VirtualClient
         /// <param name="filePath">A paths to the results file to load.</param>
         /// <param name="cancellationToken">A token that can be used to cancel the operations.</param>
         /// <returns>The contents of the results file.</returns>
-        public static async Task<string> LoadResultsAsync(this VirtualClientComponent component, string filePath, CancellationToken cancellationToken)
+        public static async Task<KeyValuePair<string, string>> LoadResultsAsync(this VirtualClientComponent component, string filePath, CancellationToken cancellationToken)
         {
             component.ThrowIfNull(nameof(component));
             filePath.ThrowIfNullOrWhiteSpace(nameof(filePath));
 
-            string results = null;
+            KeyValuePair<string, string> results = default(KeyValuePair<string, string>);
             if (!cancellationToken.IsCancellationRequested)
             {
                 if (!component.Dependencies.TryGetService<IFileSystem>(out IFileSystem fileSystem))
@@ -222,7 +241,7 @@ namespace VirtualClient
                     throw new WorkloadResultsException($"Expected results file '{filePath}' not found.", ErrorReason.WorkloadResultsNotFound);
                 }
 
-                results = await fileSystem.File.ReadAllTextAsync(filePath);
+                results = new KeyValuePair<string, string>(filePath, await fileSystem.File.ReadAllTextAsync(filePath));
             }
 
             return results;
@@ -235,12 +254,12 @@ namespace VirtualClient
         /// <param name="filePaths">A set of one or more paths to results files to load.</param>
         /// <param name="cancellationToken">A token that can be used to cancel the operations.</param>
         /// <returns>The contents of the results files.</returns>
-        public static async Task<IEnumerable<string>> LoadResultsAsync(this VirtualClientComponent component, IEnumerable<string> filePaths, CancellationToken cancellationToken)
+        public static async Task<IEnumerable<KeyValuePair<string, string>>> LoadResultsAsync(this VirtualClientComponent component, IEnumerable<string> filePaths, CancellationToken cancellationToken)
         {
             component.ThrowIfNull(nameof(component));
             filePaths.ThrowIfNullOrEmpty(nameof(filePaths));
 
-            List<string> results = null;
+            List<KeyValuePair<string, string>> results = null;
             if (!cancellationToken.IsCancellationRequested)
             {
                 if (!component.Dependencies.TryGetService<IFileSystem>(out IFileSystem fileSystem))
@@ -250,7 +269,7 @@ namespace VirtualClient
                         ErrorReason.DependencyNotFound);
                 }
 
-                results = new List<string>();
+                results = new List<KeyValuePair<string, string>>();
                 foreach (string filePath in filePaths)
                 {
                     if (!cancellationToken.IsCancellationRequested)
@@ -260,12 +279,84 @@ namespace VirtualClient
                             throw new WorkloadResultsException($"Expected results file '{filePath}' not found.", ErrorReason.WorkloadResultsNotFound);
                         }
 
-                        results.Add(await fileSystem.File.ReadAllTextAsync(filePath));
+                        results.Add(filePath, await fileSystem.File.ReadAllTextAsync(filePath));
                     }
                 }
             }
 
             return results;
+        }
+
+        /// <summary>
+        /// Prepares the binary at the path specified to be executable on the OS/system platform
+        /// (e.g. chmod +x on Linux).
+        /// </summary>
+        /// <param name="component">The component.</param>
+        /// <param name="filePath">The path to the binary.</param>
+        /// <param name="platform">The OS platform on which the binary should be executable.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+        public static async Task MakeFileExecutableAsync(this VirtualClientComponent component, string filePath, PlatformID platform, CancellationToken cancellationToken)
+        {
+            component.ThrowIfNull(nameof(component));
+            filePath.ThrowIfNullOrWhiteSpace(nameof(filePath));
+            PlatformSpecifics.ThrowIfNotSupported(platform);
+
+            ISystemManagement systemManagement = component.Dependencies.GetService<ISystemManagement>();
+            if (!systemManagement.FileSystem.File.Exists(filePath))
+            {
+                throw new DependencyException($"The file at path '{filePath}' does not exist.", ErrorReason.WorkloadDependencyMissing);
+            }
+
+            switch (platform)
+            {
+                case PlatformID.Unix:
+                    using (IProcessProxy chmod = systemManagement.ProcessManager.CreateElevatedProcess(platform, "chmod", $"+x \"{filePath}\""))
+                    {
+                        await chmod.StartAndWaitAsync(cancellationToken, TimeSpan.FromSeconds(30)).ConfigureAwait(false);
+                        chmod.ThrowIfErrored<WorkloadException>(
+                            ProcessProxy.DefaultSuccessCodes,
+                            $"Failed to attribute the binary at path '{filePath}' as executable.");
+                    }
+
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Prepares the binaries at the path specified to be executable on the OS/system platform
+        /// (e.g. chmod +x on Linux).
+        /// </summary>
+        /// <param name="component">The component.</param>
+        /// <param name="directoryPath">The path to the directory of files/binaries.</param>
+        /// <param name="platform">The OS platform on which the binary should be executable.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+        public static async Task MakeFilesExecutableAsync(this VirtualClientComponent component, string directoryPath, PlatformID platform, CancellationToken cancellationToken)
+        {
+            component.ThrowIfNull(nameof(component));
+            directoryPath.ThrowIfNullOrWhiteSpace(nameof(directoryPath));
+            PlatformSpecifics.ThrowIfNotSupported(platform);
+
+            ISystemManagement systemManagement = component.Dependencies.GetService<ISystemManagement>();
+            if (!systemManagement.FileSystem.Directory.Exists(directoryPath))
+            {
+                throw new DependencyException($"The directory '{directoryPath}' does not exist.", ErrorReason.WorkloadDependencyMissing);
+            }
+
+            switch (platform)
+            {
+                case PlatformID.Unix:
+                    // https://chmodcommand.com/chmod-2777/
+                    // chmod 2777 sets everything to read/write/executable in the defined directory and make new file/directory inherit parent folder.
+                    using (IProcessProxy chmod = systemManagement.ProcessManager.CreateElevatedProcess(platform, "chmod", $"-R 2777 \"{directoryPath}\""))
+                    {
+                        await chmod.StartAndWaitAsync(cancellationToken, TimeSpan.FromSeconds(30)).ConfigureAwait(false);
+                        chmod.ThrowIfErrored<WorkloadException>(
+                            ProcessProxy.DefaultSuccessCodes,
+                            $"Failed to attribute the binaries in the directory '{directoryPath}' as executable.");
+                    }
+
+                    break;
+            }
         }
 
         /// <summary>
@@ -378,7 +469,7 @@ namespace VirtualClient
         /// <summary>
         /// Returns true/false whether the content blob store is defined and exists in the dependencies.
         /// </summary>
-        /// <param name="dependencies">The dependencies to verify.</param>
+        /// <param name="dependencies">The dependencies containing the store managers.</param>
         /// <param name="store">The content blob store information if it exists.</param>
         /// <returns>True if the content blob store is defined. False if not.</returns>
         public static bool TryGetContentStoreManager(this IServiceCollection dependencies, out IBlobManager store)
@@ -391,7 +482,7 @@ namespace VirtualClient
         /// Returns true/false whether the content blob store is defined and exists in the dependencies
         /// for the component.
         /// </summary>
-        /// <param name="component">The component with dependencies to verify.</param>
+        /// <param name="component">The component in operation.</param>
         /// <param name="store">The packages blob store information if it exists.</param>
         /// <returns>True if the content blob store is defined. False if not.</returns>
         public static bool TryGetContentStoreManager(this VirtualClientComponent component, out IBlobManager store)
@@ -403,7 +494,7 @@ namespace VirtualClient
         /// <summary>
         /// Returns true/false whether the packages blob store is defined and exists in the dependencies.
         /// </summary>
-        /// <param name="dependencies">The dependencies to verify.</param>
+        /// <param name="dependencies">The dependencies containing the store managers.</param>
         /// <param name="store">The packages blob store information if it exists.</param>
         /// <returns>True if the packages blob store is defined. False if not.</returns>
         public static bool TryGetPackageStoreManager(this IServiceCollection dependencies, out IBlobManager store)
@@ -416,7 +507,7 @@ namespace VirtualClient
         /// Returns true/false whether the packages blob store is defined and exists in the dependencies
         /// for the component.
         /// </summary>
-        /// <param name="component">The component with dependencies to verify.</param>
+        /// <param name="component">The component in operation.</param>
         /// <param name="store">The packages blob store information if it exists.</param>
         /// <returns>True if the packages blob store is defined. False if not.</returns>
         public static bool TryGetPackageStoreManager(this VirtualClientComponent component, out IBlobManager store)
@@ -426,15 +517,43 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Returns true if a set target SSH clients exist in the dependencies.
+        /// </summary>
+        /// <param name="dependencies">The dependencies containing the clients.</param>
+        /// <param name="sshClients">Target SSH clients as defined on the command line.</param>
+        /// <returns>True if target SSH clients exist. False if not.</returns>
+        public static bool TryGetSshClients(this IServiceCollection dependencies, out IEnumerable<ISshClientProxy> sshClients)
+        {
+            sshClients = null;
+            if (dependencies.TryGetService<IEnumerable<ISshClientProxy>>(out IEnumerable<ISshClientProxy> client))
+            {
+                sshClients = client;
+            }
+
+            return sshClients != null;
+        }
+
+        /// <summary>
+        /// Returns true if a set target SSH clients exist in the dependencies for the component.
+        /// </summary>
+        /// <param name="component">The component in operation.</param>
+        /// <param name="sshClients">Target SSH clients as defined on the command line.</param>
+        /// <returns>True if target SSH clients exist. False if not.</returns>
+        public static bool TryGetSshClients(this VirtualClientComponent component, out IEnumerable<ISshClientProxy> sshClients)
+        {
+            sshClients = null;
+            return VirtualClientComponentExtensions.TryGetSshClients(component.Dependencies, out sshClients);
+        }
+
+        /// <summary>
         /// Upload a single file with defined BlobDescriptor.
         /// </summary>
         /// <param name="component">The Virtual Client component that is uploading the blob/file content.</param>
         /// <param name="blobManager">Handles the upload of the blob/file content to the store.</param>
         /// <param name="fileSystem">IFileSystem interface, required to distinguish paths between linux and windows. Provides access to the file system for reading the contents of the files.</param>
         /// <param name="descriptor">The defined blob descriptor</param>
-        /// <param name="cancellationToken">The cancellationToken.</param>
-        /// <param name="uploadManifest">True to upload a manifest alongside the file that contains metadata about the file. Default = true.</param>
-        /// <param name="deleteFile">Whether to delete file after upload. Default = false.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operations.</param>
+        /// <param name="includeManifest">True/false whether manifest files should be included with the file uploads.</param>
         /// <param name="retryPolicy">A retry policy to apply for handling transient upload issues.</param>
         /// <param name="telemetryContext">Context to include with telemetry information related to files uploaded to the blob store.</param>
         /// <returns></returns>
@@ -444,8 +563,7 @@ namespace VirtualClient
             IFileSystem fileSystem,
             FileUploadDescriptor descriptor,
             CancellationToken cancellationToken,
-            bool uploadManifest = true,
-            bool deleteFile = false,
+            bool includeManifest = false,
             IAsyncPolicy retryPolicy = null,
             EventContext telemetryContext = null)
         {
@@ -462,7 +580,6 @@ namespace VirtualClient
 
             try
             {
-                bool uploaded = false;
                 IAsyncPolicy asyncPolicy = retryPolicy ?? VirtualClientComponentExtensions.FileSystemAccessRetryPolicy;
 
                 await (retryPolicy ?? VirtualClientComponentExtensions.FileSystemAccessRetryPolicy).ExecuteAsync(async () =>
@@ -490,9 +607,9 @@ namespace VirtualClient
                                     await component.Logger.LogMessageAsync($"{component.TypeName}.UploadFile", relatedContext, async () =>
                                     {
                                         BlobDescriptor fileDescriptor = descriptor.ToBlobDescriptor();
-                                        await blobManager.UploadBlobAsync(fileDescriptor, uploadStream, cancellationToken);
+                                        await blobManager.UploadBlobAsync(fileDescriptor, uploadStream, cancellationToken, component.Metadata);
 
-                                        if (uploadManifest && descriptor.Manifest?.Any() == true)
+                                        if (includeManifest && descriptor.Manifest?.Any() == true)
                                         {
                                             BlobDescriptor manifestDescriptor = descriptor.ToBlobManifestDescriptor(out Stream manifestStream);
                                             using (manifestStream)
@@ -500,22 +617,12 @@ namespace VirtualClient
                                                 await blobManager.UploadBlobAsync(manifestDescriptor, manifestStream, cancellationToken);
                                             }
                                         }
-
-                                        uploaded = true;
                                     });
                                 }
                             }
                         }
                     }
                 });
-
-                // Delete ONLY if uploaded successfully. We DO use the cancellation token supplied to the method
-                // here to ensure we cycle around quickly to uploading files while Virtual Client is trying to shut
-                // down to have the best chance of getting them off the system.
-                if (deleteFile && uploaded)
-                {
-                    await fileSystem.File.DeleteAsync(descriptor.FilePath);
-                }
             }
             catch (IOException exc) when (exc.Message.Contains("being used by another process", StringComparison.OrdinalIgnoreCase))
             {
@@ -537,9 +644,8 @@ namespace VirtualClient
         /// <param name="blobManager">Handles the upload of the blob/file content to the store.</param>
         /// <param name="fileSystem">IFileSystem interface, required to distinguish paths between linux and windows. Provides access to the file system for reading the contents of the files.</param>
         /// <param name="descriptors">A set of file path and descriptor pairs that each define a blob/file to upload and the target location in the store.</param>
-        /// <param name="cancellationToken">The cancellationToken.</param>
-        /// <param name="uploadManifest">True to upload a manifest alongside the file that contains metadata about the file. Default = true.</param>
-        /// <param name="deleteFile">Whether to delete file after upload. Default = false.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operations.</param>
+        /// <param name="includeManifest">True/false whether manifest files should be included with the file uploads.</param>
         /// <param name="retryPolicy">A retry policy to apply for handling transient upload issues.</param>
         /// <param name="telemetryContext">Context to include with telemetry information related to files uploaded to the blob store.</param>
         /// <returns></returns>
@@ -549,14 +655,13 @@ namespace VirtualClient
             IFileSystem fileSystem,
             IEnumerable<FileUploadDescriptor> descriptors,
             CancellationToken cancellationToken,
-            bool uploadManifest = true,
-            bool deleteFile = false,
+            bool includeManifest = false,
             IAsyncPolicy retryPolicy = null,
             EventContext telemetryContext = null)
         {
             foreach (FileUploadDescriptor descriptor in descriptors)
             {
-                await component.UploadFileAsync(blobManager, fileSystem, descriptor, cancellationToken, uploadManifest, deleteFile, retryPolicy, telemetryContext);
+                await component.UploadFileAsync(blobManager, fileSystem, descriptor, cancellationToken, includeManifest, retryPolicy, telemetryContext);
             }
         }
 

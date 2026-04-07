@@ -4,6 +4,7 @@
 namespace VirtualClient.Common
 {
     using System;
+    using System.Collections.Generic;
     using System.Collections.Specialized;
     using System.Diagnostics;
     using System.IO;
@@ -40,11 +41,6 @@ namespace VirtualClient.Common
         /// Gets the exit time for the underlying process.
         /// </summary>
         DateTime ExitTime { get; set; }
-
-        /// <summary>
-        /// The underlying process details.
-        /// </summary>
-        ProcessDetails ProcessDetails { get; }
 
         /// <summary>
         /// A pointer to the process module control handle.

@@ -303,7 +303,7 @@ namespace VirtualClient
         /// exactly as supplied (e.g. fio.exe -> ...\VirtualClient\packages\fio\1.0.0\fio.exe,
         /// runtimes\win-x64\fio.exe -> ...\VirtualClient\packages\fio\1.0.0\runtimes\win-x64\fio.exe)
         /// </param>
-        public static DependencyFixture SetupWorkloadPackage(
+        public static DependencyFixture SetupPackage(
             this DependencyFixture fixture, 
             string packageName,
             IDictionary<string, IConvertible> metadata = null,
@@ -314,6 +314,12 @@ namespace VirtualClient
 
             fixture.PackageManager.RegisterPackageAsync(package, CancellationToken.None)
                 .GetAwaiter().GetResult();
+
+            // Platform-specific directories.
+            fixture.SetupDirectory(fixture.PlatformSpecifics.Combine(packagePath, PlatformSpecifics.LinuxArm64));
+            fixture.SetupDirectory(fixture.PlatformSpecifics.Combine(packagePath, PlatformSpecifics.LinuxX64));
+            fixture.SetupDirectory(fixture.PlatformSpecifics.Combine(packagePath, PlatformSpecifics.WinArm64));
+            fixture.SetupDirectory(fixture.PlatformSpecifics.Combine(packagePath, PlatformSpecifics.WinX64));
 
             if (expectedFiles?.Any() == true)
             {

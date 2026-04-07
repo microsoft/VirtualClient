@@ -9,6 +9,7 @@ namespace VirtualClient.Contracts
     using System.Linq;
     using System.Runtime.InteropServices;
     using System.Text.RegularExpressions;
+    using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
 
     /// <summary>
@@ -36,6 +37,34 @@ namespace VirtualClient.Contracts
         /// WinArm64 platformArchitecture Name.
         /// </summary>
         public static readonly string WinArm64 = PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Win32NT, Architecture.Arm64);
+
+        /// <summary>
+        /// Regular expression for identifying text containing relative paths within.
+        /// </summary>
+        public static readonly Regex RelativePathExpression = new Regex(@"\.{1,}[\\\/]{1,2}[\x21\x23-\x7E]*", RegexOptions.Compiled);
+
+        /// <summary>
+        /// When determining the name of the command, we want to exclude certain terms
+        /// that define the hosting/terminal environment (e.g. pwsh, python).
+        /// </summary>
+        /// <remarks>
+        /// Examples:
+        /// pwsh S:\any\Script.ps1 -> Script
+        /// pwsh -Command S:\any\Script.ps1 -> Script
+        /// </remarks>
+        private static readonly Regex CommandTerminalExpression = new Regex(
+            @"^bash|^cmd|^pwsh|^powershell|^python|^python3|^py|^-[a-z-_]|[\(\)]+", 
+            RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+        private static readonly Regex GenericCommandExpression = new Regex(
+            @"(py|python|python3)(?:\.exe)*\s+-c|(pwsh|powershell)(?:\.exe)*\s+.+Import-Module",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+        private static readonly Regex ValidFileNameExpression = new Regex(
+            @"^(?!(?:CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(?:\.[^.]*)?$)[^<>:""/\\|?*\x00-\x1F]*[^<>:""/\\|?*\x00-\x1F .]$",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+        private static readonly char[] CommandTrimChars = new char[] { ' ', '"', '\'', '/' };
 
         /// <summary>
         /// Initializes a new version of the <see cref="PlatformSpecifics"/> class.
@@ -80,13 +109,14 @@ namespace VirtualClient.Contracts
             this.ProfileDownloadsDirectory = this.Combine(standardizedCurrentDirectory, "profiles", "downloads");
             this.ScriptsDirectory = this.Combine(standardizedCurrentDirectory, "scripts");
             this.StateDirectory = this.Combine(standardizedCurrentDirectory, "state");
+            this.TempDirectory = this.Combine(standardizedCurrentDirectory, "temp");
             this.ToolsDirectory = this.Combine(standardizedCurrentDirectory, "tools");
         }
 
         /// <summary>
         /// The directory for file/content upload notifications (e.g. /logs/contentuploads).
         /// </summary>
-        public string ContentUploadsDirectory { get; }
+        public string ContentUploadsDirectory { get; set; }
 
         /// <summary>
         /// The CPU architecture (e.g. x64, arm64).
@@ -140,6 +170,11 @@ namespace VirtualClient.Contracts
         public string StateDirectory { get; set; }
 
         /// <summary>
+        /// The directory where temp files can be saved.
+        /// </summary>
+        public string TempDirectory { get; set; }
+
+        /// <summary>
         /// The directory where built-in tools/toolsets are stored.
         /// </summary>
         public string ToolsDirectory { get; }
@@ -154,32 +189,6 @@ namespace VirtualClient.Contracts
         /// Whether VC is running in the context of docker container.
         /// </summary>
         internal static bool RunningInContainer { get; set; } = PlatformSpecifics.IsRunningInContainer();
-
-        /// <summary>
-        /// Get the logged in user/username. On Windows systems, the user is discoverable even when running as Administrator.
-        /// On Linux systems, the user can be discovered using certain environment variables when running under sudo/root.
-        /// </summary>
-        public string GetLoggedInUser()
-        {
-            string loggedInUserName = Environment.UserName;
-            if (string.Equals(loggedInUserName, "root"))
-            {
-                loggedInUserName = this.GetEnvironmentVariable(EnvironmentVariable.SUDO_USER);
-                if (string.Equals(loggedInUserName, "root") || string.IsNullOrEmpty(loggedInUserName))
-                {
-                    loggedInUserName = this.GetEnvironmentVariable(EnvironmentVariable.VC_SUDO_USER);
-                    if (string.IsNullOrEmpty(loggedInUserName))
-                    {
-                        throw new EnvironmentSetupException(
-                            $"Unable to determine logged in username. The expected environment variables '{EnvironmentVariable.SUDO_USER}' and " +
-                            $"'{EnvironmentVariable.VC_SUDO_USER}' do not exist or are set to 'root' (i.e. potentially when running as sudo/root).",
-                            ErrorReason.EnvironmentIsInsufficent);
-                    }
-                }
-            }
-
-            return loggedInUserName;
-        }
 
         /// <summary>
         /// Returns the platform + architecture name used by the Virtual Client to represent a
@@ -258,11 +267,11 @@ namespace VirtualClient.Contracts
         /// local file system.
         /// </summary>
         /// <param name="path">The path to evaluate.</param>
-        /// <returns>True if the path is a fully qualified path (e.g. C:\Users\any\path, home/user/any/path). False if not.</returns>
+        /// <returns>True if the path is a fully qualified path (e.g. C:\Users\any\path, /home/user/any/path). False if not.</returns>
         public static bool IsFullyQualifiedPath(string path)
         {
             path.ThrowIfNull(nameof(path));
-            return Regex.IsMatch(path, "[A-Z]+:\\\\|^/", RegexOptions.IgnoreCase);
+            return Regex.IsMatch(path.Trim(), @"^[A-Z]{1}:[\\\\/]|^\/", RegexOptions.IgnoreCase);
         }
 
         /// <summary>
@@ -274,6 +283,31 @@ namespace VirtualClient.Contracts
         {
             // DOTNET does not properly recognize some containers. Adding /.dockerenv file as back up.
             return (Convert.ToBoolean(Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER")) == true || File.Exists("/.dockerenv"));
+        }
+
+        /// <summary>
+        /// Resolves any relative paths in the text as full paths 
+        /// (e.g. "../path/to/script.sh --log-dir=../path/to/logs" -> "/home/user/path/to/script.sh --log-dir=/home/user/path/to/logs").
+        /// </summary>
+        public static string ResolveRelativePaths(string text)
+        {
+            string resolved = text;
+            if (!string.IsNullOrWhiteSpace(resolved))
+            {
+                MatchCollection relativePathMatches = PlatformSpecifics.RelativePathExpression.Matches(resolved);
+                if (relativePathMatches?.Any() == true)
+                {
+                    foreach (Match match in relativePathMatches)
+                    {
+                        // Ensure that relative working directory paths are fully expanded. Preserve case-sensitivity
+                        // to avoid anomalies on Linux.
+                        string relativePath = match.Value;
+                        resolved = resolved.Replace(relativePath, Path.GetFullPath(relativePath), StringComparison.Ordinal);
+                    }
+                }
+            }
+
+            return resolved;
         }
 
         /// <summary>
@@ -352,6 +386,176 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
+        /// Returns the name of the command being executed.
+        /// </summary>
+        /// <param name="commandArguments">The command line arguments.</param>
+        /// <param name="commandName">The name of the command.</param>
+        public static bool TryGetCommandName(string commandArguments, out string commandName)
+        {
+            commandName = null;
+
+            // It is difficult to determine a random command from PowerShell or Python. We default to the terminal name here.
+            Match genericCommand = PlatformSpecifics.GenericCommandExpression.Match(commandArguments);
+            if (genericCommand.Success)
+            {
+                for (int group = 1; group < genericCommand.Groups.Count; group++)
+                {
+                    if (!string.IsNullOrWhiteSpace(genericCommand.Groups[group].Value))
+                    {
+                        commandName = genericCommand.Groups[group].Value.Trim();
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                string[] commandLineArguments = commandArguments.Split(' ', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+                foreach (string argument in commandLineArguments)
+                {
+                    string normalizedArgument = argument?.Trim(PlatformSpecifics.CommandTrimChars);
+                    if (normalizedArgument?.Length > 1)
+                    {
+                        if (string.Equals(normalizedArgument, "sudo"))
+                        {
+                            continue;
+                        }
+
+                        // Default command name is the terminal itself (e.g. pwsh, python, cmd, bash).
+                        Match terminalMatch = PlatformSpecifics.CommandTerminalExpression.Match(normalizedArgument);
+                        if (terminalMatch.Success)
+                        {
+                            if (commandName == null)
+                            {
+                                commandName = Path.GetFileNameWithoutExtension(terminalMatch.Value.Trim());
+                            }
+
+                            continue;
+                        }
+
+                        // Find the first argument that is not a shell/terminal or command line option. We must also
+                        // account for scenarios where we are referencing a script inline on the command line
+                        // (e.g. python.exe -c "print('Hello from inline Python')" ).
+                        string fileName = Path.GetFileNameWithoutExtension(normalizedArgument);
+                        if (!PlatformSpecifics.ValidFileNameExpression.IsMatch(fileName))
+                        {
+                            continue;
+                        }
+
+                        commandName = fileName;
+                        break;
+                    }
+                }
+            }
+
+            return !string.IsNullOrWhiteSpace(commandName);
+        }
+
+        /// <summary>
+        /// Returns the name of the command being executed.
+        /// </summary>
+        /// <param name="commandArguments">The command line arguments.</param>
+        /// <param name="commandName">The name of the command.</param>
+        public static bool TryGetCommandName(string[] commandArguments, out string commandName)
+        {
+            commandName = null;
+
+            foreach (string argument in commandArguments)
+            {
+                string normalizedArgument = argument?.Trim(PlatformSpecifics.CommandTrimChars);
+                if (normalizedArgument?.Length > 1)
+                {
+                    if (string.Equals(normalizedArgument, "sudo"))
+                    {
+                        continue;
+                    }
+
+                    // It is difficult to determine a random command from Python. We default to the terminal name here.
+                    if (Regex.IsMatch(normalizedArgument, "py -c|py.exe -c|python -c|python.exe -c|python3 -c|python3.exe -c", RegexOptions.IgnoreCase))
+                    {
+                        commandName = "python";
+                        break;
+                    }
+
+                    // It is difficult to determine a random command from PowerShell. We default to the terminal name here.
+                    if (Regex.IsMatch(normalizedArgument, "Import-Module[^;&&]+(.+)", RegexOptions.IgnoreCase))
+                    {
+                        commandName = "python";
+                        break;
+                    }
+
+                    // Default command name is the terminal itself (e.g. pwsh, python, cmd, bash).
+                    Match terminalMatch = PlatformSpecifics.CommandTerminalExpression.Match(normalizedArgument);
+                    if (terminalMatch.Success)
+                    {
+                        if (commandName == null)
+                        {
+                            commandName = Path.GetFileNameWithoutExtension(terminalMatch.Value.Trim());
+                        }
+
+                        continue;
+                    }
+
+                    // Find the first argument that is not a shell/terminal or command line option.
+                    commandName = Path.GetFileNameWithoutExtension(normalizedArgument);
+                    break;
+                }
+            }
+
+            return !string.IsNullOrWhiteSpace(commandName);
+        }
+
+        /// <summary>
+        /// Returns true if the command parts can be determined and outputs the parts.
+        /// </summary>
+        /// <param name="fullCommand">The full comamnd and arguments (e.g. sudo lshw -c disk).</param>
+        /// <param name="command">The command to execute.</param>
+        /// <param name="commandArguments">The arguments to pass to the command.</param>
+        public static bool TryGetCommandParts(string fullCommand, out string command, out string commandArguments)
+        {
+            fullCommand.ThrowIfNullOrWhiteSpace(nameof(fullCommand));
+
+            command = null;
+            commandArguments = null;
+
+            string effectiveFullCommand = fullCommand.Trim();
+            Match commandMatch = null;
+
+            // Note:
+            // \x22 = quotation mark
+            if (effectiveFullCommand.StartsWith('"'))
+            {
+                // e.g.
+                // "/home/user/dir/anycommand"
+                // "/home/user/dir with space/anycommand"
+                //
+                // ...directories having spaces in the name
+                // "/home/user/dir/anycommand" --argument=value --argument2=value2
+                // "/home/user/dir with space/anycommand" --argument=value --argument2=value2
+                commandMatch = Regex.Match(effectiveFullCommand, @"^(\x22[\x20\x21\x23-\x7E]+\x22)", RegexOptions.IgnoreCase);
+            }
+            else
+            {
+                // e.g.
+                // /home/user/dir/anycommand
+                // /home/user/dir/anycommand --argument=value --argument2=value2
+                commandMatch = Regex.Match(effectiveFullCommand, @"^([\x21\x23-\x7E]+)", RegexOptions.IgnoreCase);
+            }
+
+            if (commandMatch.Success)
+            {
+                command = commandMatch.Groups[1].Value?.Trim();
+                commandArguments = fullCommand.Substring(commandMatch.Groups[1].Value.Trim().Length)?.Trim();
+
+                if (string.IsNullOrWhiteSpace(commandArguments))
+                {
+                    commandArguments = null;
+                }
+            }
+
+            return command != null;
+        }
+
+        /// <summary>
         /// Combines the path segments into a valid path for the platform/OS.
         /// </summary>
         /// <param name="pathSegments">Individual segments of a full path.</param>
@@ -383,6 +587,32 @@ namespace VirtualClient.Contracts
         public virtual string GetEnvironmentVariable(string variableName, EnvironmentVariableTarget target = EnvironmentVariableTarget.Process)
         {
             return Environment.GetEnvironmentVariable(variableName, target);
+        }
+
+        /// <summary>
+        /// Get the logged in user/username. On Windows systems, the user is discoverable even when running as Administrator.
+        /// On Linux systems, the user can be discovered using certain environment variables when running under sudo/root.
+        /// </summary>
+        public string GetLoggedInUser()
+        {
+            string loggedInUserName = Environment.UserName;
+            if (this.Platform == PlatformID.Unix)
+            {
+                // Note that when the user is "root" and running a command with "sudo", there will be
+                // no "SUDO_USER" environment variable.
+                string sudoUser = this.GetEnvironmentVariable(EnvironmentVariable.SUDO_USER);
+                if (string.IsNullOrWhiteSpace(sudoUser))
+                {
+                    sudoUser = this.GetEnvironmentVariable(EnvironmentVariable.VC_SUDO_USER);
+                }
+
+                if (!string.IsNullOrEmpty(sudoUser))
+                {
+                    return sudoUser;
+                }
+            }
+
+            return loggedInUserName;
         }
 
         /// <summary>
@@ -434,6 +664,16 @@ namespace VirtualClient.Contracts
             return additionalPathSegments?.Any() != true
                 ? this.ScriptsDirectory
                 : this.Combine(this.ScriptsDirectory, this.Combine(additionalPathSegments));
+        }
+
+        /// <summary>
+        /// Combines the path segments provided with path where temp files are stored.
+        /// </summary>
+        public string GetTempPath(params string[] additionalPathSegments)
+        {
+            return additionalPathSegments?.Any() != true
+                ? this.TempDirectory
+                : this.Combine(this.TempDirectory, this.Combine(additionalPathSegments));
         }
 
         /// <summary>
@@ -508,7 +748,7 @@ namespace VirtualClient.Contracts
                 {
                     commitChange = true;
                 }
-                else if (!originalValue.EndsWith(value))
+                else if (!originalValue.Contains(value, StringComparison.Ordinal))
                 {
                     commitChange = true;
                     newValue = $"{originalValue}{delimiter}{newValue}";
@@ -518,6 +758,51 @@ namespace VirtualClient.Contracts
             if (commitChange)
             {
                 Environment.SetEnvironmentVariable(name, newValue, target);
+            }
+        }
+
+        /// <summary>
+        /// Adds the environment variable to the process variables.
+        /// </summary>
+        /// <param name="process">The process to which to add the environment variables.</param>
+        /// <param name="name">The name of the environment variable to set.</param>
+        /// <param name="value">The value to which to set the environment variable or append to the end of the existing value.</param>
+        /// <param name="append">True to append the value to the end of the existing environment variable value. False to replace the existing value.</param>
+        public void SetEnvironmentVariable(IProcessProxy process, string name, string value, bool append = false)
+        {
+            process.ThrowIfNull(nameof(process));
+            name.ThrowIfNullOrWhiteSpace(nameof(name));
+            value.ThrowIfNullOrWhiteSpace(nameof(value));
+
+            string originalValue = null;
+            if (process.EnvironmentVariables.ContainsKey(name))
+            {
+                originalValue = process.EnvironmentVariables[name];
+            }
+
+            string newValue = value ?? string.Empty;
+            bool commitChange = true;
+
+            if (!string.IsNullOrWhiteSpace(originalValue) && append)
+            {
+                commitChange = false;
+                char delimiter = this.Platform == PlatformID.Unix ? ':' : ';';
+
+                originalValue = originalValue?.TrimEnd(delimiter);
+                if (string.IsNullOrWhiteSpace(originalValue))
+                {
+                    commitChange = true;
+                }
+                else if (!originalValue.Contains(value, StringComparison.Ordinal))
+                {
+                    commitChange = true;
+                    newValue = $"{originalValue}{delimiter}{newValue}";
+                }
+            }
+
+            if (commitChange)
+            {
+                process.EnvironmentVariables[name] = newValue;
             }
         }
 

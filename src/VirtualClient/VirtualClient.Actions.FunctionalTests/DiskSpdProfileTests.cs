@@ -74,7 +74,7 @@ namespace VirtualClient.Actions
             // - The workload generates valid results.
             this.mockFixture.Setup(PlatformID.Win32NT);
             this.mockFixture.SetupDisks(withUnformatted: false);
-            this.mockFixture.SetupWorkloadPackage("diskspd", expectedFiles: $@"win-x64\diskspd.exe");
+            this.mockFixture.SetupPackage("diskspd", expectedFiles: $@"win-x64\diskspd.exe");
 
             this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {

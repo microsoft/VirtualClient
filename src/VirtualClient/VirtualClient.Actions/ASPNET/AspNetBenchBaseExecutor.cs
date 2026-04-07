@@ -163,26 +163,22 @@ namespace VirtualClient.Actions
             try 
             {
                 // Check for Bombardier Package, if not available try wrk package
-                DependencyPath bombardierPackage = await this.packageManager.GetPlatformSpecificPackageAsync(this.BombardierPackageName, this.Platform, this.CpuArchitecture, cancellationToken)
-                               .ConfigureAwait(false);
+                DependencyPath bombardierPackage = await this.GetPlatformSpecificPackageAsync(this.BombardierPackageName, cancellationToken);
 
                 if (bombardierPackage != null)
                 {
                     this.bombardierFilePath = this.Combine(bombardierPackage.Path, this.Platform == PlatformID.Unix ? "bombardier" : "bombardier.exe");
-                    await this.systemManagement.MakeFileExecutableAsync(this.bombardierFilePath, this.Platform, cancellationToken)
-                        .ConfigureAwait(false);
+                    await this.systemManagement.MakeFileExecutableAsync(this.bombardierFilePath, this.Platform, cancellationToken);
                 }
             }
             catch (DependencyException)
             {
-                DependencyPath wrkPackage = await this.packageManager.GetPackageAsync(this.WrkPackageName, cancellationToken)
-                                .ConfigureAwait(false);
+                DependencyPath wrkPackage = await this.packageManager.GetPackageAsync(this.WrkPackageName, cancellationToken);
 
                 if (wrkPackage != null)
                 {
                     this.wrkFilePath = this.Combine(wrkPackage.Path, "wrk");
-                    await this.systemManagement.MakeFileExecutableAsync(this.wrkFilePath, this.Platform, cancellationToken)
-                        .ConfigureAwait(false);
+                    await this.systemManagement.MakeFileExecutableAsync(this.wrkFilePath, this.Platform, cancellationToken);
                 }
             }
         }
@@ -207,13 +203,13 @@ namespace VirtualClient.Actions
             }
 
             this.dotnetExePath = this.Combine(dotnetSdkPackage.Path, this.Platform == PlatformID.Unix ? "dotnet" : "dotnet.exe");
-            // ~/vc/packages/dotnet/dotnet build -c Release -p:BenchmarksTargetFramework=net8.0
+            // ~/vc/packages/dotnet/dotnet build -c Release -p:BenchmarksTargetFramework=net9.0
             // Build the aspnetbenchmark project
             string buildArgument = $"build -c Release -p:BenchmarksTargetFramework={this.TargetFramework}";
             await this.ExecuteCommandAsync(this.dotnetExePath, buildArgument, this.aspnetBenchDirectory, telemetryContext, cancellationToken)
                 .ConfigureAwait(false);
 
-            // "C:\Users\vcvmadmin\Benchmarks\src\Benchmarks\bin\Release\net8.0\Benchmarks.dll"
+            // "C:\Users\vcvmadmin\Benchmarks\src\Benchmarks\bin\Release\net9.0\Benchmarks.dll"
             this.aspnetBenchDllPath = this.Combine(
                 this.aspnetBenchDirectory,
                 "bin",

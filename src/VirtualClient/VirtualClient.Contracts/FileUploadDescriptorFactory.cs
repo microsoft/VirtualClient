@@ -16,7 +16,7 @@ namespace VirtualClient.Contracts
     /// </summary>
     public static class FileUploadDescriptorFactory
     {
-        private const string DefaultContentPathTemplate = "{experimentId}/{agentId}/{toolName}/{role}/{scenario}";
+        internal const string DefaultContentPathTemplate = "{experimentId}/{clientId}/{toolName}/{role}/{scenario}";
 
         private static readonly Regex TemplatePlaceholderExpression = new Regex(@"\{(.*?)\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
@@ -53,7 +53,8 @@ namespace VirtualClient.Contracts
         /// file name is not desirable. Default = true (timestamped file names).
         /// </param>
         /// <param name="pathTemplate">Content path template to use when uploading content to target storage resources.</param>
-        public static FileUploadDescriptor CreateDescriptor(FileContext fileContext, IDictionary<string, IConvertible> parameters = null, IDictionary<string, IConvertible> metadata = null, bool timestamped = true, string pathTemplate = null)
+        /// <param name="subPath">A base directory path to preserve when creating the blob path.</param>
+        public static FileUploadDescriptor CreateDescriptor(FileContext fileContext, IDictionary<string, IConvertible> parameters = null, IDictionary<string, IConvertible> metadata = null, bool timestamped = true, string pathTemplate = null, string subPath = null)
         {
             fileContext.ThrowIfNull(nameof(fileContext));
 
@@ -61,7 +62,7 @@ namespace VirtualClient.Contracts
 
             if (timestamped)
             {
-                blobName = FileUploadDescriptor.GetFileName(blobName, fileContext.File.CreationTimeUtc);
+                blobName = FileContext.GetFileName(blobName, fileContext.File.CreationTimeUtc);
             }
 
             // The caller of this factory method makes the determination on the runtime parameters that are 
@@ -69,6 +70,7 @@ namespace VirtualClient.Contracts
             {
                 { "experimentId", fileContext.ExperimentId },
                 { "agentId", fileContext.AgentId },
+                { "clientId", fileContext.AgentId },
                 { "toolName", fileContext.ToolName },
                 { "role", fileContext.Role },
                 { "scenario", fileContext.Scenario }
@@ -97,7 +99,7 @@ namespace VirtualClient.Contracts
             }
 
             effectivePathTemplate = effectivePathTemplate ?? FileUploadDescriptorFactory.DefaultContentPathTemplate;
-            string resolvedTemplate = FileUploadDescriptorFactory.ResolveContentPathTemplateParts(effectivePathTemplate, runtimeParameters, parameters, metadata);
+            string resolvedTemplate = FileUploadDescriptorFactory.ResolveContentPathTemplateParts(effectivePathTemplate, runtimeParameters, parameters, metadata, subPath);
 
             string[] resolvedTemplateParts = resolvedTemplate?.Split("/", StringSplitOptions.RemoveEmptyEntries);
             if (resolvedTemplateParts?.Any() != true)
@@ -141,7 +143,8 @@ namespace VirtualClient.Contracts
             string pathTemplate,
             IDictionary<string, IConvertible> runtimeMetadata,
             IDictionary<string, IConvertible> parameters,
-            IDictionary<string, IConvertible> metadata)
+            IDictionary<string, IConvertible> metadata,
+            string subPath = null)
         {
             string resolvedTemplate = pathTemplate;
             MatchCollection matches = FileUploadDescriptorFactory.TemplatePlaceholderExpression.Matches(pathTemplate);
@@ -151,30 +154,58 @@ namespace VirtualClient.Contracts
                 string resolvedValue;
                 foreach (Match match in matches)
                 {
-                    // Order of placeholder resolution:
-                    // 1) Metadata known by the VC runtime is applied first because it is definitive.
-                    // 2) Component metadata supplied to the factory.
-                    // 3) Component parameters supplied to the factory.
-                    if (FileUploadDescriptorFactory.TryResolvePlaceholder(runtimeMetadata, match.Groups[1].Value, out resolvedValue))
+                    string[] effectivePlaceholders = null;
+                    string templatePlaceholder = match.Groups[1].Value;
+                    if (templatePlaceholder.IndexOf('|') < 0)
                     {
-                        resolvedTemplate = resolvedTemplate.Replace(match.Value, resolvedValue);
-                    }
-                    else if (metadata?.Any() == true && FileUploadDescriptorFactory.TryResolvePlaceholder(metadata, match.Groups[1].Value, out resolvedValue))
-                    {
-                        resolvedTemplate = resolvedTemplate.Replace(match.Value, resolvedValue);
-                    }
-                    else if (parameters?.Any() == true && FileUploadDescriptorFactory.TryResolvePlaceholder(parameters, match.Groups[1].Value, out resolvedValue))
-                    {
-                        resolvedTemplate = resolvedTemplate.Replace(match.Value, resolvedValue);
+                        effectivePlaceholders = new string[] { templatePlaceholder };
                     }
                     else
+                    {
+                        effectivePlaceholders = templatePlaceholder.Split("|", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                    }
+
+                    bool placeholderMatched = false;
+                    foreach (string placeholder in effectivePlaceholders)
+                    {
+                        // Order of placeholder resolution:
+                        // 1) Metadata known by the VC runtime is applied first because it is definitive.
+                        // 2) Component metadata supplied to the factory.
+                        // 3) Component parameters supplied to the factory.
+                        if (FileUploadDescriptorFactory.TryResolvePlaceholder(runtimeMetadata, placeholder, out resolvedValue))
+                        {
+                            placeholderMatched = true;
+                            resolvedTemplate = resolvedTemplate.Replace(match.Value, resolvedValue);
+                            break;
+                        }
+                        else if (metadata?.Any() == true && FileUploadDescriptorFactory.TryResolvePlaceholder(metadata, placeholder, out resolvedValue))
+                        {
+                            placeholderMatched = true;
+                            resolvedTemplate = resolvedTemplate.Replace(match.Value, resolvedValue);
+                            break;
+                        }
+                        else if (parameters?.Any() == true && FileUploadDescriptorFactory.TryResolvePlaceholder(parameters, placeholder, out resolvedValue))
+                        {
+                            placeholderMatched = true;
+                            resolvedTemplate = resolvedTemplate.Replace(match.Value, resolvedValue);
+                            break;
+                        }
+                    }
+
+                    if (!placeholderMatched)
                     {
                         resolvedTemplate = resolvedTemplate.Replace(match.Value, string.Empty);
                     }
                 }
             }
 
-            return resolvedTemplate.Replace("//", "/");
+            if (!string.IsNullOrWhiteSpace(subPath))
+            {
+                string effectiveSubpath = subPath.Replace('\\', '/').Trim('/');
+                resolvedTemplate = $"{resolvedTemplate}/{effectiveSubpath}";
+            }
+
+            return resolvedTemplate.Replace("//", "/").Trim('/');
         }
 
         private static bool TryResolvePlaceholder(IDictionary<string, IConvertible> metadata, string propertyName, out string resolvedValue)

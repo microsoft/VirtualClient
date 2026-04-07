@@ -5,7 +5,6 @@ namespace VirtualClient
 {
     using System;
     using System.Collections.Generic;
-    using System.IO.Abstractions;
     using System.Linq;
     using System.Runtime.InteropServices;
     using System.Security.Cryptography;
@@ -23,6 +22,8 @@ namespace VirtualClient
     /// </summary>
     public static class EndpointUtility
     {
+        private const string AllowedPackageUri = "https://packages.virtualclient.microsoft.com";
+
         /// <summary>
         /// Creates a <see cref="DependencyBlobStore"/> definition from the connection properties provided.
         /// <list>
@@ -43,6 +44,7 @@ namespace VirtualClient
             certificateManager.ThrowIfNull(nameof(certificateManager));
 
             DependencyBlobStore store = null;
+            endpoint = ValidateAndFormatPackageUri(endpoint);
             string argumentValue = endpoint.Trim(new char[] { '\'', '"', ' ' });
 
             if (EndpointUtility.IsStorageAccountConnectionString(argumentValue))
@@ -70,6 +72,10 @@ namespace VirtualClient
                 // or
                 // Custom URI
                 // https://any.service.azure.com/?cid=307591a4-abb2-4559-af59-b47177d140cf&tid=985bbc17-e3a5-4fec-b0cb-40dbb8bc5959&crtt=1753429a8bc4f91d
+                // or
+                // Package URI
+                // https://packages.virtualclient.microsoft.com
+
                 store = EndpointUtility.CreateBlobStoreReference(storeName, endpointUri, certificateManager);
             }
 
@@ -162,6 +168,54 @@ namespace VirtualClient
                     $"See the following documentation for additional details and examples:{Environment.NewLine}" +
                     $"- https://microsoft.github.io/VirtualClient/docs/guides/0010-command-line/{Environment.NewLine}" +
                     $"- https://microsoft.github.io/VirtualClient/docs/guides/0610-integration-event-hub/{Environment.NewLine}");
+            }
+
+            return store;
+        }
+
+        /// <summary>
+        /// Creates a <see cref="DependencyKeyVaultStore"/> definition from the connection string provided.
+        /// </summary>
+        /// <param name="storeName">The name of the dependency store (e.g. KeyVault, Packages).</param>
+        /// <param name="endpoint">A connection string or URI describing the target Key Vault endpoint and any identity/authentication information.</param>
+        /// <param name="certificateManager"></param>
+        public static DependencyKeyVaultStore CreateKeyVaultStoreReference(string storeName, string endpoint, ICertificateManager certificateManager)
+        {
+            storeName.ThrowIfNullOrWhiteSpace(nameof(storeName));
+            endpoint.ThrowIfNullOrWhiteSpace(nameof(endpoint));
+            certificateManager.ThrowIfNull(nameof(certificateManager));
+
+            DependencyKeyVaultStore store = null;
+            string argumentValue = endpoint.Trim(new char[] { '\'', '\"', ' ' });
+
+            if (EndpointUtility.IsCustomConnectionString(argumentValue))
+            {
+                // e.g.
+                // Endpoint=https://my-keyvault.vault.azure.net/;CertificateThumbprint=1234567;ClientId=985bbc17;TenantId=307591a4
+                IDictionary<string, string> connectionParameters = TextParsingExtensions.ParseDelimitedValues(argumentValue)?.ToDictionary(
+                    entry => entry.Key,
+                    entry => entry.Value?.ToString(),
+                    StringComparer.OrdinalIgnoreCase);
+
+                store = EndpointUtility.CreateKeyVaultStoreReference(storeName, connectionParameters, certificateManager);
+            }
+            else if (Uri.TryCreate(argumentValue, UriKind.Absolute, out Uri endpointUri))
+            {
+                // e.g.
+                // https://my-keyvault.vault.azure.net
+                // https://my-keyvault.vault.azure.net/?cid=985bbc17-e3a5-4fec-b0cb-40dbb8bc5959&tid=307591a4-abb2-4559-af59-b47177d140cf&crtt=123456789
+                store = EndpointUtility.CreateKeyVaultStoreReference(storeName, endpointUri, certificateManager);
+            }
+
+            if (store == null)
+            {
+                throw new SchemaException(
+                    $"The value provided for the Key Vault endpoint is invalid. The value must be one of the following supported identifiers:{Environment.NewLine}" +
+                    $"1) A valid Key Vault namespace access policy/connection string{Environment.NewLine}" +
+                    $"2) A URI with Microsoft Entra ID/App identity information(e.g. using certificate-based authentication){Environment.NewLine}" +
+                    $"3) A URI with Microsoft Azure Managed Identity information{Environment.NewLine}{Environment.NewLine}" +
+                    $"See the following documentation for additional details and examples:{Environment.NewLine}" +
+                    $"- https://microsoft.github.io/VirtualClient/docs/guides/0010-command-line/{Environment.NewLine}");
             }
 
             return store;
@@ -295,6 +349,86 @@ namespace VirtualClient
             return Regex.IsMatch(endpointUri.Query, "sv=|se=|spr=|sig=", RegexOptions.IgnoreCase);
         }
 
+        /// <summary>
+        /// Returns true/false whether the provided endpoint uri is allowed to access package.
+        /// (e.g. https://packages.virtualclient.microsoft.com)
+        /// </summary>
+        /// <param name="endpointUri">The URI to evaluate.</param>
+        /// <param name="storeName"></param>
+        /// <returns></returns>
+        /// <exception cref="DependencyException"></exception>
+        public static bool IsPackageUri(Uri endpointUri, string storeName)
+        {
+            bool packageUri = new Uri(AllowedPackageUri).Host.Equals(endpointUri.Host, StringComparison.OrdinalIgnoreCase);
+            if (storeName == DependencyStore.Content && packageUri)
+            {
+                throw new SchemaException(
+                    $"The URI provided for '--{storeName}' is not supported. {Environment.NewLine}. The value must be one of the following supported identifiers: {Environment.NewLine}" +
+                    $"1) A valid storage account or blob container SAS URI{Environment.NewLine}" +
+                    $"2) A URI with Microsoft Entra ID/App identity information (e.g. using certificate-based authentication){Environment.NewLine}" +
+                    $"3) A URI with Microsoft Azure Managed Identity information{Environment.NewLine}" +
+                    $"4) A directory path that exists on the system.{Environment.NewLine}{Environment.NewLine}{Environment.NewLine}" +
+                    $"See the following documentation for additional details and examples:{Environment.NewLine}" +
+                    $"- https://microsoft.github.io/VirtualClient/docs/guides/0010-command-line/{Environment.NewLine}" +
+                    $"- https://microsoft.github.io/VirtualClient/docs/guides/0600-integration-blob-storage/{Environment.NewLine}");
+            }
+
+            return storeName == DependencyStore.Packages && packageUri;
+        }
+
+        /// <summary>
+        /// Parses the subject name and issuer from the provided uri. If the uri does not contain the correctly formatted certificate subject name
+        /// and issuer information the method will return false, and keep the two out parameters as null.
+        /// Ex. https://vegaprod01proxyapi.azurewebsites.net?crti=issuerName&amp;crts=certSubject
+        /// </summary>
+        /// <param name="uri">The uri to attempt to parse the values from.</param>
+        /// <param name="issuer">The issuer of the certificate.</param>
+        /// <param name="subject">The subject of the certificate.</param>
+        /// <returns>True/False if the method was able to successfully parse both the subject name and the issuer of the certificate.</returns>
+        public static bool TryParseCertificateReference(Uri uri, out string issuer, out string subject)
+        {
+            string queryString = Uri.UnescapeDataString(uri.Query).Trim('?').Replace("&", ",,,");
+
+            IDictionary<string, string> queryParameters = TextParsingExtensions.ParseDelimitedValues(queryString)?.ToDictionary(
+                entry => entry.Key,
+                entry => entry.Value?.ToString(),
+                StringComparer.OrdinalIgnoreCase);
+
+            return TryGetCertificateReferenceForUri(queryParameters, out issuer, out subject);
+        }
+
+        /// <summary>
+        /// Tries to parse the Microsoft Entra reference information from the provided uri. If the uri does not contain the correctly formatted client ID
+        /// and tenant ID information the method will return false, and keep the two out parameters as null.
+        /// Ex. https://anystore.blob.core.windows.net?cid={clientId};tid={tenantId}
+        /// </summary>
+        /// <param name="uri">The uri to attempt to parse the values from.</param>
+        /// <param name="tenantId">The tenant ID from the Microsoft Entra reference.</param>
+        /// <returns>True/False if the method was able to successfully parse both the client ID and the tenant ID from the Microsoft Entra reference.</returns>
+        public static bool TryParseMicrosoftEntraTenantIdReference(Uri uri, out string tenantId)
+        {
+            string queryString = Uri.UnescapeDataString(uri.Query).Trim('?').Replace("&", ",,,");
+
+            IDictionary<string, string> queryParameters = TextParsingExtensions.ParseDelimitedValues(queryString)?.ToDictionary(
+                entry => entry.Key,
+                entry => entry.Value?.ToString(),
+                StringComparer.OrdinalIgnoreCase);
+
+            return TryGetMicrosoftEntraTenantId(queryParameters, out tenantId);
+        }
+
+        /// <summary>
+        /// Returns the endpoint by verifying package uri checks.
+        /// if the endpoint is a package uri without http or https protocols then append the protocol else return the endpoint value.
+        /// </summary>
+        /// <param name="endpoint">endpoint to verify and format</param>
+        /// <returns></returns>
+        public static string ValidateAndFormatPackageUri(string endpoint)
+        {
+            string packageUri = new Uri(AllowedPackageUri).Host;
+            return packageUri == endpoint ? $"https://{endpoint}" : endpoint;
+        }
+
         private static DependencyBlobStore CreateBlobStoreReference(string storeName, string connectionString)
         {
             storeName.ThrowIfNullOrWhiteSpace(nameof(storeName));
@@ -333,10 +467,12 @@ namespace VirtualClient
 
             if (string.IsNullOrWhiteSpace(endpointUri.Query))
             {
-                // 1) Basic URI without any query parameters
-                //    e.g. https://any.blob.core.windows.net
-
-                store = new DependencyBlobStore(storeName, endpointUri);
+                // Basic URI without any query parameters
+                // 1) If the given endpoint uri is a package uri (e.g. https://packages.virtualclient.microsoft.com ) then the package is retrieved from storage via CDN
+                // 2) If the given endpoint uri is a blob storage (e.g https://any.blob.core.windows.net) then the packages is retrieved from blob storage 
+                store = IsPackageUri(endpointUri, storeName)
+                    ? new DependencyBlobStore(storeName, endpointUri, DependencyStore.StoreTypeAzureCDN)
+                    : new DependencyBlobStore(storeName, endpointUri);
             }
             else if (EndpointUtility.IsStorageAccountSasUri(endpointUri))
             {
@@ -457,34 +593,6 @@ namespace VirtualClient
             return store;
         }
 
-        private static DependencyEventHubStore CreateEventHubStoreReference(string storeName, string connectionString)
-        {
-            storeName.ThrowIfNullOrWhiteSpace(nameof(storeName));
-            connectionString.ThrowIfNullOrWhiteSpace(nameof(connectionString));
-
-            DependencyEventHubStore store = null;
-
-            if (EndpointUtility.IsEventHubConnectionString(connectionString))
-            {
-                // #1 - Storage account-level or container-level connection string
-                store = new DependencyEventHubStore(storeName, connectionString);
-            }
-
-            if (store == null)
-            {
-                throw new SchemaException(
-                    $"The value provided for the Event Hub endpoint is invalid. The value must be one of the following supported identifiers:{Environment.NewLine}" +
-                    $"1) A valid Event Hub namespace access policy/connection string{Environment.NewLine}" +
-                    $"2) A URI with Microsoft Entra ID/App identity information(e.g. using certificate-based authentication){Environment.NewLine}" +
-                    $"3) A URI with Microsoft Azure Managed Identity information{Environment.NewLine}{Environment.NewLine}" +
-                    $"See the following documentation for additional details and examples:{Environment.NewLine}" +
-                    $"- https://microsoft.github.io/VirtualClient/docs/guides/0010-command-line/{Environment.NewLine}" +
-                    $"- https://microsoft.github.io/VirtualClient/docs/guides/0610-integration-event-hub/{Environment.NewLine}");
-            }
-
-            return store;
-        }
-
         private static DependencyEventHubStore CreateEventHubStoreReference(string storeName, Uri endpointUri, ICertificateManager certificateManager)
         {
             storeName.ThrowIfNullOrWhiteSpace(nameof(storeName));
@@ -598,6 +706,129 @@ namespace VirtualClient
                     $"See the following documentation for additional details and examples:{Environment.NewLine}" +
                     $"- https://microsoft.github.io/VirtualClient/docs/guides/0010-command-line/{Environment.NewLine}" +
                     $"- https://microsoft.github.io/VirtualClient/docs/guides/0610-integration-event-hub/{Environment.NewLine}");
+            }
+
+            return store;
+        }
+
+        private static DependencyKeyVaultStore CreateKeyVaultStoreReference(string storeName, Uri endpointUri, ICertificateManager certificateManager)
+        {
+            storeName.ThrowIfNullOrWhiteSpace(nameof(storeName));
+            endpointUri.ThrowIfNull(nameof(endpointUri));
+            certificateManager.ThrowIfNull(nameof(certificateManager));
+
+            DependencyKeyVaultStore store = null;
+
+            if (string.IsNullOrWhiteSpace(endpointUri.Query))
+            {
+                // Basic URI without any query parameters
+                // 1) If the given endpoint uri is a package uri (e.g. https://packages.virtualclient.microsoft.com ) then the package is retrieved from storage via CDN
+                // 2) If the given endpoint uri is a blob storage (e.g https://any.blob.core.windows.net) then the packages is retrieved from blob storage 
+                store = new DependencyKeyVaultStore(DependencyStore.KeyVault, endpointUri);
+            }
+            else if (EndpointUtility.IsCustomUri(endpointUri))
+            {
+                // URI for Microsoft Entra or Managed Identity
+                // e.g. https://my-keyvault.vault.azure.net/?cid=307591a4-abb2-4559-af59-b47177d140cf&tid=985bbc17-e3a5-4fec-b0cb-40dbb8bc5959&crti=ABC&crts=any.service.com)
+
+                // We unescape any URI-encoded characters (e.g. spaces -> %20).
+                string queryString = Uri.UnescapeDataString(endpointUri.Query).Trim('?').Replace("&", ",,,");
+
+                IDictionary<string, string> queryParameters = TextParsingExtensions.ParseDelimitedValues(queryString)?.ToDictionary(
+                    entry => entry.Key,
+                    entry => entry.Value?.ToString(),
+                    StringComparer.OrdinalIgnoreCase);
+
+                TokenCredential credential = null;
+                if (EndpointUtility.TryGetManagedIdentityReferenceForUri(queryParameters, out string managedIdentityId))
+                {
+                    credential = new ManagedIdentityCredential(managedIdentityId);
+                }
+                else if (EndpointUtility.TryGetMicrosoftEntraReferenceForUri(queryParameters, out string clientId, out string tenantId))
+                {
+                    if (EndpointUtility.TryGetCertificateReferenceForUri(queryParameters, out string certificateThumbprint))
+                    {
+                        credential = EndpointUtility.CreateIdentityTokenCredentialAsync(certificateManager, clientId, tenantId, certificateThumbprint)
+                            .GetAwaiter().GetResult();
+                    }
+                    else if (EndpointUtility.TryGetCertificateReferenceForUri(queryParameters, out string certificateIssuer, out string certificateSubject))
+                    {
+                        credential = EndpointUtility.CreateIdentityTokenCredentialAsync(certificateManager, clientId, tenantId, certificateIssuer, certificateSubject)
+                            .GetAwaiter().GetResult();
+                    }
+                }
+
+                if (credential != null)
+                {
+                    // e.g.
+                    // https://my-keyvault.vault.azure.net/?miid=307591a4-abb2-4559-af59-b47177d140cf -> https://my-keyvault.vault.azure.net/
+
+                    Uri baseUri = new Uri(endpointUri.OriginalString.Substring(0, endpointUri.OriginalString.IndexOf("?")));
+                    store = new DependencyKeyVaultStore(storeName, baseUri, credential);
+                }
+            }
+
+            if (store == null)
+            {
+                throw new SchemaException(
+                    $"The value provided for the Key Vault endpoint is invalid. The value must be one of the following supported identifiers:{Environment.NewLine}" +
+                    $"1) A valid Key Vault access policy/connection string{Environment.NewLine}" +
+                    $"2) A URI with Microsoft Entra ID/App identity information(e.g. using certificate-based authentication){Environment.NewLine}" +
+                    $"3) A URI with Microsoft Azure Managed Identity information{Environment.NewLine}{Environment.NewLine}" +
+                    $"See the following documentation for additional details and examples:{Environment.NewLine}" +
+                    $"- https://microsoft.github.io/VirtualClient/docs/guides/0010-command-line/{Environment.NewLine}");
+            }
+
+            return store;
+        }
+
+        private static DependencyKeyVaultStore CreateKeyVaultStoreReference(string storeName, IDictionary<string, string> connectionParameters, ICertificateManager certificateManager)
+        {
+            storeName.ThrowIfNullOrWhiteSpace(nameof(storeName));
+            connectionParameters.ThrowIfNullOrEmpty(nameof(connectionParameters));
+            certificateManager.ThrowIfNull(nameof(certificateManager));
+
+            DependencyKeyVaultStore store = null;
+
+            if (EndpointUtility.TryGetEndpointForConnection(connectionParameters, out string endpoint))
+            {
+                if (Uri.TryCreate(endpoint, UriKind.Absolute, out Uri endpointUri))
+                {
+                    TokenCredential credential = null;
+                    if (EndpointUtility.TryGetManagedIdentityReferenceForConnection(connectionParameters, out string managedIdentityId))
+                    {
+                        credential = new ManagedIdentityCredential(managedIdentityId);
+                    }
+                    else if (EndpointUtility.TryGetMicrosoftEntraReferenceForConnection(connectionParameters, out string clientId, out string tenantId))
+                    {
+                        if (EndpointUtility.TryGetCertificateReferenceForConnection(connectionParameters, out string certificateThumbprint))
+                        {
+                            credential = EndpointUtility.CreateIdentityTokenCredentialAsync(certificateManager, clientId, tenantId, certificateThumbprint)
+                                .GetAwaiter().GetResult();
+                        }
+                        else if (EndpointUtility.TryGetCertificateReferenceForConnection(connectionParameters, out string certificateIssuer, out string certificateSubject))
+                        {
+                            credential = EndpointUtility.CreateIdentityTokenCredentialAsync(certificateManager, clientId, tenantId, certificateIssuer, certificateSubject)
+                                .GetAwaiter().GetResult();
+                        }
+                    }
+
+                    if (credential != null)
+                    {
+                        store = new DependencyKeyVaultStore(storeName, endpointUri, credential);
+                    }
+                }
+            }
+
+            if (store == null)
+            {
+                throw new SchemaException(
+                    $"The value provided for the Key Vault endpoint is invalid. The value must be one of the following supported identifiers:{Environment.NewLine}" +
+                    $"1) A valid Key Vault namespace access policy/connection string{Environment.NewLine}" +
+                    $"2) A connection string or URI with Microsoft Entra ID/App information (e.g. using certificate-based authentication){Environment.NewLine}" +
+                    $"3) A connection string or URI with Microsoft Azure Managed Identity information{Environment.NewLine}{Environment.NewLine}" +
+                    $"See the following documentation for additional details and examples:{Environment.NewLine}" +
+                    $"- https://microsoft.github.io/VirtualClient/docs/guides/0010-command-line/{Environment.NewLine}");
             }
 
             return store;
@@ -735,9 +966,9 @@ namespace VirtualClient
             else
             {
                 certificate = await certificateManager.GetCertificateFromStoreAsync(
-                    certificateIssuer, 
-                    certificateSubject, 
-                    storeLocations, 
+                    certificateIssuer,
+                    certificateSubject,
+                    storeLocations,
                     storeName);
             }
 
@@ -1052,6 +1283,24 @@ namespace VirtualClient
                     && !string.IsNullOrWhiteSpace(microsoftEntraTenantId))
                 {
                     clientId = microsoftEntraClientId;
+                    tenantId = microsoftEntraTenantId;
+                    parametersDefined = true;
+                }
+            }
+
+            return parametersDefined;
+        }
+
+        private static bool TryGetMicrosoftEntraTenantId(IDictionary<string, string> uriParameters, out string tenantId)
+        {
+            bool parametersDefined = false;
+            tenantId = null;
+
+            if (uriParameters?.Any() == true)
+            {
+                if (uriParameters.TryGetValue(UriParameter.TenantId, out string microsoftEntraTenantId)
+                    && !string.IsNullOrWhiteSpace(microsoftEntraTenantId))
+                {
                     tenantId = microsoftEntraTenantId;
                     parametersDefined = true;
                 }

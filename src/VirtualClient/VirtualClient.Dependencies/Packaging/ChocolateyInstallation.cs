@@ -56,7 +56,7 @@ namespace VirtualClient.Dependencies
                 using (IProcessProxy process = systemManagement.ProcessManager.CreateElevatedProcess(
                         this.Platform, "powershell.exe", $"-Command {argument}", this.PlatformSpecifics.PackagesDirectory))
                 {
-                    this.CleanupTasks.Add(() => process.SafeKill());
+                    this.CleanupTasks.Add(() => process.SafeKill(this.Logger));
 
                     await process.StartAndWaitAsync(cancellationToken)
                         .ConfigureAwait(false);

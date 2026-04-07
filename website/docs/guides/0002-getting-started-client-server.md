@@ -49,12 +49,12 @@ settings on the systems in order to allow for HTTP traffic on the default port u
 - Run the following command on Client
 
   ``` bash
-  sudo ./VirtualClient --clientId=TestClient --profile=GET-STARTED-REDIS.json --profile=MONITORS-NONE.json --iterations=1 --packages=https://virtualclient.blob.core.windows.net/packages --layoutPath=./layout.json
+  sudo ./VirtualClient --clientId=TestClient --profile=GET-STARTED-REDIS.json --layoutPath=./layout.json
   ```
 - Run the following command on Server
 
   ```bash
-  sudo ./VirtualClient --clientId=TestServer --profile=GET-STARTED-REDIS.json --profile=MONITORS-NONE.json --iterations=1 --packages=https://virtualclient.blob.core.windows.net/packages --layoutPath=./layout.json
+  sudo ./VirtualClient --clientId=TestServer --profile=GET-STARTED-REDIS.json --layoutPath=./layout.json
   ```
 - Context on the command lines used:
   - Note that two commands are exactly the same except the `--clientId`. When the client ID is supplied on the command line, it will be the name Virtual Client uses to identify itself.
@@ -65,9 +65,6 @@ settings on the systems in order to allow for HTTP traffic on the default port u
 
   - The `--profile` option defines the exact workload or monitor profile(s) to run. Any number of profiles can be defined on the command line. If more than 1 is defined, all
     of the profiles will be merged into 1 at runtime.
-
-  - The `--packages` option defines the URI to the package store from which the Virtual Client can download dependencies it needs to run the profile (e.g. the Redis software).
-    The package store provided in the example is one maintained by the Virtual Client team that is publicly available.
 
 ## Walking Through the Operations
 The following section describes what is happening as the 2 instances of the Virtual Client are running on the different systems.

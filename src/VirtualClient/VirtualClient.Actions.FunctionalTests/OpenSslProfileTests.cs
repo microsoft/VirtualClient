@@ -82,7 +82,7 @@ namespace VirtualClient.Actions
             // - The workload generates valid results.
             this.mockFixture.Setup(PlatformID.Win32NT);
             this.mockFixture.SetupDisks(withRemoteDisks: false);
-            this.mockFixture.SetupWorkloadPackage("openssl", expectedFiles: @"win-x64\bin\openssl.exe");
+            this.mockFixture.SetupPackage("openssl", expectedFiles: @"win-x64\bin\openssl.exe");
 
             this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
@@ -115,7 +115,7 @@ namespace VirtualClient.Actions
             // - The workload generates valid results.
             this.mockFixture.Setup(PlatformID.Unix);
             this.mockFixture.SetupDisks(withRemoteDisks: false);
-            this.mockFixture.SetupWorkloadPackage("openssl", expectedFiles: @"linux-x64/bin/openssl");
+            this.mockFixture.SetupPackage("openssl", expectedFiles: @"linux-x64/bin/openssl");
 
             this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {

@@ -19,6 +19,7 @@ namespace VirtualClient.Metadata
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
     using VirtualClient.Contracts.Metadata;
+    using VirtualClient.Logging;
 
     [TestFixture]
     [Category("Integration")]
@@ -59,8 +60,7 @@ namespace VirtualClient.Metadata
             ISystemManagement systemManagement = DependencyFactory.CreateSystemManager(
                 Environment.MachineName,
                 experimentId,
-                new PlatformSpecifics(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture),
-                NullLogger.Instance);
+                new PlatformSpecifics(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture));
 
             // Persisted properties and metadata contracts are applied to the telemetry output
             // by the Virtual Client. The properties within are included in the custom dimensions
@@ -103,11 +103,11 @@ namespace VirtualClient.Metadata
 
             MetadataContract.Persist(
                 metadata,
-                MetadataContractCategory.Default);
+                MetadataContract.DefaultCategory);
 
             MetadataContract.Persist(
                 hostMetadata,
-                MetadataContractCategory.Host);
+                MetadataContract.HostCategory);
 
             MetadataContract.Persist(
                 new Dictionary<string, object>
@@ -121,7 +121,7 @@ namespace VirtualClient.Metadata
                     { "timeoutScope", DeterminismScope.IndividualAction.ToString() },
                     { "scenarios", "Scenario1,Scenario2,-Dependency1" },
                 },
-                MetadataContractCategory.Runtime);
+                MetadataContract.RuntimeCategory);
 
             MetadataContract.Persist(
                 new Dictionary<string, object>
@@ -131,7 +131,7 @@ namespace VirtualClient.Metadata
                     { "compilerVersion_gfortran", "10.5.0" },
                     { "package_speccpu2017", "speccpu.2017.1.1.8.zip" },
                 },
-                MetadataContractCategory.Dependencies,
+                MetadataContract.DependenciesCategory,
                 true);
 
             MetadataContract contract = new MetadataContract();
@@ -147,7 +147,7 @@ namespace VirtualClient.Metadata
                     { "baseOptimizingFlags", "-g -O3 -march=native" },
                     { "peakOptimizingFlags", "-g -Ofast -march=native -flto" },
                 },
-                MetadataContractCategory.Scenario,
+                MetadataContract.ScenarioCategory,
                 true);
 
             EventContext telemetryContext = new EventContext(Guid.NewGuid());

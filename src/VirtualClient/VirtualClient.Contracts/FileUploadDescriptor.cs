@@ -5,11 +5,11 @@ namespace VirtualClient.Contracts
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.IO;
     using System.Linq;
     using System.Runtime.InteropServices;
     using System.Text;
-    using System.Text.RegularExpressions;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Serialization;
     using VirtualClient.Common.Contracts;
@@ -18,15 +18,13 @@ namespace VirtualClient.Contracts
     /// <summary>
     /// Provides information required to upload content to a target storage system.
     /// </summary>
+    [DebuggerDisplay("{FilePath}")]
     public class FileUploadDescriptor
     {
         /// <summary>
         /// The default extension for the file uploads.
         /// </summary>
         public const string UploadDescriptorFileExtension = "upload.json";
-
-        private const string FileTimestampFormat = "yyyy-MM-ddTHH-mm-ss-fffffK";
-        private static readonly Regex PathReservedCharacterExpression = new Regex(@"[""<>:|?*\\/]+", RegexOptions.Compiled);
         private static readonly char[] PathDelimiters = new char[] { '/', '\\' };
 
         /// <summary>
@@ -38,9 +36,8 @@ namespace VirtualClient.Contracts
         /// <param name="contentType">The web content type for the blob (e.g. text/plain, application/octet-stream).</param>
         /// <param name="filePath">The path to the file containing the content to upload.</param>
         /// <param name="manifest">Properties that define a manifest (e.g. metadata) for the file and its contents.</param>
-        /// <param name="deleteOnUpload">True/false whether the file should be deleted upon being successfully uploaded.</param>
         [JsonConstructor]
-        public FileUploadDescriptor(string blobPath, string containerName, string contentEncoding, string contentType, string filePath, IDictionary<string, IConvertible> manifest = null, bool deleteOnUpload = false)
+        public FileUploadDescriptor(string blobPath, string containerName, string contentEncoding, string contentType, string filePath, IDictionary<string, IConvertible> manifest = null)
         {
             blobPath.ThrowIfNullOrWhiteSpace(nameof(blobPath));
             containerName.ThrowIfNullOrWhiteSpace(nameof(containerName));
@@ -54,7 +51,6 @@ namespace VirtualClient.Contracts
             this.ContainerName = containerName;
             this.ContentEncoding = contentEncoding;
             this.ContentType = contentType;
-            this.DeleteOnUpload = deleteOnUpload;
             this.FilePath = filePath;
             this.Manifest = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
 
@@ -93,12 +89,6 @@ namespace VirtualClient.Contracts
         /// </summary>
         [JsonProperty(PropertyName = "contentType", Required = Required.Always)]
         public string ContentType { get; }
-
-        /// <summary>
-        /// True/false whether the file should be deleted upon being successfully uploaded.
-        /// </summary>
-        [JsonProperty(PropertyName = "deleteOnUpload", Required = Required.Always)]
-        public bool DeleteOnUpload { get; set;  }
 
         /// <summary>
         /// The full path to the file to upload.
@@ -171,19 +161,6 @@ namespace VirtualClient.Contracts
             }
 
             return fileManifest.ObscureSecrets();
-        }
-
-        /// <summary>
-        /// Returns a file name containing a timestamp as part of the name having removed any
-        /// characters not allowed in file paths (e.g. 2023-02-01T12-23-30241Z-randomwrite_4k_blocksize.log).
-        /// </summary>
-        /// <param name="fileName">The name of the file (e.g. randomwrite_4k_blocksize.log)</param>
-        /// <param name="timestamp">The timestamp to add to the file name.</param>
-        public static string GetFileName(string fileName, DateTime timestamp)
-        {
-            return PathReservedCharacterExpression.Replace(
-                $"{timestamp.ToString(FileTimestampFormat)}-{fileName.RemoveWhitespace()}",
-                string.Empty);
         }
 
         /// <summary>

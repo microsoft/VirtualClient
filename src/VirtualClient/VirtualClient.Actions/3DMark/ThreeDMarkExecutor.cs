@@ -6,14 +6,12 @@ namespace VirtualClient.Actions
     using System;
     using System.Collections.Generic;
     using System.IO.Abstractions;
-    using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
-    using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
     using VirtualClient.Contracts.Metadata;
@@ -175,7 +173,7 @@ namespace VirtualClient.Actions
                 // Point 3DMark to DLC Path
                 using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(psexec, $"{baseArg} {this.ExecutablePath} --path={this.DLCPath}", this.psexecDir))
                 {
-                    this.CleanupTasks.Add(() => process.SafeKill());
+                    this.CleanupTasks.Add(() => process.SafeKill(this.Logger));
 
                     try
                     {
@@ -201,7 +199,7 @@ namespace VirtualClient.Actions
                 // Lisence Registry
                 using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(psexec, $"{baseArg} {this.ExecutablePath} --register={this.LisenceKey}", this.psexecDir))
                 {
-                    this.CleanupTasks.Add(() => process.SafeKill());
+                    this.CleanupTasks.Add(() => process.SafeKill(this.Logger));
 
                     try
                     {
@@ -238,7 +236,7 @@ namespace VirtualClient.Actions
 
                         using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(psexec, commandArguments, this.psexecDir))
                         {
-                            this.CleanupTasks.Add(() => process.SafeKill());
+                            this.CleanupTasks.Add(() => process.SafeKill(this.Logger));
 
                             try
                             {
@@ -264,7 +262,7 @@ namespace VirtualClient.Actions
                         string commandArguments2 = $"{baseArg} {this.ExecutablePath} --in={this.OutFileName} --export=result.xml";
                         using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(psexec, commandArguments2, this.psexecDir))
                         {
-                            this.CleanupTasks.Add(() => process.SafeKill());
+                            this.CleanupTasks.Add(() => process.SafeKill(this.Logger));
 
                             try
                             {

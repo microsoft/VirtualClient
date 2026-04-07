@@ -14,11 +14,28 @@ information to the Virtual Client in support of the needs of the workload. The f
 | Property         | Description | Required |
 |------------------|-------------|----------|
 | name             | Defines the name/ID of the system. This is how the Virtual Client will "lookup itself" in the list of instances. If an agent ID is passed in on the command line, that is the name that should be used. Otherwise, the machine name (as defined by the operating system) should be used. |
-| ipAddress        | Defines the IP address of the system. Virtual Client instances use this IP address to |
+| ipAddress        | Defines the IP address of the system. Virtual Client instances use this IP address to communicate through a self-hosted REST API. |
+| role             | Defines the role of the system in the workload. The roles are specific to each workload and are used by the Virtual Client to determine which operations to perform on each system. For example, in a client/server workload, the client instance will have the "Client" role and the server instance will have the "Server" role. The documentation for each profile will designate which roles are required for that profile. |
 
-``` json
+``` bash
 # The layout file path is passed in on the command line.
-VirtualClient.exe --profile=PERF-NETWORK.json --system=Demo --timeout=180 --layout="C:\users\any\vc\layout.json" --packages="{BlobStoreConnectionString|SAS URI}"
+#
+# Format:
+# {system_name},{ip_address},{role};{system_name},{ip_address},{role}
+VirtualClient.exe 
+    --profile=PERF-NETWORK.json 
+    --system=Demo --timeout=180 
+    --layout="system01,10.1.0.2,Client;system02,10.1.0.5,Server" 
+    --packages="https://packages.virtualclient.microsoft.com"
+```
+
+``` bash
+# The layout file path is passed in on the command line.
+VirtualClient.exe 
+    --profile=PERF-NETWORK.json 
+    --system=Demo --timeout=180 
+    --layout-path="C:\users\any\vc\layout.json" 
+    --packages="https://packages.virtualclient.microsoft.com"
 
 # Contents of the 'layout.json' file
 {

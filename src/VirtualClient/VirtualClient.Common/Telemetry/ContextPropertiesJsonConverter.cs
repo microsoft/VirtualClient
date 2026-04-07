@@ -9,6 +9,7 @@ namespace VirtualClient.Common.Telemetry
     using System.Linq;
     using System.Text;
     using Newtonsoft.Json;
+    using Newtonsoft.Json.Linq;
     using Newtonsoft.Json.Serialization;
     using VirtualClient.Common.Extensions;
 
@@ -52,7 +53,19 @@ namespace VirtualClient.Common.Telemetry
         /// </returns>
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
-            throw new NotImplementedException();
+            if (reader == null)
+            {
+                throw new ArgumentException("The reader parameter is required.", nameof(reader));
+            }
+
+            IDictionary<string, object> dictionary = new Dictionary<string, object>();
+            if (reader.TokenType == JsonToken.StartObject)
+            {
+                JObject providerJsonObject = JObject.Load(reader);
+                ContextPropertiesJsonConverter.ReadDictionaryEntries(providerJsonObject, dictionary);
+            }
+
+            return dictionary;
         }
 
         /// <summary>
@@ -70,11 +83,42 @@ namespace VirtualClient.Common.Telemetry
 
             if (contextProperties != null)
             {
-                ContextPropertiesJsonConverter.WriteContextPropertyEntries(writer, serializer, contextProperties);
+                ContextPropertiesJsonConverter.WriteDictionaryEntries(writer, serializer, contextProperties);
             }
         }
 
-        private static void WriteContextPropertyEntries(JsonWriter writer, JsonSerializer serializer, IEnumerable<KeyValuePair<string, object>> contextProperties)
+        private static void ReadDictionaryEntries(JToken providerJsonObject, IDictionary<string, object> dictionary)
+        {
+            IEnumerable<JToken> children = providerJsonObject.Children();
+            if (children.Any())
+            {
+                foreach (JToken child in children)
+                {
+                    if (child.Type == JTokenType.Property)
+                    {
+                        if (child.First != null)
+                        {
+                            JValue propertyValue = child.First as JValue;
+                            object settingValue = propertyValue.Value;
+
+                            // JSON properties that have periods (.) in them will have a path representation
+                            // like this:  ['this.is.a.path'].  We have to account for that when adding the key
+                            // to the dictionary. The key we want to add is 'this.is.a.path'
+                            string key = child.Path;
+                            if (key.IndexOf(".", StringComparison.OrdinalIgnoreCase) >= 0)
+                            {
+                                // ['this.is.a.path'] -> this.is.a.path
+                                key = child.Path.Trim('[', '\'', ']');
+                            }
+
+                            dictionary.Add(key, settingValue);
+                        }
+                    }
+                }
+            }
+        }
+
+        private static void WriteDictionaryEntries(JsonWriter writer, JsonSerializer serializer, IEnumerable<KeyValuePair<string, object>> contextProperties)
         {
             writer.WriteStartObject();
             if (contextProperties.Any())

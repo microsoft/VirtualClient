@@ -1,0 +1,21 @@
+{
+    "Description": "Uploads telemetry from data point files on the local system.",
+    "Parameters": {
+        "Format": null,
+        "Intrinsic": false,
+        "Schema": null,
+        "TargetFiles": null
+    },
+    "Dependencies": [
+        {
+            "Type": "UploadTelemetry",
+            "Parameters": {
+                "Scenario": "UploadTelemetry",
+                "Format": "$.Parameters.Format",
+                "Intrinsic": "$.Parameters.Intrinsic",
+                "Schema": "$.Parameters.Schema",
+                "TargetFiles": "$.Parameters.TargetFiles"
+            }
+        }
+    ]
+}

@@ -143,12 +143,8 @@ namespace VirtualClient.Actions
             this.ThrowIfLayoutNotDefined();
             this.ThrowIfLayoutClientIPAddressNotFound(layoutIPAddress);
 
-            IPackageManager packageManager = this.Dependencies.GetService<IPackageManager>();
-            DependencyPath workloadPackage = await packageManager.GetPlatformSpecificPackageAsync(this.PackageName, this.Platform, this.CpuArchitecture, cancellationToken)
-                .ConfigureAwait(false);
-
+            DependencyPath workloadPackage = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken);
             telemetryContext.AddContext("package", workloadPackage);
-
             string role = clientInstance.Role;
 
             this.InitializeApiClients();
@@ -159,19 +155,19 @@ namespace VirtualClient.Actions
             this.ProcessName = "cps";
             this.Tool = "CPS";
 
-            string resultsDir = this.PlatformSpecifics.Combine(workloadPackage.Path, this.Scenario);
+            string resultsDir = this.Combine(workloadPackage.Path, this.Scenario);
             this.fileSystem.Directory.CreateDirectory(resultsDir);
 
-            this.ResultsPath = this.PlatformSpecifics.Combine(resultsDir, CPSExecutor2.OutputFileName);
+            this.ResultsPath = this.Combine(resultsDir, CPSExecutor2.OutputFileName);
             this.Results = null;
 
             if (this.Platform == PlatformID.Win32NT)
             {
-                this.ExecutablePath = this.PlatformSpecifics.Combine(workloadPackage.Path, "cps.exe");
+                this.ExecutablePath = this.Combine(workloadPackage.Path, "cps.exe");
             }
             else if (this.Platform == PlatformID.Unix)
             {
-                this.ExecutablePath = this.PlatformSpecifics.Combine(workloadPackage.Path, "cps");
+                this.ExecutablePath = this.Combine(workloadPackage.Path, "cps");
             }
             else
             {
@@ -347,7 +343,7 @@ namespace VirtualClient.Actions
                         {
                             try
                             {
-                                this.CleanupTasks.Add(() => process.SafeKill());
+                                this.CleanupTasks.Add(() => process.SafeKill(this.Logger));
                                 await process.StartAndWaitAsync(cancellationToken, timeout);
 
                                 if (!cancellationToken.IsCancellationRequested)
@@ -363,7 +359,7 @@ namespace VirtualClient.Actions
                                 // We give this a best effort but do not want it to prevent the next workload
                                 // from executing.
                                 this.Logger.LogMessage($"{this.TypeName}.WorkloadTimeout", LogLevel.Warning, relatedContext.AddError(exc));
-                                process.SafeKill();
+                                process.SafeKill(this.Logger);
 
                                 throw new WorkloadException($"CPS workload did not exit within the timeout period defined (timeout={timeout}).", exc, ErrorReason.WorkloadFailed);
                             }

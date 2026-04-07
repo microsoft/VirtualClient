@@ -10,15 +10,73 @@ namespace VirtualClient.Cleanup
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using VirtualClient.Common.Contracts;
-    using VirtualClient.Common.Extensions;
-    using VirtualClient.Contracts;
+    using VirtualClient.Common;
 
     /// <summary>
     /// Extension methods that support runtime cleanup operations.
     /// </summary>
     public static class CleanupExtensions
     {
+        /// <summary>
+        /// Cleans the default "logs" directory provided deleting any files and folders that are beyond the
+        /// defined retention period.
+        /// </summary>
+        /// <param name="systemManagement">The system management instance.</param>
+        /// <param name="archivePath">The path to which the logs should be archived.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+        public static async Task ArchiveLogsDirectoryAsync(this ISystemManagement systemManagement, string archivePath, CancellationToken cancellationToken)
+        {
+            IFileSystem fileSystem = systemManagement.FileSystem;
+            ProcessManager processManager = systemManagement.ProcessManager;
+            string logsDirectory = systemManagement.PlatformSpecifics.GetLogsPath();
+
+            if (!fileSystem.Directory.Exists(archivePath))
+            {
+                fileSystem.Directory.CreateDirectory(archivePath);
+            }
+
+            string command = null;
+            string commandArguments = null;
+
+            if (systemManagement.Platform == PlatformID.Unix)
+            {
+                command = "rsync";
+                commandArguments = $"-av --ignore-existing \"{logsDirectory}/\" \"{archivePath}/\"";
+            }
+            else
+            {
+                command = "robocopy";
+                commandArguments = $"\"{logsDirectory}\" \"{archivePath}\" /E /XO /XC /R:5 /W:5 /NS /NC /NJH /NJS";
+            }
+
+            using (IProcessProxy copyProcess = processManager.CreateProcess(command, commandArguments))
+            {
+                await copyProcess.StartAndWaitAsync(cancellationToken);
+            }
+        }
+
+        /// <summary>
+        /// Cleans the default "contentuploads" directory provided deleting any files and folders that are beyond the
+        /// defined retention period.
+        /// </summary>
+        /// <param name="systemManagement">The system management instance.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+        /// <param name="retentionDate">A retention date to apply to files within the directory. Any files created within this retention date are preserved.</param>
+        public static async Task CleanContentUploadsDirectoryAsync(this ISystemManagement systemManagement, CancellationToken cancellationToken, DateTime? retentionDate = null)
+        {
+            IFileSystem fileSystem = systemManagement.FileSystem;
+            string contentUploadsDirectory = systemManagement.PlatformSpecifics.ContentUploadsDirectory;
+
+            if (fileSystem.Directory.Exists(contentUploadsDirectory))
+            {
+                IEnumerable<string> uploadRequestFiles = fileSystem.Directory.EnumerateFiles(contentUploadsDirectory, "*.*", SearchOption.AllDirectories);
+                await CleanupExtensions.DeleteFilesAsync(fileSystem, uploadRequestFiles, retentionDate, cancellationToken);
+
+                IEnumerable<string> contentUploadDirectories = fileSystem.Directory.EnumerateDirectories(contentUploadsDirectory, "*.*", SearchOption.AllDirectories);
+                await CleanupExtensions.DeleteDirectoriesAsync(fileSystem, contentUploadDirectories, retentionDate, cancellationToken);
+            }
+        }
+
         /// <summary>
         /// Cleans the default "logs" directory provided deleting any files and folders that are beyond the
         /// defined retention period.
@@ -91,6 +149,26 @@ namespace VirtualClient.Cleanup
 
                 IEnumerable<string> stateDirectories = fileSystem.Directory.EnumerateDirectories(stateDirectory, "*.*", SearchOption.AllDirectories);
                 await CleanupExtensions.DeleteDirectoriesAsync(fileSystem, stateDirectories, null, cancellationToken);
+            }
+        }
+
+        /// <summary>
+        /// Cleans the default "temp" directory provided deleting any files and folders.
+        /// </summary>
+        /// <param name="systemManagement">The system management instance.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+        public static async Task CleanTempDirectoryAsync(this ISystemManagement systemManagement, CancellationToken cancellationToken)
+        {
+            IFileSystem fileSystem = systemManagement.FileSystem;
+            string tempDirectory = systemManagement.PlatformSpecifics.GetTempPath();
+
+            if (fileSystem.Directory.Exists(tempDirectory))
+            {
+                IEnumerable<string> tempFiles = fileSystem.Directory.EnumerateFiles(tempDirectory, "*.*", SearchOption.AllDirectories);
+                await CleanupExtensions.DeleteFilesAsync(fileSystem, tempFiles, null, cancellationToken);
+
+                IEnumerable<string> tempDirectories = fileSystem.Directory.EnumerateDirectories(tempDirectory, "*.*", SearchOption.AllDirectories);
+                await CleanupExtensions.DeleteDirectoriesAsync(fileSystem, tempDirectories, null, cancellationToken);
             }
         }
 

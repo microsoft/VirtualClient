@@ -268,17 +268,6 @@ namespace VirtualClient.Actions
                     ErrorReason.DependencyNotFound);
             }
 
-            if (await this.diskManager.CreateMountPointsAsync(filteredDisks, this.systemManager, cancellationToken).ConfigureAwait(false))
-            {
-                // Refresh the disks to pickup the mount point changes.
-                await Task.Delay(1000).ConfigureAwait(false);
-
-                IEnumerable<Disk> updatedDisks = await this.diskManager.GetDisksAsync(cancellationToken)
-                    .ConfigureAwait(false);
-
-                filteredDisks = this.GetFilteredDisks(updatedDisks, this.DiskFilter);
-            }
-
             filteredDisks.ToList().ForEach(disk => this.Logger.LogTraceMessage($"Disk Target: '{disk}'"));
 
             string accessPath = filteredDisks.OrderBy(d => d.Index).First().GetPreferredAccessPath(this.Platform);
@@ -407,10 +396,10 @@ namespace VirtualClient.Actions
 
                 foreach (string file in resultsFiles)
                 {
-                    string results = await this.LoadResultsAsync(file, cancellationToken);
-                    await this.LogProcessDetailsAsync(process, telemetryContext, "MLPerf", results: results.AsArray(), logToFile: true);
+                    KeyValuePair<string, string> results = await this.LoadResultsAsync(file, cancellationToken);
+                    await this.LogProcessDetailsAsync(process, telemetryContext, "MLPerf", logToFile: true, results: results);
 
-                    MLPerfMetricsParser parser = new MLPerfMetricsParser(results, accuracyMode: true);
+                    MLPerfMetricsParser parser = new MLPerfMetricsParser(results.Value, accuracyMode: true);
                     IList<Metric> metrics = parser.Parse();
 
                     this.Logger.LogMetrics(
@@ -433,10 +422,10 @@ namespace VirtualClient.Actions
 
                 foreach (string file in resultsFiles)
                 {
-                    string results = await this.LoadResultsAsync(file, cancellationToken);
-                    await this.LogProcessDetailsAsync(process, telemetryContext, "MLPerf", results: results.AsArray(), logToFile: true);
+                    KeyValuePair<string, string> results = await this.LoadResultsAsync(file, cancellationToken);
+                    await this.LogProcessDetailsAsync(process, telemetryContext, "MLPerf", logToFile: true, results: results);
 
-                    MLPerfMetricsParser parser = new MLPerfMetricsParser(results, accuracyMode: false);
+                    MLPerfMetricsParser parser = new MLPerfMetricsParser(results.Value, accuracyMode: false);
                     IList<Metric> metrics = parser.Parse();
 
                     this.Logger.LogMetrics(
@@ -522,7 +511,7 @@ namespace VirtualClient.Actions
                 {
                     using (IProcessProxy process = this.systemManager.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, commandLineArguments, workingDirectory))
                     {
-                        this.CleanupTasks.Add(() => process.SafeKill());
+                        this.CleanupTasks.Add(() => process.SafeKill(this.Logger));
                         await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
 
                         if (!cancellationToken.IsCancellationRequested)

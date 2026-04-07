@@ -63,7 +63,7 @@ namespace VirtualClient.Actions
             // - Workload binaries/executables exist on the file system.
             // - The workload generates valid results.
             this.mockFixture.Setup(PlatformID.Unix);
-            this.mockFixture.SetupWorkloadPackage("graph500", expectedFiles: @"linux-x64/src/graph500_reference_bfs_sssp");
+            this.mockFixture.SetupPackage("graph500", expectedFiles: @"linux-x64/src/graph500_reference_bfs_sssp");
             this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
                 IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);

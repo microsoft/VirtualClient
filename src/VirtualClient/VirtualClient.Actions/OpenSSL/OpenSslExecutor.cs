@@ -18,6 +18,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
     using VirtualClient.Contracts.Metadata;
+    using YamlDotNet.Serialization;
 
     /// <summary>
     /// Executes the OpenSSL workload.
@@ -90,17 +91,132 @@ namespace VirtualClient.Actions
                 .ConfigureAwait(false);
         }
 
-        private void CaptureMetrics(IProcessProxy workloadProcess, string commandArguments, EventContext telemetryContext)
+        /// <summary>
+        /// Sets the environment variables required for running the OpenSSL workload.
+        /// </summary>
+        protected void SetEnvironmentVariables(IProcessProxy process)
+        {
+            if (this.Platform == PlatformID.Win32NT)
+            {
+                // The OpenSSL toolset we use was compiled using the Visual Studio 2019 C++ compiler. This creates a runtime
+                // dependency on the VC runtime .dlls. These are packaged with the OpenSSL package itself in the 'vcruntime'
+                // folder. We append the location of these VC runtime .dlls to the PATH environment variable so they can be
+                // found.
+                string vcRuntimeDllPath = this.PlatformSpecifics.Combine(this.Package.Path, "vcruntime");
+                string currentPathValue = process.EnvironmentVariables["Path"]?.TrimEnd(';');
+
+                this.Logger.LogTraceMessage($"Setting Environment Variable:Path={currentPathValue};{vcRuntimeDllPath}", EventContext.Persisted());
+                process.EnvironmentVariables["Path"] = $"{currentPathValue};{vcRuntimeDllPath}";
+            }
+            else if (this.Platform == PlatformID.Unix)
+            {
+                // OpenSSL is typically installed on Linux systems by default. However, we want to use the package version that
+                // we compiled to ensure we are always running the exact same toolset across Windows and Linux systems. To ensure
+                // the package version of OpenSSL we use can find its lib/library files required to run, we have to set a special
+                // environment variable $LD_LIBRARY_PATH
+                string libPath = this.PlatformSpecifics.Combine(this.Package.Path, "lib64");
+
+                this.Logger.LogTraceMessage($"Setting Environment Variable:LD_LIBRARY_PATH={libPath}", EventContext.Persisted());
+                process.EnvironmentVariables["LD_LIBRARY_PATH"] = libPath;
+            }
+        }
+
+        /// <summary>
+        /// Initializes the location of the OpenSSL package on the system.
+        /// </summary>
+        protected async Task InitializePackageLocationAsync(CancellationToken cancellationToken)
+        {
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                DependencyPath workloadPackage = await this.systemManagement.PackageManager.GetPackageAsync(this.PackageName, CancellationToken.None)
+                    .ConfigureAwait(false);
+
+                if (workloadPackage == null)
+                {
+                    throw new DependencyException(
+                        $"The expected package '{this.PackageName}' does not exist on the system or is not registered.",
+                        ErrorReason.WorkloadDependencyMissing);
+                }
+
+                workloadPackage = this.PlatformSpecifics.ToPlatformSpecificPath(workloadPackage, this.Platform, this.CpuArchitecture);
+
+                this.Package = workloadPackage;
+            }
+        }
+
+        /// <summary>
+        ///  Initializes the OpenSSL workload toolsets (e.g. executable, libraries, etc.) on the system.
+        /// </summary>           
+        protected async Task InitializeWorkloadToolsetsAsync(CancellationToken cancellationToken)
+        {
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                if (this.Platform == PlatformID.Unix)
+                {
+                    this.ExecutablePath = this.PlatformSpecifics.Combine(this.Package.Path, "bin", "openssl");
+                    
+                    this.fileSystem.File.ThrowIfFileDoesNotExist(
+                        this.ExecutablePath,
+                        $"OpenSSL executable not found at path '{this.ExecutablePath}'");
+
+                    await this.systemManagement.MakeFileExecutableAsync(this.ExecutablePath, this.Platform, cancellationToken)
+                        .ConfigureAwait(false);
+                }
+                else if (this.Platform == PlatformID.Win32NT)
+                {
+                    this.ExecutablePath = this.PlatformSpecifics.Combine(this.Package.Path, "bin", "openssl.exe");
+
+                    this.fileSystem.File.ThrowIfFileDoesNotExist(
+                       this.ExecutablePath,
+                       $"OpenSSL executable not found at path '{this.ExecutablePath}'");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets openssl version by running openssl version command.
+        /// </summary>
+        private async Task GetOpenSslVersionAsync(string toolCommand, CancellationToken cancellationToken)
+        {
+            // The OpenSSL version is not available in the workload output. We need to run a separate command to get the version.   
+            // The command 'openssl version' will return the version of OpenSSL installed on the system.
+            string opensslVersion = "Unknown";
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                this.Logger.LogTraceMessage($"Executing process 'openssl version' at directory '{this.ExecutablePath}'.");
+                using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(this.ExecutablePath, "version"))
+                {
+                    this.SetEnvironmentVariables(process);
+                    await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
+                    process.ThrowIfWorkloadFailed();
+
+                    opensslVersion = process.StandardOutput?.ToString().Trim() ?? "Unknown";
+                    if (string.IsNullOrWhiteSpace(opensslVersion))
+                    {
+                        opensslVersion = "Unknown";
+                    }
+
+                    this.MetadataContract.Add("OpenSSLVersion", opensslVersion, MetadataContract.DependenciesCategory);
+                    this.Logger.LogMessage($"{nameof(OpenSslExecutor)}.GetOpenSslVersionAsync", LogLevel.Information, EventContext.Persisted().AddContext("opensslVersion", opensslVersion));
+
+                    this.MetadataContract.AddForScenario(
+                       "OpenSSL Speed",
+                       toolCommand,
+                       toolVersion: opensslVersion);
+                }
+            }
+            
+        }
+
+        private async Task CaptureMetricsAsync(IProcessProxy workloadProcess, string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             if (workloadProcess.ExitCode == 0)
             {
                 try
                 {
-                    this.MetadataContract.AddForScenario(
-                       "OpenSSL Speed",
-                       workloadProcess.FullCommand(),
-                       toolVersion: null);
-
+                    // Retrieve OpenSSL version
+                    await this.GetOpenSslVersionAsync(workloadProcess.FullCommand(), cancellationToken);
+                
                     this.MetadataContract.Apply(telemetryContext);
 
                     OpenSslMetricsParser resultsParser = new OpenSslMetricsParser(workloadProcess.StandardOutput.ToString(), commandArguments);
@@ -116,6 +232,8 @@ namespace VirtualClient.Actions
                         commandArguments,
                         this.Tags,
                         telemetryContext);
+
+                    metrics.LogConsole(this.Scenario, "OpenSSL");
                 }
                 catch (SchemaException exc)
                 {
@@ -133,7 +251,7 @@ namespace VirtualClient.Actions
 
             EventContext relatedContext = telemetryContext.Clone()
                 .AddContext("executable", this.ExecutablePath)
-                .AddContext("commandArguments", commandArguments);
+                .AddContext("commandArguments", commandArguments);       
 
             return this.Logger.LogMessageAsync($"{nameof(OpenSslExecutor)}.ExecuteWorkload", relatedContext, async () =>
             {
@@ -142,7 +260,7 @@ namespace VirtualClient.Actions
                     using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(this.ExecutablePath, commandArguments))
                     {
                         this.SetEnvironmentVariables(process);
-                        this.CleanupTasks.Add(() => process.SafeKill());
+                        this.CleanupTasks.Add(() => process.SafeKill(this.Logger));
 
                         try
                         {
@@ -153,7 +271,7 @@ namespace VirtualClient.Actions
                                 await this.LogProcessDetailsAsync(process, telemetryContext, "OpenSSL", logToFile: true);
 
                                 process.ThrowIfWorkloadFailed();
-                                this.CaptureMetrics(process, commandArguments, telemetryContext);
+                                await this.CaptureMetricsAsync(process, commandArguments, telemetryContext, cancellationToken);
                             }
                         }
                         finally
@@ -190,77 +308,5 @@ namespace VirtualClient.Actions
             return commandArguments;
         }
 
-        private async Task InitializePackageLocationAsync(CancellationToken cancellationToken)
-        {
-            if (!cancellationToken.IsCancellationRequested)
-            {
-                DependencyPath workloadPackage = await this.systemManagement.PackageManager.GetPackageAsync(this.PackageName, CancellationToken.None)
-                    .ConfigureAwait(false);
-
-                if (workloadPackage == null)
-                {
-                    throw new DependencyException(
-                        $"The expected package '{this.PackageName}' does not exist on the system or is not registered.",
-                        ErrorReason.WorkloadDependencyMissing);
-                }
-
-                workloadPackage = this.PlatformSpecifics.ToPlatformSpecificPath(workloadPackage, this.Platform, this.CpuArchitecture);
-
-                this.Package = workloadPackage;
-            }
-        }
-
-        private async Task InitializeWorkloadToolsetsAsync(CancellationToken cancellationToken)
-        {
-            if (!cancellationToken.IsCancellationRequested)
-            {
-                if (this.Platform == PlatformID.Unix)
-                {
-                    this.ExecutablePath = this.PlatformSpecifics.Combine(this.Package.Path, "bin", "openssl");
-
-                    this.fileSystem.File.ThrowIfFileDoesNotExist(
-                        this.ExecutablePath,
-                        $"OpenSSL executable not found at path '{this.ExecutablePath}'");
-
-                    await this.systemManagement.MakeFileExecutableAsync(this.ExecutablePath, this.Platform, cancellationToken)
-                        .ConfigureAwait(false);
-                }
-                else if (this.Platform == PlatformID.Win32NT)
-                {
-                    this.ExecutablePath = this.PlatformSpecifics.Combine(this.Package.Path, "bin", "openssl.exe");
-
-                    this.fileSystem.File.ThrowIfFileDoesNotExist(
-                       this.ExecutablePath,
-                       $"OpenSSL executable not found at path '{this.ExecutablePath}'");
-                }
-            }
-        }
-
-        private void SetEnvironmentVariables(IProcessProxy process)
-        {
-            if (this.Platform == PlatformID.Win32NT)
-            {
-                // The OpenSSL toolset we use was compiled using the Visual Studio 2019 C++ compiler. This creates a runtime
-                // dependency on the VC runtime .dlls. These are packaged with the OpenSSL package itself in the 'vcruntime'
-                // folder. We append the location of these VC runtime .dlls to the PATH environment variable so they can be
-                // found.
-                string vcRuntimeDllPath = this.PlatformSpecifics.Combine(this.Package.Path, "vcruntime");
-                string currentPathValue = process.EnvironmentVariables["Path"]?.TrimEnd(';');
-
-                this.Logger.LogTraceMessage($"Setting Environment Variable:Path={currentPathValue};{vcRuntimeDllPath}", EventContext.Persisted());
-                process.EnvironmentVariables["Path"] = $"{currentPathValue};{vcRuntimeDllPath}";
-            }
-            else if (this.Platform == PlatformID.Unix)
-            {
-                // OpenSSL is typically installed on Linux systems by default. However, we want to use the package version that
-                // we compiled to ensure we are always running the exact same toolset across Windows and Linux systems. To ensure
-                // the package version of OpenSSL we use can find its lib/library files required to run, we have to set a special
-                // environment variable $LD_LIBRARY_PATH
-                string libPath = this.PlatformSpecifics.Combine(this.Package.Path, "lib64");
-
-                this.Logger.LogTraceMessage($"Setting Environment Variable:LD_LIBRARY_PATH={libPath}", EventContext.Persisted());
-                process.EnvironmentVariables["LD_LIBRARY_PATH"] = libPath;
-            }
-        }
     }
 }

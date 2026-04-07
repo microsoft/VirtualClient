@@ -31,19 +31,25 @@ namespace VirtualClient.Monitors
         }
 
         /// <inheritdoc/>
-        protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        protected override Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            switch (this.Platform)
-            {
-                case PlatformID.Win32NT:
-                    await this.QueryGpuAsync(telemetryContext, cancellationToken)
-                        .ConfigureAwait(false);
-                    break;
+            // All background monitor ExecuteAsync methods should be either 'async' or should use a Task.Run() if running a 'while' loop or the
+            // logic will block without returning. Monitors are typically expected to be fire-and-forget.
 
-                case PlatformID.Unix:
-                    // not supported at the moment
-                    break;
-            }
+            return Task.Run(async () =>
+            {
+                switch (this.Platform)
+                {
+                    case PlatformID.Win32NT:
+                        await this.QueryGpuAsync(telemetryContext, cancellationToken)
+                            .ConfigureAwait(false);
+                        break;
+
+                    case PlatformID.Unix:
+                        // not supported at the moment
+                        break;
+                }
+            });
         }
 
         /// <inheritdoc/>
@@ -82,7 +88,7 @@ namespace VirtualClient.Monitors
                 {
                     using (IProcessProxy process = systemManagement.ProcessManager.CreateElevatedProcess(this.Platform, command, $"{commandArguments}", Environment.CurrentDirectory))
                     {
-                        this.CleanupTasks.Add(() => process.SafeKill());
+                        this.CleanupTasks.Add(() => process.SafeKill(this.Logger));
 
                         DateTime startTime = DateTime.UtcNow;
                         await process.StartAndWaitAsync(cancellationToken)

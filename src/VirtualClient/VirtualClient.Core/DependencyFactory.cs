@@ -9,6 +9,7 @@ namespace VirtualClient
     using System.IO.Abstractions;
     using System.Linq;
     using System.Net;
+    using System.Security.Cryptography.X509Certificates;
     using System.Threading.Tasks;
     using Azure.Core;
     using Azure.Messaging.EventHubs.Producer;
@@ -17,7 +18,6 @@ namespace VirtualClient
     using Serilog.Formatting;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
-    using VirtualClient.Common.Logging;
     using VirtualClient.Common.Rest;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Configuration;
@@ -31,8 +31,6 @@ namespace VirtualClient
     /// </summary>
     public static class DependencyFactory
     {
-        private static List<IFlushableChannel> telemetryChannels = new List<IFlushableChannel>();
-
         /// <summary>
         /// Creates an <see cref="IBlobManager"/> instance that can be used to download blobs/files from a store or
         /// upload blobs/files to a store.
@@ -44,6 +42,7 @@ namespace VirtualClient
             switch (dependencyStore.StoreType)
             {
                 case DependencyStore.StoreTypeAzureStorageBlob:
+                case DependencyStore.StoreTypeAzureCDN:
                     DependencyBlobStore blobStore = dependencyStore as DependencyBlobStore;
                     if (blobStore != null)
                     {
@@ -78,21 +77,49 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Creates an <see cref="IKeyVaultManager"/> instance that can be used to access secrets and certificates from Key vault
+        /// </summary>
+        /// <param name="dependencyStore">Describes the type of dependency store.</param>
+        public static IKeyVaultManager CreateKeyVaultManager(DependencyStore dependencyStore)
+        {
+            if (dependencyStore == null)
+            {
+                throw new DependencyException("Dependency store cannot be null while creating the KeyVault reference.", ErrorReason.DependencyDescriptionInvalid);
+            }
+
+            IKeyVaultManager keyVaultManager = null;
+            DependencyKeyVaultStore keyVaultStore = dependencyStore as DependencyKeyVaultStore;
+            if (keyVaultStore != null)
+            {
+                keyVaultManager = new KeyVaultManager(keyVaultStore);
+            }
+
+            if (keyVaultManager == null)
+            {
+                throw new DependencyException(
+                    $"Required Key Vault information not provided. A dependency store of type '{dependencyStore.StoreType}' is missing " +
+                    $"required information or was provided in an unsupported format.",
+                    ErrorReason.DependencyDescriptionInvalid);
+            }
+
+            return keyVaultManager;
+        }
+
+        /// <summary>
         /// Creates a disk manager for the OS/system platform (e.g. Windows, Linux).
         /// </summary>
         /// <param name="platform">The OS/system platform.</param>
-        /// <param name="logger">A logger for capturing disk management telemetry.</param>
-        public static DiskManager CreateDiskManager(PlatformID platform, Microsoft.Extensions.Logging.ILogger logger = null)
+        public static DiskManager CreateDiskManager(PlatformID platform)
         {
             DiskManager manager = null;
             switch (platform)
             {
                 case PlatformID.Win32NT:
-                    manager = new WindowsDiskManager(new WindowsProcessManager(), logger);
+                    manager = new WindowsDiskManager(new WindowsProcessManager());
                     break;
 
                 case PlatformID.Unix:
-                    manager = new UnixDiskManager(new UnixProcessManager(), logger);
+                    manager = new UnixDiskManager(new UnixProcessManager());
                     break;
 
                 default:
@@ -123,8 +150,6 @@ namespace VirtualClient
 
             EventHubTelemetryChannel channel = new EventHubTelemetryChannel(client, enableDiagnostics: true);
 
-            DependencyFactory.telemetryChannels.Add(channel);
-            VirtualClientRuntime.CleanupTasks.Add(new Action_(() => channel.Dispose()));
             return channel;
         }
 
@@ -134,7 +159,8 @@ namespace VirtualClient
         /// <param name="eventHubStore">Describes the Event Hub namespace dependency store.</param>
         /// <param name="settings">Defines the settings for each individual Event Hub targeted.</param>
         /// <param name="level">The logging severity level.</param>
-        public static IEnumerable<ILoggerProvider> CreateEventHubLoggerProviders(DependencyEventHubStore eventHubStore, EventHubLogSettings settings, LogLevel level)
+        /// <param name="flushTimeout">A timeout to apply to flush operations.</param>
+        public static IEnumerable<ILoggerProvider> CreateEventHubLoggerProviders(DependencyEventHubStore eventHubStore, EventHubLogSettings settings, LogLevel level, TimeSpan? flushTimeout = null)
         {
             List<ILoggerProvider> loggerProviders = new List<ILoggerProvider>();
 
@@ -171,7 +197,7 @@ namespace VirtualClient
                     };
 
                     // Traces logging is affected by --log-level values defined on the command line.
-                    ILoggerProvider tracesLoggerProvider = new EventHubTelemetryLoggerProvider(tracesChannel, level)
+                    ILoggerProvider tracesLoggerProvider = new EventHubTelemetryLoggerProvider(tracesChannel, level, flushTimeout)
                         .HandleTraces();
 
                     loggerProviders.Add(tracesLoggerProvider);
@@ -190,7 +216,7 @@ namespace VirtualClient
 
                     // Metrics are NOT affected by --log-level values defined on the command line. Metrics are
                     // always written.
-                    ILoggerProvider metricsLoggerProvider = new EventHubTelemetryLoggerProvider(metricsChannel, LogLevel.Trace)
+                    ILoggerProvider metricsLoggerProvider = new EventHubTelemetryLoggerProvider(metricsChannel, LogLevel.Trace, flushTimeout)
                         .HandleMetrics();
 
                     loggerProviders.Add(metricsLoggerProvider);
@@ -209,12 +235,35 @@ namespace VirtualClient
 
                     // System Events are NOT affected by --log-level values defined on the command line. Events are
                     // always written.
-                    ILoggerProvider eventsLoggerProvider = new EventHubTelemetryLoggerProvider(systemEventsChannel, LogLevel.Trace)
+                    ILoggerProvider eventsLoggerProvider = new EventHubTelemetryLoggerProvider(systemEventsChannel, LogLevel.Trace, flushTimeout)
                         .HandleSystemEvents();
 
                     loggerProviders.Add(eventsLoggerProvider);
                 }
             }
+
+            return loggerProviders;
+        }
+
+        /// <summary>
+        /// Creates logger providers for writing telemetry to local CSV files.
+        /// </summary>
+        /// <param name="logFileDirectory">The path to the directory where log files are written.</param>
+        public static IEnumerable<ILoggerProvider> CreateCsvFileLoggerProviders(string logFileDirectory)
+        {
+            logFileDirectory.ThrowIfNullOrWhiteSpace(nameof(logFileDirectory));
+
+            // 20MB
+            // General Sizing:
+            // Around 34,400 metric records will fit inside of a single CSV file at 20MB.
+            const long maxFileSizeBytes = 20000000;
+
+            List<ILoggerProvider> loggerProviders = new List<ILoggerProvider>();
+
+            string metricsCsvFilePath = Path.Combine(logFileDirectory, "metrics.csv");
+            ILoggerProvider metricsCsvProvider = new MetricsCsvFileLoggerProvider(metricsCsvFilePath, maxFileSizeBytes);
+            loggerProviders.Add(metricsCsvProvider);
+            VirtualClientRuntime.CleanupTasks.Add(new Action_(() => metricsCsvProvider.Dispose()));
 
             return loggerProviders;
         }
@@ -230,8 +279,8 @@ namespace VirtualClient
         {
             logFilePath.ThrowIfNullOrWhiteSpace(nameof(logFilePath));
 
-            // 100MB
-            const long maxFileSizeBytes = 100000000;
+            // 20MB
+            const long maxFileSizeBytes = 20000000;
 
             ILoggerProvider loggerProvider = null;
 
@@ -240,48 +289,26 @@ namespace VirtualClient
                 LoggerConfiguration logConfiguration = null;
                 if (formatter != null)
                 {
-                    logConfiguration = new LoggerConfiguration().WriteTo.RollingFile(
+                    logConfiguration = new LoggerConfiguration().WriteTo.File(
                         formatter,
                         logFilePath,
                         fileSizeLimitBytes: maxFileSizeBytes,
-                        retainedFileCountLimit: 10,
+                        rollOnFileSizeLimit: true,
+                        retainedFileCountLimit: 50,
                         flushToDiskInterval: flushInterval);
                 }
                 else
                 {
-                    logConfiguration = new LoggerConfiguration().WriteTo.RollingFile(
+                    logConfiguration = new LoggerConfiguration().WriteTo.File(
                         logFilePath,
                         fileSizeLimitBytes: maxFileSizeBytes,
-                        retainedFileCountLimit: 10,
+                        rollOnFileSizeLimit: true,
+                        retainedFileCountLimit: 50,
                         flushToDiskInterval: flushInterval);
                 }
 
                 loggerProvider = new SerilogFileLoggerProvider(logConfiguration, level);
 
-                VirtualClientRuntime.CleanupTasks.Add(new Action_(() => loggerProvider.Dispose()));
-            }
-
-            return loggerProvider;
-        }
-
-        /// <summary>
-        /// Creates logger providers for writing telemetry to local CSV files.
-        /// </summary>
-        /// <param name="csvFilePath">The full path for the log file (e.g. C:\users\any\VirtualClient\logs\metrics.csv).</param>
-        public static ILoggerProvider CreateCsvFileLoggerProvider(string csvFilePath)
-        {
-            csvFilePath.ThrowIfNullOrWhiteSpace(nameof(csvFilePath));
-
-            // 50MB
-            // General Sizing:
-            // Around 86,000 metrics will fit inside of a single CSV file at 50MB.
-            const long maxFileSizeBytes = 50000000;
-
-            ILoggerProvider loggerProvider = null;
-
-            if (!string.IsNullOrWhiteSpace(csvFilePath))
-            {
-                loggerProvider = new MetricsCsvFileLoggerProvider(csvFilePath, maxFileSizeBytes);
                 VirtualClientRuntime.CleanupTasks.Add(new Action_(() => loggerProvider.Dispose()));
             }
 
@@ -321,35 +348,24 @@ namespace VirtualClient
                     level,
                     new SerilogJsonTextFormatter()).HandleTraces();
 
-                VirtualClientRuntime.CleanupTasks.Add(new Action_(() => tracesLoggerProvider.Dispose()));
                 loggerProviders.Add(tracesLoggerProvider);
 
                 // Metrics/Results
                 ILoggerProvider metricsLoggerProvider = DependencyFactory.CreateFileLoggerProvider(
-                    Path.Combine(logFileDirectory, settings.MetricsFileName), 
-                    TimeSpan.FromSeconds(3), 
+                    Path.Combine(logFileDirectory, settings.MetricsFileName),
+                    TimeSpan.FromSeconds(3),
                     LogLevel.Trace,
                     new SerilogJsonTextFormatter(propertiesToExcludeForMetrics)).HandleMetrics();
 
-                VirtualClientRuntime.CleanupTasks.Add(new Action_(() => metricsLoggerProvider.Dispose()));
                 loggerProviders.Add(metricsLoggerProvider);
-
-                // Metrics/Results in CSV Format
-                ILoggerProvider metricsCsvLoggerProvider = DependencyFactory.CreateCsvFileLoggerProvider(
-                    Path.Combine(logFileDirectory, 
-                    settings.MetricsCsvFileName)).HandleMetrics();
-
-                VirtualClientRuntime.CleanupTasks.Add(new Action_(() => metricsCsvLoggerProvider.Dispose()));
-                loggerProviders.Add(metricsCsvLoggerProvider);
 
                 // System Events
                 ILoggerProvider eventsLoggerProvider = DependencyFactory.CreateFileLoggerProvider(
-                    Path.Combine(logFileDirectory, settings.EventsFileName), 
-                    TimeSpan.FromSeconds(5), 
+                    Path.Combine(logFileDirectory, settings.EventsFileName),
+                    TimeSpan.FromSeconds(5),
                     LogLevel.Trace,
                     new SerilogJsonTextFormatter(propertiesToExcludeForEvents)).HandleSystemEvents();
 
-                VirtualClientRuntime.CleanupTasks.Add(new Action_(() => eventsLoggerProvider.Dispose()));
                 loggerProviders.Add(eventsLoggerProvider);
             }
 
@@ -386,11 +402,12 @@ namespace VirtualClient
         /// <param name="storeDescription">Describes the type of blob store (e.g. Content, Packages).</param>
         /// <param name="source">An explicit source to use for blob uploads/downloads through the proxy API.</param>
         /// <param name="logger">A logger to use for capturing information related to blob upload/download operations.</param>
-        public static IBlobManager CreateProxyBlobManager(DependencyProxyStore storeDescription, string source = null, Microsoft.Extensions.Logging.ILogger logger = null)
+        /// <param name="certificate">The certificate to authenticate to the proxy API</param>
+        public static IBlobManager CreateProxyBlobManager(DependencyProxyStore storeDescription, string source = null, Microsoft.Extensions.Logging.ILogger logger = null, X509Certificate2 certificate = null)
         {
             storeDescription.ThrowIfNull(nameof(storeDescription));
 
-            VirtualClientProxyApiClient proxyApiClient = DependencyFactory.CreateVirtualClientProxyApiClient(storeDescription.ProxyApiUri, TimeSpan.FromHours(6));
+            VirtualClientProxyApiClient proxyApiClient = DependencyFactory.CreateVirtualClientProxyApiClient(storeDescription.ProxyApiUri, TimeSpan.FromHours(6), certificate);
             ProxyBlobManager blobManager = new ProxyBlobManager(storeDescription, proxyApiClient, source);
 
             if (logger != null)
@@ -565,8 +582,6 @@ namespace VirtualClient
                 };
             }
 
-            DependencyFactory.telemetryChannels.Add(channel);
-
             return channel;
         }
 
@@ -576,8 +591,9 @@ namespace VirtualClient
         /// <param name="agentId">The ID of the agent as part of the larger experiment in operation.</param>
         /// <param name="experimentId">The ID of the larger experiment in operation.</param>
         /// <param name="platformSpecifics">Provides features for platform-specific operations (e.g. Windows, Unix).</param>
-        /// <param name="logger">The logger to use for capturing telemetry.</param>
-        public static ISystemManagement CreateSystemManager(string agentId, string experimentId, PlatformSpecifics platformSpecifics, Microsoft.Extensions.Logging.ILogger logger = null)
+        /// <param name="executionSystem">The name of the execution system launching the application.</param>
+        /// <param name="isolated">Instructs the factory to construct dependencies for cross-process/isolated runs.</param>
+        public static ISystemManagement CreateSystemManager(string agentId, string experimentId, PlatformSpecifics platformSpecifics, string executionSystem = null, bool isolated = false)
         {
             agentId.ThrowIfNullOrWhiteSpace(nameof(agentId));
             experimentId.ThrowIfNullOrWhiteSpace(nameof(experimentId));
@@ -585,16 +601,23 @@ namespace VirtualClient
 
             PlatformID platform = platformSpecifics.Platform;
             ProcessManager processManager = ProcessManager.Create(platform);
-            IDiskManager diskManager = DependencyFactory.CreateDiskManager(platform, logger);
+            IDiskManager diskManager = DependencyFactory.CreateDiskManager(platform);
             IFileSystem fileSystem = new FileSystem();
             IFirewallManager firewallManager = DependencyFactory.CreateFirewallManager(platform, processManager);
-            IPackageManager packageManager = new PackageManager(platformSpecifics, fileSystem, logger);
-            ISshClientManager sshClientManager = new SshClientManager();
+            IPackageManager packageManager = new PackageManager(platformSpecifics, fileSystem);
+
+            if (isolated)
+            {
+                packageManager = new IsolatedPackageManager(packageManager);
+            }
+
+            ISshClientFactory sshClientManager = new SshClientFactory();
             IStateManager stateManager = new StateManager(fileSystem, platformSpecifics);
 
             return new SystemManagement
             {
                 AgentId = agentId,
+                ExecutionSystem = executionSystem,
                 ExperimentId = experimentId.ToLowerInvariant(),
                 DiskManager = diskManager,
                 FileSystem = fileSystem,
@@ -602,7 +625,7 @@ namespace VirtualClient
                 PackageManager = packageManager,
                 PlatformSpecifics = platformSpecifics,
                 ProcessManager = processManager,
-                SshClientManager = sshClientManager,
+                SshClientFactory = sshClientManager,
                 StateManager = stateManager
             };
         }
@@ -649,28 +672,30 @@ namespace VirtualClient
         /// </summary>
         /// <param name="proxyApiUri">The URI for the proxy API/service including its port (e.g. http://any.uri:5000).</param>
         /// <param name="timeout">A timeout to use for the underlying HTTP client.</param>
-        public static VirtualClientProxyApiClient CreateVirtualClientProxyApiClient(Uri proxyApiUri, TimeSpan? timeout = null)
+        /// <param name="certificate">The certificate to authenticate to the proxy API</param>
+        public static VirtualClientProxyApiClient CreateVirtualClientProxyApiClient(Uri proxyApiUri, TimeSpan? timeout = null, X509Certificate2 certificate = null)
         {
             proxyApiUri.ThrowIfNull(nameof(proxyApiUri));
 
-            IRestClient restClient = new RestClientBuilder(timeout)
+            if (!string.IsNullOrWhiteSpace(proxyApiUri.Query))
+            {
+                // e.g.
+                // https://any.service.azure.com/?miid=307591a4-abb2-4559-af59-b47177d140cf -> https://any.service.azure.com/
+
+                proxyApiUri = new Uri(proxyApiUri.OriginalString.Substring(0, proxyApiUri.OriginalString.IndexOf("?")));
+            }
+
+            IRestClientBuilder builder = new RestClientBuilder(timeout)
                 .AlwaysTrustServerCertificate()
-                .AddAcceptedMediaType(MediaType.Json)
-                .Build();
+                .AddAcceptedMediaType(MediaType.Json);
 
-            return new VirtualClientProxyApiClient(restClient, proxyApiUri);
+            if (certificate != null)
+            {
+                builder.AddCertificate(certificate);
+            }
+
+            return new VirtualClientProxyApiClient(builder.Build(), proxyApiUri);
         }
-
-        /// <summary>
-        /// Flushes buffered telemetry from all channels.
-        /// </summary>
-        /// <param name="timeout">The absolute timeout to flush the telemetry from each individual channel.</param>
-        /// <returns>
-        /// </returns>
-        public static void FlushTelemetry(TimeSpan? timeout = null)
-        {
-            Parallel.ForEach(DependencyFactory.telemetryChannels, channel => channel.Flush(timeout));
-         }
 
         /// <summary>
         /// Applies a filter to the logger generated by the provider that will handle the logging
@@ -678,7 +703,7 @@ namespace VirtualClient
         /// </summary>
         internal static ILoggerProvider HandleMetrics(this ILoggerProvider loggerProvider)
         {
-            return loggerProvider.WithFilter((eventId, logLevel, state) => (LogType)eventId.Id == LogType.Metrics);
+            return loggerProvider.WithFilter((eventId, logLevel, state) => (LogType)eventId.Id == LogType.Metric);
         }
 
         /// <summary>
@@ -687,7 +712,7 @@ namespace VirtualClient
         /// </summary>
         internal static ILoggerProvider HandlePerformanceCounters(this ILoggerProvider loggerProvider)
         {
-            return loggerProvider.WithFilter((eventId, logLevel, state) => (LogType)eventId.Id == LogType.Metrics && eventId.Name == "PerformanceCounter");
+            return loggerProvider.WithFilter((eventId, logLevel, state) => (LogType)eventId.Id == LogType.Metric && eventId.Name == "PerformanceCounter");
         }
 
         /// <summary>

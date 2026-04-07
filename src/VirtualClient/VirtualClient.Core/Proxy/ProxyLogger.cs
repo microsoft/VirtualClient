@@ -14,7 +14,7 @@ namespace VirtualClient.Proxy
     /// <summary>
     /// A logger that uploads telemetry messages/events to a proxy API endpoint.
     /// </summary>
-    internal class ProxyLogger : ILogger
+    public class ProxyLogger : ILogger
     {
         private static AssemblyName sdkAssembly = Assembly.GetAssembly(typeof(EventContext)).GetName();
 
@@ -23,7 +23,7 @@ namespace VirtualClient.Proxy
             { LogType.Undefined, "Traces" },
             { LogType.Error, "Errors" },
             { LogType.Trace, "Traces" },
-            { LogType.Metrics, "Metrics" },
+            { LogType.Metric, "Metrics" },
             { LogType.SystemEvent, "Events" }
         };
 
@@ -39,7 +39,7 @@ namespace VirtualClient.Proxy
             this.Channel = channel;
             this.Source = !string.IsNullOrWhiteSpace(source)
                 ? source
-                : ProxyBlobDescriptor.DefaultSource;
+                : "VirtualClient";
         }
 
         /// <summary>

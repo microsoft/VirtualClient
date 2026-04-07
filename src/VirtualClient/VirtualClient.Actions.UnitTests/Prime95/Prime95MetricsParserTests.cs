@@ -34,8 +34,8 @@ namespace VirtualClient.Actions
             IList<Metric> metrics = this.testParser.Parse();
 
             Assert.AreEqual(2, metrics.Count);
-            MetricAssert.Exists(metrics, "passTestCount", 200);
-            MetricAssert.Exists(metrics, "failTestCount", 0);
+            MetricAssert.Exists(metrics, "Test Pass", 200);
+            MetricAssert.Exists(metrics, "Test Fail", 0);
         }
 
         [Test]
@@ -47,8 +47,8 @@ namespace VirtualClient.Actions
             IList<Metric> metrics = this.testParser.Parse();
 
             Assert.AreEqual(2, metrics.Count);
-            MetricAssert.Exists(metrics, "passTestCount", 7);
-            MetricAssert.Exists(metrics, "failTestCount", 3);
+            MetricAssert.Exists(metrics, "Test Pass", 7);
+            MetricAssert.Exists(metrics, "Test Fail", 3);
         }
     }
 }

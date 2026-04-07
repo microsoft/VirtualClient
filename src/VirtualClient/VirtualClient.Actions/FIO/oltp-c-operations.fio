@@ -1,0 +1,33 @@
+# fio template for OLTP-C runs
+# defines three components: readers, writes, and loggers
+
+# --------------- Global section defines defaults across all components
+[global]
+direct=1
+group_reporting=0
+time_based=1
+numjobs=1
+
+# by setting the submit mode to offload, we can guarantee a fixed rate of
+# submission regardless of what the device completion rate is.
+#io_submit_mode=offload
+
+# Represents reading of data from sql/OLTP database.
+[randomreader]
+new_group
+rw=randread
+
+# Represents writing of data in sql/OLTP database.
+[randomwriter]
+new_group
+rw=randwrite
+
+# Represents log readers of sql/OLTP database.
+[sequentialreader]
+new_group
+rw=read
+
+# Represents log writers of sql/OLTP database.
+[sequentialwriter]
+new_group
+rw=write

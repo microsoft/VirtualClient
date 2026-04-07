@@ -1,7 +1,7 @@
 # Nvidia SMI
 The NVIDIA System Management Interface (nvidia-smi) is a command line utility, based on top of the NVIDIA Management Library (NVML), intended to aid in the management and monitoring of NVIDIA GPU devices. 
 
-This utility allows administrators to query GPU device state and with the appropriate privileges, permits administrators to modify GPU device state.  It is targeted at the TeslaTM, GRIDTM, QuadroTM and Titan X product, though limited support is also available on other NVIDIA GPUs.
+This utility allows administrators to query GPU device state and with the appropriate privileges, permits administrators to modify GPU device state.  It is targeted at the Blackwell, Hopper, Ampere, TeslaTM, GRIDTM, QuadroTM and Titan X product, though limited support is also available on other NVIDIA GPUs.
 
 NVIDIA-smi ships with NVIDIA GPU display drivers on Linux, and with 64bit Windows Server 2008 R2 and Windows 7. Nvidia-smi can report query information as XML or human readable plain text to either standard output or a file. For more details, please refer to the nvidia-smi documentation.
 
@@ -14,6 +14,7 @@ This monitor has dependency on nvidia-smi. Please use [Nvidia Driver Installatio
 ## Supported Platforms
 * linux-x64
 * linux-arm64
+* win-x64
 
 ## Supported Query
 Right now the query supported are --query-gpu and --query-c2c. Please create a feature request if you need other queries.

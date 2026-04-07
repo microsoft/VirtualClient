@@ -76,7 +76,7 @@ namespace VirtualClient.Actions
                         throw new WorkloadException($"The API server workload did not start as expected.", ErrorReason.WorkloadFailed);
                     }
 
-                    this.CleanupTasks.Add(() => webHostProcess.SafeKill());
+                    this.CleanupTasks.Add(() => webHostProcess.SafeKill(this.Logger));
                     this.Logger.LogTraceMessage($"API server workload online awaiting client requests...");
 
                     // Signal to clients that the server-side is online and ready to receive requests. The server-side is offline
@@ -113,8 +113,7 @@ namespace VirtualClient.Actions
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             // Imagine there is a package that contains binaries/exes used to run a web server (e.g. NGINX).
-            this.WebServerPackage = await this.PackageManager.GetPlatformSpecificPackageAsync(this.PackageName, this.Platform, this.CpuArchitecture, cancellationToken)
-                .ConfigureAwait(false);
+            this.WebServerPackage = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken);
 
             if (this.Platform == PlatformID.Win32NT)
             {
@@ -128,8 +127,7 @@ namespace VirtualClient.Actions
                 this.WebServerExecutablePath = this.Combine(this.WebServerPackage.Path, "ExampleWorkload");
 
                 // Binaries on Unix/Linux must be attributed with an attribute that makes them "executable".
-                await this.SystemManagement.MakeFileExecutableAsync(this.WebServerExecutablePath, this.Platform, cancellationToken)
-                    .ConfigureAwait(false);
+                await this.SystemManagement.MakeFileExecutableAsync(this.WebServerExecutablePath, this.Platform, cancellationToken);
             }
         }
     }

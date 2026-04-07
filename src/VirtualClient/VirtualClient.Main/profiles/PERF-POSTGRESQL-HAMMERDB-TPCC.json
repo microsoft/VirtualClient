@@ -10,6 +10,7 @@
         "DatabaseName": "hammerdb_tpcc",
         "DiskFilter": "osdisk:false&sizegreaterthan:256g",
         "Port": "5432",
+        "Duration": "00:20:00",
         "VirtualUsers": "{calculate({LogicalCoreCount})}",
         "WarehouseCount": "{calculate({SystemMemoryMegabytes} * 15 / 800)}",
         "SharedMemoryBuffer": "{calculate({SystemMemoryMegabytes} * 85 / 100)}"
@@ -20,12 +21,13 @@
             "Parameters": {
                 "Scenario": "ExecuteServer",
                 "PackageName": "hammerdb",
-                "DatabaseName": "$.Parameters.DatabaseName",
                 "Workload": "tpcc",
                 "SQLServer": "postgresql",
+                "DatabaseName": "$.Parameters.DatabaseName",
                 "Port": "$.Parameters.Port",
                 "VirtualUsers": "$.Parameters.VirtualUsers",
                 "WarehouseCount": "$.Parameters.WarehouseCount",
+                "Duration": "$.Parameters.Duration",
                 "Role": "Server"
             }
         },
@@ -40,6 +42,7 @@
                 "Port": "$.Parameters.Port",
                 "VirtualUsers": "$.Parameters.VirtualUsers",
                 "WarehouseCount": "$.Parameters.WarehouseCount",
+                "Duration": "$.Parameters.Duration",
                 "Role": "Client"
             }
         }
@@ -71,7 +74,7 @@
             "Parameters": {
                 "Scenario": "DownloadPostgreSQLPackage",
                 "BlobContainer": "packages",
-                "BlobName": "postgresql.14.0.0.rev1.zip",
+                "BlobName": "postgresql.14.0.0.rev3.zip",
                 "PackageName": "postgresql",
                 "Extract": true
             }
@@ -81,7 +84,7 @@
             "Parameters": {
                 "Scenario": "DownloadHammerDBPackage",
                 "BlobContainer": "packages",
-                "BlobName": "hammerdb.4.7.0.rev1.zip",
+                "BlobName": "hammerdb.4.12.0.rev3.zip",
                 "PackageName": "hammerdb",
                 "Extract": true
             }
@@ -109,40 +112,17 @@
         {
             "Type": "HammerDBExecutor",
             "Parameters": {
-                "Scenario": "CreatePostgreSQLDatabase",
-                "DatabaseName": "$.Parameters.DatabaseName",
-                "Workload": "tpcc",
-                "SQLServer": "postgresql",
-                "PackageName": "hammerdb",
-                "VirtualUsers": "1",
-                "WarehouseCount": "1",
-                "Port": "$.Parameters.Port",
-                "Role": "Server"
-            }
-        },
-        {
-            "Type": "PostgreSQLServerConfiguration",
-            "Parameters": {
-                "Scenario": "DistributePostgreSQLDatabase",
-                "Action": "DistributeDatabase",
+                "Scenario": "PopulatePostgreSQLDatabase",
+                "Action": "PopulateTables",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "DiskFilter": "$.Parameters.DiskFilter",
-                "PackageName": "postgresql",
-                "Port": "$.Parameters.Port",
-                "Role": "Server"
-            }
-        },
-        {
-            "Type": "HammerDBExecutor",
-            "Parameters": {
-                "Scenario": "PopulatePostgreSQLDatabase",
-                "DatabaseName": "$.Parameters.DatabaseName",
                 "Workload": "tpcc",
                 "SQLServer": "postgresql",
                 "PackageName": "hammerdb",
                 "VirtualUsers": "$.Parameters.VirtualUsers",
                 "WarehouseCount": "$.Parameters.WarehouseCount",
                 "Port": "$.Parameters.Port",
+                "Duration": "$.Parameters.Duration",
                 "Role": "Server"
             }
         },

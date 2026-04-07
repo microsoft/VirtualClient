@@ -110,7 +110,7 @@ namespace VirtualClient
         /// <summary>
         /// The logger used to capture telemetry.
         /// </summary>
-        public ILogger Logger { get; }
+        public ILogger Logger { get; set; }
 
         /// <summary>
         /// The directory where packages are stored.
@@ -612,6 +612,7 @@ namespace VirtualClient
                     string dependencyPackagePath = this.PlatformSpecifics.Combine(installationPath, installationDirectoryName.ToLowerInvariant());
 
                     // Account for blob dependencies that might have a path structure (e.g. /virtual/path/to/dependency.zip
+                    // dependency.zip
                     string dependencyName = PackageManager.GetPackageDirectoryName(description);
 
                     if (description.Extract)
@@ -627,10 +628,8 @@ namespace VirtualClient
                     }
                     else
                     {
-                        // If the package does not need to be extracted, then we want to contain it within
-                        // a folder matching the package name (e.g. the package path).
-                        installationPath = this.PlatformSpecifics.Combine(installationPath, description.PackageName.ToLowerInvariant());
-                        dependencyPackagePath = installationPath;
+                        // without extraction, the package will be the file itself
+                        dependencyPackagePath = this.PlatformSpecifics.Combine(installationPath, dependencyName);
                     }
 
                     // e.g.
@@ -889,7 +888,7 @@ namespace VirtualClient
                 await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
                 if (!cancellationToken.IsCancellationRequested)
                 {
-                    this.Logger.LogProcessDetails(process, nameof(PackageManager), EventContext.Persisted(), "Tar");
+                    this.Logger.LogProcessDetails(process.ToProcessDetails("tar"), nameof(PackageManager), EventContext.Persisted());
                     process.ThrowIfErrored<DependencyException>(errorReason: ErrorReason.SystemOperationFailed);
                 }
             }

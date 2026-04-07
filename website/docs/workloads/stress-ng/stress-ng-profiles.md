@@ -43,5 +43,5 @@ Runs the Stress-ng workload in short but constant bursts to assess the performan
 
   ``` bash
   # Execute the workload profile
-  VirtualClient.exe --profile=PERF-STRESSNG.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
+  VirtualClient.exe --profile=PERF-STRESSNG.json
   ```

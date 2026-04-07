@@ -518,7 +518,7 @@ namespace VirtualClient.Proxy
 
                 ProxyTelemetryMessage message = new ProxyTelemetryMessage
                 {
-                    Source = ProxyBlobDescriptor.DefaultSource,
+                    Source = "VirtualClient",
                     Message = i.ToString(),
                     SeverityLevel = LogLevel.Information,
                     EventType = LogType.Trace.ToString(),

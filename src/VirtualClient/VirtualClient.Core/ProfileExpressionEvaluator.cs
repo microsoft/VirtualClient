@@ -6,12 +6,11 @@ namespace VirtualClient
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Runtime.InteropServices;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.CodeAnalysis.Scripting;
     using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.Extensions.FileSystemGlobbing.Internal;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Contracts;
 
@@ -23,24 +22,19 @@ namespace VirtualClient
     {
         // e.g.
         // {fn(512 / 16)]}
-        // {fn(512 / {LogicalThreadCount})}
+        // {calculate(512 / {LogicalThreadCount})}
         private static readonly Regex CalculateExpression = new Regex(
-    @"\{calculate\(([0-9L\*\/\+\-\(\)\s]+)\)\}",
-    RegexOptions.Compiled | RegexOptions.IgnoreCase);
-
-        // e.g.
-        // {calculate({IsTLSEnabled} ? "Yes" : "No")}
-        // (([^?]+)\s*\?\s*([^:]+)\s*:\s*([^)]+))
-        private static readonly Regex CalculateTernaryExpression = new Regex(
-            @"\{calculate\((([^?]+)\s*\?\s*([^:]+)\s*:\s*([^)]+))\)\}",
+            @"\{(?:calculate|fn)\(([a-z0-9L\*\/\+\-\^<>=!%\(\)\:\?""'&|_\.\s\\@]+)\)\}",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-        // e.g.
-        // Expression: {calculate(512 == 4)}
-        // Expression: {calculate(512 > 2)}
-        // Expression: {calculate(512 != {LogicalCoreCount})}
-        private static readonly Regex CalculateComparisionExpression = new Regex(
-            @"\{calculate\((\d+\s*(?:==|!=|<|>|<=|>=|&&|\|\|)\s*\d+)\)\}",
+        // e.g
+        // Expression: {calculate(1.00:00:00 + 00:00:10)}
+        // Expression: {calculate({Duration} + 00:00:10)}
+        // Expression: {calculate(1.00:00:00 + {Duration})}
+        // Expression: {calculate(1.00:00:00 + {Duration} - 00:10:45)}
+        // Expression: {calculate(1.00:00:00 - 00:00:10)}
+        private static readonly Regex CalculateTimeSpanExpression = new Regex(
+            @"\{calculate\(\s*((?:\d{1,2}(?:\.\d{2})?:\d{2}:\d{2}\s*[\+\-]\s*)*\d{1,2}(?:\.\d{2})?:\d{2}:\d{2})\s*\)\}",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         // e.g.
@@ -50,39 +44,65 @@ namespace VirtualClient
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         // e.g.
-        // {PackagePath:redis}
-        private static readonly Regex PackagePathExpression = new Regex(
-            @"\{PackagePath\:([a-z0-9-_\. ]+)\}",
+        // {LogPath}, {LogDir}
+        private static readonly Regex LogPathExpression = new Regex(
+            @"\{(?:LogPath|LogDir)\}",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         // e.g.
-        // {ScriptPath:redis}
-        private static readonly Regex ScriptPathExpression = new Regex(
-            @"\{ScriptPath\:([a-z0-9-_\. ]+)\}",
+        // {PackagePath:redis}, {PackageDir:redis}
+        private static readonly Regex PackagePathExpression = new Regex(
+            @"\{(?:PackagePath|PackageDir)\:([a-z0-9-_\. ]+)\}",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         // e.g.
         // {PackagePath/Platform:fio}
         private static readonly Regex PackagePathForPlatformExpression = new Regex(
-            @"\{PackagePath/Platform\:([a-z0-9-_\. ]+)\}",
+            @"\{(?:PackagePath|PackageDir)/Platform\:([a-z0-9-_\. ]+)\}",
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+        // e.g.
+        // {StatePath}, {StateDir}
+        private static readonly Regex StatePathExpression = new Regex(
+            @"\{(?:StatePath|StateDir)\}",
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+        // e.g.
+        // {TempPath}, {TempDir}
+        private static readonly Regex TempPathExpression = new Regex(
+            @"\{(?:TempPath|TempDir)\}",
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+        // e.g.
+        // {ScriptPath}, {ScriptPath:redis}, {ScriptDir}, {ScriptDir:redis}
+        private static readonly Regex ScriptPathExpression = new Regex(
+            @"\{(?:ScriptPath|ScriptDir)(?:\:([a-z0-9-_\. ]+))*\}",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         // e.g.
         // {Platform}
         private static readonly Regex PlatformExpression = new Regex(
-            @"\{Platform\}",
+            @"\{(?:Platform|PlatformArchitecture)\}",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         // e.g.
         // {LogicalCoreCount}
         private static readonly Regex LogicalCoreCountExpression = new Regex(
-            @"\{LogicalCoreCount\}",
+            @"\{(?:LogicalCoreCount|LogicalProcessorCount)\}",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         // e.g.
         // {PhysicalCoreCount}
         private static readonly Regex PhysicalCoreCountExpression = new Regex(
-            @"\{PhysicalCoreCount\}",
+            @"\{(?:PhysicalCoreCount|PhysicalProcessorCount)\}",
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+        private static readonly Regex ArchitectureExpression = new Regex(
+            @"\{Architecture\}",
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+        private static readonly Regex OSExpression = new Regex(
+            @"\{OS\}",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         // e.g.
@@ -104,38 +124,36 @@ namespace VirtualClient
             @"\{([a-z0-9_-]+)\.(TotalDays|TotalHours|TotalMilliseconds|TotalMinutes|TotalSeconds)\}",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
+        // e.g.
+        // {ExperimentId}
+        // {ExecutionSystem}
+        // {AgentId}
+        // {ClientId}
+        private static readonly Regex RuntimeInfoExpression = new Regex(
+            @"\{(AgentId|ClientId|ExperimentId|ExecutionSystem)\}",
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
         /// <summary>
         /// The set of expressions and evaluators supported by the editor. Additional expressions
         /// and evaluators can be added (e.g. {PackagePath/Special:redis}).
         /// </summary>
         private static readonly IList<Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>> Evaluators = new List<Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>>
         {
-            // Expression: {ScriptPath:xyz}
-            // this.PlatformSpecifics.GetScriptPath("a","b");
-            // Resolves to the path to the Script folder location (e.g. /home/users/virtualclient/scripts/redis).
+            // Expression: {LogPath|LogDir}
+            // Resolves to the path to the log folder location (e.g. /home/users/virtualclient/logs).
             new Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>((dependencies, parameters, expression) =>
             {
                 bool isMatched = false;
                 string evaluatedExpression = expression;
-                MatchCollection matches = ProfileExpressionEvaluator.ScriptPathExpression.Matches(expression);
+                MatchCollection matches = ProfileExpressionEvaluator.LogPathExpression.Matches(expression);
 
                 if (matches?.Any() == true)
                 {
                     isMatched = true;
-                    ISystemManagement systemManagement = dependencies.GetService<ISystemManagement>();
+                    PlatformSpecifics platformSpecifics = dependencies.GetService<PlatformSpecifics>();
                     foreach (Match match in matches)
                     {
-                        string scriptFolderPath = systemManagement.PlatformSpecifics.GetScriptPath(match.Groups[1].Value);
-
-                        if (scriptFolderPath == null)
-                        {
-                            throw new DependencyException(
-                                $"Cannot evaluate expression {{ScriptPath:{match.Value}}}. A scipt with the name '{match.Value}' does not " +
-                                $"exist on system or is not registered with Virtual Client.",
-                                ErrorReason.DependencyNotFound);
-                        }
-
-                        evaluatedExpression = Regex.Replace(evaluatedExpression, match.Value, scriptFolderPath);
+                        evaluatedExpression = Regex.Replace(evaluatedExpression, match.Value, platformSpecifics.LogsDirectory);
                     }
                 }
 
@@ -145,7 +163,60 @@ namespace VirtualClient
                     Outcome = evaluatedExpression
                 });
             }),
-            // Expression: {Platform}
+            // Expression: {StatePath|StateDir}
+            // Resolves to the path to the state folder location (e.g. /home/users/virtualclient/state).
+            new Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>((dependencies, parameters, expression) =>
+            {
+                bool isMatched = false;
+                string evaluatedExpression = expression;
+                MatchCollection matches = ProfileExpressionEvaluator.StatePathExpression.Matches(expression);
+
+                if (matches?.Any() == true)
+                {
+                    isMatched = true;
+                    PlatformSpecifics platformSpecifics = dependencies.GetService<PlatformSpecifics>();
+                    foreach (Match match in matches)
+                    {
+                        evaluatedExpression = Regex.Replace(evaluatedExpression, match.Value, platformSpecifics.StateDirectory);
+                    }
+                }
+
+                return Task.FromResult(new EvaluationResult
+                {
+                    IsMatched = isMatched,
+                    Outcome = evaluatedExpression
+                });
+            }),
+            // Expression: {OS}
+            // Resolves to the current operating system (e.g. linux, windows).
+            new Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>((dependencies, parameters, expression) =>
+            {
+                bool isMatched = false;
+                string evaluatedExpression = expression;
+                MatchCollection matches = ProfileExpressionEvaluator.OSExpression.Matches(expression);
+
+                if (matches?.Any() == true)
+                {
+                    isMatched = true;
+                    ISystemManagement systemManagement = dependencies.GetService<ISystemManagement>();
+                    PlatformID platform = systemManagement.PlatformSpecifics.Platform;
+
+                    foreach (Match match in matches)
+                    {
+                        evaluatedExpression = Regex.Replace(
+                            evaluatedExpression,
+                            match.Value,
+                            platform == PlatformID.Unix ? "linux" : "windows");
+                    }
+                }
+
+                return Task.FromResult(new EvaluationResult
+                {
+                    IsMatched = isMatched,
+                    Outcome = evaluatedExpression
+                });
+            }),
+            // Expression: {Platform|PlatformArchitecture}
             // Resolves to the current platform-architecture for the system (e.g. linux-arm64, linux-x64, win-arm64, win-x64).
             new Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>((dependencies, parameters, expression) =>
             {
@@ -174,7 +245,7 @@ namespace VirtualClient
                     Outcome = evaluatedExpression
                 });
             }),
-            // Expression: {PackagePath:xyz}
+            // Expression: {PackagePath|PackageDir:xyz}
             // Resolves to the path to the package folder location (e.g. /home/users/virtualclient/packages/redis).
             new Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>(async (dependencies, parameters, expression) =>
             {
@@ -208,7 +279,7 @@ namespace VirtualClient
                     Outcome = evaluatedExpression
                 };
             }),
-            // Expression: {PackagePath/Platform:xyz}
+            // Expression: {PackagePath|PackageDir/Platform:xyz}
             // Resolves to the path to the package platform-specific folder location (e.g. /home/users/virtualclient/packages/fio/linux-x64).
             new Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>(async (dependencies, parameters, expression) =>
             {
@@ -246,6 +317,120 @@ namespace VirtualClient
                     IsMatched = isMatched,
                     Outcome = evaluatedExpression
                 };
+            }),
+            // Expression: {ScriptPath|ScriptDir|ScriptPath:xyz|ScriptDir:xyz}
+            // this.PlatformSpecifics.GetScriptPath("a","b");
+            // Resolves to the path to the Script folder location (e.g. /home/users/virtualclient/scripts/redis).
+            new Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>((dependencies, parameters, expression) =>
+            {
+                bool isMatched = false;
+                string evaluatedExpression = expression;
+                MatchCollection matches = ProfileExpressionEvaluator.ScriptPathExpression.Matches(expression);
+
+                if (matches?.Any() == true)
+                {
+                    isMatched = true;
+                    ISystemManagement systemManagement = dependencies.GetService<ISystemManagement>();
+                    foreach (Match match in matches)
+                    {
+                        string scriptFolderPath = null;
+
+                        if (match.Groups.Count <= 1)
+                        {
+                            scriptFolderPath = systemManagement.PlatformSpecifics.GetScriptPath();
+                        }
+                        else
+                        {
+                            scriptFolderPath = systemManagement.PlatformSpecifics.GetScriptPath(match.Groups[1].Value?.Trim());
+                        }
+
+                        if (scriptFolderPath == null)
+                        {
+                            throw new DependencyException(
+                                $"Cannot evaluate expression {{ScriptPath:{match.Value}}}. A scipt with the name '{match.Value}' does not " +
+                                $"exist on system or is not registered with Virtual Client.",
+                                ErrorReason.DependencyNotFound);
+                        }
+
+                        evaluatedExpression = Regex.Replace(evaluatedExpression, match.Value, scriptFolderPath);
+                    }
+                }
+
+                return Task.FromResult(new EvaluationResult
+                {
+                    IsMatched = isMatched,
+                    Outcome = evaluatedExpression
+                });
+            }),
+            // Expression: {TempPath|TempDir}
+            // Resolves to the path to the log folder location (e.g. /home/users/virtualclient/temp).
+            new Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>((dependencies, parameters, expression) =>
+            {
+                bool isMatched = false;
+                string evaluatedExpression = expression;
+                MatchCollection matches = ProfileExpressionEvaluator.TempPathExpression.Matches(expression);
+
+                if (matches?.Any() == true)
+                {
+                    isMatched = true;
+                    PlatformSpecifics platformSpecifics = dependencies.GetService<PlatformSpecifics>();
+                    foreach (Match match in matches)
+                    {
+                        evaluatedExpression = Regex.Replace(evaluatedExpression, match.Value, platformSpecifics.TempDirectory);
+                    }
+                }
+
+                return Task.FromResult(new EvaluationResult
+                {
+                    IsMatched = isMatched,
+                    Outcome = evaluatedExpression
+                });
+            }),
+            // Expression: {AgentId}, {ClientId}, {ExperimentId}, {System}
+            // Resolves to the runtime values for the current experiment, agent, client, system, or timestamp depending on the expression reference used.
+            new Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>((dependencies, parameters, expression) =>
+            {
+                bool isMatched = false;
+                string evaluatedExpression = expression;
+                MatchCollection matches = ProfileExpressionEvaluator.RuntimeInfoExpression.Matches(expression);
+
+                if (matches?.Any() == true)
+                {
+                    isMatched = true;
+                    ISystemInfo systemInfo = dependencies.GetService<ISystemInfo>();
+
+                    foreach (Match match in matches)
+                    {
+                        string replacementValue = null;
+                        string runtimeValue = match.Value.ToLowerInvariant();
+                        switch (runtimeValue)
+                        {
+                            case "{agentid}":
+                            case "{clientid}":
+                                replacementValue = systemInfo.AgentId;
+                                break;
+
+                            case "{experimentid}":
+                                replacementValue = systemInfo.ExperimentId;
+                                break;
+
+                            case "{executionsystem}":
+                                replacementValue = systemInfo.ExecutionSystem ?? string.Empty;
+                                break;
+                        }
+
+                        if (replacementValue != null)
+                        {
+                            evaluatedExpression = Regex.Replace(evaluatedExpression, match.Value, replacementValue);
+                        }
+                    }
+                }
+
+                return Task.FromResult(new EvaluationResult
+                {
+                    IsMatched = isMatched,
+                    Outcome = evaluatedExpression
+                });
             }),
             // e.g.
             // {Duration.TotalDays}
@@ -312,6 +497,35 @@ namespace VirtualClient
                                 }
                             }
                         }
+                    }
+                }
+
+                return Task.FromResult(new EvaluationResult
+                {
+                    IsMatched = isMatched,
+                    Outcome = evaluatedExpression
+                });
+            }),
+            // Expression: {Architecture}
+            // Resolves to the current architecture for the system (e.g. x64, arm64).
+            new Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>((dependencies, parameters, expression) =>
+            {
+                bool isMatched = false;
+                string evaluatedExpression = expression;
+                MatchCollection matches = ProfileExpressionEvaluator.ArchitectureExpression.Matches(expression);
+
+                if (matches?.Any() == true)
+                {
+                    isMatched = true;
+                    ISystemManagement systemManagement = dependencies.GetService<ISystemManagement>();
+                    Architecture architecture = systemManagement.PlatformSpecifics.CpuArchitecture;
+
+                    foreach (Match match in matches)
+                    {
+                        evaluatedExpression = Regex.Replace(
+                            evaluatedExpression,
+                            match.Value,
+                            architecture.ToString().ToLowerInvariant());
                     }
                 }
 
@@ -422,6 +636,66 @@ namespace VirtualClient
                     Outcome = evaluatedExpression
                 };
             }),
+        };
+
+        /// <summary>
+        /// The set of expressions and evaluators to support parameter calculations. These should be executed
+        /// AFTER all other sets of evaluators.
+        /// </summary>
+        private static readonly IList<Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>> EvaluatorsForCalculations = new List<Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>>
+        {
+            // Expression: {calculate(1.00:00:00 + 00:00:10)}
+            //
+            // **IMPORTANT**
+            // This expression evaluation MUST come last after ALL other expression evaluators, before numerical arithmentic calculations.
+            new Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>((dependencies, parameters, expression) =>
+            {
+                bool isMatched = false;
+                string evaluatedExpression = expression;
+                MatchCollection matches = ProfileExpressionEvaluator.CalculateTimeSpanExpression.Matches(expression);
+
+                if (matches?.Any() == true)
+                {
+                    isMatched = true;
+                    foreach (Match match in matches)
+                    {
+                        TimeSpan result = TimeSpan.Zero;
+
+                        string function = match.Groups[0].Value;
+
+                        // Pattern to extract tokens: timespans and operators
+                        var timespanExtractionPattern = new Regex(@"(\d+\.\d{2}:\d{2}:\d{2}|\d{2}:\d{2}:\d{2}|[\+\-])");
+                        var timespanMatches = timespanExtractionPattern.Matches(function);
+
+                        if (timespanMatches.Count > 0)
+                        {
+                            // Parse and evaluate
+                            result = TimeSpan.Parse(timespanMatches[0].Value);
+                            for (int i = 1; i < timespanMatches.Count - 1; i += 2)
+                            {
+                                string op = timespanMatches[i].Value;
+                                TimeSpan next = TimeSpan.Parse(timespanMatches[i + 1].Value);
+
+                                result = op == "+" ? result + next : result - next;
+                            
+                                // Clamp to zero if it goes negative
+                                if (result < TimeSpan.Zero)
+                                {
+                                    result = TimeSpan.Zero;
+                                }
+                            }
+                        }
+
+                        evaluatedExpression = evaluatedExpression.Replace(match.Value, result.ToString());
+                    }
+                }
+
+                return Task.FromResult(new EvaluationResult
+                {
+                    IsMatched = isMatched,
+                    Outcome = evaluatedExpression
+                });
+            }),
             // Expression: {calculate(512 * 4)}
             // Expression: {calculate(512 / (4 / 2))}
             // Expression: {calculate(512 / {LogicalCoreCount})}
@@ -440,70 +714,18 @@ namespace VirtualClient
                     foreach (Match match in matches)
                     {
                         string function = match.Groups[1].Value;
-                        long result = await Microsoft.CodeAnalysis.CSharp.Scripting.CSharpScript.EvaluateAsync<long>(function);
-                        evaluatedExpression = evaluatedExpression.Replace(match.Value, result.ToString());
-                    }
-                }
+                        object result = await Microsoft.CodeAnalysis.CSharp.Scripting.CSharpScript.EvaluateAsync<object>(function);
 
-                return new EvaluationResult
-                {
-                    IsMatched = isMatched,
-                    Outcome = evaluatedExpression
-                };
-            }),
-            // Expression: {calculate(512 == 4)}
-            // Expression: {calculate(512 > 2)}
-            // Expression: {calculate(512 != {LogicalCoreCount})}
-            // **IMPORTANT**
-            // This expression evaluation MUST come last after arthematic caluculation evaluators.
-            new Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>(async (dependencies, parameters, expression) =>
-            {
-                bool isMatched = false;
-                string evaluatedExpression = expression;
-                MatchCollection matches = ProfileExpressionEvaluator.CalculateComparisionExpression.Matches(expression);
-
-                if (matches?.Any() == true)
-                {
-                    isMatched = true;
-                    foreach (Match match in matches)
-                    {
-                        string function = match.Groups[1].Value;
-                        bool result = await Microsoft.CodeAnalysis.CSharp.Scripting.CSharpScript.EvaluateAsync<bool>(function);
-
-                        evaluatedExpression = evaluatedExpression.Replace(match.Value, result.ToString());
-                    }
-                }
-
-                return new EvaluationResult
-                {
-                    IsMatched = isMatched,
-                    Outcome = evaluatedExpression
-                };
-            }),
-            // Expression: {calculate({IsTLSEnabled} ? "Yes" : "No")}
-            // Expression: {calculate(calculate(512 == 2) ? "Yes" : "No")}
-            // **IMPORTANT**
-            // This expression evaluation MUST come last after arthematic/logical/comparative caluculation evaluators.
-            new Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>(async (dependencies, parameters, expression) =>
-            {
-                bool isMatched = false;
-                string evaluatedExpression = expression;
-                MatchCollection matches = ProfileExpressionEvaluator.CalculateTernaryExpression.Matches(expression);
-
-                if (matches?.Any() == true)
-                {
-                    isMatched = true;
-                    foreach (Match match in matches)
-                    {
-                        string function = match.Groups[1].Value;
-
-                        function = Regex.Replace(function, @"(?<=\b)(True|False)(?=\s*\?)", m =>
+                        if (result is bool)
                         {
-                            return m.Value.ToLower();
-                        });
-
-                        string result = await Microsoft.CodeAnalysis.CSharp.Scripting.CSharpScript.EvaluateAsync<string>(function);
-                        evaluatedExpression = evaluatedExpression.Replace(match.Value, result.ToString());
+                            // bool.ToString() produces "True" or "False" whereas "true" or "false"
+                            // is preferred.
+                            evaluatedExpression = evaluatedExpression.Replace(match.Value, result.ToString().ToLowerInvariant());
+                        }
+                        else
+                        {
+                            evaluatedExpression = evaluatedExpression.Replace(match.Value, result.ToString());
+                        }
                     }
                 }
 
@@ -512,7 +734,7 @@ namespace VirtualClient
                     IsMatched = isMatched,
                     Outcome = evaluatedExpression
                 };
-            })
+            }),
         };
 
         private ProfileExpressionEvaluator()
@@ -571,7 +793,20 @@ namespace VirtualClient
         {
             dependencies.ThrowIfNull(nameof(dependencies));
 
-            EvaluationResult evaluation = await ProfileExpressionEvaluator.EvaluateExpressionAsync(dependencies, null, text, cancellationToken);
+            EvaluationResult evaluation = await ProfileExpressionEvaluator.EvaluateExpressionAsync(
+                ProfileExpressionEvaluator.Evaluators, 
+                dependencies, 
+                null, 
+                text, 
+                cancellationToken);
+
+            evaluation = await ProfileExpressionEvaluator.EvaluateExpressionAsync(
+                ProfileExpressionEvaluator.EvaluatorsForCalculations,
+                dependencies,
+                null,
+                evaluation.Outcome,
+                cancellationToken);
+
             return evaluation.Outcome;
         }
 
@@ -603,6 +838,14 @@ namespace VirtualClient
 
             int maxIterations = 5;
             int iterations = 0;
+
+            while (this.ContainsReferences(parameters) && iterations < maxIterations)
+            {
+                iterations++;
+                await ProfileExpressionEvaluator.EvaluateWellKnownParametersAsync(dependencies, parameters, cancellationToken);
+            }
+
+            iterations = 0;
             while (this.ContainsReferences(parameters) && iterations < maxIterations)
             {
                 iterations++;
@@ -616,11 +859,62 @@ namespace VirtualClient
             while (this.ContainsReferences(parameters) && iterations < maxIterations)
             {
                 iterations++;
-                await ProfileExpressionEvaluator.EvaluateWellKnownExpressionsAsync(dependencies, parameters, cancellationToken);
+
+                // We take as many passes through to ensure that all placeholders/expressions have been evaluated. This allows
+                // placeholders that are themselves contained/nested within parent placeholders to be successfully resolved.
+                await ProfileExpressionEvaluator.EvaluateCalculationsAsync(dependencies, parameters, cancellationToken);
             }
         }
 
-        private static async Task<EvaluationResult> EvaluateExpressionAsync(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters, string text, CancellationToken cancellationToken)
+        private static async Task<bool> EvaluateCalculationsAsync(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters, CancellationToken cancellationToken)
+        {
+            bool expressionsFound = false;
+            foreach (var parameter in parameters)
+            {
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    if (parameter.Value is string)
+                    {
+                        MatchCollection expressionMatches = ProfileExpressionEvaluator.GeneralExpression.Matches(parameter.Value.ToString());
+                        if (expressionMatches?.Any() == true)
+                        {
+                            expressionsFound = true;
+
+                            // Parameters:
+                            //    ThreadCount: --port={Port} --threads={LogicalCoreCount} --package={PackagePath}
+                            //    Port: 1234
+                            //
+                            // And given logical core count = 8, a package path of /home/users/virtualclient/packages/anypackage
+                            //
+                            // Desired Outcome
+                            // Parameters:
+                            //    CommandLine: --port=1234 --threads=8 --package=/home/users/virtualclient/packages/anypackage
+                            //    Port: 1234
+                            EvaluationResult evaluation = await ProfileExpressionEvaluator.EvaluateExpressionAsync(
+                                ProfileExpressionEvaluator.EvaluatorsForCalculations,
+                                dependencies,
+                                parameters,
+                                parameter.Value.ToString(),
+                                cancellationToken);
+
+                            if (evaluation.IsMatched)
+                            {
+                                parameters[parameter.Key] = evaluation.Outcome;
+                            }
+                        }
+                    }
+                }
+            }
+
+            return expressionsFound;
+        }
+
+        private static async Task<EvaluationResult> EvaluateExpressionAsync(
+            IList<Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>> expressionEvaluators,
+            IServiceCollection dependencies, 
+            IDictionary<string, IConvertible> parameters, 
+            string text, 
+            CancellationToken cancellationToken)
         {
             dependencies.ThrowIfNull(nameof(dependencies));
 
@@ -630,7 +924,7 @@ namespace VirtualClient
             {
                 if (ProfileExpressionEvaluator.GeneralExpression.IsMatch(text))
                 {
-                    foreach (var evaluator in ProfileExpressionEvaluator.Evaluators)
+                    foreach (var evaluator in expressionEvaluators)
                     {
                         EvaluationResult evaluation = await evaluator.Invoke(dependencies, parameters, evaluatedExpression);
                         if (evaluation.IsMatched)
@@ -673,6 +967,11 @@ namespace VirtualClient
                                         matchesFound = true;
                                         string referencedParameterValue = value?.ToString();
 
+                                        if (value is bool)
+                                        {
+                                            referencedParameterValue = referencedParameterValue?.ToLowerInvariant();
+                                        }
+
                                         // Parameters:
                                         //    CommandLine: --port={Port} --threads={ThreadCount}
                                         //    Port: 1234
@@ -684,7 +983,7 @@ namespace VirtualClient
                                         //    Port: 1234
                                         //    Threads: 8
 
-                                        parameters[parameter.Key] = parameters[parameter.Key].ToString().Replace(match.Groups[0].Value, referencedParameterValue.ToString());
+                                        parameters[parameter.Key] = parameters[parameter.Key].ToString().Replace(match.Groups[0].Value, referencedParameterValue?.ToString());
                                     }
                                 }
                             }
@@ -696,7 +995,7 @@ namespace VirtualClient
             return matchesFound;
         }
 
-        private static async Task<bool> EvaluateWellKnownExpressionsAsync(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters, CancellationToken cancellationToken)
+        private static async Task<bool> EvaluateWellKnownParametersAsync(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters, CancellationToken cancellationToken)
         {
             bool expressionsFound = false;
             foreach (var parameter in parameters)
@@ -720,7 +1019,13 @@ namespace VirtualClient
                             // Parameters:
                             //    CommandLine: --port=1234 --threads=8 --package=/home/users/virtualclient/packages/anypackage
                             //    Port: 1234
-                            EvaluationResult evaluation = await ProfileExpressionEvaluator.EvaluateExpressionAsync(dependencies, parameters, parameter.Value.ToString(), cancellationToken);
+                            EvaluationResult evaluation = await ProfileExpressionEvaluator.EvaluateExpressionAsync(
+                                ProfileExpressionEvaluator.Evaluators,
+                                dependencies, 
+                                parameters, 
+                                parameter.Value.ToString(), 
+                                cancellationToken);
+
                             if (evaluation.IsMatched)
                             {
                                 parameters[parameter.Key] = evaluation.Outcome;

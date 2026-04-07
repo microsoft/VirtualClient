@@ -164,12 +164,12 @@ namespace VirtualClient.Actions
 
                 foreach (string file in outputFiles)
                 {
-                    string results = await this.LoadResultsAsync(file, cancellationToken);
-                    await this.LogProcessDetailsAsync(process, telemetryContext, "SPECjbb", results: results.AsArray(), logToFile: true);
+                    KeyValuePair<string, string> results = await this.LoadResultsAsync(file, cancellationToken);
+                    await this.LogProcessDetailsAsync(process, telemetryContext, "SPECjbb", logToFile: true, results: results);
 
                     try
                     {
-                        SpecJbbMetricsParser parser = new SpecJbbMetricsParser(results);
+                        SpecJbbMetricsParser parser = new SpecJbbMetricsParser(results.Value);
 
                         this.Logger.LogMetrics(
                             toolName: "SPECjbb",
@@ -186,37 +186,9 @@ namespace VirtualClient.Actions
                     }
                     catch (Exception exc)
                     {
-                        throw new WorkloadException($"Failed to parse file at '{file}' with text '{results}'.", exc, ErrorReason.InvalidResults);
+                        throw new WorkloadException($"Failed to parse file at '{file}' with text '{results.Value}'.", exc, ErrorReason.InvalidResults);
                     }
                 }
-            }
-        }
-
-        private async Task ExecuteCommandAsync(string pathToExe, string commandLineArguments, string workingDirectory, CancellationToken cancellationToken)
-        {
-            if (!cancellationToken.IsCancellationRequested)
-            {
-                EventContext telemetryContext = EventContext.Persisted()
-                    .AddContext("command", pathToExe)
-                    .AddContext("commandArguments", commandLineArguments);
-
-                await this.Logger.LogMessageAsync($"{nameof(SpecJbbExecutor)}.ExecuteProcess", telemetryContext, async () =>
-                {
-                    using (IProcessProxy process = this.systemManagement.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, commandLineArguments, workingDirectory))
-                    {
-                        this.CleanupTasks.Add(() => process.SafeKill());
-                        this.LogProcessTrace(process);
-                        await process.StartAndWaitAsync(cancellationToken);
-
-                        await this.ValidateProcessExitedAsync(process.Id, TimeSpan.FromMinutes(10), cancellationToken);
-
-                        if (!cancellationToken.IsCancellationRequested)
-                        {
-                            await this.LogProcessDetailsAsync(process, telemetryContext, "SPECjbb");
-                            process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
-                        }
-                    }
-                });
             }
         }
 
@@ -264,7 +236,7 @@ namespace VirtualClient.Actions
             return jbbArgument;
         }
 
-        private Task UploadGcLogAsync(IBlobManager blobManager, string gcLogPath, DateTime logTime, CancellationToken cancellationToken)
+        private async Task UploadGcLogAsync(IBlobManager blobManager, string gcLogPath, DateTime logTime, CancellationToken cancellationToken)
         {
             // Example Blob Store Structure:
             // /7dfae74c-06c0-49fc-ade6-987534bb5169/anyagentid/specjbb/2022-04-30T20:13:23.3768938Z-gc.log
@@ -280,8 +252,8 @@ namespace VirtualClient.Actions
                     null,
                     this.Roles?.FirstOrDefault()));
 
-            return this.UploadFileAsync(blobManager, this.fileSystem, descriptor, cancellationToken, deleteFile: true);
-
+            await this.UploadFileAsync(blobManager, this.fileSystem, descriptor, cancellationToken);
+            await this.fileSystem.File.DeleteAsync(gcLogPath);
         }
 
         private async Task ValidateProcessExitedAsync(int processId, TimeSpan timeout, CancellationToken cancellationToken)

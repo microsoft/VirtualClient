@@ -123,12 +123,12 @@ namespace VirtualClient.Actions
 
                 if (string.Equals(this.ServiceName, DeathStarBenchExecutor.MediaMicroservices, StringComparison.OrdinalIgnoreCase))
                 {
-                    await this.ExecuteCommandAsync("python3 scripts/write_movie_info.py -c datasets/tmdb/casts.json -m datasets/tmdb/movies.json", this.ServiceDirectory, cancellationToken)
+                    await this.ExecuteCommandAsync($"{this.PythonExecutablePath} scripts/write_movie_info.py -c datasets/tmdb/casts.json -m datasets/tmdb/movies.json", this.ServiceDirectory, cancellationToken)
                         .ConfigureAwait();
                 }
                 else if (string.Equals(this.ServiceName, DeathStarBenchExecutor.SocialNetwork, StringComparison.OrdinalIgnoreCase))
                 {
-                    await this.ExecuteCommandAsync(@$"bash -c ""python3 scripts/init_social_graph.py --graph={this.GraphType} --limit=1000""", this.ServiceDirectory, cancellationToken)
+                    await this.ExecuteCommandAsync(@$"bash -c ""{this.PythonExecutablePath} scripts/init_social_graph.py --graph={this.GraphType} --limit=1000""", this.ServiceDirectory, cancellationToken)
                         .ConfigureAwait();
                 }
             }

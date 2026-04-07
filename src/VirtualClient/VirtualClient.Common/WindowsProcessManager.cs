@@ -3,8 +3,8 @@
 
 namespace VirtualClient.Common
 {
+    using System;
     using System.Diagnostics;
-    using System.IO;
     using VirtualClient.Common.Extensions;
 
     /// <summary>
@@ -12,6 +12,9 @@ namespace VirtualClient.Common
     /// </summary>
     public class WindowsProcessManager : ProcessManager
     {
+        /// <inheritdoc />
+        public override PlatformID Platform => PlatformID.Win32NT;
+
         /// <inheritdoc />
         public override IProcessProxy CreateProcess(string command, string arguments = null, string workingDir = null)
         {
@@ -23,7 +26,7 @@ namespace VirtualClient.Common
                 {
                     FileName = command,
                     Arguments = arguments,
-                    WorkingDirectory = workingDir ?? Path.GetDirectoryName(command),
+                    WorkingDirectory = workingDir,
                     CreateNoWindow = true,
                     UseShellExecute = false,
                     RedirectStandardError = true,

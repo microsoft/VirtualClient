@@ -37,6 +37,7 @@ namespace VirtualClient.Contracts
             // Mariner 3+ renamed to AzLinux 3
             Regex azLinuxRegex = new Regex("Operating System: (CBL-Mariner|Microsoft Azure Linux)", RegexOptions.Multiline | RegexOptions.IgnoreCase);
             Regex suseRegex = new Regex("Operating System: SUSE", RegexOptions.Multiline | RegexOptions.IgnoreCase);
+            Regex awsLinuxRegex = new Regex("Operating System: Amazon Linux", RegexOptions.Multiline | RegexOptions.IgnoreCase);
 
             Dictionary<Regex, LinuxDistribution> distroMapping = new Dictionary<Regex, LinuxDistribution>()
             {
@@ -48,7 +49,8 @@ namespace VirtualClient.Contracts
                 { centos7Regex, LinuxDistribution.CentOS7 },
                 { centos8Regex, LinuxDistribution.CentOS8 },
                 { suseRegex, LinuxDistribution.SUSE },
-                { azLinuxRegex, LinuxDistribution.AzLinux }
+                { azLinuxRegex, LinuxDistribution.AzLinux },
+                { awsLinuxRegex, LinuxDistribution.AwsLinux }
             };
 
             LinuxDistribution distribution = LinuxDistribution.Unknown;

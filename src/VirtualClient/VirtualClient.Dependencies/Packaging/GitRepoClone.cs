@@ -5,7 +5,6 @@ namespace VirtualClient.Dependencies
 {
     using System;
     using System.Collections.Generic;
-    using System.CommandLine;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
@@ -93,7 +92,7 @@ namespace VirtualClient.Dependencies
 
                 using (IProcessProxy process = processManager.CreateProcess("git", $"clone {this.RepoUri} {cloneDirectory}", this.PlatformSpecifics.PackagesDirectory))
                 {
-                    this.CleanupTasks.Add(() => process.SafeKill());
+                    this.CleanupTasks.Add(() => process.SafeKill(this.Logger));
 
                     await process.StartAndWaitAsync(cancellationToken)
                        .ConfigureAwait(false);

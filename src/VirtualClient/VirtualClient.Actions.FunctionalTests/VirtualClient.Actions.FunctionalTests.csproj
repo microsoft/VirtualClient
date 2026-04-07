@@ -1,21 +1,21 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>net9.0</TargetFramework>
         <IsPackable>false</IsPackable>
         <RunCodeAnalysis>false</RunCodeAnalysis>
         <RunAnalyzers>true</RunAnalyzers>
         <RootNamespace>VirtualClient.Actions</RootNamespace>
-        <NoWarn>SA1116,SA1117,SA1118,AsyncFixer02</NoWarn>
+        <NoWarn>SA1116;SA1117;SA1118;AsyncFixer02</NoWarn>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     </PropertyGroup>
 
-    <ItemGroup>
-        <PackageReference Include="Moq" Version="$(Moq_PackageVersion)" />
-        <PackageReference Include="NUnit" Version="$(NUnit_PackageVersion)" />
-        <PackageReference Include="NUnit3TestAdapter" Version="$(NUnit3TestAdapter_PackageVersion)" />
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(Microsoft_NET_Test_Sdk_PackageVersion)" />
-    </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.NET.Test.Sdk" />
+		<PackageReference Include="Moq" />
+		<PackageReference Include="NUnit" />
+		<PackageReference Include="NUnit3TestAdapter" />
+	</ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\VirtualClient.Actions\VirtualClient.Actions.csproj" />

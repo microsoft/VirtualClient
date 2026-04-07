@@ -9,9 +9,11 @@ namespace VirtualClient.Contracts
     using System.IO.Abstractions;
     using System.Linq;
     using System.Runtime.InteropServices;
+    using System.Text;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.CodeAnalysis;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Polly;
@@ -100,57 +102,116 @@ namespace VirtualClient.Contracts
         /// </summary>
         /// <param name="component">The component requesting the file upload descriptor.</param>
         /// <param name="fileContext">Provides context about a file to be uploaded.</param>
+        /// <param name="additionalParameters">Parameters related to the component that produced the file (e.g. the parameters from the component).</param>
+        /// <param name="additionalMetadata">Additional information and metadata related to the blob/file to include in the descriptor alongside the default manifest information.</param>
+        /// <param name="timestamped">
+        /// True to to include the file creation time in the file name (e.g. 2023-05-21t09-23-30-23813z-file.log). This is explicit to allow for cases where modification of the 
+        /// file name is not desirable. Default = true (timestamped file names).
+        /// </param>
+        /// <param name="subPath">A relative directory path to preserve when creating the blob path (e.g. \ipmiutil\sel, /ipmiutil/sel).</param>
+        public static FileUploadDescriptor CreateFileUploadDescriptor(this VirtualClientComponent component, FileContext fileContext, IDictionary<string, IConvertible> additionalParameters = null, IDictionary<string, IConvertible> additionalMetadata = null, bool timestamped = true, string subPath = null)
+        {
+            component.ThrowIfNull(nameof(component));
+            fileContext.ThrowIfNull(nameof(fileContext));
+
+            IDictionary<string, IConvertible> effectiveMetadata = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
+
+            if (component.Metadata?.Any() == true)
+            {
+                effectiveMetadata.AddRange(component.Metadata);
+            }
+
+            if (additionalMetadata?.Any() == true)
+            {
+                effectiveMetadata.AddRange(additionalMetadata, true);
+            }
+
+            IDictionary<string, IConvertible> effectiveParameters = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
+
+            if (component.Parameters?.Any() == true)
+            {
+                effectiveParameters.AddRange(component.Parameters);
+            }
+
+            if (additionalParameters?.Any() == true)
+            {
+                effectiveParameters.AddRange(additionalParameters, true);
+            }
+
+            FileUploadDescriptor descriptor = FileUploadDescriptorFactory.CreateDescriptor(
+                fileContext,
+                effectiveParameters,
+                effectiveMetadata,
+                timestamped,
+                component.ContentPathTemplate,
+                subPath);
+
+            return descriptor;
+        }
+
+        /// <summary>
+        /// Creates a descriptor that can be used to publish a request
+        /// </summary>
+        /// <param name="component">The component requesting the file upload descriptor.</param>
+        /// <param name="targetDirectory">A directory with files to upload.</param>
+        /// <param name="toolName">The name of the toolset for which the files are associated.</param>
         /// <param name="parameters">Parameters related to the component that produced the file (e.g. the parameters from the component).</param>
         /// <param name="metadata">Additional information and metadata related to the blob/file to include in the descriptor alongside the default manifest information.</param>
         /// <param name="timestamped">
         /// True to to include the file creation time in the file name (e.g. 2023-05-21t09-23-30-23813z-file.log). This is explicit to allow for cases where modification of the 
         /// file name is not desirable. Default = true (timestamped file names).
         /// </param>
-        public static FileUploadDescriptor CreateFileUploadDescriptor(this VirtualClientComponent component, FileContext fileContext, IDictionary<string, IConvertible> parameters = null, IDictionary<string, IConvertible> metadata = null, bool timestamped = true)
+        /// <param name="flatten">
+        /// True to use a flattened blob virtual path structure for file uploads (e.g. no subdirectories). False to preserve the 
+        /// relative subpaths for directories on the file system in the blob virtual paths. Default = true.
+        /// </param>
+        /// <param name="recursive">True to include files in subdirectories. False to include only files in the specified directory. Default = true.</param>
+        public static IEnumerable<FileUploadDescriptor> CreateFileUploadDescriptors(this VirtualClientComponent component, string targetDirectory, string toolName = null, IDictionary<string, IConvertible> parameters = null, IDictionary<string, IConvertible> metadata = null, bool timestamped = true, bool flatten = true, bool recursive = true)
         {
             component.ThrowIfNull(nameof(component));
-            fileContext.ThrowIfNull(nameof(fileContext));
+            targetDirectory.ThrowIfNullOrWhiteSpace(nameof(targetDirectory));
 
-            IDictionary<string, IConvertible> effectiveMetadata = new Dictionary<string, IConvertible>(component.Metadata, StringComparer.OrdinalIgnoreCase);
-            
-            if (metadata?.Any() == true)
+            IFileSystem fileSystem = component.Dependencies.GetService<IFileSystem>();
+            IEnumerable<string> filesToUpload = fileSystem.Directory.GetFiles(targetDirectory, "*.*", recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
+            List<FileUploadDescriptor> descriptors = new List<FileUploadDescriptor>();
+
+            if (filesToUpload?.Any() == true)
             {
-                effectiveMetadata.AddRange(metadata, true);
-            }
-
-            FileUploadDescriptor descriptor = FileUploadDescriptorFactory.CreateDescriptor(
-                fileContext,
-                parameters,
-                effectiveMetadata,
-                timestamped,
-                VirtualClientComponent.ContentPathTemplate);
-
-            return descriptor;
-        }
-
-        /// <summary>
-        /// Evaluates each of the parameters provided to the component to replace
-        /// supported placeholder expressions (e.g. {PackagePath:anytool} -> replace with path to 'anytool' package).
-        /// </summary>
-        /// <param name="component">The component whose parameters to evaluate.</param>
-        /// <param name="cancellationToken">A token that can be used to cancel the operations.</param>
-        /// <param name="force">Forces the evaluation of the parameters for scenarios where re-evaluation is necessary after an initial pass. Default = false.</param>
-        public static async Task EvaluateParametersAsync(this VirtualClientComponent component, CancellationToken cancellationToken, bool force = false)
-        {
-            component.ThrowIfNull(nameof(component));
-
-            if (!component.ParametersEvaluated || force)
-            {
-                if (component.Parameters?.Any() == true)
+                foreach (string file in filesToUpload)
                 {
-                    if (component.Dependencies.TryGetService<IExpressionEvaluator>(out IExpressionEvaluator evaluator))
-                    {
-                        await evaluator.EvaluateAsync(component.Dependencies, component.Parameters, cancellationToken);
-                    }
-                }
+                    string contentType = MimeMapping.MimeUtility.GetMimeMapping(file);
+                    string relativeSubPath = null;
 
-                component.ParametersEvaluated = true;
+                    if (!flatten)
+                    {
+                        // Preserve the directory structure in the blob virtual path.
+                        string subDirectory = fileSystem.GetRelativeSubdirectory(targetDirectory, file);
+                        if (!string.IsNullOrWhiteSpace(subDirectory))
+                        {
+                            relativeSubPath = subDirectory;
+                        }
+                    }
+
+                    FileUploadDescriptor descriptor = VirtualClientComponentExtensions.CreateFileUploadDescriptor(
+                        component,
+                        new FileContext(
+                            fileSystem.FileInfo.New(file),
+                            contentType,
+                            Encoding.UTF8.WebName,
+                            component.ExperimentId,
+                            component.AgentId,
+                            toolName,
+                            component.Scenario,
+                            component.Roles?.FirstOrDefault()),
+                        additionalParameters: parameters,
+                        timestamped: timestamped,
+                        subPath: relativeSubPath);
+
+                    descriptors.Add(descriptor);
+                }
             }
+
+            return descriptors;
         }
 
         /// <summary>
@@ -177,7 +238,7 @@ namespace VirtualClient.Contracts
                 throw new DependencyException(
                     $"Client instance not found. A client instance does not exist in the environment layout " +
                     $"provided to the Virtual Client for agent ID '{desiredAgentId}'.",
-                    ErrorReason.EnvironmentLayoutClientInstancesNotFound);
+                    ErrorReason.LayoutInvalid);
             }
 
             return instance;
@@ -207,7 +268,7 @@ namespace VirtualClient.Contracts
                 throw new DependencyException(
                     $"Client instances not found. A set of client instances do not exist in the environment layout " +
                     $"provided to the Virtual Client for the role '{role}'.",
-                    ErrorReason.EnvironmentLayoutClientInstancesNotFound);
+                    ErrorReason.LayoutInvalid);
             }
 
             return clientInstances;
@@ -220,6 +281,59 @@ namespace VirtualClient.Contracts
         {
             component.ThrowIfNull(nameof(component));
             return component.PlatformSpecifics.GetPackagePath(pathSegments);
+        }
+
+        /// <summary>
+        /// Returns the relative subdirectory for a given file based on the target directory
+        /// (e.g. /home/user/virtualclient/logs/directory1/any.log -> /directory1).
+        /// </summary>
+        /// <param name="fileSystem">The file system interface.</param>
+        /// <param name="rootDirectory">The target/root directory from which the subpath should be determined.</param>
+        /// <param name="filePath">The full path to the file inside of the target directory.</param>
+        public static string GetRelativeSubdirectory(this IFileSystem fileSystem, string rootDirectory, string filePath)
+        {
+            rootDirectory.ThrowIfNullOrWhiteSpace(nameof(rootDirectory), $"The root directory must be defined and cannot be null or whitespace.");
+            filePath.ThrowIfNullOrWhiteSpace(nameof(filePath), $"The file path must be defined and cannot be null or whitespace.");
+
+            if (!filePath.StartsWith(rootDirectory, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new ArgumentException($"The file path '{filePath}' is not within the root/target directory '{rootDirectory}'.");
+            }
+
+            // Preserve the directory structure in the blob virtual path.
+            string relativeSubPath = null;
+            string fileDirectory = fileSystem.Path.GetDirectoryName(filePath)?.Trim();
+
+            if (Regex.IsMatch(fileDirectory, @"^[A-Z]\:\\*$", RegexOptions.IgnoreCase))
+            {
+                relativeSubPath = fileDirectory;
+            }
+            else
+            {
+                relativeSubPath = fileDirectory?.Substring(rootDirectory.Length);
+
+                if (!string.IsNullOrWhiteSpace(relativeSubPath))
+                {
+                    // A relative path within the full file directory path to preserve in the file upload
+                    // descriptor.
+                    // 
+                    // e.g.
+                    // /home/user/virtualclient/logs/directory1/any.log -> /directory1
+                    // /home/user/virtualclient/logs/directory1/directory2/any.log -> /directory1/directory2
+                    relativeSubPath = relativeSubPath.Trim('\\', '/');
+                }
+            }
+
+            return relativeSubPath;
+        }
+
+        /// <summary>
+        /// Combines the path segments into a valid default temp path.
+        /// </summary>
+        public static string GetTempPath(this VirtualClientComponent component, params string[] pathSegments)
+        {
+            component.ThrowIfNull(nameof(component));
+            return component.PlatformSpecifics.GetTempPath(pathSegments);
         }
 
         /// <summary>
@@ -277,7 +391,7 @@ namespace VirtualClient.Contracts
                         fileSystem.Directory.CreateDirectory(targetDirectory);
                     }
 
-                    string fileName = FileUploadDescriptor.GetFileName(FileUploadDescriptor.UploadDescriptorFileExtension, DateTime.UtcNow);
+                    string fileName = FileContext.GetFileName(FileUploadDescriptor.UploadDescriptorFileExtension, DateTime.UtcNow);
                     string filePath = component.Combine(targetDirectory, fileName.ToLowerInvariant());
 
                     await fileSystem.File.WriteAllTextAsync(filePath, descriptor.ToJson());
@@ -410,7 +524,7 @@ namespace VirtualClient.Contracts
                 throw new DependencyException(
                     "The environment layout is not defined. An environment layout must be provided to the " +
                     "Virtual Client application on the command line.",
-                    ErrorReason.EnvironmentLayoutNotDefined);
+                    ErrorReason.LayoutNotDefined);
             }
         }
 
@@ -429,7 +543,7 @@ namespace VirtualClient.Contracts
                 throw new WorkloadException(
                     $"The IP address defined in the environment layout for this agent " +
                     $"instance '{ipAddress}' does not match with the IP addresses defined on the system.",
-                    ErrorReason.LayoutIPAddressDoesNotMatch);
+                    ErrorReason.LayoutInvalid);
             }
         }
 

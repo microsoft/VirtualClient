@@ -16,9 +16,9 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Constructor for <see cref="Prime95MetricsParser"/>
         /// </summary>
-        /// <param name="rawText">Raw text to parse.</param>
-        public Prime95MetricsParser(string rawText)
-            : base(rawText)
+        /// <param name="results">Raw text to parse.</param>
+        public Prime95MetricsParser(string results)
+            : base(results)
         {
         }
 
@@ -46,12 +46,12 @@ namespace VirtualClient.Actions
                     }
                 }
 
-                metrics.Add(new Metric("passTestCount", selfTestPassCount, MetricRelativity.HigherIsBetter));
-                metrics.Add(new Metric("failTestCount", fatalErrorsCount, MetricRelativity.LowerIsBetter));
+                metrics.Add(new Metric("Test Pass", selfTestPassCount, "count", MetricRelativity.HigherIsBetter));
+                metrics.Add(new Metric("Test Fail", fatalErrorsCount, "count", MetricRelativity.LowerIsBetter));
 
-                if (metrics.Count != 2)
+                if (selfTestPassCount <= 0 && fatalErrorsCount <= 0)
                 {
-                    throw new WorkloadResultsException($"The Prime95 Workload did not generate valid metrics! ");
+                    throw new WorkloadResultsException($"The Prime95 Workload did not generate any valid pass/fail metrics!");
                 }
 
                 return metrics;
@@ -73,6 +73,6 @@ namespace VirtualClient.Actions
 
             // Removing unnecessary starting and ending space.
             this.PreprocessedText = this.PreprocessedText.Trim();
-        }        
+        }
     }
 }

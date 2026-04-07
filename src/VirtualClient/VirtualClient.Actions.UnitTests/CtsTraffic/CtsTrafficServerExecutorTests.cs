@@ -5,8 +5,6 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
-    using System.IO;
-    using System.Linq;
     using System.Net;
     using System.Net.Http;
     using System.Runtime.InteropServices;
@@ -23,22 +21,20 @@ namespace VirtualClient.Actions
 
     [TestFixture]
     [Category("Unit")]
-    public class CtsTrafficServerExecutorTests
+    public class CtsTrafficServerExecutorTests : MockFixture
     {
-        private MockFixture mockFixture;
-        private DependencyPath mockCtsTrafficPackage;
+        private DependencyPath mockPackage;
         private string mockResults;
 
-        public void SetupDefaults(PlatformID platform = PlatformID.Win32NT, Architecture architecture = Architecture.X64, int numaNodeIndex = 0)
+        public void SetupTest(PlatformID platform = PlatformID.Win32NT, Architecture architecture = Architecture.X64, int numaNodeIndex = 0)
         {
-            this.mockFixture = new MockFixture();
-            this.mockFixture.Setup(platform, architecture);
+            this.Setup(platform, architecture);
 
-            this.mockCtsTrafficPackage = new DependencyPath("ctstraffic", this.mockFixture.GetPackagePath("ctstraffic"));
+            this.mockPackage = new DependencyPath("ctstraffic", this.GetPackagePath("ctstraffic"));
 
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            this.Parameters = new Dictionary<string, IConvertible>()
             {
-                ["PackageName"] = this.mockCtsTrafficPackage.Name,
+                ["PackageName"] = this.mockPackage.Name,
                 ["PrimaryPort"] = "4445",
                 ["SecondaryPort"] = "4444",
                 ["NumaNodeIndex"] = numaNodeIndex,
@@ -48,24 +44,24 @@ namespace VirtualClient.Actions
                 ["ServerExitLimit"] = 1
             };
 
-            this.mockFixture.PackageManager.OnGetPackage("ctstraffic").ReturnsAsync(this.mockCtsTrafficPackage);
+            this.SetupPackage(this.mockPackage);
 
             // Setup:
             // The server will be checking for state objects. State is how the server communicates required information
             // to the client.
             CtsTrafficServerState state = new CtsTrafficServerState();
-            this.mockFixture.ApiClient.OnGetState(nameof(CtsTrafficServerState))
-                .ReturnsAsync(() => this.mockFixture.CreateHttpResponse(HttpStatusCode.OK, new Item<CtsTrafficServerState>(nameof(CtsTrafficServerState), state)));
+            this.ApiClient.OnGetState(nameof(CtsTrafficServerState))
+                .ReturnsAsync(() => this.CreateHttpResponse(HttpStatusCode.OK, new Item<CtsTrafficServerState>(nameof(CtsTrafficServerState), state)));
 
-            this.mockFixture.ApiClient.OnUpdateState<CtsTrafficServerState>(nameof(CtsTrafficServerState))
-                .ReturnsAsync(() => this.mockFixture.CreateHttpResponse(HttpStatusCode.OK));
+            this.ApiClient.OnUpdateState<CtsTrafficServerState>(nameof(CtsTrafficServerState))
+                .ReturnsAsync(() => this.CreateHttpResponse(HttpStatusCode.OK));
 
-            this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>())).Returns(true);
-            this.mockFixture.Directory.Setup(d => d.Exists(It.IsAny<string>())).Returns(true);
+            this.File.Setup(f => f.Exists(It.IsAny<string>())).Returns(true);
+            this.Directory.Setup(d => d.Exists(It.IsAny<string>())).Returns(true);
 
-            this.mockResults = File.ReadAllText(MockFixture.GetDirectory(typeof(CtsTrafficServerExecutorTests), "Examples", @"CtsTraffic", "CtsTrafficResultsExample.csv"));
+            this.mockResults = MockFixture.ReadFile(MockFixture.ExamplesDirectory, @"CtsTraffic", "CtsTrafficResultsExample.csv");
 
-            this.mockFixture.File.Setup(f => f.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            this.File.Setup(f => f.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(this.mockResults);
 
         }
@@ -73,12 +69,12 @@ namespace VirtualClient.Actions
         [Test]
         public async Task CtsTrafficServerExecutorWritesTheExpectedInformationToTheServerState()
         {
-            this.SetupDefaults();
+            this.SetupTest();
 
-            using (var executor = new TestCtsTrafficServerExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (var executor = new TestCtsTrafficServerExecutor(this.Dependencies, this.Parameters))
             {
                 bool confirmed_setup = true;
-                this.mockFixture.ApiClient.OnUpdateState<CtsTrafficServerState>(nameof(CtsTrafficServerState))
+                this.ApiClient.OnUpdateState<CtsTrafficServerState>(nameof(CtsTrafficServerState))
                     .Callback<string, object, CancellationToken, IAsyncPolicy<HttpResponseMessage>>((stateId, state, token, retryPolicy) =>
                     {
                         Item<CtsTrafficServerState> actualState = state as Item<CtsTrafficServerState>;
@@ -90,7 +86,7 @@ namespace VirtualClient.Actions
                             confirmed_setup = true;
                         }
                     })
-                    .ReturnsAsync(this.mockFixture.CreateHttpResponse(HttpStatusCode.OK));
+                    .ReturnsAsync(this.CreateHttpResponse(HttpStatusCode.OK));
 
                 await executor.ExecuteAsync(CancellationToken.None);
                 Assert.IsTrue(confirmed_setup);
@@ -102,12 +98,12 @@ namespace VirtualClient.Actions
         [TestCase(Architecture.Arm64)]
         public async Task CtsTrafficServerExecutorExecutesExpectedCommandsOnWindowsSystemsWithNumaNodeProvided(Architecture architecture)
         {
-            this.SetupDefaults(PlatformID.Win32NT,architecture);
-            using (var executor = new TestCtsTrafficServerExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            this.SetupTest(PlatformID.Win32NT,architecture);
+            using (var executor = new TestCtsTrafficServerExecutor(this.Dependencies, this.Parameters))
             {
                 // e.g.
                 // C:\Users\Any\VirtualClient\packages\ctstraffic
-                string ctsTrafficPackage = this.mockCtsTrafficPackage.Path;
+                string ctsTrafficPackage = this.mockPackage.Path;
                 string arch = architecture.ToString().ToLower();
 
                 List<string> expectedCommands = new List<string>()
@@ -121,7 +117,7 @@ namespace VirtualClient.Actions
                     $"-Transfer:{executor.BytesToTransfer} -ServerExitLimit:{executor.ServerExitLimit} -Buffer:{executor.BufferInBytes} -TimeLimit:150000\" --> {ctsTrafficPackage}\\win-{arch}"
                 };
 
-                this.mockFixture.ProcessManager.OnProcessCreated = (process) =>
+                this.ProcessManager.OnProcessCreated = (process) =>
                 {
                     process.StandardOutput.Clear();
                     if (process.FullCommand().Contains("ctsTraffic.exe"))
@@ -141,12 +137,12 @@ namespace VirtualClient.Actions
         [TestCase(Architecture.Arm64)]
         public async Task CtsTrafficServerExecutorExecutesExpectedCommandsOnWindowsSystemsWithNumaNodeNotProvided(Architecture architecture)
         {
-            this.SetupDefaults(PlatformID.Win32NT, architecture, -1);
-            using (var executor = new TestCtsTrafficServerExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            this.SetupTest(PlatformID.Win32NT, architecture, -1);
+            using (var executor = new TestCtsTrafficServerExecutor(this.Dependencies, this.Parameters))
             {
                 // e.g.
                 // C:\Users\Any\VirtualClient\packages\ctstraffic
-                string ctsTrafficPackage = this.mockCtsTrafficPackage.Path;
+                string ctsTrafficPackage = this.mockPackage.Path;
                 string arch = architecture.ToString().ToLower();
 
                 List<string> expectedCommands = new List<string>()
@@ -159,7 +155,7 @@ namespace VirtualClient.Actions
                     $"-Transfer:{executor.BytesToTransfer} -ServerExitLimit:{executor.ServerExitLimit} -Buffer:{executor.BufferInBytes} -TimeLimit:150000 --> {ctsTrafficPackage}\\win-{arch}"
                 };
 
-                this.mockFixture.ProcessManager.OnProcessCreated = (process) =>
+                this.ProcessManager.OnProcessCreated = (process) =>
                 {
                     process.StandardOutput.Clear();
                     if (process.FullCommand().Contains("ctsTraffic.exe"))

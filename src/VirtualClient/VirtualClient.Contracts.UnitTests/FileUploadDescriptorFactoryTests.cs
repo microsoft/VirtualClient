@@ -19,7 +19,7 @@ namespace VirtualClient.Contracts
         private MockFixture mockFixture;
         private Mock<IFileInfo> mockFile;
 
-        public void SetupDefaults()
+        public void Setup()
         {
             this.mockFixture = new MockFixture();
             this.mockFixture.Setup(PlatformID.Unix);
@@ -40,7 +40,7 @@ namespace VirtualClient.Contracts
         [TestCase("Agent01", "ToolA", "Scenario01", "Client")]
         public void FileUploadDescriptorFactoryCreatesTheExpectedDescriptor_When_Not_Timestamped(string expectedAgentId, string expectedToolName, string expectedScenario, string expectedRole)
         {
-            this.SetupDefaults();
+            this.Setup();
 
             string expectedExperimentId = Guid.NewGuid().ToString();
             string expectedContentType = HttpContentType.PlainText;
@@ -87,13 +87,13 @@ namespace VirtualClient.Contracts
         [TestCase("Agent01", "ToolA", "Scenario01", "Client")]
         public void FileUploadDescriptorFactoryCreatesTheExpectedDescriptor_When_Timestamped(string expectedAgentId, string expectedToolName, string expectedScenario, string expectedRole)
         {
-            this.SetupDefaults();
+            this.Setup();
 
             string expectedExperimentId = Guid.NewGuid().ToString();
             string expectedContentType = HttpContentType.PlainText;
             string expectedContentEncoding = Encoding.UTF8.WebName;
             string expectedFilePath = this.mockFile.Object.FullName;
-            string expectedFileName = $"{this.mockFile.Object.CreationTimeUtc.ToString("yyyy-MM-ddTHH-mm-ss-fffffZ")}-{this.mockFile.Object.Name}";
+            string expectedFileName = $"{this.mockFile.Object.CreationTimeUtc.ToString("yyyy-MM-ddTHH-mm-ss-ffffffZ")}-{this.mockFile.Object.Name}";
             string expectedBlobPath = string.Join('/', (new string[] { expectedAgentId, expectedToolName, expectedRole, expectedScenario })
                 .Where(i => i != null))
                 .ToLowerInvariant();
@@ -129,8 +129,8 @@ namespace VirtualClient.Contracts
         public void FileUploadDescriptorFactoryCreatesTheExpectedDescriptorWithDefaultContentPathTemplate_Scenario_1()
         {
             //  Default Template:
-            //  {experimentId}/{agentId}/{toolName}/{scenario}
-            this.SetupDefaults();
+            //  {experimentId}/{agentId}/{role}/{scenario}
+            this.Setup();
 
             string expectedExperimentId = Guid.NewGuid().ToString();
             string expectedAgentId = "Agent01";
@@ -139,7 +139,7 @@ namespace VirtualClient.Contracts
             string expectedContentType = HttpContentType.PlainText;
             string expectedContentEncoding = Encoding.UTF8.WebName;
             string expectedFilePath = this.mockFile.Object.FullName;
-            string expectedFileName = $"{this.mockFile.Object.CreationTimeUtc.ToString("yyyy-MM-ddTHH-mm-ss-fffffZ")}-{this.mockFile.Object.Name}";
+            string expectedFileName = $"{this.mockFile.Object.CreationTimeUtc.ToString("yyyy-MM-ddTHH-mm-ss-ffffffZ")}-{this.mockFile.Object.Name}";
             string expectedBlobPath = string.Join('/', (new string[]
             {
                 expectedAgentId,
@@ -175,8 +175,8 @@ namespace VirtualClient.Contracts
         public void FileUploadDescriptorFactoryCreatesTheExpectedDescriptorWithDefaultContentPathTemplate_Scenario_2()
         {
             //  Default Template:
-            //  {experimentId}/{agentId}/{toolName}/{role}/{scenario}
-            this.SetupDefaults();
+            //  {experimentId}/{agentId}/{role}/{scenario}
+            this.Setup();
 
             string expectedExperimentId = Guid.NewGuid().ToString();
             string expectedAgentId = "Agent01";
@@ -186,7 +186,7 @@ namespace VirtualClient.Contracts
             string expectedContentType = HttpContentType.PlainText;
             string expectedContentEncoding = Encoding.UTF8.WebName;
             string expectedFilePath = this.mockFile.Object.FullName;
-            string expectedFileName = $"{this.mockFile.Object.CreationTimeUtc.ToString("yyyy-MM-ddTHH-mm-ss-fffffZ")}-{this.mockFile.Object.Name}";
+            string expectedFileName = $"{this.mockFile.Object.CreationTimeUtc.ToString("yyyy-MM-ddTHH-mm-ss-ffffffZ")}-{this.mockFile.Object.Name}";
             string expectedBlobPath = string.Join('/', (new string[]
             {
                 expectedAgentId,
@@ -259,7 +259,7 @@ namespace VirtualClient.Contracts
         )]
         public void FileUploadDescriptorFactoryCreatesTheExpectedDescriptorWithCustomContentPathTemplates(string contentPathTemplate, string expectedContainer, string expectedBlobPath)
         {
-            this.SetupDefaults();
+            this.Setup();
 
             string expectedExperimentName = "Test_Experiment";
             string expectedExperimentId = "cfad01a9-8F5c-4210-841e-63210ed6a85d";
@@ -272,7 +272,7 @@ namespace VirtualClient.Contracts
             string expectedContentType = HttpContentType.PlainText;
             string expectedContentEncoding = Encoding.UTF8.WebName;
             string expectedFilePath = this.mockFile.Object.FullName;
-            string expectedFileName = $"{this.mockFile.Object.CreationTimeUtc.ToString("yyyy-MM-ddTHH-mm-ss-fffffZ")}-{this.mockFile.Object.Name}";
+            string expectedFileName = $"{this.mockFile.Object.CreationTimeUtc.ToString("yyyy-MM-ddTHH-mm-ss-ffffffZ")}-{this.mockFile.Object.Name}";
 
             // The blob path itself is lower-cased. However, the file name casing is NOT modified.
             expectedBlobPath = $"{expectedBlobPath.ToLowerInvariant().TrimEnd('/')}/{expectedFileName}";
@@ -326,7 +326,7 @@ namespace VirtualClient.Contracts
         )]
         public void FileUploadDescriptorFactoryCreatesTheExpectedDescriptorWithCustomContentPathTemplatesDefinedInCommandLineMetadata(string contentPathTemplate, string expectedContainer, string expectedBlobPath)
         {
-            this.SetupDefaults();
+            this.Setup();
 
             string expectedExperimentName = "Test_Experiment";
             string expectedExperimentId = "cfad01a9-8F5c-4210-841e-63210ed6a85d";
@@ -339,7 +339,7 @@ namespace VirtualClient.Contracts
             string expectedContentType = HttpContentType.PlainText;
             string expectedContentEncoding = Encoding.UTF8.WebName;
             string expectedFilePath = this.mockFile.Object.FullName;
-            string expectedFileName = $"{this.mockFile.Object.CreationTimeUtc.ToString("yyyy-MM-ddTHH-mm-ss-fffffZ")}-{this.mockFile.Object.Name}";
+            string expectedFileName = $"{this.mockFile.Object.CreationTimeUtc.ToString("yyyy-MM-ddTHH-mm-ss-ffffffZ")}-{this.mockFile.Object.Name}";
 
             // The blob path itself is lower-cased. However, the file name casing is NOT modified.
             expectedBlobPath = $"{expectedBlobPath.ToLowerInvariant().TrimEnd('/')}/{expectedFileName}";
@@ -380,7 +380,7 @@ namespace VirtualClient.Contracts
         [TestCase("contentPathTemplate")]
         public void FileUploadDescriptorFactoryIsNotCaseSensitiveOnContentPathTemplatesDefinedInCommandLineMetadata(string contentPathTemplateParameterName)
         {
-            this.SetupDefaults();
+            this.Setup();
 
             string expectedContentPathTemplate = "customcontainer/{ExperimentDefinitionId}/{ExperimentName}/{ExperimentId},{Revision}/{AgentId}/{Scenario}/{Role}";
             string expectedExperimentName = "Test_Experiment";
@@ -394,7 +394,7 @@ namespace VirtualClient.Contracts
             string expectedContentType = HttpContentType.PlainText;
             string expectedContentEncoding = Encoding.UTF8.WebName;
             string expectedFilePath = this.mockFile.Object.FullName;
-            string expectedFileName = $"{this.mockFile.Object.CreationTimeUtc.ToString("yyyy-MM-ddTHH-mm-ss-fffffZ")}-{this.mockFile.Object.Name}";
+            string expectedFileName = $"{this.mockFile.Object.CreationTimeUtc.ToString("yyyy-MM-ddTHH-mm-ss-ffffffZ")}-{this.mockFile.Object.Name}";
 
             // The blob path itself is lower-cased. However, the file name casing is NOT modified.
             string expectedContainer = "customcontainer";
@@ -450,7 +450,7 @@ namespace VirtualClient.Contracts
         )]
         public void FileUploadDescriptorFactoryCreatesTheExpectedDescriptorWithCustomContentPathTemplatesDefinedInComponentParameters(string contentPathTemplate, string expectedContainer, string expectedBlobPath)
         {
-            this.SetupDefaults();
+            this.Setup();
 
             string expectedExperimentName = "Test_Experiment";
             string expectedExperimentId = "cfad01a9-8F5c-4210-841e-63210ed6a85d";
@@ -463,7 +463,7 @@ namespace VirtualClient.Contracts
             string expectedContentType = HttpContentType.PlainText;
             string expectedContentEncoding = Encoding.UTF8.WebName;
             string expectedFilePath = this.mockFile.Object.FullName;
-            string expectedFileName = $"{this.mockFile.Object.CreationTimeUtc.ToString("yyyy-MM-ddTHH-mm-ss-fffffZ")}-{this.mockFile.Object.Name}";
+            string expectedFileName = $"{this.mockFile.Object.CreationTimeUtc.ToString("yyyy-MM-ddTHH-mm-ss-ffffffZ")}-{this.mockFile.Object.Name}";
 
             // The blob path itself is lower-cased. However, the file name casing is NOT modified.
             expectedBlobPath = $"{expectedBlobPath.ToLowerInvariant().TrimEnd('/')}/{expectedFileName}";
@@ -512,12 +512,12 @@ namespace VirtualClient.Contracts
         )]
         public void FileUploadDescriptorFactoryCreatesBlobPathsWithTheExpectedCasing(string contentPathTemplate, string expectedContainer, string expectedBlobPath)
         {
-            this.SetupDefaults();
+            this.Setup();
 
             string expectedContentType = HttpContentType.PlainText;
             string expectedContentEncoding = Encoding.UTF8.WebName;
             string expectedFilePath = this.mockFile.Object.FullName;
-            string expectedFileName = $"{this.mockFile.Object.CreationTimeUtc.ToString("yyyy-MM-ddTHH-mm-ss-fffffZ")}-{this.mockFile.Object.Name}";
+            string expectedFileName = $"{this.mockFile.Object.CreationTimeUtc.ToString("yyyy-MM-ddTHH-mm-ss-ffffffZ")}-{this.mockFile.Object.Name}";
 
             // The blob path itself is lower-cased. However, the file name casing is NOT modified.
             expectedBlobPath = $"{expectedBlobPath.ToLowerInvariant().TrimEnd('/')}/{expectedFileName}";
@@ -548,7 +548,7 @@ namespace VirtualClient.Contracts
         [TestCase("{ThisDoesNotExist}")]
         public void FileUploadDescriptorFactoryValidatesTheContentPath(string invalidContentPathTemplate)
         {
-            this.SetupDefaults();
+            this.Setup();
 
             FileContext context = new FileContext(
                 this.mockFile.Object,
@@ -562,6 +562,172 @@ namespace VirtualClient.Contracts
                 "AnyRole");
 
             Assert.Throws<SchemaException>(() => FileUploadDescriptorFactory.CreateDescriptor(context, timestamped: true, pathTemplate: invalidContentPathTemplate));
+        }
+
+        [Test]
+        public void FileUploadDescriptorFactorySupportsEitherOrPathTemplateDefinitions_1()
+        {
+            this.Setup();
+
+            string expectedContainerName = "customcontainer";
+            string expectedExperimentName = "Test_Experiment";
+            string expectedExperimentId = "cfad01a9-8F5c-4210-841e-63210ed6a85d";
+            string expectedExperimentDefinitionId = "645f6639-98c6-41ee-a853-b0a3ab8ce0a3";
+            string expectedAgentId = "642,042728166da7,37,192.168.2.155";
+            string expectedRevision = "6.2";
+            string expectedToolName = "Toolkit";
+            string expectedScenario = "RunToolkitCommand";
+            string expectedToolkitCommand = "Cycle-VegaServer";
+            string expectedRole = "Client";
+            string expectedContentType = HttpContentType.PlainText;
+            string expectedContentEncoding = Encoding.UTF8.WebName;
+            string expectedFilePath = this.mockFile.Object.FullName;
+            string expectedFileName = $"{this.mockFile.Object.CreationTimeUtc.ToString("yyyy-MM-ddTHH-mm-ss-ffffffZ")}-{this.mockFile.Object.Name}";
+
+            string contentPathTemplate = "customcontainer/{experimentDefinitionId}/{experimentName}/{experimentId},{revision}/{toolkitCommand|scenario}";
+
+            // The blob path itself is lower-cased. However, the file name casing is NOT modified.
+            string expectedBlobPath = string.Join("/",
+                $"/{expectedExperimentDefinitionId}/{expectedExperimentName}/{expectedExperimentId},{expectedRevision}/{expectedToolkitCommand}".ToLowerInvariant(),
+                expectedFileName);
+
+            FileContext context = new FileContext(
+                this.mockFile.Object,
+                expectedContentType,
+                expectedContentEncoding,
+                expectedExperimentId,
+                expectedAgentId,
+                expectedToolName,
+                expectedScenario,
+                null,
+                expectedRole);
+
+            IDictionary<string, IConvertible> componentParameters = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase)
+            {
+                { "Revision", expectedRevision },
+                { "ExperimentDefinitionId", expectedExperimentDefinitionId },
+                { "ExperimentName", expectedExperimentName },
+                { "ToolkitCommand", expectedToolkitCommand },
+                { "Scenario", expectedScenario }
+            };
+
+            FileUploadDescriptor descriptor = FileUploadDescriptorFactory.CreateDescriptor(context, parameters: componentParameters, timestamped: true, pathTemplate: contentPathTemplate);
+
+            Assert.AreEqual(expectedContainerName, descriptor.ContainerName);
+            Assert.AreEqual(expectedFileName, descriptor.BlobName);
+            Assert.AreEqual(expectedBlobPath, descriptor.BlobPath);
+            Assert.AreEqual(expectedContentEncoding, descriptor.ContentEncoding);
+            Assert.AreEqual(expectedContentType, descriptor.ContentType);
+            Assert.AreEqual(expectedFilePath, descriptor.FilePath);
+        }
+
+        [Test]
+        public void FileUploadDescriptorFactorySupportsEitherOrPathTemplateDefinitions_2()
+        {
+            this.Setup();
+
+            string expectedContainerName = "customcontainer";
+            string expectedExperimentName = "Test_Experiment";
+            string expectedExperimentId = "cfad01a9-8F5c-4210-841e-63210ed6a85d";
+            string expectedExperimentDefinitionId = "645f6639-98c6-41ee-a853-b0a3ab8ce0a3";
+            string expectedAgentId = "642,042728166da7,37,192.168.2.155";
+            string expectedRevision = "6.2";
+            string expectedToolName = "AnyTool";
+            string expectedScenario = "ExecuteToolset";
+            string expectedContentType = HttpContentType.PlainText;
+            string expectedContentEncoding = Encoding.UTF8.WebName;
+            string expectedFilePath = this.mockFile.Object.FullName;
+            string expectedFileName = $"{this.mockFile.Object.CreationTimeUtc.ToString("yyyy-MM-ddTHH-mm-ss-ffffffZ")}-{this.mockFile.Object.Name}";
+
+            // A parameter "toolkitCommand" does not exist. The template should use the "scenario" parameter instead.
+            string contentPathTemplate = "customcontainer/{experimentDefinitionId}/{experimentName}/{experimentId},{revision}/{toolkitCommand|scenario}";
+
+            // The blob path itself is lower-cased. However, the file name casing is NOT modified.
+            string expectedBlobPath = string.Join("/",
+                $"/{expectedExperimentDefinitionId}/{expectedExperimentName}/{expectedExperimentId},{expectedRevision}/{expectedScenario}".ToLowerInvariant(),
+                expectedFileName);
+
+            FileContext context = new FileContext(
+                this.mockFile.Object,
+                expectedContentType,
+                expectedContentEncoding,
+                expectedExperimentId,
+                expectedAgentId,
+                expectedToolName,
+                expectedScenario,
+                null);
+
+            IDictionary<string, IConvertible> componentParameters = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase)
+            {
+                { "Revision", expectedRevision },
+                { "ExperimentDefinitionId", expectedExperimentDefinitionId },
+                { "ExperimentName", expectedExperimentName },
+                { "Scenario", expectedScenario }
+            };
+
+            FileUploadDescriptor descriptor = FileUploadDescriptorFactory.CreateDescriptor(context, parameters: componentParameters, timestamped: true, pathTemplate: contentPathTemplate);
+
+            Assert.AreEqual(expectedContainerName, descriptor.ContainerName);
+            Assert.AreEqual(expectedFileName, descriptor.BlobName);
+            Assert.AreEqual(expectedBlobPath, descriptor.BlobPath);
+            Assert.AreEqual(expectedContentEncoding, descriptor.ContentEncoding);
+            Assert.AreEqual(expectedContentType, descriptor.ContentType);
+            Assert.AreEqual(expectedFilePath, descriptor.FilePath);
+        }
+
+        [Test]
+        public void FileUploadDescriptorFactoryHandlesCasesWhereTheTemplateReferencesAParameterThatDoesNotExist()
+        {
+            this.Setup();
+
+            string expectedContainerName = "customcontainer";
+            string expectedExperimentName = "Test_Experiment";
+            string expectedExperimentId = "cfad01a9-8F5c-4210-841e-63210ed6a85d";
+            string expectedExperimentDefinitionId = "645f6639-98c6-41ee-a853-b0a3ab8ce0a3";
+            string expectedAgentId = "642,042728166da7,37,192.168.2.155";
+            string expectedRevision = "6.2";
+            string expectedToolName = "AnyTool";
+            string expectedScenario = "ExecuteToolset";
+            string expectedContentType = HttpContentType.PlainText;
+            string expectedContentEncoding = Encoding.UTF8.WebName;
+            string expectedFilePath = this.mockFile.Object.FullName;
+            string expectedFileName = $"{this.mockFile.Object.CreationTimeUtc.ToString("yyyy-MM-ddTHH-mm-ss-ffffffZ")}-{this.mockFile.Object.Name}";
+
+            // A parameter "toolkitCommand" does not exist. The factory should just remove the parameter in the
+            // final blob path.
+            string contentPathTemplate = "customcontainer/{experimentDefinitionId}/{experimentName}/{experimentId},{revision}/{toolkitCommand}/{scenario}";
+
+            // The blob path itself is lower-cased. However, the file name casing is NOT modified.
+            string expectedBlobPath = string.Join("/",
+                $"/{expectedExperimentDefinitionId}/{expectedExperimentName}/{expectedExperimentId},{expectedRevision}/{expectedScenario}".ToLowerInvariant(),
+                expectedFileName);
+
+            FileContext context = new FileContext(
+                this.mockFile.Object,
+                expectedContentType,
+                expectedContentEncoding,
+                expectedExperimentId,
+                expectedAgentId,
+                expectedToolName,
+                expectedScenario,
+                null);
+
+            IDictionary<string, IConvertible> componentParameters = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase)
+            {
+                { "Revision", expectedRevision },
+                { "ExperimentDefinitionId", expectedExperimentDefinitionId },
+                { "ExperimentName", expectedExperimentName },
+                { "Scenario", expectedScenario }
+            };
+
+            FileUploadDescriptor descriptor = FileUploadDescriptorFactory.CreateDescriptor(context, parameters: componentParameters, timestamped: true, pathTemplate: contentPathTemplate);
+
+            Assert.AreEqual(expectedContainerName, descriptor.ContainerName);
+            Assert.AreEqual(expectedFileName, descriptor.BlobName);
+            Assert.AreEqual(expectedBlobPath, descriptor.BlobPath);
+            Assert.AreEqual(expectedContentEncoding, descriptor.ContentEncoding);
+            Assert.AreEqual(expectedContentType, descriptor.ContentType);
+            Assert.AreEqual(expectedFilePath, descriptor.FilePath);
         }
     }
 }

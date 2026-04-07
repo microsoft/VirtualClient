@@ -50,7 +50,7 @@ namespace VirtualClient
                 };
             };
 
-            this.blobManager.OnUploadFromStreamAsync = (descriptor, stream, options) =>
+            this.blobManager.OnUploadFromStreamAsync = (descriptor, stream, options, metadata) =>
             {
                 return new TestResponse<BlobContentInfo>()
                 {
@@ -362,7 +362,7 @@ namespace VirtualClient
                     this.mockDescriptor.Name = name;
 
                     Assert.ThrowsAsync<ArgumentException>(
-                        () => this.blobManager.UploadBlobAsync(this.mockDescriptor, uploadStream, CancellationToken.None, Policy.NoOpAsync()));
+                        () => this.blobManager.UploadBlobAsync(this.mockDescriptor, uploadStream, CancellationToken.None, retryPolicy: Policy.NoOpAsync()));
                 });
 
                 validBlobNames.ForEach(name =>
@@ -370,7 +370,7 @@ namespace VirtualClient
                     this.mockDescriptor.Name = name;
 
                     Assert.DoesNotThrowAsync(
-                        () => this.blobManager.UploadBlobAsync(this.mockDescriptor, uploadStream, CancellationToken.None, Policy.NoOpAsync()));
+                        () => this.blobManager.UploadBlobAsync(this.mockDescriptor, uploadStream, CancellationToken.None, retryPolicy: Policy.NoOpAsync()));
                 });
             }
         }
@@ -403,7 +403,7 @@ namespace VirtualClient
                     this.mockDescriptor.ContainerName = name;
 
                     Assert.ThrowsAsync<ArgumentException>(
-                        () => this.blobManager.UploadBlobAsync(this.mockDescriptor, uploadStream, CancellationToken.None, Policy.NoOpAsync()));
+                        () => this.blobManager.UploadBlobAsync(this.mockDescriptor, uploadStream, CancellationToken.None, retryPolicy: Policy.NoOpAsync()));
                 });
 
                 validContainerNames.ForEach(name =>
@@ -411,7 +411,7 @@ namespace VirtualClient
                     this.mockDescriptor.ContainerName = name;
 
                     Assert.DoesNotThrowAsync(
-                        () => this.blobManager.UploadBlobAsync(this.mockDescriptor, uploadStream, CancellationToken.None, Policy.NoOpAsync()));
+                        () => this.blobManager.UploadBlobAsync(this.mockDescriptor, uploadStream, CancellationToken.None, retryPolicy: Policy.NoOpAsync()));
                 });
             }
         }
@@ -422,7 +422,7 @@ namespace VirtualClient
             using (MemoryStream uploadStream = new MemoryStream())
             {
                 bool supported = false;
-                this.blobManager.OnUploadFromStreamAsync = (descriptor, stream, options) =>
+                this.blobManager.OnUploadFromStreamAsync = (descriptor, stream, options, metadata) =>
                 {
                     supported = true;
 
@@ -436,7 +436,7 @@ namespace VirtualClient
                 };
 
                 DependencyDescriptor baseDescriptor = new DependencyDescriptor(this.mockDescriptor);
-                await this.blobManager.UploadBlobAsync(baseDescriptor, uploadStream, CancellationToken.None, Policy.NoOpAsync())
+                await this.blobManager.UploadBlobAsync(baseDescriptor, uploadStream, CancellationToken.None, retryPolicy: Policy.NoOpAsync())
                     .ConfigureAwait(false);
 
                 Assert.IsTrue(supported);
@@ -448,7 +448,7 @@ namespace VirtualClient
         {
             using (MemoryStream uploadStream = new MemoryStream())
             {
-                this.blobManager.OnUploadFromStreamAsync = (descriptor, stream, options) =>
+                this.blobManager.OnUploadFromStreamAsync = (descriptor, stream, options, metadata) =>
                 {
                     Assert.IsTrue(object.ReferenceEquals(this.mockDescriptor, descriptor));
                     Assert.AreEqual(descriptor.ContentEncoding.WebName, options.HttpHeaders.ContentEncoding);
@@ -463,7 +463,7 @@ namespace VirtualClient
                     };
                 };
 
-                await this.blobManager.UploadBlobAsync(this.mockDescriptor, uploadStream, CancellationToken.None, Policy.NoOpAsync())
+                await this.blobManager.UploadBlobAsync(this.mockDescriptor, uploadStream, CancellationToken.None, retryPolicy: Policy.NoOpAsync())
                     .ConfigureAwait(false);
             }
         }
@@ -474,7 +474,7 @@ namespace VirtualClient
             using (MemoryStream uploadStream = new MemoryStream())
             {
                 this.mockDescriptor.ETag = "\"0x123456789\"";
-                this.blobManager.OnUploadFromStreamAsync = (descriptor, stream, options) =>
+                this.blobManager.OnUploadFromStreamAsync = (descriptor, stream, options, metadata) =>
                 {
                     Assert.IsNotNull(options.Conditions);
                     Assert.IsTrue(options.Conditions.IfMatch.HasValue);
@@ -489,7 +489,7 @@ namespace VirtualClient
                     };
                 };
 
-                await this.blobManager.UploadBlobAsync(this.mockDescriptor, uploadStream, CancellationToken.None, Policy.NoOpAsync())
+                await this.blobManager.UploadBlobAsync(this.mockDescriptor, uploadStream, CancellationToken.None, retryPolicy: Policy.NoOpAsync())
                     .ConfigureAwait(false);
             }
         }
@@ -499,7 +499,7 @@ namespace VirtualClient
         {
             using (MemoryStream uploadStream = new MemoryStream())
             {
-                BlobDescriptor actualDescriptor = await this.blobManager.UploadBlobAsync(this.mockDescriptor, uploadStream, CancellationToken.None, Policy.NoOpAsync())
+                BlobDescriptor actualDescriptor = await this.blobManager.UploadBlobAsync(this.mockDescriptor, uploadStream, CancellationToken.None, retryPolicy: Policy.NoOpAsync())
                     .ConfigureAwait(false) as BlobDescriptor;
 
                 Assert.IsNotNull(actualDescriptor);
@@ -512,11 +512,46 @@ namespace VirtualClient
         }
 
         [Test]
+        public async Task BlobManagerIncludesMetadataInBlobsUploadedWhenProvided()
+        {
+            using (MemoryStream uploadStream = new MemoryStream())
+            {
+                IDictionary<string, IConvertible> expectedMetadata = new Dictionary<string, IConvertible>
+                {
+                    { "Metadata1", "Value1" },
+                    { "Metadata2", 1234 },
+                    { "Metadata3", true },
+                    { "Metadata4", Guid.NewGuid().ToString() }
+                };
+
+                bool confirmed = false;
+                this.blobManager.OnUploadFromStreamAsync = (descriptor, stream, options, metadata) =>
+                {
+                    CollectionAssert.AreEquivalent(expectedMetadata, metadata);
+                    confirmed = true;
+
+                    return new TestResponse<BlobContentInfo>()
+                    {
+                        RawResponse = new TestResponse((int)HttpStatusCode.OK, "\"0x123456789\"")
+                        {
+                            ContentStream = new MemoryStream()
+                        }
+                    };
+                };
+
+                BlobDescriptor actualDescriptor = await this.blobManager.UploadBlobAsync(this.mockDescriptor, uploadStream, CancellationToken.None, expectedMetadata, Policy.NoOpAsync())
+                    .ConfigureAwait(false) as BlobDescriptor;
+
+                Assert.IsTrue(confirmed);
+            }
+        }
+
+        [Test]
         public void BlobManagerThrowsIfAFailedResponseIsReturnedOnAnAttemptToUploadABlob()
         {
             using (MemoryStream uploadStream = new MemoryStream())
             {
-                this.blobManager.OnUploadFromStreamAsync = (descriptor, stream, options) =>
+                this.blobManager.OnUploadFromStreamAsync = (descriptor, stream, options, metadata) =>
                 {
                     return new TestResponse<BlobContentInfo>()
                     {
@@ -528,7 +563,7 @@ namespace VirtualClient
                 };
 
                 DependencyException error = Assert.ThrowsAsync<DependencyException>(
-                    () => this.blobManager.UploadBlobAsync(this.mockDescriptor, uploadStream, CancellationToken.None, Policy.NoOpAsync()));
+                    () => this.blobManager.UploadBlobAsync(this.mockDescriptor, uploadStream, CancellationToken.None, retryPolicy: Policy.NoOpAsync()));
 
                 Assert.IsTrue(error.Message.Contains("BadRequest"));
             }
@@ -540,7 +575,7 @@ namespace VirtualClient
             using (MemoryStream uploadStream = new MemoryStream())
             {
                 int uploadAttempts = 0;
-                this.blobManager.OnUploadFromStreamAsync = (descriptor, stream, options) =>
+                this.blobManager.OnUploadFromStreamAsync = (descriptor, stream, options, metadata) =>
                 {
                     uploadAttempts++;
                     throw new RequestFailedException("Transient Error");
@@ -549,7 +584,7 @@ namespace VirtualClient
                 IAsyncPolicy expectedRetryPolicy = Policy.Handle<RequestFailedException>().RetryAsync(3);
 
                 Assert.ThrowsAsync<DependencyException>(
-                    () => this.blobManager.UploadBlobAsync(this.mockDescriptor, uploadStream, CancellationToken.None, expectedRetryPolicy));
+                    () => this.blobManager.UploadBlobAsync(this.mockDescriptor, uploadStream, CancellationToken.None, retryPolicy: expectedRetryPolicy));
 
                 Assert.IsTrue(uploadAttempts == 4);
             }
@@ -561,7 +596,7 @@ namespace VirtualClient
             using (MemoryStream uploadStream = new MemoryStream())
             {
                 int uploadAttempts = 0;
-                this.blobManager.OnUploadFromStreamAsync = (descriptor, stream, options) =>
+                this.blobManager.OnUploadFromStreamAsync = (descriptor, stream, options, metadata) =>
                 {
                     uploadAttempts++;
                     throw new RequestFailedException(
@@ -582,7 +617,7 @@ namespace VirtualClient
             using (MemoryStream uploadStream = new MemoryStream())
             {
                 int uploadAttempts = 0;
-                this.blobManager.OnUploadFromStreamAsync = (descriptor, stream, options) =>
+                this.blobManager.OnUploadFromStreamAsync = (descriptor, stream, options, metadata) =>
                 {
                     if (uploadAttempts <= 1)
                     {
@@ -616,7 +651,7 @@ namespace VirtualClient
 
             public Func<BlobDescriptor, Stream, Response> OnDownloadToStreamAsync { get; set; }
 
-            public Func<BlobDescriptor, Stream, BlobUploadOptions, Response<BlobContentInfo>> OnUploadFromStreamAsync { get; set; }
+            public Func<BlobDescriptor, Stream, BlobUploadOptions, IDictionary<string, IConvertible>, Response<BlobContentInfo>> OnUploadFromStreamAsync { get; set; }
 
             public new BlobContainerClient CreateContainerClient(BlobDescriptor descriptor, DependencyBlobStore blobStore)
             {
@@ -632,10 +667,10 @@ namespace VirtualClient
                 return Task.FromResult(response);
             }
 
-            protected override Task<Response<BlobContentInfo>> UploadFromStreamAsync(BlobDescriptor descriptor, Stream stream, BlobUploadOptions uploadOptions, CancellationToken cancellationToken)
+            protected override Task<Response<BlobContentInfo>> UploadFromStreamAsync(BlobDescriptor descriptor, Stream stream, BlobUploadOptions uploadOptions, CancellationToken cancellationToken, IDictionary<string, IConvertible> metadata = null)
             {
                 Response<BlobContentInfo> response = this.OnUploadFromStreamAsync != null
-                    ? this.OnUploadFromStreamAsync?.Invoke(descriptor, stream, uploadOptions)
+                    ? this.OnUploadFromStreamAsync?.Invoke(descriptor, stream, uploadOptions, metadata)
                     : null;
 
                 return Task.FromResult(response);

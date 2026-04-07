@@ -1,0 +1,26 @@
+{
+    "Description": "Uploads files from a directory to a content store location.",
+    "Parameters": {
+        "TargetDirectory": null,
+        "FlattenStructure": false
+    },
+    "Actions": [
+        {
+            "Type": "WaitExecutor",
+            "Parameters": {
+                "Scenario": "Finalize",
+                "Duration": "00:00:01"
+            }
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "UploadFiles",
+            "Parameters": {
+                "Scenario": "UploadFiles",
+                "TargetDirectory": "$.Parameters.TargetDirectory",
+                "Flatten": "$.Parameters.FlattenStructure"
+            }
+        }
+    ]
+}

@@ -186,6 +186,9 @@ namespace VirtualClient.Dependencies
             if (this.Platform == PlatformID.Unix)
             {
                 this.linuxDistroInfo = await this.systemManagement.GetLinuxDistributionAsync(cancellationToken).ConfigureAwait(false);
+                
+                telemetryContext.AddContext("LinuxDistribution", this.linuxDistroInfo.LinuxDistribution.ToString());
+
                 VirtualClientComponent installer;
                 switch (this.linuxDistroInfo.LinuxDistribution)
                 {
@@ -197,6 +200,7 @@ namespace VirtualClient.Dependencies
                     case LinuxDistribution.CentOS8:
                     case LinuxDistribution.RHEL8:
                     case LinuxDistribution.AzLinux:
+                    case LinuxDistribution.AwsLinux:
                         installer = this.InstantiateDnfInstaller();
                         break;
 

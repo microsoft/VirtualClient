@@ -21,11 +21,11 @@ namespace VirtualClient.Dependencies
         private IEnumerable<Disk> disks;
 
         [SetUp]
-        public void SetupTest()
+        public void Setup()
         {
             this.mockFixture = new MockFixture();
             this.mockFixture.SetupMocks();
-            this.disks = this.mockFixture.CreateDisks(PlatformID.Win32NT, true);
+            this.disks = this.mockFixture.CreateDisks(PlatformID.Win32NT, true).Skip(1);
         }
 
         [Test]
@@ -35,12 +35,12 @@ namespace VirtualClient.Dependencies
         {
             this.mockFixture.Setup(platform);
             this.disks = this.mockFixture.CreateDisks(platform, true);
-            this.SetupDefaultMockBehaviors();
+            this.SetupTest();
 
             using (FormatDisks diskFormatter = new FormatDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
                 diskFormatter.WaitTime = TimeSpan.Zero;
-                await diskFormatter.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+                await diskFormatter.ExecuteAsync(CancellationToken.None);
 
                 this.mockFixture.DiskManager.Verify(mgr => mgr.FormatDiskAsync(
                    It.IsAny<Disk>(),
@@ -58,12 +58,12 @@ namespace VirtualClient.Dependencies
         {
             this.mockFixture.Setup(platform);
             this.disks = this.mockFixture.CreateDisks(platform, true);
-            this.SetupDefaultMockBehaviors();
+            this.SetupTest();
 
             using (FormatDisks diskFormatter = new FormatDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
                 diskFormatter.WaitTime = TimeSpan.Zero;
-                await diskFormatter.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+                await diskFormatter.ExecuteAsync(CancellationToken.None);
 
                 this.mockFixture.DiskManager.Verify(mgr => mgr.FormatDiskAsync(
                    It.IsAny<Disk>(),
@@ -80,7 +80,7 @@ namespace VirtualClient.Dependencies
         {
             this.mockFixture.Setup(platform);
             this.disks = this.mockFixture.CreateDisks(platform, true);
-            this.SetupDefaultMockBehaviors();
+            this.SetupTest();
 
             // Instruct the executor to format in-parallel
             this.mockFixture.Parameters[nameof(FormatDisks.InitializeDisksInParallel)] = true;
@@ -88,7 +88,7 @@ namespace VirtualClient.Dependencies
             using (FormatDisks diskFormatter = new FormatDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
                 diskFormatter.WaitTime = TimeSpan.Zero;
-                await diskFormatter.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+                await diskFormatter.ExecuteAsync(CancellationToken.None);
 
                 // It is difficult to evaluate whether the operations ran in pure parallel. We are simply evaluating
                 // that the each of the format calls/per disk was made for now.
@@ -104,12 +104,12 @@ namespace VirtualClient.Dependencies
         [Test]
         public async Task FormatDisksWillNotFormatTheOperatingSystemDisk_Scenario1()
         {
-            this.SetupDefaultMockBehaviors();
+            this.SetupTest();
 
             using (FormatDisks diskFormatter = new FormatDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
                 diskFormatter.WaitTime = TimeSpan.Zero;
-                await diskFormatter.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+                await diskFormatter.ExecuteAsync(CancellationToken.None);
             }
 
             this.mockFixture.DiskManager.Verify(mgr => mgr.FormatDiskAsync(
@@ -123,7 +123,7 @@ namespace VirtualClient.Dependencies
         [Test]
         public async Task FormatDisksWillNotFormatTheOperatingSystemDisk_Scenario2()
         {
-            this.SetupDefaultMockBehaviors();
+            this.SetupTest();
 
             // This is entirely an unexpected scenario. However, if for some reason the disk identified
             // as the OS disk itself is not showing any partitions, we should still NOT attempt to format
@@ -133,7 +133,7 @@ namespace VirtualClient.Dependencies
             using (FormatDisks diskFormatter = new FormatDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
                 diskFormatter.WaitTime = TimeSpan.Zero;
-                await diskFormatter.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+                await diskFormatter.ExecuteAsync(CancellationToken.None);
             }
 
             this.mockFixture.DiskManager.Verify(mgr => mgr.FormatDiskAsync(
@@ -154,13 +154,13 @@ namespace VirtualClient.Dependencies
             // Scenario:
             // The disks are NOT already partitioned/formatted. We re-partition and format them anyway.
             this.disks = this.mockFixture.CreateDisks(platform, false);
-            this.SetupDefaultMockBehaviors();
+            this.SetupTest();
 
             this.mockFixture.Parameters["Force"] = true;
             using (FormatDisks diskFormatter = new FormatDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
                 diskFormatter.WaitTime = TimeSpan.Zero;
-                await diskFormatter.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+                await diskFormatter.ExecuteAsync(CancellationToken.None);
 
                 this.mockFixture.DiskManager.Verify(mgr => mgr.FormatDiskAsync(
                    It.IsAny<Disk>(),
@@ -181,13 +181,13 @@ namespace VirtualClient.Dependencies
             // Scenario:
             // The disks are already partitioned/formatted. We re-partition and format them.
             this.disks = this.mockFixture.CreateDisks(platform, true);
-            this.SetupDefaultMockBehaviors();
+            this.SetupTest();
 
             this.mockFixture.Parameters["Force"] = true;
             using (FormatDisks diskFormatter = new FormatDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
                 diskFormatter.WaitTime = TimeSpan.Zero;
-                await diskFormatter.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+                await diskFormatter.ExecuteAsync(CancellationToken.None);
 
                 this.mockFixture.DiskManager.Verify(mgr => mgr.FormatDiskAsync(
                    It.IsAny<Disk>(),
@@ -207,14 +207,14 @@ namespace VirtualClient.Dependencies
             Disk cdRom2 = new Disk(5, "/dev/cdrom");
             this.disks = this.disks.Append(cdRom1).Append(cdRom2);
 
-            this.SetupDefaultMockBehaviors();
+            this.SetupTest();
 
             this.mockFixture.Parameters["DiskFilter"] = "none";
 
             using (FormatDisks diskFormatter = new FormatDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
                 diskFormatter.WaitTime = TimeSpan.Zero;
-                await diskFormatter.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+                await diskFormatter.ExecuteAsync(CancellationToken.None);
             }
 
             this.mockFixture.DiskManager.Verify(mgr => mgr.FormatDiskAsync(
@@ -228,7 +228,7 @@ namespace VirtualClient.Dependencies
         [Test]
         public async Task FormatDisksWillDoNothingIfAllDisksAreAlreadyFormatted()
         {
-            this.SetupDefaultMockBehaviors();
+            this.SetupTest();
 
             this.disks.ToList().ForEach(disk =>
             {
@@ -241,7 +241,7 @@ namespace VirtualClient.Dependencies
             using (FormatDisks diskFormatter = new FormatDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
                 diskFormatter.WaitTime = TimeSpan.Zero;
-                await diskFormatter.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+                await diskFormatter.ExecuteAsync(CancellationToken.None);
 
                 this.mockFixture.DiskManager.Verify(mgr => mgr.FormatDiskAsync(
                    It.IsAny<Disk>(),
@@ -256,7 +256,7 @@ namespace VirtualClient.Dependencies
         [Platform(Exclude = "Unix,Linux,MacOsX")]
         public async Task FormatDisksWillAttemptToFormatOnlyDisksThatHaveNotAlreadyBeenFormatted()
         {
-            this.SetupDefaultMockBehaviors();
+            this.SetupTest();
 
             List<Disk> disksFormatted = new List<Disk>();
 
@@ -277,17 +277,15 @@ namespace VirtualClient.Dependencies
             using (FormatDisks diskFormatter = new FormatDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
                 diskFormatter.WaitTime = TimeSpan.Zero;
-                await diskFormatter.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+                await diskFormatter.ExecuteAsync(CancellationToken.None);
 
                 Assert.IsNotEmpty(disksFormatted);
                 CollectionAssert.AreEquivalent(this.disks.Where(disk => !disk.Volumes.Any()), disksFormatted);
             }
         }
 
-        private void SetupDefaultMockBehaviors()
+        private void SetupTest()
         {
-            Assert.IsTrue(this.disks.Any(disk => disk.IsOperatingSystem()), "Mock disks should contain an OS disk");
-
             // The default mock behaviors are those that create a "happy path". In the default
             // path, there are disks that need to be formatted and are successfully. This ensures
             // the full set of code paths are run by default. The default behavior is then adjusted in

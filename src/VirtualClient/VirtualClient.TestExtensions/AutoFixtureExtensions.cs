@@ -3,13 +3,10 @@
 
 namespace VirtualClient.TestExtensions
 {
-    using System.Diagnostics.CodeAnalysis;
     using System.IO;
     using System.Reflection;
-    using System.Security;
     using System.Security.Cryptography.X509Certificates;
     using AutoFixture;
-    using VirtualClient.Common.Extensions;
 
     /// <summary>
     /// Extension methods for <see cref="Fixture"/> instances and for general
@@ -38,7 +35,7 @@ namespace VirtualClient.TestExtensions
         /// <param name="fixture">The test/auto fixture.</param>
         public static Fixture SetupCertificateMocks(this Fixture fixture)
         {
-            fixture.Register<X509Certificate2>(() => AutoFixtureExtensions.CreateCertificate(withPrivateKey: true));
+            fixture.Register<X509Certificate2>(() => fixture.CreateCertificate(withPrivateKey: true));
 
             return fixture;
         }
@@ -49,24 +46,38 @@ namespace VirtualClient.TestExtensions
         /// <returns>
         /// A mock/test certificate.
         /// </returns>
-        [SuppressMessage("Microsoft.Reliability", "CA2000:Dispose objects before losing scope", Justification = "The certificate password parameter cannot be disposed in this context.")]
-        private static X509Certificate2 CreateCertificate(bool withPrivateKey = false)
+        public static X509Certificate2 CreateCertificate(this Fixture fixture, bool withPrivateKey = false)
         {
             X509Certificate2 certificate = null;
             string resourcesDirectory = Path.Combine(Path.GetDirectoryName(AutoFixtureExtensions.thisAssembly.Location), "Resources");
 
+#if NET9_0_OR_GREATER
+            if (withPrivateKey)
+            {
+                certificate = X509CertificateLoader.LoadPkcs12(
+                    File.ReadAllBytes(Path.Combine(resourcesDirectory, "test-certificate.private")),
+                    "CRC",
+                    X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet);
+            }
+            else
+            {
+                certificate = X509CertificateLoader.LoadCertificate(
+                    File.ReadAllBytes(Path.Combine(resourcesDirectory, "test-certificate.public")));
+            }
+#elif NET8_0_OR_GREATER
             if (withPrivateKey)
             {
                 certificate = new X509Certificate2(
                     File.ReadAllBytes(Path.Combine(resourcesDirectory, "test-certificate.private")),
-                    string.Empty.ToSecureString(),
+                    "CRC",
                     X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet);
             }
             else
             {
                 certificate = new X509Certificate2(
-                    File.ReadAllBytes(Path.Combine(resourcesDirectory, "test-certificate.private")));
+                    File.ReadAllBytes(Path.Combine(resourcesDirectory, "test-certificate.public")));
             }
+#endif
 
             return certificate;
         }

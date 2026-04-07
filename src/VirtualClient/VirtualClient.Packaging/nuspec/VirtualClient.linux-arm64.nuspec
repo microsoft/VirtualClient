@@ -1,0 +1,43 @@
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+    <metadata>
+        <id>VirtualClient.linux-arm64</id>
+        <version>$Version$</version>
+        <title>VirtualClient</title>
+        <description>Runtime platform for executing a wide-range of benchmark and customer-representative workloads on a system.</description>
+        <authors>Microsoft</authors>
+        <license type="expression">MIT</license>
+        <projectUrl>https://github.com/microsoft/VirtualClient</projectUrl>
+        <copyright>© Microsoft Corporation. All rights reserved.</copyright>
+        <tags>Microsoft Azure VirtualClient Workload Benchmark</tags>
+
+        <dependencies>
+            <group targetFramework=".net9.0"></group>
+        </dependencies>
+    </metadata>
+
+    <files>
+        <!--
+        We are moving towards a new model where Virtual Client can install packages. This new model expects packages
+        to exist in a 'packages' directory. If they don't exist there, the package will be downloaded from either a NuGet feed
+        or Blob store as defined in the profile (see the PERF-CPU-OPENSSL.json profile).
+        
+        Note that we are excluding the following .dlls in order to keep the overall NuGet package size
+        below 250MB (NuGet.org max package size limit). These .dlls are confirmed to be unnecessary for
+        VirtualClient.
+        
+        - Microsoft.AspNetCore.Razor.Language.dll
+        - Microsoft.Diagnostics.Tracing.TraceEvent.dll
+        -->
+        
+        <!-- 
+        linux-arm64
+        =============================================================================================
+        -->
+        <file
+            src="$BinConfigDir$\ARM64\VirtualClient.Main\net9.0\linux-arm64\**\*"
+            exclude="**\*.pdb;*.xml;**\Microsoft.AspNetCore.Razor.Language.dll;**\Microsoft.Diagnostics.Tracing.TraceEvent.dll"
+            target="content\linux-arm64"
+            />
+
+    </files>
+</package>

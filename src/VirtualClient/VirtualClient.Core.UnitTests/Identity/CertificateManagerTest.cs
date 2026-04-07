@@ -5,11 +5,9 @@ namespace VirtualClient.Identity
 {
     using System;
     using System.Collections.Generic;
-    using System.IO.Abstractions;
     using System.Linq;
     using System.Security.Cryptography;
     using System.Security.Cryptography.X509Certificates;
-    using System.Threading;
     using System.Threading.Tasks;
     using AutoFixture;
     using Moq;
@@ -35,13 +33,10 @@ namespace VirtualClient.Identity
         [Test]
         [TestCase("AME")]
         [TestCase("GBL")]
-        [TestCase("AME Infra CA 06")]
+        [TestCase("AME Infra Test CA 7")]
         [TestCase("DC=AME")]
         [TestCase("DC=GBL")]
         [TestCase("CN=AME")]
-        [TestCase("CN=AME Infra CA 06")]
-        [TestCase("CN=AME Infra CA 06, DC=AME, DC=GBL")]
-        [TestCase("CN=AME Infra CA 06,DC=AME,DC=GBL")]
         public void CertificateManagerSearchesSupportsARangeOfFormatsForIssuersOnCertificates(string issuer)
         {
             X509Certificate2 certificate = this.mockFixture.Create<X509Certificate2>();
@@ -50,15 +45,15 @@ namespace VirtualClient.Identity
 
         [Test]
         [TestCase("ABC")]
-        [TestCase("AME Infra CA 01")]
+        [TestCase("AME Infra Test CA 06")]
         [TestCase("DC=ABC")]
         [TestCase("DC=GBB")]
-        [TestCase("DC=AME Infra CA 01")]
+        [TestCase("DC=Infra Test CA 777")]
         [TestCase("CN=ABC")]
-        [TestCase("CN=AME Infra CA 01")]
-        [TestCase("CN=ABC Infra CA 01, DC=AME, DC=GBL")]
-        [TestCase("CN=AME Infra CA 01, DC=ABC, DC=GBL")]
-        [TestCase("CN=AME Infra CA 01, DC=AME, DC=GBB")]
+        [TestCase("CN=AME Infra Test CA 06")]
+        [TestCase("CN=ABC Infra Test CA 777, DC=AME, DC=GBL")]
+        [TestCase("CN=AME Infra Test CA 777, DC=ABC, DC=GBL")]
+        [TestCase("CN=AME Infra Test CA 777, DC=AME, DC=GBB")]
         public void CertificateManagerDoesNotMismatchIssuersOnCertificates(string issuer)
         {
             X509Certificate2 certificate = this.mockFixture.Create<X509Certificate2>();
@@ -95,13 +90,13 @@ namespace VirtualClient.Identity
             this.testCertificateManager = new TestCertificateManager(this.mockFixture);
 
             string expectedDirectory = CertificateManager.DefaultUnixCertificateDirectory;
-            string expectedCertificateFile = this.mockFixture.Combine(expectedDirectory, "C3F4A77CAD588341B8D62EE4DA02D85E8F100EFA");
+            string expectedCertificateFile = this.mockFixture.Combine(expectedDirectory, "545AF7DD6DA3A7A78BE6D5A7A316CAD52942F949");
             bool confirmedDir = false;
             bool confirmedFile = false;
 
             // Issuer: AME
             // Subject Name: virtualclient.test.corp.azure.com
-            // Thumbprint: C3F4A77CAD588341B8D62EE4DA02D85E8F100EFA
+            // Thumbprint: 545AF7DD6DA3A7A78BE6D5A7A316CAD52942F949
             //
             // Note that this is an expired/invalid certificate so there are no security concerns. It is merely
             // used for testing purposes.
@@ -127,13 +122,13 @@ namespace VirtualClient.Identity
             // Setup:
             // The certificate content/bytes.
             this.mockFixture.File
-                .Setup(file => file.ReadAllBytesAsync(expectedCertificateFile, It.IsAny<CancellationToken>()))
-                .Callback<string, CancellationToken>((actualCertificateFile, token) =>
+                .Setup(file => file.ReadAllBytes(expectedCertificateFile))
+                .Callback<string>((actualCertificateFile) =>
                 {
                     Assert.AreEqual(expectedCertificateFile, actualCertificateFile);
                     confirmedFile = true;
                 })
-                .ReturnsAsync(certificate.RawData);
+                .Returns(certificate.Export(X509ContentType.Pfx));
 
             // Expectation:
             // We do not need to compare the certificate properties. We just need to ensure we attempted to
@@ -147,26 +142,23 @@ namespace VirtualClient.Identity
         [Test]
         [TestCase("AME", "virtualclient.test.corp.azure.com")]
         [TestCase("GBL", "virtualclient.test.corp.azure.com")]
-        [TestCase("AME Infra CA 06", "virtualclient")]
+        [TestCase("AME Infra Test CA 7", "virtualclient")]
         [TestCase("DC=AME", "corp.azure.com")]
         [TestCase("DC=GBL", "azure.com")]
         [TestCase("CN=AME", "virtualclient.test.corp.azure.com")]
-        [TestCase("CN=AME Infra CA 06", "CN=virtualclient.test.corp.azure.com")]
-        [TestCase("CN=AME Infra CA 06, DC=AME, DC=GBL", "CN=virtualclient.test.corp.azure.com")]
-        [TestCase("CN=AME Infra CA 06,DC=AME,DC=GBL", "CN=virtualclient.test.corp.azure.com")]
         public async Task CertificateManagerHandlesDifferentIssuerAndSubjectNameFormats(string issuer, string subjectName)
         {
             this.mockFixture.Setup(PlatformID.Unix);
             this.testCertificateManager = new TestCertificateManager(this.mockFixture);
 
-            string expectedDirectory = CertificateManager.DefaultUnixCertificateDirectory;
-            string expectedCertificateFile = this.mockFixture.Combine(expectedDirectory, "C3F4A77CAD588341B8D62EE4DA02D85E8F100EFA");
+            string expectedDirectory = string.Format(CertificateManager.DefaultUnixCertificateDirectory, Environment.UserName.ToLowerInvariant());
+            string expectedCertificateFile = this.mockFixture.Combine(expectedDirectory, "6E68322DBFF09EEB4CDB00AE94E00EF2037653EF");
             bool confirmedDir = false;
             bool confirmedFile = false;
 
             // Issuer: AME
             // Subject Name: virtualclient.test.corp.azure.com
-            // Thumbprint: C3F4A77CAD588341B8D62EE4DA02D85E8F100EFA
+            // Thumbprint: 545AF7DD6DA3A7A78BE6D5A7A316CAD52942F949
             //
             // Note that this is an expired/invalid certificate so there are no security concerns. It is merely
             // used for testing purposes.
@@ -192,13 +184,13 @@ namespace VirtualClient.Identity
             // Setup:
             // The certificate content/bytes.
             this.mockFixture.File
-                .Setup(file => file.ReadAllBytesAsync(expectedCertificateFile, It.IsAny<CancellationToken>()))
-                .Callback<string, CancellationToken>((actualCertificateFile, token) =>
+                .Setup(file => file.ReadAllBytes(expectedCertificateFile))
+                .Callback<string>((actualCertificateFile) =>
                 {
                     Assert.AreEqual(expectedCertificateFile, actualCertificateFile);
                     confirmedFile = true;
                 })
-                .ReturnsAsync(certificate.RawData);
+                .Returns(certificate.Export(X509ContentType.Pfx));
 
             // Expectation:
             // We do not need to compare the certificate properties. We just need to ensure we attempted to
@@ -268,13 +260,13 @@ namespace VirtualClient.Identity
             X509Certificate2 expectedCertificate = this.mockFixture.Create<X509Certificate2>();
 
             List<bool> isExpectedCertificate = new List<bool>();
-            this.testCertificateManager.OnGetCertificateByIssuerFromStoreAsync = (store, issuer, subjectName) =>
+            this.testCertificateManager.OnGetCertificatesByIssuerFromStoreAsync = (store, issuer, subjectName) =>
             {
                 isExpectedCertificate.Add(issuer == expectedIssuer);
                 isExpectedCertificate.Add(subjectName == expectedSubjectName);
 
                 // Return a match
-                return expectedCertificate;
+                return new List<X509Certificate2> { expectedCertificate };
             };
 
             this.testCertificateManager.GetCertificateFromStoreAsync(expectedIssuer, expectedSubjectName)
@@ -311,7 +303,7 @@ namespace VirtualClient.Identity
 
             public Func<X509Store, string, X509Certificate2> OnGetCertificateFromStoreAsync { get; set; }
 
-            public Func<X509Store, string, string, X509Certificate2> OnGetCertificateByIssuerFromStoreAsync { get; set; }
+            public Func<X509Store, string, string, IEnumerable<X509Certificate2>> OnGetCertificatesByIssuerFromStoreAsync { get; set; }
 
             protected override Task<X509Certificate2> GetCertificateFromStoreAsync(X509Store store, string thumbprint)
             {
@@ -321,12 +313,11 @@ namespace VirtualClient.Identity
                     : Task.FromResult(cert);
             }
 
-            protected override Task<X509Certificate2> GetCertificateFromStoreAsync(X509Store store, string issuer, string subject)
+            protected override Task<IEnumerable<X509Certificate2>> GetCertificatesFromStoreAsync(X509Store store, string issuer, string subject)
             {
-                X509Certificate2 cert = null;
-                return this.OnGetCertificateByIssuerFromStoreAsync != null
-                    ? Task.FromResult(this.OnGetCertificateByIssuerFromStoreAsync.Invoke(store, issuer, subject))
-                    : Task.FromResult(cert);
+                return this.OnGetCertificatesByIssuerFromStoreAsync != null
+                    ? Task.FromResult(this.OnGetCertificatesByIssuerFromStoreAsync.Invoke(store, issuer, subject))
+                    : Task.FromResult(null as IEnumerable<X509Certificate2>);
             }
         }
     }

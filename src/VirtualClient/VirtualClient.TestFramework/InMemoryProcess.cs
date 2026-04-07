@@ -35,6 +35,7 @@ namespace VirtualClient
         /// </summary>
         public InMemoryProcess(Stream standardInput)
         {
+            this.ExitCode = 0;
             this.StandardError = new ConcurrentBuffer();
             this.StandardOutput = new ConcurrentBuffer();
             this.StandardInput = new StreamWriter(standardInput);
@@ -44,7 +45,9 @@ namespace VirtualClient
                 Arguments = "--argument1=123 --argument2=value"
             };
             this.processDetails = new ProcessDetails();
-            this.processDetails.GeneratedResults = new List<string>();
+            this.processDetails.Results = new List<KeyValuePair<string, string>>();
+
+            this.OnHasExited = () => true;
         }
 
         /// <summary>
@@ -172,20 +175,11 @@ namespace VirtualClient
         /// </summary>
         public Func<bool> OnStart { get; set; }
 
-        /// <inheritdoc />
-        public ProcessDetails ProcessDetails
-        {
-            get
-            {
-                this.processDetails.CommandLine = SensitiveData.ObscureSecrets($"{this.StartInfo?.FileName} {this.StartInfo?.Arguments}".Trim());
-                this.processDetails.ExitCode = this.ExitCode;
-                this.processDetails.StandardError = this.StandardError?.Length > 0 ? this.StandardError.ToString() : string.Empty;
-                this.processDetails.StandardOutput = this.StandardOutput?.Length > 0 ? this.StandardOutput.ToString() : string.Empty;
-                this.processDetails.WorkingDirectory = this.StartInfo?.WorkingDirectory;
-
-                return this.processDetails;
-            }
-        }
+        /// <summary>
+        /// Delegate allows user/test to define the logic to execute when
+        /// CPU affinity is applied (Windows).
+        /// </summary>
+        public Action<IntPtr> OnApplyAffinity { get; set; }
 
         /// <summary>
         /// Closes the fake process.

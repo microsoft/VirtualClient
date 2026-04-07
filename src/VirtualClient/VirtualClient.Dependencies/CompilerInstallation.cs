@@ -18,6 +18,7 @@ namespace VirtualClient.Dependencies
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
     using VirtualClient.Contracts.Metadata;
+    using VirtualClient.Logging;
     using VirtualClient.Metadata;
 
     /// <summary>
@@ -43,13 +44,13 @@ namespace VirtualClient.Dependencies
         }
 
         /// <summary>
-        /// The name of the compiler (e.g. gnu).
+        /// The name of the compiler (e.g. gcc).
         /// </summary>
         public string CompilerName
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(CompilerInstallation.CompilerName), "gnu");
+                return this.Parameters.GetValue<string>(nameof(CompilerInstallation.CompilerName), "gcc");
             }
         }
 
@@ -96,9 +97,11 @@ namespace VirtualClient.Dependencies
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
+            IDictionary<string, object> compilerMetadata = null;
+
             switch (this.CompilerName.ToLowerInvariant())
             {
-                case Compilers.Gnu:
+                case Compilers.Gcc:
                     if (this.Platform == PlatformID.Unix)
                     {
                         await this.InstallGccAsync(this.CompilerVersion, telemetryContext, cancellationToken);
@@ -114,6 +117,8 @@ namespace VirtualClient.Dependencies
                         {
                             throw new DependencyException("gcc, cc, and gfortran compiler versions do not match", ErrorReason.DependencyInstallationFailed);
                         }
+
+                        compilerMetadata = await this.systemManager.GetInstalledCompilerMetadataAsync(this.Logger, cancellationToken);
                     }
                     else if (this.Platform == PlatformID.Win32NT)
                     {
@@ -122,8 +127,9 @@ namespace VirtualClient.Dependencies
 
                         DependencyPath cygwinPackage = new DependencyPath("cygwin", cygwinInstallationPath);
                         await this.systemManager.PackageManager.RegisterPackageAsync(cygwinPackage, cancellationToken);
-
                         await this.InstallCygwinAsync(cygwinPackage, telemetryContext, cancellationToken);
+
+                        compilerMetadata = await this.systemManager.GetInstalledCompilerMetadataAsync(this.Logger, cancellationToken, cygwinInstallationPath);
                     }
 
                     break;
@@ -140,10 +146,12 @@ namespace VirtualClient.Dependencies
                     throw new NotSupportedException($"Compiler '{this.CompilerName}' is not supported.");
             }
 
-            // The compiler + version installed is an important part of the metadata
-            // contract for VC scenarios.
-            IDictionary<string, object> compilerMetadata = await this.systemManager.GetInstalledCompilerMetadataAsync(this.Logger, cancellationToken);
-            MetadataContract.Persist(compilerMetadata, MetadataContractCategory.Dependencies, true);
+            if (compilerMetadata != null)
+            {
+                // The compiler + version installed is an important part of the metadata
+                // contract for VC scenarios.
+                MetadataContract.Persist(compilerMetadata, MetadataContract.DependenciesCategory, true);
+            }
         }
 
         /// <summary>
@@ -255,6 +263,7 @@ namespace VirtualClient.Dependencies
                     break;
 
                 case LinuxDistribution.AzLinux:
+                case LinuxDistribution.AwsLinux:
                     if (!string.IsNullOrEmpty(gccVersion))
                     {
                         throw new Exception($"gcc version must not be supplied for {distro.LinuxDistribution}");
@@ -278,7 +287,9 @@ namespace VirtualClient.Dependencies
             string[] packages =
             {
                 "gcc",
-                "gfortran"
+                "gfortran",
+                "g++",
+                "gcov"
             };
 
             // due to the following error:
@@ -345,7 +356,7 @@ namespace VirtualClient.Dependencies
                  string output = string.Empty;
                  using (IProcessProxy process = this.systemManager.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, commandLineArguments, workingDirectory))
                  {
-                     this.CleanupTasks.Add(() => process.SafeKill());
+                     this.CleanupTasks.Add(() => process.SafeKill(this.Logger));
                      this.LogProcessTrace(process);
 
                      await process.StartAndWaitAsync(cancellationToken);
@@ -395,11 +406,6 @@ namespace VirtualClient.Dependencies
     /// </summary>
     public class Compilers
     {
-        /// <summary>
-        /// Gnu compiler.
-        /// </summary>
-        public const string Gnu = "gnu";
-
         /// <summary>
         /// Gcc compiler.
         /// </summary>

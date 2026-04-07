@@ -60,25 +60,19 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            IPackageManager packageManager = this.Dependencies.GetService<IPackageManager>();
-            DependencyPath workloadPackage = await packageManager.GetPlatformSpecificPackageAsync(this.PackageName, this.Platform, this.CpuArchitecture, cancellationToken)
-                .ConfigureAwait(false);
-
+            DependencyPath workloadPackage = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken);
             this.packageDirectory = workloadPackage.Path;
 
             if (this.Platform == PlatformID.Win32NT)
             {
-                DependencyPath cygwinPackage = await this.packageManager.GetPackageAsync("cygwin", CancellationToken.None)
-                    .ConfigureAwait(false);
-
+                DependencyPath cygwinPackage = await this.GetPackageAsync("cygwin", CancellationToken.None, throwIfNotfound: true);
                 this.cygwinPackageDirectory = cygwinPackage.Path;
             }
 
-            await this.systemManagement.MakeFileExecutableAsync(this.PlatformSpecifics.Combine(this.packageDirectory, @"lapack_testing.py"), this.Platform, cancellationToken)
-                .ConfigureAwait(false);
+            await this.systemManagement.MakeFileExecutableAsync(this.Combine(this.packageDirectory, @"lapack_testing.py"), this.Platform, cancellationToken);
 
-            this.ScriptFilePath = this.PlatformSpecifics.Combine(workloadPackage.Path, "LapackTestScript.sh");
-            this.ResultsFilePath = this.PlatformSpecifics.Combine(this.packageDirectory, "TESTING", "testing_results.txt");
+            this.ScriptFilePath = this.Combine(workloadPackage.Path, "LapackTestScript.sh");
+            this.ResultsFilePath = this.Combine(this.packageDirectory, "TESTING", "testing_results.txt");
         }
 
         /// <summary>
@@ -156,7 +150,7 @@ namespace VirtualClient.Actions
                 {
                     using (IProcessProxy process = this.systemManagement.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, commandLineArguments, workingDirectory))
                     {
-                        this.CleanupTasks.Add(() => process.SafeKill());
+                        this.CleanupTasks.Add(() => process.SafeKill(this.Logger));
                         await process.StartAndWaitAsync(cancellationToken).ConfigureAwait();
 
                         if (!cancellationToken.IsCancellationRequested)
@@ -190,10 +184,10 @@ namespace VirtualClient.Actions
                         ErrorReason.WorkloadFailed);
                 }
 
-                string results = await this.LoadResultsAsync(resultsFilePath, cancellationToken);
-                await this.LogProcessDetailsAsync(process, telemetryContext, "LAPACK", results.AsArray(), logToFile: true);
+                KeyValuePair<string, string> results = await this.LoadResultsAsync(resultsFilePath, cancellationToken);
+                await this.LogProcessDetailsAsync(process, telemetryContext, "LAPACK", logToFile: true, results: results);
 
-                LAPACKMetricsParser lapackParser = new LAPACKMetricsParser(results);
+                LAPACKMetricsParser lapackParser = new LAPACKMetricsParser(results.Value);
                 IList<Metric> metrics = lapackParser.Parse();
 
                 this.Logger.LogMetrics(

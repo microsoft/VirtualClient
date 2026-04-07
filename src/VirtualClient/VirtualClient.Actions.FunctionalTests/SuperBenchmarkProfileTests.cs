@@ -39,7 +39,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("PERF-GPU-SUPERBENCH.json")]
+        [TestCase("SETUP-NVIDIA-A100.json")]
         public async Task SuperBenchmarkWorkloadProfileExecutesTheExpectedDependenciesAndReboot(string profile)
         {
             List<string> expectedCommands = new List<string>
@@ -55,7 +55,7 @@ namespace VirtualClient.Actions
 
             this.mockFixture.Setup(PlatformID.Unix);
             this.mockFixture.SetupDisks(withRemoteDisks: false);
-            this.mockFixture.SetupWorkloadPackage("SuperBenchmark", expectedFiles: @"runtimes/linux-x64/bin/sb");
+            this.mockFixture.SetupPackage("SuperBenchmark", expectedFiles: @"runtimes/linux-x64/bin/sb");
 
             this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
@@ -74,7 +74,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("PERF-GPU-SUPERBENCH.json")]
+        [TestCase("SETUP-NVIDIA-A100.json")]
         public async Task SuperBenchmarkWorkloadProfileExecutesTheExpectedDependenciesAndWorkloadsAfterReboot(string profile)
         {
             IEnumerable<string> expectedCommands = this.GetProfileExpectedCommands(PlatformID.Unix);
@@ -85,7 +85,7 @@ namespace VirtualClient.Actions
             // - The workload generates valid results.
             this.mockFixture.Setup(PlatformID.Unix);
             this.mockFixture.SetupDisks(withRemoteDisks: false);
-            this.mockFixture.SetupWorkloadPackage("SuperBenchmark", expectedFiles: @"runtimes/linux-x64/bin/sb");
+            this.mockFixture.SetupPackage("SuperBenchmark", expectedFiles: @"runtimes/linux-x64/bin/sb");
 
             string expectedStateId = nameof(CudaAndNvidiaGPUDriverInstallation);
             await this.mockFixture.StateManager.SaveStateAsync(expectedStateId, JObject.Parse("{ \"any\": \"state\" }"), CancellationToken.None)
@@ -123,12 +123,7 @@ namespace VirtualClient.Actions
                 $"sudo bash -c \"{setupCommand}\"",
                 $"sudo apt-get update",
                 $"sudo apt-get install -y nvidia-container-toolkit",
-                $"sudo systemctl restart docker",
-                $"sudo chmod -R 2777 \"/home/user/tools/VirtualClient\"",
-                $"sudo git clone -b v0.9.0 https://github.com/microsoft/superbenchmark",
-                $"sudo bash initialize.sh",
-                $"sb deploy --host-list localhost -i superbench/superbench:v0.9.0-cuda12.1",
-                $"sb run --host-list localhost -c default.yaml"
+                $"sudo systemctl restart docker"
             };
         }
     }

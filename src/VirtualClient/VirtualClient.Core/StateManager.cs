@@ -103,14 +103,21 @@ namespace VirtualClient
                 string stateFilePath = this.GetStateFilePath(stateId);
                 if (this.FileSystem.File.Exists(stateFilePath))
                 {
-                    state = await (retryPolicy ?? StateManager.DefaultRetryPolicy).ExecuteAsync(async () =>
+                    try
                     {
-                        string fileContent = await this.FileSystem.File.ReadAllTextAsync(stateFilePath, cancellationToken)
-                            .ConfigureAwait(false);
+                        state = await (retryPolicy ?? StateManager.DefaultRetryPolicy).ExecuteAsync(async () =>
+                        {
+                            string fileContent = await this.FileSystem.File.ReadAllTextAsync(stateFilePath, cancellationToken)
+                                .ConfigureAwait(false);
 
-                        return JObject.Parse(fileContent);
+                            return JObject.Parse(fileContent);
 
-                    }).ConfigureAwait(false);
+                        }).ConfigureAwait(false);
+                    }
+                    catch
+                    {
+                        // Return default JObject / null if the file is not valid JSON.
+                    }
                 }
 
                 return state;

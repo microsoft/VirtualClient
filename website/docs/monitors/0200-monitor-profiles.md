@@ -69,7 +69,6 @@ toolsets. This monitor profile will be used when no other monitor profiles are s
 
   ```
 
-
 ## MONITORS-GPU-NVIDIA.json
 The monitor profile designed for Nvidia GPU systems. The profile captures counters on Linux systems of Nvidia GPUs with nvidia-smi, and lspci utilities.
 

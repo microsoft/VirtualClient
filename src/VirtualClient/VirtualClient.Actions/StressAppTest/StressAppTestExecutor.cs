@@ -40,35 +40,72 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// The command line argument defined in the profile.
+        /// The duration of the StressAppTest workload.
         /// </summary>
-        public string CommandLine
+        public TimeSpan Duration
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(StressAppTestExecutor.CommandLine));
+                return this.Parameters.GetTimeSpanValue(nameof(StressAppTestExecutor.Duration), TimeSpan.FromSeconds(60));
             }
         }
 
         /// <summary>
-        /// The TimeInSeconds argument defined in the profile.
-        /// </summary>
-        public int TimeInSeconds
-        {
-            get
-            {
-                return this.Parameters.GetValue<int>(nameof(StressAppTestExecutor.TimeInSeconds));
-            }
-        }
-
-        /// <summary>
-        /// The UseCpuStressfulMemoryCopy argument defined in the profile, Switch to toggle StressAppTest built-in option to use more CPU-Stressful memory copy
+        /// Switch to toggle StressAppTest built-in option to use more CPU-Stressful memory copy (-W flag).
         /// </summary>
         public bool UseCpuStressfulMemoryCopy
         {
             get
             {
                 return this.Parameters.GetValue<bool>(nameof(StressAppTestExecutor.UseCpuStressfulMemoryCopy));
+            }
+        }
+
+        /// <summary>
+        /// Optional. Megabytes of RAM to test (-M flag). When not specified, stressapptest auto-detects (~94% of system memory).
+        /// </summary>
+        public int? MemoryInMB
+        {
+            get
+            {
+                if (this.Parameters.TryGetValue(nameof(StressAppTestExecutor.MemoryInMB), out IConvertible value) && value != null)
+                {
+                    return value.ToInt32(null);
+                }
+
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Optional. Number of memory copy threads to run (-m flag). When not specified, stressapptest defaults to 2 threads per CPU.
+        /// </summary>
+        public int? ThreadCount
+        {
+            get
+            {
+                if (this.Parameters.TryGetValue(nameof(StressAppTestExecutor.ThreadCount), out IConvertible value) && value != null)
+                {
+                    return value.ToInt32(null);
+                }
+
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Optional. Number of CPU stress threads to run (-C flag). When not specified, no CPU stress threads are added.
+        /// </summary>
+        public int? CpuStressThreadCount
+        {
+            get
+            {
+                if (this.Parameters.TryGetValue(nameof(StressAppTestExecutor.CpuStressThreadCount), out IConvertible value) && value != null)
+                {
+                    return value.ToInt32(null);
+                }
+
+                return null;
             }
         }
 
@@ -87,16 +124,13 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            DependencyPath workloadPackage = await this.packageManager.GetPlatformSpecificPackageAsync(
-                this.PackageName, this.Platform, this.CpuArchitecture, cancellationToken)
-                .ConfigureAwait(false);
-
+            DependencyPath workloadPackage = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken);
             this.PackageDirectory = workloadPackage.Path;
 
             switch (this.Platform)
             {
                 case PlatformID.Unix:
-                    this.ExecutableName = this.PlatformSpecifics.Combine(this.PackageDirectory, "stressapptest");
+                    this.ExecutableName = this.Combine(this.PackageDirectory, "stressapptest");
                     break;
 
                 default:
@@ -106,8 +140,7 @@ namespace VirtualClient.Actions
                         ErrorReason.PlatformNotSupported);
             }
 
-            await this.systemManagement.MakeFileExecutableAsync(this.ExecutableName, this.Platform, cancellationToken)
-                .ConfigureAwait(false);
+            await this.MakeFileExecutableAsync(this.ExecutableName, this.Platform, cancellationToken);
 
             if (!this.fileSystem.File.Exists(this.ExecutableName))
             {
@@ -140,20 +173,32 @@ namespace VirtualClient.Actions
                     ErrorReason.InvalidProfileDefinition);
             }
 
-            if (this.TimeInSeconds <= 0)
+            if (this.Duration <= TimeSpan.Zero)
             {
                 throw new WorkloadException(
-                    $"Unexpected profile definition.The action in the profile does not contain the " +
-                    $"required value for'{nameof(this.TimeInSeconds)}' arguments defined. {nameof(this.TimeInSeconds)} should be an integer greater than 0",
+                    $"Unexpected profile definition. The action in the profile does not contain the " +
+                    $"required value for '{nameof(this.Duration)}' arguments defined. {nameof(this.Duration)} should be greater than 0.",
                     ErrorReason.InvalidProfileDefinition);
             }
 
-            if (this.CommandLine.Contains("-l"))
+            if (this.MemoryInMB.HasValue && this.MemoryInMB.Value <= 0)
             {
                 throw new WorkloadException(
-                    $"Unexpected profile definition.The action in the profile does not contain the " +
-                    $"required value for'{nameof(this.CommandLine)}' arguments defined. {nameof(this.CommandLine)} should not contain a custom log file, with " +
-                    $"-l parameter. That is being appended programatically",
+                    $"Unexpected profile definition. The '{nameof(this.MemoryInMB)}' parameter must be greater than 0.",
+                    ErrorReason.InvalidProfileDefinition);
+            }
+
+            if (this.ThreadCount.HasValue && this.ThreadCount.Value <= 0)
+            {
+                throw new WorkloadException(
+                    $"Unexpected profile definition. The '{nameof(this.ThreadCount)}' parameter must be greater than 0.",
+                    ErrorReason.InvalidProfileDefinition);
+            }
+
+            if (this.CpuStressThreadCount.HasValue && this.CpuStressThreadCount.Value < 0)
+            {
+                throw new WorkloadException(
+                    $"Unexpected profile definition. The '{nameof(this.CpuStressThreadCount)}' parameter must be greater than or equal to 0.",
                     ErrorReason.InvalidProfileDefinition);
             }
         }
@@ -167,11 +212,26 @@ namespace VirtualClient.Actions
             {
                 using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
-                    string commandLineArguments = this.CommandLine;
-                    commandLineArguments += " -s " + this.TimeInSeconds;
-                    if (this.UseCpuStressfulMemoryCopy && !commandLineArguments.Contains("-W"))
+                    string commandLineArguments = "-s " + this.Duration.TotalSeconds;
+
+                    if (this.UseCpuStressfulMemoryCopy)
                     {
                         commandLineArguments += " -W";
+                    }
+
+                    if (this.MemoryInMB.HasValue)
+                    {
+                        commandLineArguments += " -M " + this.MemoryInMB.Value;
+                    }
+
+                    if (this.ThreadCount.HasValue)
+                    {
+                        commandLineArguments += " -m " + this.ThreadCount.Value;
+                    }
+
+                    if (this.CpuStressThreadCount.HasValue)
+                    {
+                        commandLineArguments += " -C " + this.CpuStressThreadCount.Value;
                     }
 
                     // Example command with arguments: ./stressapptest -s 60 -l stressapptestLogs_202301131037407031.txt
@@ -210,23 +270,23 @@ namespace VirtualClient.Actions
                 this.MetadataContract.Apply(telemetryContext);
 
                 string resultsPath = this.PlatformSpecifics.Combine(this.PackageDirectory, resultsFileName);
-                string results = await this.LoadResultsAsync(resultsPath, cancellationToken);
+                KeyValuePair<string, string> results = await this.LoadResultsAsync(resultsPath, cancellationToken);
 
-                await this.LogProcessDetailsAsync(process, telemetryContext, "StressAppTest", results.AsArray(), logToFile: true);
+                await this.LogProcessDetailsAsync(process, telemetryContext, "StressAppTest", logToFile: true, results: results);
 
-                if (string.IsNullOrWhiteSpace(results))
+                if (string.IsNullOrWhiteSpace(results.Value))
                 {
                     throw new WorkloadResultsException($"Invalid results. The StressAppTest workload did not produce valid results.", ErrorReason.InvalidResults);
                 }
 
-                StressAppTestMetricsParser parser = new StressAppTestMetricsParser(results);
+                StressAppTestMetricsParser parser = new StressAppTestMetricsParser(results.Value);
                 IList<Metric> workloadMetrics = parser.Parse();
 
                 foreach (Metric metric in workloadMetrics)
                 {
                     telemetryContext.AddContext("testRunResult", metric.Tags[0] ?? string.Empty);
 
-                    this.Logger.LogMetrics(
+                    this.Logger.LogMetric(
                         toolName: "StressAppTest",
                         scenarioName: this.Scenario,
                         process.StartTime,

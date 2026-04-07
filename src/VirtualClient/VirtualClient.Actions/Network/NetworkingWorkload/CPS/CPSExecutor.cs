@@ -5,7 +5,6 @@ namespace VirtualClient.Actions.NetworkPerformance
 {
     using System;
     using System.Collections.Generic;
-    using System.IO.Abstractions;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
@@ -20,10 +19,9 @@ namespace VirtualClient.Actions.NetworkPerformance
     /// <summary>
     /// CPS(Connections Per Second) Tool Client Executor. 
     /// </summary>
+    [SupportedPlatforms("linux-arm64,linux-x64,win-arm64,win-x64")]
     public class CPSExecutor : NetworkingWorkloadToolExecutor
     {
-        private IFileSystem fileSystem;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="CPSExecutor"/> class.
         /// </summary>
@@ -31,19 +29,9 @@ namespace VirtualClient.Actions.NetworkPerformance
         public CPSExecutor(VirtualClientComponent component)
            : base(component)
         {
-            this.ProcessStartRetryPolicy = Policy.Handle<Exception>(exc => exc.Message.Contains("sockwiz")).Or<VirtualClientException>()
-                .WaitAndRetryAsync(5, retries => TimeSpan.FromSeconds(retries * 3));
-
-            this.Parameters.SetIfNotDefined(nameof(this.ConnectionDuration), 0);
-            this.Parameters.SetIfNotDefined(nameof(this.DataTransferMode), 1);
-            this.Parameters.SetIfNotDefined(nameof(this.DisplayInterval), 10);
-            this.Parameters.SetIfNotDefined(nameof(this.ConnectionsPerThread), 100);
-            this.Parameters.SetIfNotDefined(nameof(this.MaxPendingRequestsPerThread), 100);
-            this.Parameters.SetIfNotDefined(nameof(this.Port), 7201);
-            this.Parameters.SetIfNotDefined(nameof(this.WarmupTime), 8);
-            this.Parameters.SetIfNotDefined(nameof(this.DelayTime), 0);
-            this.Parameters.SetIfNotDefined(nameof(this.ConfidenceLevel), 99);
-            this.Parameters.SetIfNotDefined(nameof(this.AdditionalParams), string.Empty);
+            this.ProcessStartRetryPolicy = Policy
+                .Handle<Exception>()
+                .WaitAndRetryAsync(3, retries => TimeSpan.FromSeconds(retries * 3));
         }
 
         /// <summary>
@@ -54,20 +42,9 @@ namespace VirtualClient.Actions.NetworkPerformance
         public CPSExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
            : base(dependencies, parameters)
         {
-            this.fileSystem = dependencies.GetService<IFileSystem>();
-            this.ProcessStartRetryPolicy = Policy.Handle<Exception>(exc => exc.Message.Contains("sockwiz")).Or<VirtualClientException>()
-                .WaitAndRetryAsync(5, retries => TimeSpan.FromSeconds(retries * 3));
-
-            this.Parameters.SetIfNotDefined(nameof(this.ConnectionDuration), 0);
-            this.Parameters.SetIfNotDefined(nameof(this.DataTransferMode), 1);
-            this.Parameters.SetIfNotDefined(nameof(this.DisplayInterval), 10);
-            this.Parameters.SetIfNotDefined(nameof(this.ConnectionsPerThread), 100);
-            this.Parameters.SetIfNotDefined(nameof(this.MaxPendingRequestsPerThread), 100);
-            this.Parameters.SetIfNotDefined(nameof(this.Port), 7201);
-            this.Parameters.SetIfNotDefined(nameof(this.WarmupTime), 8);
-            this.Parameters.SetIfNotDefined(nameof(this.DelayTime), 0);
-            this.Parameters.SetIfNotDefined(nameof(this.ConfidenceLevel), 99);
-            this.Parameters.SetIfNotDefined(nameof(this.AdditionalParams), string.Empty);
+            this.ProcessStartRetryPolicy = Policy
+                .Handle<Exception>()
+                .WaitAndRetryAsync(3, retries => TimeSpan.FromSeconds(retries * 3));
         }
 
         /// <summary>
@@ -149,35 +126,35 @@ namespace VirtualClient.Actions.NetworkPerformance
         }
 
         /// <summary>
-        /// Parameter defines the duration (in seconds) for running the CPS workload.
+        /// Parameter defines the duration for running the CPS workload.
         /// </summary>
-        public int TestDuration
+        public TimeSpan TestDuration
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.TestDuration), 60);
+                return this.Parameters.GetTimeSpanValue(nameof(this.TestDuration), TimeSpan.FromSeconds(60));
             }
         }
 
         /// <summary>
-        /// gets test warmup time values in seconds.
+        /// gets test warmup time values.
         /// </summary>
-        public int WarmupTime
+        public TimeSpan WarmupTime
         {
             get 
             {
-                return this.Parameters.GetValue<int>(nameof(this.WarmupTime), 8);
+                return this.Parameters.GetTimeSpanValue(nameof(this.WarmupTime), TimeSpan.FromSeconds(8));
             }
         }
 
         /// <summary>
-        /// gets test delay time values in seconds.
+        /// gets test delay time values.
         /// </summary>
-        public int DelayTime
+        public TimeSpan DelayTime
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.DelayTime), 0);
+                return this.Parameters.GetTimeSpanValue(nameof(this.DelayTime), TimeSpan.Zero);
             }
         }
 
@@ -248,7 +225,7 @@ namespace VirtualClient.Actions.NetworkPerformance
             }
 
             // Validating CPS parameters
-            if (this.TestDuration <= 0)
+            if (this.TestDuration <= TimeSpan.Zero)
             {
                 throw new WorkloadException("Test duration cannot be equal or less than zero for CPS workload", ErrorReason.InstructionsNotValid);
             }
@@ -295,7 +272,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                         {
                             try
                             {
-                                this.CleanupTasks.Add(() => process.SafeKill());
+                                this.CleanupTasks.Add(() => process.SafeKill(this.Logger));
                                 await process.StartAndWaitAsync(cancellationToken, timeout);
                                 await this.LogProcessDetailsAsync(process, relatedContext, "CPS");
                                 process.ThrowIfWorkloadFailed();
@@ -316,7 +293,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                                 // We give this a best effort but do not want it to prevent the next workload
                                 // from executing.
                                 this.Logger.LogMessage($"{this.GetType().Name}.WorkloadTimeout", LogLevel.Warning, relatedContext.AddError(exc));
-                                process.SafeKill();
+                                process.SafeKill(this.Logger);
 
                                 throw new WorkloadException($"CPS workload did not exit within the timeout period defined (timeout={timeout}).", exc, ErrorReason.WorkloadFailed);
                             }
@@ -347,7 +324,7 @@ namespace VirtualClient.Actions.NetworkPerformance
 
                 this.MetadataContract.Apply(telemetryContext);
 
-                MetricsParser parser = new CPSMetricsParser(results, this.ConfidenceLevel, this.WarmupTime);
+                MetricsParser parser = new CPSMetricsParser(results, this.ConfidenceLevel, this.WarmupTime.TotalSeconds);
                 IList<Metric> metrics = parser.Parse();
 
                 this.Logger.LogMetrics(

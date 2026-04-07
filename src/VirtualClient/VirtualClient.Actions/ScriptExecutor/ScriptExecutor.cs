@@ -12,7 +12,7 @@ namespace VirtualClient.Actions
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.Extensions.Logging;
+    using MimeMapping;
     using Polly;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
@@ -23,10 +23,11 @@ namespace VirtualClient.Actions
     /// <summary>
     /// The Generic Script executor for Powershell, Bash etc scripts.
     /// </summary>
+    [SupportedPlatforms("linux-arm64,linux-x64,win-arm64,win-x64")]
     public class ScriptExecutor : VirtualClientComponent
     {
+        private const string MetricsFileName = "test-metrics.json";
         private IFileSystem fileSystem;
-        private IPackageManager packageManager;
         private ISystemManagement systemManagement;
 
         /// <summary>
@@ -38,7 +39,6 @@ namespace VirtualClient.Actions
              : base(dependencies, parameters)
         {
             this.systemManagement = this.Dependencies.GetService<ISystemManagement>();
-            this.packageManager = this.systemManagement.PackageManager;
             this.fileSystem = this.systemManagement.FileSystem;
         }
 
@@ -54,7 +54,8 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// The relative Script Path to be used to initiate the script
+        /// The Script Path can be an absolute Path, or be relative to the Virtual Client Executable 
+        /// or be relative to platform specific package if the script is downloaded using DependencyPackageInstallation.
         /// </summary>
         public string ScriptPath
         {
@@ -67,11 +68,12 @@ namespace VirtualClient.Actions
         /// <summary>
         /// The Regex Based, semi-colon separated relative log file/Folder Paths
         /// </summary>
-        public string LogPaths
+        public IEnumerable<string> LogPaths
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(this.LogPaths));
+                this.Parameters.TryGetCollection<string>(nameof(this.LogPaths), out IEnumerable<string> logPaths);
+                return logPaths;
             }
         }
 
@@ -82,24 +84,51 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(this.ToolName));
+                return this.Parameters.GetValue<string>(nameof(this.ToolName), string.Empty);
+            }
+
+            set
+            {
+                this.Parameters[nameof(this.ToolName)] = value;
+            }
+        }
+
+        /// <summary>
+        /// True if VC should create elevated process
+        /// to execute the script. Default = false.
+        /// </summary>
+        public bool RunElevated
+        {
+            get
+            {
+                return this.Parameters.GetValue<bool>(nameof(this.RunElevated), false);
+            }
+
+            set
+            {
+                this.Parameters[nameof(this.RunElevated)] = value;
             }
         }
 
         /// <summary>
         /// The full path to the script executable.
         /// </summary>
-        public string ExecutablePath { get; set; }
+        protected string ExecutablePath { get; set; }
+
+        /// <summary>
+        /// The path to the directory containing script executable.
+        /// </summary>
+        protected string ExecutableDirectory { get; set; }
 
         /// <summary>
         /// A retry policy to apply to file access/move operations.
         /// </summary>
-        public IAsyncPolicy FileOperationsRetryPolicy { get; set; } = RetryPolicies.FileOperations;
+        protected IAsyncPolicy FileOperationsRetryPolicy { get; set; } = RetryPolicies.FileOperations;
 
         /// <summary>
-        /// The path to the workload package.
+        /// The full path to the expected metrics file (when it exists).
         /// </summary>
-        protected DependencyPath WorkloadPackage { get; set; }
+        protected string MetricsFilePath { get; set; }
 
         /// <summary>
         /// Initializes the environment for execution of the provided script.
@@ -108,20 +137,49 @@ namespace VirtualClient.Actions
         {
             await this.EvaluateParametersAsync(cancellationToken);
 
-            this.WorkloadPackage = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken);
+            string scriptFileLocation = string.Empty;
+            if (PlatformSpecifics.IsFullyQualifiedPath(this.ScriptPath))
+            {
+                this.ExecutablePath = this.ScriptPath;
+            }
+            else if (!string.IsNullOrWhiteSpace(this.PackageName))
+            {
+                DependencyPath workloadPackage = await this.GetPackageAsync(this.PackageName, cancellationToken);
+                DependencyPath platformSpecificPackage = this.ToPlatformSpecificPath(workloadPackage, this.Platform, this.CpuArchitecture);
 
-            this.ExecutablePath = this.Combine(this.WorkloadPackage.Path, this.ScriptPath);
-
-            await this.systemManagement.MakeFileExecutableAsync(this.ExecutablePath, this.Platform, cancellationToken);
+                if (this.fileSystem.Directory.Exists(platformSpecificPackage.Path))
+                {
+                    // Package is separated into platform-specific folders (e.g. win-x64, linux-arm64).
+                    this.ExecutablePath = this.fileSystem.Path.GetFullPath(this.fileSystem.Path.Combine(platformSpecificPackage.Path, this.ScriptPath));
+                }
+                else
+                {
+                    // Package does not have platform-specific folders.
+                    this.ExecutablePath = this.fileSystem.Path.GetFullPath(this.fileSystem.Path.Combine(workloadPackage.Path, this.ScriptPath));
+                }
+            }
+            else
+            {
+                this.ExecutablePath = this.fileSystem.Path.GetFullPath(this.fileSystem.Path.Combine(this.PlatformSpecifics.CurrentDirectory, this.ScriptPath));
+            }
 
             if (!this.fileSystem.File.Exists(this.ExecutablePath))
             {
                 throw new DependencyException(
-                    $"The expected workload binary/executable was not found in the '{this.PackageName}' package. The script cannot be executed " +
-                    $"successfully without this binary/executable. Check that the workload package was installed successfully and that the executable " +
-                    $"exists in the path expected '{this.ExecutablePath}'.",
-                    ErrorReason.DependencyNotFound);
+                    $"The expected workload script was not found at '{this.ExecutablePath}'. The script cannot be executed " +
+                    $"successfully without this binary/executable.",
+                    ErrorReason.WorkloadDependencyMissing);
             }
+
+            this.MetricsFilePath = this.Combine(this.ExecutableDirectory, ScriptExecutor.MetricsFileName);
+            if (this.fileSystem.File.Exists(this.MetricsFilePath))
+            {
+                this.fileSystem.File.Delete(this.MetricsFilePath);
+            }
+
+            this.ExecutableDirectory = this.fileSystem.Path.GetDirectoryName(this.ExecutablePath);
+            this.ToolName = string.IsNullOrWhiteSpace(this.ToolName) ? $"{this.fileSystem.Path.GetFileNameWithoutExtension(this.ExecutablePath)}" : this.ToolName;
+            await this.systemManagement.MakeFileExecutableAsync(this.ExecutablePath, this.Platform, cancellationToken);
         }
 
         /// <summary>
@@ -132,21 +190,26 @@ namespace VirtualClient.Actions
             using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
             {
                 string command = this.ExecutablePath;
-                string commandArguments = SensitiveData.ObscureSecrets(this.CommandLine);
+                string commandArguments = this.CommandLine;
 
                 telemetryContext
                     .AddContext(nameof(command), command)
-                    .AddContext(nameof(commandArguments), commandArguments);
+                    .AddContext(nameof(commandArguments), SensitiveData.ObscureSecrets(commandArguments));
 
-                using (IProcessProxy process = await this.ExecuteCommandAsync(command, commandArguments, this.WorkloadPackage.Path, telemetryContext, cancellationToken, false))
+                using (IProcessProxy process = await this.ExecuteCommandAsync(command, commandArguments, this.ExecutableDirectory, telemetryContext, cancellationToken, this.RunElevated))
                 {
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        await this.LogProcessDetailsAsync(process, telemetryContext, this.ToolName, logToFile: true);
-                        process.ThrowIfWorkloadFailed();
-
-                        await this.CaptureMetricsAsync(process, telemetryContext, cancellationToken);
-                        await this.CaptureLogsAsync(cancellationToken);
+                        try
+                        {
+                            await this.LogProcessDetailsAsync(process, telemetryContext, this.ToolName);
+                            process.ThrowIfWorkloadFailed();
+                        }
+                        finally
+                        {
+                            await this.CaptureMetricsAsync(process, telemetryContext, cancellationToken);
+                            await this.CaptureLogsAsync(cancellationToken);
+                        }
                     }
                 }
             }
@@ -165,30 +228,32 @@ namespace VirtualClient.Actions
 
                 this.MetadataContract.Apply(telemetryContext);
 
-                string metricsFilePath = this.Combine(this.WorkloadPackage.Path, "test-metrics.json");
-                telemetryContext.AddContext(nameof(metricsFilePath), metricsFilePath);
                 bool metricsFileFound = false;
 
                 try
                 {
-                    if (this.fileSystem.File.Exists(metricsFilePath))
+                    if (this.fileSystem.File.Exists(this.MetricsFilePath))
                     {
                         metricsFileFound = true;
-                        string results = await this.fileSystem.File.ReadAllTextAsync(metricsFilePath);
+                        telemetryContext.AddContext("metricsFilePath", this.MetricsFilePath);
+                        string results = await this.fileSystem.File.ReadAllTextAsync(this.MetricsFilePath);
 
-                        JsonMetricsParser parser = new JsonMetricsParser(results, this.Logger, telemetryContext);
-                        IList<Metric> workloadMetrics = parser.Parse();
+                        if (!string.IsNullOrWhiteSpace(results))
+                        {
+                            JsonMetricsParser parser = new JsonMetricsParser(results, this.Logger, telemetryContext);
+                            IList<Metric> workloadMetrics = parser.Parse();
 
-                        this.Logger.LogMetrics(
-                            this.ToolName,
-                            this.MetricScenario ?? this.Scenario,
-                            process.StartTime,
-                            process.ExitTime,
-                            workloadMetrics,
-                            null,
-                            process.FullCommand(),
-                            this.Tags,
-                            telemetryContext);
+                            this.Logger.LogMetrics(
+                                this.ToolName,
+                                (this.MetricScenario ?? this.Scenario) ?? "Script",
+                                process.StartTime,
+                                process.ExitTime,
+                                workloadMetrics,
+                                null,
+                                process.FullCommand(),
+                                this.Tags,
+                                telemetryContext);
+                        }
                     }
                 }
                 finally
@@ -201,89 +266,125 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Captures the workload logs based on LogFiles parameter of ScriptExecutor.
         /// All the files inmatching sub-folders and all the matching files along with metrics file will be moved to the 
-        /// central Virtual Client logs directory. If the cintent store (--cs) argument is used with Virtual Client, then
-        /// the captured logs will also be uploaded to blob content store.
+        /// central Virtual Client logs directory.
         /// </summary>
         protected async Task CaptureLogsAsync(CancellationToken cancellationToken)
         {
             // e.g.
             // /logs/anytool/executecustomscript1
             // /logs/anytool/executecustomscript2
-            string destinitionLogsDir = this.PlatformSpecifics.GetLogsPath(this.ToolName.ToLower(), (this.Scenario ?? "customscript").ToLower());
-            if (!this.fileSystem.Directory.Exists(destinitionLogsDir))
-            {
-                this.fileSystem.Directory.CreateDirectory(destinitionLogsDir);
-            }
+            string destinitionLogsDir = this.Combine(this.GetLogDirectory(this.ToolName), DateTime.UtcNow.ToString("yyyy-MM-dd_hh-mm-ss"));
 
-            foreach (string logPath in this.LogPaths.Split(";"))
+            if (this.LogPaths?.Any() == true)
             {
-                string fullLogPath = this.Combine(this.WorkloadPackage.Path, logPath);
-
-                // Check for Matching Sub-Directories 
-                if (this.fileSystem.Directory.Exists(fullLogPath))
+                foreach (string logPath in this.LogPaths)
                 {
-                    foreach (string logFilePath in this.fileSystem.Directory.GetFiles(fullLogPath, "*", SearchOption.AllDirectories))
+                    if (string.IsNullOrWhiteSpace(logPath))
                     {
-                        this.RequestUploadAndMoveToLogsDirectory(logFilePath, destinitionLogsDir, cancellationToken);
+                        continue;
                     }
-                }
 
-                // Check for Matching FileNames
-                foreach (string logFilePath in this.fileSystem.Directory.GetFiles(this.WorkloadPackage.Path, logPath, SearchOption.AllDirectories))
-                {
-                    await this.RequestUploadAndMoveToLogsDirectory(logFilePath, destinitionLogsDir, cancellationToken);
+                    string fullLogPath = this.fileSystem.Path.GetFullPath(this.fileSystem.Path.Combine(this.ExecutableDirectory, logPath));
+
+                    // Check for Matching Sub-Directories 
+                    if (this.fileSystem.Directory.Exists(fullLogPath))
+                    {
+                        foreach (string logFilePath in this.fileSystem.Directory.GetFiles(fullLogPath, "*", SearchOption.AllDirectories))
+                        {
+                            var logs = await this.MoveLogsAsync(logFilePath, destinitionLogsDir, cancellationToken, sourceRootDirectory: fullLogPath);
+                            await this.RequestLogUploadsAsync(logs);
+                        }
+                    }
+
+                    // Check for Matching FileNames
+                    foreach (string logFilePath in this.fileSystem.Directory.GetFiles(this.ExecutableDirectory, logPath, SearchOption.AllDirectories))
+                    {
+                        var logs = await this.MoveLogsAsync(logFilePath, destinitionLogsDir, cancellationToken);
+                        await this.RequestLogUploadsAsync(logs);
+                    }
                 }
             }
 
             // Move test-metrics.json file if that exists
-            string metricsFilePath = this.Combine(this.WorkloadPackage.Path, "test-metrics.json");
+            string metricsFilePath = this.Combine(this.ExecutableDirectory, "test-metrics.json");
             if (this.fileSystem.File.Exists(metricsFilePath))
             {
-                await this.RequestUploadAndMoveToLogsDirectory(metricsFilePath, destinitionLogsDir, cancellationToken);
+                var logs = await this.MoveLogsAsync(metricsFilePath, destinitionLogsDir, cancellationToken);
+                await this.RequestLogUploadsAsync(logs);
             }
         }
 
         /// <summary>
-        /// Requests a file upload.
+        /// Requests a file upload for each of the log file paths provided.
         /// </summary>
-        protected Task RequestUpload(string logPath)
+        protected async Task RequestLogUploadsAsync(IEnumerable<string> logPaths)
         {
-            FileUploadDescriptor descriptor = this.CreateFileUploadDescriptor(
-                new FileContext(
-                    this.fileSystem.FileInfo.New(logPath),
-                    HttpContentType.PlainText,
-                    Encoding.UTF8.WebName,
-                    this.ExperimentId,
-                    this.AgentId,
-                    this.ToolName,
-                    this.Scenario,
-                    null,
-                    this.Roles?.FirstOrDefault()));
+            if (logPaths?.Any() == true && this.TryGetContentStoreManager(out IBlobManager blobManager))
+            {
+                foreach (string logPath in logPaths)
+                {
+                    FileUploadDescriptor descriptor = this.CreateFileUploadDescriptor(
+                        new FileContext(
+                            this.fileSystem.FileInfo.New(logPath),
+                            MimeUtility.GetMimeMapping(logPath),
+                            Encoding.UTF8.WebName,
+                            this.ExperimentId,
+                            this.AgentId,
+                            this.ToolName,
+                            this.Scenario,
+                            null,
+                            this.Roles?.FirstOrDefault()));
 
-            return this.RequestFileUploadAsync(descriptor);
+                    await this.RequestFileUploadAsync(descriptor);
+                }
+            }
         }
 
         /// <summary>
-        /// Move the log files to central logs directory and Upload to Content Store
+        /// Move the log files to central logs directory (retaining source directory structure) and Upload to Content Store.
         /// </summary>
-        protected async Task RequestUploadAndMoveToLogsDirectory(string sourcePath, string destinitionDirectory, CancellationToken cancellationToken)
+        private async Task<IEnumerable<string>> MoveLogsAsync(string sourcePath, string destinationDirectory, CancellationToken cancellationToken, string sourceRootDirectory = null)
         {
-            if (this.TryGetContentStoreManager(out IBlobManager blobManager))
+            List<string> targetLogs = new List<string>();
+            if (!string.Equals(sourcePath, this.ExecutablePath))
             {
-                await this.RequestUpload(sourcePath);
+                if (!this.fileSystem.Directory.Exists(destinationDirectory))
+                {
+                    this.fileSystem.Directory.CreateDirectory(destinationDirectory);
+                }
+
+                string destPath = sourcePath;
+                await (this.FileOperationsRetryPolicy ?? Policy.NoOpAsync()).ExecuteAsync(async () =>
+                {
+                    await Task.Run(() =>
+                    {
+                        string fileName = Path.GetFileName(sourcePath);
+
+                        if (!string.IsNullOrEmpty(sourceRootDirectory))
+                        {
+                            // Compute relative path from sourceRoot to sourcePath
+                            string relativePath = this.fileSystem.Path.GetRelativePath(sourceRootDirectory, sourcePath);
+                            string destDir = this.fileSystem.Path.Combine(destinationDirectory, this.fileSystem.Path.GetDirectoryName(relativePath));
+
+                            if (!this.fileSystem.Directory.Exists(destDir))
+                            {
+                                this.fileSystem.Directory.CreateDirectory(destDir);
+                            }
+
+                            destPath = this.Combine(destDir, fileName);
+                        }
+                        else
+                        {
+                            destPath = this.Combine(destinationDirectory, fileName);
+                        }
+
+                        this.fileSystem.File.Move(sourcePath, destPath, true);
+                        targetLogs.Add(destPath);
+                    });
+                });
             }
 
-            await (this.FileOperationsRetryPolicy ?? Policy.NoOpAsync()).ExecuteAsync(() =>
-            {
-                // e.g.
-                // /logs/anytool/executecustomscript1/2023-06-27T21-13-12-51001Z-CustomScript.sh
-                // /logs/anytool/executecustomscript1/2023-06-27T21-15-36-12018Z-CustomScript.sh
-                string fileName = Path.GetFileName(sourcePath);
-                string destinitionPath = this.Combine(destinitionDirectory, BlobDescriptor.SanitizeBlobPath($"{DateTime.UtcNow.ToString("o").Replace('.', '-')}-{fileName}"));
-                this.fileSystem.File.Move(sourcePath, destinitionPath, true);
-
-                return Task.CompletedTask;
-            });
+            return targetLogs;
         }
     }
 }

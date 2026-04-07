@@ -12,10 +12,14 @@ namespace VirtualClient
     using System.IO.Abstractions;
     using System.Linq;
     using System.Net;
+    using System.Runtime.InteropServices;
+    using System.Text.RegularExpressions;
     using Microsoft.CodeAnalysis;
     using Microsoft.Extensions.Logging;
+    using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Extensibility;
     using VirtualClient.Identity;
 
     /// <summary>
@@ -24,9 +28,47 @@ namespace VirtualClient
     [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1118:Parameter should not span multiple lines", Justification = "Allow for longer description text.")]
     public static class OptionFactory
     {
+        internal const string HtmlQuote = "&quot;";
         private static readonly ICertificateManager defaultCertificateManager = new CertificateManager();
         private static readonly IFileSystem defaultFileSystem = new FileSystem();
+        private static readonly PlatformSpecifics defaultPlatformSpecifics = new PlatformSpecifics(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture);
         private static readonly char[] argumentTrimChars = new char[] { '\'', '"', ' ' };
+
+        /// <summary>
+        /// Checks to determine if the command line arguments contains the option provided.
+        /// </summary>
+        /// <param name="option">The option to check for existence.</param>
+        /// <param name="args">The command line arguments.</param>
+        /// <returns>True if the command line arguments contains the option. False if not.</returns>
+        public static bool ContainsOption(Option option, params string[] args)
+        {
+            option.ThrowIfNull(nameof(option));
+            bool hasOption = false;
+
+            if (args?.Any() == true)
+            {
+                // e.g.
+                // -f, --profile
+                var optionAliases = option.Aliases.Where(a => a.StartsWith("-"));
+
+                if (optionAliases?.Any() == true)
+                {
+                    string aliasExpression = string.Join("|", optionAliases);
+                    Regex optionExpression = new Regex($@"(?:^|\s)({aliasExpression})(?=$|\s|=)");
+
+                    foreach (string arg in args)
+                    {
+                        if (!string.IsNullOrWhiteSpace(arg) && optionExpression.IsMatch(arg))
+                        {
+                            hasOption = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            return hasOption;
+        }
 
         /// <summary>
         /// Command line option defines the port on which the local self-hosted REST API service
@@ -39,7 +81,7 @@ namespace VirtualClient
             // Note:
             // Only the first 3 of these will display in help output (i.e. --help).
             Option<IDictionary<string, int>> option = new Option<IDictionary<string, int>>(
-                new string[] { "--port", "--api-port" },
+                new string[] { "--api-port" },
                 new ParseArgument<IDictionary<string, int>>(result =>
                 {
                     IDictionary<string, int> apiPorts = new Dictionary<string, int>();
@@ -81,6 +123,59 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Command line option indicates existing logs should be archived before proceeding.
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateArchiveLogsOption(bool required = true, object defaultValue = null)
+        {
+            Option<IList<string>> option = new Option<IList<string>>(
+                new string[] { "-a", "--archive-logs" },
+                parseArgument: result =>
+                {
+                    string archivePath = null;
+                    if (result.Tokens?.Any() == true)
+                    {
+                        // e.g.
+                        // --archive-logs=/home/user/custom_archive/logs
+                        archivePath = OptionFactory.ToFullPath(result.Tokens[0].Value);
+                    }
+
+                    return new List<string> { archivePath };
+                })
+            {
+                Name = "ArchiveLogTargets",
+                Description = "Indicates any existing logs/log files should be archived. A path to the archive location can be provided. Default path is an '/archive/logs' folder in the user profile/home directory.",
+                ArgumentHelpName = "path",
+                AllowMultipleArgumentsPerToken = false,
+                Arity = new ArgumentArity(0, 2)
+            };
+
+            OptionFactory.SetOptionRequirements(option, required);
+
+            return option;
+        }
+
+        /// <summary>
+        /// Command line option defines the certificate name to retrieve from Key Vault.
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateCertificateNameOption(bool required = false, object defaultValue = null)
+        {
+            Option<string> option = new Option<string>(new string[] { "--cert-name" })
+            {
+                Name = "CertificateName",
+                Description = "The name of the certificate in Azure Key Vault to install to the local certificate store.",
+                ArgumentHelpName = "name",
+                AllowMultipleArgumentsPerToken = false
+            };
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+            return option;
+        }
+
+        /// <summary>
         /// Command line option indicates a clean/reset should be performed and defines the targets
         /// (e.g. logs, state, packages, all).
         /// </summary>
@@ -89,7 +184,7 @@ namespace VirtualClient
         public static Option CreateCleanOption(bool required = true, object defaultValue = null)
         {
             Option<IList<string>> option = new Option<IList<string>>(
-                new string[] { "--clean" },
+                new string[] { "-c", "--clean" },
                 new ParseArgument<IList<string>>(result => OptionFactory.ParseDelimitedValues(result)))
             {
                 Name = "CleanTargets",
@@ -107,10 +202,11 @@ namespace VirtualClient
 
                     IList<string> validTargets = new List<string>
                     {
-                        CleanTargets.All,
-                        CleanTargets.Logs,
-                        CleanTargets.Packages,
-                        CleanTargets.State
+                        ResourceTargets.All,
+                        ResourceTargets.Logs,
+                        ResourceTargets.Packages,
+                        ResourceTargets.State,
+                        ResourceTargets.Temp
                     };
 
                     IEnumerable<string> otherTargets = targets.Except(validTargets);
@@ -138,12 +234,41 @@ namespace VirtualClient
         {
             // Note:
             // Only the first 2 of these will display in help output (i.e. --help).
-            Option<string> option = new Option<string>(new string[] { "--c", "--client", "--client-id", "--clientId", "--clientid", "--agent-id", "--agentId", "--agentid" })
+            //
+            // **IMPORTANT**
+            // Note that the --agentId option will be deprecated in the future.
+            Option<string> option = new Option<string>(new string[] { "--client-id" })
             {
                 Name = "ClientId",
                 Description = "A name/identifier to describe the instance of the application (the agent) that will be included with all " +
                     "telemetry/data emitted during operations.",
                 ArgumentHelpName = "id",
+                AllowMultipleArgumentsPerToken = false
+            };
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+
+            return option;
+        }
+
+        /// <summary>
+        /// Command line argument allows the user to define a command to execute in another 
+        /// runtime (e.g. PowerShell, Python).
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateCommandOption(bool required = false, object defaultValue = null)
+        {
+            // Single command execution is also supported. Behind the scenes this uses a
+            // profile execution flow to allow the user to execute the command (e.g. pwsh S:\Invoke-Script.ps1)
+            // while additionally having the full set of other options available for profile execution.
+            Option<string> option = new Option<string>(
+                 new string[] { "-C", "--command" },
+                 result => OptionFactory.GetValue(result, normalize: true)?.Trim())
+            {
+                Name = "Command",
+                Description = "Defines a command/command line to execute.",
+                ArgumentHelpName = "arguments",
                 AllowMultipleArgumentsPerToken = false
             };
 
@@ -162,7 +287,7 @@ namespace VirtualClient
         {
             // Note:
             // Only the first 3 of these will display in help output (i.e. --help).
-            Option<string> option = new Option<string>(new string[] { "--cp", "--content-path", "--content-path-template", "--contentPathTemplate", "--contentpathtemplate", "--contentPath", "--contentpath" })
+            Option<string> option = new Option<string>(new string[] { "--content-path", "--content-path-template" })
             {
                 Name = "ContentPathTemplate",
                 Description = "A template defining the virtual folder structure to use when uploading files to a target storage account. Default = /{experimentId}/{agentId}/{toolName}/{role}/{scenario}.",
@@ -193,7 +318,7 @@ namespace VirtualClient
             // Note:
             // Only the first 3 of these will display in help output (i.e. --help).
             Option<DependencyStore> option = new Option<DependencyStore>(
-                new string[] { "--cs", "--content", "--content-store", "--contentStore", "--contentstore",   },
+                new string[] { "--content", "--content-store" },
                 new ParseArgument<DependencyStore>(result => OptionFactory.ParseBlobStore(
                     result,
                     DependencyStore.Content,
@@ -212,17 +337,89 @@ namespace VirtualClient
         }
 
         /// <summary>
-        /// Command line option defines whether debug output should be emitted on the console/terminal.
+        /// Command line option indicates the format for a data point file (Csv, Json, Yaml).
         /// </summary>
         /// <param name="required">Sets this option as required.</param>
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
-        public static Option CreateDebugFlag(bool required = true, object defaultValue = null)
+        public static Option CreateDataFormatOption(bool required = true, object defaultValue = null)
         {
-            Option<bool> option = new Option<bool>(new string[] { "--debug", "--verbose" })
+            Option<DataFormat> option = new Option<DataFormat>(
+                new string[] { "--format" },
+                new ParseArgument<DataFormat>(result =>
+                {
+                    DataFormat format = DataFormat.Undefined;
+                    string value = result.Tokens.First().Value;
+
+                    switch (value?.ToLowerInvariant())
+                    {
+                        case "csv":
+                            format = DataFormat.Csv;
+                            break;
+
+                        case "json":
+                            format = DataFormat.Json;
+                            break;
+
+                        case "yaml":
+                            format = DataFormat.Yaml;
+                            break;
+                    }
+
+                    if (format == DataFormat.Undefined)
+                    {
+                        throw new ArgumentException($"The data format '{value}' is not supported.");
+                    }
+
+                    return format;
+                }))
             {
-                Name = "Debug",
-                Description = "Flag indicates that verbose output should be emitted to the console/terminal.",
-                ArgumentHelpName = "Flag",
+                Name = "DataFormat",
+                Description = "Indicates the data format. Supported values = Csv, Json, Yaml.",
+                ArgumentHelpName = "name",
+                AllowMultipleArgumentsPerToken = false,
+            };
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+
+            return option;
+        }
+
+        /// <summary>
+        /// Command line option indicates the schema for the content in a data point file (Events, Metrics).
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateDataSchemaOption(bool required = true, object defaultValue = null)
+        {
+            Option<DataSchema> option = new Option<DataSchema>(
+                new string[] { "--schema" },
+                new ParseArgument<DataSchema>(result =>
+                {
+                    DataSchema schema = DataSchema.Undefined;
+                    string value = result.Tokens.First().Value;
+
+                    switch (value?.ToLowerInvariant())
+                    {
+                        case "events":
+                            schema = DataSchema.Events;
+                            break;
+
+                        case "metrics":
+                            schema = DataSchema.Metrics;
+                            break;
+                    }
+
+                    if (schema == DataSchema.Undefined)
+                    {
+                        throw new ArgumentException($"The data schema '{value}' is not supported.");
+                    }
+
+                    return schema;
+                }))
+            {
+                Name = "DataSchema",
+                Description = "Indicates the data schema. Supported values = Events, Metrics.",
+                ArgumentHelpName = "name",
                 AllowMultipleArgumentsPerToken = false,
             };
 
@@ -238,7 +435,7 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreateDependenciesFlag(bool required = true, object defaultValue = null)
         {
-            Option<bool> option = new Option<bool>(new string[] { "--dependencies" })
+            Option<bool> option = new Option<bool>(new string[] { "-d", "--dependencies" })
             {
                 Name = "InstallDependencies",
                 Description = "Flag indicates that only the profile dependencies should be evaluated/installed (i.e. no actions or monitors).",
@@ -271,17 +468,15 @@ namespace VirtualClient
         /// </summary>
         /// <param name="required">Sets this option as required.</param>
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
-        /// <param name="certificateManager">Optional parameter defines the certificate manager to use for accessing certificates on the system.</param>
-        public static Option CreateEventHubStoreOption(bool required = false, object defaultValue = null, ICertificateManager certificateManager = null)
+        public static Option CreateEventHubStoreOption(bool required = false, object defaultValue = null)
         {
             // Note:
             // Only the first 3 of these will display in help output (i.e. --help).
-            Option<DependencyEventHubStore> option = new Option<DependencyEventHubStore>(
-                new string[] { "--eh", "--eventhub", "--event-hub", "--eventHub", "--eventHubConnectionString", "--eventhubconnectionstring" },
-                new ParseArgument<DependencyEventHubStore>(result => OptionFactory.ParseEventHubStore(
-                    result,
-                    DependencyStore.Telemetry,
-                    certificateManager ?? OptionFactory.defaultCertificateManager)))
+            //
+            // **IMPORTANT**
+            // Note that this option will be deprecated in the future.
+            Option<string> option = new Option<string>(
+                new string[] { "--event-hub" })
             {
                 Name = "EventHubStore",
                 Description = "An endpoint URI or connection string/access policy defining an Event Hub to which telemetry should be sent/uploaded.",
@@ -304,7 +499,7 @@ namespace VirtualClient
             // Note:
             // Only the first 3 of these will display in help output (i.e. --help).
             Option<TimeSpan> option = new Option<TimeSpan>(
-                new string[] { "--wait", "--exit-wait", "--flush-wait" },
+                new string[] { "--exit-wait" },
                 new ParseArgument<TimeSpan>(arg => OptionFactory.ParseTimeSpan(arg)))
             {
                 Name = "ExitWait",
@@ -328,7 +523,10 @@ namespace VirtualClient
         {
             // Note:
             // Only the first 3 of these will display in help output (i.e. --help).
-            Option<string> option = new Option<string>(new string[] { "--e", "--experiment", "--experiment-id", "--experimentId", "--experimentid"  })
+            //
+            // **IMPORTANT**
+            // Note that the --experimentId option will be deprecated in the future.
+            Option<string> option = new Option<string>(new string[] { "--experiment-id" })
             {
                 Name = "ExperimentId",
                 Description = "An identifier that will be used to correlate all operations with telemetry/data emitted by the application. If not defined, a random identifier will be used.",
@@ -348,12 +546,32 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreateFailFastFlag(bool required = true, object defaultValue = null)
         {
-            Option<bool> option = new Option<bool>(new string[] { "--ff", "--fail-fast" })
+            Option<bool> option = new Option<bool>(new string[] { "-f", "--fail-fast" })
             {
                 Name = "FailFast",
                 Description = "Flag indicates that the application should fail fast and exit immediately on any errors experienced regardless of severity.",
                 ArgumentHelpName = "Flag",
                 AllowMultipleArgumentsPerToken = false,
+            };
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+
+            return option;
+        }
+
+        /// <summary>
+        /// Command line flag indicates data is intrinsic to the current system.
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateIntrinsicFlag(bool required = true, object defaultValue = null)
+        {
+            Option<bool> option = new Option<bool>(new string[] { "-i", "--intrinsic" })
+            {
+                Name = "Intrinsic",
+                Description = "Flag indicates the data is intrinsic to the current system.",
+                ArgumentHelpName = "Flag",
+                AllowMultipleArgumentsPerToken = false
             };
 
             OptionFactory.SetOptionRequirements(option, required, defaultValue);
@@ -370,7 +588,7 @@ namespace VirtualClient
         {
             // Note:
             // Only the first 3 of these will display in help output (i.e. --help).
-            Option<string> option = new Option<string>(new string[] { "--ip", "--ip-address" })
+            Option<string> option = new Option<string>(new string[] { "--ip-address" })
             {
                 Name = "IPAddress",
                 Description = "The IP address of a remote/target application API instance to monitor.",
@@ -396,6 +614,30 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Command line option indicates that VC directories should be isolated to prevent sharing of state and content 
+        /// across multiple instances of the application running on the same system.
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateIsolatedFlag(bool required = true, object defaultValue = null)
+        {
+            Option<IList<string>> option = new Option<IList<string>>(
+                new string[] { "-i", "--isolated" },
+                new ParseArgument<IList<string>>(result => OptionFactory.ParseDelimitedValues(result)))
+            {
+                Name = "IsolationTargets",
+                Description = "Indicates operational directories should be isolated. Valid targets are: logs, state, packages, all. Multiple targets can be defined comma-delimited (e.g. logs,state,packages).",
+                ArgumentHelpName = "target",
+                AllowMultipleArgumentsPerToken = false,
+                Arity = new ArgumentArity(0, 10000)
+            };
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+
+            return option;
+        }
+
+        /// <summary>
         /// Command line option defines the number of rounds/iterations to run the profile actions.
         /// </summary>
         /// <param name="required">Sets this option as required.</param>
@@ -403,7 +645,7 @@ namespace VirtualClient
         public static Option CreateIterationsOption(bool required = false, object defaultValue = null)
         {
             Option<ProfileTiming> option = new Option<ProfileTiming>(
-                new string[] { "--i", "--iterations" },
+                new string[] { "--iterations" },
                 new ParseArgument<ProfileTiming>(arg => OptionFactory.ParseProfileIterations(arg)))
             {
                 Name = "Iterations",
@@ -428,21 +670,56 @@ namespace VirtualClient
         }
 
         /// <summary>
-        /// Command line option defines the path to the environment layout file.
+        /// Command line option defines a keyvault for the Virtual Client to get certificates and secrets.
         /// </summary>
         /// <param name="required">Sets this option as required.</param>
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
-        public static Option CreateLayoutPathOption(bool required = true, object defaultValue = null)
+        /// <param name="certificateManager">Optional parameter defines the certificate manager to use for accessing certificates on the system.</param>
+        /// <param name="fileSystem">Optional parameter to use to validate file system paths.</param>
+        public static Option CreateKeyVaultStoreOption(bool required = false, object defaultValue = null, ICertificateManager certificateManager = null, IFileSystem fileSystem = null)
+        {
+            Option<DependencyStore> option = new Option<DependencyStore>(
+                new string[] { "--key-vault" },
+                new ParseArgument<DependencyStore>(result => OptionFactory.ParseKeyVaultStore(
+                    result,
+                    DependencyStore.KeyVault,
+                    certificateManager ?? OptionFactory.defaultCertificateManager,
+                    fileSystem ?? OptionFactory.defaultFileSystem)))
+            {
+                Name = "KeyVaultStore",
+                Description = "An endpoint URI or connection string to the Key Vault from which secrets and certificates can be accessed.",
+                ArgumentHelpName = "connectionstring|sas",
+                AllowMultipleArgumentsPerToken = false
+            };
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+
+            return option;
+        }
+
+        /// <summary>
+        /// Command line option defines the environment layout or a path to the layout file.
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        /// <param name="fileSystem">Optional parameter to use to validate file system paths.</param>
+        /// <param name="platformSpecifics">Optional parameter defines the certificate manager to use for accessing certificates on the system.</param>
+        public static Option CreateLayoutOption(bool required = true, object defaultValue = null, IFileSystem fileSystem = null, PlatformSpecifics platformSpecifics = null)
         {
             // Note:
             // Only the first 3 of these will display in help output (i.e. --help).
-            Option<string> option = new Option<string>(new string[] { "--lp", "--layout", "--layout-path", "--layoutPath", "--layoutpath",  })
+            Option<EnvironmentLayout> option = new Option<EnvironmentLayout>(
+                new string[] { "--layout", "--layout-path",  },
+                parseArgument: result => OptionFactory.ParseEnvironmentLayout(
+                    result, 
+                    fileSystem ?? OptionFactory.defaultFileSystem, 
+                    platformSpecifics ?? OptionFactory.defaultPlatformSpecifics))
             {
-                Name = "LayoutPath",
-                Description = "The path to the environment layout .json file required for client/server operations. The contents of this " +
-                    "file are used by the self-hosted API service for example to enable individual instances of the application running on different " +
-                    "systems to synchronize with each other.",
-                ArgumentHelpName = "path",
+                Name = "Layout",
+                Description = 
+                    "An environment layout definition or path to a *.json file defining the set of systems associated with client/server operations. This definition " +
+                    "enable individual instances of the application running on different systems to synchronize with each other.",
+                ArgumentHelpName = "definition",
                 AllowMultipleArgumentsPerToken = false
             };
 
@@ -459,12 +736,40 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreateLogDirectoryOption(bool required = true, object defaultValue = null)
         {
-            Option<string> option = new Option<string>(new string[] { "--ldir", "--log-dir" })
+            Option<string> option = new Option<string>(
+                new string[] { "--log-dir" },
+                new ParseArgument<string>(arg => OptionFactory.ParsePath(arg)))
             {
                 Name = "LogDirectory",
                 Description = "Defines an alternate directory to which log files should be written.",
                 ArgumentHelpName = "path",
                 AllowMultipleArgumentsPerToken = false
+            };
+
+            string defaultPath = defaultValue?.ToString();
+            if (!string.IsNullOrWhiteSpace(defaultPath))
+            {
+                defaultPath = OptionFactory.ToFullPath(defaultPath);
+            }
+
+            OptionFactory.SetOptionRequirements(option, required, defaultPath);
+
+            return option;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateLoggerOption(bool required = true, object defaultValue = null)
+        {
+            Option<IEnumerable<string>> option = new Option<IEnumerable<string>>(new string[] { "--logger" })
+            {
+                Name = "Loggers",
+                Description = "Defines custom logger definitions.",
+                ArgumentHelpName = "logger-definition",
+                AllowMultipleArgumentsPerToken = false,
             };
 
             OptionFactory.SetOptionRequirements(option, required, defaultValue);
@@ -480,7 +785,7 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreateLogLevelOption(bool required = true, object defaultValue = null)
         {
-            Option<LogLevel> option = new Option<LogLevel>(new string[] { "--ll", "--log-level" })
+            Option<LogLevel> option = new Option<LogLevel>(new string[] { "--log-level" })
             {
                 Name = "LoggingLevel",
                 Description = "Indicates the logging level for telemetry output (0 = Trace, 1 = Debug, 2 = Information, 3 = Warning, 4 = Error, 5 = Critical).",
@@ -518,7 +823,7 @@ namespace VirtualClient
         public static Option CreateLogRetentionOption(bool required = true, object defaultValue = null)
         {
             Option<TimeSpan> option = new Option<TimeSpan>(
-                new string[] { "--lr", "--log-retention" },
+                new string[] { "--log-retention" },
                 new ParseArgument<TimeSpan>(arg => OptionFactory.ParseTimeSpan(arg)))
             {
                 Name = "LogRetention",
@@ -542,12 +847,32 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreateLogToFileFlag(bool required = true, object defaultValue = null)
         {
-            Option<bool> option = new Option<bool>(new string[] { "--ltf", "--log-to-file" })
+            Option<bool> option = new Option<bool>(new string[] { "-l", "--log-to-file" })
             {
                 Name = "LogToFile",
                 Description = "Flag indicates that the output of processes should be logged to files in the logs directory.",
                 ArgumentHelpName = "Flag",
                 AllowMultipleArgumentsPerToken = false,
+            };
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+
+            return option;
+        }
+
+        /// <summary>
+        /// Command line option defines an expression to use for matching.
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateMatchExpressionOption(bool required = true, object defaultValue = null)
+        {
+            Option<string> option = new Option<string>(new string[] { "--match" })
+            {
+                Name = "MatchExpression",
+                Description = "An expression to use for matching.",
+                ArgumentHelpName = "expression",
+                AllowMultipleArgumentsPerToken = false
             };
 
             OptionFactory.SetOptionRequirements(option, required, defaultValue);
@@ -564,7 +889,7 @@ namespace VirtualClient
         public static Option CreateMetadataOption(bool required = true, object defaultValue = null)
         {
             Option<IDictionary<string, IConvertible>> option = new Option<IDictionary<string, IConvertible>>(
-                new string[] { "--mt", "--metadata"  },
+                new string[] { "--metadata" },
                 new ParseArgument<IDictionary<string, IConvertible>>(arg => OptionFactory.ParseDelimitedKeyValuePairs(arg)))
             {
                 Name = "Metadata",
@@ -586,7 +911,7 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreateMonitorFlag(bool required = true, object defaultValue = null)
         {
-            Option<bool> option = new Option<bool>(new string[] { "--mon", "--monitor" })
+            Option<bool> option = new Option<bool>(new string[] { "-m", "--monitor" })
             {
                 Name = "Monitor",
                 Description = "Indicates the Virtual Client should monitor itself or another instance via the API for heartbeats (e.g. online, offline). " +
@@ -608,7 +933,7 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreateNameOption(bool required = false, object defaultValue = null)
         {
-            Option<string> option = new Option<string>(new string[] { "--n", "--name" })
+            Option<string> option = new Option<string>(new string[] { "--name" })
             {
                 Name = "Name",
                 Description = "The logical name of a package as it should be registered on the system (e.g. anypackage.1.0.0.zip -> anypackage).",
@@ -628,10 +953,30 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreateOutputDirectoryOption(bool required = false, object defaultValue = null)
         {
-            Option<string> option = new Option<string>(new string[] { "--path", "--output", "--output-path" })
+            Option<string> option = new Option<string>(new string[] { "--output-dir" })
             {
                 Name = "OutputPath",
                 Description = "The directory to which file output should be written.",
+                ArgumentHelpName = "path",
+                AllowMultipleArgumentsPerToken = false
+            };
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+
+            return option;
+        }
+
+        /// <summary>
+        /// Command line option defines the path to a file in which output should be written.
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateOutputFileOption(bool required = false, object defaultValue = null)
+        {
+            Option<string> option = new Option<string>(new string[] { "--output-file" })
+            {
+                Name = "OutputFilePath",
+                Description = "A path to the file in which output should be written.",
                 ArgumentHelpName = "path",
                 AllowMultipleArgumentsPerToken = false
             };
@@ -649,7 +994,9 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreatePackageDirectoryOption(bool required = true, object defaultValue = null)
         {
-            Option<string> option = new Option<string>(new string[] { "--pdir", "--package-dir" })
+            Option<string> option = new Option<string>(
+                new string[] { "--package-dir" },
+                new ParseArgument<string>(arg => OptionFactory.ParsePath(arg)))
             {
                 Name = "PackageDirectory",
                 Description = "Defines an alternate directory to which packages will be downloaded.",
@@ -657,7 +1004,13 @@ namespace VirtualClient
                 AllowMultipleArgumentsPerToken = false
             };
 
-            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+            string defaultPath = defaultValue?.ToString();
+            if (!string.IsNullOrWhiteSpace(defaultPath))
+            {
+                defaultPath = OptionFactory.ToFullPath(defaultPath);
+            }
+
+            OptionFactory.SetOptionRequirements(option, required, defaultPath);
 
             return option;
         }
@@ -669,9 +1022,9 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreatePackageOption(bool required = false, object defaultValue = null)
         {
-            Option<string> option = new Option<string>(new string[] { "--pkg", "--package" })
+            Option<string> option = new Option<string>(new string[] { "--package" })
             {
-                Name = "Package",
+                Name = "PackageName",
                 Description = "The physical name of a package to bootstrap/install as it is defined in a package store (e.g. anypackage.1.0.0.zip).",
                 ArgumentHelpName = "name",
                 AllowMultipleArgumentsPerToken = false
@@ -695,7 +1048,7 @@ namespace VirtualClient
             // Note:
             // Only the first 3 of these will display in help output (i.e. --help).
             Option<DependencyStore> option = new Option<DependencyStore>(
-                new string[] { "--ps", "--packages", "--package-store", "--packageStore", "--packagestore"  },
+                new string[] { "--packages", "--package-store" },
                 new ParseArgument<DependencyStore>(result => OptionFactory.ParseBlobStore(
                     result,
                     DependencyStore.Packages,
@@ -722,7 +1075,7 @@ namespace VirtualClient
         public static Option CreateParametersOption(bool required = true, object defaultValue = null)
         {
             Option<IDictionary<string, IConvertible>> option = new Option<IDictionary<string, IConvertible>>(
-                new string[] { "--pm", "--parameters" },
+                new string[] { "--parameters" },
                 new ParseArgument<IDictionary<string, IConvertible>>(arg => OptionFactory.ParseDelimitedKeyValuePairs(arg)))
             {
                 Name = "Parameters",
@@ -730,32 +1083,6 @@ namespace VirtualClient
                     "(e.g. parameter1=true,,,parameter2=123).",
                 ArgumentHelpName = "p1=v1,,,p2=v2...",
                 AllowMultipleArgumentsPerToken = true
-            };
-
-            OptionFactory.SetOptionRequirements(option, required, defaultValue);
-
-            return option;
-        }
-
-        /// <summary>
-        /// Command line option defines the port on which the local self-hosted REST API service
-        /// should list for HTTP traffic.
-        /// </summary>
-        /// <param name="required">Sets this option as required.</param>
-        /// <param name="defaultValue">Sets the default value when none is provided.</param>
-        public static Option CreatePortOption(bool required = true, object defaultValue = null)
-        {
-            Option<IEnumerable<int>> option = new Option<IEnumerable<int>>(
-                new string[] { "--port" },
-                new ParseArgument<IEnumerable<int>>(result =>
-                {
-                    return OptionFactory.ParseDelimitedValues(result)?.Select(port => int.Parse(port.Trim()));
-                }))
-            {
-                Name = "Ports",
-                Description = "The port on which the local self-hosted REST API service should list for HTTP traffic. Client and server ports may be explicitly defined delimited by a comma (e.g. 4500,4501).",
-                ArgumentHelpName = "integer",
-                AllowMultipleArgumentsPerToken = false
             };
 
             OptionFactory.SetOptionRequirements(option, required, defaultValue);
@@ -773,7 +1100,7 @@ namespace VirtualClient
         public static Option CreateProfileOption(bool required = true, object defaultValue = null, ICertificateManager certificateManager = null, IFileSystem fileSystem = null)
         {
             Option<IEnumerable<DependencyProfileReference>> option = new Option<IEnumerable<DependencyProfileReference>>(
-                new string[] { "--p", "--profile" },
+                new string[] { "--profile" },
                 new ParseArgument<IEnumerable<DependencyProfileReference>>(result => OptionFactory.ParseProfiles(
                     result,
                     certificateManager ?? OptionFactory.defaultCertificateManager,
@@ -828,8 +1155,33 @@ namespace VirtualClient
                     "EventHubStore",
                     "Invalid usage. An Event Hub option cannot be supplied at the same time as a proxy API option. When using a proxy API, all telemetry is uploaded through the proxy.");
 
+                OptionFactory.ThrowIfOptionExists(
+                    result,
+                    "KeyVault",
+                    "Invalid usage. A Key Vault option cannot be supplied at the same time as a proxy API option. When using a proxy API, all secrets and certificates are resolved through the proxy.");
+
                 return string.Empty;
             });
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+
+            return option;
+        }
+
+        /// <summary>
+        /// Command line flag indicates a recursive search instruction.
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateRecursiveFlag(bool required = true, object defaultValue = null)
+        {
+            Option<bool> option = new Option<bool>(new string[] { "-r", "--recursive" })
+            {
+                Name = "Recursive",
+                Description = "Flag requests a recursive search.",
+                ArgumentHelpName = "Flag",
+                AllowMultipleArgumentsPerToken = false
+            };
 
             OptionFactory.SetOptionRequirements(option, required, defaultValue);
 
@@ -844,7 +1196,7 @@ namespace VirtualClient
         public static Option CreateScenariosOption(bool required = false, object defaultValue = null)
         {
             Option<IEnumerable<string>> option = new Option<IEnumerable<string>>(
-                new string[] { "--sc", "--scenarios" },
+                new string[] { "--scenarios" },
                 new ParseArgument<IEnumerable<string>>(result =>
                 {
                     IEnumerable<string> scenarios = null;
@@ -871,27 +1223,6 @@ namespace VirtualClient
         }
 
         /// <summary>
-        /// Command line option defines a seed that can be used to guarantee identical randomization 
-        /// bases for workloads that require it.
-        /// </summary>
-        /// <param name="required">Sets this option as required.</param>
-        /// <param name="defaultValue">Sets the default value when none is provided.</param>
-        public static Option CreateSeedOption(bool required = true, object defaultValue = null)
-        {
-            Option<int> option = new Option<int>(new string[] { "--sd", "--seed" })
-            {
-                Name = "RandomizationSeed",
-                Description = "A seed that can be used to guarantee identical randomization bases for workloads that require it.",
-                ArgumentHelpName = "integer",
-                AllowMultipleArgumentsPerToken = false
-            };
-
-            OptionFactory.SetOptionRequirements(option, required, defaultValue);
-
-            return option;
-        }
-
-        /// <summary>
         /// Command line option defines an alternate directory on the system in 
         /// which to write state files/documents.
         /// </summary>
@@ -899,7 +1230,9 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreateStateDirectoryOption(bool required = true, object defaultValue = null)
         {
-            Option<string> option = new Option<string>(new string[] { "--sdir", "--state-dir" })
+            Option<string> option = new Option<string>(
+                new string[] { "--state-dir" },
+                new ParseArgument<string>(arg => OptionFactory.ParsePath(arg)))
             {
                 Name = "StateDirectory",
                 Description = "Defines an alternate directory to which state files/documents will be written.",
@@ -907,7 +1240,13 @@ namespace VirtualClient
                 AllowMultipleArgumentsPerToken = false
             };
 
-            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+            string defaultPath = defaultValue?.ToString();
+            if (!string.IsNullOrWhiteSpace(defaultPath))
+            {
+                defaultPath = OptionFactory.ToFullPath(defaultPath);
+            }
+
+            OptionFactory.SetOptionRequirements(option, required, defaultPath);
 
             return option;
         }
@@ -919,7 +1258,7 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreateSystemOption(bool required = true, object defaultValue = null)
         {
-            Option<string> option = new Option<string>(new string[] { "--s", "--system" })
+            Option<string> option = new Option<string>(new string[] { "--system" })
             {
                 Name = "ExecutionSystem",
                 Description = "The execution system/environment platform (e.g. Azure).",
@@ -933,6 +1272,149 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Command line option defines the target agent SSH connection information (e.g. anyuser@192.168.1.15;pass_w_@rd).
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateTargetOption(bool required = false, object defaultValue = null)
+        {
+            Option<IEnumerable<string>> option = new Option<IEnumerable<string>>(new string[] { "--target" })
+            {
+                Name = "Targets",
+                Description = "The target system SSH connection information (e.g. anyuser@192.168.1.15;pass_w_@rd).",
+                ArgumentHelpName = "target",
+                AllowMultipleArgumentsPerToken = true
+            };
+
+            option.AddValidator(result =>
+            {
+                foreach (Token token in result.Tokens)
+                {
+                    string agentSsh = token.Value;
+                    if (!SshClientProxy.TryGetSshTargetInformation(agentSsh, out string host, out string username, out string pass))
+                    {
+                        throw new NotSupportedException(
+                            $"Invalid target agent SSH definition. The SSH host, username or password information provided is not a valid format. " +
+                            $"Agent SSH targets should be in a format similar to the following example: user@192.168.1.15;pw@rd");
+                    }
+                }
+
+                return string.Empty;
+            });
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+
+            return option;
+        }
+
+        /// <summary>
+        /// Command line option defines a target directory.
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateTargetDirectoryOption(bool required = false, object defaultValue = null)
+        {
+            Option<string> option = new Option<string>(
+                new string[] { "--directory" },
+                new ParseArgument<string>(arg => OptionFactory.ParsePath(arg)))
+            {
+                Name = "TargetDirectory",
+                Description = "The target directory to search.",
+                ArgumentHelpName = "path",
+                AllowMultipleArgumentsPerToken = false
+            };
+
+            string defaultPath = defaultValue?.ToString();
+            if (!string.IsNullOrWhiteSpace(defaultPath))
+            {
+                defaultPath = OptionFactory.ToFullPath(defaultPath);
+            }
+
+            OptionFactory.SetOptionRequirements(option, required, defaultPath);
+
+            return option;
+        }
+
+        /// <summary>
+        /// Command line option defines a set of target files.
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateTargetFilesOption(bool required = false, object defaultValue = null)
+        {
+            Option<IEnumerable<string>> option = new Option<IEnumerable<string>>(
+                new string[] { "--files" },
+                new ParseArgument<IEnumerable<string>>(result =>
+                {
+                    IEnumerable<string> files = null;
+                    if (result.Tokens?.Any() == true)
+                    {
+                        files = OptionFactory.ParseDelimitedValues(result.Tokens.First().Value);
+                    }
+
+                    return files?.Select(file => OptionFactory.ToFullPath(file)).OrderBy(file => file);
+                }))
+            {
+                Name = "TargetFiles",
+                Description = "The target files (comma-delimited).",
+                ArgumentHelpName = "file,file...",
+                AllowMultipleArgumentsPerToken = false
+            };
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+
+            return option;
+        }
+
+        /// <summary>
+        /// Command line option defines an alternate directory on the system in 
+        /// which to write temp files/documents.
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateTempDirectoryOption(bool required = true, object defaultValue = null)
+        {
+            Option<string> option = new Option<string>(
+                new string[] { "--temp-dir" },
+                new ParseArgument<string>(arg => OptionFactory.ParsePath(arg)))
+            {
+                Name = "TempDirectory",
+                Description = "Defines an alternate directory to which temp files/documents will be written.",
+                ArgumentHelpName = "path",
+                AllowMultipleArgumentsPerToken = false
+            };
+
+            string defaultPath = defaultValue?.ToString();
+            if (!string.IsNullOrWhiteSpace(defaultPath))
+            {
+                defaultPath = OptionFactory.ToFullPath(defaultPath);
+            }
+
+            OptionFactory.SetOptionRequirements(option, required, defaultPath);
+
+            return option;
+        }
+
+        /// <summary>
+        /// Command line option defines the tenant ID associated with your Microsoft Entra ID
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateTenantIdOption(bool required = false, object defaultValue = null)
+        {
+            Option<string> option = new Option<string>(new string[] { "--tenant-id" })
+            {
+                Name = "TenantId",
+                Description = "The ID of the Azure tenant in which target resources exist (e.g. Microsoft Entra, Key Vault).",
+                ArgumentHelpName = "tid",
+                AllowMultipleArgumentsPerToken = false
+            };
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+            return option;
+        }
+
+        /// <summary>
         /// Command line option defines the duration/timeout for running the operation (e.g. workload execution timeout).
         /// </summary>
         /// <param name="required">Sets this option as required.</param>
@@ -940,7 +1422,7 @@ namespace VirtualClient
         public static Option CreateTimeoutOption(bool required = true, object defaultValue = null)
         {
             Option<ProfileTiming> option = new Option<ProfileTiming>(
-                new string[] { "--t", "--timeout" },
+                new string[] { "--timeout" },
                 new ParseArgument<ProfileTiming>(arg => OptionFactory.ParseProfileTimeout(arg)))
             {
                 Name = "Timeout",
@@ -969,6 +1451,65 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Command line option defines an access token to use for request authentication.
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateTokenOption(bool required = false, object defaultValue = null)
+        {
+            Option<string> option = new Option<string>(new string[] { "--token" })
+            {
+                Name = "AccessToken",
+                Description = "A token to use for authentication with Azure resources.",
+                ArgumentHelpName = "token",
+                AllowMultipleArgumentsPerToken = false
+            };
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+            return option;
+        }
+
+        /// <summary>
+        /// Command line option defines a path to a file containing an access token to use for 
+        /// request authentication.
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateTokenFileOption(bool required = false, object defaultValue = null)
+        {
+            Option<string> option = new Option<string>(new string[] { "--token-file" })
+            {
+                Name = "TokenFilePath",
+                Description = "Path to a file containing a token to use for authentication with Azure resources.",
+                ArgumentHelpName = "path",
+                AllowMultipleArgumentsPerToken = false
+            };
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+            return option;
+        }
+
+        /// <summary>
+        /// Command line option defines whether debug output should be emitted on the console/terminal.
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateVerboseFlag(bool required = true, object defaultValue = null)
+        {
+            Option<bool> option = new Option<bool>(new string[] { "-v", "--verbose" })
+            {
+                Name = "Verbose",
+                Description = "Flag indicates that verbose output should be emitted to the console/terminal.",
+                ArgumentHelpName = "Flag",
+                AllowMultipleArgumentsPerToken = false,
+            };
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+
+            return option;
+        }
+
+        /// <summary>
         /// An option to display the current build version of the application.
         /// </summary>
         /// <param name="required">Sets this option as required.</param>
@@ -986,14 +1527,94 @@ namespace VirtualClient
             return option;
         }
 
-        private static string GetValue(ArgumentResult result)
+        /// <summary>
+        /// Applies backwards compatibility to the set of command line arguments.
+        /// </summary>
+        /// <param name="args">Command line arguments to assess.</param>
+        /// <returns>Command line options updated for backwards compatibility.</returns>
+        internal static string[] ApplyBackwardsCompatibility(string[] args)
         {
-            return result.Tokens?.FirstOrDefault()?.Value?.Trim(OptionFactory.argumentTrimChars);
+            Regex optionExpression = new Regex(
+                "^(--[a-z-]+)[=\b]{0,1}",
+                RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+            var optionMappings = new Dictionary<string, string>
+            {
+                { "--agentId", "--client-id" },
+                { "--eventHubConnectionString", "--event-hub" },
+                { "--experimentId", "--experiment-id" },
+                { "--debug", "--verbose" }
+            };
+
+            string finalArg = null;
+            List<string> mappedArgs = new List<string>();
+            foreach (string arg in args)
+            {
+                finalArg = arg;
+                Match match = optionExpression.Match(arg);
+                if (match.Success)
+                {
+                    string originalArg = match.Groups[1].Value;
+                    if (optionMappings.TryGetValue(originalArg, out string replacementArg))
+                    {
+                        finalArg = arg.Replace(originalArg, replacementArg);
+                    }
+                }
+
+                mappedArgs.Add(finalArg);
+            }
+
+            return mappedArgs.ToArray();
         }
 
-        private static string GetValue(Token token)
+        /// <summary>
+        /// Converts the path to a fully qualified path.
+        /// </summary>
+        /// <param name="path">A relative path to convert into a full path.</param>
+        public static string ToFullPath(string path)
         {
-            return token?.Value?.Trim(OptionFactory.argumentTrimChars);
+            string fullPath = path;
+            if (!string.IsNullOrWhiteSpace(path))
+            {
+                if (!Path.IsPathRooted(path))
+                {
+                    // Convert relative path to full path.
+                    fullPath = Path.GetFullPath(path);
+                }
+            }
+
+            return fullPath;
+        }
+
+        private static string GetValue(Token token, bool normalize = false, bool trim = false)
+        {
+            string value = token?.Value;
+            if (normalize && !string.IsNullOrWhiteSpace(value))
+            {
+                // System.CommandLine Quirk:
+                // The library parsing logic will strip the \" from the end of the command line
+                // vs. treating it as an explicit quotation mark to leave in place. There are no
+                // hooks in the library implementation to override this behavior.
+                //
+                // To workaround this we replace the quotes with the HTML encoding. Each option can
+                // then handle the HTML decoding as required.
+                if (value.Contains(OptionFactory.HtmlQuote))
+                {
+                    value = value.Replace(OptionFactory.HtmlQuote, "\"");
+                }
+            }
+
+            if (trim)
+            {
+                value = value?.Trim(argumentTrimChars);
+            }
+
+            return value;
+        }
+
+        private static string GetValue(ArgumentResult result, bool normalize = false, bool trim = false)
+        {
+            return OptionFactory.GetValue(result?.Tokens?.FirstOrDefault(), normalize, trim);
         }
 
         private static IList<string> ParseDelimitedValues(string parsedResult)
@@ -1030,7 +1651,8 @@ namespace VirtualClient
                 {
                     if (!string.IsNullOrWhiteSpace(token.Value))
                     {
-                        string[] delimitedValues = OptionFactory.GetValue(token)?.Split(VirtualClientComponent.CommonDelimiters, StringSplitOptions.RemoveEmptyEntries);
+                        string tokenValue = token.Value;
+                        string[] delimitedValues = tokenValue?.Split(VirtualClientComponent.CommonDelimiters, StringSplitOptions.RemoveEmptyEntries);
 
                         if (delimitedValues?.Any() == true)
                         {
@@ -1059,7 +1681,8 @@ namespace VirtualClient
                 {
                     if (!string.IsNullOrWhiteSpace(token.Value))
                     {
-                        delimitedValues.AddRange(TextParsingExtensions.ParseDelimitedValues(token.Value));
+                        string normalizedValue = OptionFactory.GetValue(token, normalize: true);
+                        delimitedValues.AddRange(TextParsingExtensions.ParseDelimitedValues(normalizedValue));
                     }
                 }
             }
@@ -1096,67 +1719,125 @@ namespace VirtualClient
                     $"- https://microsoft.github.io/VirtualClient/docs/guides/0600-integration-blob-storage/{Environment.NewLine}");
             }
 
+            return store;
+        }
+
+        private static EnvironmentLayout ParseEnvironmentLayout(ArgumentResult parsedResult, IFileSystem fileSystem, PlatformSpecifics platformSpecifics)
+        {
+            EnvironmentLayout layout = null;
+
+            // A layout can be a path to a file or an inline definition:
+            //
+            // e.g. inline
+            // --layout "client01,10.1.0.1,Client;client02,10.1.0.2,Server"
+            //
+            // e.g. file path
+            // --layout-path="C:\Users\Any\VirtualClient\layout.json"
+            //
+            string layoutValue = parsedResult.Tokens?.FirstOrDefault()?.Value;
+            if (!string.IsNullOrWhiteSpace(layoutValue) && Regex.IsMatch(layoutValue, "[,;]+"))
+            {
+                List<ClientInstance> clientsInstances = new List<ClientInstance>();
+                string[] clients = layoutValue.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+                if (clients?.Any() == true)
+                {
+                    foreach (string client in clients)
+                    {
+                        // e.g.
+                        // client01,10.1.0.1,Client
+                        // client02,10.1.0.2,Server
+                        string[] clientParts = client.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+                        if (clientParts?.Length == 3)
+                        {
+                            clientsInstances.Add(new ClientInstance(clientParts[0], ipAddress: clientParts[1], role:clientParts[2]));
+                        }
+                    }
+                }
+
+                if (!clientsInstances.Any())
+                {
+                    throw new ArgumentException(
+                        "Invalid layout definition. The environment layout definition provided is not in a valid format: " +
+                        "{client_name},{ip_address},{role};{client_name},{ip_address},{role} (e.g. client01,10.1.0.1,Client;client02,10.1.0.2,Server).");
+                }
+
+                layout = new EnvironmentLayout(clientsInstances);
+            }
+            else
+            {
+                string layoutFullPath = platformSpecifics.StandardizePath(Path.GetFullPath(layoutValue));
+
+                if (!fileSystem.File.Exists(layoutFullPath))
+                {
+                    throw new ArgumentException($"Invalid path specified. An environment layout file does not exist at path '{layoutFullPath}'.");
+                }
+
+                string layoutContent = RetryPolicies.Synchronous.FileOperations.Execute(() => fileSystem.File.ReadAllText(layoutFullPath));
+                layout = layoutContent.FromJson<EnvironmentLayout>();
+            }
+
+            return layout;
+        }
+
+        private static DependencyStore ParseKeyVaultStore(ArgumentResult parsedResult, string storeName, ICertificateManager certificateManager, IFileSystem fileSystem)
+        {
+            string endpoint = OptionFactory.GetValue(parsedResult);
+            DependencyStore store = EndpointUtility.CreateKeyVaultStoreReference(storeName, endpoint, certificateManager);
+
+            // If the certificate is not found, the certificate manager will throw and exception. The logic that follows
+            // here would happen if the user provided invalid information that precedes the search for the actual certificate.
+            if (store == null)
+            {
+                throw new SchemaException(
+                    $"The value provided for the Key Vault endpoint is invalid. The value must be one of the following supported identifiers:{Environment.NewLine}" +
+                    $"1) A valid storage account or blob container SAS URI{Environment.NewLine}" +
+                    $"2) A URI with Microsoft Entra ID/App identity information (e.g. using certificate-based authentication){Environment.NewLine}" +
+                    $"3) A URI with Microsoft Azure Managed Identity information{Environment.NewLine}" +
+                    $"4) A directory path that exists on the system.{Environment.NewLine}{Environment.NewLine}{Environment.NewLine}" +
+                    $"See the following documentation for additional details and examples:{Environment.NewLine}" +
+                    $"- https://microsoft.github.io/VirtualClient/docs/guides/0010-command-line/{Environment.NewLine}");
+            }
 
             return store;
         }
 
-        private static DependencyEventHubStore ParseEventHubStore(ArgumentResult parsedResult, string storeName, ICertificateManager certificateManager)
+        private static string ParsePath(ArgumentResult arg)
         {
-            string endpoint = OptionFactory.GetValue(parsedResult);
-            DependencyEventHubStore store = EndpointUtility.CreateEventHubStoreReference(storeName, endpoint, certificateManager);
-
-            if (store == null)
-            {
-                throw new SchemaException(
-                    $"The value provided for the Event Hub endpoint is invalid. The value must be one of the following supported identifiers:{Environment.NewLine}" +
-                    $"1) A valid Event Hub namespace access policy/connection string{Environment.NewLine}" +
-                    $"2) A URI with Microsoft Entra ID/App identity information(e.g. using certificate-based authentication){Environment.NewLine}" +
-                    $"3) A URI with Microsoft Azure Managed Identity information{Environment.NewLine}{Environment.NewLine}" +
-                    $"See the following documentation for additional details and examples:{Environment.NewLine}" +
-                    $"- https://microsoft.github.io/VirtualClient/docs/guides/0010-command-line/{Environment.NewLine}" +
-                    $"- https://microsoft.github.io/VirtualClient/docs/guides/0610-integration-event-hub/{Environment.NewLine}");
-            }
-
-            return store;
+            return OptionFactory.ToFullPath(arg.Tokens?.FirstOrDefault()?.Value?.Trim());
         }
 
         private static IEnumerable<DependencyProfileReference> ParseProfiles(ArgumentResult parsedResult, ICertificateManager certificateManager, IFileSystem fileSystem)
         {
             List<DependencyProfileReference> profiles = new List<DependencyProfileReference>();
 
-            foreach (Token argument in parsedResult.Tokens)
+            foreach (Token token in parsedResult.Tokens)
             {
-                string profileReference = OptionFactory.GetValue(argument);
+                string profileReference = token.Value?.Trim();
 
                 if (PlatformSpecifics.IsFullyQualifiedPath(profileReference))
                 {
                     profiles.Add(new DependencyProfileReference(profileReference));
                 }
-                else if (!Uri.TryCreate(profileReference, UriKind.Absolute, out Uri profileUri)
-                    && !EndpointUtility.IsCustomConnectionString(profileReference)
-                    && !EndpointUtility.IsStorageAccountConnectionString(profileReference))
+                else if (Uri.TryCreate(profileReference, UriKind.Absolute, out Uri profileUri)
+                    || EndpointUtility.IsCustomConnectionString(profileReference)
+                    || EndpointUtility.IsStorageAccountConnectionString(profileReference))
                 {
-                    if (PlatformSpecifics.IsFullyQualifiedPath(profileReference))
+                    profiles.Add(EndpointUtility.CreateProfileReference(profileReference, certificateManager));
+                }
+                else
+                {
+                    string directoryName = Path.GetDirectoryName(profileReference);
+                    if (string.IsNullOrWhiteSpace(directoryName))
                     {
                         profiles.Add(new DependencyProfileReference(profileReference));
                     }
                     else
                     {
-                        string directoryName = Path.GetDirectoryName(profileReference);
-                        if (string.IsNullOrWhiteSpace(directoryName))
-                        {
-                            profiles.Add(new DependencyProfileReference(profileReference));
-                        }
-                        else
-                        {
-                            string fullPath = Path.GetFullPath(profileReference);
-                            profiles.Add(new DependencyProfileReference(fullPath));
-                        }
-                    } 
-                }
-                else
-                {
-                    profiles.Add(EndpointUtility.CreateProfileReference(profileReference, certificateManager));
+                        string fullPath = Path.GetFullPath(profileReference);
+                        profiles.Add(new DependencyProfileReference(fullPath));
+                    }
                 }
             }
 
@@ -1208,7 +1889,8 @@ namespace VirtualClient
             if (iterations <= 0)
             {
                 throw new ArgumentException(
-                    $"Invalid value provided for the iterations option. The iterations parameter must be greater than zero.");
+                    $"Invalid iteartion value '{iterations}' provided for the iterations option. " +
+                    $"The iterations parameter must be greater than zero.");
             }
 
             return new ProfileTiming(iterations);
@@ -1217,70 +1899,86 @@ namespace VirtualClient
         private static ProfileTiming ParseProfileTimeout(ArgumentResult parsedResult)
         {
             // Example Format:
+            // --timeout=-1
+            // --timeout=never
             // --timeout=1440
             // --timeout=1440,deterministic
             // --timeout=1440,deterministic*
-            // 
             // --timeout=01:00:00
             // --timeout=01:00:00,deterministic
             // --timeout=01:00:00,deterministic*
 
             ProfileTiming timing = null;
             string argument = OptionFactory.GetValue(parsedResult);
-            string[] parts = argument.Split(VirtualClientComponent.CommonDelimiters, StringSplitOptions.RemoveEmptyEntries);
 
-            TimeSpan timeout = TimeSpan.Zero;
-            try
+            if (argument == "-1" || argument.Equals("never", StringComparison.OrdinalIgnoreCase))
             {
-                if (int.TryParse(parts[0], out int minutes))
-                {
-                    // The value is an integer representing minutes.
-                    timeout = TimeSpan.FromMinutes(minutes);
-                }
-                else
-                {
-                    // The value is a timespan format: 01.00:00:00.
-                    timeout = TimeSpan.Parse(parts[0]);
-                }
-            }
-            catch (FormatException)
-            {
-                throw new ArgumentException(
-                    $"Invalid timespan value provided for the timeout/duration option. The duration/timeout parameter must be " +
-                    $"either a valid timespan or numeric value (e.g. 01.00:00:00 or 1440).");
-            }
-
-            if (parts.Length == 1)
-            {
-                timing = new ProfileTiming(timeout);
-            }
-            else if (parts.Length == 2)
-            {
-                DeterminismScope levelOfDeterminism = DeterminismScope.Undefined;
-                string determinismScope = parts[1].ToLowerInvariant();
-                switch (determinismScope)
-                {
-                    case "deterministic":
-                        levelOfDeterminism = DeterminismScope.IndividualAction;
-                        break;
-
-                    case "deterministic*":
-                        levelOfDeterminism = DeterminismScope.AllActions;
-                        break;
-
-                    default:
-                        throw new ArgumentException(
-                            $"Invalid level of determinism value defined for the timeout/duration option. " +
-                            $"Supported values include 'deterministic' and 'deterministic*' (e.g. --timeout=1440,deterministic, --timeout=1440,deterministic*).");
-                }
-
-                timing = new ProfileTiming(timeout, levelOfDeterminism);
+                // Use -1 or never to indicate running forever
+                timing = ProfileTiming.Forever();
             }
             else
             {
-                throw new ArgumentException(
-                    $"Invalid level of determinism value defined for the timeout/duration option. " +
-                    $"Supported values include 'deterministic' and 'deterministic*' (e.g. --timeout=1440,deterministic, --timeout=1440,deterministic*).");
+                string[] parts = argument.Split(VirtualClientComponent.CommonDelimiters, StringSplitOptions.RemoveEmptyEntries);
+
+                TimeSpan timeout = TimeSpan.Zero;
+                try
+                {
+                    if (int.TryParse(parts[0], out int minutes))
+                    {
+                        if (minutes <= 0)
+                        {
+                            throw new ArgumentException(
+                                $"Invalid timeout value '{argument}' provided for the timeout/duration option. " +
+                                $"The duration/timeout parameter must be greater than zero. Except using -1 to indicate run forever.");
+                        }
+                        // The value is an integer representing minutes.
+                        timeout = TimeSpan.FromMinutes(minutes);
+                    }
+                    else
+                    {
+                        // The value is a timespan format: 01.00:00:00.
+                        timeout = TimeSpan.Parse(parts[0]);
+                    }
+                }
+                catch (FormatException)
+                {
+                    throw new ArgumentException(
+                        $"Invalid timespan value provided for the timeout/duration option. The duration/timeout parameter must be " +
+                        $"either a valid timespan or numeric value (e.g. 01.00:00:00 or 1440).");
+                }
+
+                if (parts.Length == 1)
+                {
+                    timing = new ProfileTiming(timeout);
+                }
+                else if (parts.Length == 2)
+                {
+                    DeterminismScope levelOfDeterminism = DeterminismScope.Undefined;
+                    string determinismScope = parts[1].ToLowerInvariant();
+                    switch (determinismScope)
+                    {
+                        case "deterministic":
+                            levelOfDeterminism = DeterminismScope.IndividualAction;
+                            break;
+
+                        case "deterministic*":
+                            levelOfDeterminism = DeterminismScope.AllActions;
+                            break;
+
+                        default:
+                            throw new ArgumentException(
+                                $"Invalid level of determinism value defined for the timeout/duration option. " +
+                                $"Supported values include 'deterministic' and 'deterministic*' (e.g. --timeout=1440,deterministic, --timeout=1440,deterministic*).");
+                    }
+
+                    timing = new ProfileTiming(timeout, levelOfDeterminism);
+                }
+                else
+                {
+                    throw new ArgumentException(
+                        $"Invalid level of determinism value defined for the timeout/duration option. " +
+                        $"Supported values include 'deterministic' and 'deterministic*' (e.g. --timeout=1440,deterministic, --timeout=1440,deterministic*).");
+                }
             }
 
             return timing;
@@ -1310,5 +2008,24 @@ namespace VirtualClient
                 throw new ArgumentException(errorMessage);
             }
         }
+
+        private static void ThrowIfOptionDoesNotExists(OptionResult parsedResult, string optionName, string errorMessage)
+        {
+            if (parsedResult.Parent?.Children?.Any(option => string.Equals(option.Symbol.Name, optionName, StringComparison.OrdinalIgnoreCase)) != true)
+            {
+                throw new ArgumentException(errorMessage);
+            }
+        }
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public class ArchivePath
+    {
+        /// <summary>
+        /// 
+        /// </summary>
+        public string Path { get; set; }
     }
 }

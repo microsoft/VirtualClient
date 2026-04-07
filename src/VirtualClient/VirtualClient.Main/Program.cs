@@ -9,12 +9,12 @@ namespace VirtualClient
     using System.CommandLine.Builder;
     using System.CommandLine.Invocation;
     using System.CommandLine.Parsing;
+    using System.Diagnostics;
     using System.Diagnostics.CodeAnalysis;
     using System.IO;
-    using System.IO.Abstractions;
     using System.Linq;
-    using System.Reflection;
     using System.Runtime.InteropServices;
+    using System.Security.Cryptography;
     using System.ServiceProcess;
     using System.Threading;
     using System.Threading.Tasks;
@@ -25,12 +25,15 @@ namespace VirtualClient
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Configuration;
+    using VirtualClient.Logging;
 
     /// <summary>
     /// The main entry point for the program
     /// </summary>
     public sealed class Program
     {
+        internal static IConfiguration Configuration { get; private set; }
+
         internal static ILogger Logger { get; set; }
 
         /// <summary>
@@ -44,6 +47,12 @@ namespace VirtualClient
 
             try
             {
+                // Ensure execution start time is set as early as possible.
+                DateTime startTime = VirtualClientRuntime.ExecutionStartTime;
+
+                string[] effectiveArgs = OptionFactory.ApplyBackwardsCompatibility(args);
+                VirtualClientRuntime.CommandLineArguments = effectiveArgs;
+
                 // We want to ensure that the platform on which we are running is actually supported.
                 PlatformSpecifics.ThrowIfNotSupported(Environment.OSVersion.Platform);
                 PlatformSpecifics.ThrowIfNotSupported(RuntimeInformation.ProcessArchitecture);
@@ -56,7 +65,8 @@ namespace VirtualClient
 
                 // We do not want to miss any startup errors that happen before we can get the rest of
                 // the loggers setup.
-                Program.InitializeStartupLogging(args);
+                Program.InitializeStartupLogging(effectiveArgs);
+                Program.Configuration = Program.LoadAppSettings();
 
                 using (CancellationTokenSource cancellationSource = VirtualClientRuntime.CancellationSource)
                 {
@@ -69,25 +79,20 @@ namespace VirtualClient
                             e.Cancel = true;
                         };
 
-                        CommandLineBuilder commandBuilder = Program.SetupCommandLine(args, cancellationSource);
-                        ParseResult parseResult = commandBuilder.Build().Parse(args);
-                        parseResult.ThrowOnUsageError();
-
-                        Task<int> executionTask = parseResult.InvokeAsync();
+                        CommandLineParser parser = CommandLineParser.Create(args, cancellationSource);
+                        ParseResult parseResults = parser.Parse();
+                        Task<int> executionTask = parseResults.InvokeAsync();
 
                         // On Windows systems, this is required when running Virtual Client as a service.
                         // Certain notifications have to be sent to the Windows service control manager (SCM)
                         // in order to ensure the service is recognized as running.
-                        Task serviceHostTask = Task.Run(() =>
+                        if (Environment.OSVersion.Platform == PlatformID.Win32NT && Program.IsRunningAsService(Environment.OSVersion.Platform))
                         {
-                            if (Program.IsRunningAsService())
+                            Task serviceHostTask = Task.Run(() =>
                             {
-                                if (Environment.OSVersion.Platform == PlatformID.Win32NT)
-                                {
-                                    Program.RunAsWindowsService(cancellationSource);
-                                }
-                            }
-                        });
+                                Program.RunAsWindowsService(cancellationSource);
+                            });
+                        }
 
                         exitCode = executionTask.GetAwaiter().GetResult();
                     }
@@ -102,21 +107,39 @@ namespace VirtualClient
                     }
                 }
             }
-            catch (ObjectDisposedException exc)
+            catch (ObjectDisposedException)
             {
                 // Expected when the CancellationTokenSource is cancelled followed by being disposed.
-                Console.WriteLine(exc.Message);
             }
-            catch (OperationCanceledException exc)
+            catch (OperationCanceledException)
             {
                 // Expected when the Ctrl-C is pressed to cancel operation.
-                Console.WriteLine(exc.Message);
+            }
+            catch (CryptographicException exc)
+            {
+                // Certificate-related issues.
+                exitCode = (int)ErrorReason.InvalidCertificate;
+                Console.Error.WriteLine(exc.ToString(withCallStack: false, withErrorTypes: false));
+                Program.WriteCrashLog(exc);
+            }
+            catch (NotSupportedException exc)
+            {
+                // Various usages that are not supported.
+                exitCode = (int)ErrorReason.NotSupported;
+                Console.Error.WriteLine(exc.ToString(withCallStack: false, withErrorTypes: false));
+                Program.WriteCrashLog(exc);
             }
             catch (Exception exc)
             {
                 exitCode = 1;
-                Console.Error.WriteLine(exc.Message);
-                Console.Error.WriteLine(exc.StackTrace);
+                Console.Error.WriteLine(exc.ToString(withCallStack: true, withErrorTypes: false));
+                Program.WriteCrashLog(exc);
+            }
+
+            if (exitCode != 0)
+            {
+                int statusCode = StatusCodeRegistry.GetStatusCode(exitCode);
+                Console.Error.WriteLine($"Status Code: Virtual Client = {statusCode}");
             }
 
             return exitCode;
@@ -169,274 +192,26 @@ namespace VirtualClient
             }
         }
 
-        /// <summary>
-        /// Sets up the application command line options.
-        /// </summary>
-        internal static CommandLineBuilder SetupCommandLine(string[] args, CancellationTokenSource cancellationTokenSource)
-        {
-            RootCommand rootCommand = new RootCommand("Executes workload and monitoring profiles on the system.")
-            {
-                // Required
-                // -------------------------------------------------------------------
-                // --profile
-                OptionFactory.CreateProfileOption(),
-
-                // OPTIONAL
-                // -------------------------------------------------------------------
-                // --agentId
-                OptionFactory.CreateClientIdOption(required: false, Environment.MachineName),
-
-                // --api-port
-                OptionFactory.CreateApiPortOption(required: false),
-
-                // --clean
-                OptionFactory.CreateCleanOption(required: false),
-
-                // --content-store
-                OptionFactory.CreateContentStoreOption(required: false),
-
-                // --content-path-template
-                OptionFactory.CreateContentPathTemplateOption(required: false),
-
-                // --debug
-                OptionFactory.CreateDebugFlag(required: false, false),
-
-                // --timeout
-                OptionFactory.CreateTimeoutOption(required: false),
-
-                // --event-hub
-                OptionFactory.CreateEventHubStoreOption(required: false),
-
-                // --experiment-id
-                OptionFactory.CreateExperimentIdOption(required: false, Guid.NewGuid().ToString()),
-
-                // --exit-wait
-                OptionFactory.CreateExitWaitOption(required: false, TimeSpan.FromMinutes(30)),
-
-                // --fail-fast
-                OptionFactory.CreateFailFastFlag(required: false),
-
-                // --dependencies
-                OptionFactory.CreateDependenciesFlag(required: false),
-
-                // --iterations
-                OptionFactory.CreateIterationsOption(required: false),
-
-                // --layout-path
-                OptionFactory.CreateLayoutPathOption(required: false),
-
-                // --log-dir
-                OptionFactory.CreateLogDirectoryOption(required: false),
-
-                // --log-level
-                OptionFactory.CreateLogLevelOption(required: false, LogLevel.Information),
-
-                // --log-retention
-                OptionFactory.CreateLogRetentionOption(required: false),
-
-                // --log-to-file
-                OptionFactory.CreateLogToFileFlag(required: false),
-
-                // --metadata
-                OptionFactory.CreateMetadataOption(required: false),
-
-                // --package-dir
-                OptionFactory.CreatePackageDirectoryOption(required: false),
-
-                // --package-store
-                OptionFactory.CreatePackageStoreOption(required: false),
-
-                // --parameters
-                OptionFactory.CreateParametersOption(required: false),
-
-                // --proxy-api
-                OptionFactory.CreateProxyApiOption(required: false),
-
-                // --scenarios
-                OptionFactory.CreateScenariosOption(required: false),
-
-                // --seed
-                OptionFactory.CreateSeedOption(required: false, 777),
-
-                // --state-dir
-                OptionFactory.CreateStateDirectoryOption(required: false),
-
-                // --system
-                OptionFactory.CreateSystemOption(required: false)
-            };
-
-            rootCommand.TreatUnmatchedTokensAsErrors = true;
-            rootCommand.Handler = CommandHandler.Create<RunProfileCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
-
-            Command runApiCommand = new Command(
-                "runapi",
-                "Runs the Virtual Client API service and optionally monitors the API (local or a remote instance) for heartbeats.")
-            {
-                // OPTIONAL
-                // -------------------------------------------------------------------
-                // --api-port
-                OptionFactory.CreateApiPortOption(required: false),
-
-                 // --clean
-                OptionFactory.CreateCleanOption(required: false),
-
-                // --debug
-                OptionFactory.CreateDebugFlag(required: false, false),
-
-                // --ip-address
-                OptionFactory.CreateIPAddressOption(required: false),
-
-                // --log-dir
-                OptionFactory.CreateLogDirectoryOption(required: false),
-
-                // --log-level
-                OptionFactory.CreateLogLevelOption(required: false, LogLevel.Information),
-
-                // --log-retention
-                OptionFactory.CreateLogRetentionOption(required: false),
-
-                // --log-to-file
-                OptionFactory.CreateLogToFileFlag(required: false),
-
-                // --monitor
-                OptionFactory.CreateMonitorFlag(required: false, false),
-
-                // --state-dir
-                OptionFactory.CreateStateDirectoryOption(required: false),
-            };
-
-            runApiCommand.TreatUnmatchedTokensAsErrors = true;
-            runApiCommand.AddAlias("RunApi");
-            runApiCommand.AddAlias("RunAPI");
-            runApiCommand.Handler = CommandHandler.Create<RunApiCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
-
-            Command runBootstrapCommand = new Command(
-                "bootstrap",
-                "Bootstraps/installs a dependency package on the system.")
-            {
-                // Required
-                // -------------------------------------------------------------------
-                // --package
-                OptionFactory.CreatePackageOption(required: true),
-
-                // --name
-                OptionFactory.CreateNameOption(required: true),
-
-                // OPTIONAL
-                // -------------------------------------------------------------------
-                // --agent-id
-                OptionFactory.CreateClientIdOption(required: false, Environment.MachineName),
-
-                // --clean
-                OptionFactory.CreateCleanOption(required: false),
-
-                // --debug
-                OptionFactory.CreateDebugFlag(required: false, false),
-
-                // --event-hub
-                OptionFactory.CreateEventHubStoreOption(required: false),
-
-                // --exit-wait
-                OptionFactory.CreateExitWaitOption(required: false, TimeSpan.FromMinutes(30)),
-
-                // --experiment-id
-                OptionFactory.CreateExperimentIdOption(required: false, Guid.NewGuid().ToString()),
-
-                // --metadata
-                OptionFactory.CreateMetadataOption(required: false),
-
-                // --log-dir
-                OptionFactory.CreateLogDirectoryOption(required: false),
-
-                // --log-level
-                OptionFactory.CreateLogLevelOption(required: false, LogLevel.Information),
-
-                // --log-retention
-                OptionFactory.CreateLogRetentionOption(required: false),
-
-                // --log-to-file
-                OptionFactory.CreateLogToFileFlag(required: false),
-
-                // --package-dir
-                OptionFactory.CreatePackageDirectoryOption(required: false),
-
-                // --package-store
-                OptionFactory.CreatePackageStoreOption(required: false),
-
-                // --proxy-api
-                OptionFactory.CreateProxyApiOption(required: false),
-
-                // --system
-                OptionFactory.CreateSystemOption(required: false),
-
-                // --state-dir
-                OptionFactory.CreateStateDirectoryOption(required: false),
-            };
-
-            runBootstrapCommand.TreatUnmatchedTokensAsErrors = true;
-            runBootstrapCommand.AddAlias("Bootstrap");
-            runBootstrapCommand.Handler = CommandHandler.Create<RunBootstrapCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
-
-            Command runResetCommand = new Command(
-                "reset",
-                "Resets the state of the Virtual Client for a 'first run' scenario.")
-            {
-                // OPTIONAL
-                // -------------------------------------------------------------------
-                 // --clean
-                OptionFactory.CreateCleanOption(required: false),
-
-                // --log-dir
-                OptionFactory.CreateLogDirectoryOption(required: false),
-
-                // --log-level
-                OptionFactory.CreateLogLevelOption(required: false, LogLevel.Information),
-
-                // --log-retention
-                OptionFactory.CreateLogRetentionOption(required: false)
-            };
-
-            runResetCommand.TreatUnmatchedTokensAsErrors = true;
-            runResetCommand.AddAlias("Reset");
-            runResetCommand.AddAlias("Clean");
-            runResetCommand.AddAlias("clean");
-            runResetCommand.Handler = CommandHandler.Create<ResetCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
-
-            Command convertCommand = new Command(
-                "convert",
-                "Converts execution profiles from JSON to YAML format and vice-versa.")
-            {
-                // Required
-                // -------------------------------------------------------------------
-                // --profile
-                OptionFactory.CreateProfileOption(required: true),
-
-                // --output-path
-                OptionFactory.CreateOutputDirectoryOption(required: true)
-            };
-
-            convertCommand.TreatUnmatchedTokensAsErrors = true;
-            convertCommand.Handler = CommandHandler.Create<ConvertCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
-
-            rootCommand.AddCommand(runApiCommand);
-            rootCommand.AddCommand(runBootstrapCommand);
-            rootCommand.AddCommand(runResetCommand);
-            rootCommand.AddCommand(convertCommand);
-
-            return new CommandLineBuilder(rootCommand).WithDefaults();
-        }
-
         private static void InitializeStartupLogging(string[] args)
         {
             List<ILoggerProvider> loggerProviders = new List<ILoggerProvider>();
-            loggerProviders.Add(new VirtualClient.ConsoleLoggerProvider(LogLevel.Trace));
+            loggerProviders.Add(new ConsoleLoggerProvider(LogLevel.Trace));
 
             Program.Logger = new LoggerFactory(loggerProviders).CreateLogger("VirtualClient");
         }
 
-        private static bool IsRunningAsService()
+        private static bool IsRunningAsService(PlatformID platform)
         {
-            return !Environment.UserInteractive;
+            bool isService = false;
+            if (platform == PlatformID.Win32NT)
+            {
+                // Windows services run as child processes of the "services.exe" module.
+                int currentProcessId = Process.GetCurrentProcess().Id;
+                int parentProcessId = WindowsServiceHost.GetParentProcessId(currentProcessId);
+                isService = currentProcessId != parentProcessId;
+            }
+
+            return isService;
         }
 
         private static void RunAsWindowsService(CancellationTokenSource cancellationTokenSource)
@@ -454,6 +229,28 @@ namespace VirtualClient
             }
         }
 
+        private static void WriteCrashLog(Exception exc)
+        {
+            try
+            {
+                string crashLogDirectory = Path.Combine(Environment.CurrentDirectory, "logs");
+                if (!Directory.Exists(crashLogDirectory))
+                {
+                    Directory.CreateDirectory(crashLogDirectory);
+                }
+
+                File.AppendAllText(
+                    Path.Combine(crashLogDirectory, "crash.log"),
+                    $"[{DateTime.Now.ToString("yyyy-MM-ddThh:mm:ss")}] Unhandled/Unexpected Error:{Environment.NewLine}" +
+                    $"-----------------------------------------------------------------------------{Environment.NewLine}" +
+                    $"{exc.ToString(withCallStack: true, withErrorTypes: true)}{Environment.NewLine}{Environment.NewLine}");
+            }
+            catch
+            {
+                // Best effort
+            }
+        }
+
         private class WindowsServiceHost : ServiceBase
         {
             private readonly CancellationTokenSource cancellationTokenSource;
@@ -468,6 +265,25 @@ namespace VirtualClient
             {
                 this.cancellationTokenSource = cancellationTokenSource;
                 this.logger = logger ?? NullLogger.Instance;
+            }
+
+            internal static int GetParentProcessId(int processId)
+            {
+                IntPtr hProcess = NativeMethods.OpenProcess(ProcessAccessFlags.QueryLimitedInformation, false, processId);
+                if (hProcess == IntPtr.Zero) return -1;
+
+                try
+                {
+                    PROCESS_BASIC_INFORMATION pbi = new PROCESS_BASIC_INFORMATION();
+                    int returnLength;
+                    int status = NativeMethods.NtQueryInformationProcess(hProcess, 0, ref pbi, Marshal.SizeOf(pbi), out returnLength);
+
+                    return (status == 0) ? pbi.ParentProcessId : -1;
+                }
+                finally
+                {
+                    NativeMethods.CloseHandle(hProcess);
+                }
             }
 
             /// <inheritdoc/>
@@ -507,10 +323,20 @@ namespace VirtualClient
                 NativeMethods.SetServiceStatus(this.ServiceHandle, ref serviceStatus);
             }
 
-            private static class NativeMethods
+            internal static class NativeMethods
             {
                 [DllImport("advapi32.dll", SetLastError = true)]
                 internal static extern bool SetServiceStatus(IntPtr handle, ref ServiceStatus serviceStatus);
+
+                [DllImport("ntdll.dll")]
+                internal static extern int NtQueryInformationProcess(IntPtr processHandle, int processInformationClass,
+                    ref PROCESS_BASIC_INFORMATION processInformation, int processInformationLength, out int returnLength);
+
+                [DllImport("kernel32.dll")]
+                internal static extern IntPtr OpenProcess(ProcessAccessFlags processAccess, bool bInheritHandle, int processId);
+
+                [DllImport("kernel32.dll")]
+                internal static extern bool CloseHandle(IntPtr hObject);
             }
 
             internal enum ServiceState
@@ -537,6 +363,22 @@ namespace VirtualClient
                 public long ServiceSpecificExitCode;
                 public long CheckPoint;
                 public long WaitHint;
+            }
+
+            internal struct PROCESS_BASIC_INFORMATION
+            {
+                public IntPtr Reserved1;
+                public IntPtr PebBaseAddress;
+                public IntPtr Reserved2;
+                public IntPtr Reserved3;
+                public int ParentProcessId;
+                public IntPtr Reserved4;
+            }
+
+            [Flags]
+            internal enum ProcessAccessFlags : uint
+            {
+                QueryLimitedInformation = 0x1000
             }
         }
     }

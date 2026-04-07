@@ -6,8 +6,10 @@ namespace VirtualClient.Dependencies
     using System;
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
+    using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
+    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.CodeAnalysis;
@@ -25,11 +27,21 @@ namespace VirtualClient.Dependencies
     {
         private const string Mi25ExeName = "AMD-mi25.exe";
         private const string V620ExeName = "Setup.exe";
+
+        // Known-good ROCm installation URLs for each supported Ubuntu codename.
+        // These are the default URLs used when the profile does not specify a LinuxInstallationFile.
+        private static readonly Dictionary<string, string> SupportedInstallationFiles = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            { "focal", "https://repo.radeon.com/amdgpu-install/5.5/ubuntu/focal/amdgpu-install_5.5.50500-1_all.deb" },
+            { "jammy", "https://repo.radeon.com/amdgpu-install/6.3.3/ubuntu/jammy/amdgpu-install_6.3.60303-1_all.deb" }
+        };
+
         private IPackageManager packageManager;
         private IFileSystem fileSystem;
         private ISystemManagement systemManager;
         private IStateManager stateManager;
         private LinuxDistributionInfo linuxDistributionInfo;
+        private string osVersionCodename;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AMDGPUDriverInstallation"/> class.
@@ -184,12 +196,17 @@ namespace VirtualClient.Dependencies
             {
                 this.linuxDistributionInfo = await this.systemManager.GetLinuxDistributionAsync(cancellationToken)
                     .ConfigureAwait(false);
+
+                this.osVersionCodename = await this.DetectOsVersionCodenameAsync(cancellationToken)
+                    .ConfigureAwait(false);
             }
         }
 
         [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1118:Parameter should not span multiple lines", Justification = "Readability")]
         private async Task InstallAMDGPUDriverLinux(EventContext telemetryContext, CancellationToken cancellationToken)
         {
+            this.ResolveLinuxInstallationFile();
+
             if (string.IsNullOrWhiteSpace(this.LinuxInstallationFile))
             {
                 throw new DependencyException($"The linux installation file can not be null or empty and it is: {this.LinuxInstallationFile}", ErrorReason.DependencyNotFound);
@@ -198,7 +215,12 @@ namespace VirtualClient.Dependencies
             // The .bashrc file is used to define commands that should be run whenever the system
             // is booted. For the purpose of the AMD GPU driver installation, we want to include extra
             // paths in the $PATH environment variable post installation.
-            string bashRcPath = $"/home/{this.Username}/.bashrc";
+            string userHome = this.GetUserHomePath();
+            string bashRcPath = $"{userHome}/.bashrc";
+
+            this.fileSystem.Directory.CreateDirectory(Path.GetDirectoryName(bashRcPath) !);
+
+            this.fileSystem.Directory.CreateDirectory(Path.GetDirectoryName(bashRcPath) !);
 
             // We hit a bug where the .bashrc file does not exist on the system. To prevent issues later
             // we are creating the file if it is missing.
@@ -252,6 +274,11 @@ namespace VirtualClient.Dependencies
             switch (this.linuxDistributionInfo.LinuxDistribution)
             {
                 case LinuxDistribution.Ubuntu:
+                    // Clean up any broken package state from previous failed installation attempts.
+                    // The amdgpu-dkms package can be left in a half-configured state if the DKMS module
+                    // build fails, which causes all subsequent apt-get commands to fail.
+                    commands.Add("bash -c \"dpkg --remove --force-remove-reinstreq amdgpu-dkms || true\"");
+                    commands.Add("bash -c \"dpkg --configure -a || true\"");
                     commands.Add("apt-get -yq update");
                     commands.Add("apt-get install -yq libpci3 libpci-dev doxygen unzip cmake git");
                     commands.Add("apt-get install -yq libnuma-dev libncurses5");
@@ -290,12 +317,14 @@ namespace VirtualClient.Dependencies
 
         private List<string> PostInstallationCommands()
         {
+            string userHome = this.GetUserHomePath();
+
             // last 2 command are to make sure that we are blacklisting AMD GPU drivers before rebooting
             return new List<string>
             {
                 "amdgpu-install -y --usecase=hiplibsdk,rocm,dkms",
                 $"bash -c \"echo 'export PATH=/opt/rocm/bin${{PATH:+:${{PATH}}}}' | " +
-                $"sudo tee -a /home/{this.Username}/.bashrc\"",
+                $"sudo tee -a {userHome}/.bashrc\"",
                 $"bash -c \"echo 'blacklist amdgpu' | sudo tee -a /etc/modprobe.d/amdgpu.conf \"",
                 "update-initramfs -u -k all"
             };
@@ -331,6 +360,67 @@ namespace VirtualClient.Dependencies
                     process.ThrowIfErrored<DependencyException>(errorReason: ErrorReason.DependencyInstallationFailed);
                 }
             }
+        }
+
+        /// <summary>
+        /// Reads /etc/os-release to detect the OS version codename (e.g., "focal", "jammy").
+        /// Follows the same pattern as MongoDBServerInstallation's codename detection.
+        /// </summary>
+        private async Task<string> DetectOsVersionCodenameAsync(CancellationToken cancellationToken)
+        {
+            try
+            {
+                string osReleaseContent = await this.fileSystem.File.ReadAllTextAsync("/etc/os-release", cancellationToken)
+                    .ConfigureAwait(false);
+
+                Match match = Regex.Match(osReleaseContent, @"VERSION_CODENAME=(\w+)", RegexOptions.Multiline);
+                return match.Success ? match.Groups[1].Value : null;
+            }
+            catch
+            {
+                // If /etc/os-release cannot be read, return null and let ResolveLinuxInstallationFile
+                // fall back to the profile-provided LinuxInstallationFile parameter.
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Resolves the correct Linux installation file URL based on the detected OS codename.
+        /// If the profile provides an explicit LinuxInstallationFile, that takes precedence.
+        /// Otherwise, the built-in mapping of codename to ROCm URL is used.
+        /// </summary>
+        private void ResolveLinuxInstallationFile()
+        {
+            // If the profile explicitly provided a LinuxInstallationFile, use it as-is.
+            if (!string.IsNullOrWhiteSpace(this.LinuxInstallationFile))
+            {
+                return;
+            }
+
+            // Look up the detected codename in the built-in mapping.
+            if (!string.IsNullOrWhiteSpace(this.osVersionCodename)
+                && AMDGPUDriverInstallation.SupportedInstallationFiles.TryGetValue(this.osVersionCodename, out string resolvedUrl))
+            {
+                this.LinuxInstallationFile = resolvedUrl;
+                return;
+            }
+
+            throw new DependencyException(
+                $"No AMD GPU driver installation file is available for the detected OS codename '{this.osVersionCodename}'. " +
+                $"Supported codenames: {string.Join(", ", AMDGPUDriverInstallation.SupportedInstallationFiles.Keys)}. " +
+                $"You can provide an explicit URL via the 'LinuxInstallationFile' profile parameter.",
+                ErrorReason.DependencyNotFound);
+        }
+
+        private string GetUserHomePath()
+        {
+            string username = this.Username;
+            if (string.Equals(username, "root", StringComparison.OrdinalIgnoreCase))
+            {
+                return "/root";
+            }
+
+            return $"/home/{username}";
         }
 
         private async Task InstallAMDGPUDriverWindows(EventContext telemetryContext, CancellationToken cancellationToken)

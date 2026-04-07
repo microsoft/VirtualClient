@@ -58,7 +58,7 @@ namespace VirtualClient.Dependencies.MySqlServer
 
             string[] expectedCommands =
             {
-                $"python3 {this.packagePath}/configure.py --serverIp 1.2.3.4 --innoDbDirs \"/dev/sdd1;/dev/sde1;/dev/sdf1;\"",
+                $"python3 {this.packagePath}/configure.py --serverIp 1.2.3.4 --innoDbDirs \"/home/user/mnt_dev_sdc1/mysql;/home/user/mnt_dev_sdd1/mysql;/home/user/mnt_dev_sde1/mysql\"",
             };
 
             int commandNumber = 0;
@@ -115,7 +115,7 @@ namespace VirtualClient.Dependencies.MySqlServer
 
             string[] expectedCommands =
             {
-                $"python3 {this.packagePath}/configure.py --serverIp 1.2.3.4 --innoDbDirs \"/dev/sdd1;/dev/sde1;/dev/sdf1;\" " +
+                $"python3 {this.packagePath}/configure.py --serverIp 1.2.3.4 --innoDbDirs \"/home/user/mnt_dev_sdc1/mysql;/home/user/mnt_dev_sdd1/mysql;/home/user/mnt_dev_sde1/mysql\" " +
                     $"--inMemory 8192",
             };
 
@@ -273,7 +273,7 @@ namespace VirtualClient.Dependencies.MySqlServer
 
             string[] expectedCommands =
             {
-                $"python3 {this.packagePath}/set-global-variables.py --variables MAX_PREPARED_STMT_COUNT=100000;MAX_CONNECTIONS=1024",
+                $"python3 {this.packagePath}/set-global-variables.py --variables \"MAX_PREPARED_STMT_COUNT=100000;MAX_CONNECTIONS=1024\"",
             };
 
             int commandNumber = 0;
@@ -326,7 +326,7 @@ namespace VirtualClient.Dependencies.MySqlServer
 
             string[] expectedCommands =
             {
-                $"python3 {this.packagePath}/distribute-database.py --dbName mysql-test --directories \"/dev/sdd1;/dev/sde1;/dev/sdf1;\"",
+                $"python3 {this.packagePath}/distribute-database.py --dbName mysql-test --directories \"/home/user/mnt_dev_sdc1/mysql;/home/user/mnt_dev_sdd1/mysql;/home/user/mnt_dev_sde1/mysql\"",
             };
 
             int commandNumber = 0;

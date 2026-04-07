@@ -7,6 +7,7 @@ namespace VirtualClient.Common.Rest
     using System.Collections.Generic;
     using System.Net.Http;
     using System.Net.Http.Headers;
+    using System.Security.Cryptography.X509Certificates;
     using VirtualClient.Common.Extensions;
 
     /// <summary>
@@ -14,9 +15,15 @@ namespace VirtualClient.Common.Rest
     /// </summary>
     public class RestClientBuilder : IRestClientBuilder
     {
-        private RestClient restClient;
         private TimeSpan? httpTimeout;
         private bool disposed = false;
+
+        private List<MediaTypeWithQualityHeaderValue> acceptedMediaTypes;
+        private AuthenticationHeaderValue authenticationHeader;
+
+#pragma warning disable CA2213 // We will reuse these single objects for the lifetime of virtual client execution
+        private HttpClientHandler handler;
+#pragma warning restore CA2213 // Disposable fields should be disposed
 
         /// <summary>
         /// Constructor for the rest client builder
@@ -24,14 +31,15 @@ namespace VirtualClient.Common.Rest
         /// <param name="timeout">The HTTP timeout to apply.</param>
         public RestClientBuilder(TimeSpan? timeout = null)
         {
-            this.restClient = new RestClient();
             this.httpTimeout = timeout;
+            this.handler = new HttpClientHandler();
+            this.acceptedMediaTypes = new List<MediaTypeWithQualityHeaderValue>();
         }
 
         /// <inheritdoc/>
         public IRestClientBuilder AddAuthorizationHeader(string authToken, string headerName = "Bearer")
         {
-            this.restClient.SetAuthorizationHeader(new AuthenticationHeaderValue(headerName, authToken));
+            this.authenticationHeader = new AuthenticationHeaderValue(authToken, headerName);
             return this;
         }
 
@@ -39,21 +47,25 @@ namespace VirtualClient.Common.Rest
         public IRestClientBuilder AddAcceptedMediaType(MediaType mediaType)
         {
             mediaType.ThrowIfNull(nameof(mediaType));
-            this.restClient.AddAcceptedMediaTypeHeader(new MediaTypeWithQualityHeaderValue(mediaType.FieldName));
+            this.acceptedMediaTypes.Add(new MediaTypeWithQualityHeaderValue(mediaType.FieldName));
             return this;
         }
 
         /// <inheritdoc/>
         public IRestClientBuilder AlwaysTrustServerCertificate()
         {
-            HttpClientHandler handler = new HttpClientHandler();
-            handler.ServerCertificateCustomValidationCallback = (httpRequestMessage, cert, cetChain, policyErrors) =>
+            this.handler.ServerCertificateCustomValidationCallback = (httpRequestMessage, cert, cetChain, policyErrors) =>
             {
                 return true;
             };
 
-            HttpClient client = new HttpClient(handler);
-            this.restClient = new RestClient(client);
+            return this;
+        }
+
+        /// <inheritdoc/>
+        public IRestClientBuilder AddCertificate(X509Certificate2 certificate)
+        {
+            this.handler.ClientCertificates.Add(certificate);
             return this;
         }
 
@@ -63,15 +75,28 @@ namespace VirtualClient.Common.Rest
         /// <returns>The built rest client.</returns>
         public IRestClient Build()
         {
-            RestClient output = this.restClient;
-            this.restClient = new RestClient();
+            HttpClient client = new HttpClient(this.handler);
+            RestClient restClient = new RestClient(client);
+
+            if (this.authenticationHeader != null)
+            {
+                restClient.SetAuthorizationHeader(this.authenticationHeader);
+            }
+
+            if (this.acceptedMediaTypes.Count > 0)
+            {
+                foreach (var mediaType in this.acceptedMediaTypes)
+                {
+                    restClient.AddAcceptedMediaTypeHeader(mediaType);
+                }
+            }
 
             if (this.httpTimeout != null)
             {
-                output.Client.Timeout = this.httpTimeout.Value;
+                restClient.Client.Timeout = this.httpTimeout.Value;
             }
 
-            return output;
+            return restClient;
         }
 
         /// <inheritdoc/>
@@ -88,7 +113,6 @@ namespace VirtualClient.Common.Rest
             {
                 if (disposing)
                 {
-                    this.restClient.Dispose();
                 }
 
                 this.disposed = true;

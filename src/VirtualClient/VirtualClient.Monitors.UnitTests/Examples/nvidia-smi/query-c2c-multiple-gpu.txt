@@ -1,0 +1,24 @@
+GPU 0: NVIDIA Graphics Device (UUID: GPU-c313e848-2b51-a47a-eede-b82de138eb6b)
+         C2C Link 0: 44.712 GB/s
+         C2C Link 1: 44.713 GB/s
+         C2C Link 2: 44.714 GB/s
+         C2C Link 3: 44.715 GB/s
+         C2C Link 4: 44.716 GB/s
+GPU 1: NVIDIA Graphics Device (UUID: GPU-777aaa14-3a78-5452-09cf-af6dec0d96a4)
+         C2C Link 0: 44.717 GB/s
+         C2C Link 1: 44.718 GB/s
+         C2C Link 2: 44.719 GB/s
+         C2C Link 3: 44.720 GB/s
+         C2C Link 4: 44.721 GB/s
+GPU 2: NVIDIA Graphics Device (UUID: GPU-14339560-ee03-2ca2-bede-090b7b6befcc)
+         C2C Link 0: 44.722 GB/s
+         C2C Link 1: 44.723 GB/s
+         C2C Link 2: 44.724 GB/s
+         C2C Link 3: 44.725 GB/s
+         C2C Link 4: 44.726 GB/s
+GPU 3: NVIDIA Graphics Device (UUID: GPU-61c6af66-6309-c0a0-03f3-7cc9ac97ab99)
+         C2C Link 0: 44.727 GB/s
+         C2C Link 1: 44.728 GB/s
+         C2C Link 2: 44.729 GB/s
+         C2C Link 3: 44.730 GB/s
+         C2C Link 4: 44.731 GB/s

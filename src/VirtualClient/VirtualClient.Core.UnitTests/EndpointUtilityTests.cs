@@ -12,6 +12,7 @@ namespace VirtualClient
     using Moq;
     using NUnit.Framework;
     using VirtualClient.Contracts;
+    using VirtualClient.Identity;
     using VirtualClient.TestExtensions;
 
     [TestFixture]
@@ -151,11 +152,43 @@ namespace VirtualClient
 
         [Test]
         [TestCase(
+            "packages.virtualclient.microsoft.com",
+            "https://packages.virtualclient.microsoft.com/")]
+        //
+        [TestCase(
+            "https://packages.virtualclient.microsoft.com",
+            "https://packages.virtualclient.microsoft.com/")]
+        public void EndpointUtilityCreatesTheExpectedBlobStoreReferenceForCDNUri(string uri, string expectedUri)
+        {
+            DependencyBlobStore store = EndpointUtility.CreateBlobStoreReference(
+                DependencyStore.Packages,
+                uri,
+                this.mockFixture.CertificateManager.Object);
+
+            Assert.IsNotNull(store);
+            Assert.AreEqual(DependencyStore.Packages, store.StoreName);
+            Assert.AreEqual(DependencyStore.StoreTypeAzureCDN, store.StoreType);
+            Assert.AreEqual(new Uri(expectedUri).ToString(), store.EndpointUri.ToString());
+            Assert.IsNull(store.Credentials);
+        }
+
+        [Test]
+        [TestCase("https://packages.virtualclient.microsoft.com")]
+        public void EndpointUtilityThrowsWhenCreatingBlobStoreReferenceForCDNUriIfUriIsValidButDependencyStoreIsContent(string uri)
+        {
+            Assert.Throws<SchemaException>(() => EndpointUtility.CreateBlobStoreReference(
+                DependencyStore.Content,
+                uri,
+                this.mockFixture.CertificateManager.Object));
+        }
+
+        [Test]
+        [TestCase(
             "https://anystorage.blob.core.windows.net",
             "https://anystorage.blob.core.windows.net/")]
         //
         [TestCase(
-            "https://anystorage.blob.core.windows.net?sv=2022-11-02&ss=b&srt=co&sp=rtf&se=2024-07-02T05:15:29Z&st=2024-07-01T21:15:29Z&spr=https", 
+            "https://anystorage.blob.core.windows.net?sv=2022-11-02&ss=b&srt=co&sp=rtf&se=2024-07-02T05:15:29Z&st=2024-07-01T21:15:29Z&spr=https",
             "https://anystorage.blob.core.windows.net/?sv=2022-11-02&ss=b&srt=co&sp=rtf&se=2024-07-02T05:15:29Z&st=2024-07-01T21:15:29Z&spr=https")]
         //
         [TestCase(
@@ -197,7 +230,7 @@ namespace VirtualClient
 
         [Test]
         [TestCase("https://any.service.azure.com?miid=307591a4-abb2-4559-af59-b47177d140cf", "https://any.service.azure.com")]
-        [TestCase("https://any.service.azure.com/?miid=307591a4-abb2-4559-af59-b47177d140cf","https://any.service.azure.com/")]
+        [TestCase("https://any.service.azure.com/?miid=307591a4-abb2-4559-af59-b47177d140cf", "https://any.service.azure.com/")]
         public void EndpointUtilityCreatesTheExpectedBlobStoreReferenceForUrisReferencingManagedIdentities(string uri, string expectedUri)
         {
             DependencyBlobStore store = EndpointUtility.CreateBlobStoreReference(
@@ -305,7 +338,7 @@ namespace VirtualClient
             Assert.IsNotNull(store.Credentials);
             Assert.IsInstanceOf<ClientCertificateCredential>(store.Credentials);
         }
-       
+
         [Test]
         [TestCase("https://any.service.azure.com/?cid=307591a4-abb2-4559-af59-b47177d140cf&tid=985bbc17-e3a5-4fec-b0cb-40dbb8bc5959&crti=ABC&crts=any.domain.com", "https://any.service.azure.com/")]
         [TestCase("https://any.service.azure.com/?cid=307591a4-abb2-4559-af59-b47177d140cf&tid=985bbc17-e3a5-4fec-b0cb-40dbb8bc5959&crti=ABC CA 01&crts=any.domain.com", "https://any.service.azure.com/")]
@@ -762,6 +795,96 @@ namespace VirtualClient
             Assert.Throws<SchemaException>(() => EndpointUtility.CreateProfileReference(
                 invalidEndpoint,
                 this.mockFixture.CertificateManager.Object));
+        }
+
+        [Test]
+        [TestCase(
+            "https://my-keyvault.vault.azure.net/?cid=985bbc17-e3a5-4fec-b0cb-40dbb8bc5959&tid=307591a4-abb2-4559-af59-b47177d140cf&crtt=1234567",
+            "https://my-keyvault.vault.azure.net/")]
+        [TestCase(
+            "Endpoint=https://my-keyvault.vault.azure.net/;CertificateThumbprint=1234567;ClientId=985bbc17;TenantId=307591a4",
+            "https://my-keyvault.vault.azure.net/")]
+        public void EndpointUtility_CreateKeyVaultStoreReference_Entra(string connectionString, string expectedUri)
+        {
+            // Setup: A matching certificate is found in the local store.
+            this.mockFixture.CertificateManager.Setup(mgr => mgr.GetCertificateFromStoreAsync("1234567", It.IsAny<IEnumerable<StoreLocation>>(), It.IsAny<StoreName>()))
+                .ReturnsAsync(this.mockFixture.Create<X509Certificate2>());
+
+            var store = EndpointUtility.CreateKeyVaultStoreReference(
+                DependencyStore.KeyVault,
+                connectionString,
+                this.mockFixture.CertificateManager.Object);
+
+            Assert.IsNotNull(store);
+            Assert.AreEqual(DependencyStore.KeyVault, store.StoreName);
+            Assert.AreEqual(DependencyStore.StoreTypeAzureKeyVault, store.StoreType);
+            Assert.AreEqual(new Uri(expectedUri).ToString(), store.EndpointUri.ToString());
+            Assert.IsNotNull(store.Credentials);
+            Assert.IsInstanceOf<ClientCertificateCredential>(store.Credentials);
+        }
+
+        [Test]
+        [TestCase(
+            "Endpoint=https://my-keyvault.vault.azure.net/;ManagedIdentityId=307591a4-abb2-4559-af59-b47177d140cf",
+            "https://my-keyvault.vault.azure.net/")]
+        [TestCase(
+            "https://my-keyvault.vault.azure.net/?miid=307591a4-abb2-4559-af59-b47177d140cf",
+            "https://my-keyvault.vault.azure.net/")]
+        public void EndpointUtility_CreateKeyVaultStoreReference_Miid(string connectionString, string expectedUri)
+        {
+            var store = EndpointUtility.CreateKeyVaultStoreReference(
+                DependencyStore.KeyVault,
+                connectionString,
+                this.mockFixture.CertificateManager.Object);
+
+            Assert.IsNotNull(store);
+            Assert.AreEqual(DependencyStore.KeyVault, store.StoreName);
+            Assert.AreEqual(DependencyStore.StoreTypeAzureKeyVault, store.StoreType);
+            Assert.AreEqual(new Uri(expectedUri).ToString(), store.EndpointUri.ToString());
+            Assert.IsNotNull(store.Credentials);
+            Assert.IsInstanceOf<ManagedIdentityCredential>(store.Credentials);
+        }
+
+        [Test]
+        public void CreateKeyVaultStoreReference_ConnectionString_ThrowsOnInvalid()
+        {
+            Assert.Throws<SchemaException>(() =>
+                EndpointUtility.CreateKeyVaultStoreReference(
+                    DependencyStore.KeyVault,
+                    "InvalidConnectionString",
+                    this.mockFixture.CertificateManager.Object));
+        }
+
+        [Test]
+        [TestCase("https://anyvault.vault.azure.net/?cid=123456&tid=654321")]
+        [TestCase("https://anycontentstorage.blob.core.windows.net?cid=123456&tid=654321")]
+        [TestCase("https://anypackagestorage.blob.core.windows.net?tid=654321")]
+        [TestCase("https://anynamespace.servicebus.windows.net?cid=123456&tid=654321")]
+        [TestCase("https://my-keyvault.vault.azure.net/?;tid=654321")]
+        public void TryParseMicrosoftEntraTenantIdReference_Uri_WorksAsExpected(string input)
+        {
+            // Arrange
+            Uri uri = new Uri(input);
+            bool result = EndpointUtility.TryParseMicrosoftEntraTenantIdReference(uri, out string actualTenantId);
+
+            // Assert
+            Assert.True(result);
+            Assert.AreEqual("654321", actualTenantId);
+        }
+
+        [Test]
+        [TestCase("https://anycontentstorage.blob.core.windows.net?cid=123456&tenantId=654321")]
+        [TestCase("https://anypackagestorage.blob.core.windows.net?miid=654321")]
+        [TestCase("https://my-keyvault.vault.azure.net/;cid=654321")]
+        public void TryParseMicrosoftEntraTenantIdReference_Uri_ReturnFalseWhenInvalid(string input)
+        {
+            // Arrange
+            Uri uri = new Uri(input);
+            bool result = EndpointUtility.TryParseMicrosoftEntraTenantIdReference(uri, out string actualTenantId);
+
+            // Assert
+            Assert.IsFalse(result);
+            Assert.IsNull(actualTenantId);
         }
     }
 }

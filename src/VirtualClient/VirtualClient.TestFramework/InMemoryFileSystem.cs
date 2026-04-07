@@ -172,6 +172,9 @@ namespace VirtualClient
         /// </summary>
         public Action<string, byte[]> OnWriteFile { get; set; }
 
+        [SuppressMessage("Design", "CA1065:Do not raise exceptions in unexpected locations", Justification = "We are not implementing support for everything.")]
+        public IFileVersionInfoFactory FileVersionInfo => throw new NotImplementedException();
+
         /// <summary>
         /// Clears/removes all directories and files from the in-memory file system.
         /// </summary>

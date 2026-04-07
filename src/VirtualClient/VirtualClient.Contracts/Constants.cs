@@ -131,6 +131,11 @@ namespace VirtualClient.Contracts
     public static class EnvironmentVariable
     {
         /// <summary>
+        /// Name = HOME
+        /// </summary>
+        public const string HOME = nameof(HOME);
+
+        /// <summary>
         /// Name = JAVA_HOME
         /// </summary>
         public const string JAVA_HOME = nameof(JAVA_HOME);
@@ -151,21 +156,6 @@ namespace VirtualClient.Contracts
         public const string PATH = nameof(PATH);
 
         /// <summary>
-        /// Name = SDK_EVENTHUB_CONNECTION
-        /// </summary>
-        public const string SDK_EVENTHUB_CONNECTION = nameof(SDK_EVENTHUB_CONNECTION);
-
-        /// <summary>
-        /// Name = SDK_PACKAGES_CONNECTION
-        /// </summary>
-        public const string SDK_PACKAGES_CONNECTION = nameof(SDK_PACKAGES_CONNECTION);
-
-        /// <summary>
-        /// Name = SDK_PACKAGES_DIR
-        /// </summary>
-        public const string SDK_PACKAGES_DIR = nameof(SDK_PACKAGES_DIR);
-
-        /// <summary>
         /// Name = SUDO_USER
         /// </summary>
         public const string SUDO_USER = nameof(SUDO_USER);
@@ -174,6 +164,11 @@ namespace VirtualClient.Contracts
         /// Name = USER
         /// </summary>
         public const string USER = nameof(USER);
+
+        /// <summary>
+        /// Name = USERPROFILE
+        /// </summary>
+        public const string USERPROFILE = nameof(USERPROFILE);
 
         /// <summary>
         /// Name = VC_PASSWORD
@@ -204,6 +199,11 @@ namespace VirtualClient.Contracts
         /// Name = VC_SUDO_USER
         /// </summary>
         public const string VC_SUDO_USER = nameof(VC_SUDO_USER);
+
+        /// <summary>
+        /// Name = VC_TEMP_DIR
+        /// </summary>
+        public const string VC_TEMP_DIR = nameof(VC_TEMP_DIR);
     }
 
     /// <summary>
@@ -246,6 +246,32 @@ namespace VirtualClient.Contracts
         /// application/json
         /// </summary>
         public const string Json = "application/json";
+    }
+
+    /// <summary>
+    /// Logging options.
+    /// </summary>
+    public static class LogOption
+    {
+        /// <summary>
+        /// DeleteOnUpload
+        /// </summary>
+        public const string DeleteOnUpload = nameof(DeleteOnUpload);
+
+        /// <summary>
+        /// Upload
+        /// </summary>
+        public const string Upload = nameof(Upload);
+
+        /// <summary>
+        /// UploadManifest
+        /// </summary>
+        public const string UploadManifest = nameof(UploadManifest);
+
+        /// <summary>
+        /// Timestamped
+        /// </summary>
+        public const string Timestamped = nameof(Timestamped);
     }
 
     /// <summary>
@@ -294,5 +320,27 @@ namespace VirtualClient.Contracts
         /// URI Parameter = tid. The Azure tenant/directory ID.
         /// </summary>
         public const string TenantId = "tid";
+    }
+
+    /// <summary>
+    /// Constants that define workload process models/strategies.
+    /// </summary>
+    public static class WorkloadProcessModel
+    {
+        /// <summary>
+        /// A single process to run the workload.
+        /// </summary>
+        public const string SingleProcess = "SingleProcess";
+
+        /// <summary>
+        /// A single process running against multiple disks with
+        /// aggregated results across those disks.
+        /// </summary>
+        public const string SingleProcessAggregated = nameof(SingleProcessAggregated);
+
+        /// <summary>
+        /// A single process per disk under test by the workload.
+        /// </summary>
+        public const string SingleProcessPerDisk = "SingleProcessPerDisk";
     }
 }

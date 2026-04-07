@@ -24,16 +24,44 @@ namespace VirtualClient.Actions
     public class NetworkingWorkloadExecutorTests
     {
         private MockFixture mockFixture;
-        private DependencyPath mockPath;
+        private DependencyPath mockPackage;
 
-        [SetUp]
-        public void SetupTest()
+        public void SetupTest(PlatformID platformID, NetworkingWorkloadTool tool)
         {
-            this.SetupForPlatform(PlatformID.Win32NT, NetworkingWorkloadTool.NTttcp);
+            this.mockFixture = new MockFixture();
+            this.mockFixture.Setup(platformID);
+            this.mockPackage = new DependencyPath("networking", this.mockFixture.PlatformSpecifics.GetPackagePath("networking"));
+            this.mockFixture.SetupPackage(this.mockPackage);
+
+            this.mockFixture.Parameters["PackageName"] = "networking";
+            this.mockFixture.Parameters["Scenario"] = "Scenario_1";
+            this.mockFixture.Parameters["ToolName"] = NetworkingWorkloadTool.NTttcp.ToString();
+
+            NetworkingWorkloadState runningWorkloadState = new NetworkingWorkloadState(
+                "networking",
+                "Scenario_1",
+                tool,
+                NetworkingWorkloadToolState.Running);
+
+            Item<JObject> expectedStateItem = new Item<JObject>(nameof(NetworkingWorkloadState), JObject.FromObject(runningWorkloadState));
+
+            this.mockFixture.ApiClient.Setup(client => client.GetHeartbeatAsync(It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
+
+            this.mockFixture.ApiClient.Setup(client => client.GetServerOnlineStatusAsync(It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
+
+            this.mockFixture.ApiClient.SetupSequence(client => client.GetStateAsync(nameof(NetworkingWorkloadState), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.NotFound))
+                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK, new Item<NetworkingWorkloadState>(nameof(NetworkingWorkloadState), runningWorkloadState)))
+                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.NotFound));
         }
 
         [Test]
-        public void NetworkingWorkloadStateInstancesAreJsonSerializable()
+        [TestCase(null)]
+        [TestCase(true)]
+        [TestCase(false)]
+        public void NetworkingWorkloadStateInstancesAreJsonSerializable(bool? noSyncEnabled)
         {
             NetworkingWorkloadState state = new NetworkingWorkloadState(
                 "networking",
@@ -45,9 +73,9 @@ namespace VirtualClient.Actions
                 "8K",
                 "8K",
                 256,
-                60,
-                5,
-                5,
+                "00:01:00",
+                "00:00:05",
+                "00:00:05",
                 "Test_Mode_1",
                 64,
                 1234,
@@ -62,6 +90,7 @@ namespace VirtualClient.Actions
                 "Profiling_Scenario_1",
                 "00:00:30",
                 "00:00:05",
+                noSyncEnabled,
                 Guid.NewGuid());
 
             SerializationAssert.IsJsonSerializable(state);
@@ -80,9 +109,9 @@ namespace VirtualClient.Actions
                 "8K",
                 "8K",
                 256,
-                60,
-                5,
-                5,
+                "00:01:00",
+                "00:00:05",
+                "00:00:05",  
                 "Test_Mode_1",
                 64,
                 1234,
@@ -97,6 +126,7 @@ namespace VirtualClient.Actions
                 "Profiling_Scenario_1",
                 "00:00:30",
                 "00:00:05",
+                false,
                 Guid.NewGuid(),
                 //
                 // With Metadata
@@ -127,9 +157,9 @@ namespace VirtualClient.Actions
                 "8K",
                 "8K",
                 256,
-                60,
-                5,
-                5,
+                "00:01:00",
+                "00:00:05",
+                "00:00:05",
                 "Test_Mode_1",
                 64,
                 1234,
@@ -144,6 +174,7 @@ namespace VirtualClient.Actions
                 "Profiling_Scenario_1",
                 "00:00:30",
                 "00:00:05",
+                false,
                 Guid.NewGuid(),
                 //
                 // With Metadata
@@ -176,13 +207,15 @@ namespace VirtualClient.Actions
         [TestCase(NetworkingWorkloadTool.SockPerf, PlatformID.Win32NT)]
         public async Task NetworkingWorkloadExecutorServerDoesNotRunOnItOwn(NetworkingWorkloadTool toolName, PlatformID platformID)
         {
+            this.SetupTest(platformID, toolName);
+
             string agentId = $"{Environment.MachineName}-Server";
             this.mockFixture.SystemManagement.SetupGet(obj => obj.AgentId).Returns(agentId);
             this.mockFixture.Parameters["ToolName"] = toolName.ToString();
 
             TestNetworkingWorkloadExecutor component = new TestNetworkingWorkloadExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
 
-            await component.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+            await component.ExecuteAsync(CancellationToken.None);
             Assert.IsTrue(component.ToolExecuted == string.Empty);
         }
 
@@ -195,12 +228,12 @@ namespace VirtualClient.Actions
         [TestCase(NetworkingWorkloadTool.SockPerf, PlatformID.Unix)]
         public async Task NetworkingWorkloadExecutorClientExecutesAsExpectedTools(NetworkingWorkloadTool toolName, PlatformID platformID)
         {
-            this.SetupForPlatform(platformID, toolName);
+            this.SetupTest(platformID, toolName);
             this.mockFixture.Parameters["ToolName"] = toolName.ToString();
 
             TestNetworkingWorkloadExecutor component = new TestNetworkingWorkloadExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
 
-            await component.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+            await component.ExecuteAsync(CancellationToken.None);
             Assert.IsTrue(toolName.ToString() == component.ToolExecuted);
         }
 
@@ -209,36 +242,13 @@ namespace VirtualClient.Actions
         [TestCase(NetworkingWorkloadTool.SockPerf, PlatformID.Win32NT)]
         public async Task NetworkingWorkloadExecutorClientDoesNotRunToolsOnNonSupportedPlatformsAsExpectedTools(NetworkingWorkloadTool toolName, PlatformID platformID)
         {
-            this.SetupForPlatform(platformID, toolName);
+            this.SetupTest(platformID, toolName);
             this.mockFixture.Parameters["ToolName"] = toolName.ToString();
 
             TestNetworkingWorkloadExecutor component = new TestNetworkingWorkloadExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
 
-            await component.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+            await component.ExecuteAsync(CancellationToken.None);
             Assert.IsTrue(component.ToolExecuted == string.Empty);
-        }
-
-        [Test]
-        [Ignore("This is a flaky test and networking executors will be redesigned.")]
-        public async Task NetworkingWorkloadExecutorServerExecutesToolOnInstructionsReceived()
-        {
-            string agentId = $"{Environment.MachineName}-Server";
-            this.mockFixture.SystemManagement.SetupGet(obj => obj.AgentId).Returns(agentId);
-
-            TestNetworkingWorkloadExecutor component = new TestNetworkingWorkloadExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
-            Mock<object> mockSender = new Mock<object>();
-            
-            NetworkingWorkloadState mockNetworkingWorkloadState = new NetworkingWorkloadState();
-            mockNetworkingWorkloadState.Scenario = "AnyScenario";
-            mockNetworkingWorkloadState.Tool = NetworkingWorkloadTool.NTttcp;
-            mockNetworkingWorkloadState.ToolState = NetworkingWorkloadToolState.Start;
-            JObject mockJobject = JObject.FromObject(new Item<NetworkingWorkloadState>("mockId",mockNetworkingWorkloadState));
-            
-            await component.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
-            component.ServerCancellationSource = new CancellationTokenSource();
-            component.OnClientInstructionsReceived.Invoke(mockSender.Object, mockJobject);
-            
-            Assert.AreEqual(NetworkingWorkloadTool.NTttcp.ToString(), component.ToolExecuted);
         }
 
         [Test]
@@ -248,35 +258,40 @@ namespace VirtualClient.Actions
             Mock<object> mockSender = new Mock<object>();
         }
 
-        private void SetupForPlatform(PlatformID platformID, NetworkingWorkloadTool tool)
+        [Test]
+        public void NetworkingWorkloadExecutorSupportsIntegerAndTimeSpanTimeFormats()
         {
-            this.mockFixture = new MockFixture();
-            this.mockFixture.Setup(platformID);
-            this.mockPath = new DependencyPath("NetworkingWorkload", this.mockFixture.PlatformSpecifics.GetPackagePath("networkingworkload"));
-            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPath);
+            this.SetupTest(PlatformID.Unix, NetworkingWorkloadTool.NTttcp);
 
-            this.mockFixture.Parameters["PackageName"] = "Networking";
-            this.mockFixture.Parameters["Scenario"] = "Scenario_1";
-            this.mockFixture.Parameters["ToolName"] = NetworkingWorkloadTool.NTttcp.ToString();
+            this.mockFixture.Parameters["TestDuration"] = 300;
+            this.mockFixture.Parameters["WarmupTime"] = 60;
+            this.mockFixture.Parameters["DelayTime"] = 30;
 
-            NetworkingWorkloadState runningWorkloadState = new NetworkingWorkloadState(
-                "networking",
-                "Scenario_1",
-                tool,
-                NetworkingWorkloadToolState.Running);
+            TestNetworkingWorkloadExecutor executor = new TestNetworkingWorkloadExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
 
-            Item<JObject> expectedStateItem = new Item<JObject>(nameof(NetworkingWorkloadState), JObject.FromObject(runningWorkloadState));
+            Assert.AreEqual(TimeSpan.FromSeconds(300), executor.TestDuration);
+            Assert.AreEqual(TimeSpan.FromSeconds(60), executor.WarmupTime);
+            Assert.AreEqual(TimeSpan.FromSeconds(30), executor.DelayTime);
 
-            this.mockFixture.ApiClient.Setup(client => client.GetHeartbeatAsync(It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
+            this.mockFixture.Parameters["TestDuration"] = "00:05:00";
+            this.mockFixture.Parameters["WarmupTime"] = "00:01:00";
+            this.mockFixture.Parameters["DelayTime"] = "00:00:30";
 
-            this.mockFixture.ApiClient.Setup(client => client.GetServerOnlineStatusAsync(It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
+            executor = new TestNetworkingWorkloadExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
 
-            this.mockFixture.ApiClient.SetupSequence(client => client.GetStateAsync(nameof(NetworkingWorkloadState), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.NotFound))
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK, new Item<NetworkingWorkloadState>(nameof(NetworkingWorkloadState), runningWorkloadState)))
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.NotFound));
+            Assert.AreEqual(TimeSpan.FromMinutes(5), executor.TestDuration);
+            Assert.AreEqual(TimeSpan.FromMinutes(1), executor.WarmupTime);
+            Assert.AreEqual(TimeSpan.FromSeconds(30), executor.DelayTime);
+
+            this.mockFixture.Parameters["TestDuration"] = 180;
+            executor = new TestNetworkingWorkloadExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            TimeSpan integerBasedDuration = executor.TestDuration;
+
+            this.mockFixture.Parameters["TestDuration"] = "00:03:00";
+            executor = new TestNetworkingWorkloadExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            TimeSpan timespanBasedDuration = executor.TestDuration;
+
+            Assert.AreEqual(integerBasedDuration, timespanBasedDuration);
         }
 
         public class TestNetworkingWorkloadExecutor : NetworkingWorkloadExecutor

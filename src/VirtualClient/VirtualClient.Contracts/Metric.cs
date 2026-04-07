@@ -8,6 +8,8 @@ namespace VirtualClient.Contracts
     using System.Diagnostics;
     using System.Linq;
     using System.Text;
+    using Newtonsoft.Json;
+    using VirtualClient.Common.Contracts;
 
     /// <summary>
     /// Represents the result of a single metric
@@ -18,12 +20,13 @@ namespace VirtualClient.Contracts
         /// <summary>
         /// Creates a metric
         /// </summary>
+        [JsonConstructor]
         public Metric(string name, double value)
         {
             this.Name = name;
             this.Value = value;
             this.Relativity = MetricRelativity.Undefined;
-            this.Metadata = new Dictionary<string, IConvertible>(); 
+            this.Metadata = new Dictionary<string, IConvertible>();
             this.Tags = new List<string>();
         }
 
@@ -90,6 +93,13 @@ namespace VirtualClient.Contracts
         public static Metric None { get; } = new Metric("n/a", 0);
 
         /// <summary>
+        /// A high-level category in which the metric is associated. For example, in disk I/O
+        /// workloads, it may be useful to categorize the I/O operations as pertaining to local/physically
+        /// attached disks vs. remote/network disks.
+        /// </summary>
+        public string Categorization { get; set; }
+
+        /// <summary>
         /// Name of metric
         /// </summary>
         public string Description { get; set; }
@@ -133,13 +143,24 @@ namespace VirtualClient.Contracts
         /// <summary>
         /// Telemetry context for metric.
         /// </summary>
+        [JsonConverter(typeof(ParameterDictionaryJsonConverter))]
         public IDictionary<string, IConvertible> Metadata { get; }
 
         /// <summary>
-        /// Metric verbosity to descript importance of metric. Default to 1, which means standard.
-        /// Verbosity 0: Critical. Verbosity 1: Standard. Verbosity 2: Informational.
+        /// Metric verbosity to describe importance/priority of the metric.
+        ///
+        /// Verbosity levels define a convention for organizing metrics by importance:
+        /// - 1 (Standard/Critical): Most important metrics for decision making - bandwidth, throughput, IOPS, key latency percentiles (p50, p99)
+        /// - 2 (Detailed): Additional detailed metrics - supplementary percentiles (p70, p90, p95, p99.9)
+        /// - 3 (Reserved): Reserved for future expansion
+        /// - 4 (Reserved): Reserved for future expansion
+        /// - 5 (Verbose): All diagnostic/internal metrics - histogram buckets, standard deviations, byte counts, I/O counts
+        ///
+        /// Currently, only levels 1, 2, and 5 are actively used. Levels 3 and 4 are reserved for future use.
+        ///
+        /// Default = 5 (Verbose). Metrics without an explicit verbosity assignment are considered verbose/diagnostic.
         /// </summary>
-        public int Verbosity { get; set; } = 1;
+        public int Verbosity { get; set; } = 5;
 
         /// <summary>
         /// Determines if two objects are equal.
@@ -227,7 +248,7 @@ namespace VirtualClient.Contracts
         public override int GetHashCode()
         {
             StringBuilder hashBuilder = new StringBuilder()
-                .Append($"{this.Name},{this.Value},{this.Unit},{this.Description},{this.Relativity},{this.Verbosity},{string.Join(",", this.Tags)},{this.StartTime},{this.EndTime}");
+                .Append($"{this.Name},{this.Value},{this.Unit},{this.Categorization},{this.Description},{this.Relativity},{this.Verbosity},{string.Join(",", this.Tags)},{this.StartTime},{this.EndTime}");
 
             return hashBuilder.ToString().ToLowerInvariant().GetHashCode(StringComparison.OrdinalIgnoreCase);
         }

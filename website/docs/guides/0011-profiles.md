@@ -34,10 +34,10 @@ are part of the 'Actions', 'Monitors' or 'Dependencies' sections. In general, Vi
 for how to utilize resources and work a given system. Whereas any number of parameters can be defined in the 'Parameters' section, it is common practice to allow overrides to a minimum
 set. This helps to ensure the purpose and consistency of the profile operations on the system cannnot diverge too far from the original intentions.
 
-```
+``` json
 "Parameters": {
     "CompilerName": "gcc",
-    "CompilerVersion": "10",
+    "CompilerVersion": 10,
     "ThreadCount": null
 },
  "Actions": [
@@ -51,6 +51,45 @@ set. This helps to ensure the purpose and consistency of the profile operations 
 ]
 ```
 
+## ParametersOn
+The section 'ParametersOn' within a profile defines a sets of parameters each with a "condition" that when evaluated to true will cause that specific set of parameters
+to be added to the profile parameters and used. Any parameters with keys matching in the conditional set will override those in the profile. Note that this
+section is not required and is used primarily in conjunction with "calculated parameters/values". See the section below on `Inline Parameter References -> Calculations`.
+
+``` json
+"Parameters": {
+    "CompilerName": "gcc",
+    "CompilerVersion": 10,
+    "ThreadCount": null
+},
+"ParametersOn": [
+    {
+        "Condition": "{calculate(\"{Platform}\" == \"linux-x64\")},
+        "CompilerVersion": "13"
+    },
+    {
+        "Condition": "{calculate(\"{Platform}\" == \"linux-arm64\")},
+        "CompilerVersion": "12"
+    }
+]
+
+# Will result in the following parameters being used when running 
+# on a linux-x64 system:
+"Parameters": {
+    "CompilerName": "gcc",
+    "CompilerVersion": 13,
+    "ThreadCount": null
+}
+
+# Will result in the following parameters being used when running 
+# on a linux-arm64 system:
+"Parameters": {
+    "CompilerName": "gcc",
+    "CompilerVersion": 12,
+    "ThreadCount": null
+}
+```
+
 ## Well-Known Parameters
 There are certain parameters that can be used in a profile that represent aspects of the system that differ from one to another. These parameters are used to allow
 designers of profiles to be as expressive as possible with intentions. One of the express goals of the Virtual Client team with regards to profile design is
@@ -59,12 +98,17 @@ the system. The following table describes the set of well-known parameters that 
 
 | Parameter                             | Description |
 |---------------------------------------|-------------|
-| LogicalCoreCount                      | Represents the number of logical cores/vCPUs on the system. |
-| PhysicalCoreCount                     | Represents the number of physical cores on the system. |
-| PackagePath:\{package_name\}          | Represents the path to a package that is installed on the system by one of the dependency components (e.g. \{PackagePath\:openssl} ...resolving to /home/users/virtualclient/packages/openssl). |
-| PackagePath/Platform:\{package_name\} | Represents the "platform-specific" path to a package that is installed on the system by one of the dependency components. Platform-specific paths are a Virtual Client concept. They represent paths within a given package that contain toolsets and scripts for different OS platforms and CPU architectures  (e.g. \{PackagePath/Platform:openssl\} ...resolving to /home/users/virtualclient/packages/openssl/linux-x64, /home/users/virtualclient/packages/openssl/win-arm64). |
-| Platform                              | Represents the platform-architecture for the system on which Virtual Client is running (e.g. linux-arm64, linux-x64, win-arm64, win-x64) |
-| ScriptPath:\{script_folder\}			| Represents the path to a script that is copied to the build output 'scripts' directory. |
+| Architecture                          | Represents the processor/CPU architecture. Supported values include: x64, arm64. |
+| ExperimentId                          | Represents the ID of the experiment for the running application. |
+| LogDir                                | Represents the path to the application logs directory (e.g. /home/users/virtualclient/logs). |
+| LogicalProcessorCount                 | Represents the number of logical processors/cores/vCPUs on the system. |
+| OS                                    | Represents the name of operating system. Supported values include: linux, windows. |
+| PackageDir:\{package_name\}           | Represents the path to a package that is installed on the system by one of the dependency components (e.g. \{PackagePath\:openssl} ...resolving to /home/users/virtualclient/packages/openssl). |
+| PackageDir/Platform:\{package_name\}  | Represents the "platform-specific" path to a package that is installed on the system by one of the dependency components. Platform-specific paths are a Virtual Client concept. They represent paths within a given package that contain toolsets and scripts for different OS platforms and CPU architectures  (e.g. \{PackagePath/Platform:openssl\} ...resolving to /home/users/virtualclient/packages/openssl/linux-x64, /home/users/virtualclient/packages/openssl/win-arm64). |
+| Platform                              | Represents the platform-architecture for the system on which the application is running (e.g. linux-arm64, linux-x64, win-arm64, win-x64) |
+| PhysicalProcessorCount                | Represents the number of physical processors/cores on the system. |
+| ScriptDir:\{script_folder\}			| Represents the path to a script that is copied to the build output 'scripts' directory. |
+| TempDir                               | Represents the path to the application temp directory (e.g. /home/users/virtualclient/temp). |
 | SystemMemoryBytes                     | Represents the total memory/RAM (in bytes) on the system. |
 | SystemMemoryKilobytes                 | Represents the total memory/RAM (in kilobytes) on the system. Note that industry standard memory unit definitions are used (e.g. 1 kilobyte = 1024 bytes). |
 | SystemMemoryMegabytes                 | Represents the total memory/RAM (in megabytes) on the system. Note that industry standard memory unit definitions are used (e.g. 1 megabyte = 1024 kilobytes or 1024 x 1024 bytes). |
@@ -80,7 +124,7 @@ the system. The following table describes the set of well-known parameters that 
             "CommandLine": "--protected-mode no --io-threads {ServerThreadCount} --maxmemory-policy noeviction --ignore-warnings ARM64-COW-BUG --save",
             "BindToCores": true,
             "Port": "$.Parameters.ServerPort",
-            "ServerInstances": "{LogicalCoreCount}",
+            "ServerInstances": "{LogicalProcessorCount}",
             "ServerThreadCount": "$.Parameters.ServerThreadCount",
             "Role": "Server"
         }
@@ -104,7 +148,7 @@ the system. The following table describes the set of well-known parameters that 
             "Scenario": "CompileMemcached",
             "Platforms": "linux-x64,linux-arm64",
             "Command": "bash -c './configure'&&make",
-            "WorkingDirectory": "{PackagePath:memcached}"
+            "WorkingDirectory": "{PackageDir:memcached}"
         }
     }
 ]
@@ -126,7 +170,7 @@ the system. The following table describes the set of well-known parameters that 
             "Scenario": "CompileCoremark",
             "Platforms": "linux-x64,linux-arm64",
             "Command": "bash -c './configure'&&make",
-            "WorkingDirectory": "{PackagePath/Platform:coremark}"
+            "WorkingDirectory": "{PackageDir/Platform:coremark}"
         }
     }
 ]
@@ -138,7 +182,7 @@ the system. The following table describes the set of well-known parameters that 
             "Scenario": "InstallCustomToolsetPackage",
             "BlobContainer": "packages",
             "BlobName": "customtoolset-{Platform}.1.0.0.zip",
-            "PackageName": "customtoolset-{Platform}",
+            "PackageName": "customtoolset",
             "Extract": true
         }
     },
@@ -146,9 +190,8 @@ the system. The following table describes the set of well-known parameters that 
         "Type": "ExecuteCommand",
         "Parameters": {
             "Scenario": "InstallCustomToolset",
-            "Platforms": "{Platform}",
-            "Command": "bash -c 'install-toolset.sh'",
-            "WorkingDirectory": "{PackagePath:customtoolset-{Platform}}"
+            "Command": "bash -c 'install-toolset.sh --log-dir {LogDir}/installation'",
+            "WorkingDirectory": "{PackageDir:customtoolset}"
         }
     }
 ]
@@ -159,7 +202,7 @@ the system. The following table describes the set of well-known parameters that 
 		"Parameters": {
 			"Scenario": "FioExecutorJobFile",
 			"PackageName": "fio",
-			"JobFile": "{ScriptPath:fio}/oltp-c.jobfile",
+			"JobFile": "{ScriptDir:fio}/oltp-c.jobfile",
 			"CommandLine": "--thread {JobFile}"
 		}
 	}
@@ -328,12 +371,18 @@ to translate string literals into mathematical calculations.
 
 ```
 Calculations in parameter values should use the following format:  
-{calculate(<expression>)}
+{calculate(<expression>)} or {fn(<expression>)}
 
 e.g.
 {calculate(100 / {TotalThreads})}
-{calculate({LogicalCoreCount} - 2)}
-{calculate(({LogicalCoreCount} - 2) / 512)}
+{calculate({LogicalProcessorCount} - 2)}
+{calculate(({LogicalProcessorCount} - 2) / 512)}
+{calculate(\"{Platform}\".StartsWith(\"linux\") ? \"libaio\" : \"windowsaio\")}
+
+{fn(100 / {TotalThreads})}
+{fn({LogicalProcessorCount} - 2)}
+{fn(({LogicalProcessorCount} - 2) / 512)}
+{fn(\"{Platform}\".StartsWith(\"linux\") ? \"libaio\" : \"windowsaio\")}
 ```
 
 ``` json
@@ -344,7 +393,7 @@ e.g.
           "Scenario": "RandomWrite_4k_BlockSize",
           "PackageName": "diskspd",
           "DiskFilter": "$.Parameters.DiskFilter",
-          "CommandLine": "-c496G -b4K -r4K -t{calculate({LogicalCoreCount}/2)} -o{calculate(512/{ThreadCount})} -w100 -d300 -Suw -W15 -D -L -Rtext",
+          "CommandLine": "-c496G -b4K -r4K -t{calculate({LogicalProcessorCount}/2)} -o{calculate(512/{ThreadCount})} -w100 -d300 -Suw -W15 -D -L -Rtext",
           "FileName": "diskspd-test.dat",
           "ProcessModel": "SingleProcess",
           "DeleteTestFilesOnFinish": false,
@@ -365,7 +414,7 @@ e.g.
           "CommandLine": "-c{FileSize} -b4K -r4K -t{ThreadCount} -o{QueueDepth} -w100 -d{Duration} -Suw -W15 -D -L -Rtext",
           "TestName": "diskspd_randwrite_{FileSize}_4k_d{ThreadCount}_th{ThreadCount}",
           "Duration": "$.Parameters.Duration",
-          "ThreadCount": "{calculate({LogicalCoreCount}/2)}",
+          "ThreadCount": "{calculate({LogicalProcessorCount}/2)}",
           "QueueDepth": "{calculate(512/{ThreadCount})}",
           "FileSize": "$.Parameters.FileSize",
           "FileName": "diskspd-test.dat",
@@ -376,6 +425,104 @@ e.g.
   }
 ]
 ```
+
+## Metric Filtering
+The Virtual Client supports filtering of metrics emitted by workloads and monitors using the `MetricFilters` parameter. This allows users to control which metrics are captured and 
+logged, reducing telemetry volume and focusing on metrics of interest. Metric filtering supports three filtering strategies: **verbosity-based filtering**, **regex-based inclusion 
+filtering**, and **exclusion filtering**.
+
+### Verbosity-Based Filtering
+Metrics in the Virtual Client are assigned a verbosity level that indicates their importance for decision making:
+
+| Verbosity Level | Description |
+|-----------------|-------------|
+| 1 (Standard/Critical) | Most important metrics for decision making |
+| 2 (Detailed) | Additional detailed metrics |
+| 3 (Reserved) | Reserved for future expansion |
+| 4 (Reserved) | Reserved for future expansion |
+| 5 (Verbose) | All diagnostic/internal metrics |
+
+To filter metrics by verbosity level, use the `verbosity:N` filter format, where N is a value between 1 and 5. This will include all metrics with a verbosity level less than or equal to N.
+
+``` json
+"Actions": [
+    {
+        "Type": "FioExecutor",
+        "Parameters": {
+            "Scenario": "RandomWrite_4k_BlockSize",
+            "PackageName": "fio",
+            "CommandLine": "--name=fio_test --size=10G --rw=randwrite --bs=4k",
+            "MetricFilters": "verbosity:1"
+        }
+    }
+]
+```
+
+### Regex-Based Inclusion Filtering
+Metrics can be filtered using regular expression patterns (case-insensitive). Multiple filter terms can be combined, and a metric will be included if it matches any of the patterns.
+
+``` json
+"Actions": [
+    {
+        "Type": "FioExecutor",
+        "Parameters": {
+            "Scenario": "RandomWrite_4k_BlockSize",
+            "PackageName": "fio",
+            "CommandLine": "--name=fio_test --size=10G --rw=randwrite --bs=4k",
+            "MetricFilters": "bandwidth,iops,_p99"
+        }
+    }
+]
+```
+
+The filter above will include metrics whose names contain "bandwidth", "iops", or "_p99". More complex regex patterns are also supported:
+
+``` json
+"MetricFilters": "(read|write)_(bandwidth|iops)"
+```
+
+### Exclusion Filtering
+Metrics can be explicitly excluded by prefixing the filter term with a minus sign (`-`). This is useful for removing verbose or diagnostic metrics that are not needed.
+
+``` json
+"Actions": [
+    {
+        "Type": "RedisServerExecutor",
+        "Parameters": {
+            "Scenario": "Server",
+            "PackageName": "redis",
+            "CommandLine": "--protected-mode no",
+            "MetricFilters": "-h000*,-h001*"
+        }
+    }
+]
+```
+
+### Combining Filter Types
+Multiple filter types can be combined. Verbosity filtering is applied first, followed by exclusion filters, and then inclusion filters.
+
+``` json
+"Actions": [
+    {
+        "Type": "FioExecutor",
+        "Parameters": {
+            "Scenario": "RandomWrite_4k_BlockSize",
+            "PackageName": "fio",
+            "CommandLine": "--name=fio_test --size=10G --rw=randwrite --bs=4k",
+            "MetricFilters": "verbosity:2,-histogram*,bandwidth|iops|latency"
+        }
+    }
+]
+```
+
+The example above will:
+1. Include only metrics with verbosity ? 2
+2. Exclude metrics matching the pattern "histogram*"
+3. From the remaining metrics, include only those matching "bandwidth", "iops", or "latency"
+
+### Default Behavior
+When the `MetricFilters` parameter is not specified, all metrics emitted by the workload or monitor are captured and logged. This ensures backward compatibility with existing 
+profiles and allows users to see all available metrics during initial testing before applying filters to reduce telemetry volume.
 
 ## Actions
 The section 'Actions' within the profile defines a set of 1 or more toolsets to execute on the system. The term 'workload' is often used synonymously with 'Actions' to 
@@ -521,4 +668,3 @@ sequential order as they are defined within the profile. These components begin 
 -----------> Action 2
 -----------> Action 3
 -----------> Action 4
-```

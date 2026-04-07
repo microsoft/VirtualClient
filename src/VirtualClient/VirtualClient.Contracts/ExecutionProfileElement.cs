@@ -62,6 +62,12 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
+        /// The type of profile component (e.g. Action, Dependency, Monitor).
+        /// </summary>
+        [JsonIgnore]
+        public ComponentType ComponentType { get; internal set; }
+
+        /// <summary>
         /// The name of this element
         /// </summary>
         [JsonProperty(PropertyName = "Type", Required = Required.Always, Order = 10)]

@@ -99,6 +99,11 @@ The following metrics are examples of those captured by the Virtual Client when 
 3. Set Environment variable using the command :
   `export OMP_NUM_THREADS=<available_number_of_physical_cores>` (e.g. `export OMP_NUM_THREADS=4`)
 
+  :::note
+  When using the Virtual Client, this step is handled automatically. The profile sets `OMP_NUM_THREADS` via the `ThreadCount` parameter
+  (default: logical core count - 2, minimum 1). You can override it on the command line with `--parameters="ThreadCount=<value>"`.
+  :::
+
 4. For multi-system scenarios setup passwordless SSH. See the blog post [here](https://linuxize.com/post/how-to-setup-passwordless-ssh-login/) for examples. Skip
    this step if you are running a single-system scenario.
 

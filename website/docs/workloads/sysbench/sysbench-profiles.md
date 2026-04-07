@@ -105,52 +105,88 @@ There are a lot of moving parts to this workload that allows for both out-of-box
 ### Actions
 
 * **SysbenchConfiguration**  
-  Populates the MySQL database using the Sysbench tool. Note that the default Sysbench settings does not populate a database on the data disks, but on the OS disk. Thus, the 
-  recommended profile format is as follows. The below setup creates N tables in the database with one record each. Only then can MySQL equally distribute the database onto different 
+  Populates the MySQL database using the Sysbench tool. The below setup creates N tables in the database with one record each. Only then can MySQL equally distribute the database onto different 
   data disks mounted on the system, as it copies the tables and their schemas into new tables. From there, Sysbench can add additional records to further populate the database tables. 
-  Once populated, VC persists the state, and it will not drop or recreate tables.
 
-  ``` bash
+``` bash
+{
   {
       "Type": "SysbenchConfiguration",
       "Parameters": 
       {
-        "Scenario": "PopulateMySQLDatabase",
-        "BenchmarkName": "TPCC",
-        "DatabaseName": "sbtest",
-        "WarehouseCount": 1,
-        "NumTables": 10,
-        "PackageName": "sysbench",
-        "Role": "Server"
+          "Scenario": "PrepareMySQLDatabase",
+          "Action": "CreateTables",
+          "DatabaseSystem": "MySQL",
+          "Benchmark": "OLTP",
+          "DatabaseName": "$.Parameters.DatabaseName",
+          "DatabaseScenario": "$.Parameters.DatabaseScenario",
+          "PackageName": "sysbench",
+          "Role": "Server"
       }
-    },
-    {
+  },
+  {
       "Type": "MySQLServerConfiguration",
       "Parameters": 
       {
-        "Scenario": "DistributeMySQLDatabase",
-        "BenchmarkName": "TPCC",
-        "Action": "DistributeDatabase",
-        "DatabaseName": "sbtest",
-        "NumTables": 10,
-        "PackageName": "mysql-server",
-        "Role": "Server"
+          "Scenario": "DistributeMySQLDatabase",
+          "Action": "DistributeDatabase",
+          "DiskFilter": "$.Parameters.DiskFilter",
+          "DatabaseName": "$.Parameters.DatabaseName",
+          "PackageName": "mysql-server",
+          "Role": "Server"
       }
-    },
-    {
+  },
+  {
       "Type": "SysbenchConfiguration",
       "Parameters": 
       {
-        "Scenario": "PopulateMySQLDatabase",
-        "BenchmarkName": "TPCC",
-        "DatabaseName": "sbtest",
-        "NumTables": 10,
-        "WarehouseCount": 100,
-        "PackageName": "sysbench",
-        "Role": "Server"
+          "Scenario": "PopulateMySQLDatabase",
+          "Action": "PopulateTables",
+          "DatabaseSystem": "MySQL",
+          "Benchmark": "OLTP",
+          "DatabaseName": "$.Parameters.DatabaseName",
+          "DatabaseScenario": "$.Parameters.DatabaseScenario",
+          "PackageName": "sysbench",
+          "Role": "Server"
       }
   }
-  ```
+}
+```
+
+  Once populated, VC persists the state, and it will not drop or recreate tables unless the 'cleanup' action is performed. An example is shown below. In a multi-disk scenario without striping, the DistributeDatabase step must be performed after the CreateTables step once again to re-distribute the tables evenly on each disk.
+
+``` bash
+{
+  {
+    "Type": "SysbenchConfiguration",
+    "Parameters": 
+    {
+        "Scenario": "CleanMySQLDatabase",
+        "Action": "Cleanup",
+        "DatabaseSystem": "MySQL",
+        "Benchmark": "OLTP",
+        "DatabaseName": "$.Parameters.DatabaseName",
+        "DatabaseScenario": "$.Parameters.DatabaseScenario",
+        "PackageName": "sysbench",
+        "Role": "Server"
+    }
+  },
+  {
+    "Type": "SysbenchConfiguration",
+    "Parameters": 
+    {
+        "Scenario": "PrepareMySQLDatabase",
+        "Action": "CreateTables",
+        "DatabaseSystem": "MySQL",
+        "Benchmark": "OLTP",
+        "DatabaseName": "$.Parameters.DatabaseName",
+        "DatabaseScenario": "$.Parameters.DatabaseScenario",
+        "PackageName": "sysbench",
+        "Role": "Server"
+    }
+  },
+}
+```
 
 * **SysbenchClientExecutor**  
   Runs a given workload from the client-side on the server database. Note that this action can run with different arguments from SysbenchConfiguration -- though a database of 10 tables

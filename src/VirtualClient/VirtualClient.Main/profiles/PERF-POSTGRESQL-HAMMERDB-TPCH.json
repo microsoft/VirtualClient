@@ -1,0 +1,136 @@
+{
+    "Description": "HammerDB PostgreSQL TPCH Database Server Performance Workload",
+    "MinimumExecutionInterval": "00:01:00",
+    "Metadata": {
+        "RecommendedMinimumExecutionTime": "04:00:00",
+        "SupportedPlatforms": "linux-x64",
+        "SupportedOperatingSystems": "Debian,Ubuntu"
+    },
+    "Parameters": {
+        "DatabaseName": "hammerdb_tpch",
+        "DiskFilter": "osdisk:false&sizegreaterthan:256g",
+        "Port": "5432",
+        "Duration": "00:20:00",
+        "VirtualUsers": "{calculate({LogicalCoreCount})}",
+        "ScaleFactor": "10",
+        "SharedMemoryBuffer": "{calculate({SystemMemoryMegabytes} * 85 / 100)}"
+    },
+    "Actions": [
+        {
+            "Type": "HammerDBServerExecutor",
+            "Parameters": {
+                "Scenario": "ExecuteServer",
+                "PackageName": "hammerdb",
+                "Workload": "tpch",
+                "SQLServer": "postgresql",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "Port": "$.Parameters.Port",
+                "VirtualUsers": "$.Parameters.VirtualUsers",
+                "ScaleFactor": "$.Parameters.ScaleFactor",
+                "Duration": "$.Parameters.Duration",
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "HammerDBClientExecutor",
+            "Parameters": {
+                "Scenario": "tpch",
+                "Workload": "tpch",
+                "SQLServer": "postgresql",
+                "PackageName": "hammerdb",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "Port": "$.Parameters.Port",
+                "VirtualUsers": "$.Parameters.VirtualUsers",
+                "ScaleFactor": "$.Parameters.ScaleFactor",
+                "Duration": "$.Parameters.Duration",
+                "Role": "Client"
+            }
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "FormatDisks",
+            "Parameters": {
+                "Scenario": "FormatDisks",
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "MountDisks",
+            "Parameters": {
+                "Scenario": "CreateMountPoints",
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "LinuxPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallLinuxPackages",
+                "Packages": "python3"
+            }
+        },
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "DownloadPostgreSQLPackage",
+                "BlobContainer": "packages",
+                "BlobName": "postgresql.14.0.0.rev3.zip",
+                "PackageName": "postgresql",
+                "Extract": true
+            }
+        },
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "DownloadHammerDBPackage",
+                "BlobContainer": "packages",
+                "BlobName": "hammerdb.4.12.0.rev3.zip",
+                "PackageName": "hammerdb",
+                "Extract": true
+            }
+        },
+        {
+            "Type": "PostgreSQLServerInstallation",
+            "Parameters": {
+                "Scenario": "InstallPostgreSQLServer",
+                "Action": "InstallServer",
+                "PackageName": "postgresql"
+            }
+        },
+        {
+            "Type": "PostgreSQLServerConfiguration",
+            "Parameters": {
+                "Scenario": "ConfigurePostgreSQLServer",
+                "Action": "ConfigureServer",
+                "PackageName": "postgresql",
+                "Role": "Server",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "Port": "$.Parameters.Port",
+                "SharedMemoryBuffer": "$.Parameters.SharedMemoryBuffer"
+            }
+        },
+        {
+            "Type": "HammerDBExecutor",
+            "Parameters": {
+                "Scenario": "PopulatePostgreSQLDatabase",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "Workload": "tpch",
+                "SQLServer": "postgresql",
+                "PackageName": "hammerdb",
+                "VirtualUsers": "$.Parameters.VirtualUsers",
+                "ScaleFactor": "$.Parameters.ScaleFactor",
+                "Port": "$.Parameters.Port",
+                "Duration": "$.Parameters.Duration",
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "ApiServer",
+            "Parameters": {
+                "Scenario": "StartAPIServer",
+                "Role": "Server"
+            }
+        }
+    ]
+}

@@ -1,0 +1,120 @@
+{
+    "Description": "Extensions Within Parallel Execution Block Example",
+    "Actions": [
+        {
+            "Type": "ParallelExecution",
+            "Components": [
+                {
+                    "Type": "TestExecutor",
+                    "Parameters": {
+                        "CheckDescription": "Execute Check 1",
+                        "Scenario": "ExecuteWorkload1",
+                        "ActionId": "a0b8c882-f5fd-4573-8d1e-140f7e7af601",
+                        "HostType": "Standalone",
+                        "CheckTool": "check_tool.ps1",
+                        "CheckToolType": "pwsh7",
+                        "CheckToolArguments": "-Check 1 -StringToPrint 'some string to print -+/<>!@#$%^&*()'",
+                        "CheckCase": "GetVmHostname",
+                        "MetricsName": "VmHostname",
+                        "MetricsUnit": "NA",
+                        "CheckToolVersion": "1.0.4",
+                        "PackageName": "checktool",
+                        "AcceptActionContext": true,
+                        "Tags": "Powershell"
+                    },
+                    "ActionCustomParameters": {
+                        "CustomPropertyX": "PropertyXValue1",
+                        "CustomPropertyY": "PropertyYValue1",
+                        "CustomPropertyZ": "PropertyZValue1",
+                        "ExpectedMetrics": {
+                            "PassFailMode": "AllPass / OnePass1",
+                            "Expectations": [
+                                {
+                                    "MetricsName": "VMHostNameCheck1",
+                                    "MetricsUnit": "CheckResult",
+                                    "MetricsValue": 0,
+                                    "MetricsUpperBound": null,
+                                    "MetricsLowerBound": null
+                                },
+                                {
+                                    "MetricsName": "HostHealth1",
+                                    "MetricsUnit": "Int",
+                                    "MetricsValue": 0,
+                                    "MetricsUpperBound": null,
+                                    "MetricsLowerBound": null
+                                }
+                            ]
+                        },
+                        "TrackingId": "d3e2a596-5214-4084-8718-ee568ce24a14",
+                        "ScenarioRunId": "713e6d8f-37e3-4f94-b5eb-a1ed0201f754",
+                        "ScenarioReportingId": "af37b321-69fa-142c-691b-0332f614c822",
+                        "GroupId": "8bddaff1-5c3c-446c-bda6-2432af59aa12",
+                        "VMResourceName": "TestVM-1",
+                        "Region": "westus",
+                        "ZoneId": "",
+                        "ResourceGroup": "ResourceGroup01",
+                        "VMId": "bc52fda0-b06a-4426-a70c-411c6ebbf006",
+                        "AadTenantId": "72f988bf-86f1-41af-91ab-2d7cd011db47",
+                        "RoleId": "cb67cddd-2456-4eab-a723-6c8108ce3db8",
+                        "ManifestVersion": "1.0"
+                    }
+                },
+                {
+                    "Type": "TestExecutor",
+                    "Parameters": {
+                        "CheckDescription": "Execute Check 2",
+                        "Scenario": "ExecuteWorkload1",
+                        "ActionId": "a0b8c882-f5fd-4573-8d1e-140f7e7af601",
+                        "HostType": "Standalone",
+                        "CheckTool": "check_tool.ps1",
+                        "CheckToolType": "pwsh7",
+                        "CheckToolArguments": "-Check 2 -StringToPrint 'some string to print -+/<>!@#$%^&*()'",
+                        "CheckCase": "GetVmHostname",
+                        "MetricsName": "VmHostname",
+                        "MetricsUnit": "NA",
+                        "CheckToolVersion": "1.0.4",
+                        "PackageName": "checktool",
+                        "AcceptActionContext": true,
+                        "Tags": "Powershell"
+                    },
+                    "ActionCustomParameters": {
+                        "CustomPropertyX": "PropertyXValue2",
+                        "CustomPropertyY": "PropertyYValue2",
+                        "CustomPropertyZ": "PropertyZValue2",
+                        "ExpectedMetrics": {
+                            "PassFailMode": "AllPass / OnePass2",
+                            "Expectations": [
+                                {
+                                    "MetricsName": "VMHostNameCheck2",
+                                    "MetricsUnit": "CheckResult2",
+                                    "MetricsValue": 0,
+                                    "MetricsUpperBound": null,
+                                    "MetricsLowerBound": null
+                                },
+                                {
+                                    "MetricsName": "HostHealth3",
+                                    "MetricsUnit": "Int",
+                                    "MetricsValue": 0,
+                                    "MetricsUpperBound": null,
+                                    "MetricsLowerBound": null
+                                }
+                            ]
+                        },
+                        "TrackingId": "e3e2a596-5214-4084-8718-ee568ce24a14",
+                        "ScenarioRunId": "113e6d8f-37e3-4f94-b5eb-a1ed0201f754",
+                        "ScenarioReportingId": "bf37b321-69fa-142c-691b-0332f614c822",
+                        "GroupId": "9bddaff1-5c3c-446c-bda6-2432af59aa12",
+                        "VMResourceName": "TestVM-2",
+                        "Region": "westus2",
+                        "ZoneId": "3",
+                        "ResourceGroup": "ResourceGroup02",
+                        "VMId": "ab52fda0-b06a-4426-a70c-411c6ebbf006",
+                        "AadTenantId": "72f988bf-86f1-41af-91ab-2d7cd011db47",
+                        "RoleId": "db67cddd-2456-4eab-a723-6c8108ce3db8",
+                        "ManifestVersion": "2.0"
+                    }
+                }
+            ]
+        }
+    ]
+}

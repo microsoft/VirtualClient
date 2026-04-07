@@ -15,8 +15,8 @@ namespace VirtualClient.Common.Telemetry
     /// </summary>
     public static class EventContextExtensions
     {
-        private const string ErrorProperty = "error";
-        private const string ErrorCallstackProperty = "errorCallstack";
+        internal const string ErrorProperty = "error";
+        internal const string ErrorCallstackProperty = "errorCallstack";
         private const int MaxCallStackLength = 2000;
 
         /// <summary>
@@ -42,7 +42,7 @@ namespace VirtualClient.Common.Telemetry
                     errors.Add(new
                     {
                         errorType = currentError.GetType().FullName,
-                        errorMessage = currentError.Message
+                        errorMessage = SensitiveData.ObscureSecrets(currentError.Message)
                     });
 
                     currentError = currentError.InnerException;
@@ -65,11 +65,11 @@ namespace VirtualClient.Common.Telemetry
                 {
                     if (error.StackTrace.Length > maxCallStackLength)
                     {
-                        context.Properties[EventContextExtensions.ErrorCallstackProperty] = error.StackTrace.Substring(0, maxCallStackLength);
+                        context.Properties[EventContextExtensions.ErrorCallstackProperty] = SensitiveData.ObscureSecrets(error.StackTrace.Substring(0, maxCallStackLength));
                     }
                     else
                     {
-                        context.Properties[EventContextExtensions.ErrorCallstackProperty] = error.StackTrace;
+                        context.Properties[EventContextExtensions.ErrorCallstackProperty] = SensitiveData.ObscureSecrets(error.StackTrace);
                     }
                 }
             }

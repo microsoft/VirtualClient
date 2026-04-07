@@ -12,6 +12,7 @@ namespace VirtualClient
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.DependencyInjection.Extensions;
     using NUnit.Framework;
     using VirtualClient.Contracts;
     using VirtualClient.Monitors;
@@ -106,7 +107,7 @@ namespace VirtualClient
 
                     FileUploadDescriptor descriptor = component.CreateFileUploadDescriptor(fileContext, component.Parameters, component.Metadata);
 
-                    await component.UploadFileAsync(contentStore, this.fileSystem, descriptor, CancellationToken.None, deleteFile: false);
+                    await component.UploadFileAsync(contentStore, this.fileSystem, descriptor, CancellationToken.None);
                 }
             }
         }
@@ -251,7 +252,7 @@ namespace VirtualClient
                 while (DateTime.UtcNow < finishTime)
                 {
                     FileUploadDescriptor descriptor = this.GetRandomDescriptor(component, resultsFiles);
-                    await component.UploadFileAsync(contentStore, this.fileSystem, descriptor, CancellationToken.None, deleteFile: false);
+                    await component.UploadFileAsync(contentStore, this.fileSystem, descriptor, CancellationToken.None);
                 }
             }
         }

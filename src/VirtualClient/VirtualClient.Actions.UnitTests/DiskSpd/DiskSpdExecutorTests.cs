@@ -8,10 +8,10 @@ namespace VirtualClient.Actions.DiskPerformance
     using System.Diagnostics;
     using System.IO;
     using System.Linq;
-    using System.Reflection;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
+    using Moq;
     using NUnit.Framework;
     using Polly;
     using VirtualClient.Common;
@@ -21,22 +21,24 @@ namespace VirtualClient.Actions.DiskPerformance
     [TestFixture]
     [Category("Unit")]
     [Platform(Exclude = "Unix,Linux,MacOsX")]
-    public class DiskSpdExecutorTests
+    public class DiskSpdExecutorTests : MockFixture
     {
-        private DependencyFixture fixture;
+        private DependencyPath mockPackage;
         private Dictionary<string, IConvertible> profileParameters;
         private IEnumerable<Disk> disks;
         private string output;
 
         [SetUp]
-        public void SetupDefaultBehavior()
+        public void SetupTest()
         {
-            this.fixture = new DependencyFixture();
-            this.disks = this.fixture.CreateDisks(PlatformID.Win32NT, true);
-            this.fixture.DiskManager.AddRange(this.disks);
+            this.disks = this.CreateDisks(PlatformID.Win32NT, true);
+            this.SetupDisks(this.disks?.ToArray());
 
             // The workload requires the DiskSpd package to be registered (either built-in or installed).
-            this.fixture.SetupWorkloadPackage("diskspd", expectedFiles: @"win-x64\diskspd.exe");
+            this.mockPackage = new DependencyPath("diskspd", this.GetPackagePath("diskspd"));
+            this.SetupPackage(this.mockPackage);
+            this.SetupFile(this.Combine(this.mockPackage.Path, "win-arm64", "diskspd.exe"));
+            this.SetupFile(this.Combine(this.mockPackage.Path, "win-x64", "diskspd.exe"));
 
             this.profileParameters = new Dictionary<string, IConvertible>()
             {
@@ -46,17 +48,73 @@ namespace VirtualClient.Actions.DiskPerformance
                 { nameof(DiskSpdExecutor.MetricScenario), "diskspd_randwrite_4GB_direct" }
             };
 
-            string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "DiskSpd", "DiskSpdExample-ReadWrite.txt");
-            this.output = File.ReadAllText(outputPath);
+            this.output = MockFixture.ReadFile(MockFixture.ExamplesDirectory, "DiskSpd", "DiskSpdExample-ReadWrite.txt");
 
-            this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
+            this.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
-                IProcessProxy process = this.fixture.CreateProcess(command, arguments, workingDir);
-                process.StandardOutput.Append(this.output);
-
-                return process;
+                return new Mock<IProcessProxy>()
+                    .Setup(command, arguments, workingDir, this.output).Object;
             };
+        }
+
+        [Test]
+        public void DiskSpdExecutorSelectsTheExpectedDisksForTest_RemoteDiskScenario()
+        {
+            IEnumerable<Disk> expectedDisks = this.disks.Where(disk => !disk.IsOperatingSystem());
+
+            using (TestDiskSpdExecutor workloadExecutor = new TestDiskSpdExecutor(this.Dependencies, this.profileParameters))
+            {
+                IEnumerable<Disk> actualDisks = workloadExecutor.GetDisksToTest(this.disks);
+                CollectionAssert.AreEquivalent(expectedDisks.Select(d => d.DevicePath), actualDisks.Select(d => d.DevicePath));
+            }
+        }
+
+        [Test]
+        public void DiskSpdExecutorSelectsTheExpectedDisksForTest_OSDiskScenario()
+        {
+            IEnumerable<Disk> expectedDisks = this.disks.Where(disk => disk.IsOperatingSystem());
+            this.profileParameters[nameof(DiskSpdExecutor.DiskFilter)] = "osdisk";
+
+            using (TestDiskSpdExecutor workloadExecutor = new TestDiskSpdExecutor(this.Dependencies, this.profileParameters))
+            {
+                IEnumerable<Disk> actualDisks = workloadExecutor.GetDisksToTest(this.disks);
+                CollectionAssert.AreEquivalent(expectedDisks.Select(d => d.DevicePath), actualDisks.Select(d => d.DevicePath));
+            }
+        }
+
+        [Test]
+        public void DiskSpdExecutorSelectsTheExpectedDisksForTest_AllDisksScenario()
+        {
+            IEnumerable<Disk> expectedDisks = this.disks;
+            this.profileParameters[nameof(DiskSpdExecutor.DiskFilter)] = "none";
+            using (TestDiskSpdExecutor workloadExecutor = new TestDiskSpdExecutor(this.Dependencies, this.profileParameters))
+            {
+                IEnumerable<Disk> actualDisks = workloadExecutor.GetDisksToTest(this.disks);
+                CollectionAssert.AreEquivalent(expectedDisks.Select(d => d.DevicePath), actualDisks.Select(d => d.DevicePath));
+            }
+        }
+
+        [Test]
+        public void DiskSpdExecutorIdentifiesTheExpectedDisksWhenTheyAreExplicitlyDefined()
+        {
+            // The default mock setups create 4 disks:
+            // C:
+            // D:
+            // E:
+            // F:
+
+            this.disks = this.CreateDisks(PlatformID.Win32NT, true);
+
+            this.profileParameters["DiskFilter"] = "DiskPath:D:,E:";
+            using (TestDiskSpdExecutor workloadExecutor = new TestDiskSpdExecutor(this.Dependencies, this.profileParameters))
+            {
+                IEnumerable<Disk> disksToTest = workloadExecutor.GetDisksToTest(this.disks);
+
+                Assert.IsNotNull(disksToTest);
+                Assert.AreEqual(2, disksToTest.Count());
+                Assert.IsTrue(object.ReferenceEquals(this.disks.ElementAt(1), disksToTest.ElementAt(0)));
+                Assert.IsTrue(object.ReferenceEquals(this.disks.ElementAt(2), disksToTest.ElementAt(1)));
+            }
         }
 
         [Test]
@@ -68,7 +126,7 @@ namespace VirtualClient.Actions.DiskPerformance
             this.profileParameters[nameof(DiskSpdExecutor.QueueDepth)] = 16;
             this.profileParameters[nameof(DiskSpdExecutor.ThreadCount)] = 32;
 
-            using (TestDiskSpdExecutor executor = new TestDiskSpdExecutor(this.fixture.Dependencies, this.profileParameters))
+            using (TestDiskSpdExecutor executor = new TestDiskSpdExecutor(this.Dependencies, this.profileParameters))
             {
                 executor.EvaluateParametersAsync(EventContext.None);
 
@@ -87,7 +145,7 @@ namespace VirtualClient.Actions.DiskPerformance
             this.profileParameters[nameof(DiskSpdExecutor.MetricScenario)] = "disk_fill";
             this.profileParameters[nameof(DiskSpdExecutor.DiskFillSize)] = "496G";
 
-            using (TestDiskSpdExecutor executor = new TestDiskSpdExecutor(this.fixture.Dependencies, this.profileParameters))
+            using (TestDiskSpdExecutor executor = new TestDiskSpdExecutor(this.Dependencies, this.profileParameters))
             {
                 executor.EvaluateParametersAsync(EventContext.None);
 
@@ -114,7 +172,7 @@ namespace VirtualClient.Actions.DiskPerformance
             this.profileParameters[nameof(DiskSpdExecutor.DiskFillSize)] = size;
             this.profileParameters[nameof(DiskSpdExecutor.FileSize)] = size;
 
-            using (TestDiskSpdExecutor executor = new TestDiskSpdExecutor(this.fixture.Dependencies, this.profileParameters))
+            using (TestDiskSpdExecutor executor = new TestDiskSpdExecutor(this.Dependencies, this.profileParameters))
             {
                 executor.EvaluateParametersAsync(EventContext.None);
 
@@ -130,13 +188,13 @@ namespace VirtualClient.Actions.DiskPerformance
         public void DiskSpdExecutorValidatesRequiredProfileParameters()
         {
             this.profileParameters[nameof(DiskSpdExecutor.CommandLine)] = null;
-            using (TestDiskSpdExecutor executor = new TestDiskSpdExecutor(this.fixture.Dependencies, this.profileParameters))
+            using (TestDiskSpdExecutor executor = new TestDiskSpdExecutor(this.Dependencies, this.profileParameters))
             {
                 Assert.Throws<WorkloadException>(() => executor.Validate());
             }
 
             this.profileParameters[nameof(DiskSpdExecutor.ProcessModel)] = "notallowed";
-            using (TestDiskSpdExecutor executor = new TestDiskSpdExecutor(this.fixture.Dependencies, this.profileParameters))
+            using (TestDiskSpdExecutor executor = new TestDiskSpdExecutor(this.Dependencies, this.profileParameters))
             {
                 Assert.Throws<WorkloadException>(() => executor.Validate());
             }
@@ -148,7 +206,7 @@ namespace VirtualClient.Actions.DiskPerformance
         [TestCase(" ")]
         public void DiskSpdExecutorCreateProcessesValidatesStringParameters(string invalidParameter)
         {
-            using (TestDiskSpdExecutor executor = new TestDiskSpdExecutor(this.fixture.Dependencies, this.profileParameters))
+            using (TestDiskSpdExecutor executor = new TestDiskSpdExecutor(this.Dependencies, this.profileParameters))
             {
                 Assert.Throws<ArgumentException>(
                     () => executor.CreateWorkloadProcesses(invalidParameter, "some string", this.disks, WorkloadProcessModel.SingleProcess));
@@ -173,11 +231,11 @@ namespace VirtualClient.Actions.DiskPerformance
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
             string expectedexe = "some exe";
             string expectedArguments = "some command";
-            IEnumerable<Disk> expectedDisks = this.fixture.CreateDisks(PlatformID.Win32NT, true).TakeLast(2);
+            IEnumerable<Disk> expectedDisks = this.CreateDisks(PlatformID.Win32NT, true).TakeLast(2);
             IEnumerable<string> expectedAccessPaths = expectedDisks.Select(disk => disk.Volumes.FirstOrDefault().AccessPaths.FirstOrDefault());
 
             int processCount = 0;
-            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 processCount++;
                 Assert.AreEqual(expectedexe, exe);
@@ -194,7 +252,7 @@ namespace VirtualClient.Actions.DiskPerformance
                 };
             };
 
-            using (TestDiskSpdExecutor executor = new TestDiskSpdExecutor(this.fixture.Dependencies, this.profileParameters))
+            using (TestDiskSpdExecutor executor = new TestDiskSpdExecutor(this.Dependencies, this.profileParameters))
             {
                 executor.CreateWorkloadProcesses(expectedexe, expectedArguments, expectedDisks, WorkloadProcessModel.SingleProcess);
             }
@@ -208,11 +266,11 @@ namespace VirtualClient.Actions.DiskPerformance
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
             string expectedexe = "some exe";
             string expectedArguments = "some command";
-            IEnumerable<Disk> expectedDisks = this.fixture.CreateDisks(PlatformID.Win32NT, true).TakeLast(2);
+            IEnumerable<Disk> expectedDisks = this.CreateDisks(PlatformID.Win32NT, true).TakeLast(2);
             IEnumerable<string> expectedAccessPaths = expectedDisks.Select(disk => disk.Volumes.FirstOrDefault().AccessPaths.FirstOrDefault());
 
             int processCount = 0;
-            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 Assert.AreEqual(expectedexe, exe);
                 Assert.IsTrue(arguments.StartsWith($"{expectedArguments}"));
@@ -229,38 +287,12 @@ namespace VirtualClient.Actions.DiskPerformance
                 };
             };
 
-            using (TestDiskSpdExecutor executor = new TestDiskSpdExecutor(this.fixture.Dependencies, this.profileParameters))
+            using (TestDiskSpdExecutor executor = new TestDiskSpdExecutor(this.Dependencies, this.profileParameters))
             {
                 executor.CreateWorkloadProcesses(expectedexe, expectedArguments, expectedDisks, WorkloadProcessModel.SingleProcessPerDisk);
             }
 
             Assert.AreEqual(expectedDisks.Count(), processCount);
-        }
-
-        [Test]
-        public async Task DiskSpdExecutorCreatesExpectedMountPointsForDisksUnderTest_RemoteDiskScenario()
-        {
-            IEnumerable<Disk> remoteDisks = this.SetupWorkloadScenario(testRemoteDisks: true);
-
-            // Clear any access points out.
-            remoteDisks.ToList().ForEach(disk => disk.Volumes.ToList().ForEach(vol => (vol.AccessPaths as List<string>).Clear()));
-
-            using (TestDiskSpdExecutor workloadExecutor = new TestDiskSpdExecutor(this.fixture.Dependencies, this.profileParameters))
-            {
-                await workloadExecutor.ExecuteAsync(CancellationToken.None);
-
-                Assert.IsNotEmpty(remoteDisks);
-                Assert.AreEqual(3, remoteDisks.SelectMany(d => d.Volumes.Where(v => v.AccessPaths?.Any() == true)).Count());
-
-                string expectedMountPoint1 = Path.Combine(MockFixture.TestAssemblyDirectory, "vcmnt_d");
-                Assert.AreEqual(expectedMountPoint1, remoteDisks.ElementAt(0).Volumes.ElementAt(0).AccessPaths.First());
-
-                string expectedMountPoint2 = Path.Combine(MockFixture.TestAssemblyDirectory, "vcmnt_e");
-                Assert.AreEqual(expectedMountPoint2, remoteDisks.ElementAt(1).Volumes.ElementAt(0).AccessPaths.First());
-
-                string expectedMountPoint3 = Path.Combine(MockFixture.TestAssemblyDirectory, "vcmnt_f");
-                Assert.AreEqual(expectedMountPoint3, remoteDisks.ElementAt(2).Volumes.ElementAt(0).AccessPaths.First());
-            }
         }
 
         [Test]
@@ -287,7 +319,7 @@ namespace VirtualClient.Actions.DiskPerformance
                 new DiskWorkloadProcess(process2, "anyTestedInstance", "E:\\any\file.dat")
             };
 
-            using (TestDiskSpdExecutor executor = new TestDiskSpdExecutor(this.fixture.Dependencies, this.profileParameters))
+            using (TestDiskSpdExecutor executor = new TestDiskSpdExecutor(this.Dependencies, this.profileParameters))
             {
                 await executor.ExecuteWorkloadsAsync(expectedWorkloads, CancellationToken.None).ConfigureAwait(false);
                 Assert.IsTrue(process1.Executed);
@@ -302,7 +334,7 @@ namespace VirtualClient.Actions.DiskPerformance
             this.profileParameters[nameof(DiskSpdExecutor.DeleteTestFilesOnFinish)] = "true";
 
             int filesDeleted = 0;
-            using (TestDiskSpdExecutor executor = new TestDiskSpdExecutor(this.fixture.Dependencies, this.profileParameters))
+            using (TestDiskSpdExecutor executor = new TestDiskSpdExecutor(this.Dependencies, this.profileParameters))
             {
                 executor.OnDeleteTestFiles = (testFiles) =>
                 {
@@ -321,7 +353,7 @@ namespace VirtualClient.Actions.DiskPerformance
             this.SetupWorkloadScenario(testRemoteDisks: true);
 
             int filesDeleted = 0;
-            using (TestDiskSpdExecutor executor = new TestDiskSpdExecutor(this.fixture.Dependencies, this.profileParameters))
+            using (TestDiskSpdExecutor executor = new TestDiskSpdExecutor(this.Dependencies, this.profileParameters))
             {
                 executor.OnDeleteTestFiles = (testFiles) =>
                 {
@@ -377,6 +409,11 @@ namespace VirtualClient.Actions.DiskPerformance
             public new Task ExecuteWorkloadsAsync(IEnumerable<DiskWorkloadProcess> workloads, CancellationToken cancellationToken)
             {
                 return base.ExecuteWorkloadsAsync(workloads, cancellationToken);
+            }
+
+            public new IEnumerable<Disk> GetDisksToTest(IEnumerable<Disk> disks)
+            {
+                return base.GetDisksToTest(disks);
             }
 
             public new void Validate()

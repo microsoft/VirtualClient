@@ -176,6 +176,42 @@ namespace VirtualClient.Dependencies
             }
         }
 
+        [Test]
+        public async Task LinuxPackageInstallationInstantiateCorrectDnfInstalltionAwsLinuxComplexCase()
+        {
+            LinuxDistributionInfo mockInfo = new LinuxDistributionInfo()
+            {
+                OperationSystemFullName = "TestAwsLinux",
+                LinuxDistribution = LinuxDistribution.AwsLinux
+            };
+            this.mockFixture.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>())).ReturnsAsync(mockInfo);
+
+            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            {
+                { nameof(LinuxPackageInstallation.Packages), "pack1,pack2,pack3" },
+                { "Packages-Apt", "wrongpack1,wrongpack2" },
+                { "Packages-Dnf", "extrapack1,extrapack2" },
+                { "Repositories-Apt", "wrongrepo1,wrongrepo2" },
+                { "Packages-Yum", "wrongpack1,wrongpack2" },
+                { "Repositories-Ubuntu", "wrongpack1,wrongpack2" },
+                { "Repositories-Dnf", "repo1,repo2" },
+                { "Repositories-AwsLinux", "extrarepo1,extrarepo2" },
+                { "Packages-Ubuntu", "morepack1,morepack2" },
+                { "Packages-Debian", "wrongpack1,wrongpack2" },
+                { "Packages-AwsLinux", "morepack1,morepack2" },
+                { "Repositories-SUSE", "wrongrepo1,wrongrepo2" },
+            };
+
+            using (TestLinuxPackageInstallation packageInstallation = new TestLinuxPackageInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                await packageInstallation.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+                Assert.IsTrue(packageInstallation.InstantiatedInstaller is DnfPackageInstallation);
+                DnfPackageInstallation aptInstall = (DnfPackageInstallation)packageInstallation.InstantiatedInstaller;
+                Assert.AreEqual("pack1,pack2,pack3,extrapack1,extrapack2,morepack1,morepack2", aptInstall.Packages);
+                Assert.AreEqual("repo1,repo2,extrarepo1,extrarepo2", aptInstall.Repositories);
+            }
+        }
+
         private class TestLinuxPackageInstallation : LinuxPackageInstallation
         {
             public TestLinuxPackageInstallation(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)

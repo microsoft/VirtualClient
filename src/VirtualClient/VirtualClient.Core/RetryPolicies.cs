@@ -6,6 +6,7 @@ namespace VirtualClient
     using System;
     using System.IO;
     using Polly;
+    using Polly.Retry;
 
     /// <summary>
     /// Common retry policies used by Virtual Client components to handle common
@@ -30,5 +31,21 @@ namespace VirtualClient
         {
             return true;
         }).WaitAndRetryAsync(10, retries => TimeSpan.FromSeconds(retries + 2));
+
+        /// <summary>
+        /// Synchronous retry policies.
+        /// </summary>
+        public static class Synchronous
+        {
+            /// <summary>
+            /// Common retry policy for deleting files.
+            /// </summary>
+            public static RetryPolicy FileDelete { get; } = Policy.Handle<IOException>().WaitAndRetry(5, retries => TimeSpan.FromSeconds(retries));
+
+            /// <summary>
+            /// Common retry policy for file access and operations.
+            /// </summary>
+            public static RetryPolicy FileOperations { get; } = Policy.Handle<IOException>().WaitAndRetry(5, retries => TimeSpan.FromSeconds(retries));
+        }
     }
 }

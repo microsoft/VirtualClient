@@ -11,7 +11,6 @@ namespace VirtualClient.Actions.NetworkPerformance
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
-    using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
     using VirtualClient.Contracts.Metadata;
@@ -42,10 +41,8 @@ namespace VirtualClient.Actions.NetworkPerformance
         }
 
         /// <inheritdoc/>
-        protected override Task<IProcessProxy> ExecuteWorkloadAsync(string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken, TimeSpan? timeout = null)
+        protected override Task ExecuteWorkloadAsync(string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken, TimeSpan? timeout = null)
         {
-            IProcessProxy process = null;
-
             EventContext relatedContext = telemetryContext.Clone()
                .AddContext("command", this.ExecutablePath)
                .AddContext("commandArguments", commandArguments);
@@ -58,11 +55,10 @@ namespace VirtualClient.Actions.NetworkPerformance
                     {
                         await this.DeleteResultsFileAsync();
 
-                        using (process = this.SystemManagement.ProcessManager.CreateProcess(this.ExecutablePath, commandArguments))
+                        using (IProcessProxy process = this.SystemManagement.ProcessManager.CreateProcess(this.ExecutablePath, commandArguments))
                         {
                             try
                             {
-                                this.CleanupTasks.Add(() => process.SafeKill());
                                 await process.StartAndWaitAsync(cancellationToken, timeout);
 
                                 if (!cancellationToken.IsCancellationRequested)
@@ -75,7 +71,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                                     else
                                     {
                                         string results = await this.WaitForResultsAsync(TimeSpan.FromMinutes(1), relatedContext);
-                                        await this.LogProcessDetailsAsync(process, relatedContext, "SockPerf", results: results.AsArray());
+                                        await this.LogProcessDetailsAsync(process, relatedContext, "SockPerf", results: new KeyValuePair<string, string>(this.ResultsPath, results));
 
                                         this.CaptureMetrics(
                                             results,
@@ -91,19 +87,19 @@ namespace VirtualClient.Actions.NetworkPerformance
                                 // We give this a best effort but do not want it to prevent the next workload
                                 // from executing.
                                 this.Logger.LogMessage($"{this.TypeName}.WorkloadTimeout", LogLevel.Warning, relatedContext.AddError(exc));
-                                process.SafeKill();
                             }
                             catch (Exception exc)
                             {
                                 this.Logger.LogMessage($"{this.TypeName}.WorkloadStartupError", LogLevel.Warning, relatedContext.AddError(exc));
-                                process.SafeKill();
                                 throw;
+                            }
+                            finally
+                            {
+                                process.SafeKill(this.Logger);
                             }
                         }
                     });
                 }
-
-                return process;
             });
         }
 
@@ -120,7 +116,7 @@ namespace VirtualClient.Actions.NetworkPerformance
             return $"{this.TestMode} " +
                 $"-i {serverIPAddress} " +
                 $"-p {this.Port} {protocolParam} " +
-                $"-t {this.TestDuration} " +
+                $"-t {this.TestDuration.TotalSeconds} " +
                 $"{(this.MessagesPerSecond.ToLowerInvariant() == "max" ? "--mps=max" : $"--mps {this.MessagesPerSecond}")} " +
                 $"--full-rtt --msg-size {this.MessageSize} " +
                 $"--client_ip {clientIPAddress} " +

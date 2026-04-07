@@ -23,16 +23,16 @@ namespace VirtualClient
             this.mockDisks = new List<Disk>
             {
                 // OS disk
-                FixtureExtensions.CreateDisk(0, platform: PlatformID.Win32NT, withVolume: true, deviceName: "DISK0", os: true),
+                this.mockFixture.CreateDisk(0, platform: PlatformID.Win32NT, os: true, "DISK0", @"C:\"),
 
                 // Remote Disk
-                FixtureExtensions.CreateDisk(1, platform: PlatformID.Win32NT, withVolume: false, deviceName: "DISK1", os: false),
-                FixtureExtensions.CreateDisk(2, platform: PlatformID.Win32NT, withVolume: false, deviceName: "DISK2", os: false),
-                FixtureExtensions.CreateDisk(3, platform: PlatformID.Win32NT, withVolume: false, deviceName: "DISK3", os: false),
-                FixtureExtensions.CreateDisk(4, platform: PlatformID.Win32NT, withVolume: false, deviceName: "DISK4", os: false),
-                FixtureExtensions.CreateDisk(5, platform: PlatformID.Win32NT, withVolume: false, deviceName: "DISK5", os: false),
-                FixtureExtensions.CreateDisk(6, platform: PlatformID.Win32NT, withVolume: false, deviceName: "DISK6", os: false),
-                FixtureExtensions.CreateDisk(7, platform: PlatformID.Win32NT, withVolume: false, deviceName: "DISK7", os: false),
+                this.mockFixture.CreateDisk(1, platform: PlatformID.Win32NT, os: false, "DISK1", @"D:\"),
+                this.mockFixture.CreateDisk(2, platform: PlatformID.Win32NT, os: false, "DISK2", @"E:\"),
+                this.mockFixture.CreateDisk(3, platform: PlatformID.Win32NT, os: false, "DISK3", @"F:\"),
+                this.mockFixture.CreateDisk(4, platform: PlatformID.Win32NT, os: false, "DISK4", @"G:\"),
+                this.mockFixture.CreateDisk(5, platform: PlatformID.Win32NT, os: false, "DISK5", @"H:\"),
+                this.mockFixture.CreateDisk(6, platform: PlatformID.Win32NT, os: false, "DISK6", @"I:\"),
+                this.mockFixture.CreateDisk(7, platform: PlatformID.Win32NT, os: false, "DISK7", @"J:\"),
             };
         }
 

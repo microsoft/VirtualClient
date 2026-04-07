@@ -35,7 +35,6 @@ namespace VirtualClient.Actions
         public void GzipResultsParserParsesTheExpectedSizesAndTimeFromResults()
         {
             this.testParser.Parse();
-            this.testParser.ReductionRatio.PrintDataTableFormatted();
             Assert.AreEqual(4, this.testParser.ReductionRatio.Columns.Count);
             Assert.AreEqual(12, this.testParser.ReductionRatio.Rows.Count);
         }

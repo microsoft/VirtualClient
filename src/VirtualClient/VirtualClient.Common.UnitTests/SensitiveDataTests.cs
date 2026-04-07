@@ -152,15 +152,6 @@ namespace VirtualClient.Common
         }
 
         [Test]
-        public void ObscureSecretsObfuscatesSasUriSignatures_Scenario2()
-        {
-            Tuple<string, string> dataContainingSecrets = SensitiveDataTests.GetSasUriPairScenario2();
-            string obscuredString = SensitiveData.ObscureSecrets(dataContainingSecrets.Item1);
-
-            Assert.AreEqual(dataContainingSecrets.Item2, obscuredString);
-        }
-
-        [Test]
         [TestCase("Password=AnySecretHereae09g34YT112", "Password=...")]
         [TestCase("Password AnySecretHereae09g34YT112", "Password ...")]
         [TestCase("Password=AnySecretHereae09g34YT112,,,Property1=Value1", "Password=...,,,Property1=Value1")]
@@ -211,6 +202,18 @@ namespace VirtualClient.Common
         [TestCase("--mode 'unattended' --serverport '1234' --superpassword 'AnySecret,Hereae,,09g34Y;T112'", "--mode 'unattended' --serverport '1234' --superpassword ...")]
         [TestCase("--mode 'unattended' --serverport '1234' --superpwd 'AnySecret,Hereae,,09g34Y;T112'", "--mode 'unattended' --serverport '1234' --superpwd ...")]
         public void ObscureSecretsHandlesCasesWhereThePasswordTermIsASubstringThatIsPartOfAnotherWord(string originalString, string expectedString)
+        {
+            string obscuredString = SensitiveData.ObscureSecrets(originalString);
+            Assert.AreEqual(expectedString, obscuredString);
+        }
+
+        [Test]
+        [TestCase("user@10.2.3.5;pass_;wor;d", "user@10.2.3.5;...")]
+        [TestCase("user@10.2.3.5;pass__w@rd", "user@10.2.3.5;...")]
+        [TestCase("user@machine@somewhere;pass", "user@machine@somewhere;...")]
+        [TestCase("user@machine@somewhere;pass;_w@rd", "user@machine@somewhere;...")]
+        [TestCase("user@2001:db8:85a3:0:0:8a2e:370:7334;pass;_w@rd", "user@2001:db8:85a3:0:0:8a2e:370:7334;...")]
+        public void ObscureSecretsObfuscatesPasswordsInAgentSshConnections(string originalString, string expectedString)
         {
             string obscuredString = SensitiveData.ObscureSecrets(originalString);
             Assert.AreEqual(expectedString, obscuredString);

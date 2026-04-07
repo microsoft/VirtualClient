@@ -4,6 +4,32 @@
 namespace VirtualClient
 {
     /// <summary>
+    /// Enumeration defines the type of profile component.
+    /// </summary>
+    public enum ComponentType : int
+    {
+        /// <summary>
+        /// Undefined component type.
+        /// </summary>
+        Undefined = 0,
+
+        /// <summary>
+        /// Profile action.
+        /// </summary>
+        Action = 1,
+
+        /// <summary>
+        /// Profile dependency.
+        /// </summary>
+        Dependency = 2,
+
+        /// <summary>
+        /// Profile monitor.
+        /// </summary>
+        Monitor = 3
+    }
+
+    /// <summary>
     /// Enumeration describes error reasons. Note that error reasons with
     /// a value greater than or equal to 500 indicate failures for which will
     /// prevent the application from functioning correctly at any point.
@@ -240,6 +266,11 @@ namespace VirtualClient
         PackageStoreNotDefined = 530,
 
         /// <summary>
+        /// The content store was not defined on the command line.
+        /// </summary>
+        ContentStoreNotDefined = 531,
+
+        /// <summary>
         /// The Virtual Client API service failed to startup.
         /// </summary>
         ApiStartupFailed = 535,
@@ -250,29 +281,19 @@ namespace VirtualClient
         Unauthorized = 540,
 
         /// <summary>
+        /// Certificate provided by user is either expired or not found.
+        /// </summary>
+        InvalidCertificate = 541,
+
+        /// <summary>
         /// The environment layout is null.
         /// </summary>
-        EnvironmentLayoutNotDefined = 550,
+        LayoutNotDefined = 550,
 
         /// <summary>
         /// Environment layout is not valid or is missing required information.
         /// </summary>
         LayoutInvalid = 551,
-
-        /// <summary>
-        /// IP address present on layout does not matches with the IPAddress of the machine.
-        /// </summary>
-        LayoutIPAddressDoesNotMatch = 552,
-
-        /// <summary>
-        /// The layout does not contain any instance whose name matches with agent id.
-        /// </summary>
-        EnvironmentLayoutClientInstancesNotFound = 553,
-
-        /// <summary>
-        /// The layout contains multiple instances whose name matches with agent id.
-        /// </summary>
-        EnvironmentLayoutClientInstanceDuplicates = 554,
 
         /// <summary>
         /// An extensions assembly is not valid for the current Virtual Client
@@ -556,7 +577,12 @@ namespace VirtualClient
         /// <summary>
         /// MSFT internal CentOS based distro AzLinux (Previously Mariner)
         /// </summary>
-        AzLinux
+        AzLinux,
+
+        /// <summary>
+        /// AwsLinux
+        /// </summary>
+        AwsLinux
     }
 
     /// <summary>
@@ -587,54 +613,12 @@ namespace VirtualClient
         /// <summary>
         /// Test metrics/results data.
         /// </summary>
-        Metrics = 105,
-    }
-
-    /// <summary>
-    /// Defines a category of the Virtual Client metadata data contract
-    /// (e.g. CPU, Memory, System).
-    /// </summary>
-    public enum MetadataContractCategory
-    {
-        /// <summary>
-        /// The default metadata category. In telemetry output, the metadata section 
-        /// name will be: 'metadata'.
-        /// </summary>
-        Default,
+        Metric = 105,
 
         /// <summary>
-        /// Metadata related to dependencies/packages that are installed on the system.
-        /// In telemetry output, the metadata section name will be: 'metadata_dependencies'.
+        /// Collection of metrics.
         /// </summary>
-        Dependencies,
-
-        /// <summary>
-        /// Metadata related to the the host and operating system. In telemetry output, the metadata 
-        /// section name will be: 'metadata_host'.
-        /// </summary>
-        Host,
-
-        /// <summary>
-        /// Metadata related to the Virtual Client platform runtime
-        /// (e.g. profile, timeout, iterations). In telemetry output, the metadata section 
-        /// name will be: 'metadata_runtime'.
-        /// </summary>
-        Runtime,
-
-        /// <summary>
-        /// Metadata related to the Virtual Client runtime scenario 
-        /// (e.g. workload, monitor, dependency scenario). In telemetry output, 
-        /// the metadata section name will be: 'metadata_scenario'.
-        /// </summary>
-        Scenario,
-
-        /// <summary>
-        /// Metadata related to the Virtual Client runtime scenario 
-        /// (e.g. workload, monitor, dependency scenario) as "extensions" to
-        /// that scenario definition. In telemetry output, the metadata section name 
-        /// will be: 'metadata_scenario_ext'.
-        /// </summary>
-        ScenarioExtensions
+        MetricsCollection = 106
     }
 
     /// <summary>
@@ -675,6 +659,28 @@ namespace VirtualClient
         /// LowerIsBetter (i.e. lower values are considered better outcomes).
         /// </summary>
         LowerIsBetter = 2
+    }
+
+    /// <summary>
+    /// Defines a monitoring strategy to apply.
+    /// </summary>
+    public enum MonitorStrategy
+    {
+        /// <summary>
+        /// Undefined
+        /// </summary>
+        Undefined = 0,
+
+        /// <summary>
+        /// Strategy indicates the monitor should run only once.
+        /// </summary>
+        Once,
+
+        /// <summary>
+        /// Strategy indicates the monitor should run once at the
+        /// beginning of operations and once at the end before exit.
+        /// </summary>
+        OnceAtBeginAndEnd
     }
 
     /// <summary>

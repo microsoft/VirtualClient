@@ -11,6 +11,7 @@ namespace VirtualClient.Actions
     using global::VirtualClient;
     using global::VirtualClient.Common;
     using global::VirtualClient.Contracts;
+    using Microsoft.Extensions.DependencyInjection.Extensions;
     using Moq;
     using NUnit.Framework;
 
@@ -184,26 +185,26 @@ namespace VirtualClient.Actions
             if (platform == PlatformID.Win32NT)
             {
                 this.mockFixture.Setup(PlatformID.Win32NT);
-                this.mockFixture.SetupWorkloadPackage("specjbb2015", expectedFiles: @"runtimes/win-x64/specjbb2015.jar");
+                this.mockFixture.SetupPackage("specjbb2015", expectedFiles: @"runtimes/win-x64/specjbb2015.jar");
 
                 Dictionary<string, IConvertible> specifics = new Dictionary<string, IConvertible>()
                 {
                     { PackageMetadata.ExecutablePath, "java.exe" }
                 };
 
-                this.mockFixture.SetupWorkloadPackage("javadevelopmentkit", specifics, expectedFiles: @"runtimes/win-x64/bin/java.exe");
+                this.mockFixture.SetupPackage("javadevelopmentkit", specifics, expectedFiles: @"runtimes/win-x64/bin/java.exe");
             }
             else
             {
                 this.mockFixture.Setup(PlatformID.Unix);
-                this.mockFixture.SetupWorkloadPackage("specjbb2015", expectedFiles: @"runtimes/linux-x64/SPECJbb2008.jar");
+                this.mockFixture.SetupPackage("specjbb2015", expectedFiles: @"runtimes/linux-x64/SPECJbb2008.jar");
 
                 Dictionary<string, IConvertible> specifics = new Dictionary<string, IConvertible>()
                 {
                     { PackageMetadata.ExecutablePath, "java" }
                 };
 
-                this.mockFixture.SetupWorkloadPackage("javadevelopmentkit", specifics, expectedFiles: @"runtimes/linux-x64/bin/java");
+                this.mockFixture.SetupPackage("javadevelopmentkit", specifics, expectedFiles: @"runtimes/linux-x64/bin/java");
             }
 
             this.mockFixture.SetupDisks(withRemoteDisks: false);

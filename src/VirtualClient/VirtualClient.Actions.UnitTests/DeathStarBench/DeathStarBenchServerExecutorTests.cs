@@ -21,21 +21,56 @@ namespace VirtualClient.Actions
     [Category("Unit")]
     public class DeathStarBenchServerExecutorTests
     {
-        private MockFixture fixture;
+        private MockFixture mock;
         private DependencyPath mockPath;
         private const string GraphType = "socfb-Reed98";
+
+        public void SetupTest(string serviceName)
+        {
+            // Setup:
+            // The expected files exist on the file system.
+            string mockCommand = "--join-swarm";
+
+            this.mock.Parameters[nameof(DeathStarBenchServerExecutor.Scenario)] = serviceName;
+            this.mock.Parameters[nameof(DeathStarBenchServerExecutor.GraphType)] = "socfb-Reed98";
+
+            this.mock.File.Setup(f => f.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(mockCommand);
+
+            this.mock.Directory.Setup(d => d.Exists(It.IsAny<string>()))
+                .Returns(true);
+
+            this.mock.File.Setup(f => f.Exists(It.IsAny<string>()))
+                .Returns(true);
+
+            // Setup:
+            // The server-side component successfully updates the state.
+            this.mock.ApiClient.OnUpdateState<DeathStarBenchState>(nameof(DeathStarBenchState))
+                .ReturnsAsync(this.mock.CreateHttpResponse(HttpStatusCode.OK));
+
+            Item<State> joinSwarmState = new Item<State>(
+                nameof(DeathStarBenchExecutor.SwarmCommand),
+                new State(new Dictionary<string, IConvertible>
+                {
+                    [nameof(DeathStarBenchExecutor.SwarmCommand)] = "--join-swarm"
+                }));
+
+            this.mock.ApiClient
+                 .OnGetState(nameof(DeathStarBenchExecutor.SwarmCommand))
+                .ReturnsAsync(this.mock.CreateHttpResponse(HttpStatusCode.OK, joinSwarmState));
+        }
 
         [SetUp]
         public void SetupTests()
         {
-            this.fixture = new MockFixture();
-            this.fixture.Setup(PlatformID.Unix);
+            this.mock = new MockFixture();
+            this.mock.Setup(PlatformID.Unix);
 
-            this.mockPath = this.fixture.Create<DependencyPath>();
-            this.fixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPath);
+            this.mockPath = this.mock.Create<DependencyPath>();
+            this.mock.PackageManager.OnGetPackage().ReturnsAsync(this.mockPath);
 
-            this.fixture.Parameters[nameof(DeathStarBenchExecutor.PackageName)] = "deathstarbench";
-            this.fixture.Parameters[nameof(DeathStarBenchExecutor.ServiceName)] = "socialnetwork";
+            this.mock.Parameters[nameof(DeathStarBenchExecutor.PackageName)] = "deathstarbench";
+            this.mock.Parameters[nameof(DeathStarBenchExecutor.ServiceName)] = "socialnetwork";
         }
 
         [Test]
@@ -44,21 +79,21 @@ namespace VirtualClient.Actions
         [TestCase("hotelreservation", @"bash -c ""docker stack deploy --compose-file=docker-compose-swarm.yml hotelreservation""")]
         public async Task DeathStarBenchServerExecutorExecutesExpectedProcessInMultiVMScenario(string serviceName, string expectedArguments)
         {
-            this.SetupDefaults(serviceName);
+            this.SetupTest(serviceName);
 
             int processExecuted = 0;
-            this.fixture.Parameters[nameof(DeathStarBenchExecutor.ServiceName)] = serviceName;
-            this.fixture.Parameters[nameof(DeathStarBenchServerExecutor.GraphType)] = GraphType;
-            using TestDeathStarBenchServerExecutor executor = new TestDeathStarBenchServerExecutor(this.fixture.Dependencies, this.fixture.Parameters);
+            this.mock.Parameters[nameof(DeathStarBenchExecutor.ServiceName)] = serviceName;
+            this.mock.Parameters[nameof(DeathStarBenchServerExecutor.GraphType)] = GraphType;
+            using TestDeathStarBenchServerExecutor executor = new TestDeathStarBenchServerExecutor(this.mock.Dependencies, this.mock.Parameters);
 
 
-            this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
+            this.mock.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
             {
                 if (arguments == expectedArguments)
                 {
                     processExecuted++;
                 }
-                return this.fixture.Process;
+                return this.mock.Process;
             };
 
             await executor.ExecuteAsync(CancellationToken.None)
@@ -73,22 +108,22 @@ namespace VirtualClient.Actions
         [TestCase("hotelreservation")]
         public async Task DeathStarBenchServerExecutorExecutesExpectedProcessInSingleVMScenario(string serviceName)
         {
-            this.SetupDefaults(serviceName);
+            this.SetupTest(serviceName);
 
             int processExecuted = 0;
             string expectedArguments = "docker-compose -f docker-compose.yml up -d";
 
-            this.fixture.Layout = new EnvironmentLayout(new List<ClientInstance>
+            this.mock.Layout = new EnvironmentLayout(new List<ClientInstance>
             {
                 new ClientInstance($"{Environment.MachineName}", "1.2.3.4", "Server"),
             });
 
-            using (var executor = new TestDeathStarBenchServerExecutor(this.fixture.Dependencies, this.fixture.Parameters))
+            using (var executor = new TestDeathStarBenchServerExecutor(this.mock.Dependencies, this.mock.Parameters))
             {
                 DeathStarBenchState serverState = new DeathStarBenchState(serviceName, true);
                 Item<JObject> expectedStateItem = new Item<JObject>(nameof(DeathStarBenchState), JObject.FromObject(serverState));
 
-                this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
+                this.mock.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
                 {
                     if (command == "sudo" && arguments == expectedArguments)
                     {
@@ -97,10 +132,10 @@ namespace VirtualClient.Actions
 
                     if (arguments == "bash -c \"docker ps | wc -l\"")
                     {
-                        this.fixture.Process.StandardOutput.Append("1");
+                        this.mock.Process.StandardOutput.Append("1");
                     }
 
-                    return this.fixture.Process;
+                    return this.mock.Process;
                 };
 
                 await executor.ExecuteAsync(CancellationToken.None)
@@ -108,38 +143,6 @@ namespace VirtualClient.Actions
 
                 Assert.AreEqual(1, processExecuted);
             }
-        }
-
-        private void SetupDefaults(string serviceName)
-        {
-            // Setup:
-            // The expected files exist on the file system.
-            string mockCommand = "--join-swarm";
-
-            this.fixture.Parameters[nameof(DeathStarBenchServerExecutor.Scenario)] = serviceName;
-            this.fixture.Parameters[nameof(DeathStarBenchServerExecutor.GraphType)] = "socfb-Reed98";
-
-            this.fixture.File.Setup(f => f.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(mockCommand);
-
-            this.fixture.File.Setup(f => f.Exists(It.IsAny<string>()))
-                .Returns(true);
-
-            // Setup:
-            // The server-side component successfully updates the state.
-            this.fixture.ApiClient.OnUpdateState<DeathStarBenchState>(nameof(DeathStarBenchState))
-                .ReturnsAsync(this.fixture.CreateHttpResponse(HttpStatusCode.OK));
-
-            Item <State> joinSwarmState = new Item<State>(
-                nameof(DeathStarBenchExecutor.SwarmCommand),
-                new State(new Dictionary<string, IConvertible>
-                {
-                    [nameof(DeathStarBenchExecutor.SwarmCommand)] = "--join-swarm"
-                }));
-
-            this.fixture.ApiClient
-                 .OnGetState(nameof(DeathStarBenchExecutor.SwarmCommand))
-                .ReturnsAsync(this.fixture.CreateHttpResponse(HttpStatusCode.OK, joinSwarmState));
         }
 
         private class TestDeathStarBenchServerExecutor : DeathStarBenchServerExecutor

@@ -4,8 +4,6 @@
 namespace VirtualClient
 {
     using System;
-    using System.Collections;
-    using System.Collections.Generic;
     using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
@@ -13,7 +11,9 @@ namespace VirtualClient
     using System.Threading;
     using System.Threading.Tasks;
     using Polly;
+    using Polly.Retry;
     using VirtualClient.Common.Extensions;
+    using VirtualClient.Contracts;
 
     /// <summary>
     /// Methods for extending the functionality of the 
@@ -21,24 +21,81 @@ namespace VirtualClient
     /// </summary>
     public static class FileSystemExtensions
     {
-        private const string SettingsBeginComment = "# VC Settings Begin";
-        private const string SettingsEndComment = "# VC Settings End";
+        /// <summary>
+        /// Copies the contents of a directory to a new location.
+        /// </summary>
+        /// <param name="fileSystem">The file system interface.</param>
+        /// <param name="sourceDirectory">The source directory to copy from.</param>
+        /// <param name="destinationDirectory">The destination directory to copy to.</param>
+        /// <param name="recursive">Indicates whether to copy directories recursively.</param>
+        public static Task CopyDirectoryAsync(this IFileSystem fileSystem, string sourceDirectory, string destinationDirectory, bool recursive = true)
+        {
+            fileSystem.ThrowIfNull(nameof(fileSystem));
+            sourceDirectory.ThrowIfNullOrWhiteSpace(nameof(sourceDirectory));
+            destinationDirectory.ThrowIfNullOrWhiteSpace(nameof(destinationDirectory));
+
+            return Task.Run(() =>
+            {
+                string[] files = fileSystem.Directory.GetFiles(sourceDirectory, "*.*", recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
+                if (files?.Any() == true)
+                {
+                    if (!fileSystem.Directory.Exists(destinationDirectory))
+                    {
+                        fileSystem.Directory.CreateDirectory(destinationDirectory);
+                    }
+
+                    foreach (string file in files)
+                    {
+                        string fileName = fileSystem.Path.GetFileName(file);
+                        string relativeSubdirectory = fileSystem.GetRelativeSubdirectory(sourceDirectory, file);
+
+                        if (!string.IsNullOrWhiteSpace(relativeSubdirectory))
+                        {
+                            fileSystem.File.Copy(file, fileSystem.Path.Combine(destinationDirectory, relativeSubdirectory, fileName));
+                        }
+                        else
+                        {
+                            fileSystem.File.Copy(file, fileSystem.Path.Combine(destinationDirectory, fileName));
+                        }
+                    }
+                }
+            });
+        }
 
         /// <summary>
-        /// Evaluates if the given fully qualified file can be found in the file system, throws if can not be found.
+        /// Attempts to delete a file with transient issue retry handling.
         /// </summary>
-        /// <param name="fileHandler">Interface to interact with files in the file system.</param>
-        /// <param name="file">A fully qualified path to a file (i.e C:\App\Tools\MyTool\mytool.exe)</param>
-        /// <param name="errorMessage">An error message to use instead of the default message.</param>
-        public static void ThrowIfFileDoesNotExist(this IFile fileHandler, string file, string errorMessage = null)
+        /// <param name="fileHandler">An interface to the filesystem to interact on a per file basis.</param>
+        /// <param name="file">the fully qualified path to the file to delete.</param>
+        /// <param name="retryPolicy">The retry policy to apply to the deletion.</param>
+        public static void Delete(this IFile fileHandler, string file, RetryPolicy retryPolicy = null)
         {
             fileHandler.ThrowIfNull(nameof(fileHandler));
             file.ThrowIfNullOrWhiteSpace(nameof(file));
 
-            if (!fileHandler.Exists(file))
+            // IOException is thrown when a process still has a descriptor open on file. This is retryable
+            // when a process is closing.
+            // https://docs.microsoft.com/en-us/dotnet/api/system.io.file.delete?view=net-5.0
+            (retryPolicy ?? Policy.Handle<IOException>().WaitAndRetry(10, (attempts) => TimeSpan.FromSeconds(Math.Pow(attempts, 2)))).Execute(() =>
             {
-                throw new FileNotFoundException(errorMessage ?? $"The file '{file}' could not be found.");
-            }
+                try
+                {
+                    fileHandler.Delete(file);
+                }
+                catch (FileNotFoundException)
+                {
+                    // This can happen in certain scenarios. The outcome is the same as the one
+                    // expected...the file no longer exists!
+                }
+                catch (DirectoryNotFoundException)
+                {
+                    // This can happen in certain scenarios. The outcome is the same as the one
+                    // expected...the file no longer exists!
+                }
+
+                return Task.CompletedTask;
+
+            });
         }
 
         /// <summary>
@@ -126,13 +183,27 @@ namespace VirtualClient
         public static async Task ReplaceInFileAsync(this IFile fileHandler, string file, string pattern, string replacement, CancellationToken cancellationToken, RegexOptions options = RegexOptions.None)
         {
             FileSystemExtensions.ThrowIfFileDoesNotExist(fileHandler, file);
-            string fileContent = await fileHandler.ReadAllTextAsync(file, cancellationToken)
-                .ConfigureAwait(false);
-
+            string fileContent = await fileHandler.ReadAllTextAsync(file, cancellationToken);
             fileContent = Regex.Replace(fileContent, pattern, replacement, options);
 
-            await fileHandler.WriteAllTextAsync(file, fileContent, cancellationToken)
-                .ConfigureAwait(false);
+            await fileHandler.WriteAllTextAsync(file, fileContent, cancellationToken);
+        }
+
+        /// <summary>
+        /// Evaluates if the given fully qualified file can be found in the file system, throws if can not be found.
+        /// </summary>
+        /// <param name="fileHandler">Interface to interact with files in the file system.</param>
+        /// <param name="file">A fully qualified path to a file (i.e C:\App\Tools\MyTool\mytool.exe)</param>
+        /// <param name="errorMessage">An error message to use instead of the default message.</param>
+        public static void ThrowIfFileDoesNotExist(this IFile fileHandler, string file, string errorMessage = null)
+        {
+            fileHandler.ThrowIfNull(nameof(fileHandler));
+            file.ThrowIfNullOrWhiteSpace(nameof(file));
+
+            if (!fileHandler.Exists(file))
+            {
+                throw new FileNotFoundException(errorMessage ?? $"The file '{file}' could not be found.");
+            }
         }
     }
 }

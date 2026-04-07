@@ -11,6 +11,7 @@ namespace VirtualClient.Actions
     using System.Runtime.InteropServices;
     using System.Security.Cryptography;
     using System.Text;
+    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
@@ -42,11 +43,6 @@ namespace VirtualClient.Actions
         protected const string PythonCommand = "python3";
 
         private readonly IStateManager stateManager;
-        private static readonly string[] SelectWorkloads =
-        {
-            "select_random_points",
-            "select_random_ranges"
-        };
 
         /// <summary>
         /// Constructor for <see cref="SysbenchExecutor"/>
@@ -65,7 +61,28 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// The database name option passed to Sysbench.
+        /// Defines the mode in which Sysbench is operating.
+        /// </summary>
+        protected internal enum SysbenchMode
+        {
+            /// <summary>
+            /// Creates the database schema with minimal data.
+            /// </summary>
+            Prepare,
+
+            /// <summary>
+            /// Populates the database with the full dataset.
+            /// </summary>
+            Populate,
+
+            /// <summary>
+            /// Runs the benchmark workload.
+            /// </summary>
+            Run
+        }
+
+        /// <summary>
+        /// The benchmark (e.g. OLTP, TPCC).
         /// </summary>
         public string Benchmark
         {
@@ -111,7 +128,7 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// The workload option passed to Sysbench.
+        /// The number of tables to create in the database.
         /// </summary>
         public int? TableCount
         {
@@ -135,7 +152,7 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Number of records per table.
+        /// The database system (e.g. MySQL, PostgreSQL).
         /// </summary>
         public string DatabaseSystem
         {
@@ -152,13 +169,13 @@ namespace VirtualClient.Actions
         {
             get
             {
-                byte[] hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes(this.ExperimentId));
+                byte[] hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes("default"));
                 return Convert.ToBase64String(hashBytes);
             }
         }
 
         /// <summary>
-        /// Number of records per table.
+        /// Number of warehouses.
         /// </summary>
         public int? WarehouseCount
         {
@@ -170,7 +187,7 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// The workload option passed to Sysbench.
+        /// The workload option passed to Sysbench (e.g. oltp_update_index, oltp_update_non_index).
         /// </summary>
         public string Workload
         {
@@ -178,18 +195,6 @@ namespace VirtualClient.Actions
             {
                 this.Parameters.TryGetValue(nameof(SysbenchClientExecutor.Workload), out IConvertible workload);
                 return workload?.ToString();
-            }
-        }
-
-        /// <summary>
-        /// The specifed action that controls the execution of the dependency.
-        /// </summary>
-        public string Action
-        {
-            get
-            {
-                this.Parameters.TryGetValue(nameof(this.Action), out IConvertible action);
-                return action?.ToString();
             }
         }
 
@@ -252,7 +257,6 @@ namespace VirtualClient.Actions
             recordCountExponent = Math.Max(3, recordCountExponent);
 
             int recordEstimate = (int)Math.Pow(10, recordCountExponent);
-
             int recordCount = records.GetValueOrDefault(recordEstimate);
 
             // record count specified in profile if it is the configurable scenario
@@ -264,13 +268,21 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Method to determine the record count for the given run.
+        /// Method to determine the warehouse count for the given run.
+        /// Warehouses are scaled from the record count using the TPC-C sizing ratio:
+        /// 1 warehouse ≈ 100 MB (~500K rows), 1 OLTP record ≈ 200 bytes across 10 tables,
+        /// so 1 warehouse ≈ 50,000 OLTP records.
         /// </summary>
         /// <returns></returns>
-        public static int GetWarehouseCount(string databaseScenario, int? warehouses)
+        public static int GetWarehouseCount(ISystemManagement systemManagement, string databaseScenario, int? warehouses)
         {
-            int warehouseCount = warehouses.GetValueOrDefault(100);
-            warehouseCount = (databaseScenario == SysbenchScenario.Configure || warehouseCount == 1) ? warehouseCount : 100;
+            const int RecordsPerWarehouse = 50000;
+
+            int recordEstimate = GetRecordCount(systemManagement, databaseScenario, records: null);
+            int warehouseEstimate = Math.Max(1, recordEstimate / RecordsPerWarehouse);
+
+            int warehouseCount = warehouses.GetValueOrDefault(warehouseEstimate);
+            warehouseCount = (databaseScenario == SysbenchScenario.Configure || warehouseCount == 1) ? warehouseCount : warehouseEstimate;
 
             return warehouseCount;
         }
@@ -314,10 +326,7 @@ namespace VirtualClient.Actions
             DependencyPath package = await this.GetPackageAsync(this.PackageName, cancellationToken);
             this.SysbenchPackagePath = package.Path;
 
-            if (this.Action != ClientAction.TruncateDatabase)
-            {
-                await this.InitializeExecutablesAsync(telemetryContext, cancellationToken);
-            }
+            await this.InitializeExecutablesAsync(telemetryContext, cancellationToken);
 
             this.InitializeApiClients(telemetryContext, cancellationToken);
 
@@ -396,40 +405,42 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Add metrics to telemtry.
+        /// Build the Sysbench Logging Basic Arguments, having the common parameters
+        /// dbName, databaseSystem, benchmark and tableCount.
         /// </summary>
-        /// <param name="arguments"></param>
-        /// <param name="process"></param>
-        /// <param name="telemetryContext"></param>
-        /// <param name="cancellationToken"></param>
-        protected void AddMetric(string arguments, IProcessProxy process, EventContext telemetryContext, CancellationToken cancellationToken)
+        /// <returns></returns>
+        protected string BuildSysbenchLoggingArguments(SysbenchMode mode)
         {
-            if (!cancellationToken.IsCancellationRequested)
+            int tableCount = GetTableCount(this.DatabaseScenario, this.TableCount, this.Workload);
+            int threadCount = GetThreadCount(this.SystemManager, this.DatabaseScenario, this.Threads);
+
+            string loggingArguments = $"--dbName {this.DatabaseName} --databaseSystem {this.DatabaseSystem} --benchmark {this.Benchmark} --threadCount {threadCount} --tableCount {tableCount}";
+
+            switch (this.Benchmark)
             {
-                this.MetadataContract.AddForScenario(
-                    "Sysbench",
-                    process.FullCommand(),
-                    toolVersion: null);
+                case BenchmarkName.OLTP:
+                    int recordCount = mode == SysbenchMode.Prepare ? 1 : GetRecordCount(this.SystemManager, this.DatabaseScenario, this.RecordCount);
+                    loggingArguments = $"{loggingArguments} --recordCount {recordCount}";
+                    break;
+                case BenchmarkName.TPCC:
+                    int warehouseEstimate = GetWarehouseCount(this.SystemManager, this.DatabaseScenario, this.WarehouseCount);
+                    int warehouseCount = mode switch
+                    {
+                        SysbenchMode.Prepare => 1,
+                        SysbenchMode.Populate => Math.Max(1, warehouseEstimate - 1),
+                        SysbenchMode.Run => warehouseEstimate,
+                        _ => warehouseEstimate
+                    };
 
-                this.MetadataContract.Apply(telemetryContext);
-
-                string text = process.StandardOutput.ToString();
-
-                List<Metric> metrics = new List<Metric>();
-                double duration = (process.ExitTime - process.StartTime).TotalMinutes;
-                metrics.Add(new Metric("PopulateDatabaseTime_Minutes ", duration, "minutes", MetricRelativity.LowerIsBetter));
-
-                this.Logger.LogMetrics(
-                    toolName: "Sysbench",
-                    scenarioName: this.MetricScenario ?? this.Scenario,
-                    process.StartTime,
-                    process.ExitTime,
-                    metrics,
-                    null,
-                    scenarioArguments: arguments,
-                    this.Tags,
-                    telemetryContext);
+                    loggingArguments = $"{loggingArguments} --warehouses {warehouseCount}";
+                    break;
+                default:
+                    throw new DependencyException(
+                        $"The '{this.Benchmark}' benchmark is not supported with the Sysbench workload. Supported options include: \"OLTP, TPCC\".",
+                        ErrorReason.NotSupported);
             }
+
+            return loggingArguments;
         }
 
         private async Task CheckDistroSupportAsync(EventContext telemetryContext, CancellationToken cancellationToken)
@@ -514,27 +525,6 @@ namespace VirtualClient.Actions
         {
             public const string OLTP = nameof(OLTP);
             public const string TPCC = nameof(TPCC);
-        }
-
-        /// <summary>
-        /// Supported Sysbench Client actions.
-        /// </summary>
-        internal class ClientAction
-        {
-            /// <summary>
-            /// Creates Database on MySQL server and Users on Server and any Clients.
-            /// </summary>
-            public const string PopulateDatabase = nameof(PopulateDatabase);
-
-            /// <summary>
-            /// Truncates all tables existing in database
-            /// </summary>
-            public const string TruncateDatabase = nameof(TruncateDatabase);
-
-            /// <summary>
-            /// Truncates all tables existing in database
-            /// </summary>
-            public const string RunWorkload = nameof(RunWorkload);
         }
     }
 }

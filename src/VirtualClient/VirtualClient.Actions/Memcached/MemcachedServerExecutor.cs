@@ -20,6 +20,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Logging;
 
     /// <summary>
     /// MemcachedMemtier Server Executor
@@ -249,7 +250,7 @@ namespace VirtualClient.Actions
             {
                 foreach (IProcessProxy process in processes)
                 {
-                    process.SafeKill();
+                    process.SafeKill(this.Logger);
                 }
             }
 

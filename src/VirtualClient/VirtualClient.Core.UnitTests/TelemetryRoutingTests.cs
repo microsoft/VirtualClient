@@ -95,7 +95,7 @@ namespace VirtualClient
             loggerProviders.Add(new TestLoggerProvider(loggerExpected.Object).HandlePerformanceCounters());
 
             ILogger logger = new LoggerFactory(loggerProviders).CreateLogger("AnyCategory");
-            logger.Log(LogLevel.Information, new EventId((int)LogType.Metrics, "PerformanceCounter"), "AnyState", null, null);
+            logger.Log(LogLevel.Information, new EventId((int)LogType.Metric, "PerformanceCounter"), "AnyState", null, null);
 
             // The expected logger should have handled the event.
             loggerExpected.Verify(
@@ -129,7 +129,7 @@ namespace VirtualClient
             loggerProviders.Add(new TestLoggerProvider(loggerExpected.Object).HandleMetrics());
 
             ILogger logger = new LoggerFactory(loggerProviders).CreateLogger("AnyCategory");
-            logger.Log(LogLevel.Information, new EventId((int)LogType.Metrics, "AnyName"), "AnyState", null, null);
+            logger.Log(LogLevel.Information, new EventId((int)LogType.Metric, "AnyName"), "AnyState", null, null);
 
             // The expected logger should have handled the event.
             loggerExpected.Verify(

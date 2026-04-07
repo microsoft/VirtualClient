@@ -193,7 +193,7 @@ namespace VirtualClient.Actions
 
         private void SetupWorkloadPackages(PlatformID platformID, string platformArch)
         {
-            this.mockFixture.SetupWorkloadPackage("visualstudiocruntime");
+            this.mockFixture.SetupPackage("visualstudiocruntime");
 
             string ntttcpExe = platformID == PlatformID.Win32NT ? "NTttcp.exe" : "ntttcp";
             string cpsExe = platformID == PlatformID.Win32NT ? "cps.exe" : "cps";
@@ -208,7 +208,7 @@ namespace VirtualClient.Actions
                 $"{platformArch}/{latteExe}",
             };
 
-            this.mockFixture.SetupWorkloadPackage("networking", expectedFiles: expectedFiles.ToArray());
+            this.mockFixture.SetupPackage("networking", expectedFiles: expectedFiles.ToArray());
         }
 
         private IEnumerable<string> GetCommands(PlatformID platformID, Architecture arch)

@@ -6,7 +6,6 @@ namespace VirtualClient.Metadata
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Runtime.InteropServices;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
@@ -22,6 +21,8 @@ namespace VirtualClient.Metadata
     /// </summary>
     public static class MetadataExtensions
     {
+        private static readonly Regex VersionExpression = new Regex(@"[a-z0-9\s]+\([\x20-\x7F]+\)\s*([0-9a-z\.-]+)", RegexOptions.IgnoreCase);
+
         /// <summary>
         /// Returns metadata contract information for CPU hardware parts on the system.
         /// </summary>
@@ -137,7 +138,7 @@ namespace VirtualClient.Metadata
                                 { "type", "Memory" },
                                 { "vendor", chipInfo.Manufacturer },
                                 { "description", $"{chipInfo.Manufacturer} {chipInfo.PartNumber}" },
-                                { "bytes", chipInfo.Capacity },
+                                { "bytes", chipInfo.CapacityBytes },
                                 { "speed", chipInfo.Speed },
                                 { "partNumber", chipInfo.PartNumber }
                             });
@@ -294,54 +295,91 @@ namespace VirtualClient.Metadata
         /// <param name="systemManagement">Provides features for interaction with the system on which the application is running.</param>
         /// <param name="logger">A logger that can be used to capture error information.</param>
         /// <param name="cancellationToken">A token that can be used to cancel the operations.</param>
-        public static async Task<IDictionary<string, object>> GetInstalledCompilerMetadataAsync(this ISystemManagement systemManagement, ILogger logger = null, CancellationToken cancellationToken = default)
+        /// <param name="cygwinPath">The path to the Cygwin installation on Windows.</param>
+        public static async Task<IDictionary<string, object>> GetInstalledCompilerMetadataAsync(this ISystemManagement systemManagement, ILogger logger = null, CancellationToken cancellationToken = default, string cygwinPath = null)
         {
             systemManagement.ThrowIfNull(nameof(systemManagement));
             IDictionary<string, object> metadata = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
 
-            try
+            IDictionary<PlatformID, IEnumerable<string>> compilerToolsets = new Dictionary<PlatformID, IEnumerable<string>>
             {
-                string ccCompilerVersion = await systemManagement.GetInstalledCompilerVersionAsync("cc", cancellationToken);
-                string gccCompilerVersion = await systemManagement.GetInstalledCompilerVersionAsync("gcc", cancellationToken);
-                string gfortranCompilerVersion = await systemManagement.GetInstalledCompilerVersionAsync("gfortran", cancellationToken);
-
-                metadata.Add("compilerVersion_cc", ccCompilerVersion);
-                metadata.Add("compilerVersion_gcc", gccCompilerVersion);
-                metadata.Add("compilerVersion_gfortran", gfortranCompilerVersion);
-            }
-            catch (Exception exc)
-            {
-                // Best effort. VC should not crash.
-                logger?.LogMessage("SystemManagement.GetInstalledCompilerMetadataError", LogLevel.Warning, EventContext.Persisted().AddError(exc));
-            }
-
-            return metadata;
-        }
-
-        private static async Task<string> GetInstalledCompilerVersionAsync(this ISystemManagement systemManagement, string compilerName, CancellationToken cancellationToken)
-        {
-            systemManagement.ThrowIfNull(nameof(systemManagement));
-
-            string installedVersion = null;
-            string compiler = compilerName.ToLowerInvariant();
-
-            using (IProcessProxy process = systemManagement.ProcessManager.CreateProcess(compiler, "--version"))
-            {
-                await process.StartAndWaitAsync(cancellationToken);
-
-                // The compiler toolset may NOT be installed on the system. Unless we get a success response, we do
-                // not attempt to parse the compiler version.
-                if (!cancellationToken.IsCancellationRequested && !process.IsErrored())
+                [PlatformID.Unix] = new List<string>
                 {
-                    Match versionMatch = Regex.Match(process.StandardOutput.ToString(), @"[a-z0-9\s]+\([\x20-\x7F]+\)\s*([0-9a-z\.-]+)", RegexOptions.IgnoreCase);
-                    if (versionMatch.Success)
+                    "cc",
+                    "gcc",
+                    "gfortran"
+                },
+                [PlatformID.Win32NT] = new List<string>
+                {
+                    "cc",
+                    "gcc",
+                    "gfortran"
+                },
+            };
+
+            IEnumerable<string> toolsetsToCheck = compilerToolsets[systemManagement.Platform];
+
+            if (toolsetsToCheck?.Any() == true)
+            {
+                foreach (string toolset in toolsetsToCheck)
+                {
+                    string installedVersion = null;
+
+                    try
                     {
-                        installedVersion = versionMatch.Groups[1].Value.Trim();
+                        if (systemManagement.Platform == PlatformID.Unix)
+                        {
+                            using (IProcessProxy process = systemManagement.ProcessManager.CreateProcess(toolset, "--version"))
+                            {
+                                await process.StartAndWaitAsync(cancellationToken);
+
+                                // The compiler toolset may NOT be installed on the system. Unless we get a success response, we do
+                                // not attempt to parse the compiler version.
+                                if (!cancellationToken.IsCancellationRequested && !process.IsErrored())
+                                {
+                                    Match versionMatch = Regex.Match(process.StandardOutput.ToString(), @"[a-z0-9\s]+\([\x20-\x7F]+\)\s*([0-9a-z\.-]+)", RegexOptions.IgnoreCase);
+
+                                    if (versionMatch.Success)
+                                    {
+                                        installedVersion = versionMatch.Groups[1].Value.Trim();
+                                    }
+                                }
+                            }
+                        }
+                        else
+                        {
+                            // e.g.
+                            // C:\tools\cygwin\bin\bash.exe --login -c "gcc --version"
+                            string cygwinBashPath = systemManagement.PlatformSpecifics.Combine(cygwinPath, "bin", "bash.exe");
+                            using (IProcessProxy process = systemManagement.ProcessManager.CreateProcess(cygwinBashPath, $"--login -c \"{toolset} --version\""))
+                            {
+                                await process.StartAndWaitAsync(cancellationToken);
+
+                                // The compiler toolset may NOT be installed on the system. Unless we get a success response, we do
+                                // not attempt to parse the compiler version.
+                                if (!cancellationToken.IsCancellationRequested && !process.IsErrored())
+                                {
+                                    Match versionMatch = Regex.Match(process.StandardOutput.ToString(), @"\b\d+\.\d+\.\d+(?:-\w+)?", RegexOptions.IgnoreCase);
+
+                                    if (versionMatch.Success)
+                                    {
+                                        installedVersion = versionMatch.Groups[0].Value.Trim();
+                                    }
+                                }
+                            }
+                        }
                     }
+                    catch (Exception exc)
+                    {
+                        // Best effort. VC should not crash.
+                        logger?.LogMessage("SystemManagement.GetInstalledCompilerMetadataError", LogLevel.Warning, EventContext.Persisted().AddError(exc));
+                    }
+
+                    metadata.Add($"compilerVersion_{toolset.ToLowerInvariant()}", installedVersion);
                 }
             }
 
-            return installedVersion;
+            return metadata;
         }
     }
 }

@@ -58,6 +58,8 @@ We have two profiles for Redis.One supports redis with TLS and one without TLS.
   * linux-x64 
   * linux-arm64
 
+  **Note**: Client/Server mode not supported currently on Azurelinux 3.
+
 * **Supports Disconnected Scenarios**  
   * No. Internet connection required.
 

@@ -1,0 +1,168 @@
+{
+        "_TRANSPORT" : "kernel",
+        "SYSLOG_FACILITY" : "0",
+        "__REALTIME_TIMESTAMP" : "1744147628921412",
+        "_HOSTNAME" : "querida",
+        "SYSLOG_IDENTIFIER" : "kernel",
+        "MESSAGE" : "  #2  #3  #4  #5  #6  #7  #8  #9 #10 #11 #12 #13 #14 #15",
+        "_BOOT_ID" : "0ae0cf1a549b4faa9c7407406cab6373",
+        "__MONOTONIC_TIMESTAMP" : "3788394",
+        "_MACHINE_ID" : "3b6363233564428596fca61377e98ef6",
+        "__CURSOR" : "s=00cff89d2a5a4942be1b1c158112c928;i=91;b=0ae0cf1a549b4faa9c7407406cab6373;m=39ce6a;t=6324b03db9244;x=e2146368a128bc58",
+        "_SOURCE_MONOTONIC_TIMESTAMP" : "113139",
+        "PRIORITY" : "1"
+}
+{
+        "SYSLOG_FACILITY" : "0",
+        "_SOURCE_MONOTONIC_TIMESTAMP" : "154865",
+        "MESSAGE" : "PCI: Fatal: No config space access function found",
+        "__MONOTONIC_TIMESTAMP" : "3788763",
+        "_BOOT_ID" : "0ae0cf1a549b4faa9c7407406cab6373",
+        "_MACHINE_ID" : "3b6363233564428596fca61377e98ef6",
+        "__CURSOR" : "s=00cff89d2a5a4942be1b1c158112c928;i=a0;b=0ae0cf1a549b4faa9c7407406cab6373;m=39cfdb;t=6324b03db93b5;x=a49bac12588ea7f7",
+        "__REALTIME_TIMESTAMP" : "1744147628921781",
+        "SYSLOG_IDENTIFIER" : "kernel",
+        "_HOSTNAME" : "querida",
+        "PRIORITY" : "3",
+        "_TRANSPORT" : "kernel"
+}
+{
+        "_SOURCE_MONOTONIC_TIMESTAMP" : "464783",
+        "__MONOTONIC_TIMESTAMP" : "3790529",
+        "_HOSTNAME" : "querida",
+        "__CURSOR" : "s=00cff89d2a5a4942be1b1c158112c928;i=db;b=0ae0cf1a549b4faa9c7407406cab6373;m=39d6c1;t=6324b03db9a9b;x=d7e3678f02ef0edd",
+        "_TRANSPORT" : "kernel",
+        "__REALTIME_TIMESTAMP" : "1744147628923547",
+        "_MACHINE_ID" : "3b6363233564428596fca61377e98ef6",
+        "SYSLOG_FACILITY" : "0",
+        "SYSLOG_IDENTIFIER" : "kernel",
+        "MESSAGE" : "kvm: no hardware support",
+        "PRIORITY" : "3",
+        "_BOOT_ID" : "0ae0cf1a549b4faa9c7407406cab6373"
+}
+{
+        "PRIORITY" : "3",
+        "__MONOTONIC_TIMESTAMP" : "3819487",
+        "_SOURCE_MONOTONIC_TIMESTAMP" : "2687475",
+        "__CURSOR" : "s=00cff89d2a5a4942be1b1c158112c928;i=19c;b=0ae0cf1a549b4faa9c7407406cab6373;m=3a47df;t=6324b03dc0bb9;x=c96a8c1364c82791",
+        "SYSLOG_IDENTIFIER" : "kernel",
+        "MESSAGE" : "FS-Cache: Duplicate cookie detected",
+        "_MACHINE_ID" : "3b6363233564428596fca61377e98ef6",
+        "_HOSTNAME" : "querida",
+        "SYSLOG_FACILITY" : "0",
+        "_BOOT_ID" : "0ae0cf1a549b4faa9c7407406cab6373",
+        "_TRANSPORT" : "kernel",
+        "__REALTIME_TIMESTAMP" : "1744147628952505"
+}
+{
+        "__REALTIME_TIMESTAMP" : "1744147628952525",
+        "__MONOTONIC_TIMESTAMP" : "3819507",
+        "SYSLOG_IDENTIFIER" : "kernel",
+        "_TRANSPORT" : "kernel",
+        "_MACHINE_ID" : "3b6363233564428596fca61377e98ef6",
+        "_HOSTNAME" : "querida",
+        "__CURSOR" : "s=00cff89d2a5a4942be1b1c158112c928;i=19d;b=0ae0cf1a549b4faa9c7407406cab6373;m=3a47f3;t=6324b03dc0bcd;x=1ba7908063198a91",
+        "SYSLOG_FACILITY" : "0",
+        "_SOURCE_MONOTONIC_TIMESTAMP" : "2687985",
+        "MESSAGE" : "FS-Cache: O-cookie c=00000005 [p=00000002 fl=222 nc=0 na=1]",
+        "PRIORITY" : "3",
+        "_BOOT_ID" : "0ae0cf1a549b4faa9c7407406cab6373"
+}
+{
+        "_TRANSPORT" : "kernel",
+        "_HOSTNAME" : "querida",
+        "PRIORITY" : "3",
+        "__MONOTONIC_TIMESTAMP" : "3819527",
+        "_MACHINE_ID" : "3b6363233564428596fca61377e98ef6",
+        "SYSLOG_IDENTIFIER" : "kernel",
+        "__CURSOR" : "s=00cff89d2a5a4942be1b1c158112c928;i=19e;b=0ae0cf1a549b4faa9c7407406cab6373;m=3a4807;t=6324b03dc0be1;x=c6364cad1c52eec3",
+        "_BOOT_ID" : "0ae0cf1a549b4faa9c7407406cab6373",
+        "__REALTIME_TIMESTAMP" : "1744147628952545",
+        "_SOURCE_MONOTONIC_TIMESTAMP" : "2688827",
+        "SYSLOG_FACILITY" : "0",
+        "MESSAGE" : "FS-Cache: O-cookie d=00000000c201de2a{9P.session} n=0000000098589e42"
+}
+{
+        "_TRANSPORT" : "kernel",
+        "_HOSTNAME" : "querida",
+        "__CURSOR" : "s=00cff89d2a5a4942be1b1c158112c928;i=19f;b=0ae0cf1a549b4faa9c7407406cab6373;m=3a481b;t=6324b03dc0bf5;x=bf21a6b0d3f2e946",
+        "PRIORITY" : "3",
+        "SYSLOG_FACILITY" : "0",
+        "_BOOT_ID" : "0ae0cf1a549b4faa9c7407406cab6373",
+        "MESSAGE" : "FS-Cache: O-key=[10] '34323934393337353534'",
+        "__MONOTONIC_TIMESTAMP" : "3819547",
+        "SYSLOG_IDENTIFIER" : "kernel",
+        "_MACHINE_ID" : "3b6363233564428596fca61377e98ef6",
+        "__REALTIME_TIMESTAMP" : "1744147628952565",
+        "_SOURCE_MONOTONIC_TIMESTAMP" : "2689367"
+}
+{
+        "_HOSTNAME" : "querida",
+        "_SOURCE_MONOTONIC_TIMESTAMP" : "2689724",
+        "_TRANSPORT" : "kernel",
+        "SYSLOG_FACILITY" : "0",
+        "__CURSOR" : "s=00cff89d2a5a4942be1b1c158112c928;i=1a0;b=0ae0cf1a549b4faa9c7407406cab6373;m=3a4836;t=6324b03dc0c10;x=2e0b107856c6aac7",
+        "PRIORITY" : "3",
+        "MESSAGE" : "FS-Cache: N-cookie c=00000006 [p=00000002 fl=2 nc=0 na=1]",
+        "SYSLOG_IDENTIFIER" : "kernel",
+        "__MONOTONIC_TIMESTAMP" : "3819574",
+        "__REALTIME_TIMESTAMP" : "1744147628952592",
+        "_BOOT_ID" : "0ae0cf1a549b4faa9c7407406cab6373",
+        "_MACHINE_ID" : "3b6363233564428596fca61377e98ef6"
+}
+{
+        "SYSLOG_IDENTIFIER" : "kernel",
+        "__CURSOR" : "s=00cff89d2a5a4942be1b1c158112c928;i=1a1;b=0ae0cf1a549b4faa9c7407406cab6373;m=3a484a;t=6324b03dc0c24;x=c1a46e348771fbfb",
+        "_TRANSPORT" : "kernel",
+        "SYSLOG_FACILITY" : "0",
+        "__MONOTONIC_TIMESTAMP" : "3819594",
+        "PRIORITY" : "3",
+        "__REALTIME_TIMESTAMP" : "1744147628952612",
+        "_BOOT_ID" : "0ae0cf1a549b4faa9c7407406cab6373",
+        "MESSAGE" : "FS-Cache: N-cookie d=00000000c201de2a{9P.session} n=00000000a10921ef",
+        "_MACHINE_ID" : "3b6363233564428596fca61377e98ef6",
+        "_HOSTNAME" : "querida",
+        "_SOURCE_MONOTONIC_TIMESTAMP" : "2690145"
+}
+{
+        "_TRANSPORT" : "kernel",
+        "__REALTIME_TIMESTAMP" : "1744147628952632",
+        "SYSLOG_FACILITY" : "0",
+        "MESSAGE" : "FS-Cache: N-key=[10] '34323934393337353534'",
+        "_SOURCE_MONOTONIC_TIMESTAMP" : "2690787",
+        "SYSLOG_IDENTIFIER" : "kernel",
+        "PRIORITY" : "3",
+        "__MONOTONIC_TIMESTAMP" : "3819614",
+        "_MACHINE_ID" : "3b6363233564428596fca61377e98ef6",
+        "_BOOT_ID" : "0ae0cf1a549b4faa9c7407406cab6373",
+        "_HOSTNAME" : "querida",
+        "__CURSOR" : "s=00cff89d2a5a4942be1b1c158112c928;i=1a2;b=0ae0cf1a549b4faa9c7407406cab6373;m=3a485e;t=6324b03dc0c38;x=fec9b3667418df75"
+}
+{
+        "_HOSTNAME" : "querida",
+        "__MONOTONIC_TIMESTAMP" : "3819633",
+        "PRIORITY" : "3",
+        "_MACHINE_ID" : "3b6363233564428596fca61377e98ef6",
+        "SYSLOG_FACILITY" : "0",
+        "_SOURCE_MONOTONIC_TIMESTAMP" : "2707742",
+        "SYSLOG_IDENTIFIER" : "kernel",
+        "__REALTIME_TIMESTAMP" : "1744147628952651",
+        "__CURSOR" : "s=00cff89d2a5a4942be1b1c158112c928;i=1a3;b=0ae0cf1a549b4faa9c7407406cab6373;m=3a4871;t=6324b03dc0c4b;x=1ad8c0b631b7180b",
+        "_BOOT_ID" : "0ae0cf1a549b4faa9c7407406cab6373",
+        "MESSAGE" : "FS-Cache: Duplicate cookie detected",
+        "_TRANSPORT" : "kernel"
+}
+{
+        "_HOSTNAME" : "querida",
+        "__MONOTONIC_TIMESTAMP" : "3819653",
+        "PRIORITY" : "3",
+        "_TRANSPORT" : "kernel",
+        "MESSAGE" : "FS-Cache: O-cookie c=00000008 [p=00000002 fl=222 nc=0 na=1]",
+        "__CURSOR" : "s=00cff89d2a5a4942be1b1c158112c928;i=1a4;b=0ae0cf1a549b4faa9c7407406cab6373;m=3a4885;t=6324b03dc0c5f;x=3272cb26f0c04b19",
+        "_MACHINE_ID" : "3b6363233564428596fca61377e98ef6",
+        "SYSLOG_FACILITY" : "0",
+        "_BOOT_ID" : "0ae0cf1a549b4faa9c7407406cab6373",
+        "_SOURCE_MONOTONIC_TIMESTAMP" : "2708366",
+        "SYSLOG_IDENTIFIER" : "kernel",
+        "__REALTIME_TIMESTAMP" : "1744147628952671"
+}

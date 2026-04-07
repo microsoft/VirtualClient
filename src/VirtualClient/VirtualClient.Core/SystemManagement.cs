@@ -5,13 +5,11 @@ namespace VirtualClient
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.Diagnostics.CodeAnalysis;
     using System.IO.Abstractions;
     using System.Linq;
     using System.Net;
     using System.Runtime.InteropServices;
-    using System.Security.Principal;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
@@ -35,6 +33,11 @@ namespace VirtualClient
         /// experiment in operation.
         /// </summary>
         public string AgentId { get; internal set; }
+
+        /// <summary>
+        /// The name of the execution system launching the application.
+        /// </summary>
+        public string ExecutionSystem { get; internal set; }
 
         /// <summary>
         /// The ID of the larger experiment in operation.
@@ -83,7 +86,7 @@ namespace VirtualClient
         {
             get
             {
-                return VirtualClient.Contracts.PlatformSpecifics.GetPlatformArchitectureName(this.Platform, this.CpuArchitecture);
+                return PlatformSpecifics.GetPlatformArchitectureName(this.Platform, this.CpuArchitecture);
             }
         }
 
@@ -101,7 +104,7 @@ namespace VirtualClient
         public bool RunningInContainer { get; internal set; } = PlatformSpecifics.RunningInContainer;
 
         /// <inheritdoc />
-        public ISshClientManager SshClientManager { get; internal set; }
+        public ISshClientFactory SshClientFactory { get; internal set; }
 
         /// <summary>
         /// Provides features for managing/preserving state on the system.
@@ -125,30 +128,6 @@ namespace VirtualClient
             }
 
             return info;
-        }
-
-        /// <summary>
-        /// Get the logged In Username i.e, username of the user who invoked a command with elevated privileges using the "sudo" command in Unix operating system.
-        /// </summary>
-        public string GetLoggedInUserName()
-        {
-            string loggedInUserName = Environment.UserName;
-            if (string.Equals(loggedInUserName, "root"))
-            {
-                loggedInUserName = Environment.GetEnvironmentVariable("SUDO_USER");
-                if (string.Equals(loggedInUserName, "root") || string.IsNullOrEmpty(loggedInUserName))
-                {
-                    loggedInUserName = Environment.GetEnvironmentVariable("VC_SUDO_USER");
-                    if (string.IsNullOrEmpty(loggedInUserName))
-                    {
-                        throw new EnvironmentSetupException($"'USER' Environment variable is set to root and 'SUDO_USER' Environment variable is either root or null." +
-                            "The required environment variable 'VC_SUDO_USER' is expected to be set to a valid non-empty value." +
-                            "Please ensure that the necessary environment variables are configured properly for the execution environment.", ErrorReason.EnvironmentIsInsufficent);
-                    }
-                }
-            }
-
-            return loggedInUserName;
         }
 
         /// <summary>
@@ -279,9 +258,16 @@ namespace VirtualClient
         /// <param name="cancellationToken">A token that can be used to cancel the wait operation.</param>
         public async Task WaitAsync(CancellationToken cancellationToken)
         {
-            while (!cancellationToken.IsCancellationRequested)
+            try
             {
-                await Task.Delay(100, cancellationToken).ConfigureAwait(false);
+                while (!cancellationToken.IsCancellationRequested)
+                {
+                    await Task.Delay(100, cancellationToken);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                // expected if the CancellationToken receives a cancellation request.
             }
         }
 
@@ -293,20 +279,27 @@ namespace VirtualClient
         /// <param name="cancellationToken">A token that can be used to cancel the wait operation.</param>
         public async Task WaitAsync(DateTime timeout, CancellationToken cancellationToken)
         {
-            DateTime effectiveTimeout = timeout;
-            if (timeout.Kind != DateTimeKind.Utc)
+            try
             {
-                effectiveTimeout = timeout.ToUniversalTime();
-            }
-
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                if (DateTime.UtcNow >= effectiveTimeout)
+                DateTime effectiveTimeout = timeout;
+                if (timeout.Kind != DateTimeKind.Utc)
                 {
-                    break;
+                    effectiveTimeout = timeout.ToUniversalTime();
                 }
 
-                await Task.Delay(100, cancellationToken).ConfigureAwait(false);
+                while (!cancellationToken.IsCancellationRequested)
+                {
+                    if (DateTime.UtcNow >= effectiveTimeout)
+                    {
+                        break;
+                    }
+
+                    await Task.Delay(100, cancellationToken);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                // expected if the CancellationToken receives a cancellation request.
             }
         }
 
@@ -316,9 +309,16 @@ namespace VirtualClient
         /// </summary>
         /// <param name="timeout">The maximum time to wait before continuing.</param>
         /// <param name="cancellationToken">A token that can be used to cancel the wait operation.</param>
-        public Task WaitAsync(TimeSpan timeout, CancellationToken cancellationToken)
+        public async Task WaitAsync(TimeSpan timeout, CancellationToken cancellationToken)
         {
-            return Task.Delay(timeout, cancellationToken);
+            try
+            {
+                await Task.Delay(timeout, cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                // expected if the CancellationToken receives a cancellation request.
+            }
         }
 
         private async Task<CpuInfo> GetCpuInfoOnUnixAsync()
@@ -345,10 +345,8 @@ namespace VirtualClient
                 command = "CoreInfo64a.exe";
             }
 
-            DependencyPath package = await this.PackageManager.GetPlatformSpecificPackageAsync(
+            DependencyPath package = await this.GetPlatformSpecificPackageAsync(
                 VirtualClient.PackageManager.BuiltInSystemToolsPackageName,
-                this.Platform,
-                this.CpuArchitecture,
                 CancellationToken.None);
 
             string coreInfoExe = this.PlatformSpecifics.Combine(package.Path, command);

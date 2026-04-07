@@ -131,7 +131,7 @@ namespace VirtualClient.Actions
                     {
                         using (IProcessProxy process = this.systemManagement.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, commandLineArguments, workingDirectory))
                         {
-                            this.CleanupTasks.Add(() => process.SafeKill());
+                            this.CleanupTasks.Add(() => process.SafeKill(this.Logger));
                             this.LogProcessTrace(process);
                             await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
 
@@ -170,10 +170,10 @@ namespace VirtualClient.Actions
 
                 foreach (string file in outputFiles)
                 {
-                    string results = await this.LoadResultsAsync(file, cancellationToken);
-                    await this.LogProcessDetailsAsync(process, telemetryContext, "SPECjvm", results: results.AsArray(), logToFile: true);
+                    KeyValuePair<string, string> results = await this.LoadResultsAsync(file, cancellationToken);
+                    await this.LogProcessDetailsAsync(process, telemetryContext, "SPECjvm", logToFile: true, results: results);
 
-                    SpecJvmMetricsParser parser = new SpecJvmMetricsParser(results);
+                    SpecJvmMetricsParser parser = new SpecJvmMetricsParser(results.Value);
 
                     this.Logger.LogMetrics(
                         toolName: "SPECjvm",

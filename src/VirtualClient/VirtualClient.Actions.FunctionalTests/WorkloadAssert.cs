@@ -73,34 +73,31 @@ namespace VirtualClient.Actions
         /// </summary>
         public static void SSHCommandsExecuted(DependencyFixture fixture, params string[] commands)
         {
-            List<ISshCommandProxy> sshCommands = new List<ISshCommandProxy>();
-            List<ISshCommandProxy> sshCommandsConfirmed = new List<ISshCommandProxy>();
-            foreach (InMemorySshClient sshClient in fixture.SshClientManager.SshClients)
+            List<string> sshCommands = new List<string>();
+
+            foreach (InMemorySshClient sshClient in fixture.SshClientFactory.SshClients)
             {
-                sshCommands.AddRange(sshClient.SshCommands);
+                sshCommands.AddRange(sshClient.CommandsExecuted);
             }
 
             foreach (string command in commands)
             {
-                ISshCommandProxy matchingProcess = null;
+                string matchingCommand = null;
+
                 try
                 {
                     // Try to match regex
-                    matchingProcess = sshCommands.FirstOrDefault(
-                        sshCommand => Regex.IsMatch($"{sshCommand.CommandText}".Trim(), command, RegexOptions.IgnoreCase)
-                        && !sshCommandsConfirmed.Any(otherProc => object.ReferenceEquals(sshCommand, otherProc)));
+                    matchingCommand = sshCommands.FirstOrDefault(
+                        cmd => Regex.IsMatch($"{cmd}".Trim(), command, RegexOptions.IgnoreCase));
                 }
                 catch
                 {
                 }
 
                 // Or command exact match
-                matchingProcess = matchingProcess ?? sshCommands.FirstOrDefault(
-                    sshCommand => $"{sshCommand.CommandText}".Trim() == command
-                    && !sshCommandsConfirmed.Any(otherProc => object.ReferenceEquals(sshCommand, otherProc)));
+                matchingCommand = matchingCommand ?? sshCommands.FirstOrDefault(cmd => $"{cmd}".Trim() == command);
 
-                Assert.IsNotNull(matchingProcess, $"The command '{command}' was not executed.");
-                sshCommandsConfirmed.Add(matchingProcess);
+                Assert.IsNotNull(matchingCommand, $"The command '{command}' was not executed.");
             }
         }
 

@@ -260,11 +260,11 @@ namespace VirtualClient.Actions
             {
                 if (this.FileSystem.File.Exists(this.StatusFileName))
                 {
-                    string contents = await this.LoadResultsAsync(this.StatusFileName, cancellationToken);
+                    KeyValuePair<string, string> results = await this.LoadResultsAsync(this.StatusFileName, cancellationToken);
 
-                    await this.LogProcessDetailsAsync(process, telemetryContext, $"{this.TypeName}-{this.Role}", contents.AsArray(), logToFile: true);
+                    await this.LogProcessDetailsAsync(process, telemetryContext, $"{this.TypeName}-{this.Role}", logToFile: true, results: results);
 
-                    CtsTrafficMetricsParser parser = new CtsTrafficMetricsParser(contents);
+                    CtsTrafficMetricsParser parser = new CtsTrafficMetricsParser(results.Value);
                     IList<Metric> metrics = parser.Parse();
 
                     this.Logger.LogMetrics(

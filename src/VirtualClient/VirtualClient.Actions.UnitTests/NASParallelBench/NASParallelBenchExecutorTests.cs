@@ -8,8 +8,8 @@ namespace VirtualClient.Actions
     using System.Net.Http;
     using System.Threading;
     using System.Threading.Tasks;
-    using AutoFixture;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.DependencyInjection.Extensions;
     using Moq;
     using Newtonsoft.Json.Linq;
     using NUnit.Framework;
@@ -25,21 +25,37 @@ namespace VirtualClient.Actions
         private const string ExampleBenchmark = "bt.S.x";
         private const string ExampleUsername = "my-username";
         private MockFixture fixture;
-        private DependencyPath mockPath;
+        private DependencyPath mockPackage;
         private State expectedState;
 
-        [SetUp]
-        public void SetupTests()
+        public void SetupTest(PlatformID platformID)
         {
             this.fixture = new MockFixture();
+            this.fixture.Setup(platformID);
 
-            this.SetupDefaultMockBehavior(PlatformID.Unix);
+            this.mockPackage = new DependencyPath("nasparallelbench", this.fixture.PlatformSpecifics.GetPackagePath("nasparallelbench"));
+            this.fixture.SetupPackage(this.mockPackage);
+
+            this.fixture.Parameters = new Dictionary<string, IConvertible>()
+            {
+                ["PackageName"] = this.mockPackage.Name
+            };
+
+            this.fixture.File.Setup(f => f.Exists(It.IsAny<string>())).Returns(true);
+            this.fixture.ProcessManager.OnCreateProcess = (cmd, args, wd) => this.fixture.Process;
+
+            this.expectedState = new State(new Dictionary<string, IConvertible>
+            {
+                ["NpbBuildState"] = "completed"
+            });
+
+            this.fixture.ApiClient.OnGetState().ReturnsAsync(this.fixture.CreateHttpResponse(System.Net.HttpStatusCode.OK, this.expectedState));
         }
 
         [Test]
         public void NASParallelBenchExecutorThrowsOnUnsupportedLinuxDistro()
         {
-            this.SetupDefaultMockBehavior(PlatformID.Unix);
+            this.SetupTest(PlatformID.Unix);
 
             using (TestNASParallelBenchExecutor NASParallelBenchExecutor = new TestNASParallelBenchExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
@@ -57,6 +73,8 @@ namespace VirtualClient.Actions
         [Test]
         public async Task NASParallelBenchExecutorRunsExpectedCommandForBuild()
         {
+            this.SetupTest(PlatformID.Unix);
+
             this.fixture.ApiClient.Setup(client => client.GetStateAsync(It.IsAny<String>(), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
                 .ReturnsAsync(this.fixture.CreateHttpResponse(System.Net.HttpStatusCode.NotFound));
 
@@ -75,6 +93,8 @@ namespace VirtualClient.Actions
         [Test]
         public async Task NASParallelBenchExecutorCreatesExpectedStateOnSuccessfullBuild()
         {
+            this.SetupTest(PlatformID.Unix);
+
             this.fixture.ApiClient.Setup(client => client.GetStateAsync(It.IsAny<String>(), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
                 .ReturnsAsync(this.fixture.CreateHttpResponse(System.Net.HttpStatusCode.NotFound));
 
@@ -98,6 +118,7 @@ namespace VirtualClient.Actions
         [Test]
         public async Task NASParallelBenchExecutorExecutesTheExpectedLogicWhenASpecificRoleIsNotDefined()
         {
+            this.SetupTest(PlatformID.Unix);
             this.fixture.Dependencies.RemoveAll<EnvironmentLayout>();
 
             using (TestNASParallelBenchExecutor component = new TestNASParallelBenchExecutor(this.fixture.Dependencies, this.fixture.Parameters))
@@ -112,6 +133,8 @@ namespace VirtualClient.Actions
         [Test]
         public async Task NASParallelBenchExecutorExecutesTheExpectedLogicForTheServerRole()
         {
+            this.SetupTest(PlatformID.Unix);
+
             string agentId = $"{Environment.MachineName}-Server";
             this.fixture.SystemManagement.SetupGet(obj => obj.AgentId).Returns(agentId);
 
@@ -127,36 +150,13 @@ namespace VirtualClient.Actions
         [Test]
         public async Task NASParallelBenchExecutorExecutesTheExpectedLogicForTheClientRole()
         {
+            this.SetupTest(PlatformID.Unix);
+
             TestNASParallelBenchExecutor component = new TestNASParallelBenchExecutor(this.fixture.Dependencies, this.fixture.Parameters);
             await component.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
 
             Assert.IsTrue(component.IsNASParallelBenchClientExecuted);
             Assert.IsTrue(!component.IsNASParallelBenchServerExecuted);
-        }
-
-        private void SetupDefaultMockBehavior(PlatformID platformID)
-        {
-
-            this.fixture.Setup(platformID);
-
-            this.mockPath = this.fixture.Create<DependencyPath>();
-            DependencyPath mockPackage = new DependencyPath("nasparallelbench", this.fixture.PlatformSpecifics.GetPackagePath("nasparallelbench"));
-
-            this.fixture.Parameters = new Dictionary<string, IConvertible>()
-            {
-                ["PackageName"] = this.mockPath.Name
-            };
-
-            this.fixture.File.Setup(f => f.Exists(It.IsAny<string>())).Returns(true);
-            this.fixture.ProcessManager.OnCreateProcess = (cmd, args, wd) => this.fixture.Process;
-            this.fixture.PackageManager.OnGetPackage().ReturnsAsync(mockPackage);
-
-            this.expectedState = new State(new Dictionary<string, IConvertible>
-            {
-                ["NpbBuildState"] = "completed"
-            });
-
-            this.fixture.ApiClient.OnGetState().ReturnsAsync(this.fixture.CreateHttpResponse(System.Net.HttpStatusCode.OK, this.expectedState));
         }
 
         private class TestNASParallelBenchExecutor : NASParallelBenchExecutor

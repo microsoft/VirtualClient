@@ -42,7 +42,6 @@ namespace VirtualClient
 
         static DependencyFixture()
         {
-            VirtualClientComponent.ContentPathTemplate = "{experimentId}/{agentId}/{toolName}/{role}/{scenario}";
         }
 
         /// <summary>
@@ -186,7 +185,7 @@ namespace VirtualClient
         /// <summary>
         /// Test/fake Ssh Client manager.
         /// </summary>
-        public InMemorySshClientManager SshClientManager { get; set; }
+        public InMemorySshClientFactory SshClientFactory { get; set; }
 
         /// <summary>
         /// Test/fake state manager.
@@ -202,6 +201,11 @@ namespace VirtualClient
         /// Test/fake profile timing/timeout definition.
         /// </summary>
         public ProfileTiming Timing { get; set; }
+
+        /// <summary>
+        /// Gets the process tracking instance. This is populated after the <see cref="TrackProcesses"/> method is called.
+        /// </summary>
+        public FixtureTracking Tracking => this.ProcessManager.Tracking;
 
         /// <summary>
         /// Returns a path that is combined specific to the platform defined for this
@@ -291,7 +295,7 @@ namespace VirtualClient
             this.PackageManager = new InMemoryPackageManager(this.PlatformSpecifics);
             this.Parameters = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
             this.ProcessManager = new InMemoryProcessManager(platform);
-            this.SshClientManager = new InMemorySshClientManager();
+            this.SshClientFactory = new InMemorySshClientFactory();
             this.StateManager = new InMemoryStateManager();
             this.Timing = new ProfileTiming(TimeSpan.FromMilliseconds(2));
 
@@ -302,7 +306,7 @@ namespace VirtualClient
             this.SystemManagement.SetupGet(sm => sm.FileSystem).Returns(this.FileSystem);
             this.SystemManagement.SetupGet(sm => sm.FirewallManager).Returns(this.FirewallManager);
             this.SystemManagement.SetupGet(sm => sm.PackageManager).Returns(this.PackageManager);
-            this.SystemManagement.SetupGet(sm => sm.SshClientManager).Returns(this.SshClientManager);
+            this.SystemManagement.SetupGet(sm => sm.SshClientFactory).Returns(this.SshClientFactory);
             this.SystemManagement.SetupGet(sm => sm.RunningInContainer).Returns(false);
             this.SystemManagement.SetupGet(sm => sm.Platform).Returns(platform);
             this.SystemManagement.SetupGet(sm => sm.PlatformSpecifics).Returns(this.PlatformSpecifics);
@@ -406,6 +410,36 @@ namespace VirtualClient
             return this.PlatformSpecifics.ToPlatformSpecificPath(dependency, platform, architecture);
         }
 
+        /// <summary>
+        /// Enables automatic tracking of all process executions.
+        /// </summary>
+        /// <param name="reset">True to clear any previously tracked commands.</param>
+        /// <returns>The fixture instance for method chaining.</returns>
+        public DependencyFixture TrackProcesses(bool reset = true)
+        {
+            this.ProcessManager.TrackProcesses(reset);
+            return this;
+        }
+
+        /// <summary>
+        /// Sets up automatic output for processes whose full command line matches
+        /// the pattern provided.
+        /// </summary>
+        /// <param name="commandPattern">A regex pattern matching the command.</param>
+        /// <param name="standardOutput">The standard output to return for matching commands.</param>
+        /// <param name="standardError">The standard error output (optional).</param>
+        /// <param name="exitCode">The exit code for the process (default: 0).</param>
+        /// <returns>The fixture instance for method chaining.</returns>
+        public DependencyFixture SetupProcessOutput(
+            string commandPattern,
+            string standardOutput,
+            string standardError = null,
+            int exitCode = 0)
+        {
+            this.ProcessManager.SetupProcessOutput(commandPattern, standardOutput, standardError, exitCode);
+            return this;
+        }
+
         private IServiceCollection InitializeDependencies()
         {
             IServiceCollection dependencies = new ServiceCollection()
@@ -424,13 +458,13 @@ namespace VirtualClient
                 .AddSingleton<IFileSystem>(this.FileSystem)
                 .AddSingleton<IFirewallManager>(this.FirewallManager)
                 .AddSingleton<IPackageManager>(this.PackageManager)
-                .AddSingleton<ISshClientManager>(this.SshClientManager)
+                .AddSingleton<ISshClientFactory>(this.SshClientFactory)
                 .AddSingleton<IStateManager>(this.StateManager)
                 .AddSingleton<ProfileTiming>(this.Timing);
 
             Mock<IBlobManager> contentBlobManager = new Mock<IBlobManager>();
             contentBlobManager.SetupGet(mgr => mgr.StoreDescription).Returns(new DependencyBlobStore(DependencyStore.Content, "connection token"));
-            contentBlobManager.Setup(mgr => mgr.UploadBlobAsync(It.IsAny<DependencyDescriptor>(), It.IsAny<Stream>(), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy>()))
+            contentBlobManager.Setup(mgr => mgr.UploadBlobAsync(It.IsAny<DependencyDescriptor>(), It.IsAny<Stream>(), It.IsAny<CancellationToken>(), It.IsAny<IDictionary<string, IConvertible>>(), It.IsAny<IAsyncPolicy>()))
                 .ReturnsAsync(new BlobDescriptor
                 {
                     Name = "any/path/to/blob/content.txt",

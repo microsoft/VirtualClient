@@ -3,37 +3,41 @@
 
 namespace VirtualClient.Actions
 {
-    using NUnit.Framework;
     using System;
     using System.Collections.Generic;
-    using System.Linq;
-    using System.Text;
-    using System.Threading.Tasks;
-    using AutoFixture;
-    using VirtualClient.Contracts;
-    using System.Runtime.InteropServices;
     using System.IO;
-    using System.Reflection;
-    using Moq;
+    using System.Linq;
+    using System.Runtime.InteropServices;
     using System.Threading;
+    using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
+    using NUnit.Framework;
     using VirtualClient.Common.Telemetry;
+    using VirtualClient.Contracts;
 
     [TestFixture]
     [Category("Unit")]
     public class Graph500ExecutorTests
     {
+        private static readonly string ExamplesDirectory = MockFixture.GetDirectory(typeof(Graph500ExecutorTests), "Examples", "Graph500");
+
         private const string Scale = "10";
         private const string EdgeFactor = "4";
-        private MockFixture fixture;
-        private DependencyPath mockPath;
-        private DependencyPath currentDirectoryPath;
+        private MockFixture mockFixture;
+        private DependencyPath mockPackage;
 
-        [SetUp]
-        public void SetUpTests()
+        public void SetupTest(PlatformID platform = PlatformID.Unix, Architecture architecture = Architecture.X64)
         {
-            this.fixture = new MockFixture();
-            this.mockPath = this.fixture.Create<DependencyPath>();
+            this.mockFixture = new MockFixture();
+            this.mockFixture.Setup(platform, architecture);
+            this.mockPackage = new DependencyPath("Graph500", this.mockFixture.GetPackagePath("graph500"));
+            this.mockFixture.Parameters["PackageName"] = "Graph500";
+
+            this.mockFixture.SetupPackage(this.mockPackage);
+            this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, directory) => this.mockFixture.Process;
+
+            string exampleResults = File.ReadAllText(this.mockFixture.Combine(Graph500ExecutorTests.ExamplesDirectory, "Graph500ResultsExample.txt"));
+            this.mockFixture.Process.StandardOutput.Append(exampleResults);
         }
 
         [Test]
@@ -41,19 +45,18 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Unix, Architecture.Arm64, "linux-arm64/src/graph500_reference_bfs_sssp")]
         public async Task Graph500ExecutorInitializesItsDependenciesAsExpected(PlatformID platform, Architecture architecture, string binaryPath)
         {
-            this.SetupDefaultMockBehavior(platform, architecture);
-            using (TestGraph500Executor executor = new TestGraph500Executor(this.fixture))
+            this.SetupTest(platform, architecture);
+            using (TestGraph500Executor executor = new TestGraph500Executor(this.mockFixture))
             {
-                this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
+                this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
                 {
-                    return this.fixture.Process;
+                    return this.mockFixture.Process;
                 };
 
                 await executor.InitializeAsync(EventContext.None, CancellationToken.None)
                     .ConfigureAwait(false);
 
-                string expectedExecutableFilePath = this.fixture.PlatformSpecifics.Combine(
-                    this.mockPath.Path, binaryPath);
+                string expectedExecutableFilePath = this.mockFixture.Combine(this.mockPackage.Path, binaryPath);
 
                 Assert.AreEqual(expectedExecutableFilePath, executor.ExecutableFilePath);
             }
@@ -64,15 +67,15 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Unix, Architecture.Arm64, "linux-x64/src/graph500_reference_bfs_sssp")]
         public async Task Graph500ExecutorExecutesWorkloadAsExpected(PlatformID platform, Architecture architecture, string binaryPath)
         {
-            this.SetupDefaultMockBehavior(platform, architecture);
-            fixture.Parameters["Scale"] = Scale;
-            fixture.Parameters["EdgeFactor"] = EdgeFactor;
-            using (TestGraph500Executor executor = new TestGraph500Executor(this.fixture))
+            this.SetupTest(platform, architecture);
+            mockFixture.Parameters["Scale"] = Scale;
+            mockFixture.Parameters["EdgeFactor"] = EdgeFactor;
+            using (TestGraph500Executor executor = new TestGraph500Executor(this.mockFixture))
             {
-                string expectedFilePath = this.fixture.PlatformSpecifics.Combine(this.mockPath.Path, binaryPath);
+                string expectedFilePath = this.mockFixture.PlatformSpecifics.Combine(this.mockPackage.Path, binaryPath);
                 int executed = 0;
 
-                this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
+                this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
                 {
                     if (command == "make")
                     {
@@ -84,7 +87,7 @@ namespace VirtualClient.Actions
                         Assert.AreEqual($"{command} {arguments}", $"{executor.ExecutableFilePath} {executor.Scale} {executor.EdgeFactor}");
                     }
 
-                    return this.fixture.Process;
+                    return this.mockFixture.Process;
                 };
 
                 await executor.ExecuteAsync(EventContext.None, CancellationToken.None)
@@ -97,34 +100,19 @@ namespace VirtualClient.Actions
         [Test]
         public async Task Graph500ExecutorLogsTheExpectedWorkloadMetrics()
         {
-            this.SetupDefaultMockBehavior();
+            this.SetupTest();
 
-            using (TestGraph500Executor executor = new TestGraph500Executor(this.fixture))
+            using (TestGraph500Executor executor = new TestGraph500Executor(this.mockFixture))
             {
                 await executor.ExecuteAsync(CancellationToken.None)
                     .ConfigureAwait(false);
 
-                var messages = this.fixture.Logger.MessagesLogged("Graph500.ScenarioResult");
+                var messages = this.mockFixture.Logger.MessagesLogged("Graph500.ScenarioResult");
                 Assert.IsNotEmpty(messages);
                 Assert.True(messages.Count() == 55);
                 Assert.IsTrue(messages.All(msg => msg.Item3 as EventContext != null));
                 Assert.IsTrue(messages.All(msg => (msg.Item3 as EventContext).Properties["scenarioName"].ToString() == "Graph500"));
             }
-        }
-
-        private void SetupDefaultMockBehavior(PlatformID platform = PlatformID.Unix, Architecture architecture = Architecture.X64)
-        {
-            this.fixture.Setup(platform, architecture);
-            this.fixture.Parameters["PackageName"] = "Graph500";
-
-            string currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            this.currentDirectoryPath = new DependencyPath("Graph500", currentDirectory);
-
-            this.fixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPath);
-            this.fixture.ProcessManager.OnCreateProcess = (command, arguments, directory) => this.fixture.Process;
-
-            this.fixture.Process.StandardOutput.Append(
-                File.ReadAllText(this.fixture.Combine(this.currentDirectoryPath.Path, "Examples", "Graph500", "Graph500ResultsExample.txt")));
         }
 
         private class TestGraph500Executor : Graph500Executor

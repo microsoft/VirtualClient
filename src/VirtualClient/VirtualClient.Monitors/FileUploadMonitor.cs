@@ -13,18 +13,19 @@ namespace VirtualClient.Monitors
     using System.Threading.Tasks;
     using global::VirtualClient.Common.Contracts;
     using global::VirtualClient.Common.Extensions;
-    using global::VirtualClient.Common.Platform;
     using global::VirtualClient.Common.Telemetry;
     using global::VirtualClient.Contracts;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
+    using MimeMapping;
     using Newtonsoft.Json;
-    using Polly;
+    using VirtualClient.Common;
 
     /// <summary>
     /// This monitor processes content/file uploads requested by Virtual Client
     /// workload, monitoring and dependency components.
     /// </summary>
+    [SupportedPlatforms("linux-arm64,linux-x64,win-arm64,win-x64")]
     public class FileUploadMonitor : VirtualClientComponent
     {
         private IFileSystem fileSystem;
@@ -40,6 +41,17 @@ namespace VirtualClient.Monitors
         }
 
         /// <summary>
+        /// True/false whether log files should be deleted once uploaded. Default = false.
+        /// </summary>
+        public bool DeleteLogs
+        {
+            get
+            {
+                return this.Parameters.GetValue<bool>(nameof(this.DeleteLogs), false);
+            }
+        }
+
+        /// <summary>
         /// The source directory to watch for content upload requests/notifications.
         /// </summary>
         public string RequestsDirectory
@@ -47,6 +59,17 @@ namespace VirtualClient.Monitors
             get
             {
                 return this.Parameters.GetValue<string>(nameof(this.RequestsDirectory), this.PlatformSpecifics.ContentUploadsDirectory);
+            }
+        }
+
+        /// <summary>
+        /// True/false whether log uploaded should have a manifest included. Default = false.
+        /// </summary>
+        public bool IncludeManifest
+        {
+            get
+            {
+                return this.Parameters.GetValue<bool>(nameof(this.IncludeManifest), false);
             }
         }
 
@@ -66,7 +89,7 @@ namespace VirtualClient.Monitors
                 if (this.TryGetContentStoreManager(out IBlobManager blobManager))
                 {
                     await this.ProcessFileUploadsAsync(blobManager, telemetryContext, cancellationToken);
-                    await this.ProcessSummaryFileUploadsAsync(blobManager, telemetryContext);
+                    await this.ProcessStandardLogFileUploadsAsync(blobManager, telemetryContext);
                 }
             });
         }
@@ -121,7 +144,7 @@ namespace VirtualClient.Monitors
             }
         }
 
-        private async Task ProcessSummaryFileUploadsAsync(IBlobManager blobManager, EventContext telemetryContext)
+        private async Task ProcessStandardLogFileUploadsAsync(IBlobManager blobManager, EventContext telemetryContext)
         {
             EventContext relatedContext = telemetryContext.Clone().AddContext("directoryPath", this.PlatformSpecifics.LogsDirectory);
 
@@ -129,11 +152,11 @@ namespace VirtualClient.Monitors
             {
                 try
                 {
-                    await this.Logger.LogMessageAsync($"{this.TypeName}.ProcessSummaryFileUploads", relatedContext, async () =>
+                    await this.Logger.LogMessageAsync($"{this.TypeName}.ProcessStandardLogFileUploads", relatedContext, async () =>
                     {
-                        // Upload the workload summary logs (e.g. metrics.csv) before exiting. We do this at the very end. Same as before, we do not
-                        // honor the cancellation token until ALL files have been successfully processed.
-                        await this.UploadCsvSummaryFilesAsync(blobManager, relatedContext);
+                        // Upload the default logs (e.g. vc.metrics, vc.events, metrics.csv, summary.txt) before exiting. We do this at the very end.
+                        // Same as before, we do not honor the cancellation token until ALL files have been successfully processed.
+                        await this.UploadStandardLogFilesAsync(blobManager, relatedContext);
                     });
 
                     break;
@@ -165,20 +188,35 @@ namespace VirtualClient.Monitors
 
                     if (filesFound)
                     {
-                        foreach (var uploadDescriptor in uploadDescriptorFiles)
+                        foreach (var uploadDescriptorFile in uploadDescriptorFiles)
                         {
                             try
                             {
                                 bool deleteFile = false;
-                                string uploadDescriptorContent = await this.fileSystem.File.ReadAllTextAsync(uploadDescriptor, CancellationToken.None);
+                                string uploadDescriptorContent = await this.fileSystem.File.ReadAllTextAsync(uploadDescriptorFile, CancellationToken.None);
                                 FileUploadDescriptor descriptor = uploadDescriptorContent.FromJson<FileUploadDescriptor>();
+
+                                // Do not assume the file still exists. Check to see if the file remains on the
+                                // system so that we do not end up in an endless retry loop trying to upload a file that
+                                // does not exist.
+                                if (!this.fileSystem.File.Exists(descriptor.FilePath))
+                                {
+                                    await this.fileSystem.File.DeleteAsync(uploadDescriptorFile);
+                                    continue;
+                                }
 
                                 try
                                 {
-                                    await this.UploadFileAsync(blobManager, this.fileSystem, descriptor, CancellationToken.None);
-                                    deleteFile = descriptor.DeleteOnUpload;
+                                    await this.UploadFileAsync(
+                                        blobManager, 
+                                        this.fileSystem,
+                                        descriptor, 
+                                        CancellationToken.None, 
+                                        includeManifest: this.IncludeManifest);
 
-                                    await this.fileSystem.File.DeleteAsync(uploadDescriptor);
+                                    deleteFile = this.DeleteLogs;
+
+                                    await this.fileSystem.File.DeleteAsync(uploadDescriptorFile);
                                 }
                                 catch (Exception exc)
                                 {
@@ -200,7 +238,7 @@ namespace VirtualClient.Monitors
                             catch (JsonSerializationException)
                             {
                                 // Invalid file in the directory.
-                                await this.fileSystem.File.DeleteAsync(uploadDescriptor);
+                                await this.fileSystem.File.DeleteAsync(uploadDescriptorFile);
                             }
                             catch (IOException exc) when (exc.Message.Contains("being used by another process", StringComparison.OrdinalIgnoreCase))
                             {
@@ -224,28 +262,39 @@ namespace VirtualClient.Monitors
             return filesFound;
         }
 
-        private async Task UploadCsvSummaryFilesAsync(IBlobManager blobManager, EventContext telemetryContext)
+        private async Task UploadStandardLogFilesAsync(IBlobManager blobManager, EventContext telemetryContext)
         {
             try
             {
                 if (this.fileSystem.Directory.Exists(this.PlatformSpecifics.LogsDirectory))
                 {
-                    IEnumerable<string> csvFiles = this.fileSystem.Directory.GetFiles(this.PlatformSpecifics.LogsDirectory, "*.csv", SearchOption.TopDirectoryOnly);
-                    if (csvFiles?.Any() == true)
+                    IEnumerable<string> logFiles = this.fileSystem.Directory.GetFiles(this.PlatformSpecifics.LogsDirectory, "*.*", SearchOption.TopDirectoryOnly);
+                    if (logFiles?.Any() == true)
                     {
-                        foreach (var filePath in csvFiles)
+                        foreach (var filePath in logFiles)
                         {
                             try
                             {
                                 FileUploadDescriptor descriptor = this.CreateFileUploadDescriptor(
                                     new FileContext(
                                         this.fileSystem.FileInfo.New(filePath),
-                                        "text/csv",
+                                        MimeUtility.GetMimeMapping(filePath),
                                         Encoding.UTF8.WebName,
                                         this.ExperimentId,
-                                        this.AgentId));
+                                        this.AgentId),
+                                    timestamped: true);
 
-                                await this.UploadFileAsync(blobManager, this.fileSystem, descriptor, CancellationToken.None);
+                                await this.UploadFileAsync(
+                                    blobManager, 
+                                    this.fileSystem, 
+                                    descriptor, 
+                                    CancellationToken.None,
+                                    includeManifest: this.IncludeManifest);
+
+                                if (this.DeleteLogs)
+                                {
+                                    await this.fileSystem.File.DeleteAsync(filePath);
+                                }
                             }
                             catch (IOException exc) when (exc.Message.Contains("being used by another process", StringComparison.OrdinalIgnoreCase))
                             {

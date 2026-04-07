@@ -13,7 +13,6 @@ namespace VirtualClient.Actions
     using VirtualClient.Common;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
-    using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
 
@@ -135,7 +134,7 @@ namespace VirtualClient.Actions
 
                     process = processManager.CreateProcess(command, commandArguments, workingDirectory);
 
-                    this.CleanupTasks.Add(() => process.SafeKill());
+                    this.CleanupTasks.Add(() => process.SafeKill(this.Logger));
                     this.Logger.LogTraceMessage($"Executing: {command} {commandArguments}".Trim(), relatedContext);
 
                     if (!process.Start())

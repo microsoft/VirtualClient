@@ -5,9 +5,7 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
-    using System.ComponentModel;
     using System.Linq;
-    using System.Text.RegularExpressions;
     using global::VirtualClient;
     using global::VirtualClient.Actions;
     using global::VirtualClient.Contracts;
@@ -46,19 +44,63 @@ namespace VirtualClient.Actions
 
             try
             {
-                JObject keyValuePairs = JObject.Parse(this.RawText);
-                foreach (var keyValuePair in keyValuePairs.Properties())
+                JToken token = JToken.Parse(this.RawText);
+
+                if (token.Type == JTokenType.Object)
                 {
-                    if (double.TryParse(keyValuePair.Value.ToString(), out var value))
+                    // Format 1: { "metric1": 123, "metric2": 2.5, ... }
+                    JObject keyValuePairs = (JObject)token;
+                    foreach (var keyValuePair in keyValuePairs.Properties())
                     {
-                        metrics.Add(new Metric(keyValuePair.Name, value, MetricRelativity.Undefined));
+                        if (double.TryParse(keyValuePair.Value.ToString(), out var value))
+                        {
+                            metrics.Add(new Metric(keyValuePair.Name, value, MetricRelativity.Undefined));
+                        }
+                        else
+                        {
+                            throw new WorkloadResultsException(
+                                $"Invalid JSON metrics content formatting. The metric value for '{keyValuePair.Name}' is not a valid numeric data type. Provided metric value is '{keyValuePair.Value}'",
+                                ErrorReason.InvalidResults);
+                        }
                     }
-                    else
+                }
+                else if (token.Type == JTokenType.Array)
+                {
+                    /* Format 2:
+                        [
+                            {
+                                "Nmae": "metric1",
+                                "Value": 0,
+                                "Unit": "unit1",
+                                "MetaData": {
+                                    "metadata1": "m1",
+                                    "metadata2": "m2"
+                                }
+                            }
+                        ]
+                    */
+                    try
+                    {
+                        metrics = JsonConvert.DeserializeObject<List<Metric>>(this.RawText);
+                    }
+                    catch (Exception exc)
                     {
                         throw new WorkloadResultsException(
-                            $"Invalid JSON metrics content formatting. The metric value for '{keyValuePair.Name}' is not a valid numeric data type.",
+                            "Invalid JSON metrics content formatting. Failed to deserialze the Array JSON Contents into Metrics format.", exc, ErrorReason.InvalidResults);
+                    }
+
+                    if (metrics.Any(m => string.IsNullOrWhiteSpace(m.Name)))
+                    {
+                        throw new WorkloadResultsException(
+                            "Invalid JSON metrics content formatting. 'Name' is a required property for each metric, it can't be null or whitespace.",
                             ErrorReason.InvalidResults);
                     }
+                }
+                else
+                {
+                    throw new WorkloadResultsException(
+                        "Invalid JSON metrics content formatting. The root element must be either an object or an array.",
+                        ErrorReason.InvalidResults);
                 }
             }
             catch (WorkloadResultsException)
@@ -68,8 +110,8 @@ namespace VirtualClient.Actions
             catch (Exception exc)
             {
                 throw new WorkloadResultsException(
-                    $"Invalid JSON metrics content formatting. The metrics content must be in a valid JSON key/value pair JSON-format " +
-                    $"(e.g. {{ \"metric1\": 1234, \"metric2\": 987.65, \"metric3\": 32.0023481 }} )",
+                    $"Invalid JSON metrics content formatting. The metrics content must be in a valid JSON key/value pair format " +
+                    $"(e.g. {{ \"metric1\": 1234, \"metric2\": 987.65, \"metric3\": 32.0023481 }} ) or an array of Json objects.",
                     exc,
                     ErrorReason.InvalidResults);
             }

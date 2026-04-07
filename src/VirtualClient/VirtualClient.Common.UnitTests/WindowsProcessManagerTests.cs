@@ -25,7 +25,7 @@ namespace VirtualClient.Common
             Assert.IsNotNull(process.StartInfo);
             Assert.AreEqual(command, process.StartInfo.FileName);
             Assert.IsEmpty(process.StartInfo.Arguments);
-            Assert.AreEqual(@"C:\users\any\temp", process.StartInfo.WorkingDirectory);
+            Assert.IsEmpty(process.StartInfo.WorkingDirectory);
             Assert.IsTrue(process.StartInfo.RedirectStandardOutput);
             Assert.IsTrue(process.StartInfo.RedirectStandardError);
             Assert.IsFalse(process.StartInfo.UseShellExecute);
@@ -44,7 +44,7 @@ namespace VirtualClient.Common
             Assert.IsNotNull(process.StartInfo);
             Assert.AreEqual(command, process.StartInfo.FileName);
             Assert.AreEqual(commandArguments, process.StartInfo.Arguments);
-            Assert.AreEqual(@"C:\users\any\temp", process.StartInfo.WorkingDirectory);
+            Assert.IsEmpty(process.StartInfo.WorkingDirectory);
             Assert.IsTrue(process.StartInfo.RedirectStandardOutput);
             Assert.IsTrue(process.StartInfo.RedirectStandardError);
             Assert.IsFalse(process.StartInfo.UseShellExecute);

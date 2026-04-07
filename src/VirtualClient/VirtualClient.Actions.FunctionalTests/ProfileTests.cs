@@ -60,7 +60,7 @@ namespace VirtualClient.Actions
         private void SetupDefaultMockBehaviors()
         {
             this.mockFixture.Setup(PlatformID.Win32NT);
-            this.mockFixture.SetupWorkloadPackage("exampleworkload", expectedFiles: @"win-x64\exampleworkload.exe");
+            this.mockFixture.SetupPackage("exampleworkload", expectedFiles: @"win-x64\exampleworkload.exe");
             this.mockFixture.SetupDisks(withRemoteDisks: false);
         }
     }

@@ -7,6 +7,7 @@ namespace VirtualClient.TestExtensions
     using System.Text.RegularExpressions;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
+    using NUnit.Framework;
     using VirtualClient.Common.Extensions;
 
     /// <summary>
@@ -48,6 +49,53 @@ namespace VirtualClient.TestExtensions
 
                         SerializationAssert.JsonEquals(serializedData, serializedData2);
 
+                        isSerializable = true;
+                    }
+                }
+
+                if (!isSerializable)
+                {
+                    throw new SerializationAssertFailedException(
+                        $"Object of type {typeof(T).Name} is not JSON serializable or does not serialize/deserialize without data loss.");
+                }
+            }
+            catch (SerializationAssertFailedException)
+            {
+                throw;
+            }
+            catch (Exception exc)
+            {
+                throw new SerializationAssertFailedException(
+                    $"Object of type {typeof(T).Name} is not JSON serializable or does not serialize/deserialize without data loss.  {exc.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Verifies that a type is YAML serializable without any data loss.
+        /// Throws an exception if the deserialized object is not binary-equivalent
+        /// to the serialized object.
+        /// </summary>
+        /// <typeparam name="T">The type of object to serialize</typeparam>
+        /// <param name="data">The object to serialize</param>
+        public static void IsYamlSerializable<T>(T data)
+        {
+            try
+            {
+                bool isSerializable = false;
+
+                var yamlSerializer = new YamlDotNet.Serialization.SerializerBuilder().Build();
+                string serializedData = yamlSerializer.Serialize(data);
+
+                if (!string.IsNullOrEmpty(serializedData))
+                {
+                    T deserializedData = new YamlDotNet.Serialization.DeserializerBuilder().Build().Deserialize<T>(serializedData);
+
+                    if (deserializedData != null)
+                    {
+                        // Ensure that we did not lose data in the serialize/deserialize
+                        // process using binary comparison.
+                        string serializedData2 = yamlSerializer.Serialize(deserializedData);
+                        Assert.AreEqual(serializedData, serializedData2);
                         isSerializable = true;
                     }
                 }

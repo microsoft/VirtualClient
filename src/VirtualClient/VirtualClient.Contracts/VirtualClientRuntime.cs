@@ -4,12 +4,14 @@
 namespace VirtualClient
 {
     using System;
-    using System.Collections.Concurrent;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Linq;
+    using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
     using Newtonsoft.Json.Linq;
+    using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
 
     /// <summary>
@@ -53,6 +55,31 @@ namespace VirtualClient
         public static List<Action_> CleanupTasks { get; } = new List<Action_>();
 
         /// <summary>
+        /// The command line arguments provided to the Virtual Client application.
+        /// </summary>
+        public static string[] CommandLineArguments { get; internal set; }
+
+        /// <summary>
+        /// The current experiment ID for the application.
+        /// </summary>
+        public static IReadOnlyDictionary<string, IConvertible> CommandLineMetadata { get; internal set; }
+
+        /// <summary>
+        /// Parameters provided to VC on the command line.
+        /// </summary>
+        public static IReadOnlyDictionary<string, IConvertible> CommandLineParameters { get; internal set; }
+
+        /// <summary>
+        /// The name of the Virtual Client application/module.
+        /// </summary>
+        public static string ExecutableName { get; } = Process.GetCurrentProcess().MainModule.FileName;
+
+        /// <summary>
+        /// The time at which the Virtual Client application started execution.
+        /// </summary>
+        public static DateTime ExecutionStartTime { get; } = DateTime.UtcNow;
+
+        /// <summary>
         /// A set of one or more tasks (exit) registered to execute before the application
         /// exits completely. The dictionary key can be used to determine if a particular task exists
         /// in the set of not.
@@ -71,52 +98,9 @@ namespace VirtualClient
         public static bool IsRebootRequested { get; set; }
 
         /// <summary>
-        /// Cleans up any tracked resources.
+        /// The current platform-specifics for the application.
         /// </summary>
-        public static void OnCleanup()
-        {
-            if (VirtualClientRuntime.CleanupTasks.Any())
-            {
-                lock (VirtualClientRuntime.LockObject)
-                {
-                    foreach (var entry in VirtualClientRuntime.CleanupTasks)
-                    {
-                        try
-                        {
-                            entry.Invoke();
-                        }
-                        catch
-                        {
-                            // Best effort here.
-                        }
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// Cleans up any tracked resources.
-        /// </summary>
-        public static void OnExiting()
-        {
-            if (VirtualClientRuntime.ExitTasks.Any())
-            {
-                lock (VirtualClientRuntime.LockObject)
-                {
-                    foreach (var entry in VirtualClientRuntime.ExitTasks)
-                    {
-                        try
-                        {
-                            entry.Invoke();
-                        }
-                        catch
-                        {
-                            // Best effort here.
-                        }
-                    }
-                }
-            }
-        }
+        public static PlatformSpecifics PlatformSpecifics { get; } = new PlatformSpecifics(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture);
 
         /// <summary>
         /// Invokes the <see cref="ReceiveInstructions"/> event to notify subscribers
@@ -191,6 +175,54 @@ namespace VirtualClient
             lock (VirtualClientRuntime.LockObject)
             {
                 VirtualClientRuntime.IsApiOnline = online;
+            }
+        }
+
+        /// <summary>
+        /// Cleans up any tracked resources.
+        /// </summary>
+        internal static void ExecuteCleanupActions()
+        {
+            if (VirtualClientRuntime.CleanupTasks.Any())
+            {
+                lock (VirtualClientRuntime.LockObject)
+                {
+                    foreach (var entry in VirtualClientRuntime.CleanupTasks)
+                    {
+                        try
+                        {
+                            entry.Invoke();
+                        }
+                        catch
+                        {
+                            // Best effort here.
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Executes any actions before application immediate exit.
+        /// </summary>
+        internal static void ExecuteExitActions()
+        {
+            if (VirtualClientRuntime.ExitTasks.Any())
+            {
+                lock (VirtualClientRuntime.LockObject)
+                {
+                    foreach (var entry in VirtualClientRuntime.ExitTasks)
+                    {
+                        try
+                        {
+                            entry.Invoke();
+                        }
+                        catch
+                        {
+                            // Best effort here.
+                        }
+                    }
+                }
             }
         }
     }

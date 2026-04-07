@@ -7,15 +7,12 @@ namespace VirtualClient.Actions
     using System.Collections.Generic;
     using System.Net;
     using System.Net.Http;
-    using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.Extensions.Logging;
     using Newtonsoft.Json.Linq;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
-    using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
 
@@ -59,17 +56,12 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            await this.CheckDistroSupportAsync(telemetryContext, cancellationToken)
-                .ConfigureAwait(false);
+            await this.CheckDistroSupportAsync(telemetryContext, cancellationToken);
 
-            IPackageManager packageManager = this.Dependencies.GetService<IPackageManager>();
-            DependencyPath workloadPackage = await packageManager.GetPlatformSpecificPackageAsync(this.PackageName, this.Platform, this.CpuArchitecture, cancellationToken)
-                .ConfigureAwait(false);
-
+            DependencyPath workloadPackage = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken);
             this.PackagePath = workloadPackage.Path;
 
-            await this.BuildBinariesAsync(telemetryContext, cancellationToken)
-                .ConfigureAwait(false);
+            await this.BuildBinariesAsync(telemetryContext, cancellationToken);
         }
 
         /// <summary>
@@ -150,6 +142,8 @@ namespace VirtualClient.Actions
         {
             IApiClientManager clientManager = this.Dependencies.GetService<IApiClientManager>();
             var apiClient = clientManager.GetOrCreateApiClient(IPAddress.Loopback.ToString(), IPAddress.Loopback);
+
+            await apiClient.PollForHeartbeatAsync(TimeSpan.FromMinutes(40), cancellationToken);
 
             HttpResponseMessage response = await apiClient.GetStateAsync(nameof(this.NpbBuildState), cancellationToken)
                .ConfigureAwait(false);

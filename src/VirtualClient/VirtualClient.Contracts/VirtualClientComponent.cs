@@ -31,6 +31,12 @@ namespace VirtualClient.Contracts
         public static readonly char[] CommonDelimiters = new char[] { ',', ';' };
 
         /// <summary>
+        /// Common delimiters for parameter set collections. The delimiters are defined in
+        /// priority order for parsing operations.
+        /// </summary>
+        public static readonly string[] CommonParameterDelimiters = new string[] { ",,,", ";", "," };
+
+        /// <summary>
         /// The assembly containing the component base class and types.
         /// </summary>
         public static readonly Assembly DllAssembly = Assembly.GetAssembly(typeof(VirtualClientComponent));
@@ -50,10 +56,7 @@ namespace VirtualClient.Contracts
         protected VirtualClientComponent(VirtualClientComponent component)
             : this(component?.Dependencies, component?.Parameters)
         {
-            this.ClientRequestId = component.ClientRequestId;
-            this.ExecutionSeed = component.ExecutionSeed;
-            this.FailFast = component.FailFast;
-            this.LogToFile = component.LogToFile;
+            this.ComponentType = component.ComponentType;
             this.MetadataContract = component.MetadataContract;
 
             if (component.Metadata?.Any() == true)
@@ -129,12 +132,6 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
-        /// Parameter defines the content path template to use when uploading content
-        /// to target storage resources. When not defined the default template will be used.
-        /// </summary>
-        public static string ContentPathTemplate { get; set; }
-
-        /// <summary>
         /// The ID of the Virtual Client instance/agent as part of the larger experiment.
         /// </summary>
         public string AgentId { get; }
@@ -171,9 +168,49 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
+        /// The type of component (Action, Dependency, Monitor).
+        /// </summary>
+        public ComponentType ComponentType { get; set; }
+
+        /// <summary>
+        /// The content path template to use when uploading content
+        /// to target storage resources. When not defined the default template will be used.
+        /// </summary>
+        public string ContentPathTemplate
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(VirtualClientComponent.ContentPathTemplate), out IConvertible template);
+                return template?.ToString();
+            }
+
+            set
+            {
+                this.Parameters[nameof(this.ContentPathTemplate)] = value;
+            }
+        }
+
+        /// <summary>
         /// The CPU/processor architecture (e.g. amd64, arm).
         /// </summary>
         public Architecture CpuArchitecture { get; }
+
+        /// <summary>
+        /// True/false whether log files upload request processing should be deferred
+        /// for handling later when a content store is defined. Default = false.
+        /// </summary>
+        public bool DeferUploads
+        {
+            get
+            {
+                return this.Parameters.GetValue<bool>(nameof(this.DeferUploads), false);
+            }
+
+            protected set
+            {
+                this.Parameters[nameof(this.DeferUploads)] = false;
+            }
+        }
 
         /// <summary>
         /// Provides all of the required dependencies to the component.
@@ -184,11 +221,6 @@ namespace VirtualClient.Contracts
         /// Component end time
         /// </summary>
         public DateTime EndTime { get; private set; }
-
-        /// <summary>
-        /// Random execution seed
-        /// </summary>
-        public int? ExecutionSeed { get; set; }
 
         /// <summary>
         /// The ID of the larger experiment in which the Virtual Client instance
@@ -212,7 +244,7 @@ namespace VirtualClient.Contracts
                 return this.Parameters.GetValue<bool>(nameof(this.FailFast), false);
             }
 
-            set
+            protected set
             {
                 this.Parameters[nameof(this.FailFast)] = value;
             }
@@ -231,6 +263,42 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
+        /// The name of the file to which log files should be
+        /// written (e.g. ipmiutil -> ipmiutil_sel.log).
+        /// </summary>
+        public string LogFileName
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(VirtualClientComponent.LogFileName), out IConvertible logFileName);
+                return logFileName?.ToString();
+            }
+
+            protected set
+            {
+                this.Parameters[nameof(this.LogFolderName)] = value;
+            }
+        }
+
+        /// <summary>
+        /// The name of the directory/folder to which log files should be
+        /// written (e.g. geekbench -> ./logs/geekbench).
+        /// </summary>
+        public string LogFolderName
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(VirtualClientComponent.LogFolderName), out IConvertible logDirectoryName);
+                return logDirectoryName?.ToString();
+            }
+
+            protected set
+            {
+                this.Parameters[nameof(this.LogFolderName)] = value;
+            }
+        }
+
+        /// <summary>
         /// The Logger for this component
         /// </summary>
         public ILogger Logger { get; set; }
@@ -239,7 +307,18 @@ namespace VirtualClient.Contracts
         /// True/false whether the output of processes should be logged to files 
         /// in the logs directory.
         /// </summary>
-        public bool LogToFile { get; set; }
+        public bool LogToFile
+        {
+            get
+            {
+                return this.Parameters.GetValue<bool>(nameof(this.LogToFile), false);
+            }
+
+            protected set
+            {
+                this.Parameters[nameof(this.LogToFile)] = value;
+            }
+        }
 
         /// <summary>
         /// Metadata provided to the application on the command line.
@@ -324,7 +403,7 @@ namespace VirtualClient.Contracts
         /// placeholders and well-known terms to be replaced in the values of the parameters before
         /// execution of workloads, monitors or dependencies.
         /// </summary>
-        public bool ParametersEvaluated { get; internal set; }
+        public bool ParametersEvaluated { get; protected set; }
 
         /// <summary>
         /// The OS/system platform (e.g. Windows, Unix).
@@ -497,6 +576,23 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
+        /// A seed to apply to scenarios where a common base is required
+        /// for randomization operations.
+        /// </summary>
+        public int Seed
+        {
+            get
+            {
+                return this.Parameters.GetValue<int>(nameof(VirtualClientComponent.Seed), 777);
+            }
+
+            protected set
+            {
+                this.Parameters[nameof(this.Seed)] = value;
+            }
+        }
+
+        /// <summary>
         /// Action start time
         /// </summary>
         public DateTime StartTime { get; private set; }
@@ -590,6 +686,28 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
+        /// Evaluates each of the parameters provided to the component to replace
+        /// supported placeholder expressions (e.g. {PackagePath:anytool} -> replace with path to 'anytool' package).
+        /// </summary>
+        /// <param name="cancellationToken">A token that can be used to cancel the operations.</param>
+        /// <param name="force">Forces the evaluation of the parameters for scenarios where re-evaluation is necessary after an initial pass. Default = false.</param>
+        public async Task EvaluateParametersAsync(CancellationToken cancellationToken, bool force = false)
+        {
+            if (!this.ParametersEvaluated || force)
+            {
+                if (this.Parameters?.Any() == true)
+                {
+                    if (this.Dependencies.TryGetService<IExpressionEvaluator>(out IExpressionEvaluator evaluator))
+                    {
+                        await evaluator.EvaluateAsync(this.Dependencies, this.Parameters, cancellationToken);
+                    }
+                }
+
+                this.ParametersEvaluated = true;
+            }
+        }
+
+        /// <summary>
         /// When overriden in a derived class, executes the component logic.
         /// </summary>
         public async Task ExecuteAsync(CancellationToken cancellationToken)
@@ -598,6 +716,7 @@ namespace VirtualClient.Contracts
 
             try
             {
+                this.CleanupTasks.Clear();
                 PlatformSpecifics.ThrowIfNotSupported(this.Platform);
                 PlatformSpecifics.ThrowIfNotSupported(this.CpuArchitecture);
 
@@ -619,7 +738,7 @@ namespace VirtualClient.Contracts
                     {
                         this.MetadataContract.Add(
                             this.Metadata.Keys.ToDictionary(key => key, entry => this.Metadata[entry] as object).ObscureSecrets(),
-                            MetadataContractCategory.Default,
+                            MetadataContract.DefaultCategory,
                             replace: true);
                     }
 
@@ -627,7 +746,7 @@ namespace VirtualClient.Contracts
                     {
                         this.MetadataContract.Add(
                             this.Parameters.Keys.ToDictionary(key => key, entry => this.Parameters[entry] as object).ObscureSecrets(),
-                            MetadataContractCategory.Scenario,
+                            MetadataContract.ScenarioCategory,
                             replace: true);
                     }
 
@@ -640,7 +759,7 @@ namespace VirtualClient.Contracts
                         {
                             this.MetadataContract.Add(
                                 this.Extensions.Keys.ToDictionary(key => key, entry => this.Extensions[entry] as object),
-                                MetadataContractCategory.ScenarioExtensions,
+                                MetadataContract.ScenarioExtensionsCategory,
                                 replace: true);
                         }
                     }
@@ -649,7 +768,7 @@ namespace VirtualClient.Contracts
 
                     await this.Logger.LogMessageAsync($"{this.TypeName}.Execute", telemetryContext, async () =>
                     {
-                        bool succeeded = false;
+                        bool succeeded = true;
 
                         try
                         {
@@ -657,7 +776,6 @@ namespace VirtualClient.Contracts
                             this.Validate();
 
                             await this.ExecuteAsync(telemetryContext, cancellationToken);
-                            succeeded = true;
                         }
                         catch (OperationCanceledException)
                         {
@@ -665,6 +783,8 @@ namespace VirtualClient.Contracts
                         }
                         catch (Exception)
                         {
+                            succeeded = false;
+
                             // Occasionally some of the workloads throw exceptions right as VC receives a
                             // cancellation/exit request.
                             if (!cancellationToken.IsCancellationRequested)
@@ -675,19 +795,9 @@ namespace VirtualClient.Contracts
                         finally
                         {
                             this.EndTime = DateTime.UtcNow;
-
-                            if (succeeded)
-                            {
-                                this.LogSuccessMetric(scenarioStartTime: this.StartTime, scenarioEndTime: this.EndTime, telemetryContext: telemetryContext);
-                            }
-                            else
-                            {
-                                this.LogFailedMetric(scenarioStartTime: this.StartTime, scenarioEndTime: this.EndTime, telemetryContext: telemetryContext);
-                            }
+                            this.LogSuccessOrFailedMetric(succeeded, scenarioStartTime: this.StartTime, scenarioEndTime: this.EndTime, telemetryContext: telemetryContext);
+                            await this.CleanupAsync(telemetryContext, cancellationToken);
                         }
-
-                        await this.CleanupAsync(telemetryContext, cancellationToken);
-
                     });
                 }
             }
@@ -703,31 +813,32 @@ namespace VirtualClient.Contracts
         /// </summary>
         protected virtual Task CleanupAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            if (this.CleanupTasks.Any())
+            return Task.Run(() =>
             {
-                try
+                if (this.CleanupTasks.Any())
                 {
-                    foreach (Action cleanupTask in this.CleanupTasks)
+                    try
                     {
-                        try
+                        foreach (Action cleanupTask in this.CleanupTasks)
                         {
-                            cleanupTask.Invoke();
-                        }
-                        catch (Exception exc)
-                        {
-                            // Best effort...but logged
-                            this.Logger.LogMessage($"{this.TypeName}.CleanupError", LogLevel.Warning, telemetryContext.Clone().AddError(exc));
+                            try
+                            {
+                                cleanupTask.Invoke();
+                            }
+                            catch (Exception exc)
+                            {
+                                // Best effort...but logged
+                                this.Logger.LogMessage($"{this.TypeName}.CleanupError", LogLevel.Warning, telemetryContext.Clone().AddError(exc));
+                            }
                         }
                     }
+                    catch (Exception exc)
+                    {
+                        // Best effort...but logged
+                        this.Logger.LogMessage($"{this.TypeName}.CleanupError", LogLevel.Warning, telemetryContext.Clone().AddError(exc));
+                    }
                 }
-                catch (Exception exc)
-                {
-                    // Best effort...but logged
-                    this.Logger.LogMessage($"{this.TypeName}.CleanupError", LogLevel.Warning, telemetryContext.Clone().AddError(exc));
-                }
-            }
-
-            return Task.CompletedTask;
+            });
         }
 
         /// <summary>

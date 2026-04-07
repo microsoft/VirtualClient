@@ -41,6 +41,26 @@ namespace VirtualClient
         /// </summary>
         public IFileSystem FileSystem { get; }
 
+        public void AppendAllBytes(string path, byte[] bytes)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void AppendAllBytes(string path, ReadOnlySpan<byte> bytes)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task AppendAllBytesAsync(string path, byte[] bytes, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task AppendAllBytesAsync(string path, ReadOnlyMemory<byte> bytes, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
         /// <inheritdoc />
         public void AppendAllLines(string path, IEnumerable<string> contents)
         {
@@ -81,6 +101,16 @@ namespace VirtualClient
             (this.FileSystem as InMemoryFileSystem).OnWriteFile?.Invoke(path, fileContents);
         }
 
+        public void AppendAllText(string path, ReadOnlySpan<char> contents)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void AppendAllText(string path, ReadOnlySpan<char> contents, Encoding encoding)
+        {
+            throw new NotImplementedException();
+        }
+
         /// <inheritdoc />
         public Task AppendAllTextAsync(string path, string contents, CancellationToken cancellationToken = default)
         {
@@ -92,6 +122,16 @@ namespace VirtualClient
         {
             this.AppendAllText(path, contents, encoding);
             return Task.CompletedTask;
+        }
+
+        public Task AppendAllTextAsync(string path, ReadOnlyMemory<char> contents, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task AppendAllTextAsync(string path, ReadOnlyMemory<char> contents, Encoding encoding, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -515,11 +555,21 @@ namespace VirtualClient
             (this.FileSystem as InMemoryFileSystem).OnWriteFile?.Invoke(path, bytes);
         }
 
+        public void WriteAllBytes(string path, ReadOnlySpan<byte> bytes)
+        {
+            throw new NotImplementedException();
+        }
+
         /// <inheritdoc />
         public Task WriteAllBytesAsync(string path, byte[] bytes, CancellationToken cancellationToken = default)
         {
             this.WriteAllBytes(path, bytes);
             return Task.CompletedTask;
+        }
+
+        public Task WriteAllBytesAsync(string path, ReadOnlyMemory<byte> bytes, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
         }
 
         /// <inheritdoc />
@@ -584,6 +634,16 @@ namespace VirtualClient
             this.WriteAllBytes(path, encoding.GetBytes(contents));
         }
 
+        public void WriteAllText(string path, ReadOnlySpan<char> contents)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void WriteAllText(string path, ReadOnlySpan<char> contents, Encoding encoding)
+        {
+            throw new NotImplementedException();
+        }
+
         /// <inheritdoc />
         public Task WriteAllTextAsync(string path, string contents, CancellationToken cancellationToken = default)
         {
@@ -595,6 +655,16 @@ namespace VirtualClient
         {
             this.WriteAllText(path, contents, encoding);
             return Task.CompletedTask;
+        }
+
+        public Task WriteAllTextAsync(string path, ReadOnlyMemory<char> contents, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task WriteAllTextAsync(string path, ReadOnlyMemory<char> contents, Encoding encoding, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
         }
 
         FileAttributes IFile.GetAttributes(SafeFileHandle fileHandle)

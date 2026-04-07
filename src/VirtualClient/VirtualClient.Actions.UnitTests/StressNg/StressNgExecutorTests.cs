@@ -26,9 +26,9 @@ namespace VirtualClient.Actions
         private MockFixture mockFixture;
 
         [Test]
-        [TestCase("--timeout 90 --cpu 16", "--timeout 90 --cpu 16 --metrics")]
-        [TestCase("", "--cpu coreCount --timeout 60 --metrics")]
-        public async Task StressNgExecutorRunsTheExpectedWorkloadCommandInLinux(string inputCommandLineArgs, string expectedArgsInCommand)
+        [TestCase("--timeout 90 --cpu 16", "--metrics", "--timeout 90 --cpu 16")]
+        [TestCase("", "--cpu coreCount --timeout 60 --metrics", "")]
+        public async Task StressNgExecutorRunsTheExpectedWorkloadCommandInLinux(string inputCommandLineArgs, string expectedArgsInCommandPrefix, string expectedArgsInCommandSuffix)
         {
             this.SetupDefaultMockBehaviors(PlatformID.Unix);
             this.mockFixture.Parameters[nameof(StressNgExecutor.CommandLine)] = inputCommandLineArgs;
@@ -39,13 +39,13 @@ namespace VirtualClient.Actions
 
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
 
-            string expectedArgs = expectedArgsInCommand.Replace("coreCount", Environment.ProcessorCount.ToString());
-            string expectedCommand = @$"sudo stress-ng {expectedArgs} --yaml {this.mockFixture.GetPackagePath()}/stressNg/vcStressNg.yaml";
+            string expectedArgsPrefix = expectedArgsInCommandPrefix.Replace("coreCount", Environment.ProcessorCount.ToString());
+            string expectedCommand = @$"sudo stress-ng {expectedArgsPrefix} --yaml {this.mockFixture.GetPackagePath()}/stressNg/vcStressNg.yaml {expectedArgsInCommandSuffix}";
 
             bool commandExecuted = false;
             this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
-                if (expectedCommand == $"{exe} {arguments}")
+                if (expectedCommand.Trim() == $"{exe} {arguments}")
                 {
                     commandExecuted = true;
                 }

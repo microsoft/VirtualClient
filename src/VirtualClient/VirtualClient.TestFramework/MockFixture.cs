@@ -5,17 +5,18 @@ namespace VirtualClient
 {
     using System;
     using System.Collections.Generic;
-    using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
     using System.Net;
     using System.Net.Http;
     using System.Reflection;
     using System.Runtime.InteropServices;
+    using System.Text;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using AutoFixture;
+    using Azure.Core;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
@@ -42,27 +43,27 @@ namespace VirtualClient
         /// The path to the directory where the test binaries (.dlls) exist. This can be used to mimic the "runtime/working" directory
         /// of the Virtual Client for the purpose of testing dependencies expected to exist in that directory.
         /// </summary>
-        public static readonly string TestAssemblyDirectory = Path.GetDirectoryName(MockFixture.TestAssembly.Location);
+        public static readonly string TestAssemblyDirectory = System.IO.Path.GetDirectoryName(MockFixture.TestAssembly.Location);
 
         /// <summary>
         /// The path to the directory where test example files can be found. Note that this requires the
         /// test project to copy the files to a directory called 'Examples'.
         /// </summary>
-        public static readonly string ExamplesDirectory = Path.Combine(TestAssemblyDirectory, "Examples");
+        public static readonly string ExamplesDirectory = System.IO.Path.Combine(TestAssemblyDirectory, "Examples");
 
         /// <summary>
         /// The path to the directory where test test resource/example files can be found. Note that this requires the
         /// test project to copy the files to a directory called 'TestResources'.
         /// </summary>
-        public static readonly string TestResourcesDirectory = Path.Combine(TestAssemblyDirectory, "TestResources");
+        public static readonly string TestResourcesDirectory = System.IO.Path.Combine(TestAssemblyDirectory, "TestResources");
 
         private static readonly char[] PathDividers = new char[] { '\\', '/' };
+        private static readonly Regex UnixTopLevelFolderExpression = new Regex(@"^(\/[^\/]+)$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex WindowsVolumeExpression = new Regex(@"^([a-z]\:[\\/])(.+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private string experimentId;
 
         static MockFixture()
         {
-            VirtualClientComponent.ContentPathTemplate = "{experimentId}/{agentId}/{toolName}/{role}/{scenario}";
         }
 
         /// <summary>
@@ -89,6 +90,11 @@ namespace VirtualClient
         /// A mock API client manager.
         /// </summary>
         public Mock<IApiClientManager> ApiClientManager { get; set; }
+
+        /// <summary>
+        /// A mock authorization manager.
+        /// </summary>
+        public Mock<IAuthorizationManager> AuthorizationManager { get; set; }
 
         /// <summary>
         /// A mock certificate manager.
@@ -229,9 +235,9 @@ namespace VirtualClient
         public InMemoryProcessManager ProcessManager { get; set; }
 
         /// <summary>
-        /// Mock ssh client manager.
+        /// Mock SSH client factory.
         /// </summary>
-        public InMemorySshClientManager SshClientManager { get; set; }
+        public Mock<ISshClientFactory> SshClientFactory { get; set; }
 
         /// <summary>
         /// The mock process that will be created by the process manager.
@@ -249,9 +255,30 @@ namespace VirtualClient
         public Mock<ISystemManagement> SystemManagement { get; set; }
 
         /// <summary>
+        /// A mock Key Vault Manager
+        /// </summary>
+        public Mock<IKeyVaultManager> KeyVaultManager { get; set; }
+
+        /// <summary>
         /// A mock profile timing/timeout definition.
         /// </summary>
         public ProfileTiming Timing { get; set; }
+
+        /// <summary>
+        /// Gets the process tracking instance. This is populated after the <see cref="TrackProcesses"/> method is called.
+        /// </summary>
+        public FixtureTracking Tracking => this.ProcessManager.Tracking;
+
+        /// <summary>
+        /// Returns the contents of the file at the path defined by the path segments
+        /// (e.g. [ "/home/users/examples", "toolset", "example.txt" ])
+        /// </summary>
+        /// <param name="pathSegments"></param>
+        /// <returns></returns>
+        public static string ReadFile(params string[] pathSegments)
+        {
+            return System.IO.File.ReadAllText(MockFixture.CurrentPlatform.Combine(pathSegments));
+        }
 
         /// <summary>
         /// Gets a directory path relevant to the test class type (.dll location) that is formatted
@@ -263,11 +290,11 @@ namespace VirtualClient
         {
             if (pathSegments?.Any() != true)
             {
-                return MockFixture.CurrentPlatform.Combine(Path.GetDirectoryName(Assembly.GetAssembly(testClassType).Location));
+                return MockFixture.CurrentPlatform.Combine(System.IO.Path.GetDirectoryName(Assembly.GetAssembly(testClassType).Location));
             }
             else
             {
-                return MockFixture.CurrentPlatform.Combine(new string[] { Path.GetDirectoryName(Assembly.GetAssembly(testClassType).Location) }.Union(pathSegments).ToArray());
+                return MockFixture.CurrentPlatform.Combine(new string[] { System.IO.Path.GetDirectoryName(Assembly.GetAssembly(testClassType).Location) }.Union(pathSegments).ToArray());
             }
         }
 
@@ -282,6 +309,19 @@ namespace VirtualClient
         /// <returns>The directory name for the path.</returns>
         public static string GetDirectoryName(string path)
         {
+            // Matching .NET Behaviors:
+            // Path.GetDirectoryName(null) = null
+            // Path.GetDirectoryName(string.Empty) = null
+            // Path.GetDirectoryName("C:\") = null
+            // Path.GetDirectoryName("C:\Any") = C:\
+            // Path.GetDirectoryName("C:\Any\Folder") = C:\Any
+            // Path.GetDirectoryName("C:\Any\Folder\ToFile.log") = C:\Any\Folder
+            //
+            // Path.GetDirectoryName("/") = null
+            // Path.GetDirectoryName("/home") = /
+            // Path.GetDirectoryName("/home/any") = /home
+            // Path.GetDirectoryName("/home/any/ToFile.log") = /home/any
+
             string directoryName = null;
             if (!string.IsNullOrWhiteSpace(path))
             {
@@ -294,9 +334,18 @@ namespace VirtualClient
                     // Paths with more than 1 segment.
                     //
                     // e.g.
+                    // /home         -> /
                     // /home/path    -> /home
                     // C:\Users\Path -> C:\Users
                     directoryName = effectivePath.Substring(0, lastIndexOfPathDivider);
+                }
+                else if (MockFixture.UnixTopLevelFolderExpression.IsMatch(path))
+                {
+                    // Top-level folder on Linux.
+                    //
+                    // e.g.
+                    // /home -> /
+                    directoryName = "/";
                 }
                 else
                 {
@@ -363,6 +412,30 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Combines the path segments into a valid script file path.
+        /// </summary>
+        public string GetScriptPath(params string[] pathSegments)
+        {
+            return this.PlatformSpecifics.GetScriptPath(pathSegments);
+        }
+
+        /// <summary>
+        /// Combines the path segments into a valid state file path.
+        /// </summary>
+        public string GetStatePath(params string[] pathSegments)
+        {
+            return this.PlatformSpecifics.GetStatePath(pathSegments);
+        }
+
+        /// <summary>
+        /// Combines the path segments into a valid default temp path.
+        /// </summary>
+        public string GetTempPath(params string[] pathSegments)
+        {
+            return this.PlatformSpecifics.GetTempPath(pathSegments);
+        }
+
+        /// <summary>
         /// Combines the path segments into a valid default tools path.
         /// </summary>
         public string GetToolsPath(params string[] pathSegments)
@@ -390,19 +463,20 @@ namespace VirtualClient
         /// <summary>
         /// Sets up or resets the fixture to default mock behaviors.
         /// </summary>
-        public virtual MockFixture Setup(PlatformID platform, Architecture architecture = Architecture.X64, string agentId = null, bool useUnixStylePathsOnly = false)
+        public virtual MockFixture Setup(PlatformID platform, Architecture architecture = Architecture.X64, string agentId = null, bool useUnixStylePathsOnly = false, MockBehavior mockBehavior = MockBehavior.Loose)
         {
             this.SetupMocks(true);
 
-            this.ApiClient = new Mock<IApiClient>();
-            this.ApiClientManager = new Mock<IApiClientManager>();
-            this.CertificateManager = new Mock<ICertificateManager>();
-            this.FileSystem = new Mock<IFileSystem>();
-            this.File = new Mock<IFile>();
-            this.FileInfo = new Mock<IFileInfoFactory>();
-            this.FileStream = new Mock<IFileStreamFactory>();
-            this.Directory = new Mock<IDirectory>();
-            this.DirectoryInfo = new Mock<IDirectoryInfo>();
+            this.ApiClient = new Mock<IApiClient>(mockBehavior);
+            this.ApiClientManager = new Mock<IApiClientManager>(mockBehavior);
+            this.AuthorizationManager = new Mock<IAuthorizationManager>(mockBehavior);
+            this.CertificateManager = new Mock<ICertificateManager>(mockBehavior);
+            this.FileSystem = new Mock<IFileSystem>(mockBehavior);
+            this.File = new Mock<IFile>(mockBehavior);
+            this.FileInfo = new Mock<IFileInfoFactory>(mockBehavior);
+            this.FileStream = new Mock<IFileStreamFactory>(mockBehavior);
+            this.Directory = new Mock<IDirectory>(mockBehavior);
+            this.DirectoryInfo = new Mock<IDirectoryInfo>(mockBehavior);
 
             this.Directory.Setup(dir => dir.CreateDirectory(It.IsAny<string>())).Returns(this.DirectoryInfo.Object);
             this.FileSystem.SetupGet(fs => fs.File).Returns(this.File.Object);
@@ -414,7 +488,7 @@ namespace VirtualClient
                 {
                     Mock<IFileInfo> mockFile = new Mock<IFileInfo>();
 
-                    mockFile.Setup(file => file.Name).Returns(Path.GetFileName(path));
+                    mockFile.Setup(file => file.Name).Returns(System.IO.Path.GetFileName(path));
                     mockFile.Setup(file => file.CreationTime).Returns(DateTime.Now);
                     mockFile.Setup(file => file.CreationTimeUtc).Returns(DateTime.UtcNow);
                     mockFile.Setup(file => file.Length).Returns(12345);
@@ -423,19 +497,26 @@ namespace VirtualClient
                     return mockFile.Object;
                 });
 
-            this.DiskManager = new Mock<IDiskManager>();
+            this.AuthorizationManager.Setup(auth => auth.GetAccessTokenAsync(It.IsAny<Uri>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Convert.ToBase64String(Encoding.UTF8.GetBytes("Any access token")));
+
+            this.KeyVaultManager = new Mock<IKeyVaultManager>(mockBehavior);
+            this.FileSystem.Setup(fs => fs.Path.GetDirectoryName(It.IsAny<string>()))
+                .Returns<string>(path => MockFixture.GetDirectoryName(path));
+
+            this.DiskManager = new Mock<IDiskManager>(mockBehavior);
             this.Logger = new InMemoryLogger();
-            this.FirewallManager = new Mock<IFirewallManager>();
+            this.FirewallManager = new Mock<IFirewallManager>(mockBehavior);
             this.PlatformSpecifics = new TestPlatformSpecifics(platform, architecture, useUnixStylePathsOnly: useUnixStylePathsOnly);
             VirtualClient.Contracts.PlatformSpecifics.RunningInContainer = false;
             this.ProcessManager = new InMemoryProcessManager(platform);
-            this.SshClientManager = new InMemorySshClientManager();
             this.Process = new InMemoryProcess();
-            this.PackageManager = new Mock<IPackageManager>();
+            this.PackageManager = new Mock<IPackageManager>(mockBehavior);
             this.PackageManager.SetupGet(pm => pm.PlatformSpecifics).Returns(this.PlatformSpecifics);
-            this.ContentBlobManager = new Mock<IBlobManager>();
-            this.PackagesBlobManager = new Mock<IBlobManager>();
-            this.StateManager = new Mock<IStateManager>();
+            this.ContentBlobManager = new Mock<IBlobManager>(mockBehavior);
+            this.PackagesBlobManager = new Mock<IBlobManager>(mockBehavior);
+            this.SshClientFactory = new Mock<ISshClientFactory>(mockBehavior);
+            this.StateManager = new Mock<IStateManager>(mockBehavior);
             this.Timing = new ProfileTiming(TimeSpan.FromMilliseconds(2));
             this.Parameters = new Dictionary<string, IConvertible>();
             this.Parameters[nameof(VirtualClientComponent.Scenario)] = "AnyScenario";
@@ -502,7 +583,7 @@ namespace VirtualClient
             this.SystemManagement.SetupGet(sm => sm.PackageManager).Returns(() => this.PackageManager.Object);
             this.SystemManagement.SetupGet(sm => sm.PlatformSpecifics).Returns(() => this.PlatformSpecifics);
             this.SystemManagement.SetupGet(sm => sm.ProcessManager).Returns(() => this.ProcessManager);
-            this.SystemManagement.SetupGet(sm => sm.SshClientManager).Returns(() => this.SshClientManager);
+            this.SystemManagement.SetupGet(sm => sm.SshClientFactory).Returns(() => this.SshClientFactory.Object);
             this.SystemManagement.SetupGet(sm => sm.StateManager).Returns(() => this.StateManager.Object);
             this.SystemManagement.Setup(sm => sm.IsLocalIPAddress(It.IsAny<string>())).Returns(true);
             this.SystemManagement.Setup(sm => sm.WaitAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
@@ -550,8 +631,12 @@ namespace VirtualClient
                         new NetworkInterfaceInfo("Mellanox Technologies MT27800 Family [ConnectX-5 Virtual Function] (rev 80)", "Mellanox Technologies MT27800 Family [ConnectX-5 Virtual Function] (rev 80)"),
                     }));
 
+            this.KeyVaultManager.Setup(kv => kv.StoreDescription)
+                .Returns(new DependencyKeyVaultStore(DependencyStore.KeyVault, new Uri("https://testvault.vault.azure.net/")));
+
             this.Dependencies = new ServiceCollection();
             this.Dependencies.AddSingleton<ILogger>((p) => this.Logger);
+            this.Dependencies.AddSingleton<IAuthorizationManager>(this.AuthorizationManager.Object);
             this.Dependencies.AddSingleton<IConfiguration>(new ConfigurationBuilder().Build());
             this.Dependencies.AddSingleton<ICertificateManager>((p) => this.CertificateManager.Object);
             this.Dependencies.AddSingleton<IExpressionEvaluator>(ProfileExpressionEvaluator.Instance);
@@ -560,7 +645,7 @@ namespace VirtualClient
             this.Dependencies.AddSingleton<ISystemManagement>((p) => this.SystemManagement.Object);
             this.Dependencies.AddSingleton<PlatformSpecifics>((p) => this.PlatformSpecifics);
             this.Dependencies.AddSingleton<ProcessManager>((p) => this.ProcessManager);
-            this.Dependencies.AddSingleton<ISshClientManager>((p) => this.SshClientManager);
+            this.Dependencies.AddSingleton<ISshClientFactory>((p) => this.SshClientFactory.Object);
             this.Dependencies.AddSingleton<IDiskManager>((p) => this.DiskManager.Object);
             this.Dependencies.AddSingleton<IFileSystem>((p) => this.FileSystem.Object);
             this.Dependencies.AddSingleton<IPackageManager>((p) => this.PackageManager.Object);
@@ -568,6 +653,7 @@ namespace VirtualClient
             this.Dependencies.AddSingleton<EnvironmentLayout>((p) => this.Layout);
             this.Dependencies.AddSingleton<IApiClientManager>((p) => this.ApiClientManager.Object);
             this.Dependencies.AddSingleton<ProfileTiming>((p) => this.Timing);
+            this.Dependencies.AddSingleton<IKeyVaultManager>((p) => this.KeyVaultManager.Object);
             this.Dependencies.AddSingleton<IEnumerable<IBlobManager>>(new List<IBlobManager>
             {
                 this.ContentBlobManager.Object,
@@ -588,6 +674,36 @@ namespace VirtualClient
                 this.Layout = new EnvironmentLayout(clients);
             }
 
+            return this;
+        }
+
+        /// <summary>
+        /// Enables automatic tracking of all process executions.
+        /// </summary>
+        /// <param name="reset">True to clear any previously tracked commands.</param>
+        /// <returns>The fixture instance for method chaining.</returns>
+        public MockFixture TrackProcesses(bool reset = true)
+        {
+            this.ProcessManager.TrackProcesses(reset);
+            return this;
+        }
+
+        /// <summary>
+        /// Sets up automatic output for processes whose full command line matches
+        /// the pattern provided.
+        /// </summary>
+        /// <param name="commandPattern">A regex pattern matching the command.</param>
+        /// <param name="standardOutput">The standard output to return for matching commands.</param>
+        /// <param name="standardError">The standard error output (optional).</param>
+        /// <param name="exitCode">The exit code for the process (default: 0).</param>
+        /// <returns>The fixture instance for method chaining.</returns>
+        public MockFixture SetupProcessOutput(
+            string commandPattern,
+            string standardOutput,
+            string standardError = null,
+            int exitCode = 0)
+        {
+            this.ProcessManager.SetupProcessOutput(commandPattern, standardOutput, standardError, exitCode);
             return this;
         }
 

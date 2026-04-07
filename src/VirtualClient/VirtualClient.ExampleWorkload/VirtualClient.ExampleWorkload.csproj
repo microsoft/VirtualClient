@@ -2,21 +2,21 @@
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>net9.0</TargetFramework>
         <AssemblyName>ExampleWorkload</AssemblyName>
         <RootNamespace>VirtualClient</RootNamespace>
         <RuntimeIdentifiers>win-x64;linux-x64;win-arm64;linux-arm64</RuntimeIdentifiers>
         <RunAnalyzers>false</RunAnalyzers>
         <IsPackable>true</IsPackable>
         <DelaySign>false</DelaySign>
-        <NoWarn>CA1416,IL2026,IL2104,IL2072,IL3000,NU5100,NU5118,NU5128,SA1118</NoWarn>
+        <NoWarn>CA1416;IL2026;IL2104;IL2072;IL3000;NU5100;NU5118;NU5128;SA1118</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="$(Microsoft_AspNetCore_Mvc_NewtonsoftJson_PackageVersion)" />
-        <PackageReference Include="System.CommandLine" Version="$(System_CommandLine_PackageVersion)" />
-        <PackageReference Include="System.IO.Abstractions" Version="$(System_IO_Abstractions_PackageVersion)" />
-        <PackageReference Include="System.IO.FileSystem.Primitives" Version="$(System_IO_FileSystem_Primitives_PackageVersion)" />
+        <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" />
+        <PackageReference Include="System.CommandLine" />
+        <PackageReference Include="System.IO.Abstractions" />
+        <PackageReference Include="System.IO.FileSystem.Primitives" />
     </ItemGroup>
 
     <ItemGroup>

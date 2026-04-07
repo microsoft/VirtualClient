@@ -13,11 +13,9 @@ namespace VirtualClient.Actions
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
-    using Newtonsoft.Json.Linq;
     using VirtualClient.Common;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
-    using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
 
@@ -64,13 +62,13 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// get test run duration value in seconds.
+        /// get test run duration value.
         /// </summary>
-        public int TestDuration
+        public TimeSpan TestDuration
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.TestDuration));
+                return this.Parameters.GetTimeSpanValue(nameof(this.TestDuration), TimeSpan.FromSeconds(60));
             }
         }
 
@@ -88,11 +86,11 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Parameter defines the warmup time to use in the workload toolset tests.
         /// </summary>
-        public int WarmupTime
+        public TimeSpan WarmupTime
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.WarmupTime), 8);
+                return this.Parameters.GetTimeSpanValue(nameof(this.WarmupTime), TimeSpan.FromSeconds(8));
             }
         }
 

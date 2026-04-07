@@ -161,10 +161,7 @@ namespace VirtualClient.Actions
             this.ThrowIfLayoutNotDefined();
             this.ThrowIfLayoutClientIPAddressNotFound(layoutIPAddress);
 
-            IPackageManager packageManager = this.Dependencies.GetService<IPackageManager>();
-            DependencyPath workloadPackage = await packageManager.GetPlatformSpecificPackageAsync(this.PackageName, this.Platform, this.CpuArchitecture, cancellationToken)
-                .ConfigureAwait(false);
-
+            DependencyPath workloadPackage = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken);
             telemetryContext.AddContext("package", workloadPackage);
 
             this.Role = clientInstance.Role;
@@ -174,26 +171,25 @@ namespace VirtualClient.Actions
             this.ProcessName = "ntttcp";
             this.Tool = "NTttcp";
 
-            string resultsDir = this.PlatformSpecifics.Combine(workloadPackage.Path, this.Scenario);
+            string resultsDir = this.Combine(workloadPackage.Path, this.Scenario);
             this.fileSystem.Directory.CreateDirectory(resultsDir);
 
-            this.ResultsPath = this.PlatformSpecifics.Combine(resultsDir, NTttcpClientExecutor2.OutputFileName);
+            this.ResultsPath = this.Combine(resultsDir, NTttcpClientExecutor2.OutputFileName);
 
             if (this.Platform == PlatformID.Win32NT)
             {
-                this.ExecutablePath = this.PlatformSpecifics.Combine(workloadPackage.Path, "NTttcp.exe");
+                this.ExecutablePath = this.Combine(workloadPackage.Path, "NTttcp.exe");
             }
             else if (this.Platform == PlatformID.Unix)
             {
-                this.ExecutablePath = this.PlatformSpecifics.Combine(workloadPackage.Path, "ntttcp");
+                this.ExecutablePath = this.Combine(workloadPackage.Path, "ntttcp");
             }
             else
             {
                 throw new NotSupportedException($"{this.Platform} is not supported");
             }
 
-            await this.SystemManager.MakeFileExecutableAsync(this.ExecutablePath, this.Platform, cancellationToken)
-                .ConfigureAwait(false);
+            await this.SystemManager.MakeFileExecutableAsync(this.ExecutablePath, this.Platform, cancellationToken);
         }
 
         /// <summary>
@@ -362,7 +358,7 @@ namespace VirtualClient.Actions
                         {
                             try
                             {
-                                this.CleanupTasks.Add(() => process.SafeKill());
+                                this.CleanupTasks.Add(() => process.SafeKill(this.Logger));
                                 await process.StartAndWaitAsync(cancellationToken, timeout);
 
                                 if (!cancellationToken.IsCancellationRequested)
@@ -375,8 +371,8 @@ namespace VirtualClient.Actions
 
                                     await this.WaitForResultsAsync(TimeSpan.FromMinutes(2), relatedContext, cancellationToken);
 
-                                    string results = await this.LoadResultsAsync(this.ResultsPath, cancellationToken);
-                                    await this.LogProcessDetailsAsync(process, relatedContext, "NTttcp", results: results.AsArray(), logToFile: true);
+                                    KeyValuePair<string, string> results = await this.LoadResultsAsync(this.ResultsPath, cancellationToken);
+                                    await this.LogProcessDetailsAsync(process, relatedContext, "NTttcp", logToFile: true, results: results);
                                 }
                             }
                             catch (TimeoutException exc)
@@ -384,12 +380,12 @@ namespace VirtualClient.Actions
                                 // We give this a best effort but do not want it to prevent the next workload
                                 // from executing.
                                 this.Logger.LogMessage($"{this.TypeName}.WorkloadTimeout", LogLevel.Warning, relatedContext.AddError(exc));
-                                process.SafeKill();
+                                process.SafeKill(this.Logger);
                             }
                             catch (Exception exc)
                             {
                                 this.Logger.LogMessage($"{this.TypeName}.WorkloadStartupError", LogLevel.Warning, relatedContext.AddError(exc));
-                                process.SafeKill();
+                                process.SafeKill(this.Logger);
                                 throw;
                             }
                         }
@@ -415,19 +411,19 @@ namespace VirtualClient.Actions
 
             if (fileAccess.Exists(this.ResultsPath))
             {
-                string resultsContent = await this.LoadResultsAsync(this.ResultsPath, CancellationToken.None);
+                KeyValuePair<string, string> results = await this.LoadResultsAsync(this.ResultsPath, CancellationToken.None);
 
-                if (!string.IsNullOrWhiteSpace(resultsContent))
+                if (!string.IsNullOrWhiteSpace(results.Value))
                 {
                     bool isRoleClient = (this.Role == ClientRole.Client) ? true : false;
-                    MetricsParser parser = new NTttcpMetricsParser2(resultsContent, isRoleClient);
+                    MetricsParser parser = new NTttcpMetricsParser2(results.Value, isRoleClient);
                     IList<Metric> metrics = parser.Parse();
 
                     if (parser.Metadata.Any())
                     {
                         this.MetadataContract.Add(
                             parser.Metadata.ToDictionary(entry => entry.Key, entry => entry.Value as object),
-                            MetadataContractCategory.Scenario,
+                            MetadataContract.ScenarioCategory,
                             true);
 
                         foreach (var entry in parser.Metadata)
@@ -497,7 +493,7 @@ namespace VirtualClient.Actions
                     }
                     finally
                     {
-                        process.SafeKill();
+                        process.SafeKill(this.Logger);
                     }
                 }
 

@@ -5,10 +5,15 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
+    using System.IO;
+    using System.IO.Abstractions;
     using System.Linq;
+    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
+    using Newtonsoft.Json.Linq;
+    using Polly;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
@@ -26,8 +31,9 @@ namespace VirtualClient.Actions
     /// https://github.com/Microsoft/diskspd/wiki/Command-line-and-parameters
     /// </remarks>
     [SupportedPlatforms("win-arm64,win-x64")]
-    public class DiskSpdExecutor : DiskWorkloadExecutor
+    public class DiskSpdExecutor : VirtualClientComponent
     {
+        private const string FileNameParameterDelimiter = ",";
         private readonly List<DiskWorkloadProcess> workloadProcesses = new List<DiskWorkloadProcess>();
 
         /// <summary>
@@ -41,9 +47,200 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// Defines the command line specified in the profile.
+        /// </summary>
+        public string CommandLine
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(this.CommandLine), out IConvertible commandLine);
+                return commandLine?.ToString();
+            }
+
+            set
+            {
+                this.Parameters[nameof(this.CommandLine)] = value;
+            }
+        }
+
+        /// <summary>
+        /// True/false whether the test files that FIO uses in benchmark tests should be deleted at the end
+        /// of each individual round of test execution.
+        /// </summary>
+        public bool DeleteTestFilesOnFinish
+        {
+            get
+            {
+                return this.Parameters.GetValue<bool>(nameof(this.DeleteTestFilesOnFinish), true);
+            }
+
+            set
+            {
+                this.Parameters[nameof(this.DeleteTestFilesOnFinish)] = value;
+            }
+        }
+
+        /// <summary>
+        /// True/false whether the current command is meant to be a disk fill. Disk fill operations
+        /// initialize/fill the disk and do not have any metrics tracking.
+        /// </summary>
+        public bool DiskFill
+        {
+            get
+            {
+                return this.Parameters.GetValue<bool>(nameof(this.DiskFill), false);
+            }
+
+            set
+            {
+                this.Parameters[nameof(this.DiskFill)] = value;
+            }
+        }
+
+        /// <summary>
+        /// The size of the file/data to write to the disk in order to fill it with data. This must
+        /// be an exact number (e.g. DiskSpd -> 469G, FIO -> 496GB).
+        /// </summary>
+        public string DiskFillSize
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(this.DiskFillSize), out IConvertible diskFillSize);
+                return diskFillSize?.ToString();
+            }
+
+            set
+            {
+                this.Parameters[nameof(this.DiskFillSize)] = value;
+            }
+        }
+
+        /// <summary>
+        /// Disk filter string to filter disks to test.
+        /// </summary>
+        public string DiskFilter
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.DiskFilter), "BiggestSize");
+            }
+
+            set
+            {
+                this.Parameters[nameof(this.DiskFilter)] = value;
+            }
+        }
+
+        /// <summary>
+        /// The name of the test file that should use in workload tests.
+        /// </summary>
+        public string FileName
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.FileName), "diskspd-test.dat");
+            }
+
+            set
+            {
+                this.Parameters[nameof(this.FileName)] = value;
+            }
+        }
+
+        /// <summary>
+        /// The size of the test file that should use in workload tests (e.g. 496GB).
+        /// </summary>
+        public string FileSize
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(this.FileSize), out IConvertible fileSize);
+                return fileSize?.ToString();
+            }
+
+            set
+            {
+                this.Parameters[nameof(this.FileSize)] = value;
+            }
+        }
+
+        /// <summary>
+        /// Defines the model/strategy for how the disks will be tested.
+        /// (e.g. SingleProcess = 1 for the entire system, SingleProcessPerDrive = 1 for each drive on the system).
+        /// </summary>
+        public string ProcessModel
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.ProcessModel), WorkloadProcessModel.SingleProcess);
+            }
+
+            set
+            {
+                this.Parameters[nameof(this.ProcessModel)] = value;
+            }
+        }
+
+        /// <summary>
+        /// The disk I/O queue depth to use for running disk I/O operations. 
+        /// Default = 16.
+        /// </summary>
+        public int QueueDepth
+        {
+            get
+            {
+                return this.Parameters.GetValue<int>(nameof(this.QueueDepth), 16);
+            }
+
+            set
+            {
+                this.Parameters[nameof(this.QueueDepth)] = value;
+            }
+        }
+
+        /// <summary>
+        /// The number of threads to use for running disk I/O operations. 
+        /// Default = system logical processor count.
+        /// </summary>
+        public int ThreadCount
+        {
+            get
+            {
+                return this.Parameters.GetValue<int>(nameof(this.ThreadCount), Environment.ProcessorCount);
+            }
+
+            set
+            {
+                this.Parameters[nameof(this.ThreadCount)] = value;
+            }
+        }
+
+        /// <summary>
         /// The path to the DiskSpd.exe executable in the packages directory.
         /// </summary>
-        public string ExecutablePath { get; set; }
+        protected string ExecutablePath { get; set; }
+
+        /// <summary>
+        /// Provides methods for interacting with the local file system.
+        /// </summary>
+        protected IFileSystem FileSystem
+        {
+            get
+            {
+                return this.SystemManagement.FileSystem;
+            }
+        }
+
+        /// <summary>
+        /// Provides features for management of the system/environment.
+        /// </summary>
+        protected ISystemManagement SystemManagement
+        {
+            get
+            {
+                return this.Dependencies.GetService<ISystemManagement>();
+            }
+        }
 
         /// <summary>
         /// Applies the configuration specificed to the parameters of the profile
@@ -80,7 +277,7 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task CleanupAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            await base.CleanupAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
+            await base.CleanupAsync(telemetryContext, cancellationToken);
 
             if (this.workloadProcesses?.Any() == true)
             {
@@ -88,11 +285,11 @@ namespace VirtualClient.Actions
                 {
                     try
                     {
-                        await this.KillProcessAsync(process).ConfigureAwait(false);
+                        await this.KillProcessAsync(process);
 
                         if (this.DeleteTestFilesOnFinish)
                         {
-                            await this.DeleteTestFilesAsync(process.TestFiles).ConfigureAwait(false);
+                            await this.DeleteTestFilesAsync(process.TestFiles);
                         }
                     }
                     catch
@@ -100,6 +297,100 @@ namespace VirtualClient.Actions
                         // Terminating the processes is a best effort only.
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// Creates a process to run DiskSpd targeting the disks specified.
+        /// </summary>
+        /// <param name="executable">The full path to the DiskSpd executable.</param>
+        /// <param name="commandArguments">
+        /// The command line arguments to supply to the DiskSpd executable (e.g. -c4G -b4K -r4K -t1 -o1 -w100 -d480 -Suw -W15 -D -L -Rtext).
+        /// </param>
+        /// <param name="testedInstance">A name for the disks under test (e.g. remote_disk, remote_disk_premium_lrs).</param>
+        /// <param name="disksToTest">The disks under test.</param>
+        protected DiskWorkloadProcess CreateWorkloadProcess(string executable, string commandArguments, string testedInstance, params Disk[] disksToTest)
+        {
+            string[] testFiles = disksToTest.Select(disk => this.GetTestFiles(disk.GetPreferredAccessPath(this.Platform))).ToArray();
+            string diskSpdArguments = $"{commandArguments} {string.Join(" ", testFiles)}";
+
+            IProcessProxy process = this.SystemManagement.ProcessManager.CreateProcess(executable, diskSpdArguments);
+
+            return new DiskWorkloadProcess(process, testedInstance, testFiles);
+        }
+
+        /// <summary>
+        /// Create a set of <see cref="DiskWorkloadProcess"/>.
+        /// </summary>
+        /// <param name="executable">The fully qualified path to the disk spd executable.</param>
+        /// <param name="commandArguments">A templatized command to give to the disk spd executable.</param>
+        /// <param name="disks">The formatted disks.</param>
+        /// <param name="processModel">
+        /// The process model/strategy to use for I/O operations against the disks. Valid values include: SingleProcess, SingleProcessPerDisk.
+        /// </param>
+        protected virtual IEnumerable<DiskWorkloadProcess> CreateWorkloadProcesses(string executable, string commandArguments, IEnumerable<Disk> disks, string processModel)
+        {
+            executable.ThrowIfNullOrWhiteSpace(nameof(executable));
+            commandArguments.ThrowIfNullOrWhiteSpace(nameof(commandArguments));
+            processModel.ThrowIfNullOrWhiteSpace(nameof(processModel));
+            disks.ThrowIfNullOrEmpty(nameof(disks));
+
+            EventContext telemetryContext = EventContext.Persisted();
+            return this.Logger.LogMessage($"{this.GetType().Name}.CreateProcesses", telemetryContext, () =>
+            {
+                List<DiskWorkloadProcess> processes = new List<DiskWorkloadProcess>();
+
+                if (string.Equals(processModel, WorkloadProcessModel.SingleProcess, StringComparison.OrdinalIgnoreCase))
+                {
+                    // Example Metric Categorization
+                    // SingleProcess,BiggestSize,16
+                    processes.Add(this.CreateWorkloadProcess(executable, commandArguments, $"{WorkloadProcessModel.SingleProcess},{this.DiskFilter},{disks.Count()}", disks.ToArray()));
+                }
+                else if (string.Equals(processModel, WorkloadProcessModel.SingleProcessPerDisk, StringComparison.OrdinalIgnoreCase))
+                {
+                    // Example Metric Categorization
+                    // SingleProcessPerDisk,BiggestSize,16
+                    processes.AddRange(new List<DiskWorkloadProcess>(disks.Select(disk =>
+                    {
+                        return this.CreateWorkloadProcess(executable, commandArguments, $"{WorkloadProcessModel.SingleProcessPerDisk},{this.DiskFilter},1", disk);
+                    })));
+                }
+
+                return processes;
+            });
+        }
+
+        /// <summary>
+        /// Deletes any test files associated with the workload.
+        /// </summary>
+        protected virtual async Task DeleteTestFilesAsync(IEnumerable<string> testFiles, IAsyncPolicy retryPolicy = null)
+        {
+            if (this.DeleteTestFilesOnFinish)
+            {
+                EventContext telemetryContext = EventContext.Persisted()
+                    .AddContext("files", testFiles);
+
+                await this.Logger.LogMessageAsync($"{this.GetType().Name}.DeleteFiles", telemetryContext, async () =>
+                {
+                    if (testFiles?.Any() == true)
+                    {
+                        foreach (string file in testFiles)
+                        {
+                            try
+                            {
+                                if (this.SystemManagement.FileSystem.File.Exists(file))
+                                {
+                                    this.Logger.LogTraceMessage($"Delete test file '{file}'");
+                                    await this.SystemManagement.FileSystem.File.DeleteAsync(file, retryPolicy);
+                                }
+                            }
+                            catch (Exception exc)
+                            {
+                                telemetryContext.AddError(exc);
+                            }
+                        }
+                    }
+                });
             }
         }
 
@@ -122,8 +413,7 @@ namespace VirtualClient.Actions
                     // Apply parameters to the DiskSpd command line options.
                     await this.EvaluateParametersAsync(telemetryContext);
 
-                    IEnumerable<Disk> disks = await this.SystemManagement.DiskManager.GetDisksAsync(cancellationToken)
-                       .ConfigureAwait(false);
+                    IEnumerable<Disk> disks = await this.SystemManagement.DiskManager.GetDisksAsync(cancellationToken);
 
                     if (disks?.Any() != true)
                     {
@@ -146,16 +436,6 @@ namespace VirtualClient.Actions
                     this.Logger.LogMessage($"{nameof(DiskSpdExecutor)}.SelectDisks", telemetryContext.Clone()
                         .AddContext("disks", disksToTest));
 
-                    if (await this.CreateMountPointsAsync(disksToTest, cancellationToken).ConfigureAwait(false))
-                    {
-                        // Refresh the disks to pickup the mount point changes.
-                        await Task.Delay(1000).ConfigureAwait(false);
-                        IEnumerable<Disk> updatedDisks = await this.SystemManagement.DiskManager.GetDisksAsync(cancellationToken)
-                            .ConfigureAwait(false);
-
-                        disksToTest = this.GetDisksToTest(updatedDisks);
-                    }
-
                     disksToTest.ToList().ForEach(disk => this.Logger.LogTraceMessage($"Disk Target: '{disk}'"));
 
                     telemetryContext.AddContext("executable", this.ExecutablePath);
@@ -168,88 +448,24 @@ namespace VirtualClient.Actions
                         nameof(this.workloadProcesses),
                         this.workloadProcesses.Select(p => new { id = p.Process.Id, command = p.Command, arguments = p.CommandArguments }));
 
-                    await this.ExecuteWorkloadsAsync(this.workloadProcesses, cancellationToken).ConfigureAwait(false);
+                    await this.ExecuteWorkloadsAsync(this.workloadProcesses, cancellationToken);
                 }
                 finally
                 {
                     if (this.DiskFill)
                     {
-                        await this.RegisterDiskFillCompleteAsync(cancellationToken)
-                            .ConfigureAwait(false);
+                        await this.RegisterDiskFillCompleteAsync(cancellationToken);
                     }
 
                     if (this.DeleteTestFilesOnFinish)
                     {
                         foreach (DiskWorkloadProcess workload in this.workloadProcesses)
                         {
-                            await this.DeleteTestFilesAsync(workload.TestFiles).ConfigureAwait(false);
+                            await this.DeleteTestFilesAsync(workload.TestFiles);
                         }
                     }
                 }
             }
-        }
-
-        /// <summary>
-        /// Creates mount points for any disks that do not have them already.
-        /// </summary>
-        /// <param name="disks">This disks on which to create the mount points.</param>
-        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
-        protected override async Task<bool> CreateMountPointsAsync(IEnumerable<Disk> disks, CancellationToken cancellationToken)
-        {
-            bool mountPointsCreated = false;
-
-            // Don't mount any partition in OS drive.
-            foreach (Disk disk in disks.Where(d => !d.IsOperatingSystem()))
-            {
-                // mount every volume that doesn't have an accessPath so long as it does have an index defined. On
-                // Windows systems, all volumes that are valid for disk I/O operations (i.e. not reserved, not hidden) will
-                // have indexes associated.
-                foreach (DiskVolume volume in disk.Volumes.Where(v => v.Index != null && v.AccessPaths?.Any() != true))
-                {
-                    string newMountPoint = volume.GetDefaultMountPoint();
-                    this.Logger.LogTraceMessage($"Create Mount Point: {newMountPoint}");
-
-                    EventContext relatedContext = EventContext.Persisted().Clone()
-                        .AddContext(nameof(volume), volume)
-                        .AddContext("mountPoint", newMountPoint);
-
-                    await this.Logger.LogMessageAsync($"{this.TypeName}.CreateMountPoint", relatedContext, async () =>
-                    {
-                        string newMountPoint = volume.GetDefaultMountPoint();
-                        if (!this.SystemManagement.FileSystem.Directory.Exists(newMountPoint))
-                        {
-                            this.SystemManagement.FileSystem.Directory.CreateDirectory(newMountPoint).Create();
-                        }
-
-                        await this.SystemManagement.DiskManager.CreateMountPointAsync(volume, newMountPoint, cancellationToken)
-                            .ConfigureAwait(false);
-
-                        mountPointsCreated = true;
-
-                    }).ConfigureAwait(false);
-                }
-            }
-
-            return mountPointsCreated;
-        }
-
-        /// <summary>
-        /// Creates a process to run DiskSpd targeting the disks specified.
-        /// </summary>
-        /// <param name="executable">The full path to the DiskSpd executable.</param>
-        /// <param name="commandArguments">
-        /// The command line arguments to supply to the DiskSpd executable (e.g. -c4G -b4K -r4K -t1 -o1 -w100 -d480 -Suw -W15 -D -L -Rtext).
-        /// </param>
-        /// <param name="testedInstance">A name for the disks under test (e.g. remote_disk, remote_disk_premium_lrs).</param>
-        /// <param name="disksToTest">The disks under test.</param>
-        protected override DiskWorkloadProcess CreateWorkloadProcess(string executable, string commandArguments, string testedInstance, params Disk[] disksToTest)
-        {
-            string[] testFiles = disksToTest.Select(disk => this.GetTestFiles(disk.GetPreferredAccessPath(this.Platform))).ToArray();
-            string diskSpdArguments = $"{commandArguments} {string.Join(" ", testFiles)}";
-
-            IProcessProxy process = this.SystemManagement.ProcessManager.CreateProcess(executable, diskSpdArguments);
-
-            return new DiskWorkloadProcess(process, testedInstance, testFiles);
         }
 
         /// <summary>
@@ -273,26 +489,142 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// Returns the disks to test from the set of all disks.
+        /// </summary>
+        /// <param name="disks">All disks on the system.</param>
+        protected IEnumerable<Disk> GetDisksToTest(IEnumerable<Disk> disks)
+        {
+            List<Disk> disksToTest = new List<Disk>();
+            this.DiskFilter = string.IsNullOrWhiteSpace(this.DiskFilter) ? DiskFilters.DefaultDiskFilter : this.DiskFilter;
+            disksToTest = DiskFilters.FilterDisks(disks, this.DiskFilter, this.Platform).ToList();
+
+            return disksToTest;
+        }
+
+        /// <summary>
+        /// Returns the name of the test file given a mount point.
+        /// </summary>
+        /// <param name="mountPoint">A mount point to the disk under test.</param>
+        /// <returns>
+        /// The full path to the test file.
+        /// </returns>
+        protected virtual string GetTestFile(string mountPoint)
+        {
+            mountPoint.ThrowIfNullOrWhiteSpace(nameof(mountPoint));
+            return this.PlatformSpecifics.Combine(mountPoint, this.FileName ?? Path.GetRandomFileName());
+        }
+
+        /// <summary>
+        /// Returns the name of the test files seperated by whitespace given a mount point.
+        /// </summary>
+        /// <param name="mountPoint">A mount point to the disk under test.</param>
+        /// <returns>
+        /// The full path to the test files seperated by whitespace.
+        /// </returns>
+        protected virtual string GetTestFiles(string mountPoint)
+        {
+            mountPoint.ThrowIfNullOrWhiteSpace(nameof(mountPoint));
+
+            List<string> testFileNames = new List<string>();
+
+            if (!string.IsNullOrWhiteSpace(this.FileName))
+            {
+                testFileNames.AddRange(Regex.Split(this.FileName, $@"\s*{DiskSpdExecutor.FileNameParameterDelimiter}\s*").Select(f => f.Trim())
+                            .Where(f => !string.IsNullOrWhiteSpace(f)));
+            }
+
+            if (testFileNames.Count() <= 1)
+            {
+                return this.GetTestFile(mountPoint);
+            }
+
+            List<string> testFiles = new List<string>();
+            foreach (string fileName in testFileNames)
+            {
+                testFiles.Add(this.PlatformSpecifics.Combine(mountPoint, fileName));
+            }
+
+            return string.Join(' ', testFiles);
+        }
+
+        /// <summary>
+        /// Returns true if the executor has registered that a disk fill was completed.
+        /// </summary>
+        protected async Task<bool> IsDiskFillCompleteAsync(CancellationToken cancellationToken)
+        {
+            string stateId = $"{this.GetType().Name}.DiskFill";
+            WorkloadState state = await this.SystemManagement.StateManager.GetStateAsync<WorkloadState>(stateId, cancellationToken);
+
+            return state != null;
+        }
+
+        /// <summary>
         /// Initializes the executor dependencies, package locations, etc...
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            IPackageManager packageManager = this.Dependencies.GetService<IPackageManager>();
-            DependencyPath workloadPackage = await packageManager.GetPackageAsync(this.PackageName, cancellationToken)
-                .ConfigureAwait(false);
-
-            if (workloadPackage == null)
-            {
-                throw new DependencyException(
-                    $"The DiskSpd workload package was not found in the packages directory.",
-                    ErrorReason.WorkloadDependencyMissing);
-            }
-
-            workloadPackage = this.PlatformSpecifics.ToPlatformSpecificPath(workloadPackage, this.Platform, this.CpuArchitecture);
+            DependencyPath workloadPackage = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken);
 
             this.workloadProcesses.Clear();
             this.ExecutablePath = this.PlatformSpecifics.Combine(workloadPackage.Path, "diskspd.exe");
             this.SystemManagement.FileSystem.File.ThrowIfFileDoesNotExist(this.ExecutablePath);
+        }
+
+        /// <summary>
+        /// Kills the process associated with the workload.
+        /// </summary>
+        protected virtual Task KillProcessAsync(DiskWorkloadProcess workload)
+        {
+            return Task.Run(() =>
+            {
+                IProcessProxy process = workload.Process;
+
+                try
+                {
+                    if (!process.HasExited)
+                    {
+                        EventContext telemetryContext = EventContext.Persisted()
+                            .AddContext("process", process.Id)
+                            .AddContext("command", workload.Command)
+                            .AddContext("commandArguments", workload.CommandArguments);
+
+                        this.Logger.LogMessage($"{this.GetType().Name}.KillProcess", telemetryContext, () =>
+                        {
+                            try
+                            {
+                                DateTime exitTime = DateTime.Now.AddSeconds(30);
+                                while (!process.HasExited && DateTime.Now < exitTime)
+                                {
+                                    this.Logger.LogTraceMessage($"Kill process ID={process.Id}: {workload.Command} {workload.CommandArguments}");
+                                    process.Kill();
+                                    Task.Delay(1000).GetAwaiter().GetResult();
+                                }
+                            }
+                            catch (Exception exc)
+                            {
+                                telemetryContext.AddError(exc);
+                            }
+                        });
+                    }
+                }
+                catch
+                {
+                }
+            });
+        }
+
+        /// <summary>
+        /// Returns true if the executor has registered that a disk fill was completed.
+        /// </summary>
+        protected Task RegisterDiskFillCompleteAsync(CancellationToken cancellationToken)
+        {
+            string stateId = $"{this.GetType().Name}.DiskFill";
+            WorkloadState state = new WorkloadState
+            {
+                DiskFillComplete = true
+            };
+
+            return this.SystemManagement.StateManager.SaveStateAsync(stateId, JObject.FromObject(state), cancellationToken);
         }
 
         /// <summary>
@@ -355,7 +687,7 @@ namespace VirtualClient.Actions
                 metrics = metrics.FilterBy(this.MetricFilters).ToList();
             }
 
-            metrics.LogConsole(this.MetricScenario ?? this.Scenario);
+            metrics.LogConsole(this.MetricScenario ?? this.Scenario, "DiskSpd");
 
             this.Logger.LogMetrics(
                 "DiskSpd",
@@ -397,8 +729,13 @@ namespace VirtualClient.Actions
                             this.CaptureMetrics(workload, telemetryContext);
                         }
                     }
-                }).ConfigureAwait(false);
+                });
             }
+        }
+
+        private class WorkloadState
+        {
+            public bool DiskFillComplete { get; set; }
         }
     }
 }

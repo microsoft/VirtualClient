@@ -4,6 +4,8 @@
 namespace VirtualClient.Contracts
 {
     using System;
+    using System.Collections;
+    using System.Collections.Generic;
     using System.IO;
     using System.Reflection;
     using System.Runtime.InteropServices;
@@ -51,6 +53,145 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
+        [TestCase("execute", "execute")]
+        [TestCase("execute --option-a=one --option-b=two --option_c=three", "execute")]
+        [TestCase("execute --option-a one --option-b \"two\" --option_c 'three'", "execute")]
+        [TestCase("execute.exe", "execute")]
+        [TestCase("execute.exe --option-a=one --option-b=two --option_c=three", "execute")]
+        [TestCase("execute.exe --option-a one --option-b \"two\" --option_c 'three'", "execute")]
+        [TestCase("./execute", "execute")]
+        [TestCase("../execute --option-a=one --option-b=two --option_c=three", "execute")]
+        [TestCase("/home/user/tools/execute --option-a one --option-b \"two\" --option_c 'three'", "execute")]
+        [TestCase(".\\execute.exe", "execute")]
+        [TestCase(".\\execute.exe --option-a=one --option-b=two --option_c=three", "execute")]
+        [TestCase("C:\\Users\\User\\tools\\execute.exe --option-a one --option-b \"two\" --option_c 'three'", "execute")]
+        public void GetCommmandNameSupportsTheExpectedRangeOfCommands(string commandLine, string expectedCommandName)
+        {
+            Assert.IsTrue(PlatformSpecifics.TryGetCommandName(commandLine, out string actualCommandName), $"Failed: {commandLine}");
+            Assert.AreEqual(expectedCommandName, actualCommandName, $"Failed: {commandLine}");
+        }
+
+        [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
+        [TestCase("bash -c \"hostnamectl\"", "hostnamectl")]
+        [TestCase("bash -c \"execute.sh\"", "execute")]
+        [TestCase("bash -c \"execute.sh one two three\"", "execute")]
+        [TestCase("bash -c \"execute.sh --option-a=one --option-b=two --option_c=three\"", "execute")]
+        [TestCase("bash -c \"./execute.sh --option-a=one --option-b=two --option_c=three\"", "execute")]
+        [TestCase("bash -c \"../execute.sh --option-a=one --option-b=two --option_c=three\"", "execute")]
+        [TestCase("bash -c \"/home/user/tools/execute.sh --option-a=one --option-b=two --option_c=three\"", "execute")]
+        [TestCase("bash -c \"sudo execute.sh\"", "execute")]
+        [TestCase("bash -c \"sudo execute.sh one two three\"", "execute")]
+        [TestCase("bash -c \"sudo execute.sh --option-a=one --option-b=two --option_c=three\"", "execute")]
+        [TestCase("bash -c \"sudo ./execute.sh --option-a=one --option-b=two --option_c=three\"", "execute")]
+        [TestCase("bash -c \"sudo ../execute.sh --option-a=one --option-b=two --option_c=three\"", "execute")]
+        [TestCase("bash -c \"sudo /home/user/tools/execute.sh --option-a=one --option-b=two --option_c=three\"", "execute")]
+        [TestCase("sudo bash -c \"execute.sh\"", "execute")]
+        [TestCase("sudo bash -c \"execute.sh one two three\"", "execute")]
+        [TestCase("sudo bash -c \"execute.sh --option-a=one --option-b=two --option_c=three\"", "execute")]
+        [TestCase("sudo bash -c \"./execute.sh --option-a=one --option-b=two --option_c=three\"", "execute")]
+        [TestCase("sudo bash -c \"../execute.sh --option-a=one --option-b=two --option_c=three\"", "execute")]
+        [TestCase("sudo bash -c \"/home/user/tools/execute.sh --option-a=one --option-b=two --option_c=three\"", "execute")]
+        [TestCase("sudo bash -c \"/home/user/tools/bash/execute.sh --option-a=one --option-b=two --option_c=three\"", "execute")]
+        public void GetCommmandNameSupportsTheExpectedRangeOfBashCommands(string commandLine, string expectedCommandName)
+        {
+            Assert.IsTrue(PlatformSpecifics.TryGetCommandName(commandLine, out string actualCommandName), $"Failed: {commandLine}");
+            Assert.AreEqual(expectedCommandName, actualCommandName, $"Failed: {commandLine}");
+        }
+
+        [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
+        [TestCase("cmd /C \"execute.exe\"", "execute")]
+        [TestCase("cmd /C \"execute.exe one two three\"", "execute")]
+        [TestCase("cmd /C \"execute.exe --option-a=one --option-b=two --option_c=three\"", "execute")]
+        [TestCase("cmd /C \"execute.cmd\"", "execute")]
+        [TestCase("cmd /C \"execute.cmd one two three\"", "execute")]
+        [TestCase("cmd /C \"execute.cmd --option-a=one --option-b=two --option_c=three\"", "execute")]
+        [TestCase("cmd /C \"execute.bat\"", "execute")]
+        [TestCase("cmd /C \"execute.bat one two three\"", "execute")]
+        [TestCase("cmd /C \"execute.bat --option-a=one --option-b=two --option_c=three\"", "execute")]
+        [TestCase("cmd.exe /C \"execute.exe\"", "execute")]
+        [TestCase("cmd.exe /C \"execute.exe one two three\"", "execute")]
+        [TestCase("cmd.exe /C \"execute.exe --option-a=one --option-b=two --option_c=three\"", "execute")]
+        [TestCase("cmd.exe /C \"execute.cmd\"", "execute")]
+        [TestCase("cmd.exe /C \"execute.cmd one two three\"", "execute")]
+        [TestCase("cmd.exe /C \"execute.cmd --option-a=one --option-b=two --option_c=three\"", "execute")]
+        [TestCase("cmd.exe /C \"execute.bat\"", "execute")]
+        [TestCase("cmd.exe /C \"execute.bat one two three\"", "execute")]
+        [TestCase("cmd.exe /C \"execute.bat --option-a=one --option-b=two --option_c=three\"", "execute")]
+        [TestCase("cmd /C \".\\execute.bat --option-a=one --option-b=two --option_c=three\"", "execute")]
+        [TestCase("cmd /C \"..\\execute.bat --option-a=one --option-b=two --option_c=three\"", "execute")]
+        [TestCase("cmd /C \"C:\\Users\\User\\tools\\execute.bat --option-a=one --option-b=two --option_c=three\"", "execute")]
+        [TestCase("cmd /C \"C:\\Users\\User\\tools\\cmd\\execute.bat --option-a=one --option-b=two --option_c=three\"", "execute")]
+        public void GetCommmandNameSupportsTheExpectedRangeOfCmdCommands(string commandLine, string expectedCommandName)
+        {
+            Assert.IsTrue(PlatformSpecifics.TryGetCommandName(commandLine, out string actualCommandName), $"Failed: {commandLine}");
+            Assert.AreEqual(expectedCommandName, actualCommandName, $"Failed: {commandLine}");
+        }
+
+        [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
+        [TestCase("Invoke-This.ps1", "Invoke-This")]
+        [TestCase("Invoke-This.ps1 -OptionA one -OptionB=two -OptionC three", "Invoke-This")]
+        [TestCase("pwsh Invoke-This.ps1 -OptionA one -OptionB=two -OptionC three", "Invoke-This")]
+        [TestCase("pwsh.exe Invoke-This.ps1 -OptionA one -OptionB=two -OptionC three", "Invoke-This")]
+        [TestCase("pwsh \"Invoke-This.ps1 -OptionA one -OptionB=two -OptionC three\"", "Invoke-This")]
+        [TestCase("pwsh.exe \"Invoke-This.ps1 -OptionA one -OptionB=two -OptionC three\"", "Invoke-This")]
+        [TestCase("pwsh -C \"Invoke-This.ps1 -OptionA one -OptionB=two -OptionC three\"", "Invoke-This")]
+        [TestCase("pwsh.exe -C \"Invoke-This.ps1 -OptionA one -OptionB=two -OptionC three\"", "Invoke-This")]
+        [TestCase("pwsh -Command \"Invoke-This.ps1 -OptionA one -OptionB=two -OptionC three\"", "Invoke-This")]
+        [TestCase("pwsh.exe -Command \"Invoke-This.ps1 -OptionA one -OptionB=two -OptionC three\"", "Invoke-This")]
+        [TestCase("pwsh -Command \"Import-Module AnyModule.psd1;Invoke-This -OptionA one -OptionB=two -OptionC three\"", "pwsh")]
+        [TestCase("pwsh.exe -Command \"Import-Module AnyModule.psm1;Invoke-This -OptionA one -OptionB=two -OptionC three\"", "pwsh")]
+        [TestCase("powershell -Command \"Import-Module AnyModule.psd1 && Invoke-This -OptionA one -OptionB=two -OptionC three\"", "powershell")]
+        [TestCase("powershell.exe -Command \"Import-Module AnyModule.psm1 && Invoke-This -OptionA one -OptionB=two -OptionC three\"", "powershell")]
+        [TestCase("C:\\ProgramFiles\\PowerShell7\\pwsh.exe -Command \"Import-Module AnyModule.psm1;Invoke-This -OptionA one -OptionB=two -OptionC three\"", "pwsh")]
+        [TestCase("/home/user/powershell7.5.4/pwsh -Command \"Import-Module AnyModule.psd1;Invoke-This -OptionA one -OptionB=two -OptionC three\"", "pwsh")]
+        public void GetCommmandNameSupportsTheExpectedRangeOfPowerShellCommands(string commandLine, string expectedCommandName)
+        {
+            Assert.IsTrue(PlatformSpecifics.TryGetCommandName(commandLine, out string actualCommandName), $"Failed: {commandLine}");
+            Assert.AreEqual(expectedCommandName, actualCommandName, $"Failed: {commandLine}");
+        }
+
+        [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
+        [TestCase("execute.py --option-a=one --option-b=two --option_c=three", "execute")]
+        [TestCase("py \"execute.py --option-a=one --option-b=two --option_c=three\"", "execute")]
+        [TestCase("py.exe \"execute.py --option-a=one --option-b=two --option_c=three\"", "execute")]
+        [TestCase("python \"execute.py --option-a=one --option-b=two --option_c=three\"", "execute")]
+        [TestCase("python.exe \"execute.py --option-a=one --option-b=two --option_c=three\"", "execute")]
+        [TestCase("python3 \"execute.py --option-a=one --option-b=two --option_c=three\"", "execute")]
+        [TestCase("python3.exe \"execute.py --option-a=one --option-b=two --option_c=three\"", "execute")]
+        [TestCase("py -c \"import sys; print(sys.version)\"", "py")]
+        [TestCase("py -c \"print('Hello from inline Python')\"", "py")]
+        [TestCase("python3 -c \"print('Hello from inline Python')\"", "python3")]
+        [TestCase("python3 -c \"import sys; print(sys.version)\"", "python3")]
+        [TestCase("python.exe -c \"print('Hello from inline Python')\"", "python")]
+        [TestCase("python.exe -c \"import sys; print(sys.version)\"", "python")]
+        [TestCase("/home/user/python/python3 -c \"print('Hello from inline Python')\"", "python3")]
+        [TestCase("C:\\ProgramFiles\\Python3\\python.exe -c \"import sys; print(sys.version)\"", "python")]
+        public void GetCommmandNameSupportsTheExpectedRangeOfPythonCommands(string commandLine, string expectedCommandName)
+        {
+            Assert.IsTrue(PlatformSpecifics.TryGetCommandName(commandLine, out string actualCommandName), $"Failed: {commandLine}");
+            Assert.AreEqual(expectedCommandName, actualCommandName, $"Failed: {commandLine}");
+        }
+
+        [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
+        [TestCase("anycommand /NOTTHECOMMAND --option-a=one --option-b=two --option_c=three", "anycommand")]
+        [TestCase("anycommand.exe /NOT_THE_COMMAND --option-a=one --option-b=two --option_c=three", "anycommand")]
+        [TestCase("./anycommand /NOTTHECOMMAND --option-a=one --option-b=two --option_c=three", "anycommand")]
+        [TestCase(".\\anycommand /NOTTHECOMMAND --option-a=one --option-b=two --option_c=three", "anycommand")]
+        [TestCase("/home/user/tools/anycommand /NOTTHECOMMAND --option-a=one --option-b=two --option_c=three", "anycommand")]
+        [TestCase("C:\\Users\\User\\tools\\anycommand /NOTTHECOMMAND --option-a=one --option-b=two --option_c=three", "anycommand")]
+        public void GetCommmandNameSupportsCommandAnomalies(string commandLine, string expectedCommandName)
+        {
+            Assert.IsTrue(PlatformSpecifics.TryGetCommandName(commandLine, out string actualCommandName), $"Failed: {commandLine}");
+            Assert.AreEqual(expectedCommandName, actualCommandName, $"Failed: {commandLine}");
+        }
+
+        [Test]
         public void GetPackagePathReturnsTheExpectedPathOnUnixSystems()
         {
             PlatformSpecifics platformSpecifics = new TestPlatformSpecifics2(PlatformID.Unix, Architecture.X64, "/home/anyuser/virtualclient");
@@ -59,6 +200,62 @@ namespace VirtualClient.Contracts
             Assert.AreEqual("/home/anyuser/virtualclient/packages/any.package/1.0.0", platformSpecifics.GetPackagePath("/any.package/1.0.0"));
             Assert.AreEqual("/home/anyuser/virtualclient/packages/any.package/1.0.0", platformSpecifics.GetPackagePath("/any.package", "/1.0.0"));
             Assert.AreEqual("/home/anyuser/virtualclient/packages/any.package/1.0.0", platformSpecifics.GetPackagePath("any.package", "1.0.0"));
+        }
+
+        [Test]
+        public void GetLoggedInUserReturnsTheExpectedUserOnWindowsSystems()
+        {
+            PlatformSpecifics platformSpecifics = new TestPlatformSpecifics(PlatformID.Win32NT, Architecture.X64);
+            string user = platformSpecifics.GetLoggedInUser();
+            Assert.AreEqual(Environment.UserName, user);
+
+            platformSpecifics.SetEnvironmentVariable(EnvironmentVariable.SUDO_USER, "User01");
+        }
+
+        [Test]
+        public void GetLoggedInUserReturnsTheExpectedUserOnWindowsSystems_2()
+        {
+            // Environment variables do not matter on Windows and should not affect
+            // the return user.
+            PlatformSpecifics platformSpecifics = new TestPlatformSpecifics(PlatformID.Win32NT, Architecture.X64);
+
+            platformSpecifics.SetEnvironmentVariable(EnvironmentVariable.SUDO_USER, "User01");
+            string user = platformSpecifics.GetLoggedInUser();
+            Assert.AreEqual(Environment.UserName, user);
+
+            platformSpecifics.SetEnvironmentVariable(EnvironmentVariable.VC_SUDO_USER, "User02");
+            user = platformSpecifics.GetLoggedInUser();
+            Assert.AreEqual(Environment.UserName, user);
+        }
+
+        [Test]
+        public void GetLoggedInUserReturnsTheExpectedUserOnUnixSystems()
+        {
+            PlatformSpecifics platformSpecifics = new TestPlatformSpecifics(PlatformID.Unix, Architecture.X64);
+            string user = platformSpecifics.GetLoggedInUser();
+            Assert.AreEqual(Environment.UserName, user);
+        }
+
+        [Test]
+        public void GetLoggedInUserReturnsTheExpectedUserOnUnixSystemsWhenSudoIsUsed()
+        {
+            PlatformSpecifics platformSpecifics = new TestPlatformSpecifics(PlatformID.Unix, Architecture.X64);
+
+            string sudoUser = "User01";
+            platformSpecifics.SetEnvironmentVariable(EnvironmentVariable.SUDO_USER, sudoUser);
+            string user = platformSpecifics.GetLoggedInUser();
+            Assert.AreEqual(sudoUser, user);
+        }
+
+        [Test]
+        public void GetLoggedInUserReturnsTheExpectedUserOnUnixSystemsWhenCustomSudoAlternativesAreUsed()
+        {
+            PlatformSpecifics platformSpecifics = new TestPlatformSpecifics(PlatformID.Unix, Architecture.X64);
+
+            string sudoUser = "User01";
+            platformSpecifics.SetEnvironmentVariable(EnvironmentVariable.VC_SUDO_USER, sudoUser);
+            string user = platformSpecifics.GetLoggedInUser();
+            Assert.AreEqual(sudoUser, user);
         }
 
         [Test]
@@ -136,6 +333,26 @@ namespace VirtualClient.Contracts
             Assert.AreEqual(@"C:\users\anyuser\virtualclient\state\anystate.json", platformSpecifics.GetStatePath(@"anystate.json"));
             Assert.AreEqual(@"C:\users\anyuser\virtualclient\state\other\anystate.json", platformSpecifics.GetStatePath(@"\other", "anystate.json"));
             Assert.AreEqual(@"C:\users\anyuser\virtualclient\state\other\anystate.json", platformSpecifics.GetStatePath(@"\other", "anystate.json"));
+        }
+
+        [Test]
+        public void GetTempPathReturnsTheExpectedPathOnUnixSystems()
+        {
+            PlatformSpecifics platformSpecifics = new TestPlatformSpecifics2(PlatformID.Unix, Architecture.X64, "/home/anyuser/virtualclient");
+
+            Assert.AreEqual("/home/anyuser/virtualclient/temp", platformSpecifics.GetTempPath());
+            Assert.AreEqual("/home/anyuser/virtualclient/temp/any-jobfile.fio", platformSpecifics.GetTempPath("any-jobfile.fio"));
+            Assert.AreEqual("/home/anyuser/virtualclient/temp/jobfiles/any-jobfile.fio", platformSpecifics.GetTempPath("jobfiles", "any-jobfile.fio"));
+        }
+
+        [Test]
+        public void GetTempPathReturnsTheExpectedPathOnWindowsSystems()
+        {
+            PlatformSpecifics platformSpecifics = new TestPlatformSpecifics2(PlatformID.Win32NT, Architecture.X64, @"C:\users\anyuser\virtualclient");
+
+            Assert.AreEqual(@"C:\users\anyuser\virtualclient\temp", platformSpecifics.GetTempPath());
+            Assert.AreEqual(@"C:\users\anyuser\virtualclient\temp\any-jobfile.fio", platformSpecifics.GetTempPath("any-jobfile.fio"));
+            Assert.AreEqual(@"C:\users\anyuser\virtualclient\temp\jobfiles\any-jobfile.fio", platformSpecifics.GetTempPath("jobfiles", "any-jobfile.fio"));
         }
 
         [Test]
@@ -224,6 +441,155 @@ namespace VirtualClient.Contracts
             {
                 Assert.Throws<NotSupportedException>(() => PlatformSpecifics.ThrowIfNotSupported(architecture));
             }
+        }
+
+        [Test]
+        [TestCase(@"C:\", true)]
+        [TestCase(@"C:\Users", true)]
+        [TestCase(@"C:\Users\User\VirtualClient", true)]
+        [TestCase(@"C:/", true)]
+        [TestCase(@"C:/Users", true)]
+        [TestCase(@"C:/Users/User/VirtualClient", true)]
+        [TestCase(@"\\Server01", false)]
+        [TestCase(@"\\Server01\VirtualClient", false)]
+        [TestCase(@"\Users\User\VirtualClient", false)]
+        public void IsFullyQualifiedPathHandlesExpectedRangeOfPaths_Windows_Scenarios(string path, bool isFullyQualified)
+        {
+            Assert.AreEqual(
+                isFullyQualified, 
+                PlatformSpecifics.IsFullyQualifiedPath(path), 
+                $"Path validation failed: {path}");
+        }
+
+        [Test]
+        [TestCase(@"/", true)]
+        [TestCase(@"/home/user", true)]
+        [TestCase(@"/home/user/virtualclient", true)]
+        [TestCase(@"./virtualclient", false)]
+        public void IsFullyQualifiedPathHandlesExpectedRangeOfPaths_Unix_Scenarios(string path, bool isFullyQualified)
+        {
+            Assert.AreEqual(
+                isFullyQualified,
+                PlatformSpecifics.IsFullyQualifiedPath(path),
+                $"Path validation failed: {path}");
+        }
+
+        [Test]
+        [Platform(Include ="Win")]
+        public void CanResolveRelativePathsCorrectly()
+        {
+            IDictionary<string, string> paths = new Dictionary<string, string>
+            {
+                { @"script.exe", @"script.exe" },
+                { @"S:\Path\Contains\None", @"S:\Path\Contains\None" },
+                { @".\packages", Path.GetFullPath(@".\packages") },
+                { @"..\packages", Path.GetFullPath(@"..\packages") },
+                { @"..\..\directory\..\packages", Path.GetFullPath(@"..\..\directory\..\packages") },
+                { @".\scripts\script.exe", Path.GetFullPath(@".\scripts\script.exe") },
+                { @".\scripts\script.exe --any=option --flag", $"{Path.GetFullPath(@".\scripts\script.exe")} --any=option --flag" },
+                { @""".\scripts\script.exe --any=option --flag""", $"\"{Path.GetFullPath(@".\scripts\script.exe")} --any=option --flag\"" },
+                { @""".\scripts\script.exe"" --any=option --flag", $"\"{Path.GetFullPath(@".\scripts\script.exe")}\" --any=option --flag" }
+            };
+
+            foreach (var entry in paths)
+            {
+                string relativePath = entry.Key;
+                string expectedPath = entry.Value;
+                string actualPath = PlatformSpecifics.ResolveRelativePaths(relativePath);
+
+                Assert.AreEqual(expectedPath, actualPath, $"Relative path did not resolve correctly: '{relativePath}'");
+            }
+        }
+
+        [Test]
+        [Platform(Include = "Win")]
+        public void CanResolveRelativePathsCorrectly_More_Advanced_Cases()
+        {
+            IDictionary<string, string> paths = new Dictionary<string, string>
+            {
+                { 
+                    $@"cmd -c "".\scripts\script.exe --any=option --flag""", 
+                    $@"cmd -c ""{Path.GetFullPath(@".\scripts\script.exe")} --any=option --flag""" 
+                },
+                {
+                    $@"cmd -c ""'.\scripts\script.exe' --any=option --flag""",
+                    $@"cmd -c ""'{Path.GetFullPath(@".\scripts\script.exe")}' --any=option --flag"""
+                },
+                {
+                    $@"..\..\any\path\anycommand.exe --this=true --that=123 --log-path=.\another\path.log ..\and\one\other.thing .\", 
+                    $@"{Path.GetFullPath(@"..\..\any\path\anycommand.exe")} --this=true --that=123 --log-path={Path.GetFullPath(@".\another\path.log")} {Path.GetFullPath(@"..\and\one\other.thing")} {Path.GetFullPath(@".\")}" 
+                },
+                {
+                    $@"..\..\any\path\anycommand.exe --who=..\..\Any\Path\AnyCommand.exe",
+                    $@"{Path.GetFullPath(@"..\..\any\path\anycommand.exe")} --who={Path.GetFullPath(@"..\..\Any\Path\AnyCommand.exe")}"
+                }
+            };
+
+            foreach (var entry in paths)
+            {
+                string relativePath = entry.Key;
+                string expectedPath = entry.Value;
+                string actualPath = PlatformSpecifics.ResolveRelativePaths(relativePath);
+
+                Assert.AreEqual(expectedPath, actualPath, $"Relative path did not resolve correctly: '{relativePath}'");
+            }
+        }
+
+        [Test]
+        [TestCase("anycommand", "anycommand", null)]
+        [TestCase("anycommand  ", "anycommand", null)]
+        [TestCase("./anycommand", "./anycommand", null)]
+        [TestCase("./anycommand --argument=value", "./anycommand", "--argument=value")]
+        [TestCase("./anycommand --argument=value --argument2 value2", "./anycommand", "--argument=value --argument2 value2")]
+        [TestCase("./anycommand --argument=value --argument2 value2 --flag", "./anycommand", "--argument=value --argument2 value2 --flag")]
+        [TestCase("./anycommand --argument=value --argument2 value2 --flag   ", "./anycommand", "--argument=value --argument2 value2 --flag")]
+        [TestCase("../../anycommand --argument=value --argument2 value2 --flag   ", "../../anycommand", "--argument=value --argument2 value2 --flag")]
+        [TestCase("/home/user/anycommand", "/home/user/anycommand", null)]
+        [TestCase("/home/user/anycommand --argument=value --argument2 value2", "/home/user/anycommand", "--argument=value --argument2 value2")]
+        [TestCase("\"/home/user/anycommand\"", "\"/home/user/anycommand\"", null)]
+        [TestCase("\"/home/user/dir with space/anycommand\" --argument=value --argument2 value2", "\"/home/user/dir with space/anycommand\"", "--argument=value --argument2 value2")]
+        [TestCase("sudo anycommand", "sudo", "anycommand")]
+        [TestCase("sudo ./anycommand", "sudo", "./anycommand")]
+        [TestCase("sudo /home/user/anycommand", "sudo", "/home/user/anycommand")]
+        [TestCase("sudo /home/user/anycommand --argument=value --argument2 value2", "sudo", "/home/user/anycommand --argument=value --argument2 value2")]
+        [TestCase("sudo \"/home/user/dir with space/anycommand\"", "sudo", "\"/home/user/dir with space/anycommand\"")]
+        [TestCase("sudo \"/home/user/dir with space/anycommand\" --argument=value --argument2 value2", "sudo", "\"/home/user/dir with space/anycommand\" --argument=value --argument2 value2")]
+        public void CorrectlyIdentifiesThePartsOfTheCommandOnUnixSystems(string fullCommand, string expectedCommand, string expectedCommandArguments)
+        {
+            Assert.IsTrue(PlatformSpecifics.TryGetCommandParts(fullCommand, out string actualCommand, out string actualCommandArguments));
+            Assert.AreEqual(expectedCommand, actualCommand);
+            Assert.AreEqual(expectedCommandArguments, actualCommandArguments);
+        }
+
+        [Test]
+        [TestCase("bash -c \"/home/user/anyscript.sh\"", "bash", "-c \"/home/user/anyscript.sh\"")]
+        [TestCase("bash -c \"/home/user/anyscript.sh --argument=value --argument2 value2\"", "bash", "-c \"/home/user/anyscript.sh --argument=value --argument2 value2\"")]
+        [TestCase("bash -c \"/home/dir with space/anyscript.sh\"", "bash", "-c \"/home/dir with space/anyscript.sh\"")]
+        [TestCase("sudo bash -c \"/home/user/anyscript.sh --argument=value --argument2 value2\"", "sudo", "bash -c \"/home/user/anyscript.sh --argument=value --argument2 value2\"")]
+        public void CorrectlyIdentifiesThePartsOfBashCommandsOnUnixSystems(string fullCommand, string expectedCommand, string expectedCommandArguments)
+        {
+            Assert.IsTrue(PlatformSpecifics.TryGetCommandParts(fullCommand, out string actualCommand, out string actualCommandArguments));
+            Assert.AreEqual(expectedCommand, actualCommand);
+            Assert.AreEqual(expectedCommandArguments, actualCommandArguments);
+        }
+
+        [Test]
+        [TestCase("anycommand.exe", "anycommand.exe", null)]
+        [TestCase("anycommand.exe  ", "anycommand.exe", null)]
+        [TestCase(".\\anycommand.exe", ".\\anycommand.exe", null)]
+        [TestCase(".\\anycommand.exe --argument=value --argument2 value2", ".\\anycommand.exe", "--argument=value --argument2 value2")]
+        [TestCase(".\\anycommand.exe --argument=value --argument2 value2 --flag", ".\\anycommand.exe", "--argument=value --argument2 value2 --flag")]
+        [TestCase(".\\anycommand.exe --argument=value --argument2 value2 --flag   ", ".\\anycommand.exe", "--argument=value --argument2 value2 --flag")]
+        [TestCase(".\\anycommand.exe --argument=value", ".\\anycommand.exe", "--argument=value")]
+        [TestCase("..\\..\\anycommand.exe --argument=value", "..\\..\\anycommand.exe", "--argument=value")]
+        [TestCase("C:\\Users\\User\\anycommand.exe", "C:\\Users\\User\\anycommand.exe", null)]
+        [TestCase("C:\\Users\\User\\anycommand.exe --argument=value --argument2 value2", "C:\\Users\\User\\anycommand.exe", "--argument=value --argument2 value2")]
+        [TestCase("\"C:\\Users\\User\\Dir With Space\\anycommand.exe\"--argument=value --argument2 value2", "\"C:\\Users\\User\\Dir With Space\\anycommand.exe\"", "--argument=value --argument2 value2")]
+        public void CorrectlyIdentifiesThePartsOfTheCommandOnWindowsSystems(string fullCommand, string expectedCommand, string expectedCommandArguments)
+        {
+            Assert.IsTrue(PlatformSpecifics.TryGetCommandParts(fullCommand, out string actualCommand, out string actualCommandArguments));
+            Assert.AreEqual(expectedCommand, actualCommand);
+            Assert.AreEqual(expectedCommandArguments, actualCommandArguments);
         }
 
         [Test]

@@ -65,6 +65,28 @@ namespace VirtualClient.Actions.NetworkPerformance
         }
 
         /// <summary>
+        /// Parameter. Defines the duration for which the network ping test will run.
+        /// This can be a valid timespan (e.g. 00:10:00) or a simple numeric value representing total seconds (e.g. 600).
+        /// </summary>
+        public TimeSpan? Duration
+        {
+            get
+            {
+                // Check if the parameter exists and is not empty
+                if (this.Parameters.ContainsKey(nameof(NetworkPingExecutor.Duration)))
+                {
+                    string durationValue = this.Parameters[nameof(NetworkPingExecutor.Duration)]?.ToString();
+                    if (!string.IsNullOrWhiteSpace(durationValue))
+                    {
+                        return this.Parameters.GetTimeSpanValue(nameof(NetworkPingExecutor.Duration));
+                    }
+                }
+
+                return null;
+            }
+        }
+
+        /// <summary>
         /// The retry policy to apply to ping operations for handling transient
         /// issues/errors.
         /// </summary>
@@ -116,8 +138,18 @@ namespace VirtualClient.Actions.NetworkPerformance
 
                 DateTime startTime = DateTime.UtcNow;
                 Stopwatch blipTimer = Stopwatch.StartNew();
-                while (iterations < this.PingIterations && !cancellationToken.IsCancellationRequested)
+
+                // Use Duration if specified, otherwise use PingIterations
+                DateTime stopTime = startTime.Add(this.Duration ?? TimeSpan.Zero);
+
+                while (!cancellationToken.IsCancellationRequested)
                 {
+                    if ((this.Duration != null && DateTime.UtcNow >= stopTime) ||
+                        (this.Duration == null && iterations >= this.PingIterations))
+                    {
+                        break;
+                    }
+
                     try
                     {
                         await this.PingRetryPolicy.ExecuteAsync(async () =>
@@ -181,7 +213,7 @@ namespace VirtualClient.Actions.NetworkPerformance
 
                     if (responseTimes.Any())
                     {
-                        this.Logger.LogMetrics(
+                        this.Logger.LogMetric(
                             "NetworkPing",
                             "Network Ping",
                             startTime,
@@ -200,7 +232,7 @@ namespace VirtualClient.Actions.NetworkPerformance
 
                     if (networkConnections.Any())
                     {
-                        this.Logger.LogMetrics(
+                        this.Logger.LogMetric(
                             "NetworkPing",
                             "Network Ping",
                             startTime,
@@ -219,7 +251,7 @@ namespace VirtualClient.Actions.NetworkPerformance
 
                     if (networkBlips.Any())
                     {
-                        this.Logger.LogMetrics(
+                        this.Logger.LogMetric(
                             "NetworkPing",
                             "Network Ping",
                             startTime,
@@ -233,7 +265,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                             telemetryContext,
                             MetricRelativity.LowerIsBetter);
 
-                        this.Logger.LogMetrics(
+                        this.Logger.LogMetric(
                             "NetworkPing",
                             "Network Ping",
                             startTime,
@@ -249,7 +281,7 @@ namespace VirtualClient.Actions.NetworkPerformance
 
                         foreach (NetworkBlip blip in networkBlips)
                         {
-                            this.Logger.LogMetrics(
+                            this.Logger.LogMetric(
                                 "NetworkPing",
                                 "Network Ping",
                                 startTime,

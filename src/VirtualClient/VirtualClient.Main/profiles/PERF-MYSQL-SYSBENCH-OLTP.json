@@ -161,7 +161,6 @@
             "Type": "MountDisks",
             "Parameters": {
                 "Scenario": "CreateMountPoints",
-                "MountLocation": "Root",
                 "Role": "Server"
             }
         },
@@ -170,7 +169,7 @@
             "Parameters": {
                 "Scenario": "DownloadMySqlServerPackage",
                 "BlobContainer": "packages",
-                "BlobName": "mysql-server-8.0.36-v2.zip",
+                "BlobName": "mysql.8.0.36.rev3.zip",
                 "PackageName": "mysql-server",
                 "Extract": true,
                 "Role": "Server"
@@ -181,7 +180,7 @@
             "Parameters": {
                 "Scenario": "DownloadSysbenchPackage",
                 "BlobContainer": "packages",
-                "BlobName": "sysbench-1.0.20.rev2.zip",
+                "BlobName": "sysbench-1.0.20.rev3.zip",
                 "PackageName": "sysbench",
                 "Extract": true
             }
@@ -241,11 +240,11 @@
         {
             "Type": "SysbenchConfiguration",
             "Parameters": {
-                "Scenario": "PopulateMySQLDatabase",
+                "Scenario": "PrepareMySQLDatabase",
+                "Action": "CreateTables",
                 "DatabaseSystem": "MySQL",
                 "Benchmark": "OLTP",
                 "DatabaseName": "$.Parameters.DatabaseName",
-                "RecordCount": 1,
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
                 "PackageName": "sysbench",
                 "Role": "Server"
@@ -266,6 +265,7 @@
             "Type": "SysbenchConfiguration",
             "Parameters": {
                 "Scenario": "PopulateMySQLDatabase",
+                "Action": "PopulateTables",
                 "DatabaseSystem": "MySQL",
                 "Benchmark": "OLTP",
                 "DatabaseName": "$.Parameters.DatabaseName",

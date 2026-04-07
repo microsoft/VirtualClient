@@ -5,7 +5,6 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.IO.Abstractions;
     using System.Threading;
     using System.Threading.Tasks;
@@ -13,7 +12,6 @@ namespace VirtualClient.Actions
     using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
-    using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
 
@@ -228,8 +226,7 @@ namespace VirtualClient.Actions
             // execute the workload/test.
 
             // We will be referencing the workload package/paths later on. The binaries/executables we will run on in this package.
-            this.WorkloadPackage = await this.packageManager.GetPlatformSpecificPackageAsync(this.PackageName, this.Platform, this.CpuArchitecture, cancellationToken)
-                .ConfigureAwait(false);
+            this.WorkloadPackage = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken);
 
             if (this.Platform == PlatformID.Win32NT)
             {
@@ -243,8 +240,7 @@ namespace VirtualClient.Actions
                 this.WorkloadExecutablePath = this.Combine(this.WorkloadPackage.Path, "ExampleWorkload");
 
                 // Binaries on Unix/Linux must be attributed with an attribute that makes them "executable".
-                await this.systemManagement.MakeFileExecutableAsync(this.WorkloadExecutablePath, this.Platform, cancellationToken)
-                    .ConfigureAwait(false);
+                await this.systemManagement.MakeFileExecutableAsync(this.WorkloadExecutablePath, this.Platform, cancellationToken);
             }
 
             // We also typically check to make sure any expected binaries, scripts, executables etc... that are required are found
@@ -346,7 +342,7 @@ namespace VirtualClient.Actions
                     // wait for it to exit.
                     using (IProcessProxy workloadProcess = this.processManager.CreateProcess(this.WorkloadExecutablePath, commandArguments, this.WorkloadPackage.Path))
                     {
-                        this.CleanupTasks.Add(() => workloadProcess.SafeKill());
+                        this.CleanupTasks.Add(() => workloadProcess.SafeKill(this.Logger));
 
                         await workloadProcess.StartAndWaitAsync(cancellationToken)
                             .ConfigureAwait(false);

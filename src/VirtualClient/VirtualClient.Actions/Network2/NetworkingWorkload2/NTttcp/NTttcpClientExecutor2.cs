@@ -87,13 +87,13 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// get test run duration value in seconds.
+        /// get test run duration value.
         /// </summary>
-        public int TestDuration
+        public TimeSpan TestDuration
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.TestDuration), 60);
+                return this.Parameters.GetTimeSpanValue(nameof(this.TestDuration), TimeSpan.FromSeconds(60));
             }
         }
 
@@ -152,16 +152,16 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Parameter defines the warmup time to use in the workload toolset tests.
         /// </summary>
-        public int WarmupTime
+        public TimeSpan WarmupTime
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(NTttcpClientExecutor2.WarmupTime), 8);
+                return this.Parameters.GetTimeSpanValue(nameof(NTttcpClientExecutor2.WarmupTime), TimeSpan.FromSeconds(8));
             }
 
             set
             {
-                this.Parameters[nameof(NTttcpClientExecutor2.WarmupTime)] = value;
+                this.Parameters[nameof(NTttcpClientExecutor2.WarmupTime)] = value.ToString();
             }
         }
 
@@ -256,7 +256,7 @@ namespace VirtualClient.Actions
                 $"-m {this.ThreadCount},*,{serverIPAddress} " +
                 $"-wu {NTttcpExecutor2.DefaultWarmupTime.TotalSeconds} " +
                 $"-cd {NTttcpExecutor2.DefaultCooldownTime.TotalSeconds} " +
-                $"-t {this.TestDuration} " +
+                $"-t {this.TestDuration.TotalSeconds} " +
                 $"-l {this.BufferSizeClient} " +
                 $"-p {this.Port} " +
                 $"-xml {this.ResultsPath} " +
@@ -272,7 +272,7 @@ namespace VirtualClient.Actions
                 $"-m {this.ThreadCount},*,{serverIPAddress} " +
                 $"-W {NTttcpExecutor2.DefaultWarmupTime.TotalSeconds} " +
                 $"-C {NTttcpExecutor2.DefaultCooldownTime.TotalSeconds} " +
-                $"-t {this.TestDuration} " +
+                $"-t {this.TestDuration.TotalSeconds} " +
                 $"-b {this.BufferSizeClient} " +
                 $"-x {this.ResultsPath} " +
                 $"-p {this.Port} " +
@@ -383,7 +383,7 @@ namespace VirtualClient.Actions
             // Note:
             // We found that certain of the workloads do not exit when they are supposed to. We enforce an
             // absolute timeout to ensure we do not waste too much time with a workload that is stuck.
-            TimeSpan workloadTimeout = TimeSpan.FromSeconds(this.WarmupTime + (this.TestDuration * 2));
+            TimeSpan workloadTimeout = TimeSpan.FromSeconds(this.WarmupTime.TotalSeconds + (this.TestDuration.TotalSeconds * 2));
 
             string commandArguments = this.GetCommandLineArguments();
             DateTime startTime = DateTime.UtcNow;

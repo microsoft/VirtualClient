@@ -146,7 +146,7 @@ namespace VirtualClient.Actions
                 {
                     using (IProcessProxy process = this.ProcessManager.CreateElevatedProcess(this.Platform, command, arguments, workingDir))
                     {
-                        this.CleanupTasks.Add(() => process.SafeKill());
+                        this.CleanupTasks.Add(() => process.SafeKill(this.Logger));
                         await process.StartAndWaitAsync(cancellationToken).ConfigureAwait();
 
                         if (!cancellationToken.IsCancellationRequested)
@@ -220,13 +220,14 @@ namespace VirtualClient.Actions
                             case LinuxDistribution.CentOS8:
                             case LinuxDistribution.RHEL8:
                             case LinuxDistribution.AzLinux:
+                            case LinuxDistribution.AwsLinux:
                                 break;
                             default:
                                 throw new WorkloadException(
                                     $"The workload/benchmark is not supported on the current Linux distro " +
                                     $"'{distroInfo.LinuxDistribution}'.  Supported distros include: " +
                                     $"{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.Ubuntu)},{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.Debian)}" +
-                                    $"{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.CentOS8)},{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.RHEL8)},{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.AzLinux)}",
+                                    $"{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.CentOS8)},{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.RHEL8)},{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.AzLinux)},{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.AwsLinux)}",
                                     ErrorReason.LinuxDistributionNotSupported);
                         }
 

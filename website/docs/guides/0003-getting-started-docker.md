@@ -27,7 +27,7 @@ ltsc2022: Pulling from windows/nanoserver
 Digest: sha256:79fb1372fc5b3aeeca73603d5eadd0a8fb7d4f0b77bd29498696c03bb6de1fdf
 Status: Downloaded newer image for mcr.microsoft.com/windows/nanoserver:ltsc2022
  ---> 0db1879370e5
-Step 3/3 : COPY out/bin/Release/x64/VirtualClient.Main/net8.0/win-x64/publish/ C:/VirtualClient/
+Step 3/3 : COPY out/bin/Release/x64/VirtualClient.Main/net9.0/win-x64/publish/ C:/VirtualClient/
  ---> 7c2fe2466138
 Successfully built 7c2fe2466138
 Successfully tagged test-win-x64:1.0.1.3
@@ -39,7 +39,7 @@ Use 'docker scan' to run Snyk tests against images to find vulnerabilities and l
 For Windows, the Dockerfile copied VC binaries to C:\VirtualClient. You can invoke a docker container using the following commands.
 
 ```bash
->docker run -d -p 3000:80 test-win-x64:1.0.1.3 C:\VirtualClient\VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --packages=https://virtualclient.blob.core.windows.net/packages
+>docker run -d -p 3000:80 test-win-x64:1.0.1.3 C:\VirtualClient\VirtualClient.exe --profile=PERF-CPU-OPENSSL.json 
 bad3c2a2fe95a3135264dc70ee63f89df7e1deb7875b3a0104b3231e248feaac
 ```
 

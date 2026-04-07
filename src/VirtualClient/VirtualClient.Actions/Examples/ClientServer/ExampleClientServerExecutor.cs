@@ -19,6 +19,7 @@ namespace VirtualClient.Actions
     /// An example Virtual Client component responsible for executing a client/server workload or a test on
     /// the system.
     /// </summary>
+    [SupportedPlatforms("linux-arm64,linux-x64,win-arm64,win-x64")]
     public class ExampleClientServerExecutor : VirtualClientComponent
     {
         /// <summary>

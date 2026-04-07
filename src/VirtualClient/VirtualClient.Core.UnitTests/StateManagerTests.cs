@@ -133,6 +133,28 @@ namespace VirtualClient
         [Test]
         [TestCase(PlatformID.Win32NT)]
         [TestCase(PlatformID.Unix)]
+        public async Task StateManagerReturnsNullWhenStateFileIsInvalidJson(PlatformID platform)
+        {
+            this.SetupBehaviors(platform);
+
+            JObject expectedState = JObject.Parse("{ \"any\": \"state\" }");
+
+            this.mockFixture.File.Setup(file => file.Exists(It.IsAny<string>())).Returns(true);
+            this.mockFixture.File
+                .Setup(file => file.ReadAllTextAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(expectedState.ToString() + "}");
+
+            JObject actualState = await this.stateManager.GetStateAsync("AnyState", CancellationToken.None, retryPolicy: Policy.NoOpAsync())
+                .ConfigureAwait(false);
+
+            Assert.AreEqual(null, actualState);
+        }
+
+        [Test]
+        [TestCase(PlatformID.Win32NT)]
+        [TestCase(PlatformID.Unix)]
         public async Task StateManagerReturnsNothingIfTheStateObjectDoesNotExistInTheBackingLocation(PlatformID platform)
         {
             this.SetupBehaviors(platform);

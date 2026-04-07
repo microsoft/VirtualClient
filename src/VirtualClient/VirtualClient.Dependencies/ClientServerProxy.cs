@@ -164,7 +164,7 @@ namespace VirtualClient.Dependencies
                                 VirtualClientComponent component = null;
                                 if (instructions.TryGetComponent(out ExecutionProfileElement profileElement))
                                 {
-                                    component = ComponentFactory.CreateComponent(profileElement, this.Dependencies, this.ExecutionSeed);
+                                    component = ComponentFactory.CreateComponent(profileElement, this.Dependencies, new ComponentSettings(profileElement.Parameters));
                                 }
                                 else if (instructions.Properties.TryGetValue("type", out IConvertible componentType))
                                 {

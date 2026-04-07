@@ -22,7 +22,6 @@ namespace VirtualClient
         public TestExecutor(MockFixture fixture)
             : base(fixture?.Dependencies, fixture?.Parameters)
         {
-            this.LogToFile = true;
         }
 
         /// <summary>
@@ -31,7 +30,6 @@ namespace VirtualClient
         public TestExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
             : base(dependencies, parameters)
         {
-            this.LogToFile = true;
         }
 
         /// <summary>

@@ -4,13 +4,27 @@
 namespace VirtualClient.UnitTests
 {
     using System;
+    using System.Collections;
+    using System.Collections.Generic;
     using System.Runtime.InteropServices;
+    using System.Security.Cryptography.X509Certificates;
     using System.Threading;
     using System.Threading.Tasks;
+    using AutoFixture;
+    using Microsoft.Extensions.Configuration;
+    using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.DependencyInjection.Extensions;
+    using Microsoft.Extensions.Logging;
+    using Moq;
     using NUnit.Framework;
+    using VirtualClient.Common.Telemetry;
+    using VirtualClient.Configuration;
     using VirtualClient.Contracts;
+    using VirtualClient.Identity;
+    using VirtualClient.TestExtensions;
 
     [TestFixture]
+    [Platform("Win", Reason = "Path.GetFullPath() behavior cannot be readily supported when running Linux-like paths.")]
     [Category("Unit")]
     internal class CommandBaseTests : CommandBase
     {
@@ -24,9 +38,17 @@ namespace VirtualClient.UnitTests
         {
             this.mockFixture = new MockFixture();
             this.mockFixture.Setup(platform, architecture);
+            this.mockFixture.SetupCertificateMocks();
+
+            this.ExperimentId = null;
+            this.LogDirectory = null;
+            this.PackageDirectory = null;
+            this.StateDirectory = null;
+            this.TempDirectory = null;
         }
 
         [Test]
+        [Order(0)]
         [TestCase(PlatformID.Unix, Architecture.X64)]
         [TestCase(PlatformID.Unix, Architecture.Arm64)]
         [TestCase(PlatformID.Win32NT, Architecture.X64)]
@@ -46,6 +68,7 @@ namespace VirtualClient.UnitTests
         }
 
         [Test]
+        [Order(1)]
         [TestCase(PlatformID.Unix, Architecture.X64)]
         [TestCase(PlatformID.Unix, Architecture.Arm64)]
         [TestCase(PlatformID.Win32NT, Architecture.X64)]
@@ -66,6 +89,7 @@ namespace VirtualClient.UnitTests
         }
 
         [Test]
+        [Order(2)]
         [TestCase(PlatformID.Unix, Architecture.X64)]
         [TestCase(PlatformID.Unix, Architecture.Arm64)]
         [TestCase(PlatformID.Win32NT, Architecture.X64)]
@@ -86,6 +110,32 @@ namespace VirtualClient.UnitTests
         }
 
         [Test]
+        [Order(20)]
+        [TestCase(PlatformID.Unix, Architecture.X64)]
+        [TestCase(PlatformID.Unix, Architecture.Arm64)]
+        [TestCase(PlatformID.Win32NT, Architecture.X64)]
+        [TestCase(PlatformID.Win32NT, Architecture.Arm64)]
+        public void ApplicationUsesTheExpectedLogDirectoryLocationWhenIsolationRequested(PlatformID platform, Architecture architecture)
+        {
+            this.SetupTest(platform, architecture);
+
+            // Scenario:
+            // --isolated or --isolated=logs defined on the command line.
+            string experimentId = Guid.NewGuid().ToString();
+            string logDirectory = this.mockFixture.Combine(this.mockFixture.PlatformSpecifics.CurrentDirectory, "logs");
+            this.ExperimentId = experimentId;
+            this.LogDirectory = logDirectory;
+            this.IsolationTargets = new List<string> { "logs" };
+
+            this.EvaluateDirectoryPathOverrides(this.mockFixture.PlatformSpecifics);
+            string expectedDirectory = this.mockFixture.Combine(logDirectory, experimentId);
+            string actualDirectory = this.mockFixture.PlatformSpecifics.LogsDirectory;
+
+            Assert.AreEqual(expectedDirectory, actualDirectory);
+        }
+
+        [Test]
+        [Order(3)]
         [TestCase(PlatformID.Unix, Architecture.X64)]
         [TestCase(PlatformID.Unix, Architecture.Arm64)]
         [TestCase(PlatformID.Win32NT, Architecture.X64)]
@@ -105,6 +155,7 @@ namespace VirtualClient.UnitTests
         }
 
         [Test]
+        [Order(4)]
         [TestCase(PlatformID.Unix, Architecture.X64)]
         [TestCase(PlatformID.Unix, Architecture.Arm64)]
         [TestCase(PlatformID.Win32NT, Architecture.X64)]
@@ -125,6 +176,7 @@ namespace VirtualClient.UnitTests
         }
 
         [Test]
+        [Order(5)]
         [TestCase(PlatformID.Unix, Architecture.X64)]
         [TestCase(PlatformID.Unix, Architecture.Arm64)]
         [TestCase(PlatformID.Win32NT, Architecture.X64)]
@@ -145,6 +197,31 @@ namespace VirtualClient.UnitTests
         }
 
         [Test]
+        [Order(21)]
+        [TestCase(PlatformID.Unix, Architecture.X64)]
+        [TestCase(PlatformID.Unix, Architecture.Arm64)]
+        [TestCase(PlatformID.Win32NT, Architecture.X64)]
+        [TestCase(PlatformID.Win32NT, Architecture.Arm64)]
+        public void ApplicationUsesTheExpectedPackagesDirectoryLocationWhenIsolationRequested(PlatformID platform, Architecture architecture)
+        {
+            this.SetupTest(platform, architecture);
+
+            // Scenario:
+            // --isolated or --isolated=packages defined on the command line.
+            string experimentId = Guid.NewGuid().ToString();
+            string packageDirectory = this.mockFixture.Combine(this.mockFixture.PlatformSpecifics.CurrentDirectory, "packages");
+            this.ExperimentId = experimentId;
+            this.PackageDirectory = packageDirectory;
+            this.IsolationTargets = new List<string> { "packages" };
+
+            this.EvaluateDirectoryPathOverrides(this.mockFixture.PlatformSpecifics);
+            string expectedDirectory = this.mockFixture.Combine(packageDirectory, experimentId);
+            string actualDirectory = this.mockFixture.PlatformSpecifics.PackagesDirectory;
+            Assert.AreEqual(expectedDirectory, actualDirectory);
+        }
+
+        [Test]
+        [Order(6)]
         [TestCase(PlatformID.Unix, Architecture.X64)]
         [TestCase(PlatformID.Unix, Architecture.Arm64)]
         [TestCase(PlatformID.Win32NT, Architecture.X64)]
@@ -165,6 +242,7 @@ namespace VirtualClient.UnitTests
         }
 
         [Test]
+        [Order(7)]
         [TestCase(PlatformID.Unix, Architecture.X64)]
         [TestCase(PlatformID.Unix, Architecture.Arm64)]
         [TestCase(PlatformID.Win32NT, Architecture.X64)]
@@ -185,6 +263,7 @@ namespace VirtualClient.UnitTests
         }
 
         [Test]
+        [Order(8)]
         [TestCase(PlatformID.Unix, Architecture.X64)]
         [TestCase(PlatformID.Unix, Architecture.Arm64)]
         [TestCase(PlatformID.Win32NT, Architecture.X64)]
@@ -204,10 +283,223 @@ namespace VirtualClient.UnitTests
             Assert.AreEqual(expectedDirectory, actualDirectory);
         }
 
+        [Test]
+        [Order(22)]
+        [TestCase(PlatformID.Unix, Architecture.X64)]
+        [TestCase(PlatformID.Unix, Architecture.Arm64)]
+        [TestCase(PlatformID.Win32NT, Architecture.X64)]
+        [TestCase(PlatformID.Win32NT, Architecture.Arm64)]
+        public void ApplicationUsesTheExpectedStateDirectoryLocationWhenIsolationRequested(PlatformID platform, Architecture architecture)
+        {
+            this.SetupTest(platform, architecture);
+
+            // Scenario:
+            // --isolated or --isolated=state defined on the command line.
+            string experimentId = Guid.NewGuid().ToString();
+            string stateDirectory = this.mockFixture.Combine(this.mockFixture.PlatformSpecifics.CurrentDirectory, "state");
+            this.ExperimentId = experimentId;
+            this.StateDirectory = stateDirectory;
+            this.IsolationTargets = new List<string> { "state" };
+
+            this.EvaluateDirectoryPathOverrides(this.mockFixture.PlatformSpecifics);
+            string expectedDirectory = this.mockFixture.Combine(stateDirectory, experimentId);
+            string actualDirectory = this.mockFixture.PlatformSpecifics.StateDirectory;
+
+            Assert.AreEqual(expectedDirectory, actualDirectory);
+        }
+
+        [Test]
+        [Order(9)]
+        [TestCase(PlatformID.Unix, Architecture.X64)]
+        [TestCase(PlatformID.Unix, Architecture.Arm64)]
+        [TestCase(PlatformID.Win32NT, Architecture.X64)]
+        [TestCase(PlatformID.Win32NT, Architecture.Arm64)]
+        public void ApplicationUsesTheExpectedDefaultTempDirectoryLocation(PlatformID platform, Architecture architecture)
+        {
+            this.SetupTest(platform, architecture);
+
+            PlatformSpecifics platformSpecifics = new PlatformSpecifics(platform, architecture);
+            string expectedDirectory = this.mockFixture.Combine(MockFixture.GetDirectory(typeof(CommandBaseTests), "temp"));
+            string defaultDirectory = platformSpecifics.TempDirectory;
+
+            this.EvaluateDirectoryPathOverrides(platformSpecifics);
+            string actualDirectory = platformSpecifics.TempDirectory;
+
+            Assert.AreEqual(expectedDirectory, defaultDirectory, "Default temp directory does not match expected.");
+            Assert.AreEqual(expectedDirectory, actualDirectory);
+        }
+
+        [Test]
+        [Order(10)]
+        [TestCase(PlatformID.Unix, Architecture.X64)]
+        [TestCase(PlatformID.Unix, Architecture.Arm64)]
+        [TestCase(PlatformID.Win32NT, Architecture.X64)]
+        [TestCase(PlatformID.Win32NT, Architecture.Arm64)]
+        public void ApplicationUsesTheExpectedTempDirectoryLocationWhenSpecifiedOnTheCommandLine(PlatformID platform, Architecture architecture)
+        {
+            this.SetupTest(platform, architecture);
+
+            // Setup:
+            // Property set when --temp-dir=<path> is used on the command line.
+            string expectedDirectory = this.mockFixture.Combine(this.mockFixture.PlatformSpecifics.CurrentDirectory, "alternate_temp_1");
+            this.TempDirectory = expectedDirectory;
+
+            this.EvaluateDirectoryPathOverrides(this.mockFixture.PlatformSpecifics);
+            string actualDirectory = this.mockFixture.PlatformSpecifics.TempDirectory;
+
+            Assert.AreEqual(expectedDirectory, actualDirectory);
+        }
+
+        [Test]
+        [Order(11)]
+        [TestCase(PlatformID.Unix, Architecture.X64)]
+        [TestCase(PlatformID.Unix, Architecture.Arm64)]
+        [TestCase(PlatformID.Win32NT, Architecture.X64)]
+        [TestCase(PlatformID.Win32NT, Architecture.Arm64)]
+        public void ApplicationUsesTheExpectedTempDirectoryLocationWhenSpecifiedInTheSupportedEnvironmentVariable(PlatformID platform, Architecture architecture)
+        {
+            this.SetupTest(platform, architecture);
+
+            // Setup:
+            // Environment variable 'VC_TEMP_DIR' can be used to define the logs directory.
+            string expectedDirectory = this.mockFixture.Combine(this.mockFixture.PlatformSpecifics.CurrentDirectory, "alternate_temp_2");
+            this.mockFixture.SetEnvironmentVariable(EnvironmentVariable.VC_TEMP_DIR, expectedDirectory);
+
+            this.EvaluateDirectoryPathOverrides(this.mockFixture.PlatformSpecifics);
+            string actualDirectory = this.mockFixture.PlatformSpecifics.TempDirectory;
+
+            Assert.AreEqual(expectedDirectory, actualDirectory);
+        }
+
+        [Test]
+        [Order(22)]
+        [TestCase(PlatformID.Unix, Architecture.X64)]
+        [TestCase(PlatformID.Unix, Architecture.Arm64)]
+        [TestCase(PlatformID.Win32NT, Architecture.X64)]
+        [TestCase(PlatformID.Win32NT, Architecture.Arm64)]
+        public void ApplicationUsesTheExpectedTempDirectoryLocationWhenIsolationRequested(PlatformID platform, Architecture architecture)
+        {
+            this.SetupTest(platform, architecture);
+
+            // Scenario:
+            // --isolated or --isolated=temp defined on the command line.
+            string experimentId = Guid.NewGuid().ToString();
+            string tempDirectory = this.mockFixture.Combine(this.mockFixture.PlatformSpecifics.CurrentDirectory, "temp");
+            this.ExperimentId = experimentId;
+            this.TempDirectory = tempDirectory;
+            this.IsolationTargets = new List<string> { "temp" };
+
+            this.EvaluateDirectoryPathOverrides(this.mockFixture.PlatformSpecifics);
+            string expectedDirectory = this.mockFixture.Combine(tempDirectory, experimentId);
+            string actualDirectory = this.mockFixture.PlatformSpecifics.TempDirectory;
+            Assert.AreEqual(expectedDirectory, actualDirectory);
+        }
+
+        [Test]
+        [Order(15)]
+        [TestCase(PlatformID.Unix, Architecture.X64)]
+        [TestCase(PlatformID.Unix, Architecture.Arm64)]
+        [TestCase(PlatformID.Win32NT, Architecture.X64)]
+        [TestCase(PlatformID.Win32NT, Architecture.Arm64)]
+        public void CommandBaseCanCreateLoggers(PlatformID platform, Architecture architecture)
+        {
+            this.SetupTest(platform, architecture);
+
+            TestCommandBase testCommand = new TestCommandBase();
+            List<string> loggerDefinitions = new List<string>();
+            testCommand.Loggers = loggerDefinitions;
+
+            IList<ILoggerProvider> loggers = testCommand.CreateLogger(this.mockFixture.Dependencies);
+
+            // 1 console
+            Assert.AreEqual(loggers.Count, 1);
+        }
+
+        [Test]
+        [Order(16)]
+        public void CommandBaseCanCreateEventHubLoggers()
+        {
+            this.SetupTest(PlatformID.Unix, Architecture.X64);
+
+            TestCommandBase testCommand = new TestCommandBase(this.mockFixture.CertificateManager.Object);
+            this.mockFixture.CertificateManager.Setup(mgr => mgr.GetCertificateFromStoreAsync(It.IsAny<string>(), It.IsAny<IEnumerable<StoreLocation>>(), It.IsAny<StoreName>()))
+                .ReturnsAsync(this.mockFixture.Create<X509Certificate2>());
+
+            List<string> loggerDefinitions = new List<string>();
+            loggerDefinitions.Add("eventHub;sb://any.servicebus.windows.net/?cid=307591a4-abb2-4559-af59-b47177d140cf&tid=985bbc17-e3a5-4fec-b0cb-40dbb8bc5959&crtt=123456789");
+            testCommand.Loggers = loggerDefinitions;
+
+            var inMemorySettings = new Dictionary<string, string>
+            {
+                { "EventHubLogSettings:IsEnabled", "true" },
+                { "EventHubLogSettings:EventsHubName", "Events" },
+                { "EventHubLogSettings:CountersHubName", "Counters" },
+                { "EventHubLogSettings:MetricsHubName", "Metrics" },
+                { "EventHubLogSettings:TracesHubName", "Traces" },
+            };
+
+            IConfiguration configuration = new ConfigurationBuilder()
+                .AddInMemoryCollection(inMemorySettings)
+                .Build();
+
+            var eventHubLogSettings = new EventHubLogSettings();
+            configuration.GetSection("EventHubLogSettings").Bind(eventHubLogSettings);
+
+            this.mockFixture.Dependencies.RemoveAll<IConfiguration>();
+            this.mockFixture.Dependencies.AddSingleton(configuration);
+
+            IList<ILoggerProvider> loggers = testCommand.CreateLogger(this.mockFixture.Dependencies);
+
+            // 1 console, 3 eventhub
+            Assert.AreEqual(loggers.Count, 4);
+        }
+
+        [Test]
+        [Order(17)]
+        public void CommandBaseCanCreateMultipleLoggers()
+        {
+            this.SetupTest(PlatformID.Unix, Architecture.X64);
+
+            TestCommandBase testCommand = new TestCommandBase(this.mockFixture.CertificateManager.Object);
+            this.mockFixture.CertificateManager.Setup(mgr => mgr.GetCertificateFromStoreAsync(It.IsAny<string>(), It.IsAny<IEnumerable<StoreLocation>>(), It.IsAny<StoreName>()))
+                .ReturnsAsync(this.mockFixture.Create<X509Certificate2>());
+
+            List<string> loggerDefinitions = new List<string>();
+            loggerDefinitions.Add("eventHub;sb://any.servicebus.windows.net/?cid=307591a4-abb2-4559-af59-b47177d140cf&tid=985bbc17-e3a5-4fec-b0cb-40dbb8bc5959&crtt=123456789");
+            loggerDefinitions.Add("console");
+            loggerDefinitions.Add("csv");
+            loggerDefinitions.Add("file");
+            testCommand.Loggers = loggerDefinitions;
+
+            var inMemorySettings = new Dictionary<string, string>
+            {
+                { "EventHubLogSettings:IsEnabled", "true" },
+                { "EventHubLogSettings:EventsHubName", "Events" },
+                { "EventHubLogSettings:CountersHubName", "Counters" },
+                { "EventHubLogSettings:MetricsHubName", "Metrics" },
+                { "EventHubLogSettings:TracesHubName", "Traces" },
+            };
+
+            IConfiguration configuration = new ConfigurationBuilder()
+                .AddInMemoryCollection(inMemorySettings)
+                .Build();
+
+            var eventHubLogSettings = new EventHubLogSettings();
+            configuration.GetSection("EventHubLogSettings").Bind(eventHubLogSettings);
+
+            this.mockFixture.Dependencies.RemoveAll<IConfiguration>();
+            this.mockFixture.Dependencies.AddSingleton(configuration);
+
+            IList<ILoggerProvider> loggers = testCommand.CreateLogger(this.mockFixture.Dependencies);
+
+            // 1 console, 3 serilog and 1 csv file logger, 3 eventhub
+            Assert.AreEqual(loggers.Count, 8);
+        }
+
         /// <summary>
         /// Not implemented yet.
         /// </summary>
-        public override Task<int> ExecuteAsync(string[] args, CancellationTokenSource cancellationTokenSource)
+        protected override Task<int> ExecuteAsync(string[] args, IServiceCollection dependencies, CancellationTokenSource cancellationTokenSource)
         {
             throw new NotImplementedException();
         }
@@ -215,6 +507,25 @@ namespace VirtualClient.UnitTests
         public new void EvaluateDirectoryPathOverrides(PlatformSpecifics platformSpecifics)
         {
             base.EvaluateDirectoryPathOverrides(platformSpecifics);
+        }
+
+        private class TestCommandBase : CommandBase
+        {
+            public TestCommandBase(ICertificateManager certManager = null)
+                : base()
+            {
+                this.CertificateManager = certManager;
+            }
+
+            public IList<ILoggerProvider> CreateLogger(IServiceCollection dependencies)
+            {
+                return base.InitializeLoggerProviders(dependencies, null);
+            }
+
+            protected override Task<int> ExecuteAsync(string[] args, IServiceCollection dependencies, CancellationTokenSource cancellationTokenSource)
+            {
+                throw new NotImplementedException();
+            }
         }
     }
 }

@@ -3,10 +3,8 @@
 
 namespace VirtualClient
 {
-    using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
     using VirtualClient.Common.Extensions;
@@ -35,20 +33,6 @@ namespace VirtualClient
             }
 
             return package;
-        }
-
-        /// <summary>
-        /// Returns the package/dependency path information if it is registered.
-        /// </summary>
-        public static async Task<DependencyPath> GetPlatformSpecificPackageAsync(this IPackageManager packageManager, string packageName, PlatformID platform, Architecture architecture, CancellationToken cancellationToken, bool throwIfNotfound = true)
-        {
-            packageManager.ThrowIfNull(nameof(packageManager));
-            packageName.ThrowIfNullOrWhiteSpace(nameof(packageName));
-
-            DependencyPath package = await packageManager.GetPackageAsync(packageName, cancellationToken, throwIfNotfound)
-                .ConfigureAwait(false);
-
-            return packageManager.PlatformSpecifics.ToPlatformSpecificPath(package, platform, architecture);
         }
 
         /// <summary>

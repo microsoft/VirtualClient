@@ -1,29 +1,21 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace VirtualClient.Contracts
+namespace VirtualClient
 {
     using System;
     using System.Collections.Generic;
-    using System.Data;
     using System.Linq;
-    using System.Net;
     using System.Net.Http;
-    using System.Reflection;
-    using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.Extensions.Logging;
-    using Microsoft.Extensions.Logging.Abstractions;
-    using Newtonsoft.Json.Linq;
     using Polly;
-    using VirtualClient;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Rest;
     using VirtualClient.Common.Telemetry;
-    using VirtualClient.Contracts.Metadata;
+    using VirtualClient.Contracts;
 
     /// <summary>
     /// The base class for all Virtual Client profile actions and monitors.

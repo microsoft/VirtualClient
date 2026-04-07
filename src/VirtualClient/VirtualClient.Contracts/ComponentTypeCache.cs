@@ -5,16 +5,19 @@ namespace VirtualClient.Contracts
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Diagnostics.CodeAnalysis;
     using System.IO;
     using System.Linq;
+    using System.Net;
     using System.Reflection;
+    using Microsoft.Extensions.Logging;
     using VirtualClient.Common.Extensions;
 
     /// <summary>
     /// Provides a cache for object types associated with Virtual Client.
     /// </summary>
-    public class ComponentTypeCache : List<ComponentType>
+    public class ComponentTypeCache : List<CachedComponentType>
     {
         /// <summary>
         /// Lock object used to ensure single-threaded access to the cache when
@@ -26,7 +29,8 @@ namespace VirtualClient.Contracts
         // or even extensions libraries. They are dynamically loaded at runtime.
         private static readonly List<Type> ComponentDependencyTypes = new List<Type>
         {
-            typeof(VirtualClientComponent)
+            typeof(VirtualClientComponent),
+            typeof(ILoggerProvider)
         };
 
         private ComponentTypeCache()
@@ -60,11 +64,13 @@ namespace VirtualClient.Contracts
             }
             catch (BadImageFormatException)
             {
-                // Expected for certain types of assemblies that are not .NET intermediate
-                // language assemblies (IL).
+                // For the case that our exclusions miss assemblies that are NOT intermediate/IL
+                // assemblies, we need to handle this until we have a better model.
             }
             catch (FileLoadException)
             {
+                // For the case that we are loading extensions and the assembly may have
+                // been already loaded.
             }
         }
 
@@ -94,6 +100,11 @@ namespace VirtualClient.Contracts
                         // For the case that our exclusions miss assemblies that are NOT intermediate/IL
                         // assemblies, we need to handle this until we have a better model.
                     }
+                    catch (FileLoadException)
+                    {
+                        // For the case that we are loading extensions and the assembly may have
+                        // been already loaded.
+                    }
                 }
             }
         }
@@ -112,6 +123,51 @@ namespace VirtualClient.Contracts
             type = this.FirstOrDefault(type => type.FullName == componentType || type.Name == componentType)?.Type;
 
             return type != null;
+        }
+
+        /// <summary>
+        /// Returns true if 1 or more matching types exists in the type cache.
+        /// </summary>
+        /// <param name="baseType">The base type of the component (e.g. ILoggerProvider).</param>
+        /// <param name="alias">An alias for the matching type.</param>
+        /// <param name="types">A set of types having a matching alias.</param>
+        /// <returns>
+        /// True if 1 or more matching types exists in the type cache.
+        /// </returns>
+        public bool TryGetComponentTypes(Type baseType, string alias, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] out IEnumerable<Type> types)
+        {
+            baseType.ThrowIfNull(nameof(baseType));
+            alias.ThrowIfNullOrWhiteSpace(nameof(alias));
+
+            types = null;
+            List<Type> matchingAliasedTypes = new List<Type>();
+            IEnumerable<CachedComponentType> matchedTypes = this.Where(t => t.Type.IsAssignableTo(baseType));
+
+            if (matchedTypes?.Any() == true)
+            {
+                foreach (CachedComponentType matchedType in matchedTypes)
+                {
+                    if (!matchedType.Type.IsAbstract)
+                    {
+                        IEnumerable<AliasAttribute> aliases = matchedType.Type.GetCustomAttributes<AliasAttribute>();
+                        foreach (AliasAttribute attribute in aliases)
+                        {
+                            if (string.Equals(attribute.Alias, alias, StringComparison.OrdinalIgnoreCase))
+                            {
+                                matchingAliasedTypes.Add(matchedType.Type);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (matchingAliasedTypes.Any())
+            {
+                types = matchingAliasedTypes;
+            }
+
+            return types != null;
         }
 
         private static IEnumerable<string> GetAssemblies(string directoryPath)
@@ -147,7 +203,7 @@ namespace VirtualClient.Contracts
                 IEnumerable<Type> componentTypes = null;
                 if (dependencyType.IsInterface)
                 {
-                    componentTypes = componentAssembly.GetTypes()?.Where(type => type.IsAssignableFrom(dependencyType));
+                    componentTypes = componentAssembly.GetTypes()?.Where(type => dependencyType.IsAssignableFrom(type));
                 }
                 else
                 {
@@ -160,7 +216,7 @@ namespace VirtualClient.Contracts
                     {
                         if (!this.Any(type => type.Type == componentType))
                         {
-                            this.Add(new ComponentType(componentType));
+                            this.Add(new CachedComponentType(componentType));
                         }
                     }
                 }
@@ -171,12 +227,13 @@ namespace VirtualClient.Contracts
     /// <summary>
     /// Represents a cached component type.
     /// </summary>
-    public class ComponentType
+    [DebuggerDisplay("{FullName}")]
+    public class CachedComponentType
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="ComponentType"/> class.
+        /// Initializes a new instance of the <see cref="CachedComponentType"/> class.
         /// </summary>
-        public ComponentType([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] Type type)
+        public CachedComponentType([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] Type type)
         {
             type.ThrowIfNull(nameof(type));
             this.Type = type;

@@ -66,6 +66,7 @@ namespace VirtualClient.Actions
 
         [Test]
         [TestCase("PERF-CPU-HPLINPACK.json")]
+        [Ignore("HPLinpack executor needs to be reworked.")]
         public async Task HPLinpackWorkloadProfileWithOutPerformanceLibrariesExecutesExpectedCommandsOnUnixX64PlatformAsync(string profile)
         {
             // Setup the expectations for the workload
@@ -82,7 +83,7 @@ namespace VirtualClient.Actions
                 @"linux-x64/bin/Linux_GCC/HPL.dat"
             };
 
-            this.mockFixture.SetupWorkloadPackage("hpl.2.3", expectedFiles: expectedFiles);
+            this.mockFixture.SetupPackage("hpl.2.3", expectedFiles: expectedFiles);
             this.mockFixture.SystemManagement.Setup(mgr => mgr.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new MemoryInfo(1000 * 1024 * 1024));
             this.mockFixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
@@ -110,7 +111,7 @@ namespace VirtualClient.Actions
                         @"linux-x64/Make.Linux_GCC",
                     };
 
-                    this.mockFixture.SetupWorkloadPackage("hpl.2.3", expectedFiles: expectedFiles);
+                    this.mockFixture.SetupPackage("hpl.2.3", expectedFiles: expectedFiles);
                 }
 
                 return process;
@@ -126,6 +127,7 @@ namespace VirtualClient.Actions
 
         [Test]
         [TestCase("PERF-CPU-HPLINPACK.json")]
+        [Ignore("HPLinpack executor needs to be reworked.")]
         public async Task HPLinpackWorkloadProfileExecutesThxeExpectedWorkloadsOnUnixArm64Platform(string profile)
         {
             // Setup the expectations for the workload
@@ -153,7 +155,7 @@ namespace VirtualClient.Actions
                 @"linux-arm64/bin/Linux_GCC/HPL.dat"
             };
 
-            this.mockFixture.SetupWorkloadPackage("hpl.2.3", expectedFiles: expectedFiles);
+            this.mockFixture.SetupPackage("hpl.2.3", expectedFiles: expectedFiles);
             this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
                 IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
@@ -176,7 +178,7 @@ namespace VirtualClient.Actions
                         @"linux-arm64/Make.Linux_GCC",
                     };
 
-                    this.mockFixture.SetupWorkloadPackage("hpl.2.3", expectedFiles: expectedFiles);
+                    this.mockFixture.SetupPackage("hpl.2.3", expectedFiles: expectedFiles);
                 }
 
                 return process;

@@ -9,12 +9,14 @@ namespace VirtualClient.Contracts
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.DependencyInjection.Extensions;
     using Moq;
     using Newtonsoft.Json.Linq;
     using NUnit.Framework;
     using VirtualClient.Common;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Telemetry;
+    using VirtualClient.Contracts.Metadata;
 
     [TestFixture]
     [Category("Unit")]
@@ -76,9 +78,10 @@ namespace VirtualClient.Contracts
             // The following information should be copied from the original component to the new component:
             //
             // Properties
-            originalComponent.ExecutionSeed = 7777;
-            originalComponent.FailFast = true;
-            originalComponent.LogToFile = true;
+            originalComponent.Parameters[nameof(VirtualClientComponent.ContentPathTemplate)] = "any/path/template";
+            originalComponent.Parameters[nameof(VirtualClientComponent.Seed)] = 7777;
+            originalComponent.Parameters[nameof(VirtualClientComponent.FailFast)] = true;
+            originalComponent.Parameters[nameof(VirtualClientComponent.LogToFile)] = true;
             originalComponent.SupportedRoles = new List<string> { "Client", "Server" };
 
             // Parameters
@@ -88,7 +91,7 @@ namespace VirtualClient.Contracts
             originalComponent.Metadata.Add("Metadata", 1234);
 
             // Metadata Contract
-            originalComponent.MetadataContract.Add("ScenarioProperty", 9876, MetadataContractCategory.Scenario);
+            originalComponent.MetadataContract.Add("ScenarioProperty", 9876, MetadataContract.ScenarioCategory);
 
             // Extensions
             originalComponent.Extensions.Add("Contacts", JToken.Parse("[ 'virtualclient@microsoft.com' ]"));
@@ -97,10 +100,14 @@ namespace VirtualClient.Contracts
             VirtualClientComponent component = new TestVirtualClientComponent(originalComponent);
 
             Assert.IsTrue(object.ReferenceEquals(originalComponent.Dependencies, component.Dependencies));
+            Assert.AreEqual(originalComponent.AgentId, component.AgentId);
             Assert.AreEqual(originalComponent.ClientRequestId, component.ClientRequestId);
-            Assert.AreEqual(originalComponent.ExecutionSeed, component.ExecutionSeed);
-            Assert.AreEqual(originalComponent.FailFast, component.FailFast);
-            Assert.AreEqual(originalComponent.LogToFile, component.LogToFile);
+            Assert.AreEqual(originalComponent.ComponentType, component.ComponentType);
+            Assert.AreEqual(originalComponent.CpuArchitecture, component.CpuArchitecture);
+            Assert.AreEqual(originalComponent.ExperimentId, component.ExperimentId);
+            Assert.AreEqual(originalComponent.ParametersEvaluated, component.ParametersEvaluated);
+            Assert.AreEqual(originalComponent.Platform, component.Platform);
+            Assert.AreEqual(originalComponent.PlatformSpecifics, component.PlatformSpecifics);
             CollectionAssert.AreEquivalent(originalComponent.SupportedPlatforms, component.SupportedPlatforms);
             CollectionAssert.AreEquivalent(originalComponent.SupportedRoles, component.SupportedRoles);
 
@@ -113,8 +120,8 @@ namespace VirtualClient.Contracts
                 component.Metadata.Select(p => $"{p.Key}={p.Value}"));
 
             CollectionAssert.AreEquivalent(
-                originalComponent.MetadataContract.Get(MetadataContractCategory.Scenario).Select(p => $"{p.Key}={p.Value}"),
-                component.MetadataContract.Get(MetadataContractCategory.Scenario).Select(p => $"{p.Key}={p.Value}"));
+                originalComponent.MetadataContract.Get(MetadataContract.ScenarioCategory).Select(p => $"{p.Key}={p.Value}"),
+                component.MetadataContract.Get(MetadataContract.ScenarioCategory).Select(p => $"{p.Key}={p.Value}"));
 
             Assert.AreEqual(originalComponent.Extensions["Contacts"], component.Extensions["Contacts"]);
         }
@@ -452,7 +459,7 @@ namespace VirtualClient.Contracts
             component.Parameters.Clear();
             await component.ExecuteAsync(CancellationToken.None);
 
-            var messageLogged = this.mockFixture.Logger.MessagesLogged($"{component.TypeName}.ScenarioResult");
+            var messageLogged = this.mockFixture.Logger.MessagesLogged($"{component.TypeName}.SucceededOrFailed");
             Assert.IsTrue(messageLogged.Count() == 1);
 
             EventContext context = messageLogged.First().Item3 as EventContext;
@@ -483,7 +490,7 @@ namespace VirtualClient.Contracts
             component.Parameters[nameof(component.Scenario)] = "AnyScenarioDefined";
             await component.ExecuteAsync(CancellationToken.None);
 
-            var messageLogged = this.mockFixture.Logger.MessagesLogged($"{component.TypeName}.ScenarioResult");
+            var messageLogged = this.mockFixture.Logger.MessagesLogged($"{component.TypeName}.SucceededOrFailed");
             Assert.IsTrue(messageLogged.Count() == 1);
 
             EventContext context = messageLogged.First().Item3 as EventContext;
@@ -516,8 +523,8 @@ namespace VirtualClient.Contracts
 
             await component.ExecuteAsync(CancellationToken.None);
 
-            var messageLogged = this.mockFixture.Logger.MessagesLogged($"{component.TypeName}.ScenarioResult");
-            Assert.IsTrue(messageLogged.Count() == 1);
+            var messageLogged = this.mockFixture.Logger.MessagesLogged($"{component.TypeName}.SucceededOrFailed");
+            Assert.AreEqual(1, messageLogged.Count());
 
             EventContext context = messageLogged.First().Item3 as EventContext;
 
@@ -557,7 +564,7 @@ namespace VirtualClient.Contracts
                 // Exception is expected to surface.
             }
 
-            var messageLogged = this.mockFixture.Logger.MessagesLogged($"{component.TypeName}.ScenarioResult");
+            var messageLogged = this.mockFixture.Logger.MessagesLogged($"{component.TypeName}.SucceededOrFailed");
             Assert.IsTrue(messageLogged.Count() == 1);
 
             EventContext context = messageLogged.First().Item3 as EventContext;
@@ -598,8 +605,8 @@ namespace VirtualClient.Contracts
                 // Exception is expected to surface.
             }
 
-            var messageLogged = this.mockFixture.Logger.MessagesLogged($"{component.TypeName}.ScenarioResult");
-            Assert.IsTrue(messageLogged.Count() == 1);
+            var messageLogged = this.mockFixture.Logger.MessagesLogged($"{component.TypeName}.SucceededOrFailed");
+            Assert.AreEqual(1, messageLogged.Count());
 
             EventContext context = messageLogged.First().Item3 as EventContext;
 
@@ -640,7 +647,7 @@ namespace VirtualClient.Contracts
                 // Exception is expected to surface.
             }
 
-            var messageLogged = this.mockFixture.Logger.MessagesLogged($"{component.TypeName}.ScenarioResult");
+            var messageLogged = this.mockFixture.Logger.MessagesLogged($"{component.TypeName}.SucceededOrFailed");
             Assert.IsTrue(messageLogged.Count() == 1);
 
             EventContext context = messageLogged.First().Item3 as EventContext;

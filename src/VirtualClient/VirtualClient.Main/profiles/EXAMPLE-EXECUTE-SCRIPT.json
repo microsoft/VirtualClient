@@ -2,15 +2,18 @@
     "Description": "Example Script Executor",
     "MinimumExecutionInterval": "00:00:05",
     "Metadata": {
-        "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64"
+        "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64",
+        "ScriptPathParameterUsage": "The Script Path can be an absolute Path, or be relative to the Virtual Client Executable or be relative to platform-specific package if the script is downloaded using DependencyPackageInstallation."
     },
     "Parameters": {
         "CommandLine": "",
         "ScriptPath": "relativePath\\script.sh",
-        "LogPaths":  "relativePath1\\file1;relativePath2\\subFolder1;*.txt",
-        "ToolName":  "",
-        "PackageName":  "exampleWorkload",
-        "FailFast":  false
+        "LogPaths": "relativePath1\\file1;relativePath2\\subFolder1;*.txt",
+        "ToolName": "",
+        "PackageName": "exampleWorkload",
+        "WorkloadPackage": "exampleworkload.1.1.0.zip",
+        "FailFast": false,
+        "RunElevated": false
     },
     "Actions": [
         {
@@ -22,7 +25,8 @@
                 "LogPaths": "$.Parameters.LogPaths",
                 "ToolName": "$.Parameters.ToolName",
                 "PackageName": "$.Parameters.PackageName",
-                "FailFast":  "$.Parameters.FailFast",
+                "FailFast": "$.Parameters.FailFast",
+                "RunElevated": "$.Parameters.RunElevated",
                 "Tags": "Test,VC,Script"
             }
         }
@@ -33,7 +37,7 @@
             "Parameters": {
                 "Scenario": "InstallWorkloadPackage",
                 "BlobContainer": "packages",
-                "BlobName": "exampleworkload.1.1.0.zip",
+                "BlobName": "$.Parameters.WorkloadPackage",
                 "PackageName": "$.Parameters.PackageName",
                 "Extract": true
             }

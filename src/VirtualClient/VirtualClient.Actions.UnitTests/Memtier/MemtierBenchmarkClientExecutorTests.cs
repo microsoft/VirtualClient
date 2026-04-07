@@ -300,7 +300,7 @@ namespace VirtualClient.Actions
 
                 await executor.ExecuteAsync(CancellationToken.None);
 
-                IEnumerable<Tuple<LogLevel, EventId, object, Exception>> metricsEmitted = this.mockFixture.Logger.MessagesLogged(new Regex("ScenarioResult"));
+                IEnumerable<Tuple<LogLevel, EventId, object, Exception>> metricsEmitted = this.mockFixture.Logger.MessagesLogged(new Regex("(ScenarioResult)|(SucceededOrFailed)"));
                 Assert.AreEqual(30, metricsEmitted.Count());
 
                 IEnumerable<string> expectedMetrics = new List<string>
@@ -362,7 +362,7 @@ namespace VirtualClient.Actions
 
                 await executor.ExecuteAsync(CancellationToken.None);
 
-                IEnumerable<Tuple<LogLevel, EventId, object, Exception>> metricsEmitted = this.mockFixture.Logger.MessagesLogged(new Regex("ScenarioResult"));
+                IEnumerable<Tuple<LogLevel, EventId, object, Exception>> metricsEmitted = this.mockFixture.Logger.MessagesLogged(new Regex("(ScenarioResult)|(SucceededOrFailed)"));
                 Assert.AreEqual(141, metricsEmitted.Count());
 
                 IEnumerable<string> expectedMetrics = new List<string>

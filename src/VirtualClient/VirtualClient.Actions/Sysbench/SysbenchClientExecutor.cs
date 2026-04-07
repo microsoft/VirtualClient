@@ -6,7 +6,7 @@ namespace VirtualClient.Actions
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Net;
+    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
@@ -24,8 +24,6 @@ namespace VirtualClient.Actions
     {
         private string sysbenchExecutionArguments;
         private string sysbenchLoggingArguments;
-        private string sysbenchPrepareArguments;
-        private string packageDirectory;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SysbenchClientExecutor"/> class.
@@ -137,9 +135,23 @@ namespace VirtualClient.Actions
                 if (!string.IsNullOrEmpty(text)) 
                 {
                     try
-                    {
+                    {                        
                         SysbenchMetricsParser parser = new SysbenchMetricsParser(text);
                         IList<Metric> metrics = parser.Parse();
+                        string sysbenchVersion = null;
+
+                        var sysbenchVersionMetric = metrics.FirstOrDefault();
+                        if (sysbenchVersionMetric != null && sysbenchVersionMetric.Metadata.TryGetValue("sysbench_version", out var versionValue))
+                        {
+                            sysbenchVersion = versionValue?.ToString();
+                        }
+
+                        if (!string.IsNullOrEmpty(sysbenchVersion))
+                        {
+                            this.MetadataContract.Add("sysbench_version", sysbenchVersion, MetadataContract.DependenciesCategory);
+                        }
+
+                        this.MetadataContract.Apply(telemetryContext);
 
                         this.Logger.LogMetrics(
                             toolName: "Sysbench",
@@ -150,7 +162,8 @@ namespace VirtualClient.Actions
                             null,
                             scenarioArguments: this.sysbenchLoggingArguments,
                             this.Tags,
-                            telemetryContext);
+                            telemetryContext,
+                            toolVersion: sysbenchVersion);
                     }
                     catch (Exception exc)
                     {
@@ -166,154 +179,28 @@ namespace VirtualClient.Actions
             {
                 using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
-                    if (this.Benchmark == BenchmarkName.OLTP)
-                    {
-                        if (this.Action == ClientAction.TruncateDatabase)
-                        {
-                            DependencyPath workloadPackage = await this.GetPackageAsync(this.PackageName, cancellationToken).ConfigureAwait(false);
-                            workloadPackage.ThrowIfNull(this.PackageName);
+                    this.sysbenchLoggingArguments = this.BuildSysbenchLoggingArguments(SysbenchMode.Run);
+                    this.sysbenchExecutionArguments = $"{this.sysbenchLoggingArguments} --workload {this.Workload} --hostIpAddress {this.ServerIpAddress} --durationSecs {this.Duration.TotalSeconds} --password {this.SuperUserPassword}";
 
-                            DependencyPath package = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken);
-                            this.packageDirectory = package.Path;
+                    string script = $"{this.SysbenchPackagePath}/run-workload.py ";
 
-                            await this.TruncateMySQLDatabaseAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
-                        }
-                        else if (this.Action == ClientAction.PopulateDatabase)
-                        {
-                            await this.PrepareOLTPMySQLDatabase(telemetryContext, cancellationToken);
-                        }
-                        else
-                        {
-                            await this.RunOLTPWorkloadAsync(telemetryContext, cancellationToken);
-                        }
-                    }
-                    else if (this.Benchmark == BenchmarkName.TPCC)
+                    using (IProcessProxy process = await this.ExecuteCommandAsync(
+                        SysbenchExecutor.PythonCommand,
+                        script + this.sysbenchExecutionArguments,
+                        this.SysbenchPackagePath,
+                        telemetryContext,
+                        cancellationToken))
                     {
-                        await this.RunTPCCWorkloadAsync(telemetryContext, cancellationToken);
-                    }
-                    else
-                    {
-                        throw new DependencyException(
-                            $"The '{this.Benchmark}' benchmark is not supported with the Sysbench workload. Supported options include: \"OLTP, TPCC\".", 
-                            ErrorReason.NotSupported);
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            await this.LogProcessDetailsAsync(process, telemetryContext, "Sysbench", logToFile: true);
+                            process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadFailed);
+
+                            this.CaptureMetrics(process, telemetryContext, cancellationToken);
+                        }
                     }
                 }
             });
-        }
-
-        private async Task RunOLTPWorkloadAsync(EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            int tableCount = GetTableCount(this.DatabaseScenario, this.TableCount, this.Workload);
-            int threadCount = GetThreadCount(this.SystemManager, this.DatabaseScenario, this.Threads);
-            int recordCount = GetRecordCount(this.SystemManager, this.DatabaseScenario, this.RecordCount);
-
-            this.sysbenchLoggingArguments = $"--dbName {this.DatabaseName} --databaseSystem {this.DatabaseSystem} --benchmark {this.Benchmark} --workload {this.Workload} --threadCount {threadCount} --tableCount {tableCount} --recordCount {recordCount} ";
-            this.sysbenchExecutionArguments = this.sysbenchLoggingArguments + $"--hostIpAddress {this.ServerIpAddress} --durationSecs {this.Duration.TotalSeconds} --password {this.SuperUserPassword}";
-
-            string script = $"{this.SysbenchPackagePath}/run-workload.py ";
-
-            using (IProcessProxy process = await this.ExecuteCommandAsync(
-                SysbenchExecutor.PythonCommand,
-                script + this.sysbenchExecutionArguments,
-                this.SysbenchPackagePath,
-                telemetryContext,
-                cancellationToken))
-            {
-                if (!cancellationToken.IsCancellationRequested)
-                {
-                    await this.LogProcessDetailsAsync(process, telemetryContext, "Sysbench", logToFile: true);
-                    process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadFailed);
-
-                    this.CaptureMetrics(process, telemetryContext, cancellationToken);
-                }
-            }
-        }
-
-        private async Task RunTPCCWorkloadAsync(EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            int tableCount = GetTableCount(this.Scenario, this.TableCount, this.Workload);
-            int threadCount = GetThreadCount(this.SystemManager, this.DatabaseScenario, this.Threads);
-            int warehouseCount = GetWarehouseCount(this.DatabaseScenario, this.WarehouseCount);
-
-            this.sysbenchLoggingArguments = $"--dbName {this.DatabaseName} --databaseSystem {this.DatabaseSystem} --benchmark {this.Benchmark} --workload tpcc --threadCount {threadCount} --tableCount {tableCount} --warehouses {warehouseCount} ";
-            this.sysbenchExecutionArguments = this.sysbenchLoggingArguments + $"--hostIpAddress {this.ServerIpAddress} --durationSecs {this.Duration.TotalSeconds} --password {this.SuperUserPassword}";
-
-            string script = $"{this.SysbenchPackagePath}/run-workload.py ";
-
-            using (IProcessProxy process = await this.ExecuteCommandAsync(
-                SysbenchExecutor.PythonCommand,
-                script + this.sysbenchExecutionArguments,
-                this.SysbenchPackagePath,
-                telemetryContext,
-                cancellationToken))
-            {
-                if (!cancellationToken.IsCancellationRequested)
-                {
-                    await this.LogProcessDetailsAsync(process, telemetryContext, "Sysbench", logToFile: true);
-                    process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadFailed);
-
-                    this.CaptureMetrics(process, telemetryContext, cancellationToken);
-                }
-            }
-        }
-
-        private async Task TruncateMySQLDatabaseAsync(EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            string arguments = $"{this.packageDirectory}/truncate-tables.py --dbName {this.DatabaseName}";
-
-            string serverIps = (this.GetLayoutClientInstances(ClientRole.Server, false) ?? Enumerable.Empty<ClientInstance>())
-                                    .FirstOrDefault()?.IPAddress
-                                    ?? "localhost";
-
-            arguments += $" --clientIps \"{serverIps}\"";
-
-            using (IProcessProxy process = await this.ExecuteCommandAsync(
-                SysbenchExecutor.PythonCommand,
-                arguments,
-                Environment.CurrentDirectory,
-                telemetryContext,
-                cancellationToken))
-            {
-                if (!cancellationToken.IsCancellationRequested)
-                {
-                    await this.LogProcessDetailsAsync(process, telemetryContext, "Sysbench", logToFile: true);
-                    process.ThrowIfDependencyInstallationFailed(process.StandardError.ToString());
-                }
-            }
-        }
-
-        private async Task PrepareOLTPMySQLDatabase(EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            int tableCount = GetTableCount(this.DatabaseScenario, this.TableCount, this.Workload);
-            int threadCount = GetThreadCount(this.SystemManager, this.DatabaseScenario, this.Threads);
-            int recordCount = GetRecordCount(this.SystemManager, this.DatabaseScenario, this.RecordCount);
-
-            this.sysbenchLoggingArguments = $"--dbName {this.DatabaseName} --databaseSystem {this.DatabaseSystem} --benchmark {this.Benchmark} --tableCount {tableCount} --recordCount {recordCount} --threadCount {threadCount}";
-            this.sysbenchPrepareArguments = $"{this.sysbenchLoggingArguments} --password {this.SuperUserPassword}";
-
-            string serverIp = (this.GetLayoutClientInstances(ClientRole.Server, false) ?? Enumerable.Empty<ClientInstance>())
-                                    .FirstOrDefault()?.IPAddress
-                                    ?? "localhost";
-
-            this.sysbenchPrepareArguments += $" --host \"{serverIp}\"";
-
-            string arguments = $"{this.SysbenchPackagePath}/populate-database.py ";
-
-            using (IProcessProxy process = await this.ExecuteCommandAsync(
-                SysbenchExecutor.PythonCommand,
-                arguments + this.sysbenchPrepareArguments,
-                this.SysbenchPackagePath,
-                telemetryContext,
-                cancellationToken))
-            {
-                if (!cancellationToken.IsCancellationRequested)
-                {
-                    await this.LogProcessDetailsAsync(process, telemetryContext, "Sysbench", logToFile: true);
-                    process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
-
-                    this.AddMetric(this.sysbenchLoggingArguments, process, telemetryContext, cancellationToken);
-                }
-            }
         }
     }
 }

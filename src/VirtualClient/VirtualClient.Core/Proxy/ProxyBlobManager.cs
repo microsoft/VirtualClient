@@ -43,10 +43,7 @@ namespace VirtualClient.Proxy
 
             this.ApiClient = apiClient;
             this.StoreDescription = storeDescription;
-
-            this.Source = !string.IsNullOrWhiteSpace(source)
-                ? source
-                : ProxyBlobDescriptor.DefaultSource;
+            this.Source = source;
         }
 
         /// <summary>
@@ -100,13 +97,13 @@ namespace VirtualClient.Proxy
             }
 
             ProxyBlobDescriptor info = new ProxyBlobDescriptor(
-                this.Source,
                 this.StoreDescription.StoreName,
                 blobName,
                 blobDescriptor.ContainerName,
                 blobDescriptor.ContentType ?? "application/octet-stream",
                 blobDescriptor.ContentEncoding.WebName,
-                blobPath);
+                blobPath: blobPath,
+                source: this.Source);
 
             this.BlobDownload?.Invoke(this, new ProxyBlobEventArgs(info));
             HttpResponseMessage response = await this.ApiClient.DownloadBlobAsync(info, downloadStream, cancellationToken)
@@ -126,7 +123,7 @@ namespace VirtualClient.Proxy
             return descriptor;
         }
 
-        public async Task<DependencyDescriptor> UploadBlobAsync(DependencyDescriptor descriptor, Stream uploadStream, CancellationToken cancellationToken, IAsyncPolicy retryPolicy = null)
+        public async Task<DependencyDescriptor> UploadBlobAsync(DependencyDescriptor descriptor, Stream uploadStream, CancellationToken cancellationToken, IDictionary<string, IConvertible> metadata = null, IAsyncPolicy retryPolicy = null)
         {
             descriptor.ThrowIfNull(nameof(descriptor));
             uploadStream.ThrowIfNull(nameof(uploadStream));
@@ -142,13 +139,13 @@ namespace VirtualClient.Proxy
             }
 
             ProxyBlobDescriptor info = new ProxyBlobDescriptor(
-                this.Source,
                 this.StoreDescription.StoreName,
                 blobName,
                 blobDescriptor.ContainerName,
                 blobDescriptor.ContentType ?? "application/octet-stream",
                 blobDescriptor.ContentEncoding.WebName,
-                blobPath);
+                blobPath: blobPath,
+                source: this.Source);
 
             this.BlobUpload?.Invoke(this, new ProxyBlobEventArgs(info));
             HttpResponseMessage response = await this.ApiClient.UploadBlobAsync(info, uploadStream, cancellationToken)

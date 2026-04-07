@@ -50,7 +50,6 @@
             "Type": "MountDisks",
             "Parameters": {
                 "Scenario": "CreateMountPoints",
-                "MountLocation": "Root",
                 "Role": "Server"
             }
         },
@@ -59,7 +58,7 @@
             "Parameters": {
                 "Scenario": "DownloadPostgreSQLServerPackage",
                 "BlobContainer": "packages",
-                "BlobName": "postgresql.14.0.0.rev1.zip",
+                "BlobName": "postgresql.14.0.0.rev3.zip",
                 "PackageName": "postgresql",
                 "Extract": true,
                 "Role": "Server"
@@ -70,7 +69,7 @@
             "Parameters": {
                 "Scenario": "DownloadSysbenchPackage",
                 "BlobContainer": "packages",
-                "BlobName": "sysbench-1.0.20.rev1.zip",
+                "BlobName": "sysbench-1.0.20.rev3.zip",
                 "PackageName": "sysbench",
                 "Extract": true
             }
@@ -118,11 +117,11 @@
         {
             "Type": "SysbenchConfiguration",
             "Parameters": {
-                "Scenario": "PopulatePostgreSQLDatabase",
+                "Scenario": "PreparePostgreSQLDatabase",
+                "Action": "CreateTables",
                 "DatabaseSystem": "PostgreSQL",
                 "Benchmark": "TPCC",
                 "DatabaseName": "$.Parameters.DatabaseName",
-                "WarehouseCount": 1,
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
                 "PackageName": "sysbench",
                 "Role": "Server"
@@ -144,6 +143,7 @@
             "Type": "SysbenchConfiguration",
             "Parameters": {
                 "Scenario": "PopulatePostgreSQLDatabase",
+                "Action": "PopulateTables",
                 "DatabaseSystem": "PostgreSQL",
                 "Benchmark": "TPCC",
                 "DatabaseName": "$.Parameters.DatabaseName",

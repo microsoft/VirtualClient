@@ -118,7 +118,7 @@ namespace VirtualClient.Actions
                 // Choose default file for compression and decompression if files/dirs are not provided.
                 if (string.IsNullOrWhiteSpace(this.InputFilesOrDirs))
                 {
-                    await this.ExecuteCommandAsync("wget", $"https://sun.aei.polsl.pl//~sdeor/corpus/silesia.zip", this.GzipDirectory, cancellationToken);
+                    await this.ExecuteCommandAsync("wget", $"--no-check-certificate https://sun.aei.polsl.pl//~sdeor/corpus/silesia.zip", this.GzipDirectory, cancellationToken);
                     await this.ExecuteCommandAsync("unzip", "silesia.zip -d silesia", this.GzipDirectory, cancellationToken);
                 }
 
@@ -145,7 +145,7 @@ namespace VirtualClient.Actions
                     DateTime start = DateTime.Now;
                     using (IProcessProxy process = this.systemManager.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, commandLineArguments, workingDirectory))
                     {
-                        this.CleanupTasks.Add(() => process.SafeKill());
+                        this.CleanupTasks.Add(() => process.SafeKill(this.Logger));
                         await process.StartAndWaitAsync(cancellationToken).ConfigureAwait();
 
                         if (!cancellationToken.IsCancellationRequested)
@@ -212,6 +212,7 @@ namespace VirtualClient.Actions
                     case LinuxDistribution.AzLinux:
                     case LinuxDistribution.CentOS7:
                     case LinuxDistribution.RHEL7:
+                    case LinuxDistribution.AwsLinux:
                         break;
                     default:
                         throw new WorkloadException(

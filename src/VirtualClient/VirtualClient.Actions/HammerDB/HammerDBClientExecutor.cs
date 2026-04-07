@@ -5,16 +5,12 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
-    using System.Globalization;
-    using System.Linq;
-    using System.Net.Http;
-    using System.Text.RegularExpressions;
+    using System.IO;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
     using Polly;
     using VirtualClient.Common;
-    using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
@@ -25,8 +21,6 @@ namespace VirtualClient.Actions
     /// </summary>
     public class HammerDBClientExecutor : HammerDBExecutor
     {
-        private string hammerDBExecutionArguments;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="HammerDBClientExecutor"/> class.
         /// </summary>
@@ -37,17 +31,6 @@ namespace VirtualClient.Actions
         {
             this.ClientFlowRetryPolicy = Policy.Handle<Exception>().RetryAsync(3);
             this.PollingTimeout = TimeSpan.FromMinutes(40);
-        }
-
-        /// <summary>
-        /// The total time of execution option passed to HammerDB.
-        /// </summary>
-        public TimeSpan Duration
-        {
-            get
-            { 
-                return this.Parameters.GetTimeSpanValue(nameof(HammerDBClientExecutor.Duration), TimeSpan.FromMinutes(5));
-            }
         }
 
         /// <summary>
@@ -121,16 +104,6 @@ namespace VirtualClient.Actions
             return;
         }
 
-        /// <summary>
-        /// Performs initialization operations for the executor.
-        /// </summary>
-        protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            await base.InitializeAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
-
-            this.hammerDBExecutionArguments = $"--runTransactionsTCLFilePath {this.RunTransactionsTclName}";
-        }
-
         private void CaptureMetrics(IProcessProxy process, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             if (!cancellationToken.IsCancellationRequested)
@@ -154,13 +127,13 @@ namespace VirtualClient.Actions
                         this.Logger.LogMetrics(
                             toolName: "HammerDB",
                             scenarioName: this.MetricScenario ?? this.Scenario,
-                            process.StartTime,
-                            process.ExitTime,
-                            metrics,
-                            null,
-                            null,
-                            this.Tags,
-                            telemetryContext);
+                            scenarioStartTime: process.StartTime,
+                            scenarioEndTime: process.ExitTime,
+                            metrics: metrics,
+                            metricCategorization: null,
+                            scenarioArguments: this.HammerDBScenarioArguments,
+                            tags: this.Tags,
+                            eventContext: telemetryContext);
                     }
                     catch (Exception exc)
                     {
@@ -177,11 +150,11 @@ namespace VirtualClient.Actions
                 using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
                     string command = "python3";
-                    string script = $"{this.HammerDBPackagePath}/run-workload.py";
+                    string script = this.PlatformSpecifics.Combine(this.HammerDBPackagePath, "run-workload.py");
 
                     using (IProcessProxy process = await this.ExecuteCommandAsync(
                         command, 
-                        script + " " + this.hammerDBExecutionArguments, 
+                        $"{script} --runTransactionsTCLFilePath {this.RunTransactionsTclName}", 
                         this.HammerDBPackagePath, 
                         telemetryContext, 
                         cancellationToken))

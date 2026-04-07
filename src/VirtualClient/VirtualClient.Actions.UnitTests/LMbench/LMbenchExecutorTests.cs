@@ -5,19 +5,13 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
-    using System.IO;
-    using System.Linq;
-    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
-    using VirtualClient.Common;
     using Microsoft.Extensions.DependencyInjection;
     using Moq;
     using NUnit.Framework;
-    using VirtualClient.Contracts;
     using VirtualClient.Common.Telemetry;
-    using System.Reflection;
+    using VirtualClient.Contracts;
 
     [TestFixture]
     [Category("Unit")]
@@ -27,7 +21,7 @@ namespace VirtualClient.Actions
         private DependencyPath mockPackage;
 
         [SetUp]
-        public void SetupDefaults()
+        public void SetupTest()
         {
             this.Setup(PlatformID.Unix);
 
@@ -35,13 +29,14 @@ namespace VirtualClient.Actions
             // workload is compiled using Make and has a build step that runs the memory test. This uses commands in the
             // 'scripts' folder.
             this.mockPackage = new DependencyPath("lmbench", this.PlatformSpecifics.GetPackagePath("lmbench"));
-            this.PackageManager.OnGetPackage().ReturnsAsync(this.mockPackage);
+            this.SetupPackage(this.mockPackage);
             this.Directory.Setup(dir => dir.Exists(It.IsAny<string>())).Returns(true);
 
             this.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(LMbenchExecutor.PackageName), "lmbench" },
-                { nameof(LMbenchExecutor.CompilerFlags), "CPPFLAGS=\"-I /usr/include/tirpc\"" }
+                { nameof(LMbenchExecutor.CompilerFlags), "CPPFLAGS=\"-I /usr/include/tirpc\"" },
+                { nameof(LMbenchExecutor.Scenario), "Scenario" }
             };
 
             this.ProcessManager.OnProcessCreated = (process) =>
@@ -67,14 +62,36 @@ namespace VirtualClient.Actions
         }
 
         [Test]
+        public async Task LMbenchExecutorExecutesTheExpectedCommandForLatMemRd()
+        {
+            this.Parameters[nameof(LMbenchExecutor.BinaryName)] = "lat_mem_rd";
+            this.Parameters[nameof(LMbenchExecutor.BinaryCommandLine)] = "4096 128";
+
+            this.ProcessManager.OnProcessCreated = (process) =>
+            {
+                string lmbenchOutput = System.IO.File.ReadAllText(this.Combine(LMbenchExecutorTests.Examples, "latmemrd_stride_64_example_results.txt"));
+                process.StandardOutput.Append(lmbenchOutput);
+            };
+
+            using (TestLMbenchExecutor lmbenchExecutor = new TestLMbenchExecutor(this.Dependencies, this.Parameters))
+            {
+                await lmbenchExecutor.ExecuteAsync(EventContext.None, CancellationToken.None);
+
+                Assert.IsTrue(this.ProcessManager.CommandsExecuted(
+                    $"sudo chmod -R 2777 \"/home/user/tools/VirtualClient/packages/lmbench/scripts\"",
+                    $"make build CPPFLAGS=\"-I /usr/include/tirpc\"",
+                    $"/home/user/tools/VirtualClient/packages/lmbench/bin/x86_64-Linux/lat_mem_rd"));
+            }
+        }
+
+        [Test]
         public async Task LMbenchExecutorExecutesTheExpectedLMbenchBenchmarks()
         {
             List<string> expectedBenchmarks = new List<string>
             {
                 "BENCHMARK_BCOPY",
                 "BENCHMARK_MEM",
-                "BENCHMARK_MMAP",
-                "BENCHMARK_FILE"
+                "BENCHMARK_MMAP"
             };
 
             using (TestLMbenchExecutor lmbenchExecutor = new TestLMbenchExecutor(this.Dependencies, this.Parameters))

@@ -155,14 +155,10 @@ namespace VirtualClient.Actions
             this.ThrowIfLayoutNotDefined();
             this.ThrowIfLayoutClientIPAddressNotFound(layoutIPAddress);
 
-            IPackageManager packageManager = this.Dependencies.GetService<IPackageManager>();
-            DependencyPath workloadPackage = await packageManager.GetPlatformSpecificPackageAsync(this.PackageName, this.Platform, this.CpuArchitecture, cancellationToken)
-                .ConfigureAwait(false);
-
+            DependencyPath workloadPackage = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken);
             telemetryContext.AddContext("package", workloadPackage);
 
             this.Role = clientInstance.Role;
-
             this.InitializeApiClients();
 
             // e.g.
@@ -171,14 +167,13 @@ namespace VirtualClient.Actions
             this.ProcessName = "sockperf";
             this.Tool = "SockPerf";
 
-            string resultsDir = this.PlatformSpecifics.Combine(workloadPackage.Path, this.Scenario);
+            string resultsDir = this.Combine(workloadPackage.Path, this.Scenario);
             this.fileSystem.Directory.CreateDirectory(resultsDir);
 
-            this.ResultsPath = this.PlatformSpecifics.Combine(resultsDir, SockPerfClientExecutor2.OutputFileName);
-            this.ExecutablePath = this.PlatformSpecifics.Combine(workloadPackage.Path, "sockperf");
-            await this.SystemManager.MakeFileExecutableAsync(this.ExecutablePath, this.Platform, cancellationToken)
-                .ConfigureAwait(false);
+            this.ResultsPath = this.Combine(resultsDir, SockPerfClientExecutor2.OutputFileName);
+            this.ExecutablePath = this.Combine(workloadPackage.Path, "sockperf");
 
+            await this.SystemManager.MakeFileExecutableAsync(this.ExecutablePath, this.Platform, cancellationToken);
         }
 
         /// <summary>

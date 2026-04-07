@@ -8,15 +8,14 @@ namespace VirtualClient.Actions
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
-    using VirtualClient.Contracts;
 
     /// <summary>
     /// The Generic Script executor for Python
     /// </summary>
+    [SupportedPlatforms("linux-arm64,linux-x64,win-arm64,win-x64")]
     public class PythonExecutor : ScriptExecutor
     {
         private ISystemManagement systemManagement;
@@ -60,17 +59,22 @@ namespace VirtualClient.Actions
 
                 telemetryContext
                    .AddContext(nameof(command), command)
-                   .AddContext(nameof(commandArguments), commandArguments);
+                   .AddContext(nameof(commandArguments), SensitiveData.ObscureSecrets(commandArguments));
 
-                using (IProcessProxy process = await this.ExecuteCommandAsync(command, commandArguments, this.WorkloadPackage.Path, telemetryContext, cancellationToken, false))
+                using (IProcessProxy process = await this.ExecuteCommandAsync(command, commandArguments, this.ExecutableDirectory, telemetryContext, cancellationToken, this.RunElevated))
                 {
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        await this.LogProcessDetailsAsync(process, telemetryContext, this.ToolName);
-                        process.ThrowIfWorkloadFailed();
-
-                        await this.CaptureMetricsAsync(process, telemetryContext, cancellationToken);
-                        await this.CaptureLogsAsync(cancellationToken);
+                        try
+                        {
+                            await this.LogProcessDetailsAsync(process, telemetryContext, this.ToolName);
+                            process.ThrowIfWorkloadFailed();
+                        }
+                        finally
+                        {
+                            await this.CaptureMetricsAsync(process, telemetryContext, cancellationToken);
+                            await this.CaptureLogsAsync(cancellationToken);
+                        }
                     }
                 }
             }
