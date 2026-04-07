@@ -460,7 +460,7 @@ namespace VirtualClient.Actions.NetworkPerformance
         private string GetLinuxSpecificCommandLine()
         {
             string serverIPAddress = this.GetLayoutClientInstances(ClientRole.Server).First().IPAddress;
-            return $"{(this.IsInClientRole ? "-s" : "-r")} " +
+            string commandLine = $"{(this.IsInClientRole ? "-s" : "-r")} " +
                 $"-V " +
                 $"-m {this.ThreadCount},*,{serverIPAddress} " +
                 $"-W {NTttcpExecutor.DefaultWarmupTime.TotalSeconds} " +
@@ -476,6 +476,13 @@ namespace VirtualClient.Actions.NetworkPerformance
                 $"{((this.IsInClientRole && this.ConnectionsPerThread != null) ? $"-l {this.ConnectionsPerThread}" : string.Empty)} " +
                 $"{(this.NoSyncEnabled == true ? "-N" : string.Empty)} " +
                 $"{((this.DevInterruptsDifferentiator != null) ? $"--show-dev-interrupts {this.DevInterruptsDifferentiator}" : string.Empty)}".Trim();
+
+            if (this.IsInClientRole && this.Protocol.ToLowerInvariant() == "tcp")
+            {
+                commandLine += " --show-tcp-retrans";
+            }
+
+            return commandLine.Trim();
         }
     }
 }
