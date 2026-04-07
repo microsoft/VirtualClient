@@ -427,7 +427,7 @@ namespace VirtualClient.Actions
                     int warehouseCount = mode switch
                     {
                         SysbenchMode.Prepare => 1,
-                        SysbenchMode.Populate => warehouseEstimate - 1,
+                        SysbenchMode.Populate => Math.Max(1, warehouseEstimate - 1),
                         SysbenchMode.Run => warehouseEstimate,
                         _ => warehouseEstimate
                     };
