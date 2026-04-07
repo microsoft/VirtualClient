@@ -202,11 +202,11 @@ namespace VirtualClient
 
                     IList<string> validTargets = new List<string>
                     {
-                        CleanTargets.All,
-                        CleanTargets.Logs,
-                        CleanTargets.Packages,
-                        CleanTargets.State,
-                        CleanTargets.Temp
+                        ResourceTargets.All,
+                        ResourceTargets.Logs,
+                        ResourceTargets.Packages,
+                        ResourceTargets.State,
+                        ResourceTargets.Temp
                     };
 
                     IEnumerable<string> otherTargets = targets.Except(validTargets);
@@ -607,6 +607,30 @@ namespace VirtualClient
 
                 return string.Empty;
             }));
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+
+            return option;
+        }
+
+        /// <summary>
+        /// Command line option indicates that VC directories should be isolated to prevent sharing of state and content 
+        /// across multiple instances of the application running on the same system.
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateIsolatedFlag(bool required = true, object defaultValue = null)
+        {
+            Option<IList<string>> option = new Option<IList<string>>(
+                new string[] { "-i", "--isolated" },
+                new ParseArgument<IList<string>>(result => OptionFactory.ParseDelimitedValues(result)))
+            {
+                Name = "IsolationTargets",
+                Description = "Indicates operational directories should be isolated. Valid targets are: logs, state, packages, all. Multiple targets can be defined comma-delimited (e.g. logs,state,packages).",
+                ArgumentHelpName = "target",
+                AllowMultipleArgumentsPerToken = false,
+                Arity = new ArgumentArity(0, 10000)
+            };
 
             OptionFactory.SetOptionRequirements(option, required, defaultValue);
 
@@ -1562,9 +1586,9 @@ namespace VirtualClient
             return fullPath;
         }
 
-        private static string GetValue(ArgumentResult result, bool normalize = false, bool trim = false)
+        private static string GetValue(Token token, bool normalize = false, bool trim = false)
         {
-            string value = result?.Tokens?.FirstOrDefault()?.Value;
+            string value = token?.Value;
             if (normalize && !string.IsNullOrWhiteSpace(value))
             {
                 // System.CommandLine Quirk:
@@ -1586,6 +1610,11 @@ namespace VirtualClient
             }
 
             return value;
+        }
+
+        private static string GetValue(ArgumentResult result, bool normalize = false, bool trim = false)
+        {
+            return OptionFactory.GetValue(result?.Tokens?.FirstOrDefault(), normalize, trim);
         }
 
         private static IList<string> ParseDelimitedValues(string parsedResult)
@@ -1652,7 +1681,8 @@ namespace VirtualClient
                 {
                     if (!string.IsNullOrWhiteSpace(token.Value))
                     {
-                        delimitedValues.AddRange(TextParsingExtensions.ParseDelimitedValues(token.Value));
+                        string normalizedValue = OptionFactory.GetValue(token, normalize: true);
+                        delimitedValues.AddRange(TextParsingExtensions.ParseDelimitedValues(normalizedValue));
                     }
                 }
             }

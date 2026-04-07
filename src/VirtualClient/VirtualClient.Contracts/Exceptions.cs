@@ -4,7 +4,6 @@
 namespace VirtualClient
 {
     using System;
-    using System.Runtime.Serialization;
 
     /// <summary>
     /// Represents an exception/error that occurred during the execution of a monitoring process
@@ -126,6 +125,65 @@ namespace VirtualClient
         /// <param name="innerException">The inner exception.</param>
         /// <param name="reason">The error reason/category.</param>
         public ApiException(string message, Exception innerException, ErrorReason reason)
+            : base(message, innerException, reason)
+        {
+        }
+    }
+
+    /// <summary>
+    /// Represents an exception/error that occurred during the execution of a monitoring process
+    /// on the system.
+    /// </summary>
+    public class ComponentException : VirtualClientException
+    {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ComponentException"/> class.
+        /// </summary>
+        public ComponentException()
+            : base()
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ComponentException"/> class with
+        /// the provided message.
+        /// </summary>
+        /// <param name="message">The exception message.</param>
+        public ComponentException(string message)
+            : base(message)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ComponentException"/> class with
+        /// the provided message.
+        /// </summary>
+        /// <param name="message">The exception message.</param>
+        /// <param name="reason">The error reason/category.</param>
+        public ComponentException(string message, ErrorReason reason)
+            : base(message, reason)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ComponentException"/> class with
+        /// the provided message and inner exception.
+        /// </summary>
+        /// <param name="message">The exception message.</param>
+        /// <param name="innerException">The inner exception.</param>
+        public ComponentException(string message, Exception innerException)
+            : base(message, innerException)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ComponentException"/> class with
+        /// the provided message and inner exception.
+        /// </summary>
+        /// <param name="message">The exception message.</param>
+        /// <param name="innerException">The inner exception.</param>
+        /// <param name="reason">The error reason/category.</param>
+        public ComponentException(string message, Exception innerException, ErrorReason reason)
             : base(message, innerException, reason)
         {
         }

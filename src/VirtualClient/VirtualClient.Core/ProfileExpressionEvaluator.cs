@@ -22,9 +22,9 @@ namespace VirtualClient
     {
         // e.g.
         // {fn(512 / 16)]}
-        // {fn(512 / {LogicalThreadCount})}
+        // {calculate(512 / {LogicalThreadCount})}
         private static readonly Regex CalculateExpression = new Regex(
-            @"\{calculate\(([a-z0-9L\*\/\+\-\^<>=!%\(\)\:\?""'&|_\.\s]+)\)\}",
+            @"\{(?:calculate|fn)\(([a-z0-9L\*\/\+\-\^<>=!%\(\)\:\?""'&|_\.\s\\@]+)\)\}",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         // e.g
@@ -126,8 +126,11 @@ namespace VirtualClient
 
         // e.g.
         // {ExperimentId}
-        private static readonly Regex ExperimentIdExpression = new Regex(
-            @"\{ExperimentId\}",
+        // {ExecutionSystem}
+        // {AgentId}
+        // {ClientId}
+        private static readonly Regex RuntimeInfoExpression = new Regex(
+            @"\{(AgentId|ClientId|ExperimentId|ExecutionSystem)\}",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         /// <summary>
@@ -383,23 +386,43 @@ namespace VirtualClient
                     Outcome = evaluatedExpression
                 });
             }),
-            // Expression: {ExperimentId}
-            // Resolves to the runtime value of ExperimentId.
+            // Expression: {AgentId}, {ClientId}, {ExperimentId}, {System}
+            // Resolves to the runtime values for the current experiment, agent, client, system, or timestamp depending on the expression reference used.
             new Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>((dependencies, parameters, expression) =>
             {
                 bool isMatched = false;
                 string evaluatedExpression = expression;
-                MatchCollection matches = ProfileExpressionEvaluator.ExperimentIdExpression.Matches(expression);
+                MatchCollection matches = ProfileExpressionEvaluator.RuntimeInfoExpression.Matches(expression);
 
                 if (matches?.Any() == true)
                 {
                     isMatched = true;
                     ISystemInfo systemInfo = dependencies.GetService<ISystemInfo>();
-                    string experimentId = systemInfo.ExperimentId;
 
                     foreach (Match match in matches)
                     {
-                        evaluatedExpression = Regex.Replace(evaluatedExpression, match.Value, experimentId);
+                        string replacementValue = null;
+                        string runtimeValue = match.Value.ToLowerInvariant();
+                        switch (runtimeValue)
+                        {
+                            case "{agentid}":
+                            case "{clientid}":
+                                replacementValue = systemInfo.AgentId;
+                                break;
+
+                            case "{experimentid}":
+                                replacementValue = systemInfo.ExperimentId;
+                                break;
+
+                            case "{executionsystem}":
+                                replacementValue = systemInfo.ExecutionSystem ?? string.Empty;
+                                break;
+                        }
+
+                        if (replacementValue != null)
+                        {
+                            evaluatedExpression = Regex.Replace(evaluatedExpression, match.Value, replacementValue);
+                        }
                     }
                 }
 
@@ -613,68 +636,6 @@ namespace VirtualClient
                     Outcome = evaluatedExpression
                 };
             }),
-            ////// Expression: {calculate(512 == 4)}
-            ////// Expression: {calculate(512 > 2)}
-            ////// Expression: {calculate(512 != {LogicalCoreCount})}
-            ////// **IMPORTANT**
-            ////// This expression evaluation MUST come last after arthematic caluculation evaluators.
-            ////new Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>(async (dependencies, parameters, expression) =>
-            ////{
-            ////    bool isMatched = false;
-            ////    string evaluatedExpression = expression;
-            ////    MatchCollection matches = ProfileExpressionEvaluator.CalculateComparisionExpression.Matches(expression);
-
-            ////    if (matches?.Any() == true)
-            ////    {
-            ////        isMatched = true;
-            ////        foreach (Match match in matches)
-            ////        {
-            ////            string function = match.Groups[1].Value;
-            ////            bool result = await Microsoft.CodeAnalysis.CSharp.Scripting.CSharpScript.EvaluateAsync<bool>(function);
-
-            ////            evaluatedExpression = evaluatedExpression.Replace(match.Value, result.ToString());
-            ////        }
-            ////    }
-
-            ////    return new EvaluationResult
-            ////    {
-            ////        IsMatched = isMatched,
-            ////        Outcome = evaluatedExpression
-            ////    };
-            ////}),
-            ////// Expression: {calculate({IsTLSEnabled} ? "Yes" : "No")}
-            ////// Expression: {calculate(calculate(512 == 2) ? "Yes" : "No")}
-            ////// **IMPORTANT**
-            ////// This expression evaluation MUST come last after arthematic/logical/comparative caluculation evaluators.
-            ////new Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>(async (dependencies, parameters, expression) =>
-            ////{
-            ////    bool isMatched = false;
-            ////    string evaluatedExpression = expression;
-            ////    MatchCollection matches = ProfileExpressionEvaluator.CalculateTernaryExpression.Matches(expression);
-
-            ////    if (matches?.Any() == true)
-            ////    {
-            ////        isMatched = true;
-            ////        foreach (Match match in matches)
-            ////        {
-            ////            string function = match.Groups[1].Value;
-
-            ////            function = Regex.Replace(function, @"(?<=\b)(True|False)(?=\s*\?)", m =>
-            ////            {
-            ////                return m.Value.ToLower();
-            ////            });
-
-            ////            string result = await Microsoft.CodeAnalysis.CSharp.Scripting.CSharpScript.EvaluateAsync<string>(function);
-            ////            evaluatedExpression = evaluatedExpression.Replace(match.Value, result.ToString());
-            ////        }
-            ////    }
-
-            ////    return new EvaluationResult
-            ////    {
-            ////        IsMatched = isMatched,
-            ////        Outcome = evaluatedExpression
-            ////    };
-            ////})
         };
 
         /// <summary>
@@ -1022,7 +983,7 @@ namespace VirtualClient
                                         //    Port: 1234
                                         //    Threads: 8
 
-                                        parameters[parameter.Key] = parameters[parameter.Key].ToString().Replace(match.Groups[0].Value, referencedParameterValue.ToString());
+                                        parameters[parameter.Key] = parameters[parameter.Key].ToString().Replace(match.Groups[0].Value, referencedParameterValue?.ToString());
                                     }
                                 }
                             }

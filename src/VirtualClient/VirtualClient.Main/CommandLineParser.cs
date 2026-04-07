@@ -98,6 +98,9 @@ namespace VirtualClient
                 // --fail-fast
                 OptionFactory.CreateFailFastFlag(required: false),
 
+                // --isolated
+                OptionFactory.CreateIsolatedFlag(required: false),
+
                 // --iterations
                 OptionFactory.CreateIterationsOption(required: false),
 

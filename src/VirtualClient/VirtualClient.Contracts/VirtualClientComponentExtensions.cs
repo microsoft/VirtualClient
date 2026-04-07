@@ -165,13 +165,14 @@ namespace VirtualClient.Contracts
         /// True to use a flattened blob virtual path structure for file uploads (e.g. no subdirectories). False to preserve the 
         /// relative subpaths for directories on the file system in the blob virtual paths. Default = true.
         /// </param>
-        public static IEnumerable<FileUploadDescriptor> CreateFileUploadDescriptors(this VirtualClientComponent component, string targetDirectory, string toolName = null, IDictionary<string, IConvertible> parameters = null, IDictionary<string, IConvertible> metadata = null, bool timestamped = true, bool flatten = true)
+        /// <param name="recursive">True to include files in subdirectories. False to include only files in the specified directory. Default = true.</param>
+        public static IEnumerable<FileUploadDescriptor> CreateFileUploadDescriptors(this VirtualClientComponent component, string targetDirectory, string toolName = null, IDictionary<string, IConvertible> parameters = null, IDictionary<string, IConvertible> metadata = null, bool timestamped = true, bool flatten = true, bool recursive = true)
         {
             component.ThrowIfNull(nameof(component));
             targetDirectory.ThrowIfNullOrWhiteSpace(nameof(targetDirectory));
 
             IFileSystem fileSystem = component.Dependencies.GetService<IFileSystem>();
-            IEnumerable<string> filesToUpload = fileSystem.Directory.GetFiles(targetDirectory, "*.*", SearchOption.AllDirectories);
+            IEnumerable<string> filesToUpload = fileSystem.Directory.GetFiles(targetDirectory, "*.*", recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
             List<FileUploadDescriptor> descriptors = new List<FileUploadDescriptor>();
 
             if (filesToUpload?.Any() == true)
@@ -184,17 +185,10 @@ namespace VirtualClient.Contracts
                     if (!flatten)
                     {
                         // Preserve the directory structure in the blob virtual path.
-                        string subDirectory = fileSystem.Path.GetDirectoryName(file).Substring(targetDirectory.Length)?.Trim('\\')?.Trim('/');
-
+                        string subDirectory = fileSystem.GetRelativeSubdirectory(targetDirectory, file);
                         if (!string.IsNullOrWhiteSpace(subDirectory))
                         {
-                            // A relative path within the full file directory path to preserve in the file upload
-                            // descriptor.
-                            // 
-                            // e.g.
-                            // /home/user/virtualclient/logs/directory1/any.log -> /directory1
-                            // /home/user/virtualclient/logs/directory1/directory2/any.log -> /directory1/directory2
-                            relativeSubPath = subDirectory.Trim('\\').Trim('/');
+                            relativeSubPath = subDirectory;
                         }
                     }
 
@@ -287,6 +281,50 @@ namespace VirtualClient.Contracts
         {
             component.ThrowIfNull(nameof(component));
             return component.PlatformSpecifics.GetPackagePath(pathSegments);
+        }
+
+        /// <summary>
+        /// Returns the relative subdirectory for a given file based on the target directory
+        /// (e.g. /home/user/virtualclient/logs/directory1/any.log -> /directory1).
+        /// </summary>
+        /// <param name="fileSystem">The file system interface.</param>
+        /// <param name="rootDirectory">The target/root directory from which the subpath should be determined.</param>
+        /// <param name="filePath">The full path to the file inside of the target directory.</param>
+        public static string GetRelativeSubdirectory(this IFileSystem fileSystem, string rootDirectory, string filePath)
+        {
+            rootDirectory.ThrowIfNullOrWhiteSpace(nameof(rootDirectory), $"The root directory must be defined and cannot be null or whitespace.");
+            filePath.ThrowIfNullOrWhiteSpace(nameof(filePath), $"The file path must be defined and cannot be null or whitespace.");
+
+            if (!filePath.StartsWith(rootDirectory, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new ArgumentException($"The file path '{filePath}' is not within the root/target directory '{rootDirectory}'.");
+            }
+
+            // Preserve the directory structure in the blob virtual path.
+            string relativeSubPath = null;
+            string fileDirectory = fileSystem.Path.GetDirectoryName(filePath)?.Trim();
+
+            if (Regex.IsMatch(fileDirectory, @"^[A-Z]\:\\*$", RegexOptions.IgnoreCase))
+            {
+                relativeSubPath = fileDirectory;
+            }
+            else
+            {
+                relativeSubPath = fileDirectory?.Substring(rootDirectory.Length);
+
+                if (!string.IsNullOrWhiteSpace(relativeSubPath))
+                {
+                    // A relative path within the full file directory path to preserve in the file upload
+                    // descriptor.
+                    // 
+                    // e.g.
+                    // /home/user/virtualclient/logs/directory1/any.log -> /directory1
+                    // /home/user/virtualclient/logs/directory1/directory2/any.log -> /directory1/directory2
+                    relativeSubPath = relativeSubPath.Trim('\\', '/');
+                }
+            }
+
+            return relativeSubPath;
         }
 
         /// <summary>

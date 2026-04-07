@@ -24,8 +24,6 @@ namespace VirtualClient
         /// </summary>
         public static readonly object LockObject = new object();
 
-        private static readonly IList<IFlushableChannel> FlushableDataChannels = new List<IFlushableChannel>();
-
         /// <summary>
         /// Event is fired anytime special instructions are received by a component within a Virtual
         /// Client instance or from a remote instance.
@@ -72,15 +70,14 @@ namespace VirtualClient
         public static IReadOnlyDictionary<string, IConvertible> CommandLineParameters { get; internal set; }
 
         /// <summary>
-        /// The set of flushable logging channels. The application must ensure all logging is flushed before
-        /// exiting to avoid data/telemetry loss.
-        /// </summary>
-        public static List<IFlushableChannel> DataChannels { get; } = new List<IFlushableChannel>();
-
-        /// <summary>
         /// The name of the Virtual Client application/module.
         /// </summary>
         public static string ExecutableName { get; } = Process.GetCurrentProcess().MainModule.FileName;
+
+        /// <summary>
+        /// The time at which the Virtual Client application started execution.
+        /// </summary>
+        public static DateTime ExecutionStartTime { get; } = DateTime.UtcNow;
 
         /// <summary>
         /// A set of one or more tasks (exit) registered to execute before the application
@@ -223,32 +220,6 @@ namespace VirtualClient
                         catch
                         {
                             // Best effort here.
-                        }
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// Executes flush actions before application exit.
-        /// </summary>
-        /// <param name="flushTimeout">A timeout to apply to each of the data channel flush operations.</param>
-        internal static void ExecuteFlushActions(TimeSpan flushTimeout)
-        {
-            if (VirtualClientRuntime.FlushableDataChannels.Any())
-            {
-                lock (VirtualClientRuntime.LockObject)
-                {
-                    foreach (IFlushableChannel dataChannel in VirtualClientRuntime.FlushableDataChannels)
-                    {
-                        try
-                        {
-                            dataChannel.Flush(flushTimeout);
-                        }
-                        catch (Exception exc)
-                        {
-                            // Best effort here.
-                            Console.WriteLine($"Data channel flush error: {exc.Message}");
                         }
                     }
                 }
