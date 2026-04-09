@@ -82,6 +82,15 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// SAN policy is a Windows-only concept. This operation is a no-op on Linux/Unix.
+        /// </summary>
+        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+        public override Task SetSanPolicyAsync(CancellationToken cancellationToken)
+        {
+            return Task.CompletedTask;
+        }
+
+        /// <summary>
         /// Partitions and formats the disk for file system operations.
         /// </summary>
         /// <param name="disk">The disk to partition and format.</param>
