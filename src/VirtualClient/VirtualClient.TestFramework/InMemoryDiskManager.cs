@@ -129,6 +129,15 @@ namespace VirtualClient
             return Task.FromResult((IEnumerable<Disk>)this);
         }
 
+        /// <summary>
+        /// No-op in the test/in-memory disk manager. SAN policy changes are Windows-only.
+        /// </summary>
+        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+        public Task SetSanPolicyAsync(CancellationToken cancellationToken)
+        {
+            return Task.CompletedTask;
+        }
+
         private void AddVolumeToDisk(Disk disk, FileSystemType fileSystemType)
         {
             DiskVolume newVolume = null;
