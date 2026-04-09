@@ -45,5 +45,8 @@ namespace VirtualClient
 
         /// <inheritdoc/>
         public abstract Task<IEnumerable<Disk>> GetDisksAsync(CancellationToken cancellationToken);
+
+        /// <inheritdoc/>
+        public abstract Task SetSanPolicyAsync(CancellationToken cancellationToken);
     }
 }
