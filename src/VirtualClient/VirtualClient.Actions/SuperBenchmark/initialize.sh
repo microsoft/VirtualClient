@@ -1,5 +1,6 @@
 # Ansible will use sudo which needs explicit password input. This command removes that step.
-echo '$1 ALL=(ALL) NOPASSWD:ALL' | (sudo EDITOR='tee -a' visudo) 
+echo "$1 ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/$1
+sudo chmod 440 /etc/sudoers.d/$1
 
 # Remove any existing system-installed Ansible to avoid version conflicts
 sudo apt remove -y ansible || true
