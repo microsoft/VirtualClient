@@ -14,7 +14,7 @@ hardware components</b>. Work is underway with partner teams in Azure to support
 <mark>
 Note that this profile requires the AMD or Nvidia GPU driver + CUDA toolsets to be already installed on the system. The profile does not attempt to install the GPU driver or 
 any of the dependencies required by the driver. If the driver is not already installed, then this profile will fail to capture workload information.
-</mark
+</mark>
 
 * [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-GPU-SUPERBENCH.json) 
 
