@@ -25,10 +25,10 @@ idea. The name of the client must match the name of the system or the value of t
 
 # Multi-System
 # On Client role system...
-./VirtualClient --profile=PERF-MEMCACHED.json --system=Demo --timeout=1440 --clientId=Client01 --layoutPath=/any/path/to/layout.json
+./VirtualClient --profile=PERF-MEMCACHED.json --system=Demo --timeout=1440 --client-id=Client01 --layout=/any/path/to/layout.json
 
 # On Server role system...
-./VirtualClient --profile=PERF-MEMCACHED.json --system=Demo --timeout=1440 --clientId=Server01 --layoutPath=/any/path/to/layout.json
+./VirtualClient --profile=PERF-MEMCACHED.json --system=Demo --timeout=1440 --client-id=Server01 --layout=/any/path/to/layout.json
 
 # Example contents of the 'layout.json' file:
 {
@@ -63,7 +63,7 @@ Runs the Memtier workload against to generate various network traffic patterns a
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
   * Internet connection.
   * The IP addresses defined in the environment layout (see above) for the Client and Server systems must be correct.
-  * The name of the Client and Server instances defined in the environment layout must match the agent/client IDs supplied on the command line (e.g. --agentId)
+  * The name of the Client and Server instances defined in the environment layout must match the agent/client IDs supplied on the command line (e.g. --client-id)
     or must match the name of the system as defined by the operating system itself.
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
@@ -87,7 +87,7 @@ Runs the Memtier workload against to generate various network traffic patterns a
 
   | Server Role Parameter     | Purpose                                                                         | Default Value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
-  | Scenario                  | Scenario use to define the purpose of the action in the profile. This can be used to specify exact actions to run or exclude from the profile. | |
+  | Scenario                  | Scenario used to define the purpose of the action in the profile. This can be used to specify exact actions to run or exclude from the profile. | |
   | BindToCores               | True to instruct the Memcached servers to bind to explicit cores on the system (e.g. 0, 1, 2, 3 ) | |
   | CommandLine               | The command line to use for executing the Memcached server. | |
   | PackageName               | The name of the package that contains the Memcached server binaries/scripts.    |               |
@@ -98,7 +98,7 @@ Runs the Memtier workload against to generate various network traffic patterns a
 
   | Client Role Parameter     | Purpose                                                                         | Default Value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
-  | Scenario                  | Scenario use to define the purpose of the action in the profile. This can be used to specify exact actions to run or exclude from the profile. | |
+  | Scenario                  | Scenario used to define the purpose of the action in the profile. This can be used to specify exact actions to run or exclude from the profile. | |
   | ClientInstances           | Defines the number of concurrent Memtier processes to start for execution of requests against the Memcached server. Note that each client instance will open 1 connection against the server for each --thread and --clients definition (e.g. --threads 16 --clients 16 == 256 connections). Ensure the Memcached server OS limits exceed this number of connections (e.g. ulimit -Sn on Linux).  | 1 |
   | EmitAggregateMetrics      | Optional. "True" to emit aggregate/rollup metrics from all individual Memtier client/Redis server request streams. The profile executes a Redis server per logical processor on the system and can thus emit a lot of metrics. As such emitting the metrics as aggregates of all Redis server processes may be desirable. | false |
   | EmitRawMetrics            | Optional. "True" to emit the raw metrics from each individual Memtier client/Redis server request stream. This is the default option.. | true |
@@ -118,9 +118,9 @@ Runs the Memtier workload against to generate various network traffic patterns a
 
   ``` bash
   # When running on a single system (environment layout not required)
-  ./VirtualClient --profile=PERF-MEMCACHED.json --system=Demo --timeout=250 --packageStore="{BlobConnectionString|SAS Uri}"
+  ./VirtualClient --profile=PERF-MEMCACHED.json --system=Demo --timeout=250
 
   # When running in a client/server environment
-  ./VirtualClient --profile=PERF-MEMCACHED.json --system=Demo --timeout=1440 --clientId=Client01 --parameters="Username=testuser" --layoutPath="/any/path/to/layout.json" --packageStore="{BlobConnectionString|SAS Uri}"
-  ./VirtualClient --profile=PERF-MEMCACHED.json --system=Demo --timeout=1440 --clientId=Server01 --parameters="Username=testuser" --layoutPath="/any/path/to/layout.json" --packageStore="{BlobConnectionString|SAS Uri}"
+  ./VirtualClient --profile=PERF-MEMCACHED.json --system=Demo --timeout=1440 --client-id=Client01 --parameters="Username=testuser" --layout="/any/path/to/layout.json"
+  ./VirtualClient --profile=PERF-MEMCACHED.json --system=Demo --timeout=1440 --client-id=Server01 --parameters="Username=testuser" --layout="/any/path/to/layout.json"
   ```

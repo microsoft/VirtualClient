@@ -20,10 +20,10 @@ idea. The name of the client must match the name of the system or the value of t
 
 ``` bash
 # Client role system
-VirtualClient.exe --profile=PERF-NETWORK.json --system=Demo --timeout=1440 --clientId=Client01 --layoutPath=C:\any\path\to\layout.json
+VirtualClient.exe --profile=PERF-NETWORK.json --system=Demo --timeout=1440 --client-id=Client01 --layout=C:\any\path\to\layout.json
 
 # Server role system
-VirtualClient.exe --profile=PERF-NETWORK.json --system=Demo --timeout=1440 --clientId=Server01 --layoutPath=C:\any\path\to\layout.json
+VirtualClient.exe --profile=PERF-NETWORK.json --system=Demo --timeout=1440 --client-id=Server01 --layout=C:\any\path\to\layout.json
 
 # Example contents of the 'layout.json' file:
 {
@@ -88,7 +88,7 @@ sysctl -w net.core.busy_read=50
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
   * Internet connection.
   * The IP addresses defined in the environment layout (see above) for the Client and Server systems must be correct.
-  * The name of the Client and Server instances defined in the environment layout must match the agent/client IDs supplied on the command line (e.g. --agentId)
+  * The name of the Client and Server instances defined in the environment layout must match the agent/client IDs supplied on the command line (e.g. --client-id)
     or must match the name of the system as defined by the operating system itself.
   * The ports used for each of the network suite workloads (defined in the profile parameters) must NOT be used by other applications or services on the
     systems in which they are running or different ports must be used.
@@ -161,8 +161,8 @@ sysctl -w net.core.busy_read=50
 
   ``` bash
   # On the Client role system
-  ./VirtualClient --profile=PERF-NETWORK.json --system=Demo --timeout=1440 --clientId=Client01 --layoutPath="/any/path/to/layout.json" --packageStore="{BlobConnectionString|SAS Uri}"
+  ./VirtualClient --profile=PERF-NETWORK.json --system=Demo --timeout=1440 --client-id=Client01 --layout="/any/path/to/layout.json"
 
   # On the Server role system
-  ./VirtualClient --profile=PERF-NETWORK.json --system=Demo --timeout=1440 --clientId=Server01 --layoutPath="/any/path/to/layout.json" --packageStore="{BlobConnectionString|SAS Uri}"
+  ./VirtualClient --profile=PERF-NETWORK.json --system=Demo --timeout=1440 --client-id=Server01 --layout="/any/path/to/layout.json"
   ```

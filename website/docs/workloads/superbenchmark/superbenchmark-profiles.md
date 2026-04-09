@@ -11,6 +11,11 @@ The following profiles run customer-representative or benchmarking scenarios usi
 Runs the SuperBenchmark benchmark workload to test GPU performance. <mark>This workload is <b>supported ONLY for systems that contain nVidia GPU
 hardware components</b>. Work is underway with partner teams in Azure to support additional GPU manufacturers.</mark>
 
+<mark>
+Note that this profile requires the AMD or Nvidia GPU driver + CUDA toolsets to be already installed on the system. The profile does not attempt to install the GPU driver or 
+any of the dependencies required by the driver. If the driver is not already installed, then this profile will fail to capture workload information.
+</mark
+
 * [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-GPU-SUPERBENCH.json) 
 
 * **Supported Platform/Architectures**
@@ -22,7 +27,7 @@ hardware components</b>. Work is underway with partner teams in Azure to support
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
   * Internet connection.
-  * The VM must run on hardware containing Nvidia GPU cards/components.
+  * The system must have the GPU driver (e.g. AMD, Nvidia) and related toolsets (e.g. CUDA) installed.
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
   * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)

@@ -6,6 +6,11 @@ The following profile runs the SPECviewperf Workloads.
 ## PERF-GPU-SPECVIEW-AMD.json
 Runs the stock SPECviewperf Workloads.
 
+<mark>
+Note that this profile requires the AMD or Nvidia GPU driver + CUDA toolsets to be already installed on the system. The profile does not attempt to install the GPU driver or 
+any of the dependencies required by the driver. If the driver is not already installed, then this profile will fail to capture workload information.
+</mark
+
 * [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-GPU-SPECVIEW-AMD.json) 
 
 * **Supported Platform/Architectures**
@@ -17,6 +22,7 @@ Runs the stock SPECviewperf Workloads.
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
   * Internet connection.
+  * The system must have the GPU driver (e.g. AMD, Nvidia) and related toolsets (e.g. CUDA) installed.
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
   * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
@@ -24,7 +30,6 @@ Runs the stock SPECviewperf Workloads.
 * **Profile Parameters**  
   | Parameter                 | Purpose                                                                                           | Default Value |
   |---------------------------|---------------------------------------------------------------------------------------------------|---------------|
-  | GpuModel                  | Required. Specify which GPU driver should be installed. Currently supports [AMD v620, AMD mi25]            | None          |
   | Viewsets                  | Optional. Specify which particular benchmarks should be run. See the list of viewsets in the [Workload Details](https://gwpg.spec.org/benchmarks/benchmark/specviewperf-2020-v3-1/) section.                                                                                                                        | "3dsmax,catia"|
   | PsExecSession             | Optional. If specified, specviewperf will be started by PsExec in the specified session.          | -1, specviewperf runs in the current session without psExec.|
 
@@ -38,8 +43,8 @@ Runs the stock SPECviewperf Workloads.
 
   ``` bash
   # Execute the workload profile
-  VirtualClient.exe --profile=PERF-GPU-SPECVIEW-AMD.json --pm="GpuModel=v620" --system=Demo --packageStore="{BlobConnectionString|SAS Uri}"
+  VirtualClient.exe --profile=PERF-GPU-SPECVIEW-AMD.json --parameters="GpuModel=v620" --system=Demo
 
   # Override the profile default parameters to include all viewsets
-  VirtualClient.exe --profile=PERF-GPU-SPECVIEW-AMD.json --pm="GpuModel=v620,,,Viewset=3dsmax,catia,creo,energy,maya,medical,snx,sw" --system=Demo --packageStore="{BlobConnectionString|SAS Uri}"
+  VirtualClient.exe --profile=PERF-GPU-SPECVIEW-AMD.json --parameters="GpuModel=v620,,,Viewset=3dsmax,catia,creo,energy,maya,medical,snx,sw" --system=Demo
   ```

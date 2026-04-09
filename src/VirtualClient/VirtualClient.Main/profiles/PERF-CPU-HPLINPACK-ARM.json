@@ -13,7 +13,7 @@
         "NumberOfProcesses": "{LogicalCoreCount}",
         "PerformanceLibraryVersion": "25.04.1",
         "BindToCores": false,
-        "CCFLAGS": "-O3 -march=native"
+        "CCFLAGS": "-O3 -march=armv8-a"
     },
     "Actions": [
         {

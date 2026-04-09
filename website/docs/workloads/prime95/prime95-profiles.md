@@ -47,11 +47,11 @@ the performance of the CPU over various periods of time while also allowing the 
 
   ```bash
   # Execute the workload profile
-  VirtualClient.exe --profile=PERF-CPU-PRIME95.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
+  VirtualClient.exe --profile=PERF-CPU-PRIME95.json --system=Demo --timeout=1440
 
   # Override the default parameters to run the workload for a longer period of time
-  VirtualClient.exe --profile=PERF-CPU-PRIME95.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters="TimeInMins=240,,,FFTConfiguration=1"
+  VirtualClient.exe --profile=PERF-CPU-PRIME95.json --system=Demo --timeout=1440 --parameters="TimeInMins=240,,,FFTConfiguration=1"
 
   # Override the default parameters to change the "torture settings" when running the workload.
-  VirtualClient.exe --profile=PERF-CPU-PRIME95.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters="MinTortureFFT=1024,,,MaxTortureFFT=4096,,,TortureHyperthreading=0"
+  VirtualClient.exe --profile=PERF-CPU-PRIME95.json --system=Demo --timeout=1440 --parameters="MinTortureFFT=1024,,,MaxTortureFFT=4096,,,TortureHyperthreading=0"
   ```

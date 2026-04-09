@@ -40,7 +40,7 @@ against a baseline. GeekBench is an industry standard benchmarking toolset.
 
   ``` bash
   # Execute the workload profile
-  VirtualClient.exe --profile=PERF-CPU-GEEKBENCH5.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
+  VirtualClient.exe --profile=PERF-CPU-GEEKBENCH5.json --system=Demo --timeout=1440
   ```
 
 ## PERF-CPU-GEEKBENCH.json
@@ -78,5 +78,5 @@ against a baseline. GeekBench is an industry standard benchmarking toolset.
 
   ``` bash
   # Execute the workload profile
-  VirtualClient.exe --profile=PERF-CPU-GEEKBENCH.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
+  VirtualClient.exe --profile=PERF-CPU-GEEKBENCH.json --system=Demo --timeout=1440
   ```

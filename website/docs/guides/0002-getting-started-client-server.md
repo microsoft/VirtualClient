@@ -15,7 +15,7 @@ Redis is a Linux-only workload and will not run on Windows systems.
 
    ``` json
    # The name of the client instance can be the name of the system or may be any
-   # other name desired if the --agentId is provided on the command line.
+   # other name desired if the --client-id is provided on the command line.
    {
        "clients": [
          {
@@ -49,18 +49,18 @@ settings on the systems in order to allow for HTTP traffic on the default port u
 - Run the following command on Client
 
   ``` bash
-  sudo ./VirtualClient --clientId=TestClient --profile=GET-STARTED-REDIS.json --layoutPath=./layout.json
+  sudo ./VirtualClient --client-id=TestClient --profile=GET-STARTED-REDIS.json --layout=./layout.json
   ```
 - Run the following command on Server
 
   ```bash
-  sudo ./VirtualClient --clientId=TestServer --profile=GET-STARTED-REDIS.json --layoutPath=./layout.json
+  sudo ./VirtualClient --client-id=TestServer --profile=GET-STARTED-REDIS.json --layout=./layout.json
   ```
 - Context on the command lines used:
-  - Note that two commands are exactly the same except the `--clientId`. When the client ID is supplied on the command line, it will be the name Virtual Client uses to identify itself.
-    If the `--clientId` is not defined on the command line, the default machine name is used. Whichever name you choose, it must match with the name in the environment layout file.
+  - Note that two commands are exactly the same except the `--client-id`. When the client ID is supplied on the command line, it will be the name Virtual Client uses to identify itself.
+    If the `--client-id` is not defined on the command line, the default machine name is used. Whichever name you choose, it must match with the name in the environment layout file.
 
-  - The `--layoutPath` option should be provided with the path to the environment layout file that was created in the preliminaries above. Each Virtual Client instance
+  - The `--layout` option should be provided with the path to the environment layout file that was created in the preliminaries above. Each Virtual Client instance
     will "look up itself" in the environment layout to discover which role it will play on the system in which it is running (e.g. Client or Server).
 
   - The `--profile` option defines the exact workload or monitor profile(s) to run. Any number of profiles can be defined on the command line. If more than 1 is defined, all
