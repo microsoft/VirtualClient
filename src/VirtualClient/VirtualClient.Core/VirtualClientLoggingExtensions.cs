@@ -424,8 +424,6 @@ namespace VirtualClient
                             component.Roles?.Any() == true ? string.Join(',', component.Roles) : null);
 
                         // Upload the file as-is. If the file was timestamped, then it will be uploaded with that timestamp.
-                        // string subDirectory = fileSystem.GetRelativeSubdirectory(component.GetLogDirectory(), logFilePath);
-                        // FileUploadDescriptor descriptor = component.CreateFileUploadDescriptor(fileContext, timestamped: false, subPath: subDirectory);
                         FileUploadDescriptor descriptor = component.CreateFileUploadDescriptor(fileContext, timestamped: false);
 
                         await component.RequestFileUploadAsync(descriptor);
