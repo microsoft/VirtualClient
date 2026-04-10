@@ -274,7 +274,7 @@ namespace VirtualClient.Actions
                 }
                 else
                 {
-                    Assert.AreEqual(arguments, "systemctl disable nginx", NginxCommand.Stop.ConvertToCommandArgs());
+                    Assert.AreEqual(arguments, "systemctl stop nginx", NginxCommand.Stop.ConvertToCommandArgs());
                 }
 
                 Assert.AreEqual(command, "sudo");
@@ -328,7 +328,7 @@ namespace VirtualClient.Actions
                 }
                 else
                 {
-                    Assert.AreEqual(arguments, "systemctl disable nginx", NginxCommand.Stop.ConvertToCommandArgs());
+                    Assert.AreEqual(arguments, "systemctl stop nginx", NginxCommand.Stop.ConvertToCommandArgs());
                 }
 
                 Assert.AreEqual(command, "sudo");
@@ -379,7 +379,7 @@ namespace VirtualClient.Actions
                     shellScriptCalls++;
                     Assert.AreEqual(workingDir, packagePath);
                 }
-                else if (new[] { "systemctl restart nginx", "systemctl disable nginx"}.Contains(arguments, StringComparer.OrdinalIgnoreCase))
+                else if (new[] { "systemctl restart nginx", "systemctl stop nginx"}.Contains(arguments, StringComparer.OrdinalIgnoreCase))
                 {
                     nginxServiceCalls++;
                     Assert.IsNull(workingDir);
@@ -445,7 +445,7 @@ namespace VirtualClient.Actions
                     // This will ensure nginx version is empty therefore ArgumentException will be thrown.
                     this.memoryProcess.StandardError = new ConcurrentBuffer(new StringBuilder(string.Empty));
                 }
-                else if (arguments == "systemctl disable nginx" || arguments == "bash reset.sh")
+                else if (arguments == "systemctl stop nginx" || arguments == "bash reset.sh")
                 {
                 }
                 else

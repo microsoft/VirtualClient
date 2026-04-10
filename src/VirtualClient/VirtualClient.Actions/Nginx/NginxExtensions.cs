@@ -50,7 +50,7 @@ namespace VirtualClient.Actions
                     return "systemctl restart nginx";
 
                 case NginxCommand.Stop:
-                    return "systemctl disable nginx";
+                    return "systemctl stop nginx";
 
                 case NginxCommand.GetVersion:
                     return "nginx -V";

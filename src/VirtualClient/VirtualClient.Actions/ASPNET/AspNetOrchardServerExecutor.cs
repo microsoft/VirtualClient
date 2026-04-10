@@ -144,8 +144,16 @@ namespace VirtualClient.Actions
             {
                 if (!this.disposed)
                 {
-                    this.KillServerInstancesAsync(null, CancellationToken.None)
-                        .GetAwaiter().GetResult();
+                    try
+                    {
+                        this.KillServerInstancesAsync(EventContext.None, CancellationToken.None)
+                            .GetAwaiter().GetResult();
+                    }
+                    catch
+                    {
+                        // Best-effort cleanup during dispose.
+                    }
+
                     this.disposed = true;
                 }
             }

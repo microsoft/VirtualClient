@@ -6,6 +6,7 @@ namespace VirtualClient.Actions
     using System;
     using System.Collections.Generic;
     using System.Threading;
+    using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
     using Moq;
     using NUnit.Framework;
@@ -46,40 +47,40 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public void BombardierExecutorGetBombardierVersionParsesVersionWithVPrefix()
+        public async Task BombardierExecutorGetBombardierVersionParsesVersionWithVPrefix()
         {
             this.mockFixture.SetupProcessOutput(".*--version.*", "bombardier version v1.2.5 linux/arm64");
 
             using (TestBombardierExecutor executor = new TestBombardierExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
                 executor.PackageDirectory = this.mockPackage.Path;
-                string version = executor.GetBombardierVersion(EventContext.None, CancellationToken.None);
+                string version = await executor.GetBombardierVersionAsync(EventContext.None, CancellationToken.None);
                 Assert.AreEqual("1.2.5", version);
             }
         }
 
         [Test]
-        public void BombardierExecutorGetBombardierVersionParsesVersionWithoutVPrefix()
+        public async Task BombardierExecutorGetBombardierVersionParsesVersionWithoutVPrefix()
         {
             this.mockFixture.SetupProcessOutput(".*--version.*", "bombardier version 1.2.5");
 
             using (TestBombardierExecutor executor = new TestBombardierExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
                 executor.PackageDirectory = this.mockPackage.Path;
-                string version = executor.GetBombardierVersion(EventContext.None, CancellationToken.None);
+                string version = await executor.GetBombardierVersionAsync(EventContext.None, CancellationToken.None);
                 Assert.AreEqual("1.2.5", version);
             }
         }
 
         [Test]
-        public void BombardierExecutorGetBombardierVersionReturnsNullOnUnparsableOutput()
+        public async Task BombardierExecutorGetBombardierVersionReturnsNullOnUnparsableOutput()
         {
             this.mockFixture.SetupProcessOutput(".*--version.*", "unrecognized output");
 
             using (TestBombardierExecutor executor = new TestBombardierExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
                 executor.PackageDirectory = this.mockPackage.Path;
-                string version = executor.GetBombardierVersion(EventContext.None, CancellationToken.None);
+                string version = await executor.GetBombardierVersionAsync(EventContext.None, CancellationToken.None);
                 Assert.IsNull(version);
             }
         }
