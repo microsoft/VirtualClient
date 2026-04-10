@@ -60,7 +60,7 @@ Runs the compression/decompression workloads which measures performance in terms
 
   ```bash
   # Execute the workload profile
-  ./VirtualClient --profile=PERF-COMPRESSION.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
+  ./VirtualClient --profile=PERF-COMPRESSION.json --system=Demo --timeout=1440
 
   # Override the profile default parameters to use a different GCC compiler version
   ./VirtualClient --profile=PERF-COMPRESSION.json --system=Demo --timeout=1440 --parameters="CompilerVersion=11"
@@ -103,7 +103,7 @@ Runs the compression/decompression workloads which measures performance in terms
 
   ```bash
   # Execute the workload profile
-  ./VirtualClient --profile=PERF-COMPRESSION-LZBENCH.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
+  ./VirtualClient --profile=PERF-COMPRESSION-LZBENCH.json --system=Demo --timeout=1440
 
   # Override the profile default parameters to use a different GCC compiler version
   ./VirtualClient --profile=PERF-COMPRESSION-LZBENCH.json --system=Demo --timeout=1440 --parameters="CompilerVersion=11"

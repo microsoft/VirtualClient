@@ -1,0 +1,37 @@
+{
+    "Description": "FLOPs GPU Performance Workload",
+    "Metadata": {
+        "RecommendedMinimumExecutionTime": "02:00:00",
+        "SupportedPlatforms": "win-x64",
+        "SupportedOperatingSystems": "Windows",
+        "PreliminaryRequirements": "Please note that the GPU hardware driver and related toolsets (e.g. Nvidia CUDA) MUST be already installed on the system for the workloads to function correctly."
+    },
+    "Parameters": {
+        "GpuModel": "v620",
+        "LisenceKey": ""
+    },
+    "Actions": [
+        {
+            "Type": "DXFLOPSExecutor",
+            "Parameters": {
+                "Scenario": "MeasureGPUPerformance",
+                "ShaderIterations": 100000,
+                "Precision": "f32",
+                "PackageName": "dx_microbenchmarks",
+                "SupportedPlatforms": "win-x64"
+            }
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallDXMicrobenchmarksPackage",
+                "BlobContainer": "packages",
+                "BlobName": "DXMicrobenchmarks.zip",
+                "PackageName": "dx_microbenchmarks",
+                "Extract": true
+            }
+        }
+    ]
+}

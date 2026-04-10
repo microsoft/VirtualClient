@@ -150,8 +150,6 @@ namespace VirtualClient
 
             EventHubTelemetryChannel channel = new EventHubTelemetryChannel(client, enableDiagnostics: true);
 
-            VirtualClientRuntime.DataChannels.Add(channel);
-            VirtualClientRuntime.CleanupTasks.Add(new Action_(() => channel.Dispose()));
             return channel;
         }
 
@@ -161,7 +159,8 @@ namespace VirtualClient
         /// <param name="eventHubStore">Describes the Event Hub namespace dependency store.</param>
         /// <param name="settings">Defines the settings for each individual Event Hub targeted.</param>
         /// <param name="level">The logging severity level.</param>
-        public static IEnumerable<ILoggerProvider> CreateEventHubLoggerProviders(DependencyEventHubStore eventHubStore, EventHubLogSettings settings, LogLevel level)
+        /// <param name="flushTimeout">A timeout to apply to flush operations.</param>
+        public static IEnumerable<ILoggerProvider> CreateEventHubLoggerProviders(DependencyEventHubStore eventHubStore, EventHubLogSettings settings, LogLevel level, TimeSpan? flushTimeout = null)
         {
             List<ILoggerProvider> loggerProviders = new List<ILoggerProvider>();
 
@@ -198,7 +197,7 @@ namespace VirtualClient
                     };
 
                     // Traces logging is affected by --log-level values defined on the command line.
-                    ILoggerProvider tracesLoggerProvider = new EventHubTelemetryLoggerProvider(tracesChannel, level)
+                    ILoggerProvider tracesLoggerProvider = new EventHubTelemetryLoggerProvider(tracesChannel, level, flushTimeout)
                         .HandleTraces();
 
                     loggerProviders.Add(tracesLoggerProvider);
@@ -217,7 +216,7 @@ namespace VirtualClient
 
                     // Metrics are NOT affected by --log-level values defined on the command line. Metrics are
                     // always written.
-                    ILoggerProvider metricsLoggerProvider = new EventHubTelemetryLoggerProvider(metricsChannel, LogLevel.Trace)
+                    ILoggerProvider metricsLoggerProvider = new EventHubTelemetryLoggerProvider(metricsChannel, LogLevel.Trace, flushTimeout)
                         .HandleMetrics();
 
                     loggerProviders.Add(metricsLoggerProvider);
@@ -236,7 +235,7 @@ namespace VirtualClient
 
                     // System Events are NOT affected by --log-level values defined on the command line. Events are
                     // always written.
-                    ILoggerProvider eventsLoggerProvider = new EventHubTelemetryLoggerProvider(systemEventsChannel, LogLevel.Trace)
+                    ILoggerProvider eventsLoggerProvider = new EventHubTelemetryLoggerProvider(systemEventsChannel, LogLevel.Trace, flushTimeout)
                         .HandleSystemEvents();
 
                     loggerProviders.Add(eventsLoggerProvider);
@@ -583,8 +582,6 @@ namespace VirtualClient
                 };
             }
 
-            VirtualClientRuntime.DataChannels.Add(channel);
-
             return channel;
         }
 
@@ -594,8 +591,9 @@ namespace VirtualClient
         /// <param name="agentId">The ID of the agent as part of the larger experiment in operation.</param>
         /// <param name="experimentId">The ID of the larger experiment in operation.</param>
         /// <param name="platformSpecifics">Provides features for platform-specific operations (e.g. Windows, Unix).</param>
+        /// <param name="executionSystem">The name of the execution system launching the application.</param>
         /// <param name="isolated">Instructs the factory to construct dependencies for cross-process/isolated runs.</param>
-        public static ISystemManagement CreateSystemManager(string agentId, string experimentId, PlatformSpecifics platformSpecifics, bool isolated = false)
+        public static ISystemManagement CreateSystemManager(string agentId, string experimentId, PlatformSpecifics platformSpecifics, string executionSystem = null, bool isolated = false)
         {
             agentId.ThrowIfNullOrWhiteSpace(nameof(agentId));
             experimentId.ThrowIfNullOrWhiteSpace(nameof(experimentId));
@@ -619,6 +617,7 @@ namespace VirtualClient
             return new SystemManagement
             {
                 AgentId = agentId,
+                ExecutionSystem = executionSystem,
                 ExperimentId = experimentId.ToLowerInvariant(),
                 DiskManager = diskManager,
                 FileSystem = fileSystem,

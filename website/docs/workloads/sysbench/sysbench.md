@@ -95,7 +95,7 @@ mysql> SHOW TABLES;
 ```
 
 ## Creating and Distributing a Sysbench Database
-The following process can be used to create and then move the sysbench database. Virtual Client programmatically does then whenever there are extra disks on the
+The following process can be used to create and then move the sysbench database. Virtual Client programmatically does this whenever there are extra disks on the
 system beyond the OS disk.
 
 * [MySQL Option Files](https://dev.mysql.com/doc/refman/8.0/en/option-files.html)

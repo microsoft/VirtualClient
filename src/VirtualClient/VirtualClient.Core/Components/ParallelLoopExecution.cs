@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace VirtualClient.Contracts
+namespace VirtualClient
 {
     using System;
     using System.Collections.Generic;
@@ -12,6 +12,7 @@ namespace VirtualClient.Contracts
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
+    using VirtualClient.Contracts;
 
     /// <summary>
     /// A component that executes a set of child components continuously in parallel and independently.
@@ -45,13 +46,13 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
-        /// The minimum number of times each child component should run. Default set to 0.
+        /// The minimum number of times each child component should run. Default set to 1.
         /// </summary>
         public int MinimumIterations
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.MinimumIterations), 0);
+                return this.Parameters.GetValue<int>(nameof(this.MinimumIterations), 1);
             }
         }
 
@@ -64,15 +65,21 @@ namespace VirtualClient.Contracts
         {
             List<Task> componentTasks = new List<Task>();
             this.timeoutTask = Task.Delay(this.Duration, cancellationToken);
+
             foreach (VirtualClientComponent component in this)
             {
                 if (!VirtualClientComponent.IsSupported(component))
                 {
-                    this.Logger.LogMessage($"{nameof(ParallelLoopExecution)} {component.TypeName} not supported on current platform: {this.PlatformArchitectureName}", LogLevel.Information, telemetryContext);
+                    this.Logger.LogMessage(
+                        $"{nameof(ParallelLoopExecution)} {component.TypeName} not supported on current platform: {this.PlatformArchitectureName}", 
+                        LogLevel.Information, 
+                        telemetryContext);
+
                     continue;
                 }
 
                 // Wrap each component execution in a loop, and ensure we respect the timeout.
+                component.OutputComponentStart();
                 componentTasks.Add(this.ExecuteComponentLoopAsync(component, telemetryContext, cancellationToken));
             }
 
@@ -85,42 +92,38 @@ namespace VirtualClient.Contracts
         /// </summary>
         private async Task ExecuteComponentLoopAsync(VirtualClientComponent component, EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            int iterationCount = 0;
+            int currentIteration = 0;
             while (!cancellationToken.IsCancellationRequested)
             {
                 try
                 {
-                    if (this.timeoutTask.IsCompleted && iterationCount >= this.MinimumIterations)
+                    currentIteration++;
+                    telemetryContext.AddContext("currentIteration", currentIteration);
+
+                    if (this.timeoutTask.IsCompleted && currentIteration > this.MinimumIterations)
                     {
-                        this.Logger.LogMessage($"Stopping {nameof(ParallelLoopExecution)} after Timeout of '{this.Duration}'", LogLevel.Information, telemetryContext);
+                        this.Logger.LogMessage(
+                            $"Parallel execution timed out (timeout = {this.Duration}).",
+                            LogLevel.Trace,
+                            telemetryContext);
+
                         break;
                     }
 
-                    string scenarioMessage = string.IsNullOrWhiteSpace(component.Scenario)
-                    ? $"{nameof(ParallelLoopExecution)} Component = {component.TypeName}"
-                    : $"{nameof(ParallelLoopExecution)} Component = {component.TypeName} (scenario={component.Scenario})";
-
-                    this.Logger.LogMessage(scenarioMessage, LogLevel.Information, telemetryContext);
-
                     // Execute the component task with timeout handling.
                     Task componentExecutionTask = component.ExecuteAsync(cancellationToken);
-
                     Task completedTask = await Task.WhenAny(componentExecutionTask, this.timeoutTask);
 
-                    if (completedTask == this.timeoutTask && iterationCount >= this.MinimumIterations)
+                    if (completedTask == this.timeoutTask && currentIteration >= this.MinimumIterations)
                     {
                         break;
                     }
 
                     await componentExecutionTask;
-                    
-                    iterationCount++;
-
-                    this.Logger.LogMessage($"Iteration {iterationCount} completed for component {component.TypeName}", LogLevel.Information, telemetryContext);
                 }
-                catch (Exception ex)
+                finally
                 {
-                    throw new WorkloadException($"{component.TypeName} task execution failed.", ex, ErrorReason.WorkloadFailed);
+                    currentIteration++;
                 }
             }
         }

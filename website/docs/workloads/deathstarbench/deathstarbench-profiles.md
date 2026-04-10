@@ -24,10 +24,10 @@ idea. The name of the client must match the name of the system or the value of t
 
 # Multi-System
 # On Client Role System...
-./VirtualClient --profile=PERF-NETWORK-DEATHSTARBENCH.json --system=Juno --timeout=1440 --clientId=Client01 --layoutPath=/any/path/to/layout.json
+./VirtualClient --profile=PERF-NETWORK-DEATHSTARBENCH.json --system=Juno --timeout=1440 --client-id=Client01 --layout=/any/path/to/layout.json
 
 # On Server Role System...
-./VirtualClient --profile=PERF-NETWORK-DEATHSTARBENCH.json --system=Juno --timeout=1440 --clientId=Server01 --layoutPath=/any/path/to/layout.json
+./VirtualClient --profile=PERF-NETWORK-DEATHSTARBENCH.json --system=Juno --timeout=1440 --client-id=Server01 --layout=/any/path/to/layout.json
 
 # Example contents of the 'layout.json' file:
 {
@@ -65,7 +65,7 @@ the server between applications in a Docker swarm environment.
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
   * Internet connection.
   * The IP addresses defined in the environment layout (see above) for the Client and Server systems must be correct.
-  * The name of the Client and Server instances defined in the environment layout must match the agent/client IDs supplied on the command line (e.g. --agentId)
+  * The name of the Client and Server instances defined in the environment layout must match the agent/client IDs supplied on the command line (e.g. --client-id)
     or must match the name of the system as defined by the operating system itself.
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
@@ -97,12 +97,12 @@ the server between applications in a Docker swarm environment.
 
   ``` bash
   # When running on a single system (environment layout not required)
-  ./VirtualClient --profile=PERF-NETWORK-DEATHSTARBENCH.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
+  ./VirtualClient --profile=PERF-NETWORK-DEATHSTARBENCH.json --system=Demo --timeout=1440
 
   # Override the profile default parameters
-  ./VirtualClient --profile=PERF-NETWORK-DEATHSTARBENCH.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters="Duration=60s,,,ThreadCount=2,,,ConnectionCount=100"
+  ./VirtualClient --profile=PERF-NETWORK-DEATHSTARBENCH.json --system=Demo --timeout=1440 --parameters="Duration=60s,,,ThreadCount=2,,,ConnectionCount=100"
 
    # When running in a client/server environment
-  ./VirtualClient --profile=PERF-NETWORK-DEATHSTARBENCH.json --system=Demo --timeout=1440 --clientId=Client01 --packageStore="{BlobConnectionString|SAS Uri}" --layoutPath="/any/path/to/layout.json"
-  ./VirtualClient --profile=PERF-NETWORK-DEATHSTARBENCH.json --system=Demo --timeout=1440 --clientId=Server01 --packageStore="{BlobConnectionString|SAS Uri}" --layoutPath="/any/path/to/layout.json"
+  ./VirtualClient --profile=PERF-NETWORK-DEATHSTARBENCH.json --system=Demo --timeout=1440 --client-id=Client01 --layout="/any/path/to/layout.json"
+  ./VirtualClient --profile=PERF-NETWORK-DEATHSTARBENCH.json --system=Demo --timeout=1440 --client-id=Server01 --layout="/any/path/to/layout.json"
   ```

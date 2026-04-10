@@ -365,7 +365,7 @@ following interfaces/classes.
   * StateManager
 
 * **System Management**  
-  Because of there are quite a few different dependency interfaces/classes that are required to support the needs of executing a wide range of workloads on the system, all common
+  Because there are quite a few different dependency interfaces/classes that are required to support the needs of executing a wide range of workloads on the system, all common
   dependencies noted above are consolidated together into a single abstraction to simplify the discovery of what is available. Additionally, there are a few requirements that
   are extensions to behaviors that use the dependencies above that are a part of the system management abstraction. The following interfaces/abstractions provide for the
   common system management features:

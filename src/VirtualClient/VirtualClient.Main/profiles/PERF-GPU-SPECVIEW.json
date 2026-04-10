@@ -1,0 +1,49 @@
+{
+    "Description": "SPEC view GPU Performance Workload",
+    "Metadata": {
+        "RecommendedMinimumExecutionTime": "01:00:00",
+        "SupportedPlatforms": "win-x64",
+        "SupportedOperatingSystems": "Windows",
+        "PreliminaryRequirements": "Please note that the GPU hardware driver and related toolsets (e.g. Nvidia CUDA) MUST be already installed on the system for the workloads to function correctly."
+    },
+    "Parameters": {
+        "Viewsets": "3dsmax,catia",
+        "PsExecSession": -1
+    },
+    "Actions": [
+        {
+            "Type": "SpecViewExecutor",
+            "Parameters": {
+                "Scenario": "SPECviewperf",
+                "Viewsets": "$.Parameters.Viewsets",
+                "PackageName": "specviewperf2020",
+                "PsExecPackageName": "pstools",
+                "PsExecSession": "$.Parameters.PsExecSession",
+                "SupportedPlatforms": "win-x64",
+                "Tags": "GPU,SPECview,Gaming"
+            }
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallPsToolsPackage",
+                "BlobContainer": "packages",
+                "BlobName": "pstools-2.51.zip",
+                "PackageName": "pstools",
+                "Extract": true
+            }
+        },
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallSpecViewWorkloadPackage",
+                "BlobContainer": "packages",
+                "BlobName": "specviewperf2020-3.1.zip",
+                "PackageName": "specviewperf2020",
+                "Extract": true
+            }
+        }
+    ]
+}

@@ -41,10 +41,10 @@ Supports .NET 9 and .NET 10 via the `ParametersOn` conditional parameter system.
 
   ```bash
   # Run with .NET 9 (default)
-  ./VirtualClient --profile=PERF-WEB-ASPNET-TEJSON-WRK.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
+  ./VirtualClient --profile=PERF-WEB-ASPNET-TEJSON-WRK.json --system=Demo --timeout=1440
 
   # Run with .NET 10
-  ./VirtualClient --profile=PERF-WEB-ASPNET-TEJSON-WRK.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters="DotNetVersion=10"
+  ./VirtualClient --profile=PERF-WEB-ASPNET-TEJSON-WRK.json --system=Demo --timeout=1440 --parameters="DotNetVersion=10"
   ```
 
 ## PERF-WEB-ASPNET-TEJSON-WRK-AFFINITY.json
@@ -87,10 +87,10 @@ Includes a warm-up pass before the benchmark measurement. Supports .NET 9 and .N
 
   ```bash
   # Run with default affinity and .NET 9
-  ./VirtualClient --profile=PERF-WEB-ASPNET-TEJSON-WRK-AFFINITY.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
+  ./VirtualClient --profile=PERF-WEB-ASPNET-TEJSON-WRK-AFFINITY.json --system=Demo --timeout=1440
 
   # Run with .NET 10 and custom core affinity
-  ./VirtualClient --profile=PERF-WEB-ASPNET-TEJSON-WRK-AFFINITY.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters="DotNetVersion=10,,,ServerCoreAffinity=0-3,,,ClientCoreAffinity=4-7"
+  ./VirtualClient --profile=PERF-WEB-ASPNET-TEJSON-WRK-AFFINITY.json --system=Demo --timeout=1440 --parameters="DotNetVersion=10,,,ServerCoreAffinity=0-3,,,ClientCoreAffinity=4-7"
   ```
 
 ## PERF-WEB-ASPNET-ORCHARD-WRK.json
@@ -130,5 +130,5 @@ and Wrk benchmarks the `/about` endpoint. Includes a warm-up pass before the ben
 
   ```bash
   # Execute the workload profile
-  ./VirtualClient --profile=PERF-WEB-ASPNET-ORCHARD-WRK.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
+  ./VirtualClient --profile=PERF-WEB-ASPNET-ORCHARD-WRK.json --system=Demo --timeout=1440
   ```

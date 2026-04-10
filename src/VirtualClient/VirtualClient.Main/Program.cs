@@ -47,6 +47,9 @@ namespace VirtualClient
 
             try
             {
+                // Ensure execution start time is set as early as possible.
+                DateTime startTime = VirtualClientRuntime.ExecutionStartTime;
+
                 string[] effectiveArgs = OptionFactory.ApplyBackwardsCompatibility(args);
                 VirtualClientRuntime.CommandLineArguments = effectiveArgs;
 
