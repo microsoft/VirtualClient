@@ -74,7 +74,6 @@ namespace VirtualClient.Actions
                     case "reverse-proxy":
                     case "rp":
                         return "rp";
-                    case "apiwg":
                     case "apigw":
                     case "api-gateway":
                         return "apigw";

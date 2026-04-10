@@ -78,7 +78,6 @@ namespace VirtualClient.Actions
                     case "reverse-proxy":
                     case "rp":
                         return "rp";
-                    case "apiwg":
                     case "apigw":
                     case "api-gateway":
                         return "apigw";
@@ -436,8 +435,6 @@ namespace VirtualClient.Actions
                                 "/bin/bash",
                                 $"-c {wrappedCommand}",
                                 workingDir);
-
-                            process.RedirectStandardInput = true;
                         }
                         else
                         {
