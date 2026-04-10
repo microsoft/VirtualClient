@@ -31,8 +31,15 @@ namespace VirtualClient.Contracts
             // filterName1:value1&filterName2:value2&filterDoesNotRequireValue&filter4:value4
             List<string> filters = filterString.Split("&", StringSplitOptions.RemoveEmptyEntries).ToList();
 
+            // Allow callers to opt into keeping offline disks (e.g. bare/unformatted disks for raw disk I/O).
+            bool includeOffline = filters.Any(f => f.Trim().Equals(Filters.IncludeOffline, StringComparison.OrdinalIgnoreCase));
+
             disks = DiskFilters.FilterStoragePathByPrefix(disks, platform);
-            disks = DiskFilters.FilterOfflineDisksOnWindows(disks, platform);
+            if (!includeOffline)
+            {
+                disks = DiskFilters.FilterOfflineDisksOnWindows(disks, platform);
+            }
+
             disks = DiskFilters.FilterReadOnlyDisksOnWindows(disks, platform);
 
             foreach (string filter in filters)
@@ -84,6 +91,10 @@ namespace VirtualClient.Contracts
                         // C:,D:,
                         // /dev/sda, /dev/sdb
                         disks = DiskFilters.DiskPathFilter(disks, filterValue);
+                        break;
+
+                    case Filters.IncludeOffline:
+                        // Already handled before the filter loop; treated as a no-op here.
                         break;
 
                     default:
@@ -248,6 +259,12 @@ namespace VirtualClient.Contracts
             /// Disk path filter.
             /// </summary>
             public const string DiskPath = "diskpath";
+
+            /// <summary>
+            /// Include offline disks filter. By default offline disks are excluded on Windows.
+            /// Use this filter to include them (e.g. bare/unformatted disks for raw disk I/O).
+            /// </summary>
+            public const string IncludeOffline = "includeoffline";
         }
     }
 }

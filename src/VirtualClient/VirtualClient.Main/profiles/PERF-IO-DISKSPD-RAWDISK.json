@@ -1,0 +1,285 @@
+{
+    "Description": "DiskSpd I/O Stress Performance Workload (Raw Disk / Bare Metal)",
+    "Metadata": {
+        "RecommendedMinimumExecutionTime": "00:30:00",
+        "SupportedPlatforms": "win-x64,win-arm64",
+        "SupportedOperatingSystems": "Windows"
+    },
+    "Parameters": {
+        "DiskFilter": "OsDisk:false&IncludeOffline",
+        "Duration": "00:05:00",
+        "ThreadCount": "{calculate({LogicalCoreCount}/2)}",
+        "QueueDepth": "{calculate(512/{ThreadCount})}",
+        "ProcessModel": "SingleProcess"
+    },
+    "Actions": [
+        {
+            "Type": "DiskSpdExecutor",
+            "Parameters": {
+                "Scenario": "RandomWrite_4k_BlockSize",
+                "MetricScenario": "diskspd_rawdisk_randwrite_4k_d{QueueDepth}_th{ThreadCount}",
+                "PackageName": "diskspd",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "CommandLine": "-b4K -r4K -t{ThreadCount} -o{QueueDepth} -w100 -d{Duration.TotalSeconds} -Suw -W15 -D -L -Rtext",
+                "Duration": "$.Parameters.Duration",
+                "ThreadCount": "$.Parameters.ThreadCount",
+                "QueueDepth": "$.Parameters.QueueDepth",
+                "ProcessModel": "$.Parameters.ProcessModel",
+                "RawDiskTarget": true,
+                "Tags": "IO,DiskSpd,randwrite,rawdisk"
+            }
+        },
+        {
+            "Type": "DiskSpdExecutor",
+            "Parameters": {
+                "Scenario": "RandomWrite_8k_BlockSize",
+                "MetricScenario": "diskspd_rawdisk_randwrite_8k_d{QueueDepth}_th{ThreadCount}",
+                "PackageName": "diskspd",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "CommandLine": "-b8K -r4K -t{ThreadCount} -o{QueueDepth} -w100 -d{Duration.TotalSeconds} -Suw -W15 -D -L -Rtext",
+                "Duration": "$.Parameters.Duration",
+                "ThreadCount": "$.Parameters.ThreadCount",
+                "QueueDepth": "$.Parameters.QueueDepth",
+                "ProcessModel": "$.Parameters.ProcessModel",
+                "RawDiskTarget": true,
+                "Tags": "IO,DiskSpd,randwrite,rawdisk"
+            }
+        },
+        {
+            "Type": "DiskSpdExecutor",
+            "Parameters": {
+                "Scenario": "RandomWrite_16k_BlockSize",
+                "MetricScenario": "diskspd_rawdisk_randwrite_16k_d{QueueDepth}_th{ThreadCount}",
+                "PackageName": "diskspd",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "CommandLine": "-b16K -r4K -t{ThreadCount} -o{QueueDepth} -w100 -d{Duration.TotalSeconds} -Suw -W15 -D -L -Rtext",
+                "Duration": "$.Parameters.Duration",
+                "ThreadCount": "$.Parameters.ThreadCount",
+                "QueueDepth": "$.Parameters.QueueDepth",
+                "ProcessModel": "$.Parameters.ProcessModel",
+                "RawDiskTarget": true,
+                "Tags": "IO,DiskSpd,randwrite,rawdisk"
+            }
+        },
+        {
+            "Type": "DiskSpdExecutor",
+            "Parameters": {
+                "Scenario": "RandomWrite_1024k_BlockSize",
+                "MetricScenario": "diskspd_rawdisk_randwrite_1024k_d{QueueDepth}_th{ThreadCount}",
+                "PackageName": "diskspd",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "CommandLine": "-b1024k -r4K -t{ThreadCount} -o{QueueDepth} -w100 -d{Duration.TotalSeconds} -Suw -W15 -D -L -Rtext",
+                "Duration": "$.Parameters.Duration",
+                "ThreadCount": "$.Parameters.ThreadCount",
+                "QueueDepth": "$.Parameters.QueueDepth",
+                "ProcessModel": "$.Parameters.ProcessModel",
+                "RawDiskTarget": true,
+                "Tags": "IO,DiskSpd,randwrite,rawdisk"
+            }
+        },
+        {
+            "Type": "DiskSpdExecutor",
+            "Parameters": {
+                "Scenario": "SequentialWrite_4k_BlockSize",
+                "MetricScenario": "diskspd_rawdisk_write_4k_d{QueueDepth}_th{ThreadCount}",
+                "PackageName": "diskspd",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "CommandLine": "-b4K -si4K -t{ThreadCount} -o{QueueDepth} -w100 -d{Duration.TotalSeconds} -Suw -W15 -D -L -Rtext",
+                "Duration": "$.Parameters.Duration",
+                "ThreadCount": "$.Parameters.ThreadCount",
+                "QueueDepth": "$.Parameters.QueueDepth",
+                "ProcessModel": "$.Parameters.ProcessModel",
+                "RawDiskTarget": true,
+                "Tags": "IO,DiskSpd,write,rawdisk"
+            }
+        },
+        {
+            "Type": "DiskSpdExecutor",
+            "Parameters": {
+                "Scenario": "SequentialWrite_8k_BlockSize",
+                "MetricScenario": "diskspd_rawdisk_write_8k_d{QueueDepth}_th{ThreadCount}",
+                "PackageName": "diskspd",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "CommandLine": "-b8K -si4K -t{ThreadCount} -o{QueueDepth} -w100 -d{Duration.TotalSeconds} -Suw -W15 -D -L -Rtext",
+                "Duration": "$.Parameters.Duration",
+                "ThreadCount": "$.Parameters.ThreadCount",
+                "QueueDepth": "$.Parameters.QueueDepth",
+                "ProcessModel": "$.Parameters.ProcessModel",
+                "RawDiskTarget": true,
+                "Tags": "IO,DiskSpd,write,rawdisk"
+            }
+        },
+        {
+            "Type": "DiskSpdExecutor",
+            "Parameters": {
+                "Scenario": "SequentialWrite_16k_BlockSize",
+                "MetricScenario": "diskspd_rawdisk_write_16k_d{QueueDepth}_th{ThreadCount}",
+                "PackageName": "diskspd",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "CommandLine": "-b16K -si4K -t{ThreadCount} -o{QueueDepth} -w100 -d{Duration.TotalSeconds} -Suw -W15 -D -L -Rtext",
+                "Duration": "$.Parameters.Duration",
+                "ThreadCount": "$.Parameters.ThreadCount",
+                "QueueDepth": "$.Parameters.QueueDepth",
+                "ProcessModel": "$.Parameters.ProcessModel",
+                "RawDiskTarget": true,
+                "Tags": "IO,DiskSpd,write,rawdisk"
+            }
+        },
+        {
+            "Type": "DiskSpdExecutor",
+            "Parameters": {
+                "Scenario": "SequentialWrite_1024k_BlockSize",
+                "MetricScenario": "diskspd_rawdisk_write_1024k_d{QueueDepth}_th{ThreadCount}",
+                "PackageName": "diskspd",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "CommandLine": "-b1024k -si4K -t{ThreadCount} -o{QueueDepth} -w100 -d{Duration.TotalSeconds} -Suw -W15 -D -L -Rtext",
+                "Duration": "$.Parameters.Duration",
+                "ThreadCount": "$.Parameters.ThreadCount",
+                "QueueDepth": "$.Parameters.QueueDepth",
+                "ProcessModel": "$.Parameters.ProcessModel",
+                "RawDiskTarget": true,
+                "Tags": "IO,DiskSpd,write,rawdisk"
+            }
+        },
+        {
+            "Type": "DiskSpdExecutor",
+            "Parameters": {
+                "Scenario": "RandomRead_4k_BlockSize",
+                "MetricScenario": "diskspd_rawdisk_randread_4k_d{QueueDepth}_th{ThreadCount}",
+                "PackageName": "diskspd",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "CommandLine": "-b4K -r4K -t{ThreadCount} -o{QueueDepth} -w0 -d{Duration.TotalSeconds} -Suw -W15 -D -L -Rtext",
+                "Duration": "$.Parameters.Duration",
+                "ThreadCount": "$.Parameters.ThreadCount",
+                "QueueDepth": "$.Parameters.QueueDepth",
+                "ProcessModel": "$.Parameters.ProcessModel",
+                "RawDiskTarget": true,
+                "Tags": "IO,DiskSpd,randread,rawdisk"
+            }
+        },
+        {
+            "Type": "DiskSpdExecutor",
+            "Parameters": {
+                "Scenario": "RandomRead_8k_BlockSize",
+                "MetricScenario": "diskspd_rawdisk_randread_8k_d{QueueDepth}_th{ThreadCount}",
+                "PackageName": "diskspd",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "CommandLine": "-b8K -r4K -t{ThreadCount} -o{QueueDepth} -w0 -d{Duration.TotalSeconds} -Suw -W15 -D -L -Rtext",
+                "Duration": "$.Parameters.Duration",
+                "ThreadCount": "$.Parameters.ThreadCount",
+                "QueueDepth": "$.Parameters.QueueDepth",
+                "ProcessModel": "$.Parameters.ProcessModel",
+                "RawDiskTarget": true,
+                "Tags": "IO,DiskSpd,randread,rawdisk"
+            }
+        },
+        {
+            "Type": "DiskSpdExecutor",
+            "Parameters": {
+                "Scenario": "RandomRead_16k_BlockSize",
+                "MetricScenario": "diskspd_rawdisk_randread_16k_d{QueueDepth}_th{ThreadCount}",
+                "PackageName": "diskspd",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "CommandLine": "-b16K -r4K -t{ThreadCount} -o{QueueDepth} -w0 -d{Duration.TotalSeconds} -Suw -W15 -D -L -Rtext",
+                "Duration": "$.Parameters.Duration",
+                "ThreadCount": "$.Parameters.ThreadCount",
+                "QueueDepth": "$.Parameters.QueueDepth",
+                "ProcessModel": "$.Parameters.ProcessModel",
+                "RawDiskTarget": true,
+                "Tags": "IO,DiskSpd,randread,rawdisk"
+            }
+        },
+        {
+            "Type": "DiskSpdExecutor",
+            "Parameters": {
+                "Scenario": "RandomRead_1024k_BlockSize",
+                "MetricScenario": "diskspd_rawdisk_randread_1024k_d{QueueDepth}_th{ThreadCount}",
+                "PackageName": "diskspd",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "CommandLine": "-b1024k -r4K -t{ThreadCount} -o{QueueDepth} -w0 -d{Duration.TotalSeconds} -Suw -W15 -D -L -Rtext",
+                "Duration": "$.Parameters.Duration",
+                "ThreadCount": "$.Parameters.ThreadCount",
+                "QueueDepth": "$.Parameters.QueueDepth",
+                "ProcessModel": "$.Parameters.ProcessModel",
+                "RawDiskTarget": true,
+                "Tags": "IO,DiskSpd,randread,rawdisk"
+            }
+        },
+        {
+            "Type": "DiskSpdExecutor",
+            "Parameters": {
+                "Scenario": "SequentialRead_4k_BlockSize",
+                "MetricScenario": "diskspd_rawdisk_read_4k_d{QueueDepth}_th{ThreadCount}",
+                "PackageName": "diskspd",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "CommandLine": "-b4K -si4K -t{ThreadCount} -o{QueueDepth} -w0 -d{Duration.TotalSeconds} -Suw -W15 -D -L -Rtext",
+                "Duration": "$.Parameters.Duration",
+                "ThreadCount": "$.Parameters.ThreadCount",
+                "QueueDepth": "$.Parameters.QueueDepth",
+                "ProcessModel": "$.Parameters.ProcessModel",
+                "RawDiskTarget": true,
+                "Tags": "IO,DiskSpd,read,rawdisk"
+            }
+        },
+        {
+            "Type": "DiskSpdExecutor",
+            "Parameters": {
+                "Scenario": "SequentialRead_8k_BlockSize",
+                "MetricScenario": "diskspd_rawdisk_read_8k_d{QueueDepth}_th{ThreadCount}",
+                "PackageName": "diskspd",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "CommandLine": "-b8K -si4K -t{ThreadCount} -o{QueueDepth} -w0 -d{Duration.TotalSeconds} -Suw -W15 -D -L -Rtext",
+                "Duration": "$.Parameters.Duration",
+                "ThreadCount": "$.Parameters.ThreadCount",
+                "QueueDepth": "$.Parameters.QueueDepth",
+                "ProcessModel": "$.Parameters.ProcessModel",
+                "RawDiskTarget": true,
+                "Tags": "IO,DiskSpd,read,rawdisk"
+            }
+        },
+        {
+            "Type": "DiskSpdExecutor",
+            "Parameters": {
+                "Scenario": "SequentialRead_16k_BlockSize",
+                "MetricScenario": "diskspd_rawdisk_read_16k_d{QueueDepth}_th{ThreadCount}",
+                "PackageName": "diskspd",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "CommandLine": "-b16K -si4K -t{ThreadCount} -o{QueueDepth} -w0 -d{Duration.TotalSeconds} -Suw -W15 -D -L -Rtext",
+                "Duration": "$.Parameters.Duration",
+                "ThreadCount": "$.Parameters.ThreadCount",
+                "QueueDepth": "$.Parameters.QueueDepth",
+                "ProcessModel": "$.Parameters.ProcessModel",
+                "RawDiskTarget": true,
+                "Tags": "IO,DiskSpd,read,rawdisk"
+            }
+        },
+        {
+            "Type": "DiskSpdExecutor",
+            "Parameters": {
+                "Scenario": "SequentialRead_1024k_BlockSize",
+                "MetricScenario": "diskspd_rawdisk_read_1024k_d{QueueDepth}_th{ThreadCount}",
+                "PackageName": "diskspd",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "CommandLine": "-b1024k -si4K -t{ThreadCount} -o{QueueDepth} -w0 -d{Duration.TotalSeconds} -Suw -W15 -D -L -Rtext",
+                "Duration": "$.Parameters.Duration",
+                "ThreadCount": "$.Parameters.ThreadCount",
+                "QueueDepth": "$.Parameters.QueueDepth",
+                "ProcessModel": "$.Parameters.ProcessModel",
+                "RawDiskTarget": true,
+                "Tags": "IO,DiskSpd,read,rawdisk"
+            }
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallDiskSpdPackage",
+                "BlobContainer": "packages",
+                "BlobName": "diskspd.2.0.21.zip",
+                "PackageName": "diskspd",
+                "Extract": true
+            }
+        }
+    ]
+}

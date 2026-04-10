@@ -182,6 +182,25 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// True/false whether to target the raw physical device path directly (e.g. <c>\\.\PhysicalDrive1</c>)
+        /// instead of a test file on a mounted volume. Use this for bare disk (unformatted) scenarios.
+        /// When enabled the <see cref="DiskFill"/> step is skipped and no test file path is appended to
+        /// the DiskSpd command line — the device path is passed instead.
+        /// </summary>
+        public bool RawDiskTarget
+        {
+            get
+            {
+                return this.Parameters.GetValue<bool>(nameof(this.RawDiskTarget), false);
+            }
+
+            set
+            {
+                this.Parameters[nameof(this.RawDiskTarget)] = value;
+            }
+        }
+
+        /// <summary>
         /// The disk I/O queue depth to use for running disk I/O operations. 
         /// Default = 16.
         /// </summary>
@@ -311,8 +330,22 @@ namespace VirtualClient.Actions
         /// <param name="disksToTest">The disks under test.</param>
         protected DiskWorkloadProcess CreateWorkloadProcess(string executable, string commandArguments, string testedInstance, params Disk[] disksToTest)
         {
-            string[] testFiles = disksToTest.Select(disk => this.GetTestFiles(disk.GetPreferredAccessPath(this.Platform))).ToArray();
-            string diskSpdArguments = $"{commandArguments} {string.Join(" ", testFiles)}";
+            string diskSpdArguments;
+            string[] testFiles;
+
+            if (this.RawDiskTarget)
+            {
+                // DiskSpd has a native syntax for targeting a physical drive by its index: #<N>.
+                // This is the correct format for raw physical disk access; DiskSpd uses
+                // IOCTL_DISK_GET_DRIVE_GEOMETRY_EX internally to determine the drive capacity.
+                testFiles = disksToTest.Select(disk => $"#{disk.Index}").ToArray();
+                diskSpdArguments = $"{commandArguments} {string.Join(" ", testFiles)}";
+            }
+            else
+            {
+                testFiles = disksToTest.Select(disk => this.GetTestFiles(disk.GetPreferredAccessPath(this.Platform))).ToArray();
+                diskSpdArguments = $"{commandArguments} {string.Join(" ", testFiles)}";
+            }
 
             IProcessProxy process = this.SystemManagement.ProcessManager.CreateProcess(executable, diskSpdArguments);
 
@@ -665,6 +698,15 @@ namespace VirtualClient.Actions
                     $"Unexpected profile definition. One or more of the actions in the profile does not contain the " +
                     $"required '{nameof(DiskSpdExecutor.DiskFillSize)}' arguments defined. Disk fill actions require the disk fill size " +
                     $"to be defined (e.g. 496G).",
+                    ErrorReason.InvalidProfileDefinition);
+            }
+
+            if (this.RawDiskTarget && this.DiskFill)
+            {
+                throw new WorkloadException(
+                    $"Invalid profile definition. The '{nameof(DiskSpdExecutor.DiskFill)}' option cannot be used together with " +
+                    $"'{nameof(DiskSpdExecutor.RawDiskTarget)}'. Disk fill operations create test files on a mounted volume and are " +
+                    $"not applicable to raw physical device access.",
                     ErrorReason.InvalidProfileDefinition);
             }
         }

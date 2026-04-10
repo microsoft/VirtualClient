@@ -524,5 +524,69 @@ namespace VirtualClient.Contracts
             Assert.AreEqual("/dev/sdi", filteredDisks.ElementAt(30).DevicePath);
             Assert.AreEqual("/dev/sdj", filteredDisks.ElementAt(31).DevicePath);
         }
+
+        [Test]
+        public void DiskFiltersIncludeOfflineFilterKeepsOfflineDisksOnWindows()
+        {
+            // Arrange: create 4 disks; mark one as offline.
+            this.disks = this.mockFixture.CreateDisks(PlatformID.Win32NT, true);
+            this.disks.ElementAt(0).Properties["Status"] = "Online";
+            this.disks.ElementAt(1).Properties["Status"] = "Online";
+            this.disks.ElementAt(2).Properties["Status"] = "Offline (Policy)";
+            this.disks.ElementAt(3).Properties["Status"] = "Online";
+
+            // "none" alone would remove the offline disk; "none&IncludeOffline" should retain it.
+            string filterString = "none&IncludeOffline";
+            IEnumerable<Disk> result = DiskFilters.FilterDisks(this.disks, filterString, PlatformID.Win32NT);
+
+            Assert.AreEqual(4, result.Count());
+            Assert.IsTrue(result.Any(d => d.Properties["Status"].ToString().Contains("Offline")));
+        }
+
+        [Test]
+        public void DiskFiltersIncludeOfflineFilterIsCaseInsensitive()
+        {
+            this.disks = this.mockFixture.CreateDisks(PlatformID.Win32NT, true);
+            this.disks.ElementAt(1).Properties["Status"] = "Offline";
+
+            // All casing variants should be accepted.
+            foreach (string variant in new[] { "none&IncludeOffline", "none&includeoffline", "none&INCLUDEOFFLINE" })
+            {
+                IEnumerable<Disk> result = DiskFilters.FilterDisks(this.disks, variant, PlatformID.Win32NT);
+                Assert.AreEqual(4, result.Count(), $"Expected offline disk retained for filter '{variant}'");
+            }
+        }
+
+        [Test]
+        public void DiskFiltersWithoutIncludeOfflineDoesNotRetainOfflineDisksOnWindows()
+        {
+            this.disks = this.mockFixture.CreateDisks(PlatformID.Win32NT, true);
+            this.disks.ElementAt(2).Properties["Status"] = "Offline (Policy)";
+
+            // Default behaviour: the offline disk is excluded.
+            IEnumerable<Disk> result = DiskFilters.FilterDisks(this.disks, "none", PlatformID.Win32NT);
+
+            Assert.AreEqual(3, result.Count());
+            Assert.IsFalse(result.Any(d => d.Properties.ContainsKey("Status") &&
+                d.Properties["Status"].ToString().Contains("Offline")));
+        }
+
+        [Test]
+        public void DiskFiltersIncludeOfflineCanBeCombinedWithBiggestSizeFilter()
+        {
+            this.disks = this.mockFixture.CreateDisks(PlatformID.Win32NT, true);
+            // Make the offline disk the biggest.
+            this.disks.ElementAt(0).Properties["Size"] = "100 GB";
+            this.disks.ElementAt(1).Properties["Size"] = "100 GB";
+            this.disks.ElementAt(2).Properties["Size"] = "2000 GB";   // offline + biggest
+            this.disks.ElementAt(2).Properties["Status"] = "Offline";
+            this.disks.ElementAt(3).Properties["Size"] = "100 GB";
+
+            string filterString = "BiggestSize&IncludeOffline";
+            IEnumerable<Disk> result = DiskFilters.FilterDisks(this.disks, filterString, PlatformID.Win32NT);
+
+            Assert.AreEqual(1, result.Count());
+            Assert.IsTrue(object.ReferenceEquals(this.disks.ElementAt(2), result.First()));
+        }
     }
 }

@@ -366,6 +366,166 @@ namespace VirtualClient.Actions.DiskPerformance
             }
         }
 
+        [Test]
+        public void DiskSpdExecutorWithRawDiskTargetUsesPhysicalDeviceNumberSyntax_SingleProcessModel()
+        {
+            // Bare disks use VC's internal \\.\.PHYSICALDISK{N} identifier.
+            // The executor uses DiskSpd's native #N syntax (e.g. #1, #2) derived from disk.Index.
+            IEnumerable<Disk> bareDisks = new List<Disk>
+            {
+                this.CreateDisk(1, PlatformID.Win32NT, os: false, @"\\.\PHYSICALDISK1"),
+                this.CreateDisk(2, PlatformID.Win32NT, os: false, @"\\.\PHYSICALDISK2")
+            };
+
+            this.profileParameters[nameof(DiskSpdExecutor.RawDiskTarget)] = true;
+            this.profileParameters[nameof(DiskSpdExecutor.ProcessModel)] = WorkloadProcessModel.SingleProcess;
+
+            List<string> capturedArguments = new List<string>();
+            this.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            {
+                capturedArguments.Add(arguments);
+                return new InMemoryProcess
+                {
+                    StartInfo = new ProcessStartInfo { FileName = exe, Arguments = arguments }
+                };
+            };
+
+            using (TestDiskSpdExecutor executor = new TestDiskSpdExecutor(this.Dependencies, this.profileParameters))
+            {
+                executor.CreateWorkloadProcesses("diskspd.exe", "-b4K -r4K -t1 -o1 -w100", bareDisks, WorkloadProcessModel.SingleProcess);
+            }
+
+            Assert.AreEqual(1, capturedArguments.Count);
+            // DiskSpd #N syntax -- derived from disk.Index, not disk.DevicePath.
+            // DiskSpd uses IOCTL_DISK_GET_DRIVE_GEOMETRY_EX internally; no -c needed.
+            Assert.IsTrue(capturedArguments[0].Contains(" #1"));
+            Assert.IsTrue(capturedArguments[0].Contains(" #2"));
+            // No file path style references should appear.
+            Assert.IsFalse(capturedArguments[0].Contains("diskspd-test.dat"));
+        }
+
+        [Test]
+        public void DiskSpdExecutorWithRawDiskTargetUsesPhysicalDeviceNumberSyntax_SingleProcessPerDiskModel()
+        {
+            IEnumerable<Disk> bareDisks = new List<Disk>
+            {
+                this.CreateDisk(1, PlatformID.Win32NT, os: false, @"\\.\PHYSICALDISK1"),
+                this.CreateDisk(2, PlatformID.Win32NT, os: false, @"\\.\PHYSICALDISK2")
+            };
+
+            this.profileParameters[nameof(DiskSpdExecutor.RawDiskTarget)] = true;
+
+            List<string> capturedArguments = new List<string>();
+            int processCount = 0;
+            this.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            {
+                capturedArguments.Add(arguments);
+                processCount++;
+                return new InMemoryProcess
+                {
+                    StartInfo = new ProcessStartInfo { FileName = exe, Arguments = arguments }
+                };
+            };
+
+            using (TestDiskSpdExecutor executor = new TestDiskSpdExecutor(this.Dependencies, this.profileParameters))
+            {
+                executor.CreateWorkloadProcesses("diskspd.exe", "-b4K -r4K -t1 -o1 -w100", bareDisks, WorkloadProcessModel.SingleProcessPerDisk);
+            }
+
+            Assert.AreEqual(2, processCount);
+            // Each process targets exactly one drive via DiskSpd's #N syntax (derived from disk.Index).
+            Assert.IsTrue(capturedArguments[0].Contains(" #1"));
+            Assert.IsFalse(capturedArguments[0].Contains(" #2"));
+            Assert.IsTrue(capturedArguments[1].Contains(" #2"));
+            Assert.IsFalse(capturedArguments[1].Contains(" #1"));
+        }
+
+        [Test]
+        public void DiskSpdExecutorWithRawDiskTargetDoesNotAppendFilenamesToCommandLine()
+        {
+            Disk bareDisk = this.CreateDisk(1, PlatformID.Win32NT, os: false, @"\\.\PHYSICALDISK1");
+
+            this.profileParameters[nameof(DiskSpdExecutor.RawDiskTarget)] = true;
+
+            string capturedArguments = null;
+            this.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            {
+                capturedArguments = arguments;
+                return new InMemoryProcess
+                {
+                    StartInfo = new ProcessStartInfo { FileName = exe, Arguments = arguments }
+                };
+            };
+
+            using (TestDiskSpdExecutor executor = new TestDiskSpdExecutor(this.Dependencies, this.profileParameters))
+            {
+                executor.CreateWorkloadProcesses(
+                    "diskspd.exe",
+                    "-b4K -r4K -t1 -o1 -w100",
+                    new[] { bareDisk },
+                    WorkloadProcessModel.SingleProcess);
+            }
+
+            Assert.IsNotNull(capturedArguments);
+            // DiskSpd's #N syntax is used -- derived from disk.Index=1.
+            // DiskSpd queries disk capacity via IOCTL; -c and \\.\PhysicalDriveN both cause errors.
+            Assert.IsTrue(capturedArguments.Contains(" #1"));
+            // No test-file extension should be present.
+            Assert.IsFalse(capturedArguments.Contains(".dat"));
+        }
+
+        [Test]
+        public void DiskSpdExecutorWithRawDiskTargetStoresDeviceNumberPathsInTestFiles()
+        {
+            // TestFiles is iterated by DeleteTestFilesAsync. For raw disk targets the paths must be
+            // the #N device number strings -- not file paths and not \\.\.PhysicalDriveN.
+            // File.Exists("#1") returns false, so DeleteTestFilesAsync becomes a correct no-op.
+            IEnumerable<Disk> bareDisks = new List<Disk>
+            {
+                this.CreateDisk(1, PlatformID.Win32NT, os: false, @"\\.\.PHYSICALDISK1"),
+                this.CreateDisk(2, PlatformID.Win32NT, os: false, @"\\.\.PHYSICALDISK2")
+            };
+
+            this.profileParameters[nameof(DiskSpdExecutor.RawDiskTarget)] = true;
+
+            this.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+                new InMemoryProcess { StartInfo = new ProcessStartInfo { FileName = exe, Arguments = arguments } };
+
+            IEnumerable<DiskWorkloadProcess> processes;
+            using (TestDiskSpdExecutor executor = new TestDiskSpdExecutor(this.Dependencies, this.profileParameters))
+            {
+                processes = executor.CreateWorkloadProcesses(
+                    "diskspd.exe", "-b4K -r4K -t1 -o1 -w100", bareDisks, WorkloadProcessModel.SingleProcessPerDisk).ToList();
+            }
+
+            Assert.AreEqual(2, processes.Count());
+            CollectionAssert.AreEqual(new[] { "#1" }, processes.ElementAt(0).TestFiles);
+            CollectionAssert.AreEqual(new[] { "#2" }, processes.ElementAt(1).TestFiles);
+        }
+
+        [Test]
+        public void DiskSpdExecutorRawDiskTargetDefaultsToFalse()
+        {
+            using (TestDiskSpdExecutor executor = new TestDiskSpdExecutor(this.Dependencies, this.profileParameters))
+            {
+                Assert.IsFalse(executor.RawDiskTarget);
+            }
+        }
+
+        [Test]
+        public void DiskSpdExecutorThrowsWhenBothRawDiskTargetAndDiskFillAreEnabled()
+        {
+            this.profileParameters[nameof(DiskSpdExecutor.RawDiskTarget)] = true;
+            this.profileParameters[nameof(DiskSpdExecutor.DiskFill)] = true;
+            this.profileParameters[nameof(DiskSpdExecutor.DiskFillSize)] = "500G";
+
+            using (TestDiskSpdExecutor executor = new TestDiskSpdExecutor(this.Dependencies, this.profileParameters))
+            {
+                WorkloadException exc = Assert.Throws<WorkloadException>(() => executor.Validate());
+                Assert.AreEqual(ErrorReason.InvalidProfileDefinition, exc.Reason);
+            }
+        }
+
         private IEnumerable<Disk> SetupWorkloadScenario(
             bool testRemoteDisks = false, bool testOSDisk = false, string processModel = WorkloadProcessModel.SingleProcess)
         {
