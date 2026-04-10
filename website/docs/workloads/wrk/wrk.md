@@ -138,7 +138,7 @@ parameter in Virtual Client profiles.
 Virtual Client profiles define wrk parameters declaratively. The executor translates them into a wrk command line
 at runtime. For example, the following profile action:
 
-`json
+```json
 {
     "Type": "WrkExecutor",
     "Parameters": {
@@ -152,13 +152,13 @@ at runtime. For example, the following profile action:
         "Role": "Client"
     }
 }
-`
+```
 
 Translates to the following wrk command (assuming server IP `10.0.0.5`):
 
-`
+```
 wrk --latency --threads 64 --connections 4096 --duration 15s --timeout 10s http://10.0.0.5:9876/json
-`
+```
 
 ## Performance Notes
 Generally, the more concurrent connections you configure, the higher the load on the server. At some point, increasing
