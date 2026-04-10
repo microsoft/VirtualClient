@@ -60,7 +60,7 @@ Virtual Client will look for certificates in the following store locations on Wi
   certificates.
 
 ## Event Hubs Authentication
-Virtual Client supports connection string-style as well as URI-style definitions. The the following sections covers authentication options for 
+Virtual Client supports connection string-style as well as URI-style definitions. The following sections cover authentication options for 
 Azure Event Hub namespace access.
 
 ### URI-Style References

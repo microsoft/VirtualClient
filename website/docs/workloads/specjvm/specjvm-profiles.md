@@ -41,5 +41,5 @@ Runs the SPECjvm benchmark workload to evaluate the performance of the core Java
   The following section provides a few basic examples of how to use the workload profile.
 
   ``` bash
-  VirtualClient.exe --profile=PERF-SPECJVM.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
+  VirtualClient.exe --profile=PERF-SPECJVM.json --system=Demo --timeout=1440
   ```

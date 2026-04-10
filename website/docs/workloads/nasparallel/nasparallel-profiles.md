@@ -5,7 +5,7 @@ The following profiles run customer-representative or benchmarking scenarios usi
 * [Client/Server Workloads](../../guides/0020-client-server.md)
 
 ## Client/Server Topology Support
-NAS Parallel workload profiles support running the workload on both a single system as well as in an multi-system, client/server topology. This means that the workload supports
+NAS Parallel workload profiles support running the workload on both a single system as well as in a multi-system, client/server topology. This means that the workload supports
 operation on a single system or on N number of distinct systems. The client/server topology is typically used when it is desirable to include a network component in the
 overall performance evaluation. In a client/server topology, one system operates in the 'Client' role making calls to the system operating in the 'Server' role. 
 The Virtual Client instances running on the client and server systems will synchronize with each other before running the workload. In order to support a client/server topology,
@@ -46,13 +46,13 @@ For different benchmarks with NAS Parallel we have various recommendation on num
 
 # Multi-System
 # On the Client role system (the controller)
-./VirtualClient --profile=PERF-HPC-NASPARALLELBENCH.json --system=Demo --timeout=1440 --clientId=Client01 --layoutPath=/any/path/to/layout.json
+./VirtualClient --profile=PERF-HPC-NASPARALLELBENCH.json --system=Demo --timeout=1440 --client-id=Client01 --layout=/any/path/to/layout.json
 
 # On Server role system #1
-./VirtualClient --profile=PERF-HPC-NASPARALLELBENCH.json --system=Demo --timeout=1440 --clientId=Server01 --layoutPath=/any/path/to/layout.json
+./VirtualClient --profile=PERF-HPC-NASPARALLELBENCH.json --system=Demo --timeout=1440 --client-id=Server01 --layout=/any/path/to/layout.json
 
 # On Server role system #2
-./VirtualClient --profile=PERF-HPC-NASPARALLELBENCH.json --system=Demo --timeout=1440 --clientId=Server02 --layoutPath=/any/path/to/layout.json
+./VirtualClient --profile=PERF-HPC-NASPARALLELBENCH.json --system=Demo --timeout=1440 --client-id=Server02 --layout=/any/path/to/layout.json
 
 # Example contents of the 'layout.json' file:
 {
@@ -77,12 +77,12 @@ For different benchmarks with NAS Parallel we have various recommendation on num
 ```
 
 ## SSH Requirements
-OpenMPI sends messages over port 22 - as well as expects to send messages without having to supply a key or passsword. A secure and safe way is to register an SSH identity with the
+OpenMPI sends messages over port 22 - as well as expects to send messages without having to supply a key or password. A secure and safe way is to register an SSH identity with the
 client machine. Here is an example [blog post](https://linuxize.com/post/how-to-setup-passwordless-ssh-login/) on how to do this. Although the basic steps are:
 - On client, store a private-public key pair under ~/.ssh/id_rsa and ~/.ssh/id_rsa.pub
 - On server, append the id_rsa.pub generated under ~/.ssh/authorized_keys
-- On client, store server fingprints in ~/.ssh/known_hosts 
-- Last when running the profile, supply the username whos .ssh directory contains all of the files just created/edited. 
+- On client, store server fingerprints in ~/.ssh/known_hosts 
+- Last when running the profile, supply the username whose .ssh directory contains all of the files just created/edited. 
 
 ## Resource Requirements
 NPB defines problem classes that control the size of the workload. Classes range from **S** (smallest) to **F** (largest). The default class used in this
@@ -148,7 +148,7 @@ multiple nodes performance.
   * Internet connection.
   * For multi-system scenarios, communications over SSH port 22 must be allowed.
   * The IP addresses defined in the environment layout (see above) for the Client and Server systems must be correct.
-  * The name of the Client and Server instances defined in the environment layout must match the agent/client IDs supplied on the command line (e.g. --agentId)
+  * The name of the Client and Server instances defined in the environment layout must match the agent/client IDs supplied on the command line (e.g. --client-id)
     or must match the name of the system as defined by the operating system itself.
     
   Additional information on individual components that exist within the 'Dependencies' section of the profile can be found in the following locations:
@@ -190,7 +190,7 @@ multiple nodes performance.
   * Internet connection.
   * For multi-system scenarios, communications over SSH port 22 must be allowed.
   * The IP addresses defined in the environment layout (see above) for the Client and Server systems must be correct.
-  * The name of the Client and Server instances defined in the environment layout must match the agent/client IDs supplied on the command line (e.g. --agentId)
+  * The name of the Client and Server instances defined in the environment layout must match the agent/client IDs supplied on the command line (e.g. --client-id)
     or must match the name of the system as defined by the operating system itself.
     
   Additional information on individual components that exist within the 'Dependencies' section of the profile can be found in the following locations:
@@ -214,14 +214,14 @@ multiple nodes performance.
 
   ``` bash
   # When running on a single system (environment layout not required)
-  ./VirtualClient --profile=PERF-HPC-NASPARALLELBENCH.json --system=Demo --timeout=1440 --parameters="Username=testuser" --packageStore="{BlobConnectionString|SAS Uri}"
+  ./VirtualClient --profile=PERF-HPC-NASPARALLELBENCH.json --system=Demo --timeout=1440 --parameters="Username=testuser"
 
    # When running in a client/server environment
-  ./VirtualClient --profile=PERF-HPC-NASPARALLELBENCH.json --system=Demo --timeout=1440 --clientId=Client01 --parameters="Username=testuser" --layoutPath="/any/path/to/layout.json" --packageStore="{BlobConnectionString|SAS Uri}"
-  ./VirtualClient --profile=PERF-HPC-NASPARALLELBENCH.json --system=Demo --timeout=1440 --clientId=Server01 --parameters="Username=testuser" --layoutPath="/any/path/to/layout.json" --packageStore="{BlobConnectionString|SAS Uri}"
+  ./VirtualClient --profile=PERF-HPC-NASPARALLELBENCH.json --system=Demo --timeout=1440 --client-id=Client01 --parameters="Username=testuser" --layout="/any/path/to/layout.json"
+  ./VirtualClient --profile=PERF-HPC-NASPARALLELBENCH.json --system=Demo --timeout=1440 --client-id=Server01 --parameters="Username=testuser" --layout="/any/path/to/layout.json"
 
   # When running in a client/server environment with additional systems
-  ./VirtualClient --profile=PERF-HPC-NASPARALLELBENCH.json --system=Demo --timeout=1440 --clientId=Client01 --parameters="Username=testuser" --layoutPath="/any/path/to/layout.json" --packageStore="{BlobConnectionString|SAS Uri}"
-  ./VirtualClient --profile=PERF-HPC-NASPARALLELBENCH.json --system=Demo --timeout=1440 --clientId=Server01 --parameters="Username=testuser" --layoutPath="/any/path/to/layout.json" --packageStore="{BlobConnectionString|SAS Uri}"
-  ./VirtualClient --profile=PERF-HPC-NASPARALLELBENCH.json --system=Demo --timeout=1440 --clientId=Server02 --parameters="Username=testuser" --layoutPath="/any/path/to/layout.json" --packageStore="{BlobConnectionString|SAS Uri}"
+  ./VirtualClient --profile=PERF-HPC-NASPARALLELBENCH.json --system=Demo --timeout=1440 --client-id=Client01 --parameters="Username=testuser" --layout="/any/path/to/layout.json"
+  ./VirtualClient --profile=PERF-HPC-NASPARALLELBENCH.json --system=Demo --timeout=1440 --client-id=Server01 --parameters="Username=testuser" --layout="/any/path/to/layout.json"
+  ./VirtualClient --profile=PERF-HPC-NASPARALLELBENCH.json --system=Demo --timeout=1440 --client-id=Server02 --parameters="Username=testuser" --layout="/any/path/to/layout.json"
   ```

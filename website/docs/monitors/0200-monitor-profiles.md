@@ -3,14 +3,6 @@ The following sections describe the various monitor profiles that are available 
 define the background monitors that will run on the system. Monitors are often ran in conjunction with workloads (defined in workload profiles) in
 order to capture performance and reliability information from the system while workloads are running.
 
-## MONITORS-NONE.json
-Instructs the Virtual Client to not run any monitors at all.
-
-``` bash
-// Do not run any background monitors.
-VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --profile=MONITORS-NONE.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
-```
-
 ## MONITORS-DEFAULT.json
 The default monitor profile for the Virtual Client. This profile captures performance counters on the system using one or more different specialized
 toolsets. This monitor profile will be used when no other monitor profiles are specified on the command line.
@@ -62,15 +54,20 @@ toolsets. This monitor profile will be used when no other monitor profiles are s
   VirtualClient.exe --profile=MONITORS-DEFAULT.json
 
   # Runs the default monitor profile.
-  VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
+  VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --system=Demo --timeout=1440
 
   # Monitor profile explicitly defined.
-  VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --profile=MONITORS-DEFAULT.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
+  VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --profile=MONITORS-DEFAULT.json --system=Demo --timeout=1440
 
   ```
 
-## MONITORS-GPU-NVIDIA.json
-The monitor profile designed for Nvidia GPU systems. The profile captures counters on Linux systems of Nvidia GPUs with nvidia-smi, and lspci utilities.
+## MONITORS-GPU-AMD.json
+The monitor profile designed for AMD GPU systems.
+
+<mark>
+Note that this profile requires the AMD GPU driver to be already installed on the system. The profile does not attempt to install the GPU driver or 
+any of the dependencies required by the driver. If the driver is not already installed, then this profile will fail to capture monitoring information.
+</mark>
 
 * **Supported Platform/Architectures**  
   * linux-x64
@@ -82,7 +79,55 @@ The monitor profile designed for Nvidia GPU systems. The profile captures counte
   * Ubuntu 22
 
 * **Dependencies**  
-  * The system need to have Nvidia GPU with CUDA installed.
+  * The system must have AMD GPU driver installed.
+
+* **Scenarios**  
+  * Captures performance counters on Linux systems using the AMD-SMI toolset.
+
+* **Profile Parameters**  
+  The following parameters can be optionally supplied on the command line to change this default behavior.
+
+  | Parameter                 | Purpose                                                                         | Default value |
+  |---------------------------|---------------------------------------------------------------------------------|---------------|
+  | Scenario                  | Optional. A description of the purpose of the monitor within the overall profile workflow. |    |
+  | MonitorFrequency          | Optional. Defines the frequency (timespan) at which performance counters will be captured/emitted (e.g. 00:01:00). | 00:05:00 |
+  | MonitorWarmupPeriod       | Optional. Defines a period of time (timespan) to wait before starting to track/capture performance counters (e.g. 00:03:00). This allows the system to get to a more typical operational state and generally results better representation for the counters captured. | 00:05:00 |
+  | MetricFilter              | Optional. A comma-delimited list of performance counter names to capture. The default behavior is to capture/emit all performance counters (e.g. \Processor Information(_Total)\% System Time,\Processor Information(_Total)\% User Time). This allows the profile author to focus on a smaller/specific subset of the counters. This is typically used when a lower monitor frequency is required for higher sample precision to keep the size of the data sets emitted by the Virtual Client to a minimum. | |
+
+* **Profile Runtimes**  
+  1 iteration of the profile = ~5 mins. The profile will begin capturing and emitting information within 5 minutes.
+
+* **Usage Examples**  
+  The following section provides a few basic examples of how to use the workload profile. Additional usage examples can be found in the
+  'Usage Scenarios/Examples' link at the top. Note that the AMD GPU driver must be already installed on the system.
+
+  ``` bash
+  # Run the monitoring facilities only.
+  ./VirtualClient --profile=MONITORS-GPU-AMD.json
+
+  # Monitor profile explicitly defined.
+  ./VirtualClient --profile=PERF-GPU-SUPERBENCH.json --profile=MONITORS-GPU-AMD.json --system=Demo --timeout=1440
+
+
+## MONITORS-GPU-NVIDIA.json
+The monitor profile designed for Nvidia GPU systems. The profile captures counters on Linux systems of Nvidia GPUs with nvidia-smi, and lspci utilities.
+
+<mark>
+Note that this profile requires the Nvidia GPU driver and CUDA toolsets to be already installed on the system. The profile does not attempt to install the GPU driver or 
+any of the dependencies required by the driver. If the driver is not already installed, then this profile will fail to capture monitoring information.
+</mark>
+
+* **Supported Platform/Architectures**  
+  * linux-x64
+  * linux-arm64
+
+* **Supported Operating Systems**
+  * Ubuntu 18
+  * Ubuntu 20
+  * Ubuntu 22
+
+* **Dependencies**  
+  * The system must have Nvidia GPU driver with CUDA installed.
 
 * **Scenarios**  
   * Captures performance counters on Linux systems using [nvidia-smi](./0300-nvidia-smi.md)
@@ -103,13 +148,13 @@ The monitor profile designed for Nvidia GPU systems. The profile captures counte
 
 * **Usage Examples**  
   The following section provides a few basic examples of how to use the workload profile. Additional usage examples can be found in the
-  'Usage Scenarios/Examples' link at the top.
+  'Usage Scenarios/Examples' link at the top. Note that the Nvidia GPU driver and CUDA toolsets must be already installed on the system.
 
   ``` bash
   # Run the monitoring facilities only.
   ./VirtualClient --profile=MONITORS-GPU-NVIDIA.json
 
   # Monitor profile explicitly defined.
-  ./VirtualClient --profile=PERF-GPU-MLPERF.json --profile=MONITORS-GPU-NVIDIA.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
+  ./VirtualClient --profile=PERF-GPU-SUPERBENCH.json --profile=MONITORS-GPU-NVIDIA.json --system=Demo --timeout=1440
 
   ```

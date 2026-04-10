@@ -44,14 +44,14 @@ to the system if desired.
 
   ```bash
   # Execute the workload profile
-  ./VirtualClient --profile=PERF-MEM-STRESSAPPTEST.json --system=Demo --timeout=90 --packageStore="{BlobConnectionString|SAS Uri}"
+  ./VirtualClient --profile=PERF-MEM-STRESSAPPTEST.json --system=Demo --timeout=90
 
   # Override the default parameters to run the workload for a longer period of time
-  ./VirtualClient --profile=PERF-MEM-STRESSAPPTEST.json --system=Demo --timeout=90 --packageStore="{BlobConnectionString|SAS Uri}" --parameters="Duration=240"
+  ./VirtualClient --profile=PERF-MEM-STRESSAPPTEST.json --system=Demo --timeout=90 --parameters="Duration=240"
 
   # Override the default parameters to change the "torture settings" when running the workload.
-  ./VirtualClient --profile=PERF-MEM-STRESSAPPTEST.json --system=Demo --timeout=90 --packageStore="{BlobConnectionString|SAS Uri}" --parameters="Duration=240,,,UseCpuStressfulMemoryCopy=true"
+  ./VirtualClient --profile=PERF-MEM-STRESSAPPTEST.json --system=Demo --timeout=90 --parameters="Duration=240,,,UseCpuStressfulMemoryCopy=true"
 
   # Limit memory to 2048 MB with 8 memory threads and 4 CPU stress threads
-  ./VirtualClient --profile=PERF-MEM-STRESSAPPTEST.json --system=Demo --timeout=90 --packageStore="{BlobConnectionString|SAS Uri}" --parameters="Duration=240,,,MemoryInMB=2048,,,ThreadCount=8,,,CpuStressThreadCount=4"
+  ./VirtualClient --profile=PERF-MEM-STRESSAPPTEST.json --system=Demo --timeout=90 --parameters="Duration=240,,,MemoryInMB=2048,,,ThreadCount=8,,,CpuStressThreadCount=4"
   ```

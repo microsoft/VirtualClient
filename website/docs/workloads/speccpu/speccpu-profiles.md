@@ -63,7 +63,7 @@ for evaluating the performance of the CPU for processing calculations.
 
   ``` csharp
   # Execute the workload profile
-  ./VirtualClient --profile=PERF-SPECCPU-FPRATE.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
+  ./VirtualClient --profile=PERF-SPECCPU-FPRATE.json --system=Azure --timeout=1440
   ```
 
 ## PERF-SPECCPU-FPSPEED.json
@@ -117,7 +117,7 @@ for evaluating the performance of the CPU for processing calculations.
 
   ``` bash
   # Execute the workload profile
-  ./VirtualClient --profile=PERF-SPECCPU-FPSPEED.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
+  ./VirtualClient --profile=PERF-SPECCPU-FPSPEED.json --system=Azure --timeout=1440
   ```
 
 ## PERF-SPECCPU-INTRATE.json
@@ -168,7 +168,7 @@ for evaluating the performance of the CPU for processing calculations.
 
   ``` bash
   # Execute the workload profile
-  ./VirtualClient --profile=PERF-SPECCPU-INTRATE.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
+  ./VirtualClient --profile=PERF-SPECCPU-INTRATE.json --system=Azure --timeout=1440
   ```
 
 ## PERF-SPECCPU-INTSPEED.json
@@ -219,5 +219,5 @@ for evaluating the performance of the CPU for processing calculations.
 
   ``` bash
   # Execute the workload profile
-  ./VirtualClient --profile=PERF-SPECCPU-INTSPEED.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
+  ./VirtualClient --profile=PERF-SPECCPU-INTSPEED.json --system=Azure --timeout=1440
   ```

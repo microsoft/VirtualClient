@@ -34,5 +34,5 @@ Runs the SPECjbb benchmark workload to assess the performance of a Java Server.
 
   ``` bash
   # Execute the workload profile
-  VirtualClient.exe --profile=PERF-SPECJBB.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
+  VirtualClient.exe --profile=PERF-SPECJBB.json --system=Azure --timeout=1440
   ```

@@ -42,8 +42,8 @@ Runs the AspNetBench benchmark workload to assess the performance of an ASP.NET 
 
   ``` bash
   # Execute the workload profile
-  VirtualClient.exe --profile=PERF-ASPNETBENCH.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
+  VirtualClient.exe --profile=PERF-ASPNETBENCH.json --system=Demo --timeout=1440
 
   # Override the profile default parameters to use a different .NET SDK version
-  VirtualClient.exe --profile=PERF-ASPNETBENCH.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters="DotNetVersion=7.0.307"
+  VirtualClient.exe --profile=PERF-ASPNETBENCH.json --system=Demo --timeout=1440 --parameters="DotNetVersion=7.0.307"
   ```

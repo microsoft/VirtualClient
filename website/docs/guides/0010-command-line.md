@@ -561,7 +561,7 @@ passing in secrets (e.g. connection strings, SAS URIs) on the command line may n
 how to use response files with the Virtual Client on the command line.
 
 ```
-# The extension does not really matter, but is is common to use one such as '*.rsp' or '*.response' to indicate the file is a response file.
+# The extension does not really matter, but is common to use one such as '*.rsp' or '*.response' to indicate the file is a response file.
 VirtualClient.exe @.\CommandLineOptions.rsp
 VirtualClient.exe @C:\VirtualClient\win-x64\CommandLineOptions.rsp
 

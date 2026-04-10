@@ -5,11 +5,11 @@
         "RecommendedMinimumExecutionTime": "08:00:00",
         "SupportedPlatforms": "linux-x64",
         "SupportedOperatingSystems": "Ubuntu",
-        "SpecialRequirements": "This is an Nvidia GPU-specialized workload. It depends upon the system having an Nvidia GPU card/chip. Use a SETUP profile for GPU setup."
+        "PreliminaryRequirements": "Please note that the GPU hardware driver and related toolsets (e.g. Nvidia CUDA) MUST be already installed on the system for the workloads to function correctly."
     },
     "Parameters": {
         "ConfigurationFile": "default.yaml",
-        "Username": "",
+        "Username": null,
         "DockerContainerPath": null
     },
     "Actions": [

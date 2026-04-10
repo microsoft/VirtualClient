@@ -11,7 +11,7 @@
         "BlockSizeNB": "256",
         "NumberOfProcesses": "{LogicalCoreCount}",
         "BindToCores": false,
-        "CCFLAGS": "-O3 -march=native"
+        "CCFLAGS": "-O3 -march={calculate(\"{Architecture}\" == \"x64\" ? \"native\" : \"armv8-a\")}"
     },
     "Actions": [
         {
