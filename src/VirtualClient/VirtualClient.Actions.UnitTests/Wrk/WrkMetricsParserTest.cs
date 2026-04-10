@@ -1,16 +1,14 @@
-using System.Collections.Generic;
-using System.IO;
-using System.Reflection;
-using VirtualClient.Contracts;
-using NUnit.Framework;
-using VirtualClient;
-using VirtualClient.Actions;
-
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient.Actions
 {
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Reflection;
+    using NUnit.Framework;
+    using VirtualClient.Contracts;
+
     [TestFixture]
     [Category("Unit")]
     public class WrkMetricsParserTest
