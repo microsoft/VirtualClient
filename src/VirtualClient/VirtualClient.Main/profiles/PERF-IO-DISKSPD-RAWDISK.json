@@ -272,6 +272,12 @@
     ],
     "Dependencies": [
         {
+            "Type": "SetDiskSanPolicy",
+            "Parameters": {
+                "Scenario": "SetSanPolicyOnlineAll"
+            }
+        },
+        {
             "Type": "DependencyPackageInstallation",
             "Parameters": {
                 "Scenario": "InstallDiskSpdPackage",
