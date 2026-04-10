@@ -8,12 +8,12 @@ namespace VirtualClient.Actions
     using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
+    using System.Net;
     using System.Net.Http;
     using System.Text;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.CodeAnalysis;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Polly;
@@ -334,20 +334,27 @@ namespace VirtualClient.Actions
         {
             IApiClientManager clientManager = this.Dependencies.GetService<IApiClientManager>();
 
-            ClientInstance serverInstance = this.GetLayoutClientInstances(ClientRole.Server).First();
-            this.ServerApi = clientManager.GetOrCreateApiClient(serverInstance.Name, serverInstance);
-            this.RegisterToSendExitNotifications($"{this.TypeName}.ExitNotification", this.ServerApi);
-
-            IEnumerable<ClientInstance> reverseProxyInstanceEnumerable = this.GetLayoutClientInstances(ClientRole.ReverseProxy, false);
-            if ((reverseProxyInstanceEnumerable == null) || (!reverseProxyInstanceEnumerable.Any()))
+            if (!this.IsMultiRoleLayout())
             {
-                this.ReverseProxyApi = null;
+                this.ServerApi = clientManager.GetOrCreateApiClient(IPAddress.Loopback.ToString(), IPAddress.Loopback);
             }
             else
             {
-                ClientInstance reverseProxyInstance = reverseProxyInstanceEnumerable.FirstOrDefault();
-                this.ReverseProxyApi = clientManager.GetOrCreateApiClient(reverseProxyInstance.Name, reverseProxyInstance);
-                this.RegisterToSendExitNotifications($"{this.TypeName}.ExitNotification", this.ReverseProxyApi);
+                ClientInstance serverInstance = this.GetLayoutClientInstances(ClientRole.Server).First();
+                this.ServerApi = clientManager.GetOrCreateApiClient(serverInstance.Name, serverInstance);
+                this.RegisterToSendExitNotifications($"{this.TypeName}.ExitNotification", this.ServerApi);
+
+                IEnumerable<ClientInstance> reverseProxyInstanceEnumerable = this.GetLayoutClientInstances(ClientRole.ReverseProxy, false);
+                if ((reverseProxyInstanceEnumerable == null) || (!reverseProxyInstanceEnumerable.Any()))
+                {
+                    this.ReverseProxyApi = null;
+                }
+                else
+                {
+                    ClientInstance reverseProxyInstance = reverseProxyInstanceEnumerable.FirstOrDefault();
+                    this.ReverseProxyApi = clientManager.GetOrCreateApiClient(reverseProxyInstance.Name, reverseProxyInstance);
+                    this.RegisterToSendExitNotifications($"{this.TypeName}.ExitNotification", this.ReverseProxyApi);
+                }
             }
         }
 
@@ -373,8 +380,9 @@ namespace VirtualClient.Actions
                 {
                     foreach (Match match in matches)
                     {
-                        ClientInstance roleIP = this.GetLayoutClientInstances(kvp.Key).FirstOrDefault();
-                        result = Regex.Replace(result, match.Value, roleIP.IPAddress);
+                        IEnumerable<ClientInstance> instances = this.GetLayoutClientInstances(kvp.Key, throwIfNotExists: false);
+                        string ipAddress = instances?.FirstOrDefault()?.IPAddress ?? IPAddress.Loopback.ToString();
+                        result = Regex.Replace(result, match.Value, ipAddress);
                     }
                 }
             }
@@ -486,17 +494,18 @@ namespace VirtualClient.Actions
         /// <returns>Wrk Version</returns>
         protected string GetWrkVersion(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string scriptPath = this.Combine(this.PackageDirectory, WrkExecutor.WrkRunShell);
-            this.SystemManagement.FileSystem.File.ThrowIfFileDoesNotExist(scriptPath);
-
-            string command = $"bash {scriptPath}";
-            string commandArguments = "--version";
-            string versionPattern = @"wrk\s(\d+\.\d+\.\d+)";
-            Regex versionRegex = new Regex(versionPattern, RegexOptions.Compiled);
             string wrkVersion = null;
 
             try
             {
+                string scriptPath = this.Combine(this.PackageDirectory, WrkExecutor.WrkRunShell);
+                this.SystemManagement.FileSystem.File.ThrowIfFileDoesNotExist(scriptPath);
+
+                string command = $"bash {scriptPath}";
+                string commandArguments = "--version";
+                string versionPattern = @"wrk\s(\d+\.\d+\.\d+)";
+                Regex versionRegex = new Regex(versionPattern, RegexOptions.Compiled);
+
                 using (IProcessProxy process = this.ExecuteCommandAsync(command, commandArguments, workingDirectory: this.PackageDirectory, telemetryContext, cancellationToken, runElevated: true).Result)
                 {
                     if (!cancellationToken.IsCancellationRequested)
@@ -505,23 +514,24 @@ namespace VirtualClient.Actions
                         string output = process.StandardOutput.ToString();
                         Match match = versionRegex.Match(output);
 
+                        if (!match.Success)
+                        {
+                            output = process.StandardError.ToString();
+                            match = versionRegex.Match(output);
+                        }
+
                         if (match.Success)
                         {
                             wrkVersion = match.Groups[1].Value;
                             telemetryContext.AddContext("WrkVersion", wrkVersion);
                             this.Logger.LogMessage($"{this.TypeName}.WrkVersionCaptured", LogLevel.Information, telemetryContext);
                         }
-                        else
-                        {
-                            throw new WorkloadException("Failed to parse wrk version from output.", ErrorReason.CriticalWorkloadFailure);
-                        }
                     }
                 }
             }
             catch (Exception exc)
             {
-                this.Logger.LogMessage($"{this.TypeName}.WrkVersionCaptureError", LogLevel.Error, telemetryContext.Clone().AddError(exc));
-                throw;
+                this.Logger.LogErrorMessage(exc, telemetryContext);
             }
 
             return wrkVersion;

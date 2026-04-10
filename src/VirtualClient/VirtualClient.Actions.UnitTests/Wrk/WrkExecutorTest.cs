@@ -593,7 +593,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public void GetWrkVersion_ThrowsException_WhenVersionCannotBeParsed()
+        public void GetWrkVersion_ReturnsNull_WhenVersionCannotBeParsed()
         {
             this.mockFixture.Setup(PlatformID.Unix, Architecture.X64);
             TestWrkExecutor executor = new TestWrkExecutor(this.mockFixture);
@@ -606,8 +606,8 @@ namespace VirtualClient.Actions
                 .TrackProcesses()
                 .SetupProcessOutput("--version", "Invalid output without version");
 
-            WorkloadException exception = Assert.Throws<WorkloadException>(() => executor.GetWrkVersion());
-            Assert.AreEqual("Failed to parse wrk version from output.", exception.Message);
+            string version = executor.GetWrkVersion();
+            Assert.IsNull(version);
 
             this.mockFixture.Tracking.AssertCommandsExecuted(true, "sudo bash .* --version");
         }

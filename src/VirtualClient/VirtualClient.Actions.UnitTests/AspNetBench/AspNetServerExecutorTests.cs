@@ -235,6 +235,11 @@ namespace VirtualClient.Actions
             {
                 base.Validate();
             }
+
+            protected override Task WaitForPortReadyAsync(EventContext context, CancellationToken cancellationToken)
+            {
+                return Task.CompletedTask;
+            }
         }
 
         private void SetupDefaultMockBehaviors(PlatformID platform)

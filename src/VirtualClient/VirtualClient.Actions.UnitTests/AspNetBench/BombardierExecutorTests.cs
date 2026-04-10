@@ -72,17 +72,15 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public void BombardierExecutorGetBombardierVersionThrowsOnUnparsableOutput()
+        public void BombardierExecutorGetBombardierVersionReturnsNullOnUnparsableOutput()
         {
             this.mockFixture.SetupProcessOutput(".*--version.*", "unrecognized output");
 
             using (TestBombardierExecutor executor = new TestBombardierExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
                 executor.PackageDirectory = this.mockPackage.Path;
-                WorkloadException exception = Assert.Throws<WorkloadException>(
-                    () => executor.GetBombardierVersion(EventContext.None, CancellationToken.None));
-
-                Assert.AreEqual(ErrorReason.CriticalWorkloadFailure, exception.Reason);
+                string version = executor.GetBombardierVersion(EventContext.None, CancellationToken.None);
+                Assert.IsNull(version);
             }
         }
 

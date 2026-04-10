@@ -9,6 +9,7 @@ namespace VirtualClient.Actions
     using System.Linq;
     using System.Net;
     using System.Net.Http;
+    using System.Net.Sockets;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
@@ -25,6 +26,7 @@ namespace VirtualClient.Actions
     /// <summary>
     /// AspNet Orchard Server Executor.
     /// </summary>
+    [SupportedPlatforms("linux-arm64,linux-x64,win-arm64,win-x64")]
     public class AspNetOrchardServerExecutor : VirtualClientMultiRoleComponent
     {
         private Task serverProcess;
@@ -134,7 +136,7 @@ namespace VirtualClient.Actions
 
         /// <summary>
         /// Disposes of resources used by the executor including shutting down any
-        /// instances of Redis server running.
+        /// instances of server running.
         /// </summary>
         protected override void Dispose(bool disposing)
         {
@@ -200,9 +202,16 @@ namespace VirtualClient.Actions
         protected void InitializeApiClients()
         {
             IApiClientManager clientManager = this.Dependencies.GetService<IApiClientManager>();
-            ClientInstance serverInstance = this.GetLayoutClientInstances(ClientRole.Server).First();
 
-            this.ServerApi = clientManager.GetOrCreateApiClient(serverInstance.Name, serverInstance);
+            if (!this.IsMultiRoleLayout())
+            {
+                this.ServerApi = clientManager.GetOrCreateApiClient(IPAddress.Loopback.ToString(), IPAddress.Loopback);
+            }
+            else
+            {
+                ClientInstance serverInstance = this.GetLayoutClientInstances(ClientRole.Server).First();
+                this.ServerApi = clientManager.GetOrCreateApiClient(serverInstance.Name, serverInstance);
+            }
         }
 
         /// <summary>
@@ -248,16 +257,28 @@ namespace VirtualClient.Actions
                     await this.KillServerInstancesAsync(telemetryContext, cancellationToken);
                     await this.BuildAspNetOrchardAsync(telemetryContext, cancellationToken);
                     this.StartServerInstances(telemetryContext, cancellationToken);
+                    await this.WaitForPortReadyAsync(telemetryContext, cancellationToken);
 
                     await this.SaveStateAsync(telemetryContext, cancellationToken);
                     this.SetServerOnline(true);
 
-                    using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
+                    if (!this.IsMultiRoleLayout())
                     {
-                        await Task.WhenAny(this.serverProcess);
-                        if (cancellationToken.IsCancellationRequested)
+                        // In single-VM mode, clear cleanup tasks to prevent the base class
+                        // CleanupAsync from killing the server process. The server must stay
+                        // alive for the subsequent client action. It will be killed by
+                        // KillServerInstancesAsync on the next iteration or by Dispose.
+                        this.CleanupTasks.Clear();
+                    }
+                    else
+                    {
+                        using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                         {
-                            await Task.WhenAll(this.serverProcess);
+                            await Task.WhenAny(this.serverProcess);
+                            if (cancellationToken.IsCancellationRequested)
+                            {
+                                await Task.WhenAll(this.serverProcess);
+                            }
                         }
                     }
                 }
@@ -268,6 +289,42 @@ namespace VirtualClient.Actions
                     throw;
                 }
             });
+        }
+
+        /// <summary>
+        /// Waits for the configured port to start accepting TCP connections.
+        /// </summary>
+        /// <param name="telemetryContext">Provides context information that will be captured with telemetry events.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+        protected virtual async Task WaitForPortReadyAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            int port = int.Parse(this.ServerPort);
+            TimeSpan timeout = TimeSpan.FromMinutes(5);
+            DateTime deadline = DateTime.UtcNow.Add(timeout);
+
+            this.Logger.LogTraceMessage($"{this.TypeName}: Waiting for server to accept connections on port {port}...");
+
+            while (DateTime.UtcNow < deadline && !cancellationToken.IsCancellationRequested)
+            {
+                try
+                {
+                    using (TcpClient client = new TcpClient())
+                    {
+                        await client.ConnectAsync(IPAddress.Loopback, port).ConfigureAwait(false);
+                        this.Logger.LogTraceMessage($"{this.TypeName}: Server is accepting connections on port {port}.");
+                        return;
+                    }
+                }
+                catch (SocketException)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ConfigureAwait(false);
+                }
+            }
+
+            cancellationToken.ThrowIfCancellationRequested();
+            throw new WorkloadException(
+                $"The server did not start accepting connections on port {port} within {timeout}.",
+                ErrorReason.WorkloadFailed);
         }
 
         private Task DeleteStateAsync(EventContext telemetryContext, CancellationToken cancellationToken)
