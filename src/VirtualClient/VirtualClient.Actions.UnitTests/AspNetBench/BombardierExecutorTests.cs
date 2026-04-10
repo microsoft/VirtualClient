@@ -97,9 +97,9 @@ namespace VirtualClient.Actions
                 set => base.PackageDirectory = value;
             }
 
-            public new string GetBombardierVersion(EventContext telemetryContext, CancellationToken cancellationToken)
+            public new async Task<string> GetBombardierVersionAsync(EventContext telemetryContext, CancellationToken cancellationToken)
             {
-                return base.GetBombardierVersion(telemetryContext, cancellationToken);
+                return await base.GetBombardierVersionAsync(telemetryContext, cancellationToken);
             }
         }
     }

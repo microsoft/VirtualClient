@@ -416,7 +416,7 @@ namespace VirtualClient.Actions
 
                                 if (!this.WarmUp)
                                 {
-                                    this.CaptureMetrics(process, commandArguments, relatedContext, cancellationToken);
+                                    await this.CaptureMetricsAsync(process, commandArguments, relatedContext, cancellationToken).ConfigureAwait(false);
                                 }
                             }
                         }
@@ -445,7 +445,7 @@ namespace VirtualClient.Actions
         /// <param name="telemetryContext">Provides context information that will be captured with telemetry events.</param>
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
         /// <returns>Bombardier Version</returns>
-        protected string GetBombardierVersion(EventContext telemetryContext, CancellationToken cancellationToken)
+        protected async Task<string> GetBombardierVersionAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             string bombardierPath = this.Combine(this.PackageDirectory, this.Platform == PlatformID.Unix ? "bombardier" : "bombardier.exe");
             string bombardierVersion = null;
@@ -458,11 +458,11 @@ namespace VirtualClient.Actions
                 string versionPattern = @"bombardier\s+(?:version\s+)?v?(\d+\.\d+\.\d+)";
                 Regex versionRegex = new Regex(versionPattern, RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-                using (IProcessProxy process = this.ExecuteCommandAsync(bombardierPath, commandArguments, workingDirectory: this.PackageDirectory, telemetryContext, cancellationToken, runElevated: true).Result)
+                using (IProcessProxy process = await this.ExecuteCommandAsync(bombardierPath, commandArguments, workingDirectory: this.PackageDirectory, telemetryContext, cancellationToken, runElevated: true).ConfigureAwait(false))
                 {
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        this.LogProcessDetailsAsync(process, telemetryContext, "BombardierVersion", logToFile: true).Wait();
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "BombardierVersion", logToFile: true).ConfigureAwait(false);
                         string output = process.StandardOutput.ToString();
                         Match match = versionRegex.Match(output);
 
@@ -489,7 +489,7 @@ namespace VirtualClient.Actions
             return bombardierVersion;
         }
 
-        private void CaptureMetrics(IProcessProxy workloadProcess, string commandArguments, EventContext context, CancellationToken cancellationToken)
+        private async Task CaptureMetricsAsync(IProcessProxy workloadProcess, string commandArguments, EventContext context, CancellationToken cancellationToken)
         {
             if (!cancellationToken.IsCancellationRequested)
             {
@@ -511,7 +511,7 @@ namespace VirtualClient.Actions
                         }
                     }
 
-                    string bombardierVersion = this.GetBombardierVersion(telemetryContext, cancellationToken);
+                    string bombardierVersion = await this.GetBombardierVersionAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
 
                     this.MetadataContract.AddForScenario(
                        toolName: this.PackageName,

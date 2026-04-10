@@ -569,7 +569,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public void GetWrkVersionReturnsCorrectVersion()
+        public async Task GetWrkVersionReturnsCorrectVersion()
         {
             this.mockFixture.Setup(PlatformID.Unix, Architecture.X64);
             TestWrkExecutor executor = new TestWrkExecutor(this.mockFixture);
@@ -584,7 +584,7 @@ namespace VirtualClient.Actions
                 .TrackProcesses()
                 .SetupProcessOutput("--version", wrkOutput);
 
-            string actualVersion = executor.GetWrkVersion();
+            string actualVersion = await executor.GetWrkVersionAsync();
 
             Assert.AreEqual(expectedVersion, actualVersion);
             this.mockFixture.Tracking.AssertCommandsExecuted(true,
@@ -593,7 +593,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public void GetWrkVersion_ReturnsNull_WhenVersionCannotBeParsed()
+        public async Task GetWrkVersion_ReturnsNull_WhenVersionCannotBeParsed()
         {
             this.mockFixture.Setup(PlatformID.Unix, Architecture.X64);
             TestWrkExecutor executor = new TestWrkExecutor(this.mockFixture);
@@ -606,7 +606,7 @@ namespace VirtualClient.Actions
                 .TrackProcesses()
                 .SetupProcessOutput("--version", "Invalid output without version");
 
-            string version = executor.GetWrkVersion();
+            string version = await executor.GetWrkVersionAsync();
             Assert.IsNull(version);
 
             this.mockFixture.Tracking.AssertCommandsExecuted(true, "sudo bash .* --version");
@@ -648,9 +648,9 @@ namespace VirtualClient.Actions
                 return base.IsServerWarmedUp;
             }
 
-            public string GetWrkVersion()
+            public async Task<string> GetWrkVersionAsync()
             {
-                return base.GetWrkVersion(EventContext.None, CancellationToken.None);
+                return await base.GetWrkVersionAsync(EventContext.None, CancellationToken.None);
             }
 
             public void SetIsServerWarmedUp(bool value)

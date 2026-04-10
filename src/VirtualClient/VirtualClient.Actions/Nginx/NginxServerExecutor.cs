@@ -247,10 +247,17 @@ namespace VirtualClient.Actions
         {
             if (disposing)
             {
-                Task.Run((Func<Task>)(async () =>
+                try
                 {
-                    await this.ResetNginxAsync(EventContext.None, CancellationToken.None).ConfigureAwait(false);
-                })).Wait();
+                    Task.Run(async () =>
+                    {
+                        await this.ResetNginxAsync(EventContext.None, CancellationToken.None).ConfigureAwait(false);
+                    }).Wait(TimeSpan.FromSeconds(30));
+                }
+                catch (AggregateException)
+                {
+                    // Best-effort cleanup during dispose; exceptions are intentionally swallowed.
+                }
             }
         }
 

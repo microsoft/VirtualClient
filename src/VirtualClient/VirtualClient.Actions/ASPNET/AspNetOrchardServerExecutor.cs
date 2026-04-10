@@ -343,13 +343,13 @@ namespace VirtualClient.Actions
             });
         }
 
-        private Task KillServerInstancesAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        private async Task KillServerInstancesAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             this.Logger.LogTraceMessage($"{this.TypeName}.KillServerInstances");
-            this.ExecuteCommandAsync("pkill", "OrchardCore", this.aspnetOrchardDirectory, telemetryContext, cancellationToken);
-            this.ExecuteCommandAsync("fuser", $"-n tcp -k {this.ServerPort}", this.aspnetOrchardDirectory, telemetryContext, cancellationToken);
+            await this.ExecuteCommandAsync("pkill", "OrchardCore", this.aspnetOrchardDirectory, telemetryContext, cancellationToken);
+            await this.ExecuteCommandAsync("fuser", $"-n tcp -k {this.ServerPort}", this.aspnetOrchardDirectory, telemetryContext, cancellationToken);
 
-            return this.WaitAsync(TimeSpan.FromSeconds(3), cancellationToken);
+            await this.WaitAsync(TimeSpan.FromSeconds(3), cancellationToken);
         }
 
         private void StartServerInstances(EventContext telemetryContext, CancellationToken cancellationToken)

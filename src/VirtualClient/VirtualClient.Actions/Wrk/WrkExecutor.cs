@@ -463,7 +463,7 @@ namespace VirtualClient.Actions
 
                                 if (!this.WarmUp)
                                 {
-                                    this.CaptureMetrics(process, commandArguments, this.EmitLatencySpectrum, relatedContext, cancellationToken);
+                                    await this.CaptureMetricsAsync(process, commandArguments, this.EmitLatencySpectrum, relatedContext, cancellationToken).ConfigureAwait(false);
                                 }
                             }
                         }
@@ -492,7 +492,7 @@ namespace VirtualClient.Actions
         /// <param name="telemetryContext">Provides context information that will be captured with telemetry events.</param>
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
         /// <returns>Wrk Version</returns>
-        protected string GetWrkVersion(EventContext telemetryContext, CancellationToken cancellationToken)
+        protected async Task<string> GetWrkVersionAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             string wrkVersion = null;
 
@@ -506,11 +506,11 @@ namespace VirtualClient.Actions
                 string versionPattern = @"wrk\s(\d+\.\d+\.\d+)";
                 Regex versionRegex = new Regex(versionPattern, RegexOptions.Compiled);
 
-                using (IProcessProxy process = this.ExecuteCommandAsync(command, commandArguments, workingDirectory: this.PackageDirectory, telemetryContext, cancellationToken, runElevated: true).Result)
+                using (IProcessProxy process = await this.ExecuteCommandAsync(command, commandArguments, workingDirectory: this.PackageDirectory, telemetryContext, cancellationToken, runElevated: true).ConfigureAwait(false))
                 {
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        this.LogProcessDetailsAsync(process, telemetryContext, "WrkVersion", logToFile: true).Wait();
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "WrkVersion", logToFile: true).ConfigureAwait(false);
                         string output = process.StandardOutput.ToString();
                         Match match = versionRegex.Match(output);
 
@@ -537,7 +537,7 @@ namespace VirtualClient.Actions
             return wrkVersion;
         }
 
-        private void CaptureMetrics(IProcessProxy workloadProcess, string commandArguments, bool emitLatencySpectrum, EventContext context, CancellationToken cancellationToken)
+        private async Task CaptureMetricsAsync(IProcessProxy workloadProcess, string commandArguments, bool emitLatencySpectrum, EventContext context, CancellationToken cancellationToken)
         {
             if (!cancellationToken.IsCancellationRequested)
             {
@@ -559,7 +559,7 @@ namespace VirtualClient.Actions
                         }
                     }
 
-                    string wrkVersion = this.GetWrkVersion(telemetryContext, cancellationToken);
+                    string wrkVersion = await this.GetWrkVersionAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
 
                     this.MetadataContract.AddForScenario(
                        toolName: this.PackageName,

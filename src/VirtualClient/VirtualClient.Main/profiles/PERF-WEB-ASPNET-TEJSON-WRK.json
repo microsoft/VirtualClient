@@ -36,7 +36,7 @@
         "PackageName": "aspnetbenchmarks",
         "DotNetSdkPackageName": "dotnetsdk",
         "TargetFramework": "$.Parameters.TargetFramework",
-        "Port": "$.Parameters.Port"
+        "ServerPort": "$.Parameters.Port"
       }
     },
     {
