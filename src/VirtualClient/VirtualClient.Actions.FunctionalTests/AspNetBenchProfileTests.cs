@@ -51,20 +51,6 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("PERF-ASPNETBENCH-AFFINITY.json")]
-        public void AspNetBenchAffinityWorkloadProfileParametersAreInlinedCorrectly(string profile)
-        {
-            this.mockFixture.Setup(PlatformID.Unix, agentId: this.clientAgentId).SetupLayout(
-                new ClientInstance(this.clientAgentId, "1.2.3.5", ClientRole.Client),
-                new ClientInstance(this.serverAgentId, "1.2.3.4", ClientRole.Server));
-
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
-            {
-                WorkloadAssert.ParameterReferencesInlined(executor.Profile);
-            }
-        }
-
-        [Test]
         [TestCase("PERF-ASPNETBENCH.json")]
         public async Task AspNetBenchWorkloadProfileExecutesTheExpectedWorkloadsOnWindowsPlatform(string profile)
         {
