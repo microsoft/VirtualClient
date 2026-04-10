@@ -1,5 +1,5 @@
 {
-    "Description": "OpenSSL 3.5.0 CPU Performance Workload",
+    "Description": "OpenSSL CPU Performance Workload",
     "Metadata": {
         "RecommendedMinimumExecutionTime": "01:00:00",
         "SupportedPlatforms": "linux-x64,linux-arm64,win-x64",
