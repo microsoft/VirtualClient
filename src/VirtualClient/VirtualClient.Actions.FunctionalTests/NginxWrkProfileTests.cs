@@ -303,6 +303,9 @@ namespace VirtualClient.Actions
             // Setup wrk package
             this.mockFixture.SetupPackage("wrk", expectedFiles: @"wrk");
 
+            // Setup wrk2 package
+            this.mockFixture.SetupPackage("wrk2", expectedFiles: @"wrk2");
+
             this.mockFixture.SetupDisks(withRemoteDisks: false);
         }
 
