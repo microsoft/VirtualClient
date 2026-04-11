@@ -16,6 +16,7 @@ namespace VirtualClient.Actions
 
     [TestFixture]
     [Category("Functional")]
+    [Ignore("MLPerf profiles archived - no longer in active profiles directory")]
     public class MLPerfProfileTests
     {
         private DependencyFixture mockFixture;
