@@ -102,8 +102,8 @@ The following profiles are available for the Wrk/Wrk2 workloads.
 | PERF-WEB-NGINX-WRK2.json | Nginx web server benchmark using wrk2 with constant request rate and corrected latency.      | Wrk2Executor | NginxServerExecutor       | linux-x64            |
 | PERF-WEB-NGINX-WRK-RP.json  | Nginx reverse-proxy benchmark using wrk. Uses a three-node layout (Client → Reverse Proxy → Server). | WrkExecutor | NginxServerExecutor (×2) | linux-x64, linux-arm64 |
 | PERF-WEB-NGINX-WRK2-RP.json | Nginx reverse-proxy benchmark using wrk2. Uses a three-node layout (Client → Reverse Proxy → Server). | Wrk2Executor | NginxServerExecutor (×2) | linux-x64 |
-| PERF-WEB-ASPNET-TEJSON-WRK.json | ASP.NET TechEmpower JSON serialization benchmark using wrk.                                | WrkExecutor | AspNetServerExecutor       | linux-x64, linux-arm64, win-x64, win-arm64 |
-| PERF-WEB-ASPNET-TEJSON-WRK-AFFINITY.json | ASP.NET TechEmpower JSON serialization benchmark using wrk with CPU core affinity. | WrkExecutor | AspNetServerExecutor | linux-x64, linux-arm64, win-x64, win-arm64 |
+| PERF-WEB-ASPNET-WRK.json | ASP.NET TechEmpower JSON serialization benchmark using wrk.                                | WrkExecutor | AspNetServerExecutor       | linux-x64, linux-arm64, win-x64, win-arm64 |
+| PERF-WEB-ASPNET-WRK-AFFINITY.json | ASP.NET TechEmpower JSON serialization benchmark using wrk with CPU core affinity. | WrkExecutor | AspNetServerExecutor | linux-x64, linux-arm64, win-x64, win-arm64 |
 | PERF-WEB-ASPNET-ORCHARD-WRK.json | ASP.NET OrchardCore CMS benchmark using wrk.                                              | WrkExecutor | AspNetOrchardServerExecutor | linux-x64, linux-arm64 |
 
 ## Parameters

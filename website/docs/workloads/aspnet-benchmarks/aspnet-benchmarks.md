@@ -1,7 +1,7 @@
 # ASP.NET Benchmarks
 The ASP.NET benchmarks measure the throughput and latency of ASP.NET Kestrel web applications under sustained HTTP load.
 The workloads use a client-server architecture where the server runs an ASP.NET application and the client generates
-HTTP requests using either [Bombardier](../bombardier/bombardier.md) or [Wrk](../wrk/wrk.md).
+HTTP requests using [Bombardier](../bombardier/bombardier.md) or [Wrk](../wrk/wrk.md).
 
 Two server workloads are supported:
 
@@ -30,7 +30,7 @@ The ASP.NET benchmark workloads support two deployment modes:
   The client connects to the server via the loopback address (`127.0.0.1`). This mode is useful for development,
   validation, and quick smoke testing.
 
-CPU core affinity profiles (e.g., `PERF-WEB-ASPNET-TEJSON-WRK-AFFINITY.json`) work in
+CPU core affinity profiles (e.g., `PERF-WEB-ASPNET-WRK-AFFINITY.json`) work in
 both modes. In single-VM mode, core affinity is especially useful to prevent the server and client from contending
 for the same CPU cores.
 
@@ -50,7 +50,7 @@ pipeline including routing, middleware, and content rendering.
 The following metrics are examples of those captured by the Virtual Client when running the ASP.NET benchmark workloads.
 
 ### Bombardier Metrics
-When Bombardier is used as the client:
+When Bombardier is used as the client (e.g., `PERF-WEB-ASPNET-BOMBARDIER.json`):
 
 | Name                   | Example Value      | Unit        | Description                                         |
 |------------------------|--------------------|-------------|-----------------------------------------------------|
@@ -70,7 +70,7 @@ When Bombardier is used as the client:
 | RequestPerSecond P99   | 48600.556224       | Reqs/sec    | ASP.NET Web Requests per second (P99)               |
 
 ### Wrk Metrics
-When Wrk is used as the client (e.g., `PERF-WEB-ASPNET-TEJSON-WRK.json`, `PERF-WEB-ASPNET-ORCHARD-WRK.json`):
+When Wrk is used as the client (e.g., `PERF-WEB-ASPNET-WRK.json`, `PERF-WEB-ASPNET-ORCHARD-WRK.json`):
 
 | Name               | Example Value | Unit          | Description                                   |
 |--------------------|---------------|---------------|-----------------------------------------------|
@@ -91,8 +91,9 @@ page for per-profile parameters, dependencies, and usage examples.
 
 | Profile Name                             | Description                                                                        | Client Tool        | Server                        | Platforms                                  |
 |------------------------------------------|------------------------------------------------------------------------------------|--------------------|-------------------------------|--------------------------------------------|
-| PERF-WEB-ASPNET-TEJSON-WRK.json          | TechEmpower JSON serialization benchmark using Wrk with warm-up pass.              | WrkExecutor        | AspNetServerExecutor          | linux-x64, linux-arm64, win-x64, win-arm64 |
-| PERF-WEB-ASPNET-TEJSON-WRK-AFFINITY.json | TechEmpower JSON serialization benchmark using Wrk with CPU core affinity.         | WrkExecutor        | AspNetServerExecutor          | linux-x64, linux-arm64, win-x64, win-arm64 |
+| PERF-WEB-ASPNET-WRK.json          | TechEmpower JSON serialization benchmark using Wrk with warm-up pass.              | WrkExecutor        | AspNetServerExecutor          | linux-x64, linux-arm64, win-x64, win-arm64 |
+| PERF-WEB-ASPNET-WRK-AFFINITY.json | TechEmpower JSON serialization benchmark using Wrk with CPU core affinity.         | WrkExecutor        | AspNetServerExecutor          | linux-x64, linux-arm64, win-x64, win-arm64 |
+| PERF-WEB-ASPNET-BOMBARDIER.json       | TechEmpower JSON serialization benchmark using Bombardier with 256 connections.    | BombardierExecutor | AspNetServerExecutor          | linux-x64, linux-arm64, win-x64, win-arm64 |
 | PERF-WEB-ASPNET-ORCHARD-WRK.json         | OrchardCore CMS benchmark using Wrk with warm-up pass.                             | WrkExecutor        | AspNetOrchardServerExecutor   | linux-x64, linux-arm64                     |
 
 ## Server Parameters

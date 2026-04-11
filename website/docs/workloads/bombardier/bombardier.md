@@ -61,7 +61,7 @@ The following profiles use Bombardier as the client load generator.
 
 | Profile Name                 | Description                                                                                     | Server                 | Platforms                                    |
 |------------------------------|-------------------------------------------------------------------------------------------------|------------------------|----------------------------------------------|
-| PERF-ASPNETBENCH.json        | ASP.NET JSON serialization benchmark using Bombardier with 256 connections.                     | AspNetServerExecutor   | linux-x64, linux-arm64, win-x64, win-arm64   |
+| PERF-WEB-ASPNET-BOMBARDIER.json        | ASP.NET JSON serialization benchmark using Bombardier with 256 connections.                     | AspNetServerExecutor   | linux-x64, linux-arm64, win-x64, win-arm64   |
 
 ## Parameters
 The following table describes the key parameters supported by the Bombardier executor.

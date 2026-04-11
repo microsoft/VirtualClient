@@ -3,11 +3,11 @@ The following profiles run customer-representative or benchmarking scenarios usi
 
 * [Workload Details](./aspnet-benchmarks.md)
 
-## PERF-WEB-ASPNET-TEJSON-WRK.json
+## PERF-WEB-ASPNET-WRK.json
 Runs the ASP.NET TechEmpower JSON serialization benchmark using Wrk. Includes a warm-up pass before the benchmark measurement.
 Supports .NET 9 and .NET 10 via the `ParametersOn` conditional parameter system.
 
-* [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-WEB-ASPNET-TEJSON-WRK.json) 
+* [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-WEB-ASPNET-WRK.json) 
 
 * **Supported Platform/Architectures**
   * linux-x64
@@ -41,17 +41,17 @@ Supports .NET 9 and .NET 10 via the `ParametersOn` conditional parameter system.
 
   ```bash
   # Run with .NET 9 (default)
-  ./VirtualClient --profile=PERF-WEB-ASPNET-TEJSON-WRK.json --system=Demo --timeout=1440
+  ./VirtualClient --profile=PERF-WEB-ASPNET-WRK.json --system=Demo --timeout=1440
 
   # Run with .NET 10
-  ./VirtualClient --profile=PERF-WEB-ASPNET-TEJSON-WRK.json --system=Demo --timeout=1440 --parameters="DotNetVersion=10"
+  ./VirtualClient --profile=PERF-WEB-ASPNET-WRK.json --system=Demo --timeout=1440 --parameters="DotNetVersion=10"
   ```
 
-## PERF-WEB-ASPNET-TEJSON-WRK-AFFINITY.json
+## PERF-WEB-ASPNET-WRK-AFFINITY.json
 Runs the ASP.NET TechEmpower JSON serialization benchmark using Wrk with CPU core affinity for both server and client.
 Includes a warm-up pass before the benchmark measurement. Supports .NET 9 and .NET 10.
 
-* [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-WEB-ASPNET-TEJSON-WRK-AFFINITY.json) 
+* [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-WEB-ASPNET-WRK-AFFINITY.json) 
 
 * **Supported Platform/Architectures**
   * linux-x64
@@ -87,12 +87,51 @@ Includes a warm-up pass before the benchmark measurement. Supports .NET 9 and .N
 
   ```bash
   # Run with default affinity and .NET 9
-  ./VirtualClient --profile=PERF-WEB-ASPNET-TEJSON-WRK-AFFINITY.json --system=Demo --timeout=1440
+  ./VirtualClient --profile=PERF-WEB-ASPNET-WRK-AFFINITY.json --system=Demo --timeout=1440
 
   # Run with .NET 10 and custom core affinity
-  ./VirtualClient --profile=PERF-WEB-ASPNET-TEJSON-WRK-AFFINITY.json --system=Demo --timeout=1440 --parameters="DotNetVersion=10,,,ServerCoreAffinity=0-3,,,ClientCoreAffinity=4-7"
+  ./VirtualClient --profile=PERF-WEB-ASPNET-WRK-AFFINITY.json --system=Demo --timeout=1440 --parameters="DotNetVersion=10,,,ServerCoreAffinity=0-3,,,ClientCoreAffinity=4-7"
   ```
 
+## PERF-WEB-ASPNET-BOMBARDIER.json
+Runs the ASP.NET TechEmpower JSON serialization benchmark using Bombardier as the HTTP client
+with 256 concurrent connections. Uses .NET 8 SDK.
+
+* [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-WEB-ASPNET-BOMBARDIER.json) 
+
+* **Supported Platform/Architectures**
+  * linux-x64
+  * linux-arm64
+  * win-x64
+  * win-arm64
+
+* **Supports Disconnected Scenarios**  
+  * No. Internet connection required.
+
+* **Dependencies**  
+  The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
+  * Internet connection.
+
+  Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
+  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+
+* **Profile Parameters**  
+
+  | Parameter                 | Purpose                                                           | Default Value |
+  |---------------------------|-------------------------------------------------------------------|---------------|
+  | DotNetVersion             | The version of the .NET SDK to download and install.              | 8.0.204       |
+  | TargetFramework           | The .NET target framework to run.                                 | net8.0        |
+  | ServerPort                | The port the Kestrel server listens on.                           | 9876          |
+
+* **Profile Runtimes**  
+  See the 'Metadata' section of the profile for estimated runtimes.
+
+* **Usage Examples**  
+
+  ```bash
+  # Execute the workload profile
+  ./VirtualClient --profile=PERF-WEB-ASPNET-BOMBARDIER.json --system=Demo --timeout=1440
+  ```
 ## PERF-WEB-ASPNET-ORCHARD-WRK.json
 Runs the ASP.NET OrchardCore CMS benchmark using Wrk. The server runs the OrchardCore.Cms.Web application
 and Wrk benchmarks the `/about` endpoint. Includes a warm-up pass before the benchmark measurement.
