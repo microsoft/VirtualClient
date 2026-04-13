@@ -1,5 +1,5 @@
 {
-    "Description": "OpenSSL 3.5.0 Benchmark with TLS",
+    "Description": "OpenSSL Benchmark with TLS",
     "Metadata": {
         "RecommendedMinimumExecutionTime": "03:00:00",
         "SupportedPlatforms": "linux-x64,linux-arm64,win-x64",
