@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient.Actions
@@ -427,18 +427,17 @@ namespace VirtualClient.Actions
 
                             relatedContext.AddContext("affinityMask", affinityConfig.ToString());
 
-                            string fullCommandLine = $"{command} \"{commandArguments}\"";
                             LinuxProcessAffinityConfiguration linuxConfig = (LinuxProcessAffinityConfiguration)affinityConfig;
-                            string wrappedCommand = linuxConfig.GetCommandWithAffinity(null, fullCommandLine);
 
-                            process = this.SystemManagement.ProcessManager.CreateProcess(
-                                "/bin/bash",
-                                $"-c {wrappedCommand}",
-                                workingDir);
+                            // Use direct numactl invocation to avoid bash -c shell wrapping.
+                            // The wrk arguments contain embedded double quotes (e.g., --header "Accept: ..."),
+                            // which break the nested quoting in bash -c "numactl ... \"args\"" patterns.
+                            var (executable, numaArguments) = linuxConfig.GetAffinityProcessInfo(command, commandArguments);
+                            process = this.SystemManagement.ProcessManager.CreateElevatedProcess(this.Platform, executable, numaArguments, workingDir);
                         }
                         else
                         {
-                            process = await this.ExecuteCommandAsync(command, commandArguments: $"\"{commandArguments}\"", workingDir, telemetryContext, cancellationToken, runElevated: true);
+                            process = await this.ExecuteCommandAsync(command, commandArguments: $"{commandArguments}", workingDir, telemetryContext, cancellationToken, runElevated: true);
                         }
 
                         using (process)

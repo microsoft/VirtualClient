@@ -469,7 +469,7 @@ namespace VirtualClient.Actions
                 }
                 else
                 {
-                    Assert.AreEqual(arguments, $"bash {executor.Combine(directory, "runwrk.sh")} \"{results}\"");
+                    Assert.AreEqual(arguments, $"bash {executor.Combine(directory, "runwrk.sh")} {results}");
                     string examplesDirectory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Examples", "Wrk");
                     string outputPath = Path.Combine(examplesDirectory, @"wrkStandardExample1.txt");
                     this.memoryProcess.StandardOutput = new ConcurrentBuffer(new StringBuilder(File.ReadAllText(outputPath)));
