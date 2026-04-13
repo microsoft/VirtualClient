@@ -55,13 +55,16 @@ namespace VirtualClient.Contracts
                             $"Invalid '{nameof(profile.ParametersOn)}' configuration. A '{conditionKey}' must be defined in each '{nameof(profile.ParametersOn)}' section.");
                     }
 
-                    // Parameters in ParametersOn sections take priority over the profile's default parameters.
-                    var conditionalParameters = new Dictionary<string, IConvertible>(profileParameters, StringComparer.OrdinalIgnoreCase);
-                    conditionalParameters.AddRange(profileConditionalParameters, true);
+                    // Evaluate the condition using only the original profile parameters so that
+                    // override values from the ParametersOn section do not affect the condition result.
+                    var conditionContext = new Dictionary<string, IConvertible>(profileParameters, StringComparer.OrdinalIgnoreCase)
+                    {
+                        [conditionKey] = condition
+                    };
 
-                    await evaluator.EvaluateAsync(dependencies, conditionalParameters);
+                    await evaluator.EvaluateAsync(dependencies, conditionContext);
 
-                    if (!bool.TryParse(conditionalParameters[conditionKey].ToString(), out bool conditionMatches))
+                    if (!bool.TryParse(conditionContext[conditionKey].ToString(), out bool conditionMatches))
                     {
                         throw new SchemaException(
                             $"Invalid '{nameof(profile.ParametersOn)}' configuration. A '{conditionKey}' must always evaluate to true or false.");
@@ -69,7 +72,11 @@ namespace VirtualClient.Contracts
 
                     if (conditionMatches)
                     {
-                        profile.Parameters.AddRange(conditionalParameters.Where(p => p.Key != conditionKey), true);
+                        // Merge override parameters and re-evaluate for expression resolution.
+                        var resolvedParameters = new Dictionary<string, IConvertible>(profileParameters, StringComparer.OrdinalIgnoreCase);
+                        resolvedParameters.AddRange(profileConditionalParameters.Where(p => p.Key != conditionKey), true);
+                        await evaluator.EvaluateAsync(dependencies, resolvedParameters);
+                        profile.Parameters.AddRange(resolvedParameters.Where(p => p.Key != conditionKey), true);
                         break;
                     }
                 }
