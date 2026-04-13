@@ -164,7 +164,7 @@ namespace VirtualClient.Actions
                 }
                 else
                 {
-                    Assert.AreEqual(arguments, $"bash {executor.Combine(directory, "runwrk.sh")} \"{results}\"");
+                    Assert.AreEqual(arguments, $"bash {executor.Combine(directory, "runwrk.sh")} {results}");
                     string examplesDirectory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Examples", "Wrk");
                     string outputPath = Path.Combine(examplesDirectory, @"wrkStandardExample1.txt");
                     this.memoryProcess.StandardOutput = new ConcurrentBuffer(new StringBuilder(File.ReadAllText(outputPath)));
@@ -612,6 +612,52 @@ namespace VirtualClient.Actions
             this.mockFixture.Tracking.AssertCommandsExecuted(true, "sudo bash .* --version");
         }
 
+        [Test]
+        public async Task WrkClientExecutorRunsWorkloadWithAffinityUsingCorrectQuoting()
+        {
+            string commandArgumentInput = @"--latency --threads 8 --connections 256 --duration 30s --timeout 10s http://1.2.3.4:9876/json --header ""Accept: application/json""";
+            ClientInstance serverInstance = new ClientInstance(name: nameof(ClientRole.Server), ipAddress: "1.2.3.4", role: ClientRole.Server);
+            ClientInstance clientInstance = new ClientInstance(name: nameof(ClientRole.Client), ipAddress: "5.6.7.8", role: ClientRole.Client);
+
+            string directory = @"/some/random/dir/name/";
+            this.mockFixture.Setup(PlatformID.Unix, Architecture.X64, nameof(State));
+            this.mockFixture.Layout = new EnvironmentLayout(new List<ClientInstance>() { serverInstance, clientInstance });
+            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            {
+                { "CommandArguments", commandArgumentInput },
+                { "Scenario", "affinity_test" },
+                { "ToolName", "wrk" },
+                { "PackageName", "wrk" },
+                { "BindToCores", true },
+                { "CoreAffinity", "8-15" },
+                { "TargetService", "server" }
+            };
+
+            TestWrkExecutor executor = new TestWrkExecutor(this.mockFixture);
+            executor.PackageDirectory = directory;
+
+            this.mockFixture.FileSystem
+                .Setup(x => x.File.Exists(It.IsAny<string>()))
+                .Returns(true);
+
+            string examplesDirectory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Examples", "Wrk");
+            string wrkOutput = File.ReadAllText(Path.Combine(examplesDirectory, @"wrkStandardExample1.txt"));
+
+            this.mockFixture
+                .TrackProcesses()
+                .SetupProcessOutput("--version", "wrk 4.2.0 [epoll] Copyright (C) 2012 Will Glozer")
+                .SetupProcessOutput("numactl", wrkOutput);
+
+            string result = executor.GetCommandLineArguments();
+            await executor.ExecuteWorkloadAsync(result, workingDir: directory).ConfigureAwait(false);
+
+            // The affinity path uses GetAffinityProcessInfo which sets numactl as the
+            // executable, then CreateElevatedProcess wraps it with sudo to ensure
+            // ulimit and process elevation work correctly (matching non-affinity path).
+            string scriptPath = Regex.Escape(executor.Combine(directory, WrkExecutor.WrkRunShell));
+            this.mockFixture.Tracking.AssertCommandsExecuted(true,
+                $@"sudo numactl -C 8-15 bash {scriptPath} {Regex.Escape(commandArgumentInput)}");
+        }
 
         public void SetUpWorkloadOutput()
         {
