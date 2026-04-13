@@ -512,6 +512,262 @@ namespace VirtualClient.Actions.DiskPerformance
             }
         }
 
+        // -----------------------------------------------------------------------
+        // GetRawDiskIndexRange tests
+        // -----------------------------------------------------------------------
+
+        [Test]
+        public void DiskSpdExecutorGetRawDiskIndexRange_ParsesDashRange_CorrectCount()
+        {
+            using (TestDiskSpdExecutor executor = new TestDiskSpdExecutor(this.Dependencies, this.profileParameters))
+            {
+                IEnumerable<Disk> disks = executor.GetRawDiskIndexRange("6-10");
+
+                // Indices 6, 7, 8, 9, 10 → 5 disks
+                Assert.AreEqual(5, disks.Count());
+            }
+        }
+
+        [Test]
+        public void DiskSpdExecutorGetRawDiskIndexRange_ParsesDashRange_IndicesAreCorrect()
+        {
+            using (TestDiskSpdExecutor executor = new TestDiskSpdExecutor(this.Dependencies, this.profileParameters))
+            {
+                IEnumerable<Disk> disks = executor.GetRawDiskIndexRange("6-10").ToList();
+
+                CollectionAssert.AreEqual(
+                    new[] { 6, 7, 8, 9, 10 },
+                    disks.Select(d => d.Index));
+            }
+        }
+
+        [Test]
+        public void DiskSpdExecutorGetRawDiskIndexRange_ParsesDashRange_DevicePathsAreCorrect()
+        {
+            using (TestDiskSpdExecutor executor = new TestDiskSpdExecutor(this.Dependencies, this.profileParameters))
+            {
+                IEnumerable<Disk> disks = executor.GetRawDiskIndexRange("6-8").ToList();
+
+                // Device paths use the same convention as WindowsDiskManager: \\.\PHYSICALDISK{N}
+                CollectionAssert.AreEqual(
+                    new[] { @"\\.\PHYSICALDISK6", @"\\.\PHYSICALDISK7", @"\\.\PHYSICALDISK8" },
+                    disks.Select(d => d.DevicePath));
+            }
+        }
+
+        [Test]
+        public void DiskSpdExecutorGetRawDiskIndexRange_ParsesDashRange_SingleDisk()
+        {
+            // Range where start == end should yield exactly one disk.
+            using (TestDiskSpdExecutor executor = new TestDiskSpdExecutor(this.Dependencies, this.profileParameters))
+            {
+                IEnumerable<Disk> disks = executor.GetRawDiskIndexRange("42-42").ToList();
+
+                Assert.AreEqual(1, disks.Count());
+                Assert.AreEqual(42, disks.First().Index);
+            }
+        }
+
+        [Test]
+        public void DiskSpdExecutorGetRawDiskIndexRange_ParsesDashRange_IgnoresWhitespace()
+        {
+            using (TestDiskSpdExecutor executor = new TestDiskSpdExecutor(this.Dependencies, this.profileParameters))
+            {
+                IEnumerable<Disk> disks = executor.GetRawDiskIndexRange(" 6 - 8 ").ToList();
+
+                Assert.AreEqual(3, disks.Count());
+                CollectionAssert.AreEqual(new[] { 6, 7, 8 }, disks.Select(d => d.Index));
+            }
+        }
+
+        [Test]
+        public void DiskSpdExecutorGetRawDiskIndexRange_ParsesCommaSeparatedList_CorrectCount()
+        {
+            using (TestDiskSpdExecutor executor = new TestDiskSpdExecutor(this.Dependencies, this.profileParameters))
+            {
+                IEnumerable<Disk> disks = executor.GetRawDiskIndexRange("6,10,15");
+
+                Assert.AreEqual(3, disks.Count());
+            }
+        }
+
+        [Test]
+        public void DiskSpdExecutorGetRawDiskIndexRange_ParsesCommaSeparatedList_IndicesAreCorrect()
+        {
+            using (TestDiskSpdExecutor executor = new TestDiskSpdExecutor(this.Dependencies, this.profileParameters))
+            {
+                IEnumerable<Disk> disks = executor.GetRawDiskIndexRange("6,10,15").ToList();
+
+                CollectionAssert.AreEqual(new[] { 6, 10, 15 }, disks.Select(d => d.Index));
+            }
+        }
+
+        [Test]
+        public void DiskSpdExecutorGetRawDiskIndexRange_ParsesCommaSeparatedList_IgnoresWhitespace()
+        {
+            using (TestDiskSpdExecutor executor = new TestDiskSpdExecutor(this.Dependencies, this.profileParameters))
+            {
+                IEnumerable<Disk> disks = executor.GetRawDiskIndexRange(" 6 , 7 , 8 ").ToList();
+
+                CollectionAssert.AreEqual(new[] { 6, 7, 8 }, disks.Select(d => d.Index));
+            }
+        }
+
+        [Test]
+        public void DiskSpdExecutorGetRawDiskIndexRange_ParsesLargeJBODRange()
+        {
+            // Mirrors the SEscript's range(6, 181) → indices 6..180
+            using (TestDiskSpdExecutor executor = new TestDiskSpdExecutor(this.Dependencies, this.profileParameters))
+            {
+                IEnumerable<Disk> disks = executor.GetRawDiskIndexRange("6-180").ToList();
+
+                Assert.AreEqual(175, disks.Count());
+                Assert.AreEqual(6, disks.First().Index);
+                Assert.AreEqual(180, disks.Last().Index);
+            }
+        }
+
+        [Test]
+        [TestCase(null)]
+        [TestCase("")]
+        [TestCase(" ")]
+        public void DiskSpdExecutorGetRawDiskIndexRange_ThrowsOnNullOrWhitespace(string invalidRange)
+        {
+            using (TestDiskSpdExecutor executor = new TestDiskSpdExecutor(this.Dependencies, this.profileParameters))
+            {
+                Assert.Throws<ArgumentException>(() => executor.GetRawDiskIndexRange(invalidRange));
+            }
+        }
+
+        // -----------------------------------------------------------------------
+        // RawDiskIndexRange in ExecuteAsync tests
+        // -----------------------------------------------------------------------
+
+        [Test]
+        public void DiskSpdExecutorWithRawDiskIndexRange_BypassesDiskManagerEnumeration()
+        {
+            // When RawDiskIndexRange is set, the disks come from GetRawDiskIndexRange, not DiskManager.
+            // Verify this by: (a) GetRawDiskIndexRange returns disks without any DiskManager call,
+            // and (b) those disks can be fed directly into CreateWorkloadProcesses without error.
+            this.profileParameters[nameof(DiskSpdExecutor.RawDiskTarget)] = true;
+            this.profileParameters[nameof(DiskSpdExecutor.RawDiskIndexRange)] = "6-8";
+
+            // Record whether DiskManager was called.
+            bool diskManagerCalled = false;
+            this.DiskManager.OnGetDisks().Returns((CancellationToken token) =>
+            {
+                diskManagerCalled = true;
+                return Task.FromResult(this.disks);
+            });
+
+            using (TestDiskSpdExecutor executor = new TestDiskSpdExecutor(this.Dependencies, this.profileParameters))
+            {
+                // GetRawDiskIndexRange must NOT call DiskManager.
+                IEnumerable<Disk> disksFromRange = executor.GetRawDiskIndexRange("6-8");
+                Assert.AreEqual(3, disksFromRange.Count());
+            }
+
+            Assert.IsFalse(diskManagerCalled,
+                "DiskManager must NOT be called when disks are obtained via GetRawDiskIndexRange.");
+        }
+
+        [Test]
+        public void DiskSpdExecutorWithRawDiskIndexRange_CreatesOneProcessPerDisk()
+        {
+            // Range "6-8" → disks 6, 7, 8 → 3 processes (SingleProcessPerDisk model).
+            this.profileParameters[nameof(DiskSpdExecutor.RawDiskTarget)] = true;
+
+            List<string> capturedArguments = new List<string>();
+            this.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            {
+                capturedArguments.Add(arguments);
+                return new InMemoryProcess
+                {
+                    StartInfo = new ProcessStartInfo { FileName = exe, Arguments = arguments }
+                };
+            };
+
+            using (TestDiskSpdExecutor executor = new TestDiskSpdExecutor(this.Dependencies, this.profileParameters))
+            {
+                IEnumerable<Disk> disksFromRange = executor.GetRawDiskIndexRange("6-8");
+                executor.CreateWorkloadProcesses(
+                    "diskspd.exe",
+                    "-b128K -d60 -o32 -t1 -r -w0 -Sh -L -Rxml",
+                    disksFromRange,
+                    WorkloadProcessModel.SingleProcessPerDisk);
+            }
+
+            Assert.AreEqual(3, capturedArguments.Count, "Expected one process per disk in the range.");
+            Assert.IsTrue(capturedArguments[0].TrimEnd().EndsWith("#6"));
+            Assert.IsTrue(capturedArguments[1].TrimEnd().EndsWith("#7"));
+            Assert.IsTrue(capturedArguments[2].TrimEnd().EndsWith("#8"));
+        }
+
+        [Test]
+        public void DiskSpdExecutorWithRawDiskIndexRange_UsesRawDiskIndexSyntaxInCommandLine()
+        {
+            // Confirm #N notation (not a file path) is written to each spawned process.
+            this.profileParameters[nameof(DiskSpdExecutor.RawDiskTarget)] = true;
+
+            List<string> capturedArguments = new List<string>();
+            this.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            {
+                capturedArguments.Add(arguments);
+                return new InMemoryProcess
+                {
+                    StartInfo = new ProcessStartInfo { FileName = exe, Arguments = arguments }
+                };
+            };
+
+            using (TestDiskSpdExecutor executor = new TestDiskSpdExecutor(this.Dependencies, this.profileParameters))
+            {
+                IEnumerable<Disk> disksFromRange = executor.GetRawDiskIndexRange("10-11");
+                executor.CreateWorkloadProcesses(
+                    "diskspd.exe",
+                    "-b128K -d60 -o32 -t1 -r -w0 -Sh -L -Rxml",
+                    disksFromRange,
+                    WorkloadProcessModel.SingleProcessPerDisk);
+            }
+
+            Assert.AreEqual(2, capturedArguments.Count);
+            foreach (string args in capturedArguments)
+            {
+                // #N notation must be present; no test file extension should appear.
+                Assert.IsTrue(args.Contains(" #10") || args.Contains(" #11"),
+                    $"Expected '#N' syntax but got: {args}");
+                Assert.IsFalse(args.Contains(".dat"),
+                    $"Unexpected .dat file path: {args}");
+            }
+        }
+
+        [Test]
+        public void DiskSpdExecutorWithoutRawDiskIndexRange_GetDisksToTestUsesFilteredDiskSet()
+        {
+            // When RawDiskIndexRange is NOT set, GetDisksToTest must use DiskFilters and return
+            // disks from the DiskManager-sourced collection (not a hardcoded range).
+            // This is the normal (non-raw-range) code path.
+            IEnumerable<Disk> nonOsDisks = this.disks.Where(disk => !disk.IsOperatingSystem());
+
+            using (TestDiskSpdExecutor executor = new TestDiskSpdExecutor(this.Dependencies, this.profileParameters))
+            {
+                IEnumerable<Disk> disksToTest = executor.GetDisksToTest(this.disks);
+
+                // The default filter excludes the OS disk, so only non-OS disks should be returned.
+                CollectionAssert.AreEquivalent(
+                    nonOsDisks.Select(d => d.DevicePath),
+                    disksToTest.Select(d => d.DevicePath));
+            }
+        }
+
+        [Test]
+        public void DiskSpdExecutorRawDiskIndexRangeDefaultsToNull()
+        {
+            using (TestDiskSpdExecutor executor = new TestDiskSpdExecutor(this.Dependencies, this.profileParameters))
+            {
+                Assert.IsNull(executor.RawDiskIndexRange);
+            }
+        }
+
         [Test]
         public void DiskSpdExecutorThrowsWhenBothRawDiskTargetAndDiskFillAreEnabled()
         {
@@ -523,6 +779,227 @@ namespace VirtualClient.Actions.DiskPerformance
             {
                 WorkloadException exc = Assert.Throws<WorkloadException>(() => executor.Validate());
                 Assert.AreEqual(ErrorReason.InvalidProfileDefinition, exc.Reason);
+            }
+        }
+
+        // -----------------------------------------------------------------------
+        // Log file naming tests (ExecuteWorkloadAsync)
+        // -----------------------------------------------------------------------
+
+        [Test]
+        public async Task DiskSpdExecutorWithRawDiskTarget_UsesScenarioAndDiskIndexAsLogFileName()
+        {
+            // When RawDiskTarget=true the log filename must encode both the scenario
+            // and the disk ordinal: "{Scenario}_disk{N}.log"
+            this.profileParameters[nameof(DiskSpdExecutor.Scenario)] = "RandomRead_128k_BlockSize";
+            this.profileParameters[nameof(DiskSpdExecutor.RawDiskTarget)] = true;
+            this.profileParameters[nameof(DiskSpdExecutor.LogToFile)] = true;
+
+            string capturedLogFilePath = null;
+            this.FileSystem
+                .Setup(fs => fs.File.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Callback<string, string, CancellationToken>((path, content, ct) =>
+                {
+                    if (path.EndsWith(".log", StringComparison.OrdinalIgnoreCase))
+                    {
+                        capturedLogFilePath = path;
+                    }
+                })
+                .Returns(Task.CompletedTask);
+
+            InMemoryProcess process = new InMemoryProcess
+            {
+                OnStart = () => true,
+                OnHasExited = () => true
+            };
+            process.StandardOutput.Append(this.output);
+
+            DiskWorkloadProcess workload = new DiskWorkloadProcess(process, "SingleProcessPerDisk,OsDisk:false,1", "#6");
+
+            using (TestDiskSpdExecutor executor = new TestDiskSpdExecutor(this.Dependencies, this.profileParameters))
+            {
+                await executor.ExecuteWorkloadsAsync(new[] { workload }, CancellationToken.None).ConfigureAwait(false);
+            }
+
+            Assert.IsNotNull(capturedLogFilePath, "Expected a log file to be written.");
+            Assert.IsTrue(
+                Path.GetFileName(capturedLogFilePath).Contains("_disk6"),
+                $"Expected log filename to contain '_disk6' but was: {capturedLogFilePath}");
+        }
+
+        [Test]
+        public async Task DiskSpdExecutorWithoutRawDiskTarget_DoesNotAddDiskIndexToLogFileName()
+        {
+            // When RawDiskTarget is false the log filename must NOT contain a '_disk' suffix;
+            // it should fall back to the default (scenario name only).
+            this.profileParameters[nameof(DiskSpdExecutor.Scenario)] = "RandomRead_128k_BlockSize";
+            // RawDiskTarget intentionally not set — defaults to false.
+            this.profileParameters[nameof(DiskSpdExecutor.LogToFile)] = true;
+
+            string capturedLogFilePath = null;
+            this.FileSystem
+                .Setup(fs => fs.File.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Callback<string, string, CancellationToken>((path, content, ct) =>
+                {
+                    if (path.EndsWith(".log", StringComparison.OrdinalIgnoreCase))
+                    {
+                        capturedLogFilePath = path;
+                    }
+                })
+                .Returns(Task.CompletedTask);
+
+            InMemoryProcess process = new InMemoryProcess
+            {
+                OnStart = () => true,
+                OnHasExited = () => true
+            };
+            process.StandardOutput.Append(this.output);
+
+            DiskWorkloadProcess workload = new DiskWorkloadProcess(process, "SingleProcessPerDisk,OsDisk:false,1", "D:\\any\\file.dat");
+
+            using (TestDiskSpdExecutor executor = new TestDiskSpdExecutor(this.Dependencies, this.profileParameters))
+            {
+                await executor.ExecuteWorkloadsAsync(new[] { workload }, CancellationToken.None).ConfigureAwait(false);
+            }
+
+            Assert.IsNotNull(capturedLogFilePath, "Expected a log file to be written.");
+            Assert.IsFalse(
+                Path.GetFileName(capturedLogFilePath).Contains("_disk"),
+                $"Expected no '_disk' suffix in log filename when RawDiskTarget=false, but was: {capturedLogFilePath}");
+        }
+
+        [Test]
+        public async Task DiskSpdExecutorWithRawDiskTarget_LogFilenameContainsCorrectDiskOrdinalForEachProcess()
+        {
+            // Multiple workloads (#42 and #180) must each produce a log file whose
+            // name encodes their own disk index, not a shared or wrong value.
+            this.profileParameters[nameof(DiskSpdExecutor.Scenario)] = "SequentialRead_1024k_BlockSize";
+            this.profileParameters[nameof(DiskSpdExecutor.RawDiskTarget)] = true;
+            this.profileParameters[nameof(DiskSpdExecutor.LogToFile)] = true;
+
+            List<string> capturedPaths = new List<string>();
+            this.FileSystem
+                .Setup(fs => fs.File.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Callback<string, string, CancellationToken>((path, content, ct) =>
+                {
+                    if (path.EndsWith(".log", StringComparison.OrdinalIgnoreCase))
+                    {
+                        capturedPaths.Add(path);
+                    }
+                })
+                .Returns(Task.CompletedTask);
+
+            InMemoryProcess p42 = new InMemoryProcess { OnStart = () => true, OnHasExited = () => true };
+            InMemoryProcess p180 = new InMemoryProcess { OnStart = () => true, OnHasExited = () => true };
+            p42.StandardOutput.Append(this.output);
+            p180.StandardOutput.Append(this.output);
+
+            List<DiskWorkloadProcess> workloads = new List<DiskWorkloadProcess>
+            {
+                new DiskWorkloadProcess(p42, "instance", "#42"),
+                new DiskWorkloadProcess(p180, "instance", "#180")
+            };
+
+            using (TestDiskSpdExecutor executor = new TestDiskSpdExecutor(this.Dependencies, this.profileParameters))
+            {
+                await executor.ExecuteWorkloadsAsync(workloads, CancellationToken.None).ConfigureAwait(false);
+            }
+
+            Assert.AreEqual(2, capturedPaths.Count, "Expected one log file per workload.");
+            Assert.IsTrue(
+                capturedPaths.Any(p => Path.GetFileName(p).Contains("_disk42")),
+                $"Expected a log file with '_disk42'. Paths: {string.Join(", ", capturedPaths)}");
+            Assert.IsTrue(
+                capturedPaths.Any(p => Path.GetFileName(p).Contains("_disk180")),
+                $"Expected a log file with '_disk180'. Paths: {string.Join(", ", capturedPaths)}");
+        }
+
+        [Test]
+        public async Task DiskSpdExecutorRawDiskTarget_ParsesGetPhysicalDiskOutput()
+        {
+            // Simulate Get-PhysicalDisk output: one integer DeviceId per line.
+            string psOutput = "6\r\n7\r\n8\r\n180";
+
+            this.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            {
+                if (exe.Equals("powershell.exe", StringComparison.OrdinalIgnoreCase))
+                {
+                    InMemoryProcess p = new InMemoryProcess { OnStart = () => true, OnHasExited = () => true };
+                    p.StandardOutput.Append(psOutput);
+                    return p;
+                }
+
+                return new InMemoryProcess { OnStart = () => true, OnHasExited = () => true };
+            };
+
+            using (TestDiskSpdExecutor executor = new TestDiskSpdExecutor(this.Dependencies, this.profileParameters))
+            {
+                IEnumerable<Disk> disks = await executor.DiscoverRawDisksAsync(CancellationToken.None);
+
+                Assert.AreEqual(4, disks.Count());
+                Assert.AreEqual(6, disks.ElementAt(0).Index);
+                Assert.AreEqual(7, disks.ElementAt(1).Index);
+                Assert.AreEqual(8, disks.ElementAt(2).Index);
+                Assert.AreEqual(180, disks.ElementAt(3).Index);
+            }
+        }
+
+        [Test]
+        public async Task DiskSpdExecutorRawDiskTarget_InvokesGetPhysicalDiskViaPowerShell()
+        {
+            // The discovery method must invoke powershell.exe with Get-PhysicalDisk.
+            string capturedExe = null;
+            string capturedArgs = null;
+
+            this.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            {
+                capturedExe = exe;
+                capturedArgs = arguments;
+                InMemoryProcess p = new InMemoryProcess { OnStart = () => true, OnHasExited = () => true };
+                p.StandardOutput.Append("6\r\n7");
+                return p;
+            };
+
+            using (TestDiskSpdExecutor executor = new TestDiskSpdExecutor(this.Dependencies, this.profileParameters))
+            {
+                await executor.DiscoverRawDisksAsync(CancellationToken.None);
+            }
+
+            Assert.AreEqual("powershell.exe", capturedExe, "Expected powershell.exe to be invoked.");
+            Assert.IsTrue(
+                capturedArgs.Contains("Get-PhysicalDisk"),
+                $"Expected 'Get-PhysicalDisk' in the PowerShell command but got: {capturedArgs}");
+            Assert.IsTrue(
+                capturedArgs.Contains("MediaType") && capturedArgs.Contains("HDD"),
+                $"Expected HDD MediaType filter in the PowerShell command but got: {capturedArgs}");
+        }
+
+        [Test]
+        public void DiskSpdExecutorRawDiskTarget_ExplicitRangeSkipsPowerShellDiscovery()
+        {
+            // When RawDiskTarget=true and RawDiskIndexRange is supplied, the explicit range wins:
+            // powershell.exe must NOT be invoked and the resulting disks come from the range.
+            this.profileParameters[nameof(DiskSpdExecutor.RawDiskTarget)] = true;
+            this.profileParameters[nameof(DiskSpdExecutor.RawDiskIndexRange)] = "6-8";
+
+            bool powershellInvoked = false;
+            this.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            {
+                if (exe.Equals("powershell.exe", StringComparison.OrdinalIgnoreCase))
+                {
+                    powershellInvoked = true;
+                }
+
+                return new InMemoryProcess { OnStart = () => true, OnHasExited = () => true };
+            };
+
+            using (TestDiskSpdExecutor executor = new TestDiskSpdExecutor(this.Dependencies, this.profileParameters))
+            {
+                IEnumerable<Disk> disks = executor.GetRawDiskIndexRange("6-8");
+
+                Assert.IsFalse(powershellInvoked, "powershell.exe must not be invoked when RawDiskIndexRange is set.");
+                Assert.AreEqual(3, disks.Count(), "Expected exactly 3 disks for range 6-8.");
+                Assert.IsTrue(disks.All(d => d.Index >= 6 && d.Index <= 8), "All disk indices must be in [6, 8].");
             }
         }
 
@@ -574,6 +1051,16 @@ namespace VirtualClient.Actions.DiskPerformance
             public new IEnumerable<Disk> GetDisksToTest(IEnumerable<Disk> disks)
             {
                 return base.GetDisksToTest(disks);
+            }
+
+            public new IEnumerable<Disk> GetRawDiskIndexRange(string range)
+            {
+                return base.GetRawDiskIndexRange(range);
+            }
+
+            public new Task<IEnumerable<Disk>> DiscoverRawDisksAsync(CancellationToken cancellationToken)
+            {
+                return base.DiscoverRawDisksAsync(cancellationToken);
             }
 
             public new void Validate()
