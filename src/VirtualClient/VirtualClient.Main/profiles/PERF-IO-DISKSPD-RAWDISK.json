@@ -7,7 +7,9 @@
     },
     "Parameters": {
         "Duration": "00:01:00",
-        "ProcessModel": "SingleProcessPerDisk"
+        "ProcessModel": "SingleProcessPerDisk",
+        "CommandLine": "-b128K -d{Duration.TotalSeconds} -o32 -t1 -r -w0 -Sh -L -Rtext",
+        "RawDiskIndexRange": ""
     },
     "Actions": [
         {
@@ -16,10 +18,11 @@
                 "Scenario": "RandomRead_128k_BlockSize",
                 "MetricScenario": "diskspd_rawdisk_randread_128k_d32_th1",
                 "PackageName": "diskspd",
-                "CommandLine": "-b128K -d{Duration.TotalSeconds} -o32 -t1 -r -w0 -Sh -L -Rtext",
+                "CommandLine": "$.Parameters.CommandLine",
                 "Duration": "$.Parameters.Duration",
                 "ProcessModel": "$.Parameters.ProcessModel",
                 "RawDiskTarget": true,
+                "RawDiskIndexRange": "$.Parameters.RawDiskIndexRange",
                 "Tags": "IO,DiskSpd,randread,rawdisk"
             }
         }

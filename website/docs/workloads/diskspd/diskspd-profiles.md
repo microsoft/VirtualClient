@@ -144,3 +144,72 @@ aspects of the workload execution.
   # Run specific scenarios only. Each action in a profile as a 'Scenario' name.
   VirtualClient.exe --profile=PERF-IO-DISKSPD.json --system=Demo --timeout=1440 --scenarios=RandomWrite_4k_BlockSize,RandomWrite_8k_BlockSize,RandomRead_8k_BlockSize,RandomRead_4k_BlockSize
   ```
+
+## PERF-IO-DISKSPD-RAWDISK.json
+Runs a read I/O workload using the DiskSpd toolset targeting raw physical HDD disks directly (no filesystem). This profile is a Windows-only profile  
+designed for bare-metal or JBOD scenarios where disks are not formatted or mounted. It targets disks at the raw block level using DiskSpd's native `#N`  
+physical disk index syntax, bypassing the Windows volume manager entirely.
+
+The profile auto-discovers HDD disks at runtime using `Get-PhysicalDisk | Where-Object { $_.MediaType -eq 'HDD' }`, which correctly enumerates offline  
+JBOD drives that DiskPart/DiskManager cannot see. An explicit `RawDiskIndexRange` parameter can be supplied to override auto-discovery. One DiskSpd  
+process is launched per discovered disk (`ProcessModel=SingleProcessPerDisk`).
+
+* [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-IO-DISKSPD-RAWDISK.json)
+
+* **Supported Platform/Architectures**
+  * win-x64
+  * win-arm64
+
+* **Supported Operating Systems**
+  * Windows 10 / Windows 11
+  * Windows Server 2016 / 2019 / 2022
+
+* **Supports Disconnected Scenarios**  
+  * Yes. When the DiskSpd package is included in the 'packages' directory.
+
+* **Dependencies**
+  * Internet connection (for downloading the DiskSpd package on first run).
+  * Physical HDD disks present on the system (auto-discovered via `Get-PhysicalDisk`).
+
+* **Scenarios**
+  * Random Read Operations
+    * 128k block size, queue depth 32, 1 thread per disk (`RandomRead_128k_BlockSize`)
+
+* **Profile Parameters**  
+  The following parameters can be optionally supplied on the command line to modify the behaviors of the workload.
+
+  | Parameter          | Purpose | Default Value |
+  |--------------------|---------|---------------|
+  | CommandLine        | Optional. The DiskSpd command line arguments template. Supports `{Duration.TotalSeconds}` substitution. | `-b128K -d{Duration.TotalSeconds} -o32 -t1 -r -w0 -Sh -L -Rtext` |
+  | Duration           | Optional. The duration of each DiskSpd scenario/action. | 1 minute |
+  | ProcessModel       | Optional. Defines how DiskSpd processes are distributed across disks. `SingleProcessPerDisk` runs one process per raw disk. | SingleProcessPerDisk |
+  | RawDiskIndexRange  | Optional. Overrides auto-discovery when provided. Accepted forms: a hyphen range (e.g. `6-180`), a single index (e.g. `36`), or a comma-separated list (e.g. `37,38,39,40` — see note below). When empty or omitted, HDD disks are auto-discovered via `Get-PhysicalDisk`. | (auto-discovered HDD disks) |
+
+  > **Note on comma-separated lists:** The VC CLI uses `",,,"`  as the delimiter between multiple `--parameters` values. A comma-separated `RawDiskIndexRange` (e.g. `35,38`) must therefore be followed by `,,,` so the parser treats it as a single value rather than splitting on the commas. The simplest way is to append a trailing `",,,"`  (e.g. `"RawDiskIndexRange=35,38,,,"`) or include another parameter (e.g. `"RawDiskIndexRange=37,38,39,40,,,Duration=00:00:30"`). Contiguous ranges via hyphen syntax (e.g. `30-40`) have no such requirement.
+
+* **Usage Examples**  
+  The following section provides a few basic examples of how to use the workload profile.
+
+  ``` bash
+  # Run the workload — HDD disks are auto-discovered via Get-PhysicalDisk (MediaType=HDD)
+  VirtualClient.exe --profile=PERF-IO-DISKSPD-RAWDISK.json --system=Demo --timeout=1440
+
+  # Auto-discover disks with a custom duration (30 seconds per scenario)
+  VirtualClient.exe --profile=PERF-IO-DISKSPD-RAWDISK.json --system=Demo --timeout=1440 --parameters="Duration=00:00:30"
+
+  # Target a single disk by index
+  VirtualClient.exe --profile=PERF-IO-DISKSPD-RAWDISK.json --system=Demo --timeout=1440 --parameters="RawDiskIndexRange=36,,,Duration=00:00:30"
+
+  # Target a contiguous range of disks using hyphen syntax (disks 30 through 31)
+  VirtualClient.exe --profile=PERF-IO-DISKSPD-RAWDISK.json --system=Demo --timeout=1440 --parameters="RawDiskIndexRange=30-31,,,Duration=00:00:30"
+
+  # Target a non-contiguous set of disks using a comma-separated list
+  # Append a trailing ",,," so the parser treats the value as a single token
+  VirtualClient.exe --profile=PERF-IO-DISKSPD-RAWDISK.json --system=Demo --timeout=1440 --parameters="RawDiskIndexRange=35,38,,,"
+
+  # Comma-separated list combined with another parameter (trailing ",,," not needed in this case)
+  VirtualClient.exe --profile=PERF-IO-DISKSPD-RAWDISK.json --system=Demo --timeout=1440 --parameters="RawDiskIndexRange=37,38,39,40,,,Duration=00:00:30"
+
+  # Override the command line (e.g. change block size to 64K)
+  VirtualClient.exe --profile=PERF-IO-DISKSPD-RAWDISK.json --system=Demo --timeout=1440 --parameters="CommandLine=-b64K -d{Duration.TotalSeconds} -o32 -t1 -r -w0 -Sh -L -Rtext,,,Duration=00:00:30"
+  ```
