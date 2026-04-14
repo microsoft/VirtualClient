@@ -1,0 +1,404 @@
+﻿{
+    "Description": "Networking benchmarking Workload",
+    "Metadata": {
+        "RecommendedMinimumExecutionTime": "01:00:00",
+        "SupportedPlatforms": "linux-x64,linux-arm64",
+        "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu",
+        "Note": "Reverse Proxy config requires three nodes for the roles Client, Reverse Proxy, and Server."
+    },
+    "Parameters": {
+        "TestDuration": "00:02:30",
+        "Timeout": "00:30:00",
+        "FileSizeInKB": 1,
+        "EmitLatencySpectrum": false,
+        "Workers": null,
+        "TargetService": "reverse-proxy",
+        "CommandArguments": "--latency --threads {ThreadCount} --connections {Connection} --duration {TestDuration.TotalSeconds}s --timeout 10s https://{reverseproxyip}/{FileSizeInKB}kb"
+    },
+    "Actions": [
+        {
+            "Type": "NginxServerExecutor",
+            "Parameters": {
+                "Role": "Server",
+                "PackageName": "nginxconfiguration",
+                "FileSizeInKB": "$.Parameters.FileSizeInKB",
+                "Timeout": "$.Parameters.Timeout",
+                "Workers": "$.Parameters.Workers"
+            }
+        },
+        {
+            "Type": "NginxServerExecutor",
+            "Parameters": {
+                "Role": "ReverseProxy",
+                "PackageName": "nginxconfiguration",
+                "FileSizeInKB": "$.Parameters.FileSizeInKB",
+                "Timeout": "$.Parameters.Timeout",
+                "Workers": "$.Parameters.Workers"
+            }
+        },
+        {
+            "Type": "WrkExecutor",
+            "Parameters": {
+                "PackageName": "wrk",
+                "Scenario": "Latency_100_Connections",
+                "MetricScenario": "{ThreadCount}th_{Connection}c_{FileSizeInKB}kb",
+                "CommandArguments": "$.Parameters.CommandArguments",
+                "ThreadCount": "{LogicalCoreCount}",
+                "Connection": 100,
+                "FileSizeInKB": "$.Parameters.FileSizeInKB",
+                "TestDuration": "$.Parameters.TestDuration",
+                "EmitLatencySpectrum": "$.Parameters.EmitLatencySpectrum",
+                "TargetService": "$.Parameters.TargetService",
+                "Role": "Client",
+                "Timeout": "$.Parameters.Timeout",
+                "Tags": "Networking,NGINX,WRK"
+            }
+        },
+        {
+            "Type": "WrkExecutor",
+            "Parameters": {
+                "PackageName": "wrk",
+                "Scenario": "Latency_1K_Connections",
+                "MetricScenario": "{ThreadCount}th_{Connection}c_{FileSizeInKB}kb",
+                "CommandArguments": "$.Parameters.CommandArguments",
+                "ThreadCount": "{LogicalCoreCount}",
+                "Connection": 1000,
+                "FileSizeInKB": "$.Parameters.FileSizeInKB",
+                "TestDuration": "$.Parameters.TestDuration",
+                "EmitLatencySpectrum": "$.Parameters.EmitLatencySpectrum",
+                "TargetService": "$.Parameters.TargetService",
+                "Role": "Client",
+                "Timeout": "$.Parameters.Timeout",
+                "Tags": "Networking,NGINX,WRK"
+            }
+        },
+        {
+            "Type": "WrkExecutor",
+            "Parameters": {
+                "PackageName": "wrk",
+                "Scenario": "Latency_5K_Connections",
+                "MetricScenario": "{ThreadCount}th_{Connection}c_{FileSizeInKB}kb",
+                "CommandArguments": "$.Parameters.CommandArguments",
+                "ThreadCount": "{LogicalCoreCount}",
+                "Connection": 5000,
+                "FileSizeInKB": "$.Parameters.FileSizeInKB",
+                "TestDuration": "$.Parameters.TestDuration",
+                "EmitLatencySpectrum": "$.Parameters.EmitLatencySpectrum",
+                "TargetService": "$.Parameters.TargetService",
+                "Role": "Client",
+                "Timeout": "$.Parameters.Timeout",
+                "Tags": "Networking,NGINX,WRK"
+            }
+        },
+        {
+            "Type": "WrkExecutor",
+            "Parameters": {
+                "PackageName": "wrk",
+                "Scenario": "Latency_10K_Connections",
+                "MetricScenario": "{ThreadCount}th_{Connection}c_{FileSizeInKB}kb",
+                "CommandArguments": "$.Parameters.CommandArguments",
+                "ThreadCount": "{LogicalCoreCount}",
+                "Connection": 10000,
+                "FileSizeInKB": "$.Parameters.FileSizeInKB",
+                "TestDuration": "$.Parameters.TestDuration",
+                "EmitLatencySpectrum": "$.Parameters.EmitLatencySpectrum",
+                "TargetService": "$.Parameters.TargetService",
+                "Role": "Client",
+                "Timeout": "$.Parameters.Timeout",
+                "Tags": "Networking,NGINX,WRK"
+            }
+        },
+
+        {
+            "Type": "WrkExecutor",
+            "Parameters": {
+                "PackageName": "wrk",
+                "Scenario": "Latency_100_Connections_Thread/2",
+                "MetricScenario": "{ThreadCount}th_{Connection}c_{FileSizeInKB}kb",
+                "CommandArguments": "$.Parameters.CommandArguments",
+                "ThreadCount": "{calculate({LogicalCoreCount}/2)}",
+                "Connection": 100,
+                "FileSizeInKB": "$.Parameters.FileSizeInKB",
+                "TestDuration": "$.Parameters.TestDuration",
+                "EmitLatencySpectrum": "$.Parameters.EmitLatencySpectrum",
+                "TargetService": "$.Parameters.TargetService",
+                "Role": "Client",
+                "Timeout": "$.Parameters.Timeout",
+                "Tags": "Networking,NGINX,WRK"
+            }
+        },
+        {
+            "Type": "WrkExecutor",
+            "Parameters": {
+                "PackageName": "wrk",
+                "Scenario": "Latency_1K_Connections_Thread/2",
+                "MetricScenario": "{ThreadCount}th_{Connection}c_{FileSizeInKB}kb",
+                "CommandArguments": "$.Parameters.CommandArguments",
+                "ThreadCount": "{calculate({LogicalCoreCount}/2)}",
+                "Connection": 1000,
+                "FileSizeInKB": "$.Parameters.FileSizeInKB",
+                "TestDuration": "$.Parameters.TestDuration",
+                "EmitLatencySpectrum": "$.Parameters.EmitLatencySpectrum",
+                "TargetService": "$.Parameters.TargetService",
+                "Role": "Client",
+                "Timeout": "$.Parameters.Timeout",
+                "Tags": "Networking,NGINX,WRK"
+            }
+        },
+        {
+            "Type": "WrkExecutor",
+            "Parameters": {
+                "PackageName": "wrk",
+                "Scenario": "Latency_5K_Connections_Thread/2",
+                "MetricScenario": "{ThreadCount}th_{Connection}c_{FileSizeInKB}kb",
+                "CommandArguments": "$.Parameters.CommandArguments",
+                "ThreadCount": "{calculate({LogicalCoreCount}/2)}",
+                "Connection": 5000,
+                "FileSizeInKB": "$.Parameters.FileSizeInKB",
+                "TestDuration": "$.Parameters.TestDuration",
+                "EmitLatencySpectrum": "$.Parameters.EmitLatencySpectrum",
+                "TargetService": "$.Parameters.TargetService",
+                "Role": "Client",
+                "Timeout": "$.Parameters.Timeout",
+                "Tags": "Networking,NGINX,WRK"
+            }
+        },
+        {
+            "Type": "WrkExecutor",
+            "Parameters": {
+                "PackageName": "wrk",
+                "Scenario": "Latency_10K_Connections_Thread/2",
+                "MetricScenario": "{ThreadCount}th_{Connection}c_{FileSizeInKB}kb",
+                "CommandArguments": "$.Parameters.CommandArguments",
+                "ThreadCount": "{calculate({LogicalCoreCount}/2)}",
+                "Connection": 10000,
+                "FileSizeInKB": "$.Parameters.FileSizeInKB",
+                "TestDuration": "$.Parameters.TestDuration",
+                "EmitLatencySpectrum": "$.Parameters.EmitLatencySpectrum",
+                "TargetService": "$.Parameters.TargetService",
+                "Role": "Client",
+                "Timeout": "$.Parameters.Timeout",
+                "Tags": "Networking,NGINX,WRK"
+            }
+        },
+
+        {
+            "Type": "WrkExecutor",
+            "Parameters": {
+                "PackageName": "wrk",
+                "Scenario": "Latency_100_Connections_Thread/4",
+                "MetricScenario": "{ThreadCount}th_{Connection}c_{FileSizeInKB}kb",
+                "CommandArguments": "$.Parameters.CommandArguments",
+                "ThreadCount": "{calculate({LogicalCoreCount}/4)}",
+                "Connection": 100,
+                "FileSizeInKB": "$.Parameters.FileSizeInKB",
+                "TestDuration": "$.Parameters.TestDuration",
+                "EmitLatencySpectrum": "$.Parameters.EmitLatencySpectrum",
+                "TargetService": "$.Parameters.TargetService",
+                "Role": "Client",
+                "Timeout": "$.Parameters.Timeout",
+                "Tags": "Networking,NGINX,WRK"
+            }
+        },
+        {
+            "Type": "WrkExecutor",
+            "Parameters": {
+                "PackageName": "wrk",
+                "Scenario": "Latency_1K_Connections_Thread/4",
+                "MetricScenario": "{ThreadCount}th_{Connection}c_{FileSizeInKB}kb",
+                "CommandArguments": "$.Parameters.CommandArguments",
+                "ThreadCount": "{calculate({LogicalCoreCount}/4)}",
+                "Connection": 1000,
+                "FileSizeInKB": "$.Parameters.FileSizeInKB",
+                "TestDuration": "$.Parameters.TestDuration",
+                "EmitLatencySpectrum": "$.Parameters.EmitLatencySpectrum",
+                "TargetService": "$.Parameters.TargetService",
+                "Role": "Client",
+                "Timeout": "$.Parameters.Timeout",
+                "Tags": "Networking,NGINX,WRK"
+            }
+        },
+        {
+            "Type": "WrkExecutor",
+            "Parameters": {
+                "PackageName": "wrk",
+                "Scenario": "Latency_5K_Connections_Thread/4",
+                "MetricScenario": "{ThreadCount}th_{Connection}c_{FileSizeInKB}kb",
+                "CommandArguments": "$.Parameters.CommandArguments",
+                "ThreadCount": "{calculate({LogicalCoreCount}/4)}",
+                "Connection": 5000,
+                "FileSizeInKB": "$.Parameters.FileSizeInKB",
+                "TestDuration": "$.Parameters.TestDuration",
+                "EmitLatencySpectrum": "$.Parameters.EmitLatencySpectrum",
+                "TargetService": "$.Parameters.TargetService",
+                "Role": "Client",
+                "Timeout": "$.Parameters.Timeout",
+                "Tags": "Networking,NGINX,WRK"
+            }
+        },
+        {
+            "Type": "WrkExecutor",
+            "Parameters": {
+                "PackageName": "wrk",
+                "Scenario": "Latency_10K_Connections_Thread/4",
+                "MetricScenario": "{ThreadCount}th_{Connection}c_{FileSizeInKB}kb",
+                "CommandArguments": "$.Parameters.CommandArguments",
+                "ThreadCount": "{calculate({LogicalCoreCount}/4)}",
+                "Connection": 10000,
+                "FileSizeInKB": "$.Parameters.FileSizeInKB",
+                "TestDuration": "$.Parameters.TestDuration",
+                "EmitLatencySpectrum": "$.Parameters.EmitLatencySpectrum",
+                "TargetService": "$.Parameters.TargetService",
+                "Role": "Client",
+                "Timeout": "$.Parameters.Timeout",
+                "Tags": "Networking,NGINX,WRK"
+            }
+        },
+
+        {
+            "Type": "WrkExecutor",
+            "Parameters": {
+                "PackageName": "wrk",
+                "Scenario": "Latency_100_Connections_Thread/8",
+                "MetricScenario": "{ThreadCount}th_{Connection}c_{FileSizeInKB}kb",
+                "CommandArguments": "$.Parameters.CommandArguments",
+                "ThreadCount": "{calculate({LogicalCoreCount}/8)}",
+                "Connection": 100,
+                "FileSizeInKB": "$.Parameters.FileSizeInKB",
+                "TestDuration": "$.Parameters.TestDuration",
+                "EmitLatencySpectrum": "$.Parameters.EmitLatencySpectrum",
+                "TargetService": "$.Parameters.TargetService",
+                "Role": "Client",
+                "Timeout": "$.Parameters.Timeout",
+                "Tags": "Networking,NGINX,WRK"
+            }
+        },
+        {
+            "Type": "WrkExecutor",
+            "Parameters": {
+                "PackageName": "wrk",
+                "Scenario": "Latency_1K_Connections_Thread/8",
+                "MetricScenario": "{ThreadCount}th_{Connection}c_{FileSizeInKB}kb",
+                "CommandArguments": "$.Parameters.CommandArguments",
+                "ThreadCount": "{calculate({LogicalCoreCount}/8)}",
+                "Connection": 1000,
+                "FileSizeInKB": "$.Parameters.FileSizeInKB",
+                "TestDuration": "$.Parameters.TestDuration",
+                "EmitLatencySpectrum": "$.Parameters.EmitLatencySpectrum",
+                "TargetService": "$.Parameters.TargetService",
+                "Role": "Client",
+                "Timeout": "$.Parameters.Timeout",
+                "Tags": "Networking,NGINX,WRK"
+            }
+        },
+        {
+            "Type": "WrkExecutor",
+            "Parameters": {
+                "PackageName": "wrk",
+                "Scenario": "Latency_5K_Connections_Thread/8",
+                "MetricScenario": "{ThreadCount}th_{Connection}c_{FileSizeInKB}kb",
+                "CommandArguments": "$.Parameters.CommandArguments",
+                "ThreadCount": "{calculate({LogicalCoreCount}/8)}",
+                "Connection": 5000,
+                "FileSizeInKB": "$.Parameters.FileSizeInKB",
+                "TestDuration": "$.Parameters.TestDuration",
+                "EmitLatencySpectrum": "$.Parameters.EmitLatencySpectrum",
+                "TargetService": "$.Parameters.TargetService",
+                "Role": "Client",
+                "Timeout": "$.Parameters.Timeout",
+                "Tags": "Networking,NGINX,WRK"
+            }
+        },
+        {
+            "Type": "WrkExecutor",
+            "Parameters": {
+                "PackageName": "wrk",
+                "Scenario": "Latency_10K_Connections_Thread/8",
+                "MetricScenario": "{ThreadCount}th_{Connection}c_{FileSizeInKB}kb",
+                "CommandArguments": "$.Parameters.CommandArguments",
+                "ThreadCount": "{calculate({LogicalCoreCount}/8)}",
+                "Connection": 10000,
+                "FileSizeInKB": "$.Parameters.FileSizeInKB",
+                "TestDuration": "$.Parameters.TestDuration",
+                "EmitLatencySpectrum": "$.Parameters.EmitLatencySpectrum",
+                "TargetService": "$.Parameters.TargetService",
+                "Role": "Client",
+                "Timeout": "$.Parameters.Timeout",
+                "Tags": "Networking,NGINX,WRK"
+            }
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "LinuxPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallLinuxPackages",
+                "Packages-Apt": "openssl make gcc zlib1g-dev libssl-dev unzip nginx"
+            }
+        },
+        {
+            "Type": "ExecuteCommand",
+            "Parameters": {
+                "Scenario": "StopNginxAutostart",
+                "Command": "sudo systemctl disable nginx"
+            }
+        },
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallNginxConfiguration",
+                "BlobContainer": "packages",
+                "BlobName": "nginxconfiguration.1.0.2.zip",
+                "PackageName": "nginxconfiguration",
+                "Extract": true,
+                "Role": "ReverseProxy"
+            }
+        },
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallNginxConfiguration",
+                "BlobContainer": "packages",
+                "BlobName": "nginxconfiguration.1.0.2.zip",
+                "PackageName": "nginxconfiguration",
+                "Extract": true,
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallWrkConfiguration",
+                "BlobContainer": "packages",
+                "BlobName": "wrkconfiguration.1.0.0.zip",
+                "PackageName": "wrkconfiguration",
+                "Extract": true,
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "GitRepoClone",
+            "Parameters": {
+                "Scenario": "CloneWrk",
+                "RepoUri": "https://github.com/wg/wrk",
+                "PackageName": "wrk",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "ExecuteCommand",
+            "Parameters": {
+                "Scenario": "CompileWrk",
+                "Command": "make",
+                "WorkingDirectory": "{PackagePath:wrk}",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "ApiServer",
+            "Parameters": {
+                "Scenario": "StartAPIServer"
+            }
+        }
+    ]
+}

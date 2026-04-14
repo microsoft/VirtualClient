@@ -36,13 +36,34 @@ namespace VirtualClient.Common.ProcessAffinity
         /// <summary>
         /// Wraps a command with numactl to apply CPU affinity.
         /// Returns the full bash command string ready for execution.
+        /// The returned string is wrapped in double quotes so that it can be passed
+        /// as a single argument to "bash -c" (e.g., bash -c "numactl -C 0,1 command args").
         /// </summary>
         /// <param name="command">The command to wrap.</param>
         /// <param name="arguments">Optional arguments for the command.</param>
-        /// <returns>The complete command string with numactl wrapper (e.g., "bash -c \"numactl -C 0,1 redis-server --port 6379\"").</returns>
+        /// <returns>The complete command string with numactl wrapper (e.g., "\"numactl -C 0,1 redis-server --port 6379\"").</returns>
         public string GetCommandWithAffinity(string command, string arguments = null)
         {
-            return string.IsNullOrEmpty(command) ? $"\"numactl -C {this.NumactlCoreSpec} {arguments}\"" : $"{command} \"numactl -C {this.NumactlCoreSpec} {arguments}\"";
+            return string.IsNullOrEmpty(command)
+                ? $"\"numactl -C {this.NumactlCoreSpec} {arguments}\""
+                : $"{command} \"numactl -C {this.NumactlCoreSpec} {arguments}\"";
+        }
+
+        /// <summary>
+        /// Gets the numactl executable name and arguments for direct process invocation
+        /// without a bash -c shell wrapper. This approach avoids double-quote escaping
+        /// issues when arguments contain embedded quotes (e.g., HTTP headers).
+        /// </summary>
+        /// <param name="command">The command to run under numactl (e.g., "bash /path/script.sh").</param>
+        /// <param name="arguments">Optional arguments for the command.</param>
+        /// <returns>A tuple of (Executable, Arguments) for use with ProcessManager.CreateProcess.</returns>
+        public (string Executable, string Arguments) GetAffinityProcessInfo(string command, string arguments = null)
+        {
+            string numaArgs = string.IsNullOrWhiteSpace(arguments)
+                ? $"-C {this.NumactlCoreSpec} {command}"
+                : $"-C {this.NumactlCoreSpec} {command} {arguments}";
+
+            return ("numactl", numaArgs);
         }
 
         /// <summary>

@@ -1,0 +1,161 @@
+{
+    "Description": ".NET benchmarking Workload",
+    "Metadata": {
+        "RecommendedMinimumExecutionTime": "00:10:00",
+        "SupportedPlatforms": "linux-x64,linux-arm64",
+        "SupportedOperatingSystems": "CBL-Mariner,Ubuntu"
+    },
+    "Parameters": {
+        "DotNetVersion": "9.0.203",
+        "TargetFramework": "net9.0",
+        "OrchardCoreAdminValue": "Compete@CRC1",
+        "ServerPort": 5014,
+        "TestDuration": "00:00:20",
+        "EmitLatencySpectrum": false,
+        "CommandArguments": "--latency --threads {ThreadCount} --connections {Connection} --duration {TestDuration.TotalSeconds}s http://{serverip}:{ServerPort}/about --header \"Accept: text/plain,text/html;q=0.9,application/xhtml+xml;q=0.9,application/xml;q=0.8,*/*;q=0.7\" --header \"Connection:keep-alive\""
+    },
+    "Actions": [
+        {
+            "Type": "AspNetOrchardServerExecutor",
+            "Parameters": {
+                "Role": "Server",
+                "Scenario": "OrchardCore",
+                "PackageName": "orchardcore",
+                "DotNetSdkPackageName": "dotnetsdk",
+                "TargetFramework": "$.Parameters.TargetFramework",
+                "ServerPort": "$.Parameters.ServerPort"
+            }
+        },
+        {
+            "Type": "WrkExecutor",
+            "Parameters": {
+                "PackageName": "wrk",
+                "Scenario": "Warmup",
+                "MetricScenario": "Warmup_Orchard-WRK_t{ThreadCount}_c{Connection}_d{TestDuration.TotalSeconds}s",
+                "CommandArguments": "$.Parameters.CommandArguments",
+                "ServerPort": "$.Parameters.ServerPort",
+                "ThreadCount": "64",
+                "Connection": 128,
+                "TestDuration": "00:02:00",
+                "WarmUp": "true",
+                "EmitLatencySpectrum": "$.Parameters.EmitLatencySpectrum",
+                "Role": "Client",
+                "Tags": "Orchard,WRK"
+            }
+        },
+        {
+            "Type": "WrkExecutor",
+            "Parameters": {
+                "PackageName": "wrk",
+                "Scenario": "Benchmark_Measurement",
+                "MetricScenario": "Orchard-WRK_t{ThreadCount}_c{Connection}_d{TestDuration.TotalSeconds}s",
+                "CommandArguments": "$.Parameters.CommandArguments",
+                "ServerPort": "$.Parameters.ServerPort",
+                "ThreadCount": "64",
+                "Connection": 128,
+                "TestDuration": "$.Parameters.TestDuration",
+                "EmitLatencySpectrum": "$.Parameters.EmitLatencySpectrum",
+                "Role": "Client",
+                "Tags": "Orchard,WRK"
+            }
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "LinuxPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallLinuxPackages",
+                "Packages-Apt": "build-essential,libevent-dev,pkg-config,zlib1g-dev,libssl-dev,autoconf,automake,make,libpcre3-dev,gcc,unzip,openssl",
+                "Packages-Yum": "zlib-devel,pcre-devel,libevent-devel,openssl-devel,git,gcc-c++,make,autoconf,automake",
+                "Packages-Dnf": "zlib-devel,libevent-devel,openssl-devel,git,gcc,gcc-c++,make,autoconf,icu,automake,unzip,binutils,libstdc++-devel,kernel-headers,glibc-devel,perl,perl-Module-CoreList"
+            }
+        },
+        {
+            "Type": "LinuxPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallLinuxPackages",
+                "Packages-Apt": "wget,build-essential,tcl-dev,numactl",
+                "Packages-Yum": "wget,numactl,tcl-devel",
+                "Packages-Dnf": "wget,numactl,tcl-devel,iptables"
+            }
+        },
+        {
+            "Type": "ChocolateyInstallation",
+            "Parameters": {
+                "Scenario": "InstallChocolatey",
+                "PackageName": "chocolatey"
+            }
+        },
+        {
+            "Type": "ChocolateyPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallGit",
+                "PackageName": "chocolatey",
+                "Packages": "git"
+            }
+        },
+        {
+            "Type": "GitRepoClone",
+            "Parameters": {
+                "Scenario": "CloneOrchardCoreRepo",
+                "RepoUri": "https://github.com/orchardcms/orchardcore.git",
+                "Commit": "4e7c47c",
+                "PackageName": "orchardcore",
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallWrkConfiguration",
+                "BlobContainer": "packages",
+                "BlobName": "wrkconfiguration.1.0.0.zip",
+                "PackageName": "wrkconfiguration",
+                "Extract": true,
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "GitRepoClone",
+            "Parameters": {
+                "Scenario": "CloneWrk",
+                "RepoUri": "https://github.com/wg/wrk",
+                "PackageName": "wrk",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "ExecuteCommand",
+            "Parameters": {
+                "Scenario": "CompileWrk",
+                "Command": "make",
+                "WorkingDirectory": "{PackagePath:wrk}",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "DotNetInstallation",
+            "Parameters": {
+                "Scenario": "InstallDotNetSdk",
+                "DotNetVersion": "$.Parameters.DotNetVersion",
+                "PackageName": "dotnetsdk",
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "ApiServer",
+            "Parameters": {
+                "Scenario": "StartAPIServer"
+            }
+        },
+        {
+            "Type": "SetEnvironmentVariable",
+            "Parameters": {
+                "Scenario": "SetEnvironmentVariableForAspNet",
+                "EnvironmentVariables": "OrchardCore__OrchardCore_AutoSetup__Tenants__0__ShellName=Default;OrchardCore__OrchardCore_AutoSetup__Tenants__0__SiteName=Benchmark;OrchardCore__OrchardCore_AutoSetup__Tenants__0__SiteTimeZone=Europe/Amsterdam;OrchardCore__OrchardCore_AutoSetup__Tenants__0__AdminUsername=admin;OrchardCore__OrchardCore_AutoSetup__Tenants__0__AdminEmail=info@orchardproject.net;OrchardCore__OrchardCore_AutoSetup__Tenants__0__AdminPassword={OrchardCoreAdminValue};OrchardCore__OrchardCore_AutoSetup__Tenants__0__DatabaseProvider=Sqlite;OrchardCore__OrchardCore_AutoSetup__Tenants__0__RecipeName=Blog;DOTNET_GCDynamicAdaptationMode=0;DOTNET_HillClimbing_Disable=1",
+                "OrchardCoreAdminValue": "$.Parameters.OrchardCoreAdminValue",
+                "Role": "Server"
+            }
+        }
+    ]
+}

@@ -48,12 +48,12 @@ namespace VirtualClient.Actions
 
             if (platform == PlatformID.Unix)
             {
-                expectedCommands.Add($"sudo python3 {this.fixture.PlatformSpecifics.Combine(this.mockPackagePath, "configure-workload-generator.py")} --workload tpcc --sqlServer postgresql --port 5432 --virtualUsers 1 --password [A-Za-z0-9+/=]+ --dbName hammerdbtest --hostIPAddress [0-9.]+ --warehouseCount 1 --duration 1");
+                expectedCommands.Add($"sudo python3 {this.fixture.PlatformSpecifics.Combine(this.mockPackagePath, "configure-workload-generator.py")} --workload tpcc --sqlServer postgresql --port 5432 --virtualUsers 1 --password [A-Fa-f0-9]+ --dbName hammerdbtest --hostIPAddress [0-9.]+ --warehouseCount 1 --duration 1");
                 expectedCommands.Add($"python3 {this.fixture.PlatformSpecifics.Combine(this.mockPackagePath, "run-workload.py")} --runTransactionsTCLFilePath runTransactions.tcl");
             }
             else
             {
-                expectedCommands.Add($"python3 {this.fixture.PlatformSpecifics.Combine(this.mockPackagePath, "configure-workload-generator.py")} --workload tpcc --sqlServer postgresql --port 5432 --virtualUsers 1 --password [A-Za-z0-9+/=]+ --dbName hammerdbtest --hostIPAddress [0-9.]+ --warehouseCount 1 --duration 1");
+                expectedCommands.Add($"python3 {this.fixture.PlatformSpecifics.Combine(this.mockPackagePath, "configure-workload-generator.py")} --workload tpcc --sqlServer postgresql --port 5432 --virtualUsers 1 --password [A-Fa-f0-9]+ --dbName hammerdbtest --hostIPAddress [0-9.]+ --warehouseCount 1 --duration 1");
                 expectedCommands.Add($"python3 {this.fixture.PlatformSpecifics.Combine(this.mockPackagePath, "run-workload.py")} --runTransactionsTCLFilePath runTransactions.tcl");
             }
 

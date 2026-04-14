@@ -74,6 +74,25 @@ namespace VirtualClient.Actions
             }
         }
 
+        [Test]
+        public void SuperUserPasswordUsesHexEncodingWithNoSpecialCharacters()
+        {
+            using (TestHammerDBExecutor executor = new TestHammerDBExecutor(this.fixture.Dependencies, this.fixture.Parameters))
+            {
+                string password = executor.SuperUserPassword;
+
+                // Password must be hex-encoded (alphanumeric only) to avoid breaking
+                // HammerDB TCL diset command argument parsing.
+                Assert.IsTrue(System.Text.RegularExpressions.Regex.IsMatch(password, "^[A-Fa-f0-9]+$"),
+                    $"SuperUserPassword must be hex-encoded (alphanumeric only). Got: {password}");
+
+                // Must not contain Base64 special characters that break TCL parsing
+                Assert.IsFalse(password.Contains("+"), "Password must not contain '+' (breaks TCL parsing)");
+                Assert.IsFalse(password.Contains("="), "Password must not contain '=' (breaks TCL parsing)");
+                Assert.IsFalse(password.Contains("/"), "Password must not contain '/' (breaks TCL parsing)");
+            }
+        }
+
         private class TestHammerDBExecutor : HammerDBExecutor
         {
             public TestHammerDBExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters = null)
