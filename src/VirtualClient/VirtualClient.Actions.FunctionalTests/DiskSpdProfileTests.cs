@@ -118,7 +118,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("PERF-IO-DISKSPD-RAWDISK.json")]
+        [TestCase("PERF-IO-DISKSPD-PHYSICAL-DISK.json")]
         public void DiskSpdRawDiskWorkloadProfileParametersAreInlinedCorrectly(string profile)
         {
             this.mockFixture.Setup(PlatformID.Win32NT);
@@ -129,7 +129,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("PERF-IO-DISKSPD-RAWDISK.json")]
+        [TestCase("PERF-IO-DISKSPD-PHYSICAL-DISK.json")]
         public async Task DiskSpdRawDiskWorkloadProfileInstallsTheExpectedDependenciesOnWindowsPlatform(string profile)
         {
             // Raw disk profiles do not require disk formatting — disks are accessed directly at the raw block level.
@@ -146,7 +146,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("PERF-IO-DISKSPD-RAWDISK.json")]
+        [TestCase("PERF-IO-DISKSPD-PHYSICAL-DISK.json")]
         public async Task DiskSpdRawDiskWorkloadProfileExecutesTheExpectedWorkloadsOnWindowsPlatform(string profile)
         {
             IEnumerable<string> expectedCommands = DiskSpdProfileTests.GetDiskSpdRawDiskProfileExpectedCommands();
@@ -184,7 +184,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("PERF-IO-DISKSPD-RAWDISK.json")]
+        [TestCase("PERF-IO-DISKSPD-PHYSICAL-DISK.json")]
         public void DiskSpdRawDiskWorkloadProfileActionsWillNotBeExecutedIfWorkloadPackageDoesNotExist(string profile)
         {
             this.mockFixture.Setup(PlatformID.Win32NT);

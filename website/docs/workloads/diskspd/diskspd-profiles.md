@@ -145,7 +145,7 @@ aspects of the workload execution.
   VirtualClient.exe --profile=PERF-IO-DISKSPD.json --system=Demo --timeout=1440 --scenarios=RandomWrite_4k_BlockSize,RandomWrite_8k_BlockSize,RandomRead_8k_BlockSize,RandomRead_4k_BlockSize
   ```
 
-## PERF-IO-DISKSPD-RAWDISK.json
+## PERF-IO-DISKSPD-PHYSICAL-DISK.json
 Runs a read I/O workload using the DiskSpd toolset targeting raw physical HDD disks directly (no filesystem). This profile is a Windows-only profile  
 designed for bare-metal or JBOD scenarios where disks are not formatted or mounted. It targets disks at the raw block level using DiskSpd's native `#N`  
 physical disk index syntax, bypassing the Windows volume manager entirely.
@@ -154,7 +154,7 @@ The profile auto-discovers HDD disks at runtime using `Get-PhysicalDisk | Where-
 JBOD drives that DiskPart/DiskManager cannot see. An explicit `RawDiskIndexRange` parameter can be supplied to override auto-discovery. One DiskSpd  
 process is launched per discovered disk (`ProcessModel=SingleProcessPerDisk`).
 
-* [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-IO-DISKSPD-RAWDISK.json)
+* [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-IO-DISKSPD-PHYSICAL-DISK.json)
 
 * **Supported Platform/Architectures**
   * win-x64
@@ -192,24 +192,24 @@ process is launched per discovered disk (`ProcessModel=SingleProcessPerDisk`).
 
   ``` bash
   # Run the workload — HDD disks are auto-discovered via Get-PhysicalDisk (MediaType=HDD)
-  VirtualClient.exe --profile=PERF-IO-DISKSPD-RAWDISK.json --system=Demo --timeout=1440
+  VirtualClient.exe --profile=PERF-IO-DISKSPD-PHYSICAL-DISK.json --system=Demo --timeout=1440
 
   # Auto-discover disks with a custom duration (30 seconds per scenario)
-  VirtualClient.exe --profile=PERF-IO-DISKSPD-RAWDISK.json --system=Demo --timeout=1440 --parameters="Duration=00:00:30"
+  VirtualClient.exe --profile=PERF-IO-DISKSPD-PHYSICAL-DISK.json --system=Demo --timeout=1440 --parameters="Duration=00:00:30"
 
   # Target a single disk by index
-  VirtualClient.exe --profile=PERF-IO-DISKSPD-RAWDISK.json --system=Demo --timeout=1440 --parameters="RawDiskIndexRange=36,,,Duration=00:00:30"
+  VirtualClient.exe --profile=PERF-IO-DISKSPD-PHYSICAL-DISK.json --system=Demo --timeout=1440 --parameters="RawDiskIndexRange=36,,,Duration=00:00:30"
 
   # Target a contiguous range of disks using hyphen syntax (disks 30 through 31)
-  VirtualClient.exe --profile=PERF-IO-DISKSPD-RAWDISK.json --system=Demo --timeout=1440 --parameters="RawDiskIndexRange=30-31,,,Duration=00:00:30"
+  VirtualClient.exe --profile=PERF-IO-DISKSPD-PHYSICAL-DISK.json --system=Demo --timeout=1440 --parameters="RawDiskIndexRange=30-31,,,Duration=00:00:30"
 
   # Target a non-contiguous set of disks using a comma-separated list
   # Append a trailing ",,," so the parser treats the value as a single token
-  VirtualClient.exe --profile=PERF-IO-DISKSPD-RAWDISK.json --system=Demo --timeout=1440 --parameters="RawDiskIndexRange=35,38,,,"
+  VirtualClient.exe --profile=PERF-IO-DISKSPD-PHYSICAL-DISK.json --system=Demo --timeout=1440 --parameters="RawDiskIndexRange=35,38,,,"
 
   # Comma-separated list combined with another parameter (trailing ",,," not needed in this case)
-  VirtualClient.exe --profile=PERF-IO-DISKSPD-RAWDISK.json --system=Demo --timeout=1440 --parameters="RawDiskIndexRange=37,38,39,40,,,Duration=00:00:30"
+  VirtualClient.exe --profile=PERF-IO-DISKSPD-PHYSICAL-DISK.json --system=Demo --timeout=1440 --parameters="RawDiskIndexRange=37,38,39,40,,,Duration=00:00:30"
 
   # Override the command line (e.g. change block size to 64K)
-  VirtualClient.exe --profile=PERF-IO-DISKSPD-RAWDISK.json --system=Demo --timeout=1440 --parameters="CommandLine=-b64K -d{Duration.TotalSeconds} -o32 -t1 -r -w0 -Sh -L -Rtext,,,Duration=00:00:30"
+  VirtualClient.exe --profile=PERF-IO-DISKSPD-PHYSICAL-DISK.json --system=Demo --timeout=1440 --parameters="CommandLine=-b64K -d{Duration.TotalSeconds} -o32 -t1 -r -w0 -Sh -L -Rtext,,,Duration=00:00:30"
   ```
