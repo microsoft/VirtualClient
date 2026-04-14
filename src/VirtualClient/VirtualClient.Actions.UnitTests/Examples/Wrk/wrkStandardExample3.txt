@@ -1,0 +1,14 @@
+﻿Running 2m test @ http://10.9.0.7/api_new/10kb
+  32 threads and 5000 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency     4.12ms    2.38ms 219.68ms   73.08%
+    Req/Sec    38.62k     3.74k   82.02k    72.05%
+  Latency Distribution
+     50%    3.85ms
+     75%    5.05ms
+     90%    7.27ms
+     99%   11.16ms
+  184596465 requests in 2.50m, 56.05GB read
+  Non-2xx or 3xx responses: 184596465
+Requests/sec: 1229838.61
+Transfer/sec:    382.35MB

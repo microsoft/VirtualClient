@@ -43,7 +43,7 @@ namespace VirtualClient.Actions
         /// <returns></returns>
         public override IList<Metric> Parse()
         {
-            return this.Parse();
+            return this.Parse(emitLatencySpectrum: true);
         }
 
         /// <summary>
