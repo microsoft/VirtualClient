@@ -6,7 +6,6 @@
     "SupportedOperatingSystems": "Windows"
   },
   "Parameters": {
-    "GpuModel": "",
     "BlenderVersion": "4.2.0",
     "Scenes": "monster,junkshop,classroom",
     "DeviceTypes": "CPU"
