@@ -27,24 +27,6 @@
     {
       "Type": "DependencyPackageInstallation",
       "Parameters": {
-        "Scenario": "InstallAMDGPUDriverPackage",
-        "BlobContainer": "packages",
-        "BlobName": "amdgpudriver.zip",
-        "PackageName": "amdgpudriver",
-        "Extract": true
-      }
-    },
-    {
-      "Type": "AMDGPUDriverInstallation",
-      "Parameters": {
-        "Scenario": "InstallAMDGPUDriver",
-        "GpuModel": "$.Parameters.GpuModel",
-        "PackageName": "amdgpudriver"
-      }
-    },
-    {
-      "Type": "DependencyPackageInstallation",
-      "Parameters": {
         "Scenario": "InstallBlenderBenchmarkCliPackage",
         "BlobContainer": "packages",
         "BlobName": "blenderbenchmarkcli-3.3.0.zip",
