@@ -150,9 +150,9 @@ Runs a read I/O workload using the DiskSpd toolset targeting raw physical HDD di
 designed for bare-metal or JBOD scenarios where disks are not formatted or mounted. It targets disks at the raw block level using DiskSpd's native `#N`  
 physical disk index syntax, bypassing the Windows volume manager entirely.
 
-The profile auto-discovers HDD disks at runtime using `Get-PhysicalDisk | Where-Object { $_.MediaType -eq 'HDD' }`, which correctly enumerates offline  
-JBOD drives that DiskPart/DiskManager cannot see. An explicit `RawDiskIndexRange` parameter can be supplied to override auto-discovery. One DiskSpd  
-process is launched per discovered disk (`ProcessModel=SingleProcessPerDisk`).
+By default the profile auto-discovers HDD disks at runtime using `Get-PhysicalDisk | Where-Object { $_.MediaType -eq 'HDD' }` (via `DiskFilter=DiskIndex:hdd`),
+which correctly enumerates offline JBOD drives that DiskPart/DiskManager cannot see. The `DiskFilter` parameter can be overridden on the command line to
+target an explicit set of disks by index. One DiskSpd process is launched per discovered disk (`ProcessModel=SingleProcessPerDisk`).
 
 * [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-IO-DISKSPD-PHYSICAL-DISK.json)
 
@@ -178,14 +178,14 @@ process is launched per discovered disk (`ProcessModel=SingleProcessPerDisk`).
 * **Profile Parameters**  
   The following parameters can be optionally supplied on the command line to modify the behaviors of the workload.
 
-  | Parameter          | Purpose | Default Value |
-  |--------------------|---------|---------------|
-  | CommandLine        | Optional. The DiskSpd command line arguments template. Supports `{Duration.TotalSeconds}` substitution. | `-b128K -d{Duration.TotalSeconds} -o32 -t1 -r -w0 -Sh -L -Rtext` |
-  | Duration           | Optional. The duration of each DiskSpd scenario/action. | 1 minute |
-  | ProcessModel       | Optional. Defines how DiskSpd processes are distributed across disks. `SingleProcessPerDisk` runs one process per raw disk. | SingleProcessPerDisk |
-  | RawDiskIndexRange  | Optional. Overrides auto-discovery when provided. Accepted forms: a hyphen range (e.g. `6-180`), a single index (e.g. `36`), or a comma-separated list (e.g. `37,38,39,40` — see note below). When empty or omitted, HDD disks are auto-discovered via `Get-PhysicalDisk`. | (auto-discovered HDD disks) |
+  | Parameter    | Purpose | Default Value |
+  |--------------|---------|---------------|
+  | CommandLine  | Optional. The DiskSpd command line arguments template. Supports `{Duration.TotalSeconds}` substitution. | `-b128K -d{Duration.TotalSeconds} -o32 -t1 -r -w0 -Sh -L -Rtext` |
+  | Duration     | Optional. The duration of each DiskSpd scenario/action. | 1 minute |
+  | ProcessModel | Optional. Defines how DiskSpd processes are distributed across disks. `SingleProcessPerDisk` runs one process per disk. | SingleProcessPerDisk |
+  | DiskFilter   | Optional. Controls which physical disks are targeted. Use `DiskIndex:hdd` (default) for auto-discovery of all HDD disks via `Get-PhysicalDisk`, `DiskIndex:6-180` for a contiguous range, or `DiskIndex:6,10,15` for a specific set. | `DiskIndex:hdd` |
 
-  > **Note on comma-separated lists:** The VC CLI uses `",,,"`  as the delimiter between multiple `--parameters` values. A comma-separated `RawDiskIndexRange` (e.g. `35,38`) must therefore be followed by `,,,` so the parser treats it as a single value rather than splitting on the commas. The simplest way is to append a trailing `",,,"`  (e.g. `"RawDiskIndexRange=35,38,,,"`) or include another parameter (e.g. `"RawDiskIndexRange=37,38,39,40,,,Duration=00:00:30"`). Contiguous ranges via hyphen syntax (e.g. `30-40`) have no such requirement.
+  > **Note on `DiskIndex:` syntax:** The VC CLI uses `",,,"`  as the delimiter between multiple `--parameters` values. A comma-separated `DiskIndex:` value (e.g. `DiskIndex:35,38`) must therefore be followed by `,,,` so the parser treats it as a single token rather than splitting on the commas (e.g. `"DiskFilter=DiskIndex:35,38,,,"` or `"DiskFilter=DiskIndex:37,38,39,40,,,Duration=00:00:30"`). Contiguous ranges via hyphen syntax (e.g. `DiskIndex:30-40`) have no such requirement.
 
 * **Usage Examples**  
   The following section provides a few basic examples of how to use the workload profile.
@@ -198,17 +198,17 @@ process is launched per discovered disk (`ProcessModel=SingleProcessPerDisk`).
   VirtualClient.exe --profile=PERF-IO-DISKSPD-PHYSICAL-DISK.json --system=Demo --timeout=1440 --parameters="Duration=00:00:30"
 
   # Target a single disk by index
-  VirtualClient.exe --profile=PERF-IO-DISKSPD-PHYSICAL-DISK.json --system=Demo --timeout=1440 --parameters="RawDiskIndexRange=36,,,Duration=00:00:30"
+  VirtualClient.exe --profile=PERF-IO-DISKSPD-PHYSICAL-DISK.json --system=Demo --timeout=1440 --parameters="DiskFilter=DiskIndex:36,,,Duration=00:00:30"
 
-  # Target a contiguous range of disks using hyphen syntax (disks 30 through 31)
-  VirtualClient.exe --profile=PERF-IO-DISKSPD-PHYSICAL-DISK.json --system=Demo --timeout=1440 --parameters="RawDiskIndexRange=30-31,,,Duration=00:00:30"
+  # Target a contiguous range of disks using hyphen syntax (disks 6 through 180)
+  VirtualClient.exe --profile=PERF-IO-DISKSPD-PHYSICAL-DISK.json --system=Demo --timeout=1440 --parameters="DiskFilter=DiskIndex:6-180"
 
   # Target a non-contiguous set of disks using a comma-separated list
   # Append a trailing ",,," so the parser treats the value as a single token
-  VirtualClient.exe --profile=PERF-IO-DISKSPD-PHYSICAL-DISK.json --system=Demo --timeout=1440 --parameters="RawDiskIndexRange=35,38,,,"
+  VirtualClient.exe --profile=PERF-IO-DISKSPD-PHYSICAL-DISK.json --system=Demo --timeout=1440 --parameters="DiskFilter=DiskIndex:35,38,,,"
 
-  # Comma-separated list combined with another parameter (trailing ",,," not needed in this case)
-  VirtualClient.exe --profile=PERF-IO-DISKSPD-PHYSICAL-DISK.json --system=Demo --timeout=1440 --parameters="RawDiskIndexRange=37,38,39,40,,,Duration=00:00:30"
+  # Comma-separated list combined with another parameter
+  VirtualClient.exe --profile=PERF-IO-DISKSPD-PHYSICAL-DISK.json --system=Demo --timeout=1440 --parameters="DiskFilter=DiskIndex:37,38,39,40,,,Duration=00:00:30"
 
   # Override the command line (e.g. change block size to 64K)
   VirtualClient.exe --profile=PERF-IO-DISKSPD-PHYSICAL-DISK.json --system=Demo --timeout=1440 --parameters="CommandLine=-b64K -d{Duration.TotalSeconds} -o32 -t1 -r -w0 -Sh -L -Rtext,,,Duration=00:00:30"

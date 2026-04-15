@@ -154,7 +154,7 @@ namespace VirtualClient.Actions
             // Setup the expectations for the workload
             // - Workload package is installed and exists.
             // - Workload binaries/executables exist on the file system.
-            // - Raw disk discovery returns 2 HDD disks (indices 6 and 7).
+            // - DiskFilter=DiskIndex:hdd triggers Get-PhysicalDisk auto-discovery; mock returns disks 6 and 7.
             // - The workload generates valid results.
             this.mockFixture.Setup(PlatformID.Win32NT);
             this.mockFixture.SetupPackage("diskspd", expectedFiles: $@"win-x64\diskspd.exe");
@@ -164,7 +164,7 @@ namespace VirtualClient.Actions
                 IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
                 if (arguments.Contains("Get-PhysicalDisk", StringComparison.OrdinalIgnoreCase))
                 {
-                    // Simulate discovery of 2 HDD raw disks (indices 6 and 7)
+                    // Simulate auto-discovery of 2 HDD raw disks (indices 6 and 7)
                     process.StandardOutput.Append("6\r\n7");
                 }
                 else if (arguments.Contains("diskspd", StringComparison.OrdinalIgnoreCase))
@@ -206,7 +206,7 @@ namespace VirtualClient.Actions
         {
             return new List<string>
             {
-                // ProcessModel=SingleProcessPerDisk: one diskspd process per discovered raw disk.
+                // ProcessModel=SingleProcessPerDisk: one diskspd process per auto-discovered raw disk.
                 // Duration=00:01:00 -> 60 seconds; disks #6 and #7 discovered via Get-PhysicalDisk.
                 @"-b128K -d60 -o32 -t1 -r -w0 -Sh -L -Rtext #6",
                 @"-b128K -d60 -o32 -t1 -r -w0 -Sh -L -Rtext #7"

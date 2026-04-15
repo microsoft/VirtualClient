@@ -9,21 +9,20 @@
         "Duration": "00:01:00",
         "ProcessModel": "SingleProcessPerDisk",
         "CommandLine": "-b128K -d{Duration.TotalSeconds} -o32 -t1 -r -w0 -Sh -L -Rtext",
-        "RawDiskIndexRange": ""
+        "DiskFilter": "DiskIndex:hdd"
     },
     "Actions": [
         {
             "Type": "DiskSpdExecutor",
             "Parameters": {
                 "Scenario": "RandomRead_128k_BlockSize",
-                "MetricScenario": "diskspd_rawdisk_randread_128k_d32_th1",
+                "MetricScenario": "diskspd_physicaldisk_randread_128k_d32_th1",
                 "PackageName": "diskspd",
                 "CommandLine": "$.Parameters.CommandLine",
                 "Duration": "$.Parameters.Duration",
                 "ProcessModel": "$.Parameters.ProcessModel",
-                "RawDiskTarget": true,
-                "RawDiskIndexRange": "$.Parameters.RawDiskIndexRange",
-                "Tags": "IO,DiskSpd,randread,rawdisk"
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "Tags": "IO,DiskSpd,randread,physicaldisk"
             }
         }
     ],

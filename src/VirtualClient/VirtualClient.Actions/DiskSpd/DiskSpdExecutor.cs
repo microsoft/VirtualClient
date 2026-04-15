@@ -182,46 +182,6 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// True/false whether to target the raw physical device path directly (e.g. <c>\\.\PhysicalDrive1</c>)
-        /// instead of a test file on a mounted volume. Use this for bare disk (unformatted) scenarios.
-        /// When enabled the <see cref="DiskFill"/> step is skipped and no test file path is appended to
-        /// the DiskSpd command line — the device path is passed instead.
-        /// </summary>
-        public bool RawDiskTarget
-        {
-            get
-            {
-                return this.Parameters.GetValue<bool>(nameof(this.RawDiskTarget), false);
-            }
-
-            set
-            {
-                this.Parameters[nameof(this.RawDiskTarget)] = value;
-            }
-        }
-
-        /// <summary>
-        /// When <see cref="RawDiskTarget"/> is true, specifies the inclusive range of physical disk
-        /// indices to test directly (e.g. "6-180" or "6,7,8"). Bypasses DiskManager/DiskPart
-        /// enumeration entirely.
-        /// When not set and <see cref="RawDiskTarget"/> is true, disk indices are discovered
-        /// automatically at runtime via <c>Get-PhysicalDisk</c> (HDD media type only).
-        /// </summary>
-        public string RawDiskIndexRange
-        {
-            get
-            {
-                this.Parameters.TryGetValue(nameof(this.RawDiskIndexRange), out IConvertible value);
-                return value?.ToString();
-            }
-
-            set
-            {
-                this.Parameters[nameof(this.RawDiskIndexRange)] = value;
-            }
-        }
-
-        /// <summary>
         /// The disk I/O queue depth to use for running disk I/O operations. 
         /// Default = 16.
         /// </summary>
@@ -354,7 +314,7 @@ namespace VirtualClient.Actions
             string diskSpdArguments;
             string[] testFiles;
 
-            if (this.RawDiskTarget)
+            if (DiskFilters.TryGetDiskIndexes(this.DiskFilter, out _))
             {
                 // DiskSpd has a native syntax for targeting a physical drive by its index: #<N>.
                 // This is the correct format for raw physical disk access; DiskSpd uses
@@ -469,22 +429,21 @@ namespace VirtualClient.Actions
 
                     IEnumerable<Disk> disksToTest;
 
-                    if (this.RawDiskTarget && !string.IsNullOrWhiteSpace(this.RawDiskIndexRange))
+                    if (DiskFilters.TryGetDiskIndexes(this.DiskFilter, out IEnumerable<int> diskIndexes) && diskIndexes != null)
                     {
-                        // Explicit index range supplied — build disk list directly without any
-                        // OS enumeration. Useful when the exact range is known (e.g. "6-180").
-                        disksToTest = this.GetRawDiskIndexRange(this.RawDiskIndexRange);
+                        // Explicit index range supplied (e.g. DiskFilter=DiskIndex:6-180 or DiskIndex:6,7,8).
+                        // Build disk list directly without any OS enumeration.
+                        disksToTest = diskIndexes.Select(i => new Disk(i, $@"\\.\PHYSICALDISK{i}")).ToList();
 
                         this.Logger.LogMessage($"{nameof(DiskSpdExecutor)}.SelectDisks", telemetryContext.Clone()
                             .AddContext("disks", disksToTest)
-                            .AddContext("rawDiskIndexRange", this.RawDiskIndexRange));
+                            .AddContext("diskFilter", this.DiskFilter));
                     }
-                    else if (this.RawDiskTarget)
+                    else if (DiskFilters.TryGetDiskIndexes(this.DiskFilter, out _))
                     {
-                        // No explicit range — discover HDD indices at runtime via Get-PhysicalDisk.
-                        // This is the default raw-disk path: it sees offline JBOD drives that
-                        // DiskPart/DiskManager cannot enumerate, and filters to MediaType=HDD
-                        // to exclude OS SSDs/NVMe devices.
+                        // DiskIndex:hdd sentinel — discover HDD indices at runtime via Get-PhysicalDisk.
+                        // This sees offline JBOD drives that DiskPart/DiskManager cannot enumerate,
+                        // and filters to MediaType=HDD to exclude OS SSDs/NVMe devices.
                         disksToTest = await this.DiscoverRawDisksAsync(cancellationToken);
 
                         this.Logger.LogMessage($"{nameof(DiskSpdExecutor)}.SelectDisks", telemetryContext.Clone()
@@ -573,7 +532,7 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Discovers physical disk indices at runtime by running <c>Get-PhysicalDisk</c> via PowerShell.
         /// <c>Get-PhysicalDisk</c> enumerates offline drives (e.g. JBOD) that DiskPart/DiskManager does not.
-        /// Used when <see cref="RawDiskTarget"/> is true and no <see cref="RawDiskIndexRange"/> is specified.
+        /// Used when <c>DiskFilter=DiskIndex:hdd</c> is specified.
         /// </summary>
         protected virtual async Task<IEnumerable<Disk>> DiscoverRawDisksAsync(CancellationToken cancellationToken)
         {
@@ -604,45 +563,6 @@ namespace VirtualClient.Actions
                     if (int.TryParse(line.Trim(), out int index))
                     {
                         disks.Add(new Disk(index, $@"\\.\PHYSICALDISK{index}"));
-                    }
-                }
-            }
-
-            return disks;
-        }
-
-        /// <summary>
-        /// Constructs a list of <see cref="Disk"/> objects directly from a physical disk index
-        /// range string, bypassing DiskManager/DiskPart enumeration entirely. This is used when
-        /// <see cref="RawDiskTarget"/> is true and <see cref="RawDiskIndexRange"/> is set.
-        /// </summary>
-        /// <param name="range">
-        /// A range string in the form "6-180" (inclusive) or a comma-separated list "6,7,8".
-        /// </param>
-        protected IEnumerable<Disk> GetRawDiskIndexRange(string range)
-        {
-            range.ThrowIfNullOrWhiteSpace(nameof(range));
-
-            List<Disk> disks = new List<Disk>();
-
-            if (range.Contains('-'))
-            {
-                string[] parts = range.Split('-', 2);
-                int start = int.Parse(parts[0].Trim());
-                int end = int.Parse(parts[1].Trim());
-
-                for (int i = start; i <= end; i++)
-                {
-                    disks.Add(new Disk(i, $@"\\.\PHYSICALDISK{i}"));
-                }
-            }
-            else
-            {
-                foreach (string token in range.Split(','))
-                {
-                    if (int.TryParse(token.Trim(), out int idx))
-                    {
-                        disks.Add(new Disk(idx, $@"\\.\PHYSICALDISK{idx}"));
                     }
                 }
             }
@@ -830,11 +750,11 @@ namespace VirtualClient.Actions
                     ErrorReason.InvalidProfileDefinition);
             }
 
-            if (this.RawDiskTarget && this.DiskFill)
+            if (DiskFilters.TryGetDiskIndexes(this.DiskFilter, out _) && this.DiskFill)
             {
                 throw new WorkloadException(
                     $"Invalid profile definition. The '{nameof(DiskSpdExecutor.DiskFill)}' option cannot be used together with " +
-                    $"'{nameof(DiskSpdExecutor.RawDiskTarget)}'. Disk fill operations create test files on a mounted volume and are " +
+                    $"a 'DiskIndex:' disk filter. Disk fill operations create test files on a mounted volume and are " +
                     $"not applicable to raw physical device access.",
                     ErrorReason.InvalidProfileDefinition);
             }
@@ -889,7 +809,7 @@ namespace VirtualClient.Actions
                     if (!cancellationToken.IsCancellationRequested)
                     {
                         string logFileName = null;
-                        if (this.RawDiskTarget && workload.TestFiles?.Any() == true)
+                        if (workload.TestFiles?.Any() == true && workload.TestFiles.First().StartsWith("#", StringComparison.Ordinal))
                         {
                             string diskIndex = workload.TestFiles.First().TrimStart('#');
                             logFileName = $"{this.Scenario}_disk{diskIndex}";
