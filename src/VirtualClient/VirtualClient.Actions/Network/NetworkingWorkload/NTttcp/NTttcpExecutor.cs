@@ -6,6 +6,7 @@ namespace VirtualClient.Actions.NetworkPerformance
     using System;
     using System.Collections.Generic;
     using System.Globalization;
+    using System.IO.Abstractions;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
@@ -24,6 +25,9 @@ namespace VirtualClient.Actions.NetworkPerformance
     public class NTttcpExecutor : NetworkingWorkloadToolExecutor
     {
         private const string OutputFileName = "ntttcp-results.xml";
+        private const string SendOutputFileName = "ntttcp-results-send.xml";
+        private const string ReceiveOutputFileName = "ntttcp-results-recv.xml";
+        private const int ReversePortOffset = 100;
         private static readonly TimeSpan DefaultWarmupTime = TimeSpan.FromSeconds(10);
         private static readonly TimeSpan DefaultCooldownTime = TimeSpan.FromSeconds(10);
 
@@ -201,6 +205,51 @@ namespace VirtualClient.Actions.NetworkPerformance
         }
 
         /// <summary>
+        /// Duplex mode for the NTttcp workload. Valid values are "Half" (default) and "Full".
+        /// In full-duplex mode, each node runs both a sender and receiver process simultaneously.
+        /// </summary>
+        public string DuplexMode
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(this.DuplexMode), out IConvertible duplexMode);
+                return duplexMode?.ToString();
+            }
+        }
+
+        /// <summary>
+        /// Returns true if the workload is configured for full-duplex mode.
+        /// </summary>
+        protected bool IsFullDuplex
+        {
+            get
+            {
+                return string.Equals(this.DuplexMode, "Full", StringComparison.OrdinalIgnoreCase);
+            }
+        }
+
+        /// <summary>
+        /// Path to the send-direction results file (used in full-duplex mode).
+        /// </summary>
+        protected string SendResultsPath { get; set; }
+
+        /// <summary>
+        /// Path to the receive-direction results file (used in full-duplex mode).
+        /// </summary>
+        protected string ReceiveResultsPath { get; set; }
+
+        /// <summary>
+        /// The port used for the reverse direction in full-duplex mode.
+        /// </summary>
+        protected int ReversePort
+        {
+            get
+            {
+                return this.Port + NTttcpExecutor.ReversePortOffset;
+            }
+        }
+
+        /// <summary>
         /// The retry policy to apply to the startup of the NTttcp workload to handle
         /// transient issues.
         /// </summary>
@@ -235,6 +284,8 @@ namespace VirtualClient.Actions.NetworkPerformance
             this.ProcessName = "ntttcp";
             this.Tool = NetworkingWorkloadTool.NTttcp;
             this.ResultsPath = this.PlatformSpecifics.Combine(workloadPackage.Path, NTttcpExecutor.OutputFileName);
+            this.SendResultsPath = this.PlatformSpecifics.Combine(workloadPackage.Path, NTttcpExecutor.SendOutputFileName);
+            this.ReceiveResultsPath = this.PlatformSpecifics.Combine(workloadPackage.Path, NTttcpExecutor.ReceiveOutputFileName);
 
             if (this.Platform == PlatformID.Win32NT)
             {
@@ -313,6 +364,19 @@ namespace VirtualClient.Actions.NetworkPerformance
         /// <inheritdoc/>
         protected override Task ExecuteWorkloadAsync(string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken, TimeSpan? timeout = null)
         {
+            if (this.IsFullDuplex)
+            {
+                return this.ExecuteFullDuplexWorkloadAsync(telemetryContext, cancellationToken, timeout);
+            }
+
+            return this.ExecuteHalfDuplexWorkloadAsync(commandArguments, telemetryContext, cancellationToken, timeout);
+        }
+
+        /// <summary>
+        /// Executes the half-duplex (original single-direction) workload.
+        /// </summary>
+        protected Task ExecuteHalfDuplexWorkloadAsync(string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken, TimeSpan? timeout = null)
+        {
             EventContext relatedContext = telemetryContext.Clone()
                .AddContext("command", this.ExecutablePath)
                .AddContext("commandArguments", commandArguments);
@@ -375,9 +439,153 @@ namespace VirtualClient.Actions.NetworkPerformance
         }
 
         /// <summary>
+        /// Executes the full-duplex workload — runs both sender and receiver processes concurrently.
+        /// The receiver is started first, then after a brief delay the sender is launched.
+        /// Both processes run in parallel for the test duration.
+        /// </summary>
+        protected Task ExecuteFullDuplexWorkloadAsync(EventContext telemetryContext, CancellationToken cancellationToken, TimeSpan? timeout = null)
+        {
+            string sendCommandArguments = this.GetFullDuplexSendCommandLineArguments();
+            string receiveCommandArguments = this.GetFullDuplexReceiveCommandLineArguments();
+
+            EventContext relatedContext = telemetryContext.Clone()
+               .AddContext("command", this.ExecutablePath)
+               .AddContext("sendCommandArguments", sendCommandArguments)
+               .AddContext("receiveCommandArguments", receiveCommandArguments)
+               .AddContext("duplexMode", "Full");
+
+            return this.Logger.LogMessageAsync($"{this.TypeName}.ExecuteFullDuplexWorkload", relatedContext, async () =>
+            {
+                using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
+                {
+                    await this.ProcessStartRetryPolicy.ExecuteAsync(async () =>
+                    {
+                        await this.DeleteFullDuplexResultsFilesAsync();
+
+                        using (IProcessProxy receiveProcess = this.SystemManagement.ProcessManager.CreateProcess(this.ExecutablePath, receiveCommandArguments))
+                        using (IProcessProxy sendProcess = this.SystemManagement.ProcessManager.CreateProcess(this.ExecutablePath, sendCommandArguments))
+                        {
+                            try
+                            {
+                                // Start receiver first to ensure it is listening before sender connects.
+                                Task receiveTask = receiveProcess.StartAndWaitAsync(cancellationToken, timeout);
+
+                                // Brief delay to allow receiver to bind.
+                                await Task.Delay(TimeSpan.FromSeconds(2), cancellationToken).ConfigureAwait(false);
+
+                                Task sendTask = sendProcess.StartAndWaitAsync(cancellationToken, timeout);
+
+                                await Task.WhenAll(receiveTask, sendTask).ConfigureAwait(false);
+
+                                // Capture send metrics.
+                                if (!sendProcess.IsErrored())
+                                {
+                                    string sendResults = await this.WaitForResultsAsync(
+                                        TimeSpan.FromMinutes(1), relatedContext, this.SendResultsPath);
+
+                                    await this.LogProcessDetailsAsync(
+                                        sendProcess,
+                                        relatedContext,
+                                        "NTttcp",
+                                        results: new KeyValuePair<string, string>(this.SendResultsPath, sendResults));
+
+                                    this.CaptureDirectionalMetrics(
+                                        sendResults,
+                                        sendProcess.FullCommand(),
+                                        sendProcess.StartTime,
+                                        sendProcess.ExitTime,
+                                        "Send",
+                                        true,
+                                        relatedContext);
+                                }
+                                else
+                                {
+                                    await this.LogProcessDetailsAsync(sendProcess, relatedContext, "NTttcp");
+                                    this.Logger.LogMessage($"{this.TypeName}.FullDuplexSendFailed", LogLevel.Warning, relatedContext);
+                                }
+
+                                // Capture receive metrics.
+                                if (!receiveProcess.IsErrored())
+                                {
+                                    string receiveResults = await this.WaitForResultsAsync(
+                                        TimeSpan.FromMinutes(1), relatedContext, this.ReceiveResultsPath);
+
+                                    await this.LogProcessDetailsAsync(
+                                        receiveProcess,
+                                        relatedContext,
+                                        "NTttcp",
+                                        results: new KeyValuePair<string, string>(this.ReceiveResultsPath, receiveResults));
+
+                                    this.CaptureDirectionalMetrics(
+                                        receiveResults,
+                                        receiveProcess.FullCommand(),
+                                        receiveProcess.StartTime,
+                                        receiveProcess.ExitTime,
+                                        "Receive",
+                                        false,
+                                        relatedContext);
+                                }
+                                else
+                                {
+                                    await this.LogProcessDetailsAsync(receiveProcess, relatedContext, "NTttcp");
+                                    this.Logger.LogMessage($"{this.TypeName}.FullDuplexReceiveFailed", LogLevel.Warning, relatedContext);
+                                }
+
+                                // If both failed, throw.
+                                if (sendProcess.IsErrored() && receiveProcess.IsErrored())
+                                {
+                                    throw new WorkloadException(
+                                        $"Both sender and receiver processes failed in full-duplex mode.",
+                                        ErrorReason.WorkloadFailed);
+                                }
+                            }
+                            catch (OperationCanceledException)
+                            {
+                                // Expected when the client signals a cancellation.
+                            }
+                            catch (TimeoutException exc)
+                            {
+                                this.Logger.LogMessage($"{this.TypeName}.FullDuplexWorkloadTimeout", LogLevel.Warning, relatedContext.AddError(exc));
+                            }
+                            catch (WorkloadException)
+                            {
+                                throw;
+                            }
+                            catch (Exception exc)
+                            {
+                                this.Logger.LogMessage($"{this.TypeName}.FullDuplexWorkloadStartupError", LogLevel.Warning, relatedContext.AddError(exc));
+                                throw;
+                            }
+                            finally
+                            {
+                                sendProcess.SafeKill(this.Logger);
+                                receiveProcess.SafeKill(this.Logger);
+                            }
+                        }
+                    });
+                }
+            });
+        }
+
+        /// <summary>
         /// Logs the workload metrics to the telemetry.
         /// </summary>
         protected override void CaptureMetrics(string results, string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext)
+        {
+            this.CaptureDirectionalMetrics(results, commandArguments, startTime, endTime, direction: null, isClientParser: this.IsInClientRole, telemetryContext: telemetryContext);
+        }
+
+        /// <summary>
+        /// Logs direction-tagged workload metrics to telemetry.
+        /// </summary>
+        /// <param name="results">The raw XML results from the NTttcp process.</param>
+        /// <param name="commandArguments">The command line arguments used.</param>
+        /// <param name="startTime">The start time of the process.</param>
+        /// <param name="endTime">The end time of the process.</param>
+        /// <param name="direction">The direction label (Send, Receive) or null for half-duplex.</param>
+        /// <param name="isClientParser">True if parsing sender XML (ntttcps root), false for receiver XML (ntttcpr root).</param>
+        /// <param name="telemetryContext">The telemetry context.</param>
+        protected void CaptureDirectionalMetrics(string results, string commandArguments, DateTime startTime, DateTime endTime, string direction, bool isClientParser, EventContext telemetryContext)
         {
             if (!string.IsNullOrWhiteSpace(results))
             {
@@ -387,7 +595,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                     toolVersion: null);
 
                 EventContext relatedContext = telemetryContext.Clone();
-                MetricsParser parser = new NTttcpMetricsParser(results, this.IsInClientRole);
+                MetricsParser parser = new NTttcpMetricsParser(results, isClientParser);
                 IList<Metric> metrics = parser.Parse();
 
                 if (parser.Metadata.Any())
@@ -403,11 +611,21 @@ namespace VirtualClient.Actions.NetworkPerformance
                     }
                 }
 
+                if (direction != null)
+                {
+                    relatedContext.Properties["direction"] = direction;
+                    relatedContext.Properties["duplexMode"] = "Full";
+                }
+
                 this.MetadataContract.Apply(relatedContext);
+
+                string scenarioName = direction != null
+                    ? $"{this.Scenario} {this.Role} {direction}"
+                    : this.Name;
 
                 this.Logger.LogMetrics(
                     this.Tool.ToString(),
-                    this.Name,
+                    scenarioName,
                     startTime,
                     endTime,
                     metrics,
@@ -431,6 +649,76 @@ namespace VirtualClient.Actions.NetworkPerformance
             }
         }
 
+        /// <summary>
+        /// Returns the command line arguments for the send direction in full-duplex mode.
+        /// Client sends on the forward port (to server's receiver).
+        /// Server sends on the reverse port (to client's receiver).
+        /// </summary>
+        protected string GetFullDuplexSendCommandLineArguments()
+        {
+            // Client sends on forward port, Server sends on reverse port
+            int sendPort = this.IsInClientRole ? this.Port : this.ReversePort;
+
+            if (this.Platform == PlatformID.Win32NT)
+            {
+                return this.GetWindowsSpecificCommandLine(isSender: true, port: sendPort, resultsPath: this.SendResultsPath);
+            }
+
+            return this.GetLinuxSpecificCommandLine(isSender: true, port: sendPort, resultsPath: this.SendResultsPath);
+        }
+
+        /// <summary>
+        /// Returns the command line arguments for the receive direction in full-duplex mode.
+        /// Client receives on the reverse port (from server's sender).
+        /// Server receives on the forward port (from client's sender).
+        /// </summary>
+        protected string GetFullDuplexReceiveCommandLineArguments()
+        {
+            // Client receives on reverse port, Server receives on forward port
+            int recvPort = this.IsInClientRole ? this.ReversePort : this.Port;
+
+            if (this.Platform == PlatformID.Win32NT)
+            {
+                return this.GetWindowsSpecificCommandLine(isSender: false, port: recvPort, resultsPath: this.ReceiveResultsPath);
+            }
+
+            return this.GetLinuxSpecificCommandLine(isSender: false, port: recvPort, resultsPath: this.ReceiveResultsPath);
+        }
+
+        /// <summary>
+        /// Waits for results at a specific file path.
+        /// </summary>
+        protected async Task<string> WaitForResultsAsync(TimeSpan timeout, EventContext telemetryContext, string resultsPath)
+        {
+            string results = null;
+            IFile fileAccess = this.SystemManagement.FileSystem.File;
+            DateTime pollingTimeout = DateTime.UtcNow.Add(timeout);
+
+            while (DateTime.UtcNow < pollingTimeout)
+            {
+                if (fileAccess.Exists(resultsPath))
+                {
+                    try
+                    {
+                        results = await this.SystemManagement.FileSystem.File.ReadAllTextAsync(resultsPath);
+
+                        if (!string.IsNullOrWhiteSpace(results))
+                        {
+                            break;
+                        }
+                    }
+                    catch
+                    {
+                        // File may still be written to.
+                    }
+                }
+
+                await Task.Delay(TimeSpan.FromSeconds(1)).ConfigureAwait(false);
+            }
+
+            return results;
+        }
+
         private async Task DeleteResultsFileAsync()
         {
             if (this.SystemManagement.FileSystem.File.Exists(this.ResultsPath))
@@ -440,49 +728,82 @@ namespace VirtualClient.Actions.NetworkPerformance
             }
         }
 
+        private async Task DeleteFullDuplexResultsFilesAsync()
+        {
+            if (this.SystemManagement.FileSystem.File.Exists(this.SendResultsPath))
+            {
+                await this.SystemManagement.FileSystem.File.DeleteAsync(this.SendResultsPath)
+                    .ConfigureAwait(false);
+            }
+
+            if (this.SystemManagement.FileSystem.File.Exists(this.ReceiveResultsPath))
+            {
+                await this.SystemManagement.FileSystem.File.DeleteAsync(this.ReceiveResultsPath)
+                    .ConfigureAwait(false);
+            }
+        }
+
         private string GetWindowsSpecificCommandLine()
+        {
+            return this.GetWindowsSpecificCommandLine(isSender: this.IsInClientRole, port: this.Port, resultsPath: this.ResultsPath);
+        }
+
+        private string GetWindowsSpecificCommandLine(bool isSender, int port, string resultsPath)
         {
             string clientIPAddress = this.GetLayoutClientInstances(ClientRole.Client).First().IPAddress;
             string serverIPAddress = this.GetLayoutClientInstances(ClientRole.Server).First().IPAddress;
-            return $"{(this.IsInClientRole ? "-s" : "-r")} " +
-                $"-m {this.ThreadCount},*,{serverIPAddress} " +
+
+            // For NTttcp, -m always specifies the receiver's IP address.
+            // Forward direction (port = this.Port): receiver is the server
+            // Reverse direction (port = this.ReversePort): receiver is the client
+            bool isReverseDirection = port != this.Port;
+            string receiverIPAddress = isReverseDirection ? clientIPAddress : serverIPAddress;
+
+            return $"{(isSender ? "-s" : "-r")} " +
+                $"-m {this.ThreadCount},*,{receiverIPAddress} " +
                 $"-wu {NTttcpExecutor.DefaultWarmupTime.TotalSeconds} " +
                 $"-cd {NTttcpExecutor.DefaultCooldownTime.TotalSeconds} " +
                 $"-t {this.TestDuration.TotalSeconds} " +
-                $"-l {(this.IsInClientRole ? $"{this.BufferSizeClient}" : $"{this.BufferSizeServer}")} " +
-                $"-p {this.Port} " +
-                $"-xml {this.ResultsPath} " +
+                $"-l {(isSender ? $"{this.BufferSizeClient}" : $"{this.BufferSizeServer}")} " +
+                $"-p {port} " +
+                $"-xml {resultsPath} " +
                 $"{(this.Protocol.ToLowerInvariant() == "udp" ? "-u" : string.Empty)} " +
                 $"{(this.NoSyncEnabled == true ? "-ns" : string.Empty)} " +
-                $"{(this.IsInClientRole ? $"-nic {clientIPAddress}" : string.Empty)}".Trim();
+                $"{(isSender && this.IsInClientRole ? $"-nic {clientIPAddress}" : string.Empty)}".Trim();
         }
 
         private string GetLinuxSpecificCommandLine()
         {
+            return this.GetLinuxSpecificCommandLine(isSender: this.IsInClientRole, port: this.Port, resultsPath: this.ResultsPath);
+        }
+
+        private string GetLinuxSpecificCommandLine(bool isSender, int port, string resultsPath)
+        {
+            string clientIPAddress = this.GetLayoutClientInstances(ClientRole.Client).First().IPAddress;
             string serverIPAddress = this.GetLayoutClientInstances(ClientRole.Server).First().IPAddress;
-            string commandLine = $"{(this.IsInClientRole ? "-s" : "-r")} " +
+            // For NTttcp, -m always specifies the receiver's IP address.
+            // Forward direction (port = this.Port): receiver is the server
+            // Reverse direction (port = this.ReversePort): receiver is the client
+            bool isReverseDirection = port != this.Port;
+            string receiverIPAddress = isReverseDirection ? clientIPAddress : serverIPAddress;
+
+            return $"{(isSender ? "-s" : "-r")} " +
                 $"-V " +
-                $"-m {this.ThreadCount},*,{serverIPAddress} " +
+                $"-m {this.ThreadCount},*,{receiverIPAddress} " +
                 $"-W {NTttcpExecutor.DefaultWarmupTime.TotalSeconds} " +
                 $"-C {NTttcpExecutor.DefaultCooldownTime.TotalSeconds} " +
                 $"-t {this.TestDuration.TotalSeconds} " +
-                $"-b {(this.IsInClientRole ? $"{this.BufferSizeClient}" : $"{this.BufferSizeServer}")} " +
-                $"-x {this.ResultsPath} " +
-                $"-p {this.Port} " +
+                $"-b {(isSender ? $"{this.BufferSizeClient}" : $"{this.BufferSizeServer}")} " +
+                $"-x {resultsPath} " +
+                $"-p {port} " +
                 $"{(this.Protocol.ToLowerInvariant() == "udp" ? "-u" : string.Empty)} " +
-                $"{((this.IsInClientRole && this.SenderLastClient == true) ? "-L" : string.Empty)} " +
-                $"{((this.IsInServerRole && this.ReceiverMultiClientMode == true) ? "-M" : string.Empty)} " +
-                $"{((this.IsInClientRole && this.ThreadsPerServerPort != null) ? $"-n {this.ThreadsPerServerPort}" : string.Empty)} " +
-                $"{((this.IsInClientRole && this.ConnectionsPerThread != null) ? $"-l {this.ConnectionsPerThread}" : string.Empty)} " +
+                $"{((isSender && this.SenderLastClient == true) ? "-L" : string.Empty)} " +
+                $"{((!isSender && this.ReceiverMultiClientMode == true) ? "-M" : string.Empty)} " +
+                $"{((isSender && this.ThreadsPerServerPort != null) ? $"-n {this.ThreadsPerServerPort}" : string.Empty)} " +
+                $"{((isSender && this.ConnectionsPerThread != null) ? $"-l {this.ConnectionsPerThread}" : string.Empty)} " +
                 $"{(this.NoSyncEnabled == true ? "-N" : string.Empty)} " +
-                $"{((this.DevInterruptsDifferentiator != null) ? $"--show-dev-interrupts {this.DevInterruptsDifferentiator}" : string.Empty)}".Trim();
-
-            if (this.IsInClientRole && this.Protocol.ToLowerInvariant() == "tcp")
-            {
-                commandLine += " --show-tcp-retrans";
-            }
-
-            return commandLine.Trim();
+                $"{((this.DevInterruptsDifferentiator != null) ? $"--show-dev-interrupts {this.DevInterruptsDifferentiator}" : string.Empty)} " +
+                $"{(isSender && this.Protocol.ToLowerInvariant() == "tcp" ? "--show-tcp-retrans" : string.Empty)}".Trim();
         }
     }
 }

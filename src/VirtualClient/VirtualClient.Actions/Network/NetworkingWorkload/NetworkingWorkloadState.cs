@@ -136,7 +136,8 @@ namespace VirtualClient.Actions.NetworkPerformance
             string profilingWarmUpPeriod = null,
             bool? noSyncEnabled = null,
             Guid? clientRequestId = null,
-            IDictionary<string, IConvertible> metadata = null)
+            IDictionary<string, IConvertible> metadata = null,
+            string duplexMode = null)
         {
             packageName.ThrowIfNull(nameof(packageName));
             scenario.ThrowIfNull(nameof(scenario));
@@ -170,6 +171,7 @@ namespace VirtualClient.Actions.NetworkPerformance
             this.Properties[nameof(this.ProfilingPeriod)] = profilingPeriod;
             this.Properties[nameof(this.ProfilingWarmUpPeriod)] = profilingWarmUpPeriod;
             this.Properties[nameof(this.NoSyncEnabled)] = noSyncEnabled;
+            this.Properties[nameof(this.DuplexMode)] = duplexMode;
             this.ClientRequestId = clientRequestId;
 
             this.Metadata = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
@@ -542,6 +544,24 @@ namespace VirtualClient.Actions.NetworkPerformance
             set
             {
                 this.Properties[nameof(this.ConfidenceLevel)] = value;
+            }
+        }
+
+        /// <summary>
+        /// Duplex mode for the test (Half or Full). Half-duplex is the default.
+        /// In full-duplex mode, both nodes run sender and receiver simultaneously.
+        /// </summary>
+        public string DuplexMode
+        {
+            get
+            {
+                this.Properties.TryGetValue(nameof(this.DuplexMode), out IConvertible duplexMode);
+                return duplexMode?.ToString();
+            }
+
+            set
+            {
+                this.Properties[nameof(this.DuplexMode)] = value;
             }
         }
 
