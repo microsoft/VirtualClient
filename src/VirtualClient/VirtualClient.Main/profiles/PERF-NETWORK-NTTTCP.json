@@ -11,7 +11,8 @@
         "NTttcpDuration": "00:01:00",
         "ProfilingEnabled": false,
         "ProfilingMode": "None",
-        "TestDuration": "00:01:00"
+        "TestDuration": "00:01:00",
+        "DuplexMode": "Half"
     },
     "Actions": [
         {
@@ -28,7 +29,8 @@
                 "Port": "$.Parameters.NTttcpPort",
                 "ProfilingScenario": "NTttcp_TCP_4K_Buffer_T1",
                 "ProfilingEnabled": "$.Parameters.ProfilingEnabled",
-                "ProfilingMode": "$.Parameters.ProfilingMode"
+                "ProfilingMode": "$.Parameters.ProfilingMode",
+                "DuplexMode": "$.Parameters.DuplexMode"
             }
         },
         {
@@ -45,7 +47,8 @@
                 "Port": "$.Parameters.NTttcpPort",
                 "ProfilingScenario": "NTttcp_TCP_64K_Buffer_T1",
                 "ProfilingEnabled": "$.Parameters.ProfilingEnabled",
-                "ProfilingMode": "$.Parameters.ProfilingMode"
+                "ProfilingMode": "$.Parameters.ProfilingMode",
+                "DuplexMode": "$.Parameters.DuplexMode"
             }
         },
         {
@@ -62,7 +65,8 @@
                 "Port": "$.Parameters.NTttcpPort",
                 "ProfilingScenario": "NTttcp_TCP_256K_Buffer_T1",
                 "ProfilingEnabled": "$.Parameters.ProfilingEnabled",
-                "ProfilingMode": "$.Parameters.ProfilingMode"
+                "ProfilingMode": "$.Parameters.ProfilingMode",
+                "DuplexMode": "$.Parameters.DuplexMode"
             }
         },
         {
@@ -79,7 +83,8 @@
                 "Port": "$.Parameters.NTttcpPort",
                 "ProfilingScenario": "NTttcp_TCP_4K_Buffer_T32",
                 "ProfilingEnabled": "$.Parameters.ProfilingEnabled",
-                "ProfilingMode": "$.Parameters.ProfilingMode"
+                "ProfilingMode": "$.Parameters.ProfilingMode",
+                "DuplexMode": "$.Parameters.DuplexMode"
             }
         },
         {
@@ -96,7 +101,8 @@
                 "Port": "$.Parameters.NTttcpPort",
                 "ProfilingScenario": "NTttcp_TCP_64K_Buffer_T32",
                 "ProfilingEnabled": "$.Parameters.ProfilingEnabled",
-                "ProfilingMode": "$.Parameters.ProfilingMode"
+                "ProfilingMode": "$.Parameters.ProfilingMode",
+                "DuplexMode": "$.Parameters.DuplexMode"
             }
         },
         {
@@ -113,7 +119,8 @@
                 "Port": "$.Parameters.NTttcpPort",
                 "ProfilingScenario": "NTttcp_TCP_256K_Buffer_T32",
                 "ProfilingEnabled": "$.Parameters.ProfilingEnabled",
-                "ProfilingMode": "$.Parameters.ProfilingMode"
+                "ProfilingMode": "$.Parameters.ProfilingMode",
+                "DuplexMode": "$.Parameters.DuplexMode"
             }
         },
         {
@@ -130,7 +137,8 @@
                 "Port": "$.Parameters.NTttcpPort",
                 "ProfilingScenario": "NTttcp_TCP_4K_Buffer_T256",
                 "ProfilingEnabled": "$.Parameters.ProfilingEnabled",
-                "ProfilingMode": "$.Parameters.ProfilingMode"
+                "ProfilingMode": "$.Parameters.ProfilingMode",
+                "DuplexMode": "$.Parameters.DuplexMode"
             }
         },
         {
@@ -147,7 +155,8 @@
                 "Port": "$.Parameters.NTttcpPort",
                 "ProfilingScenario": "NTttcp_TCP_64K_Buffer_T256",
                 "ProfilingEnabled": "$.Parameters.ProfilingEnabled",
-                "ProfilingMode": "$.Parameters.ProfilingMode"
+                "ProfilingMode": "$.Parameters.ProfilingMode",
+                "DuplexMode": "$.Parameters.DuplexMode"
             }
         },
         {
@@ -164,7 +173,8 @@
                 "Port": "$.Parameters.NTttcpPort",
                 "ProfilingScenario": "NTttcp_TCP_256K_Buffer_T256",
                 "ProfilingEnabled": "$.Parameters.ProfilingEnabled",
-                "ProfilingMode": "$.Parameters.ProfilingMode"
+                "ProfilingMode": "$.Parameters.ProfilingMode",
+                "DuplexMode": "$.Parameters.DuplexMode"
             }
         },
         {
@@ -181,7 +191,8 @@
                 "Port": "$.Parameters.NTttcpPort",
                 "ProfilingScenario": "NTttcp_UDP_1400B_Buffer_T1",
                 "ProfilingEnabled": "$.Parameters.ProfilingEnabled",
-                "ProfilingMode": "$.Parameters.ProfilingMode"
+                "ProfilingMode": "$.Parameters.ProfilingMode",
+                "DuplexMode": "$.Parameters.DuplexMode"
             }
         },
         {
@@ -198,7 +209,8 @@
                 "Port": "$.Parameters.NTttcpPort",
                 "ProfilingScenario": "NTttcp_UDP_1400B_Buffer_T32",
                 "ProfilingEnabled": "$.Parameters.ProfilingEnabled",
-                "ProfilingMode": "$.Parameters.ProfilingMode"
+                "ProfilingMode": "$.Parameters.ProfilingMode",
+                "DuplexMode": "$.Parameters.DuplexMode"
             }
         }
     ],

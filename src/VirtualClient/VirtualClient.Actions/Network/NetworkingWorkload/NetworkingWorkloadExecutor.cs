@@ -419,6 +419,24 @@ namespace VirtualClient.Actions.NetworkPerformance
         }
 
         /// <summary>
+        /// Duplex mode for the network workload. Valid values are "Half" (default) and "Full".
+        /// In full-duplex mode, each node runs both a sender and receiver process simultaneously.
+        /// </summary>
+        public string DuplexMode
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(NetworkingWorkloadExecutor.DuplexMode), out IConvertible duplexMode);
+                return duplexMode?.ToString();
+            }
+
+            set
+            {
+                this.Parameters[nameof(NetworkingWorkloadExecutor.DuplexMode)] = value;
+            }
+        }
+
+        /// <summary>
         /// Cancellation Token Source for Server.
         /// </summary>
         protected CancellationTokenSource ServerCancellationSource { get; set; }
@@ -816,6 +834,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                                     this.ProfilingPeriod = serverInstructions.ProfilingPeriod;
                                     this.ProfilingWarmUpPeriod = serverInstructions.ProfilingWarmUpPeriod;
                                     this.NoSyncEnabled = serverInstructions.NoSyncEnabled;
+                                    this.DuplexMode = serverInstructions.DuplexMode;
 
                                     if (serverInstructions.Metadata?.Any() == true)
                                     {
@@ -985,7 +1004,8 @@ namespace VirtualClient.Actions.NetworkPerformance
                             this.ProfilingPeriod.ToString(),
                             this.ProfilingWarmUpPeriod.ToString(),
                             this.NoSyncEnabled,
-                            requestId);
+                            requestId,
+                            duplexMode: this.DuplexMode);
 
                         Item<State> instructions = new Item<State>(nameof(NetworkingWorkloadState), workloadInstructions);
                         relatedContext.AddContext("instructions", instructions);
