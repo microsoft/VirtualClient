@@ -56,8 +56,6 @@ Supports .NET 9 and .NET 10 via the `ParametersOn` conditional parameter system.
 * **Supported Platform/Architectures**
   * linux-x64
   * linux-arm64
-  * win-x64
-  * win-arm64
 
 * **Supports Disconnected Scenarios**  
   * No. Internet connection required.
@@ -107,8 +105,6 @@ Includes a warm-up pass before the benchmark measurement. Supports .NET 9 and .N
 * **Supported Platform/Architectures**
   * linux-x64
   * linux-arm64
-  * win-x64
-  * win-arm64
 
 * **Supports Disconnected Scenarios**  
   * No. Internet connection required.
