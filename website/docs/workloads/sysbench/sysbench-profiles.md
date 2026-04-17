@@ -295,7 +295,7 @@ Runs a system-intensive workload using the Sysbench Benchmark to test the bandwi
   | DatabaseScenario              | Optional. Configures the scenario in which to stress the database.                                      | Balanced          |
   | BenchmarkName              | Required. Name of the Benchmark to run. (e.g. OLTP)                                     | N/A          |
   | Duration              | Required. Timespan duration of the workload.                                                               | N/A          |
-  | Workload              | Required. Name of benchmark to run; options listed [here](./sysbench-oltp.md)                                          | N/A          |
+  | Workload              | Required. Name of benchmark to run; options listed [here](./sysbench.md)                                          | N/A          |
   | DatabaseSystem              | Required. Name of SQL Server to use (ie. MySQL, PostgreSQL)                        | N/A          |
 
   The following additional parameters can be optionally supplied on the command line under the "Configure" scenario for a custom set up.

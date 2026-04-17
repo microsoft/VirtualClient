@@ -351,10 +351,6 @@ following interfaces/classes.
   * IProcessProxy
   * ProcessProxy
 
-  **CPU Affinity Support**  
-  Virtual Client supports binding workload processes to specific CPU cores to enable core isolation testing. For detailed guidance on implementing
-  CPU affinity in workload executors, see the [Workload Onboarding Process](./0030-workload-onboarding.md#cpu-core-affinity-optional) documentation.
-
 * **State Management**  
   Certain scenarios require the ability to preserve state information in between operations. For example, there are operations that make configuration settings changes to the
   system and then require a reboot. When the Virtual Client is restarted, it needs to know what previous requirements were completed. State management is also very important
