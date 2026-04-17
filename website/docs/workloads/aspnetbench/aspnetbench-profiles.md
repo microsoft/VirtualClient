@@ -1,7 +1,7 @@
 # ASP.NET Benchmarks Workload Profiles
 The following profiles run customer-representative or benchmarking scenarios using ASP.NET server workloads.
 
-* [Workload Details](./aspnet-benchmarks.md)
+* [Workload Details](./aspnetbench.md)
 * [Client/Server Workloads](../../guides/0020-client-server.md)
 
 ## Client/Server Topology Support
