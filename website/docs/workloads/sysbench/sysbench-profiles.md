@@ -24,10 +24,10 @@ idea. The name of the client must match the name of the system or the value of t
 
 # Multi-System
 # On Client Role System...
-./VirtualClient --profile=PERF-MYSQL-OLTP-SYSBENCH.json --system=Juno --timeout=1440 --clientId=Client01 --layoutPath=/any/path/to/layout.json
+./VirtualClient --profile=PERF-MYSQL-OLTP-SYSBENCH.json --system=Juno --timeout=1440 --client-id=Client01 --layout=/any/path/to/layout.json
 
 # On Server Role System...
-./VirtualClient --profile=PERF-MYSQL-OLTP-SYSBENCH.json--system=Juno --timeout=1440 --clientId=Server01 --layoutPath=/any/path/to/layout.json
+./VirtualClient --profile=PERF-MYSQL-OLTP-SYSBENCH.json--system=Juno --timeout=1440 --client-id=Server01 --layout=/any/path/to/layout.json
 
 # Example contents of the 'layout.json' file:
 {
@@ -295,7 +295,7 @@ Runs a system-intensive workload using the Sysbench Benchmark to test the bandwi
   | DatabaseScenario              | Optional. Configures the scenario in which to stress the database.                                      | Balanced          |
   | BenchmarkName              | Required. Name of the Benchmark to run. (e.g. OLTP)                                     | N/A          |
   | Duration              | Required. Timespan duration of the workload.                                                               | N/A          |
-  | Workload              | Required. Name of benchmark to run; options listed [here](./sysbench-oltp.md)                                          | N/A          |
+  | Workload              | Required. Name of benchmark to run; options listed [here](./sysbench.md)                                          | N/A          |
   | DatabaseSystem              | Required. Name of SQL Server to use (ie. MySQL, PostgreSQL)                        | N/A          |
 
   The following additional parameters can be optionally supplied on the command line under the "Configure" scenario for a custom set up.
@@ -315,14 +315,14 @@ Runs a system-intensive workload using the Sysbench Benchmark to test the bandwi
 
   ``` bash
   # When running on a single system (environment layout not required)
-  ./VirtualClient --profile=PERF-MYSQL-OLTP-SYSBENCH.json --system=Demo --timeout=1440" --packageStore="{BlobConnectionString|SAS Uri}
+  ./VirtualClient --profile=PERF-MYSQL-OLTP-SYSBENCH.json --system=Demo --timeout=1440"
 
   # Override the default database name
-  ./VirtualClient --profile=PERF-MYSQL-OLTP-SYSBENCH.json --system=Demo --timeout=1440" --parameters="DatabaseName=mytestDB" --packageStore="{BlobConnectionString|SAS Uri}
+  ./VirtualClient --profile=PERF-MYSQL-OLTP-SYSBENCH.json --system=Demo --timeout=1440" --parameters="DatabaseName=mytestDB"
 
   # When running in a client/server environment
-  ./VirtualClient --profile=PERF-MYSQL-OLTP-SYSBENCH.json --system=Demo --timeout=1440 --clientId=Client01 --layout="/any/path/to/layout.json" --packageStore="{BlobConnectionString|SAS Uri}
-  ./VirtualClient --profile=PERF-MYSQL-OLTP-SYSBENCH.json --system=Demo --timeout=1440 --clientId=Server01  --layout="/any/path/to/layout.json" --packageStore="{BlobConnectionString|SAS Uri}
+  ./VirtualClient --profile=PERF-MYSQL-OLTP-SYSBENCH.json --system=Demo --timeout=1440 --client-id=Client01 --layout="/any/path/to/layout.json"
+  ./VirtualClient --profile=PERF-MYSQL-OLTP-SYSBENCH.json --system=Demo --timeout=1440 --client-id=Server01  --layout="/any/path/to/layout.json"
   ```
 
 ## PERF-MYSQL-TPCC-SYSBENCH.json and PERF-POSTGRESQL-TPCC-SYSBENCH.json
@@ -374,12 +374,12 @@ Runs a system-intensive workload using the Sysbench Benchmark to test the bandwi
 
   ``` bash
   # When running on a single system (environment layout not required)
-  ./VirtualClient --profile=PERF-MYSQL-TPCC-SYSBENCH.json --system=Demo --timeout=1440" --packageStore="{BlobConnectionString|SAS Uri}
+  ./VirtualClient --profile=PERF-MYSQL-TPCC-SYSBENCH.json --system=Demo --timeout=1440"
 
   # Override the default database name
-  ./VirtualClient --profile=PERF-MYSQL-TPCC-SYSBENCH.json --system=Demo --timeout=1440" --parameters="DatabaseName=mytestDB" --packageStore="{BlobConnectionString|SAS Uri}
+  ./VirtualClient --profile=PERF-MYSQL-TPCC-SYSBENCH.json --system=Demo --timeout=1440" --parameters="DatabaseName=mytestDB"
 
   # When running in a client/server environment
-  ./VirtualClient --profile=PERF-MYSQL-TPCC-SYSBENCH.json --system=Demo --timeout=1440 --clientId=Client01 --layout="/any/path/to/layout.json" --packageStore="{BlobConnectionString|SAS Uri}
-  ./VirtualClient --profile=PERF-MYSQL-TPCC-SYSBENCH.json --system=Demo --timeout=1440 --clientId=Server01  --layout="/any/path/to/layout.json" --packageStore="{BlobConnectionString|SAS Uri}
+  ./VirtualClient --profile=PERF-MYSQL-TPCC-SYSBENCH.json --system=Demo --timeout=1440 --client-id=Client01 --layout="/any/path/to/layout.json"
+  ./VirtualClient --profile=PERF-MYSQL-TPCC-SYSBENCH.json --system=Demo --timeout=1440 --client-id=Server01  --layout="/any/path/to/layout.json"
   ```

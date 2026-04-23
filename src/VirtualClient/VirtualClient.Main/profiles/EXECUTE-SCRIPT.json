@@ -8,6 +8,7 @@
         "Command": null,
         "Scenario": "ExecuteScript",
         "Package": null,
+        "PackageContainer": "packages",
         "TelemetryFileFormat": "Csv",
         "LogFileName": null,
         "LogFolderName": null,
@@ -77,7 +78,7 @@
             "Type": "DependencyPackageInstallation",
             "Parameters": {
                 "Scenario": "InstallSdkPackage",
-                "BlobContainer": "packages",
+                "BlobContainer": "$.Parameters.PackageContainer",
                 "BlobName": "$.Parameters.Package",
                 "PackageName": "script_package",
                 "Extract": true

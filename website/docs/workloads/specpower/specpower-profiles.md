@@ -38,7 +38,7 @@ system in a steady-state usage pattern.
 
   ``` bash
   # Execute the workload profile
-  VirtualClient.exe --profile=POWER-SPEC30.json --system=Juno --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
+  VirtualClient.exe --profile=POWER-SPEC30.json --system=Juno --timeout=1440
   ```
 
 ## POWER-SPEC50.json
@@ -76,7 +76,7 @@ system in a steady-state usage pattern.
 
   ``` bash
   # Execute the workload profile
-  VirtualClient.exe --profile=POWER-SPEC50.json --system=Juno --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
+  VirtualClient.exe --profile=POWER-SPEC50.json --system=Juno --timeout=1440
   ```
 
 ## POWER-SPEC70.json
@@ -114,7 +114,7 @@ system in a steady-state usage pattern.
 
   ``` bash
   # Execute the workload profile
-  VirtualClient.exe --profile=POWER-SPEC70.json --system=Juno --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
+  VirtualClient.exe --profile=POWER-SPEC70.json --system=Juno --timeout=1440
   ```
 
 ## POWER-SPEC100.json
@@ -152,5 +152,5 @@ system in a steady-state usage pattern.
 
   ``` bash
   # Execute the workload profile
-  VirtualClient.exe --profile=POWER-SPEC100.json --system=Juno --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
+  VirtualClient.exe --profile=POWER-SPEC100.json --system=Juno --timeout=1440
   ```

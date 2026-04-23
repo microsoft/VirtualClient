@@ -9,6 +9,7 @@ The platform supports a wide range of different industry standard/benchmark work
 The platform additionally provides the ability to capture important performance and reliability measurements from the underlying system. The platform supports all business-critical
 Azure environments including guest/VM systems, host/blade systems and data center/DC lab systems. The platform additionally supports both x64 and ARM64 compute architectures.
 
+* [Getting Started/Downloads](../guides/0001-getting-started.md)
 * [Platform Features](./0010-features.md)
 * [Platform Design](./0020-design.md)
 * [Usage](../guides/0010-command-line.md)
@@ -17,25 +18,6 @@ Azure environments including guest/VM systems, host/blade systems and data cente
 
 ## Team Contacts
 * [virtualclient@microsoft.com](mailto:virtualclient@microsoft.com)
-
-## Downloads
-Release versions of the Virtual Client are available on public NuGet.org. Note that versions that are not tagged as 'Release'
-are considered beta quality. Production quality releases will be tagged appropriately.
-
-* NuGet Releases
-    * https://www.nuget.org/packages/VirtualClient
-    * Please note we will be renaming package to Microsoft.VirtualClient in the future pending MSFT internal processes.
-
-## Platform/Architectures
-In the workload and profile sections below, the following designations are used to indicate the OS platform and CPU architecture on which the workloads are supported:
-* **linux-x64**
-  The workload is supported on the Linux operating system for Intel and AMD x64 architectures.<br/><br/>
-* **linux-arm64**
-  The workload is supported on the Linux operating system for ARM64/AARCH64 architectures.<br/><br/>
-* **win-x64**
-  The workload is supported on the Windows operating system for Intel and AMD x64 architectures.<br/><br/>
-* **win-arm64**
-  The workload is supported on the Windows operating system for ARM64/AARCH64 architectures.
 
 
 ## Supported Workloads/Benchmarks
@@ -50,7 +32,7 @@ for using them.
 | **Workload/Benchmark** | **Specialization** | **Supported Platforms/Architectures** | **License(s)** | 
 |------------------------|--------------------|---------------------------------------|----------------|
 | [7zip](https://microsoft.github.io/VirtualClient/docs/workloads/compression/7zip) | Compression | linux-x64, linux-arm64 | [GNU LGPL](https://www.7-zip.org/faq.html) |
-| [AspNetBench](https://microsoft.github.io/VirtualClient/docs/workloads/aspnetbench/aspnetbench) | ASP.NET Web Server.  | linux-x64, linux-arm64, win-x64, win-arm64 | [MIT (ASP.NET)](https://github.com/dotnet/aspnetcore/blob/main/LICENSE.txt)<br/>[MIT (Bombardier)](https://github.com/codesenberg/bombardier/blob/master/LICENSE) |
+| [ASP.NET Bench](https://microsoft.github.io/VirtualClient/docs/workloads/aspnetbench/aspnet-benchmarks) | ASP.NET Kestrel web server throughput and latency.  | linux-x64, linux-arm64, win-x64, win-arm64 | [MIT (ASP.NET)](https://github.com/dotnet/aspnetcore/blob/main/LICENSE.txt)<br/>[MIT (Bombardier)](https://github.com/codesenberg/bombardier/blob/master/LICENSE) |
 | [BlenderBenchmark](https://microsoft.github.io/VirtualClient/docs/workloads/blenderbenchmark) | GPU/Graphics Rendering Performance | win-x64 | [GNU LGPL](https://projects.blender.org/infrastructure/blender-open-data/src/branch/main/LICENSE) |
 | [CoreMark](https://microsoft.github.io/VirtualClient/docs/workloads/coremark/coremark) | CPU Performance | linux-x64, linux-arm64 | [Apache+Custom](https://github.com/eembc/coremark/blob/main/LICENSE.md)  |
 | [CoreMark Pro](https://microsoft.github.io/VirtualClient/docs/workloads/coremark) | Precision CPU | linux-x64, linux-arm64, win-x64, win-arm64 | [Apache+Custom](https://github.com/eembc/coremark-pro/blob/main/LICENSE.md) |
@@ -69,9 +51,9 @@ for using them.
 | [LMbench](https://microsoft.github.io/VirtualClient/docs/workloads/lmbench) | Memory Performance | linux-x64, linux-arm64 | [GPL-2.0](https://github.com/intel/lmbench/blob/master/COPYING)  |
 | [LZBench](https://microsoft.github.io/VirtualClient/docs/workloads/compression/lzbench) | Compression/Streaming | linux-x64, linux-arm64, win-x64, win-arm64 | [None](https://github.com/inikep/lzbench)  |
 | [Memcached](https://microsoft.github.io/VirtualClient/docs/workloads/memcached) | In-Memory Data Cache | linux-x64, linux-arm64 | [BSD-3 (Memcached)](https://github.com/memcached/memcached/blob/master/LICENSE)<br/>[GPL-2.0 (Memtier)](https://github.com/RedisLabs/memtier_benchmark/blob/master/COPYING)  |
-| [MLPerf](https://microsoft.github.io/VirtualClient/docs/workloads/mlperf) | Machine Learning | linux-x64 | [Custom](https://github.com/mlcommons/training/blob/master/LICENSE.md)  |
 | [NAS Parallel](https://microsoft.github.io/VirtualClient/docs/workloads/nasparallel) | High Performance Compute (HPC) | linux-x64, linux-arm64 | [NASA-1.3](https://opensource.org/licenses/nasa1.3.php)  |
 | [Network ICMP Ping](https://microsoft.github.io/VirtualClient/docs/workloads/network-ping) | Network Latencies | linux-x64, linux-arm64, win-x64, win-arm64 | [MIT](https://github.com/microsoft/VirtualClient/blob/main/LICENSE)  |
+| [NGINX](https://microsoft.github.io/VirtualClient/docs/workloads/nginx) | Web Server | linux-x64, linux-arm64, win-x64, win-arm64 | [BSD-2-Clause](https://github.com/nginx/nginx/blob/master/LICENSE)  |
 | [NTttcp](https://microsoft.github.io/VirtualClient/docs/workloads/network-suite) | Network Bandwidth | linux-x64, linux-arm64, win-x64, win-arm64 | [MIT](https://github.com/microsoft/ntttcp/blob/main/LICENSE)  |
 | [OpenFOAM](https://microsoft.github.io/VirtualClient/docs/workloads/openfoam) | Computational Fluid Dynamics | linux-x64, linux-arm64 | [Custom](https://github.com/OpenFOAM/OpenFOAM-10/blob/master/COPYING)  |
 | [OpenSSL](https://microsoft.github.io/VirtualClient/docs/workloads/openssl) | Cryptography/Encryption | linux-x64, linux-arm64, win-x64 | [Apache-2.0](https://github.com/openssl/openssl/blob/master/LICENSE.txt)  |

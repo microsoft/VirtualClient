@@ -101,6 +101,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <Folder Include="Bombardier\" />
         <Folder Include="Examples\FIO\" />
     </ItemGroup>
 

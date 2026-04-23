@@ -43,5 +43,5 @@ regressions when compared against a baseline.
 
   ```bash
   # Execute the workload profile
-  VirtualClient.exe --profile=PERF-MEM-LMBENCH.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
+  VirtualClient.exe --profile=PERF-MEM-LMBENCH.json --system=Demo --timeout=1440
   ```

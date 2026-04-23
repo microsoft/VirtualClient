@@ -351,10 +351,6 @@ following interfaces/classes.
   * IProcessProxy
   * ProcessProxy
 
-  **CPU Affinity Support**  
-  Virtual Client supports binding workload processes to specific CPU cores to enable core isolation testing. For detailed guidance on implementing
-  CPU affinity in workload executors, see the [Workload Onboarding Process](./0030-workload-onboarding.md#cpu-core-affinity-optional) documentation.
-
 * **State Management**  
   Certain scenarios require the ability to preserve state information in between operations. For example, there are operations that make configuration settings changes to the
   system and then require a reboot. When the Virtual Client is restarted, it needs to know what previous requirements were completed. State management is also very important
@@ -365,7 +361,7 @@ following interfaces/classes.
   * StateManager
 
 * **System Management**  
-  Because of there are quite a few different dependency interfaces/classes that are required to support the needs of executing a wide range of workloads on the system, all common
+  Because there are quite a few different dependency interfaces/classes that are required to support the needs of executing a wide range of workloads on the system, all common
   dependencies noted above are consolidated together into a single abstraction to simplify the discovery of what is available. Additionally, there are a few requirements that
   are extensions to behaviors that use the dependencies above that are a part of the system management abstraction. The following interfaces/abstractions provide for the
   common system management features:

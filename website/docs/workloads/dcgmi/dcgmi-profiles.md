@@ -49,8 +49,8 @@ This profile is designed to identify general/broad regressions when compared aga
 
   ```bash
   # Execute the monitor profile
-  VirtualClient.exe --profile=QUAL-GPU-DCGMI.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
+  VirtualClient.exe --profile=QUAL-GPU-DCGMI.json --system=Demo --timeout=1440
 
 
-  VirtualClient.exe --profile=QUAL-GPU-DCGMI.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=Level=1,,,Username=testusername
+  VirtualClient.exe --profile=QUAL-GPU-DCGMI.json --system=Demo --timeout=1440 --parameters=Level=1,,,Username=testusername
   ```

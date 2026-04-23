@@ -152,6 +152,90 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Sets the SAN policy to <c>onlineall</c> so that newly discovered JBOD disks are brought
+        /// online and writable rather than remaining offline or read-only.
+        /// </summary>
+        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+        public override Task SetSanPolicyAsync(CancellationToken cancellationToken)
+        {
+            EventContext context = EventContext.Persisted();
+
+            return this.Logger.LogMessageAsync($"{nameof(WindowsDiskManager)}.SetSanPolicy", context, async () =>
+            {
+                string command = string.Empty;
+                int retries = -1;
+
+                try
+                {
+                    await this.RetryPolicy.ExecuteAsync(async () =>
+                    {
+                        retries++;
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            using (IProcessProxy process = this.ProcessManager.CreateProcess("DiskPart", string.Empty))
+                            {
+                                try
+                                {
+                                    process.Interactive();
+                                    if (!process.Start())
+                                    {
+                                        throw new ProcessException("Failed to enter DiskPart session.", ErrorReason.DiskFormatFailed);
+                                    }
+
+                                    // Query the current SAN policy first.
+                                    command = "san";
+                                    await process.WriteInput(command)
+                                        .WaitForResponseAsync(@"SAN Policy\s*:", cancellationToken, timeout: TimeSpan.FromSeconds(30))
+                                        .ConfigureAwait(false);
+
+                                    string sanOutput = process.StandardOutput.ToString();
+                                    this.Logger.LogTraceMessage($"Current SAN policy output: {sanOutput}", context);
+
+                                    // Only set the policy if it is not already OnlineAll.
+                                    // DiskPart reports the policy in the format: "SAN Policy  : Online All"
+                                    if (Regex.IsMatch(sanOutput, @"SAN Policy\s*:\s*Online All", RegexOptions.IgnoreCase))
+                                    {
+                                        this.Logger.LogTraceMessage("SAN policy is already set to OnlineAll. No change required.", context);
+                                    }
+                                    else
+                                    {
+                                        // Set SAN policy to OnlineAll so that newly discovered disks are
+                                        // brought online and writable instead of remaining offline/read-only.
+                                        command = "san policy=onlineall";
+                                        await process.WriteInput(command)
+                                            .WaitForResponseAsync(@"DiskPart successfully changed the SAN policy for the current operating system\.", cancellationToken, timeout: TimeSpan.FromSeconds(30))
+                                            .ConfigureAwait(false);
+
+                                        this.Logger.LogTraceMessage("SAN policy set to OnlineAll.", context);
+                                    }
+                                }
+                                catch (TimeoutException exc)
+                                {
+                                    throw new ProcessException(
+                                        $"Failed to set SAN policy. DiskPart command timed out (command={command}, retries={retries}). {Environment.NewLine}{process.StandardOutput}",
+                                        exc,
+                                        ErrorReason.DiskFormatFailed);
+                                }
+                                finally
+                                {
+                                    process.WriteInput("exit");
+                                    await Task.Delay(this.WaitTime).ConfigureAwait(false);
+                                    context.AddProcessDetails(process.ToProcessDetails("diskpart"), "diskpartProcess");
+                                }
+                            }
+                        }
+                    }).ConfigureAwait(false);
+                }
+                catch (Win32Exception exc) when (exc.Message.Contains("requires elevation"))
+                {
+                    throw new ProcessException(
+                        $"Requires elevated permissions. The current operation set requires the application to be run with administrator privileges.",
+                        ErrorReason.Unauthorized);
+                }
+            });
+        }
+
+        /// <summary>
         /// Partitions and formats the disk for file system operations.
         /// </summary>
         /// <param name="disk">The disk to partition and format.</param>

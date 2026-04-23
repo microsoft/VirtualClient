@@ -149,7 +149,7 @@ namespace VirtualClient.Actions
             get
             {
                 byte[] hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes("default"));
-                return Convert.ToBase64String(hashBytes);
+                return Convert.ToHexString(hashBytes);
             }
         }
 

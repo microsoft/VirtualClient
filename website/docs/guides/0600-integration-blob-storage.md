@@ -9,15 +9,15 @@ The following stores are supported by the Virtual Client. The stores must be Azu
   The packages blob store contains workload and dependency packages that must be downloaded to a system during the execution of a
   workload profile. These are typically NuGet/zip files that contain binaries, scripts, etc... that are required by the scenario profile.
 
-  The packages store can be supplied to the Virtual Client on the command line using the '--packageStore' parameter and supplying the
+  The packages store can be supplied to the Virtual Client on the command line using the '--package-store' parameter and supplying the
   full connection string to the Azure storage account blob resource.
 
   ``` bash
   # The blob container does not require authentication (i.e. blob-anonymous read access)
-  VirtualClient.exe --profile=PERF-NETWORK.json --timeout=1440 --packageStore="https://any.blob.core.windows.net"
+  VirtualClient.exe --profile=PERF-NETWORK.json --timeout=1440 --package-store="https://any.blob.core.windows.net"
 
   # The blob continer requires authentication (e.g. a SAS token)
-  VirtualClient.exe --profile=PERF-NETWORK.json --timeout=1440 --packageStore="https://any.blob.core.windows.net/packages?sp=r&st=2022-05-09T18:31:45Z&se=2030-05-10T02:31:45Z&spr=https&sv=2020-08-04&sr=c&sig=..."
+  VirtualClient.exe --profile=PERF-NETWORK.json --timeout=1440 --package-store="https://any.blob.core.windows.net/packages?sp=r&st=2022-05-09T18:31:45Z&se=2030-05-10T02:31:45Z&spr=https&sv=2020-08-04&sr=c&sig=..."
   ```
 
   ![packages store](./img/blob-storage-support-1.png)
@@ -29,10 +29,10 @@ The following stores are supported by the Virtual Client. The stores must be Azu
 
   ```
   # The blob container does not require authentication (i.e. blob-anonymous read access)
-  VirtualClient.exe --profile=PERF-NETWORK.json --timeout=1440 --contentStore="https://any.blob.core.windows.net"
+  VirtualClient.exe --profile=PERF-NETWORK.json --timeout=1440 --content-store="https://any.blob.core.windows.net"
 
   # The blob continer requires authentication (e.g. a SAS token)
-  VirtualClient.exe --profile=PERF-NETWORK.json --timeout=1440 --contentStore="https://any.blob.core.windows.net/packages?sp=r&st=2022-05-09T18:31:45Z&se=2030-05-10T02:31:45Z&spr=https&sv=2020-08-04&sr=c&sig=..."
+  VirtualClient.exe --profile=PERF-NETWORK.json --timeout=1440 --content-store="https://any.blob.core.windows.net/packages?sp=r&st=2022-05-09T18:31:45Z&se=2030-05-10T02:31:45Z&spr=https&sv=2020-08-04&sr=c&sig=..."
   ```
 
   ![monitoring content](./img/blob-storage-support-2.png)
@@ -86,7 +86,7 @@ Virtual Client will look for certificates in the following store locations on Wi
   certificates.
 
 ## Blob Store Authentication
-Virtual Client supports connection string-style as well as URI-style definitions. The the following sections covers authentication options for 
+Virtual Client supports connection string-style as well as URI-style definitions. The following sections cover authentication options for 
 storage account access.
 
 ### URI-Style References
@@ -387,7 +387,7 @@ The following documentation illustrates how to use connection string-style refer
 
 ## Storage Account Blob Conventions for Content/File Uploads
 In order to ensure that files/content uploaded (e.g. --content usages) are easy to find in the blob stores, Virtual Client supports defining a flexible blob path template. The virtual path 
-location of files/content in the storage account can be defined using the `--contentPathTemplate` command line option.
+location of files/content in the storage account can be defined using the `--content-path-template` command line option.
 
 ``` bash
 # By default files/content uploaded will be saved to a container whose name matches the experiment ID for
@@ -396,7 +396,7 @@ location of files/content in the storage account can be defined using the `--con
 # However, the location can be explicitly defined using the content path template.
 #
 # e.g.
-./VirtualClient --profile=PERF-CPU-OPENSSL.json ... --contentPathTemplate="{experimentId}/logs/{toolName}/{scenarioName}"
+./VirtualClient --profile=PERF-CPU-OPENSSL.json ... --content-path-template="{experimentId}/logs/{toolName}/{scenarioName}"
 ```
 
 In above example, the virtual blob folder structure will have sub-folders corresponding to each element separated by a '/' in the content path template defined.
@@ -413,7 +413,7 @@ are case-sensitive. Lower-casing helps to ensure predictability.
 # Scenario Name = MD5
 #
 # ...and a content path template defined
---contentPathTemplate="{experimentId}/logs/{toolName}/{scenarioName}"
+--content-path-template="{experimentId}/logs/{toolName}/{scenarioName}"
 
 # Files/content would be uploaded to a virtual path in the storage account that looks like the following:
 # 29be58e5-94de-4703-beab-5c8862abcdAa7/logs/openssl/md5
@@ -431,10 +431,10 @@ If a content path template is not defined explicitly on the command line, the de
 The following section shows the set of supported "well-known" content path template placeholders.
 
 * **\{experimentId\}**  
-  The experiment ID for the Virtual Client execution (e.g. ./VirtualClient --profile=PERF-CPU-OPENSSL.json --experimentId=29be58e5-94de-4703-beab-5c8862abcdAa7 --> 29be58e5-94de-4703-beab-5c8862abcdAa7)
+  The experiment ID for the Virtual Client execution (e.g. ./VirtualClient --profile=PERF-CPU-OPENSSL.json --experiment-id=29be58e5-94de-4703-beab-5c8862abcdAa7 --> 29be58e5-94de-4703-beab-5c8862abcdAa7)
 
 * **\{agentId\}**  
-  The ID of the Virtual Client instance running (e.g. ./VirtualClient --profile=PERF-CPU-OPENSSL.json --agentId=agent1234 --> agent1234).
+  The ID of the Virtual Client instance running (e.g. ./VirtualClient --profile=PERF-CPU-OPENSSL.json --client-id=agent1234 --> agent1234).
 
 * **\{toolName\}**  
   This is the name of the tool/toolset associated with a given workload or monitor (e.g. OpenSSL).
@@ -454,7 +454,7 @@ a placeholder in a content path template.
   # e.g.
   # Suppose a content path template is defined on the command line and it references placeholders for 
   # properties defined/supplied in the --metadata (e.g. environment, audience).
-  VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --experimentId=29be58e5-94de-4703-beab-5c8862abcdAa7 --agentId=agent1234 --contentPathTemplate="{environment}/{audience}/{experimentId}/{agentId}/{toolName}/{scenarioName}" --metadata="environment=demo,,,audience=my_team" 
+  VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --experiment-id=29be58e5-94de-4703-beab-5c8862abcdAa7 --client-id=agent1234 --content-path-template="{environment}/{audience}/{experimentId}/{agentId}/{toolName}/{scenarioName}" --metadata="environment=demo,,,audience=my_team" 
 
   # The custom placeholders defined in the metadata will be resolved at runtime and replaced
   # in the virtual paths for the blobs/files (e.g. {environment} --> demo, {audience} --> my_team)
@@ -479,7 +479,7 @@ The following section provides additional context information related to content
   ``` bash
   # e.g.
   # Suppose the following content path template is defined on the command line:
-  VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --experimentId=29be58e5-94de-4703-beab-5c8862abcdAa7 --agentId=agent1234 --contentPathTemplate="{environment}/{audience}/{experimentId}/{agentId}/{toolName}/{scenarioName}" --metadata="environment=demo,,,audience=my_team" 
+  VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --experiment-id=29be58e5-94de-4703-beab-5c8862abcdAa7 --client-id=agent1234 --content-path-template="{environment}/{audience}/{experimentId}/{agentId}/{toolName}/{scenarioName}" --metadata="environment=demo,,,audience=my_team" 
 
   # The following shows examples of what the virtual paths files uploaded might look like. The blob container
   # is the very first segment in the content path template (e.g. demo).

@@ -2,7 +2,8 @@
     "Description": "Default Monitors for Nvidia GPU systems.",
     "Metadata": {
         "SupportedPlatforms": "linux-arm64,linux-x64,win-x64",
-        "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows"
+        "SupportedOperatingSystems": "CentOS,Debian,RedHat,Suse,Ubuntu,Windows",
+        "PreliminaryRequirements": "Please note that the Nvidia GPU driver and CUDA toolsets MUST be already installed on the system for the monitors to function correctly."
     },
     "Parameters": {
         "MonitorFrequency": "00:01:00",
@@ -16,7 +17,8 @@
                 "Scenario": "CaptureNvidiaSmiCounters",
                 "MonitorFrequency": "$.Parameters.MonitorFrequency",
                 "MonitorWarmupPeriod": "$.Parameters.MonitorWarmupPeriod",
-                "MonitorIterations": "$.Parameters.MonitorIterations"
+                "MonitorIterations": "$.Parameters.MonitorIterations",
+                "SupportedPlatforms": "linux-arm64,linux-x64,win-x64"
             }
         }
     ]
