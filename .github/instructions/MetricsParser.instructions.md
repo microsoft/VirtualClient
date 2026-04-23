@@ -1,5 +1,5 @@
 ---
-applyTo: "*MetricsParser.cs"
+applyTo: "**/*MetricsParser.cs"
 description: "Pattern for developing metric parsers with proper units and consistency"
 ---
 

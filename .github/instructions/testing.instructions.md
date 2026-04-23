@@ -1,5 +1,5 @@
 ---
-applyTo: "**/*Tests.cs"
+applyTo: "**/*Tests/**/*.cs"
 description: "Unit test patterns, naming conventions, mock setup, and assertion rules"
 ---
 
