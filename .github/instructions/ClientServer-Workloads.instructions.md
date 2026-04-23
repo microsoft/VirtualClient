@@ -5,68 +5,74 @@ description: "Pattern for developing multi-VM client/server/reverseProxy workloa
 
 # Client/Server Workload Development
 
-## Overview
-
 For network and database workloads, VirtualClient supports multi-role execution where separate
 instances run as client and server, coordinating via the built-in REST API.
 
 ## Key Components
 
-- `EnvironmentLayout` — defines the topology of instances (`ClientInstance` objects with Name, Role, IPAddress)
+- `EnvironmentLayout` — topology of instances (`ClientInstance` with Name, Role, IPAddress)
 - `IApiClientManager` — creates API clients for inter-VM communication
-- `ClientRole.Client` / `ClientRole.Server` — role constants
-- `ServerCancellationSource` — `CancellationTokenSource` to signal server shutdown
+- `ClientRole.Client` / `ClientRole.Server` / `ClientRole.ReverseProxy` — role constants
+- `this.SetServerOnline(bool)` — extension method to signal server readiness
+- `serverApiClient.PollForHeartbeatAsync(timeout, ct)` / `PollForServerOnlineAsync(timeout, ct)`
 
-## Role Determination
+## Base Executor Pattern
 
-Roles come from the `EnvironmentLayout` loaded into DI. The component checks its role:
-
-```csharp
-// Defined in profile Parameters: "Role": "Client" or "Role": "Server"
-// Accessed via this.IsInRole(ClientRole.Client) or this.IsInRole(ClientRole.Server)
-```
-
-## Executor Pattern
+See `VirtualClient.Actions/Examples/ClientServer/ExampleClientServerExecutor.cs` for the canonical
+implementation. The base class resolves dependencies and defines supported roles in the constructor:
 
 ```csharp
 [SupportedPlatforms("linux-x64,linux-arm64")]
 public class MyWorkloadExecutor : VirtualClientComponent
 {
-    protected IApiClientManager ApiClientManager { get; }
-    protected IApiClient ServerApiClient { get; set; }
-    protected CancellationTokenSource ServerCancellationSource { get; set; }
-
-    public MyWorkloadExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
+    public MyWorkloadExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters = null)
         : base(dependencies, parameters)
     {
+        this.SystemManagement = dependencies.GetService<ISystemManagement>();
         this.ApiClientManager = dependencies.GetService<IApiClientManager>();
-    }
+        this.FileSystem = this.SystemManagement.FileSystem;
+        this.PackageManager = this.SystemManagement.PackageManager;
+        this.ProcessManager = this.SystemManagement.ProcessManager;
+        this.StateManager = this.SystemManagement.StateManager;
 
-    // Define supported roles
-    public List<string> SupportedRoles = new List<string> { ClientRole.Client, ClientRole.Server };
-
-    protected override async Task ExecuteAsync(EventContext context, CancellationToken ct)
-    {
-        if (this.IsInRole(ClientRole.Server))
-        {
-            await this.ExecuteServerAsync(context, ct);
-        }
-        else
-        {
-            await this.ExecuteClientAsync(context, ct);
-        }
+        // Set the base class property — do NOT declare a new field
+        this.SupportedRoles = new List<string> { ClientRole.Client, ClientRole.Server };
     }
 }
 ```
 
-## State Synchronization
+## Client-Side Sync Flow
 
-Client and server coordinate via the REST API (`VirtualClient.Api/`):
+Clients poll the server before starting the workload (see `ExampleClientExecutor.cs`):
 
-- Server publishes state indicating readiness
-- Client polls for server state before starting workload
-- Use `Polly` retry policies for resilience against transient failures
-- `IApiClient` provides `GetStateAsync`/`CreateStateAsync` for state exchange
+```csharp
+IApiClient serverApiClient = this.ApiClientManager.GetOrCreateApiClient(server.Name, server);
+await serverApiClient.PollForHeartbeatAsync(this.PollingTimeout, cancellationToken);
+await serverApiClient.PollForServerOnlineAsync(TimeSpan.FromSeconds(30), cancellationToken);
+// Server confirmed online — execute workload
+```
+
+## Server-Side Signal Flow
+
+Servers signal readiness after starting (see `ExampleServerExecutor.cs`):
+
+```csharp
+this.SetServerOnline(true);   // Signal to clients
+await webHostProcess.WaitForExitAsync(cancellationToken);
+// In finally block:
+this.SetServerOnline(false);  // Always signal offline before exiting
+```
+
+## Validation
+
+Override `Validate()` to check layout and roles:
+```csharp
+protected override void Validate()
+{
+    base.Validate();
+    this.ThrowIfLayoutNotDefined();
+}
+```
 
 ## Profile Structure
 
@@ -81,10 +87,10 @@ Client and server coordinate via the REST API (`VirtualClient.Api/`):
 
 ## Checklist
 
-- [ ] Define `SupportedRoles` with `ClientRole.Client` and/or `ClientRole.Server`
-- [ ] Resolve `IApiClientManager` from dependencies
-- [ ] Use role checks (`this.IsInRole(...)`) to branch execution logic
-- [ ] Implement state synchronization via REST API
-- [ ] Use `Polly` retry policies for cross-VM communication
-- [ ] Handle `ServerCancellationSource` for clean server shutdown
+- [ ] Set `this.SupportedRoles` in constructor (use base class property, not a new field)
+- [ ] Resolve `IApiClientManager` and `ISystemManagement` from dependencies
+- [ ] Use `this.IsInRole(ClientRole.Client/Server)` to branch execution
+- [ ] Server calls `this.SetServerOnline(true/false)` for handshake
+- [ ] Client calls `PollForHeartbeatAsync` then `PollForServerOnlineAsync`
+- [ ] Use `Polly` retry policies for cross-VM communication resilience
 - [ ] Test both client and server code paths independently

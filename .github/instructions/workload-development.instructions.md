@@ -64,6 +64,12 @@ public class MyWorkloadExecutor : VirtualClientComponent
                 metrics, null, this.CommandArguments, this.Tags, telemetryContext);
         }
     }
+
+    protected override void Validate()
+    {
+        base.Validate();
+        this.ThrowIfParameterNotDefined(nameof(this.CommandArguments));
+    }
 }
 ```
 

@@ -36,24 +36,13 @@ description: "PR review rules: required fixes vs suggestions for C# code changes
 
 10. **Copyright header on every `.cs` file.** StyleCop SA1633 requires the standard two-line header.
 
-## Suggestions (flag these — won't break but inconsistent)
+## Suggestions (flag these — coding conventions defined in csharp.instructions.md)
 
-1. **Use `this.Parameters.GetValue<T>(nameof(...))` for profile parameters** — not direct
-   dictionary access.
-
-2. **Add `[SupportedPlatforms("...")]` to executor classes** — omitting means workload attempts
+1. **Add `[SupportedPlatforms("...")]` to executor classes** — omitting means workload attempts
    to run on all platforms.
+
+2. **`Validate()` should throw `WorkloadException` with `ErrorReason.InvalidProfileDefinition`.**
 
 3. **Test classes should inherit `MockFixture`** — not create mocks from scratch.
 
-4. **Using ordering: `System.*` → `Microsoft.*` → `Newtonsoft.*` → `VirtualClient.*`.**
-
-5. **Private fields: camelCase, no prefix** (`fileSystem` not `_fileSystem`).
-
-6. **XML doc comments on all public members.**
-
-7. **Parser tests should load real output from `Examples/`** — not inline strings.
-
-8. **`Validate()` should throw `WorkloadException` with `ErrorReason.InvalidProfileDefinition`.**
-
-9. **Async methods suffixed with `Async`.**
+4. **Parser tests should load real output from `Examples/`** — not inline strings.

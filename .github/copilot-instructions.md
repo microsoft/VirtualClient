@@ -39,23 +39,12 @@ src/VirtualClient/
 
 All workloads, dependencies, monitors inherit `VirtualClientComponent`.
 Constructor: `(IServiceCollection, IDictionary<string, IConvertible>)`.
-Lifecycle: `InitializeAsync` → `Validate` → `ExecuteAsync` → `CleanupAsync`.
-
-### Dependency Injection
-
-Services registered in `CommandBase.InitializeDependencies()`, resolved via `dependencies.GetService<T>()`.
-Key services: `IFileSystem`, `ISystemManagement`, `ProcessManager`, `IPackageManager`, `ILogger`.
+Lifecycle: `IsSupported` → `InitializeAsync` → `Validate` → `ExecuteAsync` → `CleanupAsync`.
 
 ### Process Execution
 
 External binaries run through `IProcessProxy` (wraps `System.Diagnostics.Process`).
 Output captured via `ConcurrentBuffer`. Tests use `InMemoryProcess`.
-
-### Error Handling
-
-Custom hierarchy: `VirtualClientException` → `WorkloadException`, `DependencyException`,
-`ProcessException`, `MonitorException`, etc. All carry `ErrorReason` enum.
-Codes ≥500 fatal, 400–499 transient.
 
 ## Build and Test
 

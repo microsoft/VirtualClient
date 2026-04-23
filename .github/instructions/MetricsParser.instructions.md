@@ -39,19 +39,21 @@ public class MyWorkloadMetricsParser : MetricsParser
 
     protected override void Preprocess()
     {
-        this.PreprocessedText = TextParsingExtensions.RemoveRows(this.RawText, somePattern);
+        // Remove unwanted lines before parsing
+        this.PreprocessedText = TextParsingExtensions.RemoveRows(this.RawText, @"^\s*$");
     }
 }
 ```
 
 ## Standard Units (from `MetricUnit` constants)
 
-Always use `MetricUnit.*` constants — never raw strings:
-
-- **Throughput**: `KilobytesPerSecond`, `MegabytesPerSecond`, `OperationsPerSec`,
-  `RequestsPerSec`, `TransactionsPerSec`
-- **Latency**: `Nanoseconds`, `Milliseconds`, `Seconds`
-- **Count**: `Count`, `Bytes`, `Kilobytes`, `Megabytes`
+Always use `MetricUnit.*` constants from `VirtualClient.Contracts/MetricUnit.cs` — never raw strings.
+Full list includes: `Bytes`, `Kilobytes`, `Megabytes`, `Gigabytes`, `Terabytes`, `Petabytes`,
+`BytesPerSecond`, `KilobytesPerSecond`, `MegabytesPerSecond`, `GigabytesPerSecond`,
+`KibibytesPerSecond`, `MebibytesPerSecond`, `GibibytesPerSecond`,
+`OperationsPerSec`, `RequestsPerSec`, `TransactionsPerSec`,
+`Nanoseconds`, `Microseconds`, `Milliseconds`, `Seconds`, `Minutes`,
+`Count`, `Operations`, `Watts`, `Amps`, `Celcius`, `Megahertz`, `BytesPerConnection`.
 
 ## MetricRelativity
 

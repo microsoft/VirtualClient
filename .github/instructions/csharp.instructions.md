@@ -38,6 +38,7 @@ namespace VirtualClient.Actions
 - **Classes**: PascalCase, suffixed by role (`OpenSslExecutor`, `DiskSpdMetricsParser`)
 - **Properties**: PascalCase (`CommandLine`, `MetricScenario`)
 - **Private fields**: camelCase, no prefix (`private IFileSystem fileSystem;` — not `_fileSystem`)
+- **Member access**: Always use `this.` prefix (`this.fileSystem`, `this.Parameters`, `this.Logger`)
 - **Constants**: PascalCase (`private const string CoreMarkOutputFile1 = "run1.log";`)
 - **Parameters keys**: PascalCase, accessed case-insensitively via `StringComparer.OrdinalIgnoreCase`
 - **Async methods**: Suffix with `Async` (`ExecuteAsync`, `InitializeAsync`, `CleanupAsync`)

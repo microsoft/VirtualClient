@@ -68,7 +68,21 @@ public class FioExecutorTests : MockFixture
 
 - Load real example output from `Examples/` directories (not inline strings)
 - Run the parser against actual benchmark output
-- Assert specific metric names, values, and units
+- Assert specific metric names, values, and units:
+
+```csharp
+[Test]
+public void MyParserParsesMetricsCorrectly()
+{
+    string output = MockFixture.ReadFile(MockFixture.ExamplesDirectory, "MyWorkload", "results.txt");
+    MyWorkloadMetricsParser parser = new MyWorkloadMetricsParser(output);
+    IList<Metric> metrics = parser.Parse();
+
+    Assert.IsNotEmpty(metrics);
+    MetricAssert.Exists(metrics, "throughput", 12345.67, MetricUnit.OperationsPerSec);
+    MetricAssert.Exists(metrics, "latency_p99", 1.23, MetricUnit.Milliseconds);
+}
+```
 
 ## Process Mocking
 

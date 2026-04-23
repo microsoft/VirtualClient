@@ -1,5 +1,5 @@
 ---
-applyTo: "**/*.json"
+applyTo: "**/profiles/**/*.json"
 description: "Execution profile review rules for VirtualClient JSON profiles"
 ---
 
@@ -37,15 +37,6 @@ Each action must have:
     "SupportedPlatforms": "linux-x64,linux-arm64,win-x64",
     "SupportedOperatingSystems": "AzureLinux,CentOS,Debian,RedHat,Suse,Ubuntu,Windows"
 }
-```
-
-## Client/Server Profiles
-
-For multi-VM workloads, actions specify roles:
-
-```json
-{ "Type": "ServerExecutor", "Parameters": { "Scenario": "Start", "Role": "Server", "Port": 6379 } },
-{ "Type": "ClientExecutor", "Parameters": { "Scenario": "Bench", "Role": "Client", "ServerPort": "$.Parameters.ServerPort" } }
 ```
 
 ## Dependencies
