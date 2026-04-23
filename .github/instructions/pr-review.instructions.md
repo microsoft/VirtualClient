@@ -29,7 +29,7 @@ description: "PR review rules: required fixes vs suggestions for C# code changes
    usings fail CI.
 
 8. **Use project exception hierarchy.** Raw `Exception`/`InvalidOperationException` breaks error
-   routing on `ErrorReason`. Use `WorkloadException`, `DependencyException`, `ProcessException`, etc.
+   routing on `ErrorReason`. See exception list in csharp.instructions.md.
 
 9. **Tests must have `[TestFixture]` and `[Category("Unit")]`.** Build scripts filter by category.
    Missing category → tests silently never run in CI.

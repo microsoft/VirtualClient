@@ -15,7 +15,7 @@ description: "Pattern for developing new workload executors"
 6. Override `InitializeAsync` — locate package, set executable path
 7. Override `ExecuteAsync` — run process, capture output, parse metrics, log telemetry
 8. Override `Validate` — check required parameters, throw `WorkloadException`
-9. Create a `MetricsParser` subclass (see MetricsParser.instructions.md)
+9. Create a `MetricsParser` subclass (see metrics-parser.instructions.md)
 10. Create profile JSON in `VirtualClient.Main/profiles/`
 11. Add unit tests inheriting `MockFixture` in `.UnitTests` project
 12. Add example output files in `Examples/` for parser tests
