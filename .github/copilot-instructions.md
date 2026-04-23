@@ -8,13 +8,13 @@ structured metrics. Supports Windows and Linux on x64 and ARM64.
 
 ## Tech Stack
 
-- **Runtime**: .NET 9 (SDK 9.0.301, `global.json`)
+- **Runtime**: .NET 9 (`global.json`)
 - **Platforms**: `linux-x64`, `linux-arm64`, `win-x64`, `win-arm64`
-- **Serialization**: `Newtonsoft.Json` 13.0.3, `YamlDotNet` 15.1.1
-- **DI**: `Microsoft.Extensions.DependencyInjection` 9.0.9
-- **Logging**: `Serilog.Extensions.Logging` 9.0.2 (NOT `Serilog`)
-- **Testing**: NUnit 3.13.2, Moq 4.18.2, AutoFixture 4.18.1
-- **Code quality**: StyleCop.Analyzers 1.1.118, AsyncFixer 1.6.0
+- **Serialization**: `Newtonsoft.Json`, `YamlDotNet`
+- **DI**: `Microsoft.Extensions.DependencyInjection`
+- **Logging**: `Serilog.Extensions.Logging` (NOT `Serilog`)
+- **Testing**: NUnit, Moq, AutoFixture
+- **Code quality**: StyleCop.Analyzers, AsyncFixer
 - **Package versions**: Centrally managed via `Directory.Packages.props`
 
 ## Repository Structure
