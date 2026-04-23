@@ -448,3 +448,87 @@ dotnet publish src/VirtualClient/VirtualClient.Main/VirtualClient.Main.csproj -r
 ### Version
 <!-- See: VERSION file at repo root; build.sh:104–106 and build.cmd:42 -->
 Build version is read from the `VERSION` file at the repo root. Override with the `VCBuildVersion` environment variable.
+
+## PR Review Guidelines
+
+When reviewing pull requests, flag items below as **Required Fix** (will break the build, crash at runtime, or violate a hard architectural constraint) or **Suggestion** (inconsistency with conventions that won't break anything but should be addressed).
+
+### Required Fixes (flag these — they break things)
+
+1. **Component must inherit `VirtualClientComponent`.**
+   Any class referenced by a profile `"Type"` field is resolved via `ComponentTypeCache` and instantiated by `ComponentFactory.CreateComponent` using `Activator.CreateInstance` — which casts the result to `VirtualClientComponent`. A class that does not inherit this base type will throw `InvalidCastException` → `StartupException` at runtime.
+   <!-- See: ComponentFactory.cs:73–77, ComponentTypeCache.cs:20, ProfileExecutor.cs:697–718 -->
+
+2. **Component constructor must be `(IServiceCollection, IDictionary<string, IConvertible>)`.**
+   `ComponentFactory` calls `Activator.CreateInstance(componentType, dependencies, effectiveParameters)` which requires exactly this two-parameter constructor signature. A missing or differently-typed constructor throws `MissingMethodException` → `StartupException`.
+   <!-- See: ComponentFactory.cs:130, ComponentFactory.cs:79–85, VirtualClientComponent.cs:85 -->
+
+3. **Assembly containing new components must have `[assembly: VirtualClientComponentAssembly]`.**
+   `ComponentTypeCache.IsComponentAssembly()` checks for this attribute; assemblies without it are skipped during type discovery. A new executor in an un-attributed assembly will cause `TypeLoadException` at profile load time.
+   <!-- See: ComponentTypeCache.cs:50–53, VirtualClient.Actions/AssemblyInfo.cs:4, ProfileExecutor.cs:712–718 -->
+
+4. **Profile `"Type"` value must exactly match the C# class name.**
+   The `ComponentTypeCache.TryGetComponentType` lookup matches on type name. A typo or wrong name throws `TypeLoadException` → `StartupException` with the message "does not exist or does not inherit from VirtualClientComponent".
+   <!-- See: ProfileExecutor.cs:697, ComponentFactory.cs:47–49, PERF-CPU-OPENSSL.json "Type": "OpenSslExecutor" -->
+
+5. **Parser must extend `MetricsParser` (which extends `TextParser<IList<Metric>>`) and implement `Parse()`.**
+   `Parse()` is abstract in `TextParser<T>` — failing to override it is a compile error. Using a return type other than `IList<Metric>` will break the `LogMetrics` call which iterates over the result.
+   <!-- See: TextParser.cs:48, MetricsParser.cs:15, VirtualClientLoggingExtensions.cs:645–662, OpenSslExecutor.cs:222–234 -->
+
+6. **NuGet package versions must be in `Directory.Packages.props`, not in individual `.csproj` files.**
+   The repo uses central package management. Adding a `Version=` attribute in a `.csproj` `<PackageReference>` will cause a build error (`NU1008`) because it conflicts with centrally-managed versions.
+   <!-- See: Directory.Packages.props, VirtualClient.Actions.csproj:11–12 (no Version attribute) -->
+
+7. **`using` statements must be inside the `namespace` block.**
+   StyleCop.Analyzers (enabled repo-wide) enforces `SA1200` — `using` directives outside a namespace cause build warnings treated as errors in CI.
+   <!-- See: OpenSslExecutor.cs:4–21, VirtualClientComponent.cs:4–21, .editorconfig:1–7 -->
+
+8. **Exception types must use the project's exception hierarchy.**
+   Throwing raw `Exception` or `InvalidOperationException` instead of the established types (`WorkloadException`, `DependencyException`, `ProcessException`, `MonitorException`, etc.) breaks the error-handling pipeline that routes on `ErrorReason`. The `Validate()` pattern in existing executors consistently throws `WorkloadException` with `ErrorReason.InvalidProfileDefinition`.
+   <!-- See: Exceptions.cs:12–549, FioExecutor.cs:841–867 (Validate throws WorkloadException), Enumerations.cs:37 -->
+
+9. **Test classes must have `[TestFixture]` and `[Category("Unit")]` (or `"Functional"`).**
+   The build scripts filter tests by category (`--filter "Category=Unit"`). Tests without a `[Category]` attribute are silently skipped by the CI pipeline and will never run.
+   <!-- See: FioExecutorTests.cs:22–23, build-test.sh:65, build-test.cmd:23 -->
+
+10. **Copyright header must be present on every `.cs` file.**
+    StyleCop rule `SA1633` requires the standard two-line header. Missing it will fail the StyleCop check.
+    <!-- See: OpenSslExecutor.cs:1–2, VirtualClientComponent.cs:1–2 -->
+
+### Suggestions (flag these — won't break but inconsistent)
+
+1. **Prefer `this.Parameters.GetValue<T>(nameof(...))` for profile parameters.**
+   All existing executors expose parameters as properties backed by `this.Parameters.GetValue<T>()` using `nameof()` for the key. Direct dictionary access (`this.Parameters["Key"]`) works but is inconsistent with the established pattern and loses the case-insensitive, typed lookup.
+   <!-- See: OpenSslExecutor.cs:55–61, CoreMarkExecutor.cs:49–55 -->
+
+2. **Add `[SupportedPlatforms("...")]` attribute to executor classes.**
+   While not strictly required (the base class handles missing attributes gracefully), every existing executor uses this attribute. Omitting it means the workload will attempt to run on all platforms, which is rarely correct.
+   <!-- See: SupportedPlatformsAttribute.cs:13, OpenSslExecutor.cs:34, CoreMarkExecutor.cs:25 -->
+
+3. **Test classes should inherit `MockFixture`, not create mocks from scratch.**
+   `MockFixture` pre-configures all the standard service mocks (`FileSystem`, `DiskManager`, `ProcessManager`, etc.) and provides helpers like `ReadFile()` and `Setup(PlatformID)`. Manually recreating these mocks is verbose and diverges from the pattern used by all existing tests.
+   <!-- See: MockFixture.cs:35, FioExecutorTests.cs:24 -->
+
+4. **Using-statement ordering: `System.*` → `Microsoft.*` → `Newtonsoft.*` → `VirtualClient.*`.**
+   StyleCop `SA1208`/`SA1210` enforce alphabetical ordering within groups. While reordering won't break the build (it's a warning, not an error), it's inconsistent with every file in the codebase.
+   <!-- See: OpenSslExecutor.cs:6–21, VirtualClientComponent.cs:6–21 -->
+
+5. **Private instance fields should use camelCase with no prefix.**
+   The codebase uses `private IFileSystem fileSystem;` not `_fileSystem` or `m_fileSystem`. Using a different convention won't break anything but creates visual inconsistency.
+   <!-- See: OpenSslExecutor.cs:37–38, CoreMarkExecutor.cs:28–29 -->
+
+6. **XML doc comments on all public members.**
+   Existing code consistently documents every public method, property, and constructor with `<summary>`, `<param>`, and `<returns>` tags. Missing docs won't fail the build (XML doc warnings are not currently treated as errors) but diverges from project norms.
+   <!-- See: OpenSslExecutor.cs:23–44, VirtualClientComponent.cs:78–84 -->
+
+7. **Parser tests should load real example output from `Examples/` directories.**
+   Parser tests in the codebase use `MockFixture.ReadFile(MockFixture.ExamplesDirectory, ...)` to load actual benchmark output. Inline test strings work but don't verify against real-world output formats.
+   <!-- See: FioExecutorTests.cs:35, MockFixture.cs:50–52 -->
+
+8. **`Validate()` should check required parameters and throw `WorkloadException` with `ErrorReason.InvalidProfileDefinition`.**
+   This is the established validation pattern. While not enforced by the compiler, skipping validation means invalid profiles fail later with obscure errors instead of clear messages at startup.
+   <!-- See: FioExecutor.cs:841–867, StressNgExecutor.cs:122, DiskSpdExecutor.cs:644 -->
+
+9. **Async methods should be suffixed with `Async`.**
+   The `AZCA1002` analyzer rule is suppressed (`.editorconfig:6–7`), so this won't break the build. However, every existing method follows the `Async` suffix convention (`ExecuteAsync`, `InitializeAsync`, `CleanupAsync`).
+   <!-- See: VirtualClientComponent.cs:713,856,861,814 -->
