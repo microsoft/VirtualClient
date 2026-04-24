@@ -498,6 +498,22 @@ namespace VirtualClient
             Assert.AreEqual("conditionalA", profile.Parameters["Parameter4"].ToString());
         }
 
+        [TestCase("Ubuntu 24.04.1 LTS", true, 24)]
+        [TestCase("Ubuntu 24.04 LTS", true, 24)]
+        [TestCase("Ubuntu 22.04.3 LTS", true, 22)]
+        [TestCase("Ubuntu 25.10", true, 25)]
+        [TestCase("ubuntu 24.04.1 lts", true, 24)]
+        [TestCase("Debian GNU/Linux 12 (bookworm)", false, 0)]
+        [TestCase("Ubuntu Noble Numbat (development branch)", false, 0)]
+        [TestCase("", false, 0)]
+        [TestCase(null, false, 0)]
+        public void TryGetUbuntuMajorVersionParsesExpectedValues(string prettyName, bool expectedSuccess, int expectedMajor)
+        {
+            bool actualSuccess = ExecuteProfileCommand.TryGetUbuntuMajorVersion(prettyName, out int actualMajor);
+            Assert.AreEqual(expectedSuccess, actualSuccess);
+            Assert.AreEqual(expectedMajor, actualMajor);
+        }
+
         private class TestRunProfileCommand : ExecuteProfileCommand
         {
             public new PlatformExtensions Extensions
