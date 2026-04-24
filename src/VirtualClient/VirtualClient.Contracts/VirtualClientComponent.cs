@@ -782,10 +782,23 @@ namespace VirtualClient.Contracts
                             // Expected for cases where a cancellation token is cancelled.
                             if (cancellationToken.IsCancellationRequested)
                             {
-                                this.Logger.LogMessage(
-                                    $"{this.TypeName}.ExecutionCancelled",
-                                    LogLevel.Warning,
-                                    telemetryContext.Clone().AddContext("executionCancelled", true));
+                                EventContext cancelContext = telemetryContext.Clone()
+                                    .AddContext("executionCancelled", true);
+
+                                ServiceDescriptor timingDescriptor = this.Dependencies.FirstOrDefault(d => d.ServiceType.Name == "ProfileTiming");
+                                if (timingDescriptor != null)
+                                {
+                                    IServiceProvider provider = this.Dependencies.BuildServiceProvider();
+                                    object timing = provider.GetService(timingDescriptor.ServiceType);
+                                    TimeSpan? duration = timing?.GetType().GetProperty("Duration")?.GetValue(timing) as TimeSpan?;
+
+                                    if (duration.HasValue)
+                                    {
+                                        cancelContext.AddContext("timeout", duration.Value.ToString());
+                                    }
+                                }
+
+                                this.Logger.LogMessage($"{this.TypeName}.ExecutionCancelled", LogLevel.Warning, cancelContext);
                             }
                         }
                         catch (Exception)

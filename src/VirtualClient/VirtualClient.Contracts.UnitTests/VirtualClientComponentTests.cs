@@ -669,12 +669,11 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public async Task VirtualClientComponentLogsExplicitTelemetryWhenExecutionIsCancelledDueToTimeout()
+        public async Task VirtualClientComponentLogsExplicitTelemetryWhenExecutionIsCancelled()
         {
             // Scenario:
-            // The cancellation token is cancelled (e.g. due to experiment timeout) while
-            // the component is executing. The component should emit explicit telemetry
-            // indicating the workload was cancelled.
+            // The cancellation token is cancelled while the component is executing.
+            // The component should emit explicit telemetry indicating the execution was cancelled.
             using (CancellationTokenSource cts = new CancellationTokenSource())
             {
                 TestVirtualClientComponent component = new TestVirtualClientComponent(this.mockFixture.Dependencies, this.mockFixture.Parameters);
@@ -694,6 +693,7 @@ namespace VirtualClient.Contracts
                 Assert.IsNotNull(context);
                 Assert.IsTrue(context.Properties.ContainsKey("executionCancelled"));
                 Assert.AreEqual(true, context.Properties["executionCancelled"]);
+                Assert.IsTrue(context.Properties.ContainsKey("timeout"));
             }
         }
 
