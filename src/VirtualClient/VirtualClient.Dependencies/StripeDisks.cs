@@ -137,6 +137,20 @@ namespace VirtualClient.Dependencies
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
+            // If the mount directory already exists and has content (e.g. from a previous run),
+            // skip the striping operation to avoid destroying existing data.
+            if (!string.IsNullOrEmpty(this.MountDirectory)
+                && this.fileSystem.Directory.Exists(this.MountDirectory)
+                && this.fileSystem.Directory.EnumerateFileSystemEntries(this.MountDirectory).Any())
+            {
+                this.Logger.LogTraceMessage($"{this.TypeName}: Skipping. Mount directory '{this.MountDirectory}' already exists and contains data.");
+                telemetryContext.AddContext("skipped", true);
+                telemetryContext.AddContext("mountDirectory", this.MountDirectory);
+                return;
+            }
+
+            // Discover all disks on the system and apply the user-specified filter
+            // (e.g. "osdisk:false&sizegreaterthan:256g") to identify eligible disks.
             IEnumerable<Disk> allDisks = await this.systemManagement.DiskManager.GetDisksAsync(cancellationToken);
             IEnumerable<Disk> filteredDisks = DiskFilters.FilterDisks(allDisks, this.DiskFilter, this.Platform);
 
@@ -147,6 +161,7 @@ namespace VirtualClient.Dependencies
                     ErrorReason.DependencyNotFound);
             }
 
+            // When DiskCount is specified, limit to that many disks (largest first).
             if (this.DiskCount > 0)
             {
                 if (filteredDisks.Count() < this.DiskCount)
@@ -162,11 +177,15 @@ namespace VirtualClient.Dependencies
                     .Take(this.DiskCount);
             }
 
+            // Build the comma-separated list of device paths (e.g. "/dev/sdc,/dev/sdd")
+            // to pass to the platform-specific striping script.
             string diskPaths = string.Join(",", filteredDisks.Select(d => d.DevicePath));
 
             string command;
             string commandArguments;
 
+            // On Windows the script is a .cmd batch file; on Linux it is a bash script
+            // that also receives the resolved mount directory for the striped volume.
             if (this.Platform == PlatformID.Win32NT)
             {
                 command = "cmd";
@@ -182,6 +201,8 @@ namespace VirtualClient.Dependencies
                 .AddContext("command", command)
                 .AddContext("commandArguments", commandArguments);
 
+            // Execute the script with elevated privileges. The script handles partitioning,
+            // LVM striping (for multiple disks), filesystem creation, and mounting.
             using (IProcessProxy process = await this.ExecuteCommandAsync(command, commandArguments, this.ScriptDirectory, telemetryContext, cancellationToken, runElevated: true))
             {
                 if (!cancellationToken.IsCancellationRequested)
@@ -193,7 +214,7 @@ namespace VirtualClient.Dependencies
         }
 
         /// <summary>
-        /// Resolves the mount directory path using the same logic as <see cref="MountDisks"/>.
+        /// Resolves the mount directory path using the same convention as <see cref="MountDisks"/>.
         /// Uses <see cref="MountLocation"/> if provided, otherwise determines the path based on
         /// the current platform and logged-in user.
         /// </summary>

@@ -64,30 +64,13 @@ namespace VirtualClient.Dependencies.MySqlServer
         }
 
         /// <summary>
-        /// stripedisk mount point.
-        /// </summary>
-        public string StripeDiskMountPoint
-        {
-            get
-            {
-                if (this.Parameters.TryGetValue(nameof(this.StripeDiskMountPoint), out IConvertible stripediskmountpoint) && stripediskmountpoint != null)
-                {
-                    return stripediskmountpoint.ToString();
-                }
-
-                return string.Empty;
-            }
-        }
-
-        /// <summary>
         /// Disk filter specified
         /// </summary>
         public string DiskFilter
         {
             get
             {
-                // and 256G
-                return this.Parameters.GetValue<string>(nameof(this.DiskFilter), "osdisk:false&sizegreaterthan:256g");
+                return this.Parameters.GetValue<string>(nameof(this.DiskFilter), "Logical");
             }
         }
 
@@ -134,7 +117,6 @@ namespace VirtualClient.Dependencies.MySqlServer
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            ProcessManager manager = this.SystemManager.ProcessManager;
             string stateId = $"{nameof(MySQLServerConfiguration)}-{this.Action}-action-success";
             ConfigurationState configurationState = await this.stateManager.GetStateAsync<ConfigurationState>(stateId, cancellationToken)
                 .ConfigureAwait(false);
@@ -161,10 +143,6 @@ namespace VirtualClient.Dependencies.MySqlServer
                             await this.CreateMySQLServerDatabaseAsync(telemetryContext, cancellationToken)
                                 .ConfigureAwait(false);
                             break;
-                        case ConfigurationAction.DistributeDatabase:
-                            await this.DistributeMySQLDatabaseAsync(telemetryContext, cancellationToken)
-                                .ConfigureAwait(false);
-                            break;
                         case ConfigurationAction.SetGlobalVariables:
                             await this.SetMySQLGlobalVariableAsync(telemetryContext, cancellationToken)
                                 .ConfigureAwait(false);
@@ -182,7 +160,7 @@ namespace VirtualClient.Dependencies.MySqlServer
                                     .FirstOrDefault()?.IPAddress
                                     ?? IPAddress.Loopback.ToString();
 
-            string innoDbDirs = !string.IsNullOrEmpty(this.StripeDiskMountPoint) ? this.StripeDiskMountPoint : await this.GetMySQLInnodbDirectoriesAsync(cancellationToken);
+            string innoDbDirs = await this.GetMySQLInnodbDirectoriesAsync(cancellationToken);
 
             string arguments = $"{this.packageDirectory}/configure.py --serverIp {serverIp} --innoDbDirs \"{innoDbDirs}\"";
 
@@ -251,69 +229,96 @@ namespace VirtualClient.Dependencies.MySqlServer
             }
         }
 
-        private async Task DistributeMySQLDatabaseAsync(EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            string innoDbDirs = await this.GetMySQLInnodbDirectoriesAsync(cancellationToken);
-
-            string arguments = $"{this.packageDirectory}/distribute-database.py --dbName {this.DatabaseName} --directories \"{innoDbDirs}\"";
-
-            using (IProcessProxy process = await this.ExecuteCommandAsync(
-                    PythonCommand,
-                    arguments,
-                    Environment.CurrentDirectory,
-                    telemetryContext,
-                    cancellationToken))
-            {
-                if (!cancellationToken.IsCancellationRequested)
-                {
-                    await this.LogProcessDetailsAsync(process, telemetryContext, "MySQLServerConfiguration", logToFile: true);
-                    process.ThrowIfDependencyInstallationFailed(process.StandardError.ToString());
-                }
-            }
-        }
-
         private async Task<string> GetMySQLInnodbDirectoriesAsync(CancellationToken cancellationToken)
         {
-            string diskPaths = string.Empty;
+            IEnumerable<Disk> disks = await this.SystemManager.DiskManager.GetDisksAsync(cancellationToken)
+                .ConfigureAwait(false);
 
-            if (!cancellationToken.IsCancellationRequested)
+            IEnumerable<Disk> filteredDisks = DiskFilters.FilterDisks(disks, this.DiskFilter, this.Platform);
+
+            this.Logger.LogTraceMessage($"{this.TypeName}: Total disks discovered: {disks.Count()}. Disks after filtering ('{this.DiskFilter}'): {filteredDisks.Count()}.");
+
+            string accessPath = filteredDisks
+                .SelectMany(d => d.Volumes)
+                .SelectMany(v => v.AccessPaths)
+                .FirstOrDefault();
+
+            // lshw typically does not report LVM logical volumes (/dev/dm-*, /dev/mapper/*).
+            // Check /proc/mounts directly for any LVM-backed mount point as a fallback.
+            if (string.IsNullOrEmpty(accessPath) && this.Platform != PlatformID.Win32NT)
             {
-                IEnumerable<Disk> disks = await this.SystemManager.DiskManager.GetDisksAsync(cancellationToken)
-                        .ConfigureAwait(false);
+                accessPath = await this.FindLvmMountPathAsync(cancellationToken).ConfigureAwait(false);
+            }
 
-                if (disks?.Any() != true)
+            // No logical volume found — fall back to the biggest non-OS physical disk.
+            if (string.IsNullOrEmpty(accessPath))
+            {
+                const string physicalDiskFilter = "OsDisk:false&BiggestSize";
+                IEnumerable<Disk> physicalDisks = DiskFilters.FilterDisks(disks, physicalDiskFilter, this.Platform);
+
+                this.Logger.LogTraceMessage($"{this.TypeName}: No logical volume found. Falling back to physical disk filter ('{physicalDiskFilter}'): {physicalDisks.Count()} disk(s).");
+
+                try
                 {
-                    throw new WorkloadException(
-                        "Unexpected scenario. The disks defined for the system could not be properly enumerated.",
-                        ErrorReason.WorkloadUnexpectedAnomaly);
+                    accessPath = physicalDisks.FirstOrDefault()?.GetPreferredAccessPath(this.Platform);
                 }
-
-                IEnumerable<Disk> disksToTest = DiskFilters.FilterDisks(disks, this.DiskFilter, this.Platform).ToList();
-
-                if (disksToTest?.Any() != true)
+                catch (Exception)
                 {
-                    throw new WorkloadException(
-                        "Expected disks to test not found. Given the parameters defined for the profile action/step or those passed " +
-                        "in on the command line, the requisite disks do not exist on the system or could not be identified based on the properties " +
-                        "of the existing disks.",
-                        ErrorReason.DependencyNotFound);
-                }
-
-                foreach (Disk disk in disksToTest)
-                {
-                    string mysqlPath = this.Combine(disk.GetPreferredAccessPath(this.Platform), "mysql");
-                    
-                    // Create the directory if it doesn't exist
-                    if (!this.SystemManager.FileSystem.Directory.Exists(mysqlPath))
-                    {
-                        this.SystemManager.FileSystem.Directory.CreateDirectory(mysqlPath);
-                    }
-                    
-                    diskPaths += $"{mysqlPath};";
+                    // The disk may not have any eligible volumes.
                 }
             }
 
-            return diskPaths.TrimEnd(';');
+            if (string.IsNullOrEmpty(accessPath))
+            {
+                throw new DependencyException(
+                    "Expected disks not found. Given the parameters defined for the profile action/step or those passed " +
+                    "in on the command line, the requisite disks do not exist on the system or could not be identified based on the properties " +
+                    "of the existing disks.",
+                    ErrorReason.DependencyNotFound);
+            }
+
+            string mysqlPath = this.Combine(accessPath, "mysql");
+
+            if (!this.SystemManager.FileSystem.Directory.Exists(mysqlPath))
+            {
+                this.Logger.LogTraceMessage($"{this.TypeName}: Creating MySQL InnoDB directory '{mysqlPath}'.");
+                this.SystemManager.FileSystem.Directory.CreateDirectory(mysqlPath);
+            }
+
+            this.Logger.LogTraceMessage($"{this.TypeName}: MySQL InnoDB directory resolved to '{mysqlPath}'.");
+
+            return mysqlPath;
+        }
+
+        /// <summary>
+        /// Reads /proc/mounts to find a mount point backed by an LVM device (/dev/mapper/* or /dev/dm-*).
+        /// Returns the mount path (e.g. /home/user/mnt_raid0) or null if none is found.
+        /// </summary>
+        private async Task<string> FindLvmMountPathAsync(CancellationToken cancellationToken)
+        {
+            try
+            {
+                string procMounts = await this.SystemManager.FileSystem.File.ReadAllTextAsync("/proc/mounts", cancellationToken)
+                    .ConfigureAwait(false);
+
+                foreach (string line in procMounts.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+                {
+                    string[] parts = line.Split(' ');
+                    if (parts.Length >= 2
+                        && (parts[0].StartsWith("/dev/mapper/", StringComparison.OrdinalIgnoreCase)
+                            || parts[0].StartsWith("/dev/dm-", StringComparison.OrdinalIgnoreCase)))
+                    {
+                        this.Logger.LogTraceMessage($"{this.TypeName}: Found LVM mount from /proc/mounts: device='{parts[0]}', path='{parts[1]}'.");
+                        return parts[1];
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                this.Logger.LogTraceMessage($"{this.TypeName}: Could not read /proc/mounts: {ex.Message}");
+            }
+
+            return null;
         }
         
         private async Task<string> GetMySQLInMemoryCapacityAsync(CancellationToken cancellationToken)
@@ -360,11 +365,6 @@ namespace VirtualClient.Dependencies.MySqlServer
             /// ie. "MAX_PREPARED_STMT_COUNT=1000000;MAX_CONNECTIONS=1024"
             /// </summary>
             public const string SetGlobalVariables = nameof(SetGlobalVariables);
-
-            /// <summary>
-            /// Distributes existing database to disks on the system
-            /// </summary>
-            public const string DistributeDatabase = nameof(DistributeDatabase);   
         }
 
         internal class ConfigurationState
