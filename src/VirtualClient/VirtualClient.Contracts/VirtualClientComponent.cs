@@ -794,7 +794,7 @@ namespace VirtualClient.Contracts
 
                                     if (duration.HasValue)
                                     {
-                                        cancelContext.AddContext("timeout", duration.Value.ToString());
+                                        cancelContext.AddContext("timeout", duration.Value);
                                     }
                                 }
 

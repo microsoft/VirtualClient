@@ -694,6 +694,7 @@ namespace VirtualClient.Contracts
                 Assert.IsTrue(context.Properties.ContainsKey("executionCancelled"));
                 Assert.AreEqual(true, context.Properties["executionCancelled"]);
                 Assert.IsTrue(context.Properties.ContainsKey("timeout"));
+                Assert.AreEqual(this.mockFixture.Timing.Duration, context.Properties["timeout"]);
             }
         }
 
