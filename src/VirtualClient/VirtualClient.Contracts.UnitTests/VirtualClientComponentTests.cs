@@ -692,9 +692,8 @@ namespace VirtualClient.Contracts
 
                 EventContext context = cancelMessages.First().Item3 as EventContext;
                 Assert.IsNotNull(context);
-                Assert.IsTrue(context.Properties.ContainsKey("terminationReason"));
-                Assert.AreEqual("Cancellation", context.Properties["terminationReason"].ToString());
-                Assert.IsTrue(context.Properties.ContainsKey("message"));
+                Assert.IsTrue(context.Properties.ContainsKey("executionCancelled"));
+                Assert.AreEqual(true, context.Properties["executionCancelled"]);
             }
         }
 

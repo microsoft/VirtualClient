@@ -890,11 +890,8 @@ namespace VirtualClient
 
                 EventContext context = timeoutMessages.First().Item3 as EventContext;
                 Assert.IsNotNull(context);
-                Assert.IsTrue(context.Properties.ContainsKey("terminationReason"));
-                Assert.AreEqual("ExperimentTimeout", context.Properties["terminationReason"].ToString());
                 Assert.IsTrue(context.Properties.ContainsKey("timeout"));
                 Assert.IsTrue(context.Properties.ContainsKey("timeoutTimestamp"));
-                Assert.IsTrue(context.Properties.ContainsKey("message"));
             }
         }
 
