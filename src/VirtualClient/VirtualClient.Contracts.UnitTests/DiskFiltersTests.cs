@@ -524,5 +524,182 @@ namespace VirtualClient.Contracts
             Assert.AreEqual("/dev/sdi", filteredDisks.ElementAt(30).DevicePath);
             Assert.AreEqual("/dev/sdj", filteredDisks.ElementAt(31).DevicePath);
         }
+
+        [Test]
+        public void DiskFiltersIncludeOfflineFilterKeepsOfflineDisksOnWindows()
+        {
+            // Arrange: create 4 disks; mark one as offline.
+            this.disks = this.mockFixture.CreateDisks(PlatformID.Win32NT, true);
+            this.disks.ElementAt(0).Properties["Status"] = "Online";
+            this.disks.ElementAt(1).Properties["Status"] = "Online";
+            this.disks.ElementAt(2).Properties["Status"] = "Offline (Policy)";
+            this.disks.ElementAt(3).Properties["Status"] = "Online";
+
+            // "none" alone would remove the offline disk; "none&IncludeOffline" should retain it.
+            string filterString = "none&IncludeOffline";
+            IEnumerable<Disk> result = DiskFilters.FilterDisks(this.disks, filterString, PlatformID.Win32NT);
+
+            Assert.AreEqual(4, result.Count());
+            Assert.IsTrue(result.Any(d => d.Properties["Status"].ToString().Contains("Offline")));
+        }
+
+        [Test]
+        public void DiskFiltersIncludeOfflineFilterIsCaseInsensitive()
+        {
+            this.disks = this.mockFixture.CreateDisks(PlatformID.Win32NT, true);
+            this.disks.ElementAt(1).Properties["Status"] = "Offline";
+
+            // All casing variants should be accepted.
+            foreach (string variant in new[] { "none&IncludeOffline", "none&includeoffline", "none&INCLUDEOFFLINE" })
+            {
+                IEnumerable<Disk> result = DiskFilters.FilterDisks(this.disks, variant, PlatformID.Win32NT);
+                Assert.AreEqual(4, result.Count(), $"Expected offline disk retained for filter '{variant}'");
+            }
+        }
+
+        [Test]
+        public void DiskFiltersWithoutIncludeOfflineDoesNotRetainOfflineDisksOnWindows()
+        {
+            this.disks = this.mockFixture.CreateDisks(PlatformID.Win32NT, true);
+            this.disks.ElementAt(2).Properties["Status"] = "Offline (Policy)";
+
+            // Default behaviour: the offline disk is excluded.
+            IEnumerable<Disk> result = DiskFilters.FilterDisks(this.disks, "none", PlatformID.Win32NT);
+
+            Assert.AreEqual(3, result.Count());
+            Assert.IsFalse(result.Any(d => d.Properties.ContainsKey("Status") &&
+                d.Properties["Status"].ToString().Contains("Offline")));
+        }
+
+        [Test]
+        public void DiskFiltersIncludeOfflineCanBeCombinedWithBiggestSizeFilter()
+        {
+            this.disks = this.mockFixture.CreateDisks(PlatformID.Win32NT, true);
+            // Make the offline disk the biggest.
+            this.disks.ElementAt(0).Properties["Size"] = "100 GB";
+            this.disks.ElementAt(1).Properties["Size"] = "100 GB";
+            this.disks.ElementAt(2).Properties["Size"] = "2000 GB";   // offline + biggest
+            this.disks.ElementAt(2).Properties["Status"] = "Offline";
+            this.disks.ElementAt(3).Properties["Size"] = "100 GB";
+
+            string filterString = "BiggestSize&IncludeOffline";
+            IEnumerable<Disk> result = DiskFilters.FilterDisks(this.disks, filterString, PlatformID.Win32NT);
+
+            Assert.AreEqual(1, result.Count());
+            Assert.IsTrue(object.ReferenceEquals(this.disks.ElementAt(2), result.First()));
+        }
+
+        // -----------------------------------------------------------------------
+        // TryGetDiskIndexes tests
+        // -----------------------------------------------------------------------
+
+        [Test]
+        public void DiskFiltersTryGetDiskIndexes_ReturnsFalseForNonDiskIndexFilter()
+        {
+            Assert.IsFalse(DiskFilters.TryGetDiskIndexes("BiggestSize", out _));
+            Assert.IsFalse(DiskFilters.TryGetDiskIndexes("none", out _));
+            Assert.IsFalse(DiskFilters.TryGetDiskIndexes("osdisk:false", out _));
+            Assert.IsFalse(DiskFilters.TryGetDiskIndexes(null, out _));
+            Assert.IsFalse(DiskFilters.TryGetDiskIndexes(string.Empty, out _));
+            Assert.IsFalse(DiskFilters.TryGetDiskIndexes("   ", out _));
+        }
+
+        [Test]
+        public void DiskFiltersTryGetDiskIndexes_ParsesDashRange_CorrectCount()
+        {
+            bool result = DiskFilters.TryGetDiskIndexes("DiskIndex:6-10", out IEnumerable<int> indexes);
+
+            Assert.IsTrue(result);
+            Assert.IsNotNull(indexes);
+            // Indices 6, 7, 8, 9, 10 → 5 entries
+            Assert.AreEqual(5, indexes.Count());
+        }
+
+        [Test]
+        public void DiskFiltersTryGetDiskIndexes_ParsesDashRange_IndicesAreCorrect()
+        {
+            DiskFilters.TryGetDiskIndexes("DiskIndex:6-10", out IEnumerable<int> indexes);
+
+            CollectionAssert.AreEqual(new[] { 6, 7, 8, 9, 10 }, indexes.ToList());
+        }
+
+        [Test]
+        public void DiskFiltersTryGetDiskIndexes_ParsesDashRange_SingleDisk()
+        {
+            DiskFilters.TryGetDiskIndexes("DiskIndex:42-42", out IEnumerable<int> indexes);
+
+            Assert.AreEqual(1, indexes.Count());
+            Assert.AreEqual(42, indexes.First());
+        }
+
+        [Test]
+        public void DiskFiltersTryGetDiskIndexes_ParsesDashRange_IgnoresWhitespace()
+        {
+            DiskFilters.TryGetDiskIndexes("DiskIndex: 6 - 8 ", out IEnumerable<int> indexes);
+
+            Assert.AreEqual(3, indexes.Count());
+            CollectionAssert.AreEqual(new[] { 6, 7, 8 }, indexes.ToList());
+        }
+
+        [Test]
+        public void DiskFiltersTryGetDiskIndexes_ParsesDashRange_LargeJBODRange()
+        {
+            bool result = DiskFilters.TryGetDiskIndexes("DiskIndex:6-180", out IEnumerable<int> indexes);
+
+            Assert.IsTrue(result);
+            Assert.AreEqual(175, indexes.Count());
+            Assert.AreEqual(6, indexes.First());
+            Assert.AreEqual(180, indexes.Last());
+        }
+
+        [Test]
+        public void DiskFiltersTryGetDiskIndexes_ParsesCommaSeparatedList_CorrectCount()
+        {
+            DiskFilters.TryGetDiskIndexes("DiskIndex:6,10,15", out IEnumerable<int> indexes);
+
+            Assert.AreEqual(3, indexes.Count());
+        }
+
+        [Test]
+        public void DiskFiltersTryGetDiskIndexes_ParsesCommaSeparatedList_IndicesAreCorrect()
+        {
+            DiskFilters.TryGetDiskIndexes("DiskIndex:6,10,15", out IEnumerable<int> indexes);
+
+            CollectionAssert.AreEqual(new[] { 6, 10, 15 }, indexes.ToList());
+        }
+
+        [Test]
+        public void DiskFiltersTryGetDiskIndexes_ParsesCommaSeparatedList_IgnoresWhitespace()
+        {
+            DiskFilters.TryGetDiskIndexes("DiskIndex: 6 , 7 , 8 ", out IEnumerable<int> indexes);
+
+            CollectionAssert.AreEqual(new[] { 6, 7, 8 }, indexes.ToList());
+        }
+
+        [Test]
+        public void DiskFiltersTryGetDiskIndexes_IsCaseInsensitive()
+        {
+            Assert.IsTrue(DiskFilters.TryGetDiskIndexes("diskindex:6-8", out _));
+            Assert.IsTrue(DiskFilters.TryGetDiskIndexes("DISKINDEX:6-8", out _));
+            Assert.IsTrue(DiskFilters.TryGetDiskIndexes("DiskIndex:6-8", out _));
+        }
+
+        [Test]
+        public void DiskFiltersTryGetDiskIndexes_HddSentinel_ReturnsTrueWithNullIndexes()
+        {
+            bool result = DiskFilters.TryGetDiskIndexes("DiskIndex:hdd", out IEnumerable<int> indexes);
+
+            Assert.IsTrue(result, "Expected true for the 'hdd' auto-discover sentinel.");
+            Assert.IsNull(indexes, "Expected null indexes for the 'hdd' sentinel — caller should use OS discovery.");
+        }
+
+        [Test]
+        public void DiskFiltersTryGetDiskIndexes_HddSentinel_IsCaseInsensitive()
+        {
+            Assert.IsTrue(DiskFilters.TryGetDiskIndexes("DiskIndex:HDD", out IEnumerable<int> i1));
+            Assert.IsNull(i1);
+            Assert.IsTrue(DiskFilters.TryGetDiskIndexes("DiskIndex:hdd", out IEnumerable<int> i2));
+            Assert.IsNull(i2);
+        }
     }
 }
