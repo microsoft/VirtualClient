@@ -782,11 +782,12 @@ namespace VirtualClient.Contracts
                             // Expected for cases where a cancellation token is cancelled.
                             if (cancellationToken.IsCancellationRequested)
                             {
-                                string cancelMessage = "Workload execution was canceled because Virtual Client enforced the experiment timeout. " +
-                                    "No workload metrics were captured. Consider increasing the --timeout value to allow the workload to complete.";
+                                string cancelMessage = "Workload execution was canceled. This may be due to an experiment timeout, " +
+                                    "a user-initiated cancellation, or a system reboot request. If no workload metrics were captured, " +
+                                    "consider increasing the --timeout value to allow the workload to complete.";
 
                                 EventContext cancelContext = telemetryContext.Clone()
-                                    .AddContext("terminationReason", "ExperimentTimeout")
+                                    .AddContext("terminationReason", "Cancellation")
                                     .AddContext("message", cancelMessage);
 
                                 this.Logger.LogMessage($"{this.TypeName}.ExecutionCancelled", LogLevel.Warning, cancelContext);

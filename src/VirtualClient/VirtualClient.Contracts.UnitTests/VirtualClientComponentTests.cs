@@ -693,7 +693,7 @@ namespace VirtualClient.Contracts
                 EventContext context = cancelMessages.First().Item3 as EventContext;
                 Assert.IsNotNull(context);
                 Assert.IsTrue(context.Properties.ContainsKey("terminationReason"));
-                Assert.AreEqual("ExperimentTimeout", context.Properties["terminationReason"].ToString());
+                Assert.AreEqual("Cancellation", context.Properties["terminationReason"].ToString());
                 Assert.IsTrue(context.Properties.ContainsKey("message"));
             }
         }
