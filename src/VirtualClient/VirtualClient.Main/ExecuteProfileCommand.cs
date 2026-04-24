@@ -17,6 +17,7 @@ namespace VirtualClient
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Newtonsoft.Json;
+    using VirtualClient.Common;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
@@ -163,6 +164,11 @@ namespace VirtualClient
 
                 logger.LogMessage($"Platform.Initialize", telemetryContext);
 
+                // Defend long-running workloads against unattended-upgrades triggered SIGKILL on
+                // Ubuntu 24.04+ (needrestart auto-restart-on-upgrade is enabled by default).
+                // Best-effort; never fails VC startup.
+                await this.DisableLinuxAutoUpdatesAsync(logger, systemManagement, telemetryContext, cancellationToken);
+
                 if (this.Profiles?.Any() == true)
                 {
                     this.LogContextToConsole(dependencies);
@@ -241,6 +247,94 @@ namespace VirtualClient
             }
 
             return exitCode;
+        }
+
+        /// <summary>
+        /// On Ubuntu 24.04 and later, the default installation of the
+        /// <see href="https://manpages.ubuntu.com/manpages/noble/man1/needrestart.1.html">needrestart</see>
+        /// package (combined with the <c>apt-daily-upgrade.timer</c> systemd timer that fires every day
+        /// between 06:00 and 07:00 UTC) will automatically restart services whose shared libraries are
+        /// updated by unattended upgrades. For long-running workloads this manifests as the Virtual Client
+        /// process being killed mid-run, desynchronizing multi-VM experiments and invalidating results.
+        /// <para>
+        /// This method is a best-effort mitigation that masks (and stops) the apt-daily timers and
+        /// services when running on Ubuntu 24.04 or newer. Failures are logged but never propagated
+        /// so that Virtual Client startup is unaffected.
+        /// </para>
+        /// </summary>
+        protected virtual async Task DisableLinuxAutoUpdatesAsync(
+            ILogger logger,
+            ISystemManagement systemManagement,
+            EventContext telemetryContext,
+            CancellationToken cancellationToken)
+        {
+            if (systemManagement == null || systemManagement.Platform != PlatformID.Unix)
+            {
+                return;
+            }
+
+            try
+            {
+                LinuxDistributionInfo distroInfo = await systemManagement.GetLinuxDistributionAsync(cancellationToken)
+                    .ConfigureAwait(false);
+
+                // The auto-restart-on-unattended-upgrade behavior has only been confirmed on Ubuntu 24.04+.
+                // Earlier Ubuntu releases and Debian do not auto-restart services in non-interactive mode
+                // and are not known to cause this issue in the field.
+                if (distroInfo?.LinuxDistribution != LinuxDistribution.Ubuntu
+                    || !ExecuteProfileCommand.TryGetUbuntuMajorVersion(distroInfo.OperationSystemFullName, out int majorVersion)
+                    || majorVersion < 24)
+                {
+                    return;
+                }
+
+                EventContext maskContext = telemetryContext.Clone()
+                    .AddContext("linuxDistribution", distroInfo.LinuxDistribution.ToString())
+                    .AddContext("linuxDistributionFullName", distroInfo.OperationSystemFullName)
+                    .AddContext("ubuntuMajorVersion", majorVersion);
+
+                // Double-quoted -c argument is required: .NET Process argument tokenization follows
+                // Windows CommandLineToArgvW-style rules (double-quote grouping only), so single quotes
+                // would be passed literally to bash.
+                string bashArgs = "-c \"systemctl mask apt-daily.timer apt-daily-upgrade.timer apt-daily.service apt-daily-upgrade.service;"
+                    + " systemctl stop apt-daily.timer apt-daily-upgrade.timer apt-daily.service apt-daily-upgrade.service;"
+                    + " exit 0\"";
+
+                using (IProcessProxy process = systemManagement.ProcessManager.CreateProcess("bash", bashArgs))
+                {
+                    await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
+                    maskContext.AddContext("exitCode", process.ExitCode);
+                    maskContext.AddContext("standardError", process.StandardError?.ToString());
+                }
+
+                logger.LogMessage($"{nameof(ExecuteProfileCommand)}.DisabledLinuxAutoUpdates", LogLevel.Information, maskContext);
+            }
+            catch (Exception exc)
+            {
+                // Never fail VC startup because of this mitigation.
+                logger.LogMessage(
+                    $"{nameof(ExecuteProfileCommand)}.DisableLinuxAutoUpdatesFailed",
+                    LogLevel.Warning,
+                    telemetryContext.Clone().AddError(exc));
+            }
+        }
+
+        /// <summary>
+        /// Parses the Ubuntu major version (e.g. 22, 24) from the PRETTY_NAME string returned
+        /// by <see cref="LinuxDistributionInfo.OperationSystemFullName"/> (e.g. "Ubuntu 24.04.1 LTS").
+        /// Returns false when the name does not contain a parseable Ubuntu version.
+        /// </summary>
+        internal static bool TryGetUbuntuMajorVersion(string osFullName, out int majorVersion)
+        {
+            majorVersion = 0;
+
+            if (string.IsNullOrWhiteSpace(osFullName))
+            {
+                return false;
+            }
+
+            Match match = Regex.Match(osFullName, @"Ubuntu\s+(\d+)\.", RegexOptions.IgnoreCase);
+            return match.Success && int.TryParse(match.Groups[1].Value, out majorVersion);
         }
 
         /// <summary>

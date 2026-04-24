@@ -42,14 +42,6 @@
     ],
     "Dependencies": [
         {
-            "Type": "ExecuteCommand",
-            "Parameters": {
-                "Scenario": "MaskAptDailyTimers",
-                "SupportedPlatforms": "linux-x64,linux-arm64",
-                "Command": "bash -c \"systemctl mask apt-daily.timer apt-daily-upgrade.timer apt-daily.service apt-daily-upgrade.service; systemctl stop apt-daily.timer apt-daily-upgrade.timer apt-daily.service apt-daily-upgrade.service; exit 0\""
-            }
-        },
-        {
             "Type": "ChocolateyInstallation",
             "Parameters": {
                 "Scenario": "InstallChocolatey",
