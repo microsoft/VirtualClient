@@ -22,6 +22,7 @@ namespace VirtualClient.Dependencies
     /// <summary>
     /// Provides functionality for configuring PostgreSQL Server.
     /// </summary>
+    [SupportedPlatforms("linux-x64,linux-arm64")]
     public class PostgreSQLServerConfiguration : ExecuteCommand
     {
         private const string PythonCommand = "python3";
@@ -29,7 +30,7 @@ namespace VirtualClient.Dependencies
         private string packageDirectory;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="MySQLServerConfiguration"/> class.
+        /// Initializes a new instance of the <see cref="PostgreSQLServerConfiguration"/> class.
         /// </summary>
         /// <param name="dependencies">An enumeration of dependencies that can be used for dependency injection.</param>
         /// <param name="parameters">A series of key value pairs that dictate runtime execution.</param>
@@ -72,8 +73,7 @@ namespace VirtualClient.Dependencies
         {
             get
             {
-                // and 256G
-                return this.Parameters.GetValue<string>(nameof(this.DiskFilter), "osdisk:false&sizegreaterthan:256g");
+                return this.Parameters.GetValue<string>(nameof(this.DiskFilter), "Logical");
             }
         }
 
@@ -136,7 +136,6 @@ namespace VirtualClient.Dependencies
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            ProcessManager manager = this.SystemManager.ProcessManager;
             string stateId = $"{nameof(PostgreSQLServerConfiguration)}-{this.Action}-action-success";
             ConfigurationState configurationState = await this.stateManager.GetStateAsync<ConfigurationState>(stateId, cancellationToken)
                 .ConfigureAwait(false);
@@ -163,10 +162,6 @@ namespace VirtualClient.Dependencies
                             await this.SetupPostgreSQLDatabaseAsync(telemetryContext, cancellationToken)
                                 .ConfigureAwait(false);
                             break;
-                        case ConfigurationAction.DistributeDatabase:
-                            await this.DistributePostgreSQLDatabaseAsync(telemetryContext, cancellationToken)
-                                .ConfigureAwait(false);
-                            break;
                     }
 
                     await this.stateManager.SaveStateAsync(stateId, new ConfigurationState(this.Action), cancellationToken);
@@ -180,7 +175,9 @@ namespace VirtualClient.Dependencies
                                     .FirstOrDefault()?.IPAddress
                                     ?? IPAddress.Loopback.ToString();
 
-            string arguments = $"{this.packageDirectory}/configure-server.py --dbName {this.DatabaseName} --serverIp {serverIp} --password {this.SuperUserPassword} --port {this.Port} --inMemory {this.SharedMemoryBuffer}";
+            string directory = await this.GetPostgreSQLDataDirectoryAsync(cancellationToken);
+
+            string arguments = $"{this.packageDirectory}/configure-server.py --dbName {this.DatabaseName} --serverIp {serverIp} --password {this.SuperUserPassword} --port {this.Port} --inMemory {this.SharedMemoryBuffer} --directory {directory}";
 
             using (IProcessProxy process = await this.ExecuteCommandAsync(
                "python3",
@@ -195,6 +192,91 @@ namespace VirtualClient.Dependencies
                     process.ThrowIfDependencyInstallationFailed(process.StandardError.ToString());
                 }
             }
+        }
+
+        private async Task<string> GetPostgreSQLDataDirectoryAsync(CancellationToken cancellationToken)
+        {
+            IEnumerable<Disk> disks = await this.SystemManager.DiskManager.GetDisksAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            IEnumerable<Disk> filteredDisks = DiskFilters.FilterDisks(disks, this.DiskFilter, this.Platform);
+
+            string accessPath = filteredDisks
+                .SelectMany(d => d.Volumes)
+                .SelectMany(v => v.AccessPaths)
+                .FirstOrDefault();
+
+            // lshw typically does not report LVM logical volumes (/dev/dm-*, /dev/mapper/*).
+            // Check /proc/mounts directly for any LVM-backed mount point as a fallback.
+            if (string.IsNullOrEmpty(accessPath) && this.Platform != PlatformID.Win32NT)
+            {
+                accessPath = await this.FindLvmMountPathAsync(cancellationToken).ConfigureAwait(false);
+            }
+
+            // No logical volume found — fall back to the biggest non-OS physical disk.
+            if (string.IsNullOrEmpty(accessPath))
+            {
+                const string physicalDiskFilter = "OsDisk:false&BiggestSize";
+                IEnumerable<Disk> physicalDisks = DiskFilters.FilterDisks(disks, physicalDiskFilter, this.Platform);
+
+                try
+                {
+                    accessPath = physicalDisks.FirstOrDefault()?.GetPreferredAccessPath(this.Platform);
+                }
+                catch (Exception)
+                {
+                    // The disk may not have any eligible volumes.
+                }
+            }
+
+            if (string.IsNullOrEmpty(accessPath))
+            {
+                throw new DependencyException(
+                    "Expected disks not found. Given the parameters defined for the profile action/step or those passed " +
+                    "in on the command line, the requisite disks do not exist on the system or could not be identified based on the properties " +
+                    "of the existing disks.",
+                    ErrorReason.DependencyNotFound);
+            }
+
+            string directory = this.Combine(accessPath, "postgresql");
+
+            if (!this.SystemManager.FileSystem.Directory.Exists(directory))
+            {
+                this.SystemManager.FileSystem.Directory.CreateDirectory(directory);
+            }
+
+            return directory;
+        }
+
+        /// <summary>
+        /// Reads /proc/mounts to find a mount point backed by an LVM device (/dev/mapper/* or /dev/dm-*).
+        /// Returns the mount path (e.g. /home/user/mnt_raid0) or null if none is found.
+        /// </summary>
+        private async Task<string> FindLvmMountPathAsync(CancellationToken cancellationToken)
+        {
+            try
+            {
+                string procMounts = await this.SystemManager.FileSystem.File.ReadAllTextAsync("/proc/mounts", cancellationToken)
+                    .ConfigureAwait(false);
+
+                foreach (string line in procMounts.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+                {
+                    string[] parts = line.Split(' ');
+                    if (parts.Length >= 2
+                        && (parts[0].StartsWith("/dev/mapper/", StringComparison.OrdinalIgnoreCase)
+                            || parts[0].StartsWith("/dev/dm-", StringComparison.OrdinalIgnoreCase)))
+                    {
+                        this.Logger.LogTraceMessage($"{this.TypeName}: Found LVM mount from /proc/mounts: device='{parts[0]}', path='{parts[1]}'.");
+                        return parts[1];
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                this.Logger.LogTraceMessage($"{this.TypeName}: Could not read /proc/mounts: {ex.Message}");
+            }
+
+            return null;
         }
 
         private async Task SetupPostgreSQLDatabaseAsync(EventContext telemetryContext, CancellationToken cancellationToken)
@@ -216,71 +298,6 @@ namespace VirtualClient.Dependencies
             }
         }
 
-        private async Task DistributePostgreSQLDatabaseAsync(EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            string innoDbDirs = await this.GetPostgreSQLInnodbDirectoriesAsync(cancellationToken);
-
-            string arguments = $"{this.packageDirectory}/distribute-database.py --dbName {this.DatabaseName} --directories \"{innoDbDirs}\" --password {this.SuperUserPassword}";
-
-            using (IProcessProxy process = await this.ExecuteCommandAsync(
-                    PythonCommand,
-                    arguments,
-                    Environment.CurrentDirectory,
-                    telemetryContext,
-                    cancellationToken))
-            {
-                if (!cancellationToken.IsCancellationRequested)
-                {
-                    await this.LogProcessDetailsAsync(process, telemetryContext, "PostgreSQLServerConfiguration", logToFile: true);
-                    process.ThrowIfDependencyInstallationFailed(process.StandardError.ToString());
-                }
-            }
-        }
-
-        private async Task<string> GetPostgreSQLInnodbDirectoriesAsync(CancellationToken cancellationToken)
-        {
-            string diskPaths = string.Empty;
-
-            if (!cancellationToken.IsCancellationRequested)
-            {
-                IEnumerable<Disk> disks = await this.SystemManager.DiskManager.GetDisksAsync(cancellationToken)
-                        .ConfigureAwait(false);
-
-                if (disks?.Any() != true)
-                {
-                    throw new WorkloadException(
-                        "Unexpected scenario. The disks defined for the system could not be properly enumerated.",
-                        ErrorReason.WorkloadUnexpectedAnomaly);
-                }
-
-                IEnumerable<Disk> disksToTest = DiskFilters.FilterDisks(disks, this.DiskFilter, this.Platform).ToList();
-
-                if (disksToTest?.Any() != true)
-                {
-                    throw new WorkloadException(
-                        "Expected disks to test not found. Given the parameters defined for the profile action/step or those passed " +
-                        "in on the command line, the requisite disks do not exist on the system or could not be identified based on the properties " +
-                        "of the existing disks.",
-                        ErrorReason.DependencyNotFound);
-                }
-
-                foreach (Disk disk in disksToTest)
-                {
-                    string postgresqlPath = this.Combine(disk.GetPreferredAccessPath(this.Platform), "postgresql");
-
-                    // Create the directory if it doesn't exist
-                    if (!this.SystemManager.FileSystem.Directory.Exists(postgresqlPath))
-                    {
-                        this.SystemManager.FileSystem.Directory.CreateDirectory(postgresqlPath);
-                    }
-
-                    diskPaths += $"{postgresqlPath};";
-                }
-            }
-
-            return diskPaths;
-        }
-
         /// <summary>
         /// Supported PostgreSQL Server configuration actions.
         /// </summary>
@@ -295,12 +312,6 @@ namespace VirtualClient.Dependencies
             /// Creates Database on PostgreSQL server and Users on Server and any Clients.
             /// </summary>
             public const string SetupDatabase = nameof(SetupDatabase);
-
-            /// <summary>
-            /// Distributes existing database to disks on the system
-            /// </summary>
-            public const string DistributeDatabase = nameof(DistributeDatabase);
-
         }
 
         internal class ConfigurationState
