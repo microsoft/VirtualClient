@@ -669,6 +669,53 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
+        public async Task VirtualClientComponentLogsExplicitTelemetryWhenExecutionIsCancelled()
+        {
+            // Scenario:
+            // The cancellation token is cancelled while the component is executing.
+            // The component should emit explicit telemetry indicating the execution was cancelled.
+            using (CancellationTokenSource cts = new CancellationTokenSource())
+            {
+                TestVirtualClientComponent component = new TestVirtualClientComponent(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+                component.OnExecute = (EventContext telemetryContext, CancellationToken cancellationToken) =>
+                {
+                    cts.Cancel();
+                    cancellationToken.ThrowIfCancellationRequested();
+                };
+
+                await component.ExecuteAsync(cts.Token);
+
+                var cancelMessages = this.mockFixture.Logger.MessagesLogged($"{component.TypeName}.ExecutionCancelled");
+                Assert.IsNotEmpty(cancelMessages);
+                Assert.AreEqual(1, cancelMessages.Count());
+
+                EventContext context = cancelMessages.First().Item3 as EventContext;
+                Assert.IsNotNull(context);
+                Assert.IsTrue(context.Properties.ContainsKey("executionCancelled"));
+                Assert.AreEqual(true, context.Properties["executionCancelled"]);
+            }
+        }
+
+        [Test]
+        public async Task VirtualClientComponentDoesNotLogCancellationTelemetryWhenTokenIsNotCancelled()
+        {
+            // Scenario:
+            // The component throws OperationCanceledException for reasons other than
+            // cancellation token being cancelled (e.g. Task.Delay cancellation).
+            // No cancellation telemetry should be emitted.
+            TestVirtualClientComponent component = new TestVirtualClientComponent(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            component.OnExecute = (EventContext telemetryContext, CancellationToken cancellationToken) =>
+            {
+                throw new OperationCanceledException();
+            };
+
+            await component.ExecuteAsync(CancellationToken.None);
+
+            var cancelMessages = this.mockFixture.Logger.MessagesLogged($"{component.TypeName}.ExecutionCancelled");
+            Assert.IsEmpty(cancelMessages);
+        }
+
+        [Test]
         public void VirtualClientComponentIsSupportedRespectsSupportedPlatformAttribute()
         {
             this.mockFixture.Setup(PlatformID.Unix, System.Runtime.InteropServices.Architecture.Arm64);

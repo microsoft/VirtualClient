@@ -268,6 +268,16 @@ namespace VirtualClient
                         }
 
                         // If we timeout or a reboot is requested, we will request all background processes to cancel/exit.
+                        if (timing.IsTimedOut)
+                        {
+                            EventContext timeoutContext = EventContext.Persisted()
+                                .AddContext("timeout", timing.Duration)
+                                .AddContext("timeoutTimestamp", timing.Timeout);
+
+                            this.Logger.LogMessage($"{nameof(ProfileExecutor)}.ExperimentTimeoutReached", LogLevel.Warning, timeoutContext);
+                            ConsoleLogger.Default.LogWarning("Profile: Experiment timeout reached. Canceling in-progress workloads.");
+                        }
+
                         await tokenSource.CancelAsync();
 
                         // We allow the user to supply an instruction on the command line to force the application
