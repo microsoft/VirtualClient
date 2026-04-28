@@ -785,19 +785,6 @@ namespace VirtualClient.Contracts
                                 EventContext cancelContext = telemetryContext.Clone()
                                     .AddContext("executionCancelled", true);
 
-                                ServiceDescriptor timingDescriptor = this.Dependencies.FirstOrDefault(d => d.ServiceType.Name == "ProfileTiming");
-                                if (timingDescriptor != null)
-                                {
-                                    IServiceProvider provider = this.Dependencies.BuildServiceProvider();
-                                    object timing = provider.GetService(timingDescriptor.ServiceType);
-                                    TimeSpan? duration = timing?.GetType().GetProperty("Duration")?.GetValue(timing) as TimeSpan?;
-
-                                    if (duration.HasValue)
-                                    {
-                                        cancelContext.AddContext("timeout", duration.Value);
-                                    }
-                                }
-
                                 this.Logger.LogMessage($"{this.TypeName}.ExecutionCancelled", LogLevel.Warning, cancelContext);
                             }
                         }
