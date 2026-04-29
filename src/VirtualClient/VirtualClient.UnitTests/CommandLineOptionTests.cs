@@ -153,6 +153,7 @@ namespace VirtualClient
         [TestCase("--ps", "https://anystorageaccount.blob.core.windows.net/?sv=2020-08-04&ss=b")]
         [TestCase("--parameters", "Param1=Value1,,,Param2=Value2")]
         [TestCase("--pm", "Param1=Value1,,,Param2=Value2")]
+        [TestCase("--parameters", "DriverInstallationCommandArguments=--silent,,,UserName=HpcUser,,,DriverBlobName=nvidiagriddriver-v20.0.zip")]
         [TestCase("--seed", "1234")]
         [TestCase("--sd", "1234")]
         [TestCase("--scenarios", "Scenario1")]

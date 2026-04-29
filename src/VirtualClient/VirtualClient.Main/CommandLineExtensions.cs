@@ -95,11 +95,14 @@ namespace VirtualClient
                     }
 
                     // Scenario 3:
-                    // There are no options on the command line that are not valid for the command.
+                    // There are options on the command line that are not valid for the command.
+                    // Use a full-string match (anchored regex) to avoid false positives from
+                    // values bound to recognized options that contain double-dash prefixed
+                    // substrings (e.g. --parameters="...DriverInstallationCommandArguments=--silent...").
                     IEnumerable<Token> arguments = parseResults.Tokens.Where(t => t.Type == TokenType.Argument);
                     if (arguments?.Any() == true)
                     {
-                        Regex optionMatchExpression = new Regex("--[a-z]+", RegexOptions.IgnoreCase);
+                        Regex optionMatchExpression = new Regex(@"^--[a-z][-a-z]*$", RegexOptions.IgnoreCase);
                         foreach (Token argument in arguments)
                         {
                             if (optionMatchExpression.IsMatch(argument.Value?.Trim()))
