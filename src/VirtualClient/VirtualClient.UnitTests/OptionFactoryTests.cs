@@ -1259,6 +1259,17 @@ namespace VirtualClient
         }
 
         [Test]
+        [TestCase("https://any.azure-api.net?api-key=12345")]
+        [TestCase("https://any.azure-api.net/packages-other?api-key=12345")]
+        public void PackageStoreOptionSupportsUrisWithApiKeys(string uri)
+        {
+            Option option = OptionFactory.CreatePackageStoreOption();
+            ParseResult result = option.Parse($"--package-store={uri}");
+            Assert.IsFalse(result.Errors.Any());
+            Assert.AreEqual(uri.ToString(), result.Tokens[1].Value);
+        }
+
+        [Test]
         public void PackageStoreOptionValidatesTheConnectionTokenProvided()
         {
             Option option = OptionFactory.CreatePackageStoreOption();

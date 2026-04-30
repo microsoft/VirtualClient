@@ -49,8 +49,24 @@ namespace VirtualClient.Dependencies
             this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPackage);
             this.packagePath = this.mockFixture.ToPlatformSpecificPath(this.mockPackage, platform, architecture).Path;
 
-            IEnumerable<Disk> disks;
-            disks = this.mockFixture.CreateDisks(platform, true);
+            // Simulate the LVM striped volume that StripeDisks creates, with a raid0 access path.
+            Disk stripedDisk = new Disk(
+                4,
+                "/dev/dm-0",
+                new List<DiskVolume>
+                {
+                    new DiskVolume(
+                        0,
+                        "/dev/dm-0",
+                        new List<string> { "/home/user/mnt_raid0" },
+                        properties: new Dictionary<string, IConvertible>
+                        {
+                            { "size", "1234567890123" }
+                        })
+                });
+
+            List<Disk> disks = new List<Disk>(this.mockFixture.CreateDisks(platform, true));
+            disks.Add(stripedDisk);
             this.mockFixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>())).ReturnsAsync(() => disks);
         }
 
@@ -75,7 +91,7 @@ namespace VirtualClient.Dependencies
 
             string[] expectedCommands =
             {
-                $"python3 {tempPackagePath}/configure-server.py --dbName hammerdbtest --serverIp 1.2.3.5 --password [A-Za-z0-9+/=]+ --port 5432 --inMemory [0-9]+",
+                $"python3 {tempPackagePath}/configure-server.py --dbName hammerdbtest --serverIp 1.2.3.5 --password [A-Za-z0-9+/=]+ --port 5432 --inMemory [0-9]+ --directory \\S+",
             };
 
             int commandNumber = 0;
@@ -172,60 +188,6 @@ namespace VirtualClient.Dependencies
             }
 
             Assert.AreEqual(0, commandsExecuted);
-        }
-
-        [Test]
-        [TestCase(PlatformID.Unix, Architecture.X64)]
-        [TestCase(PlatformID.Win32NT, Architecture.X64)]
-        public async Task PostgreSQLServerConfigurationExecutesTheExpectedProcessForDistributeDatabaseCommand(PlatformID platform, Architecture architecture)
-        {
-            this.SetupTest(platform, architecture);
-            this.mockFixture.Parameters["Action"] = "DistributeDatabase";
-            string expectedCommand;
-
-            if (platform == PlatformID.Unix)
-            {
-                expectedCommand = 
-                    $"python3 {this.packagePath}/distribute-database.py " +
-                    $"--dbName hammerdbtest " +
-                    $"--directories \"/home/user/mnt_dev_sdc1/postgresql;/home/user/mnt_dev_sdd1/postgresql;/home/user/mnt_dev_sde1/postgresql;\" " +
-                    $"--password [A-Za-z0-9+/=]+";
-            }
-            else
-            {
-                string tempPackagePath = this.packagePath.Replace(@"\", @"\\");
-                expectedCommand = $"python3 {tempPackagePath}/distribute-database.py --dbName hammerdbtest --directories \"D:\\\\postgresql;E:\\\\postgresql;F:\\\\postgresql;\" --password [A-Za-z0-9+/=]+";
-            }
-
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
-            {
-                string executedCommand = $"{exe} {arguments}";
-                Assert.IsTrue(Regex.IsMatch(executedCommand, expectedCommand));
-
-                InMemoryProcess process = new InMemoryProcess
-                {
-                    StartInfo = new ProcessStartInfo
-                    {
-                        FileName = exe,
-                        Arguments = arguments
-                    },
-                    ExitCode = 0,
-                    OnStart = () => true,
-                    OnHasExited = () => true
-                };
-
-                return process;
-            };
-
-            this.mockFixture.StateManager.OnSaveState((stateId, state) =>
-            {
-                Assert.IsNotNull(state);
-            });
-
-            using (TestPostgreSQLServerConfiguration component = new TestPostgreSQLServerConfiguration(this.mockFixture))
-            {
-                await component.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
-            }
         }
 
         private class TestPostgreSQLServerConfiguration : PostgreSQLServerConfiguration

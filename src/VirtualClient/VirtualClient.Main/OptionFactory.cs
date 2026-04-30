@@ -1699,6 +1699,10 @@ namespace VirtualClient
             {
                 store = new DependencyFileStore(storeName, Path.GetFullPath(endpoint));
             }
+            else if (EndpointUtility.IsApiKeyUri(endpoint))
+            {
+                store = new DependencyBlobStore(DependencyBlobStore.Packages, new Uri(endpoint));
+            }
             else
             {
                 store = EndpointUtility.CreateBlobStoreReference(storeName, endpoint, certificateManager);

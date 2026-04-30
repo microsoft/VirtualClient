@@ -289,6 +289,30 @@ namespace VirtualClient.Dependencies
             Assert.IsTrue(confirmed);
         }
 
+        [Test]
+        public async Task StripeDisksSkipsWhenMountDirectoryAlreadyHasContent()
+        {
+            this.mockFixture.Parameters["DiskFilter"] = "OSDisk:false";
+
+            string expectedMountDir = $"/home/{Environment.UserName}/mnt_raid0";
+            this.mockFixture.Directory.Setup(d => d.Exists(expectedMountDir)).Returns(true);
+            this.mockFixture.Directory.Setup(d => d.EnumerateFileSystemEntries(expectedMountDir))
+                .Returns(new[] { $"{expectedMountDir}/lost+found" });
+
+            int commandsExecuted = 0;
+            this.mockFixture.ProcessManager.OnProcessCreated = (process) =>
+            {
+                commandsExecuted++;
+            };
+
+            using (StripeDisks component = new StripeDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                await component.ExecuteAsync(CancellationToken.None);
+            }
+
+            Assert.AreEqual(0, commandsExecuted);
+        }
+
         private void SetupSystemConfigPackage()
         {
             this.systemConfigPackage = new DependencyPath(

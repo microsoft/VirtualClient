@@ -59,15 +59,12 @@ namespace VirtualClient.Actions
                     case ConfigurationAction.Cleanup:
                         await this.CleanUpDatabase(telemetryContext, cancellationToken);
                         break;
-                    case ConfigurationAction.CreateTables:
-                        await this.PrepareDatabase(telemetryContext, cancellationToken);
-                        break;
                     case ConfigurationAction.PopulateTables:
                         await this.PopulateDatabase(telemetryContext, cancellationToken);
                         break;
                     default:
                         throw new DependencyException(
-                            $"The specified Sysbench action '{this.Action}' is not supported. Supported actions include: \"{ConfigurationAction.PopulateTables}, {ConfigurationAction.Cleanup}, {ConfigurationAction.CreateTables}\".",
+                            $"The specified Sysbench action '{this.Action}' is not supported. Supported actions include: \"{ConfigurationAction.PopulateTables}, {ConfigurationAction.Cleanup}\".",
                             ErrorReason.NotSupported);
                 }
             }
@@ -106,41 +103,6 @@ namespace VirtualClient.Actions
             await this.stateManager.SaveStateAsync<SysbenchState>(nameof(SysbenchState), state, cancellationToken);
         }
 
-        private async Task PrepareDatabase(EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            SysbenchState state = await this.stateManager.GetStateAsync<SysbenchState>(nameof(SysbenchState), cancellationToken)
-               ?? new SysbenchState();
-
-            if (!state.DatabasePopulated)
-            {
-                string serverIp = (this.IsMultiRoleLayout() && this.IsInRole(ClientRole.Client)) ? this.ServerIpAddress : "localhost";
-                string sysbenchPrepareArguments = $"{this.BuildSysbenchLoggingArguments(SysbenchMode.Prepare)} --password {this.SuperUserPassword} --hostIpAddress \"{serverIp}\"";
-
-                string command = $"{this.SysbenchPackagePath}/populate-database.py";
-
-                using (IProcessProxy process = await this.ExecuteCommandAsync(
-                    SysbenchExecutor.PythonCommand,
-                    $"{command} {sysbenchPrepareArguments}",
-                    this.SysbenchPackagePath,
-                    telemetryContext,
-                    cancellationToken))
-                {
-                    if (!cancellationToken.IsCancellationRequested)
-                    {
-                        await this.LogProcessDetailsAsync(process, telemetryContext, "Sysbench", logToFile: true);
-                        process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
-                    }
-                }
-            }
-            else
-            {
-                throw new DependencyException(
-                            $"Database preparation failed. A database has already been populated on the system. Please drop the tables, or run \"{ConfigurationAction.Cleanup}\" Action" +
-                            $"before attempting to create new tables on this database.",
-                            ErrorReason.NotSupported);
-            }
-        }
-
         private async Task PopulateDatabase(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             SysbenchState state = await this.stateManager.GetStateAsync<SysbenchState>(nameof(SysbenchState), cancellationToken)
@@ -152,7 +114,7 @@ namespace VirtualClient.Actions
                 {
                     string serverIp = (this.IsMultiRoleLayout() && this.IsInRole(ClientRole.Client)) ? this.ServerIpAddress : "localhost";
 
-                    string sysbenchLoggingArguments = this.BuildSysbenchLoggingArguments(SysbenchMode.Populate);
+                    string sysbenchLoggingArguments = this.BuildSysbenchLoggingArguments();
                     this.sysbenchPopulationArguments = $"{sysbenchLoggingArguments} --password {this.SuperUserPassword} --hostIpAddress \"{serverIp}\"";
 
                     string script = $"{this.SysbenchPackagePath}/populate-database.py";
@@ -227,11 +189,6 @@ namespace VirtualClient.Actions
         /// </summary>
         internal class ConfigurationAction
         {
-            /// <summary>
-            /// Initializes the tables on the database.
-            /// </summary>
-            public const string CreateTables = nameof(CreateTables);
-
             /// <summary>
             /// Creates Database on MySQL server and Users on Server and any Clients.
             /// </summary>

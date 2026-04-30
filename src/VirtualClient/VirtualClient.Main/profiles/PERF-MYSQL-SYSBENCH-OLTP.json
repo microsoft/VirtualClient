@@ -151,16 +151,29 @@
     ],
     "Dependencies": [
         {
-            "Type": "FormatDisks",
+            "Type": "LinuxPackageInstallation",
             "Parameters": {
-                "Scenario": "FormatDisks",
+                "Scenario": "InstallLinuxPackages",
+                "Packages": "python3"
+            }
+        },
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "DownloadSystemConfigPackage",
+                "BlobContainer": "packages",
+                "BlobName": "system_config.1.1.0.zip",
+                "PackageName": "system_config",
+                "Extract": true,
                 "Role": "Server"
             }
         },
         {
-            "Type": "MountDisks",
+            "Type": "StripeDisks",
             "Parameters": {
-                "Scenario": "CreateMountPoints",
+                "Scenario": "StripeAndMountDisks",
+                "PackageName": "system_config",
+                "DiskFilter": "$.Parameters.DiskFilter",
                 "Role": "Server"
             }
         },
@@ -169,7 +182,7 @@
             "Parameters": {
                 "Scenario": "DownloadMySqlServerPackage",
                 "BlobContainer": "packages",
-                "BlobName": "mysql.8.0.36.rev3.zip",
+                "BlobName": "mysql-server-8.0.36-v5.zip",
                 "PackageName": "mysql-server",
                 "Extract": true,
                 "Role": "Server"
@@ -180,16 +193,9 @@
             "Parameters": {
                 "Scenario": "DownloadSysbenchPackage",
                 "BlobContainer": "packages",
-                "BlobName": "sysbench-1.0.20.rev3.zip",
+                "BlobName": "sysbench-1.0.20.rev5.zip",
                 "PackageName": "sysbench",
                 "Extract": true
-            }
-        },
-        {
-            "Type": "LinuxPackageInstallation",
-            "Parameters": {
-                "Scenario": "InstallLinuxPackages",
-                "Packages": "python3"
             }
         },
         {
@@ -208,7 +214,7 @@
                 "Scenario": "ConfigureMySQLServer",
                 "Action": "ConfigureServer",
                 "Benchmark": "OLTP",
-                "DiskFilter": "$.Parameters.DiskFilter",
+                "DiskFilter": "Logical",
                 "PackageName": "mysql-server",
                 "Role": "Server"
             }
@@ -230,33 +236,9 @@
                 "Scenario": "SetMySQLGlobalVariables",
                 "Action": "SetGlobalVariables",
                 "Benchmark": "OLTP",
-                "DiskFilter": "$.Parameters.DiskFilter",
+                "DiskFilter": "Logical",
                 "InnodbBufferPoolSize": "$.Parameters.InnodbBufferPoolSize",
                 "Variables": "MAX_PREPARED_STMT_COUNT=1000000;MAX_CONNECTIONS=100000;innodb_buffer_pool_size={InnodbBufferPoolSize};innodb_lock_wait_timeout=300;innodb_io_capacity=10000;innodb_io_capacity_max=10000;innodb_buffer_pool_dump_at_shutdown=OFF;innodb_change_buffering=0;table_open_cache=20000;",
-                "PackageName": "mysql-server",
-                "Role": "Server"
-            }
-        },
-        {
-            "Type": "SysbenchConfiguration",
-            "Parameters": {
-                "Scenario": "PrepareMySQLDatabase",
-                "Action": "CreateTables",
-                "DatabaseSystem": "MySQL",
-                "Benchmark": "OLTP",
-                "DatabaseName": "$.Parameters.DatabaseName",
-                "DatabaseScenario": "$.Parameters.DatabaseScenario",
-                "PackageName": "sysbench",
-                "Role": "Server"
-            }
-        },
-        {
-            "Type": "MySQLServerConfiguration",
-            "Parameters": {
-                "Scenario": "DistributeMySQLDatabase",
-                "Action": "DistributeDatabase",
-                "DiskFilter": "$.Parameters.DiskFilter",
-                "DatabaseName": "$.Parameters.DatabaseName",
                 "PackageName": "mysql-server",
                 "Role": "Server"
             }
