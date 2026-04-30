@@ -3,6 +3,7 @@
 set EXIT_CODE=0
 set SCRIPT_DIR=%~dp0
 set SCRIPT_DIR=%SCRIPT_DIR:~0,-1%
+set CET_PROPS=
 set BUILD_CONFIGURATION=
 set BUILD_FLAGS=
 set BUILD_VERSION=
@@ -18,6 +19,9 @@ if /i "%~1" == "-?" Goto :Usage
 if /i "%~1" == "--help" Goto :Usage
 
 for %%a in (%*) do (
+    if /i "%%a" == "--disablecet" (
+        set CET_PROPS=-p:DisableCET=true
+    )
     if /i "%%a" == "--trim" set BUILD_FLAGS=-p:PublishTrimmed=true
 
     if /i "%%a" == "--linux-x64" (
@@ -63,6 +67,11 @@ echo Configuration : %BUILD_CONFIGURATION%
 echo Flags         : %BUILD_FLAGS%
 echo **********************************************************************
 
+REM echo:
+REM echo [Restore Virtual Client]
+REM echo -------------------------------------------------------
+REM call dotnet restore "%VC_SOLUTION_DIR%\VirtualClient.sln" || Goto :Erro
+
 echo:
 echo [Build Solution]
 echo -------------------------------------------------------
@@ -74,7 +83,7 @@ echo !!! Note that the solution is be built with 'Debug' configuration in order 
 echo !!!
 echo:
 call dotnet build "%VC_SOLUTION_DIR%\VirtualClient.sln" -c Debug -v Detailed ^
--p:AssemblyVersion=%BUILD_VERSION% && echo: || Goto :Error
+-p:AssemblyVersion=%BUILD_VERSION% %CET_PROPS% && echo: || Goto :Error
 
 if /i "%BUILD_ALL%" == "true" (
     set BUILD_LINUX_X64=true
@@ -87,32 +96,48 @@ if /i "%BUILD_LINUX_X64%" == "true" (
     echo:
     echo [Build Virtual Client: linux-x64]
     echo ----------------------------------------------------------------------
-    call dotnet publish "%VC_SOLUTION_DIR%\VirtualClient.Main\VirtualClient.Main.csproj" -r linux-x64 -c %BUILD_CONFIGURATION% -v Detailed --self-contained ^
-    -p:AssemblyVersion=%BUILD_VERSION% -p:InvariantGlobalization=true %BUILD_FLAGS% && echo: || Goto :Error
+    call dotnet publish "%VC_SOLUTION_DIR%\VirtualClient.Main\VirtualClient.Main.csproj" ^
+      -r linux-x64 -c %BUILD_CONFIGURATION% -v Detailed --self-contained ^
+      -p:AssemblyVersion=%BUILD_VERSION% ^
+      -p:InvariantGlobalization=true ^
+      %CET_PROPS% %BUILD_FLAGS% ^
+      && echo: || Goto :Error
 )
 
 if /i "%BUILD_LINUX_ARM64%" == "true" (
     echo:
     echo [Build Virtual Client: linux-arm64]
     echo ----------------------------------------------------------------------
-    call dotnet publish "%VC_SOLUTION_DIR%\VirtualClient.Main\VirtualClient.Main.csproj" -r linux-arm64 -c %BUILD_CONFIGURATION% -v Detailed --self-contained ^
-    -p:AssemblyVersion=%BUILD_VERSION% -p:InvariantGlobalization=true %BUILD_FLAGS% && echo: || Goto :Error
+    call dotnet publish "%VC_SOLUTION_DIR%\VirtualClient.Main\VirtualClient.Main.csproj" ^
+      -r linux-arm64 -c %BUILD_CONFIGURATION% -v Detailed --self-contained ^
+      -p:AssemblyVersion=%BUILD_VERSION% ^
+      -p:InvariantGlobalization=true ^
+      %CET_PROPS% %BUILD_FLAGS% ^
+      && echo: || Goto :Error
 )
 
 if /i "%BUILD_WIN_X64%" == "true" (
     echo:
     echo [Build Virtual Client: win-x64]
     echo ----------------------------------------------------------------------
-    call dotnet publish "%VC_SOLUTION_DIR%\VirtualClient.Main\VirtualClient.Main.csproj" -r win-x64 -c %BUILD_CONFIGURATION% -v Detailed --self-contained ^
-    -p:AssemblyVersion=%BUILD_VERSION% %BUILD_FLAGS% && echo: || Goto :Error
+    call dotnet publish "%VC_SOLUTION_DIR%\VirtualClient.Main\VirtualClient.Main.csproj" ^
+      -r win-x64 -c %BUILD_CONFIGURATION% -v Detailed --self-contained ^
+      -p:AssemblyVersion=%BUILD_VERSION% ^
+      -p:InvariantGlobalization=true ^
+      %CET_PROPS% %BUILD_FLAGS% ^
+      && echo: || Goto :Error
 )
 
 if /i "%BUILD_WIN_ARM64%" == "true" (
     echo:
     echo [Build Virtual Client: win-arm64]
-    echo ---------------------------------------------------------------------- 
-    call dotnet publish "%VC_SOLUTION_DIR%\VirtualClient.Main\VirtualClient.Main.csproj" -r win-arm64 -c %BUILD_CONFIGURATION% -v Detailed --self-contained ^
-    -p:AssemblyVersion=%BUILD_VERSION% %BUILD_FLAGS% && echo: || Goto :Error
+    echo ----------------------------------------------------------------------
+    call dotnet publish "%VC_SOLUTION_DIR%\VirtualClient.Main\VirtualClient.Main.csproj" ^
+      -r win-arm64 -c %BUILD_CONFIGURATION% -v Detailed --self-contained ^
+      -p:AssemblyVersion=%BUILD_VERSION% ^
+      -p:InvariantGlobalization=true ^
+      %CET_PROPS% %BUILD_FLAGS% ^
+      && echo: || Goto :Error
 )
 
 Goto :End
@@ -124,7 +149,7 @@ echo Builds the source code in the repo.
 echo:
 echo Usage:
 echo ---------------------
-echo build.cmd [--win-x64] [--win-arm64] [--linux-x64] [--linux-arm64] [--trim]
+echo build.cmd [--win-x64] [--win-arm64] [--linux-x64] [--linux-arm64] [--trim] [--disablecet]
 echo:
 echo Examples:
 echo ---------------------
@@ -152,6 +177,7 @@ set BUILD_FLAGS=
 set BUILD_CONFIGURATION=
 set BUILD_VERSION=
 set SCRIPT_DIR=
+set CET_PROPS=
 set VC_SOLUTION_DIR=
 set BUILD_ALL=
 set BUILD_LINUX_X64=

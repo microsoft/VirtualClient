@@ -15,6 +15,13 @@ if /i "%~1" == "-?" Goto :Usage
 if /i "%~1" == "--help" Goto :Usage
 
 for %%a in (%*) do (
+    if /i "%%a" == "--disablecet" (
+        if not defined PACKAGE_SUFFIX (
+            set PACKAGE_SUFFIX=nocet
+        ) else (
+            set PACKAGE_SUFFIX=!PACKAGE_SUFFIX!-nocet
+        )
+    )
     
     if defined SUFFIX_FOUND (
         set SUFFIX_FOUND=!!
@@ -97,28 +104,28 @@ call dotnet pack %PACKAGES_PROJECT%  --force --no-restore --no-build -c Debug -v
 -p:Version=%PACKAGE_VERSION% -p:NuspecFile=%PACKAGE_DIR%\nuspec\VirtualClient.TestFramework.nuspec && echo: || Goto :Error
 
 echo:
-echo [Create NuGet Package] VirtualClient.linux-arm64.%PACKAGE_VERSION%
-echo ----------------------------------------------------------
-call dotnet pack %PACKAGES_PROJECT% --force --no-restore --no-build -c %BUILD_CONFIGURATION% -v Detailed ^
--p:Version=%PACKAGE_VERSION% -p:NuspecFile=%PACKAGE_DIR%\nuspec\VirtualClient.linux-arm64.nuspec && echo: || Goto :Error
-
-echo:
 echo [Create NuGet Package] VirtualClient.linux-x64.%PACKAGE_VERSION%
 echo ----------------------------------------------------------
 call dotnet pack %PACKAGES_PROJECT% --force --no-restore --no-build -c %BUILD_CONFIGURATION% -v Detailed ^
 -p:Version=%PACKAGE_VERSION% -p:NuspecFile=%PACKAGE_DIR%\nuspec\VirtualClient.linux-x64.nuspec && echo: || Goto :Error
 
 echo:
-echo [Create NuGet Package] VirtualClient.win-arm64.%PACKAGE_VERSION%
+echo [Create NuGet Package] VirtualClient.linux-arm64.%PACKAGE_VERSION%
 echo ----------------------------------------------------------
 call dotnet pack %PACKAGES_PROJECT% --force --no-restore --no-build -c %BUILD_CONFIGURATION% -v Detailed ^
--p:Version=%PACKAGE_VERSION% -p:NuspecFile=%PACKAGE_DIR%\nuspec\VirtualClient.win-arm64.nuspec && echo: || Goto :Error
+-p:Version=%PACKAGE_VERSION% -p:NuspecFile=%PACKAGE_DIR%\nuspec\VirtualClient.linux-arm64.nuspec && echo: || Goto :Error
 
 echo:
 echo [Create NuGet Package] VirtualClient.win-x64.%PACKAGE_VERSION%
 echo ----------------------------------------------------------
 call dotnet pack %PACKAGES_PROJECT% --force --no-restore --no-build -c %BUILD_CONFIGURATION% -v Detailed ^
 -p:Version=%PACKAGE_VERSION% -p:NuspecFile=%PACKAGE_DIR%\nuspec\VirtualClient.win-x64.nuspec && echo: || Goto :Error
+
+echo:
+echo [Create NuGet Package] VirtualClient.win-arm64.%PACKAGE_VERSION%
+echo ----------------------------------------------------------
+call dotnet pack %PACKAGES_PROJECT% --force --no-restore --no-build -c %BUILD_CONFIGURATION% -v Detailed ^
+-p:Version=%PACKAGE_VERSION% -p:NuspecFile=%PACKAGE_DIR%\nuspec\VirtualClient.win-arm64.nuspec && echo: || Goto :Error
 
 Goto :End
 
@@ -134,7 +141,7 @@ echo --suffix  - Defines a suffix to place on the package names. Valid values in
 echo:
 echo Usage:
 echo ---------------------
-echo build-packages.cmd [--suffix ^<alpha^|beta^>]
+echo build-packages.cmd [--suffix ^<alpha^|beta^>] [--disablecet]
 echo:
 echo Examples:
 echo ---------------------

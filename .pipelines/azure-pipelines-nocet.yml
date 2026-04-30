@@ -1,0 +1,105 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+# ADO link: https://msazure.visualstudio.com/One/_apps/hub/ms.vss-build-web.ci-designer-hub?pipelineId=297462&branch=main
+
+trigger:
+  branches:
+    include:
+    - main
+  paths:
+    exclude:
+    - website
+    
+pr: none
+
+pool:
+  vmImage: windows-latest
+
+variables:
+  ROOT: $(Build.SourcesDirectory)
+  CDP_DEFINITION_BUILD_COUNT: $[counter('', 0)] # needed for onebranch.pipeline.version task https://aka.ms/obpipelines/versioning
+  ENABLE_PRS_DELAYSIGN: 1
+  
+
+steps:
+- task: UseDotNet@2
+  continueOnError: false
+  inputs:
+    packageType: 'sdk'
+    version: '2.1.x'
+
+- task: UseDotNet@2
+  continueOnError: false
+  inputs:
+    packageType: 'sdk'
+    version: '9.0.x'
+    useGlobalJson: false
+    performMultiLevelLookup: true
+    workingDirectory: '$(Build.SourcesDirectory)'
+
+- powershell: |
+    # Read the content of VERSION
+    $version=Get-Content $(Build.SourcesDirectory)\VERSION
+    $version
+    # Set the file content as a pipeline variable
+    # Write-Host "##vso[task.setvariable variable=VcVersion]$version"
+    Write-Host "Build Version = $version"
+  displayName: 'Show VC Build Version'
+
+  # Ensure the artifact output/bin/obj directories are clean.
+- script: $(Build.SourcesDirectory)\clean.cmd
+  displayName: 'Clean Output Directories'
+  
+  # Build the repo with CET disabled.
+- script: $(Build.SourcesDirectory)\build.cmd --disablecet
+  displayName: 'Build Solutions'
+
+  # Build NuGet packages for the services/agents in the repo.
+- script: $(Build.SourcesDirectory)\build-packages.cmd --suffix $(VersionSuffix) --disablecet
+  displayName: 'Build NuGet Packages'
+
+- task: EsrpCodeSigning@5
+  inputs:
+    ConnectedServiceName: 'virtualclient-esrp-ame'
+    AppRegistrationClientId: '0225fe5c-2a99-4459-af16-27a7dcd1c14a'
+    AppRegistrationTenantId: '33e01921-4d64-4f8c-a055-5bdaffd5e33d'
+    AuthAKVName: 'virtualclient-vault-esrp'
+    AuthCertName: 'virtualclient-esrp-cert-auth'
+    AuthSignCertName: 'virtualclient-esrp-cert-sign'
+    FolderPath: '$(System.DefaultWorkingDirectory)'
+    Pattern: '*.nupkg'
+    signConfigType: 'inlineSignParams'
+    inlineOperation: |
+      [    
+          {
+            "KeyCode": "CP-401405",
+            "OperationCode": "NuGetSign",
+            "Parameters": {},
+            "ToolName": "sign",
+            "ToolVersion": "1.0"
+          },
+          {
+            "KeyCode": "CP-401405",
+            "OperationCode": "NuGetVerify",
+            "Parameters": {},
+            "ToolName": "sign",
+            "ToolVersion": "1.0"
+          }
+      ]
+    SessionTimeout: '60'
+    MaxConcurrency: '50'
+    MaxRetryAttempts: '5'
+    PendingAnalysisWaitTimeoutMinutes: '5'
+
+- task: NuGetAuthenticate@1
+  displayName: 'Authenticate with NuGet feed'
+
+- script: dotnet nuget push $(Build.SourcesDirectory)\out\packages\*.nupkg --api-key VSTS --timeout 1200 --source https://msazure.pkgs.visualstudio.com/_packaging/CRC-VC/nuget/v3/index.json --skip-duplicate
+  displayName: 'Publish NuGet to ADO Artifact Packages as temporary workaround to ADO lagging behind in package availability'
+
+- script: $(Build.SourcesDirectory)\upload-packages.cmd $(Build.SourcesDirectory)\out\packages $(NUGETORGAPIKEY)
+  displayName: 'Publish NuGet Packages'
+
+

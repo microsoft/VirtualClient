@@ -5,6 +5,8 @@ BUILD_CONFIGURATION="Release"
 BUILD_FLAGS=""
 BUILD_VERSION=""
 SCRIPT_DIR="$(dirname $(readlink -f "${BASH_SOURCE[0]}"))"
+CET_PROPS=""
+PACKAGE_SUFFIX=""
 
 # Runtime build flags
 BUILD_ALL=true
@@ -19,15 +21,16 @@ Usage() {
     echo ""
     echo "Options:"
     echo "---------------------"
-    echo "--trim         Enables trimming for publish output."
-    echo "--linux-x64    Build only for linux-x64 runtime."
-    echo "--linux-arm64  Build only for linux-arm64 runtime."
-    echo "--win-x64      Build only for win-x64 runtime."
-    echo "--win-arm64    Build only for win-arm64 runtime."
+    echo "--disablecet      Disables CET during build."
+    echo "--trim            Enables trimming for publish output."
+    echo "--linux-x64       Build only for linux-x64 runtime."
+    echo "--linux-arm64     Build only for linux-arm64 runtime."
+    echo "--win-x64         Build only for win-x64 runtime."
+    echo "--win-arm64       Build only for win-arm64 runtime."
     echo ""
     echo "Usage:"
     echo "---------------------"
-    echo "./build.sh [--trim] [--linux-x64] [--linux-arm64] [--win-x64] [--win-arm64]"
+    echo "./build.sh [--disablecet] [--trim] [--linux-x64] [--linux-arm64] [--win-x64] [--win-arm64]"
     echo ""
     echo "Examples:"
     echo "---------------------"
@@ -59,6 +62,10 @@ while [[ $# -gt 0 ]]; do
     case "${1,,}" in
         "/?"|"-?"|"--help")
             Usage
+            ;;
+        "--disablecet")
+            CET_PROPS="-p:DisableCET=true"
+            PACKAGE_SUFFIX=".nocet"
             ;;
         "--trim")
             BUILD_FLAGS="-p:PublishTrimmed=true"
@@ -134,7 +141,7 @@ if [[ "$BUILD_LINUX_X64" == true ]]; then
     echo "[Build Virtual Client: linux-x64]"
     echo "----------------------------------------------------------------------"
     dotnet publish "$SCRIPT_DIR/src/VirtualClient/VirtualClient.Main/VirtualClient.Main.csproj" -r linux-x64 -c $BUILD_CONFIGURATION -v Detailed --self-contained \
-    -p:AssemblyVersion=$BUILD_VERSION -p:InvariantGlobalization=true $BUILD_FLAGS || Error
+    -p:AssemblyVersion=$BUILD_VERSION -p:InvariantGlobalization=true $CET_PROPS $BUILD_FLAGS || Error
 fi
 
 if [[ "$BUILD_LINUX_ARM64" == true ]]; then
@@ -142,7 +149,7 @@ if [[ "$BUILD_LINUX_ARM64" == true ]]; then
     echo "[Build Virtual Client: linux-arm64]"
     echo "----------------------------------------------------------------------"
     dotnet publish "$SCRIPT_DIR/src/VirtualClient/VirtualClient.Main/VirtualClient.Main.csproj" -r linux-arm64 -c $BUILD_CONFIGURATION -v Detailed --self-contained \
-    -p:AssemblyVersion=$BUILD_VERSION -p:InvariantGlobalization=true $BUILD_FLAGS || Error
+    -p:AssemblyVersion=$BUILD_VERSION -p:InvariantGlobalization=true $CET_PROPS $BUILD_FLAGS || Error
 fi
 
 if [[ "$BUILD_WIN_X64" == true ]]; then
@@ -150,7 +157,7 @@ if [[ "$BUILD_WIN_X64" == true ]]; then
     echo "[Build Virtual Client: win-x64]"
     echo "----------------------------------------------------------------------"
     dotnet publish "$SCRIPT_DIR/src/VirtualClient/VirtualClient.Main/VirtualClient.Main.csproj" -r win-x64 -c $BUILD_CONFIGURATION -v Detailed --self-contained \
-    -p:AssemblyVersion=$BUILD_VERSION $BUILD_FLAGS || Error
+    -p:AssemblyVersion=$BUILD_VERSION $CET_PROPS $BUILD_FLAGS || Error
 fi
 
 if [[ "$BUILD_WIN_ARM64" == true ]]; then
@@ -158,7 +165,7 @@ if [[ "$BUILD_WIN_ARM64" == true ]]; then
     echo "[Build Virtual Client: win-arm64]"
     echo "----------------------------------------------------------------------"
     dotnet publish "$SCRIPT_DIR/src/VirtualClient/VirtualClient.Main/VirtualClient.Main.csproj" -r win-arm64 -c $BUILD_CONFIGURATION -v Detailed --self-contained \
-    -p:AssemblyVersion=$BUILD_VERSION $BUILD_FLAGS || Error
+    -p:AssemblyVersion=$BUILD_VERSION $CET_PROPS $BUILD_FLAGS || Error
 fi
 
 End

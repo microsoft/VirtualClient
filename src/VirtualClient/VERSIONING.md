@@ -1,10 +1,10 @@
 # Versioning
 The following sections describe the versioning process for projects/libraries within the Virtual Client platform/core repo.
 
-Projects versioned using the version defined by the Official build pipeline. This version is defined in the in the [OneBranch.Official.yml](https://github.com/Azure/AzureVirtualClient/blob/main/.pipelines/OneBranch.Official.yml)
-file found in the root of the repo in the **.pipeline** directory. The team only ever changes the 'major' or 'minor' versions in this
-file. Furthermore,tThe team follows the 'semantic versioning' process to determine versions. You can learn more about semantic versioning at the 
-link below.
+Projects versioned using the version defined by the Official build pipeline. This version is defined in the in the [VERSION](https://github.com/microsoft/VirtualClient/blob/main/VERSION)
+file found in the root of the repo. The team only ever changes the 'major' or 'minor' versions in this
+file. Furthermore, the team follows the 'semantic versioning' process to determine versions. You can learn more about semantic versioning at the 
+links below.
 
 * [Semantic Versioning](https://semver.org/)
 * [Semantic Versioning in .NET](https://docs.microsoft.com/en-us/dotnet/core/versions/#semantic-versioning)
