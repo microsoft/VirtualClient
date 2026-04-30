@@ -67,11 +67,6 @@ echo Configuration : %BUILD_CONFIGURATION%
 echo Flags         : %BUILD_FLAGS%
 echo **********************************************************************
 
-REM echo:
-REM echo [Restore Virtual Client]
-REM echo -------------------------------------------------------
-REM call dotnet restore "%VC_SOLUTION_DIR%\VirtualClient.sln" || Goto :Erro
-
 echo:
 echo [Build Solution]
 echo -------------------------------------------------------
