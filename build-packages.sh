@@ -17,7 +17,7 @@ Usage() {
     echo ""
     echo "Usage:"
     echo "---------------------"
-    echo "build-packages.sh [--suffix <alpha|beta>] [--disablecet]"
+    echo "build-packages.sh [--suffix <alpha|beta>]"
     echo ""
     echo "Examples"
     echo "---------------------"
