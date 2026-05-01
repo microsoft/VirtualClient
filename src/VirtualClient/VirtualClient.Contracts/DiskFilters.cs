@@ -86,6 +86,14 @@ namespace VirtualClient.Contracts
                         disks = DiskFilters.DiskPathFilter(disks, filterValue);
                         break;
 
+                    case Filters.AccessPath:
+                        disks = DiskFilters.AccessPathFilter(disks, filterValue);
+                        break;
+
+                    case Filters.Logical:
+                        disks = DiskFilters.LogicalDiskFilter(disks);
+                        break;
+
                     default:
                         throw new EnvironmentSetupException($"Disk filter '{filter}' is not supported.", ErrorReason.DiskInformationNotAvailable);
                 }
@@ -144,12 +152,29 @@ namespace VirtualClient.Contracts
             return disks;
         }
 
+        private static IEnumerable<Disk> AccessPathFilter(IEnumerable<Disk> disks, string accessPathPattern)
+        {
+            // Find disks where any volume has an access path containing the given pattern.
+            disks = disks.Where(d => d.Volumes.Any(v => v.AccessPaths.Any(
+                p => p.Contains(accessPathPattern, StringComparison.OrdinalIgnoreCase))));
+            return disks;
+        }
+
+        private static IEnumerable<Disk> LogicalDiskFilter(IEnumerable<Disk> disks)
+        {
+            // LVM device mapper paths: /dev/dm-N or /dev/mapper/*
+            disks = disks.Where(d =>
+                d.DevicePath?.StartsWith("/dev/dm", StringComparison.OrdinalIgnoreCase) == true
+                || d.DevicePath?.StartsWith("/dev/mapper", StringComparison.OrdinalIgnoreCase) == true);
+            return disks;
+        }
+
         private static IEnumerable<Disk> FilterStoragePathByPrefix(IEnumerable<Disk> disks, PlatformID platform)
         {
             if (platform == PlatformID.Unix)
             {
                 // There are NVMe disks that show up in lshw output, that are not really storage devices. This filter filters by common prefixes.
-                List<string> validPrefixes = new List<string> { "/dev/hd", "/dev/sd", "/dev/nvme", "/dev/xvd" };
+                List<string> validPrefixes = new List<string> { "/dev/hd", "/dev/sd", "/dev/nvme", "/dev/xvd", "/dev/dm", "/dev/mapper" };
 
                 // Match for either accessPath or devicePath.
                 disks = disks.Where(d => validPrefixes.Any(vp => d.DevicePath?.Trim().StartsWith(vp, StringComparison.OrdinalIgnoreCase) == true));
@@ -248,6 +273,16 @@ namespace VirtualClient.Contracts
             /// Disk path filter.
             /// </summary>
             public const string DiskPath = "diskpath";
+
+            /// <summary>
+            /// Access path filter. Matches disks with a volume access path containing the given value.
+            /// </summary>
+            public const string AccessPath = "accesspath";
+
+            /// <summary>
+            /// Logical disk filter. Matches LVM device mapper disks (/dev/dm-*, /dev/mapper/*).
+            /// </summary>
+            public const string Logical = "logical";
         }
     }
 }

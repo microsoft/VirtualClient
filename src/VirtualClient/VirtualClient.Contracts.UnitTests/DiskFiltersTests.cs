@@ -476,6 +476,107 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
+        public void DiskFiltersCanFilterOnAccessPathInLinux()
+        {
+            this.disks = this.mockFixture.CreateDisks(PlatformID.Unix, true);
+
+            // Add a striped volume disk with a raid0 access path
+            Disk stripedDisk = new Disk(
+                4,
+                "/dev/dm-0",
+                new List<DiskVolume>
+                {
+                    new DiskVolume(
+                        0,
+                        "/dev/dm-0",
+                        new List<string> { "/home/user/mnt_raid0" },
+                        properties: new Dictionary<string, IConvertible>
+                        {
+                            { "size", "1234567890123" }
+                        })
+                });
+
+            List<Disk> allDisks = new List<Disk>(this.disks) { stripedDisk };
+
+            string filterString = "AccessPath:raid0";
+            IEnumerable<Disk> result = DiskFilters.FilterDisks(allDisks, filterString, PlatformID.Unix);
+            Assert.AreEqual(1, result.Count());
+            Assert.IsTrue(object.ReferenceEquals(stripedDisk, result.First()));
+        }
+
+        [Test]
+        public void DiskFiltersAccessPathFilterIsCaseInsensitive()
+        {
+            this.disks = this.mockFixture.CreateDisks(PlatformID.Unix, true);
+
+            Disk stripedDisk = new Disk(
+                4,
+                "/dev/dm-0",
+                new List<DiskVolume>
+                {
+                    new DiskVolume(
+                        0,
+                        "/dev/dm-0",
+                        new List<string> { "/home/user/mnt_RAID0" },
+                        properties: new Dictionary<string, IConvertible>
+                        {
+                            { "size", "1234567890123" }
+                        })
+                });
+
+            List<Disk> allDisks = new List<Disk>(this.disks) { stripedDisk };
+
+            string filterString = "AccessPath:raid0";
+            IEnumerable<Disk> result = DiskFilters.FilterDisks(allDisks, filterString, PlatformID.Unix);
+            Assert.AreEqual(1, result.Count());
+            Assert.IsTrue(object.ReferenceEquals(stripedDisk, result.First()));
+        }
+
+        [Test]
+        public void DiskFiltersCanFilterOnLogicalDisks()
+        {
+            this.disks = this.mockFixture.CreateDisks(PlatformID.Unix, true);
+
+            Disk lvmDisk = new Disk(
+                4,
+                "/dev/dm-0",
+                new List<DiskVolume>
+                {
+                    new DiskVolume(
+                        0,
+                        "/dev/dm-0",
+                        new List<string> { "/home/user/mnt_raid0" },
+                        properties: new Dictionary<string, IConvertible>
+                        {
+                            { "size", "1234567890123" }
+                        })
+                });
+
+            Disk mapperDisk = new Disk(
+                5,
+                "/dev/mapper/vg0-lv0",
+                new List<DiskVolume>
+                {
+                    new DiskVolume(
+                        0,
+                        "/dev/mapper/vg0-lv0",
+                        new List<string> { "/mnt/data" },
+                        properties: new Dictionary<string, IConvertible>
+                        {
+                            { "size", "1234567890123" }
+                        })
+                });
+
+            List<Disk> allDisks = new List<Disk>(this.disks) { lvmDisk, mapperDisk };
+
+            string filterString = "Logical";
+            IEnumerable<Disk> result = DiskFilters.FilterDisks(allDisks, filterString, PlatformID.Unix);
+            Assert.AreEqual(2, result.Count());
+            Assert.IsTrue(result.Any(d => object.ReferenceEquals(d, lvmDisk)));
+            Assert.IsTrue(result.Any(d => object.ReferenceEquals(d, mapperDisk)));
+        }
+
+        [Test]
         public void DiskFiltersHandlesAnomaliesEncounters_1()
         {
             // Scenario:

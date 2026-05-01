@@ -21,6 +21,8 @@ namespace VirtualClient.Actions
     /// </summary>
     public class HammerDBClientExecutor : HammerDBExecutor
     {
+        private static string runTransactionsTclName = "runTransactions.tcl";
+
         /// <summary>
         /// Initializes a new instance of the <see cref="HammerDBClientExecutor"/> class.
         /// </summary>
@@ -154,7 +156,7 @@ namespace VirtualClient.Actions
 
                     using (IProcessProxy process = await this.ExecuteCommandAsync(
                         command, 
-                        $"{script} --runTransactionsTCLFilePath {this.RunTransactionsTclName}", 
+                        $"{script} --runTransactionsTCLFilePath {runTransactionsTclName}", 
                         this.HammerDBPackagePath, 
                         telemetryContext, 
                         cancellationToken))
