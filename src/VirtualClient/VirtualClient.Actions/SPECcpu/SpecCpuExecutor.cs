@@ -489,6 +489,11 @@ namespace VirtualClient.Actions
                     SpecCpuConfigPlaceHolder.Gcc10Workaround,
                     Convert.ToInt32(compilerVersion) >= 10 ? SpecCpuConfigPlaceHolder.Gcc10WorkaroundContent : string.Empty,
                     StringComparison.OrdinalIgnoreCase);
+
+                templateText = templateText.Replace(
+                    SpecCpuConfigPlaceHolder.Gcc15Workaround,
+                    Convert.ToInt32(compilerVersion) >= 15 ? SpecCpuConfigPlaceHolder.Gcc15WorkaroundContent : string.Empty,
+                    StringComparison.OrdinalIgnoreCase);
             }
             else
             {
@@ -500,6 +505,11 @@ namespace VirtualClient.Actions
                 templateText = templateText.Replace(
                 SpecCpuConfigPlaceHolder.Gcc10Workaround,
                 SpecCpuConfigPlaceHolder.Gcc10WorkaroundContent,
+                StringComparison.OrdinalIgnoreCase);
+
+                templateText = templateText.Replace(
+                SpecCpuConfigPlaceHolder.Gcc15Workaround,
+                SpecCpuConfigPlaceHolder.Gcc15WorkaroundContent,
                 StringComparison.OrdinalIgnoreCase);
             }
 
@@ -572,6 +582,8 @@ namespace VirtualClient.Actions
             public const string PeakOptimizingFlags = "$PeakOptimizingFlags$";
             public const string Gcc10Workaround = "$Gcc10Workaround$";
             public const string Gcc10WorkaroundContent = "%define GCCge10";
+            public const string Gcc15Workaround = "$Gcc15Workaround$";
+            public const string Gcc15WorkaroundContent = "%define GCCge15";
         }
     }
 }
