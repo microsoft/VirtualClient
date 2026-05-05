@@ -171,9 +171,19 @@ namespace VirtualClient.Contracts
         public const string USERPROFILE = nameof(USERPROFILE);
 
         /// <summary>
-        /// Name = VC_PASSWORD
+        /// Name = VC_EVENT_HUB_PROXY
         /// </summary>
-        public const string VC_PASSWORD = nameof(VC_PASSWORD);
+        public const string VC_EVENT_HUB_PROXY = nameof(VC_EVENT_HUB_PROXY);
+
+        /// <summary>
+        /// Name = VC_EVENT_HUB_PROXY_USERNAME
+        /// </summary>
+        public const string VC_EVENT_HUB_PROXY_USERNAME = nameof(VC_EVENT_HUB_PROXY_USERNAME);
+
+        /// <summary>
+        /// Name = VC_EVENT_HUB_PROXY_PASSWORD
+        /// </summary>
+        public const string VC_EVENT_HUB_PROXY_PASSWORD = nameof(VC_EVENT_HUB_PROXY_PASSWORD);
 
         /// <summary>
         /// Name = VC_LOGS_DIR
@@ -189,6 +199,11 @@ namespace VirtualClient.Contracts
         /// Name = VC_PACKAGES_DIR
         /// </summary>
         public const string VC_PACKAGES_DIR = nameof(VC_PACKAGES_DIR);
+
+        /// <summary>
+        /// Name = VC_PASSWORD
+        /// </summary>
+        public const string VC_PASSWORD = nameof(VC_PASSWORD);
 
         /// <summary>
         /// Name = VC_STATE_DIR

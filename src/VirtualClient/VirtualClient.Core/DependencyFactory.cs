@@ -10,7 +10,6 @@ namespace VirtualClient
     using System.Linq;
     using System.Net;
     using System.Security.Cryptography.X509Certificates;
-    using System.Threading.Tasks;
     using Azure.Core;
     using Azure.Messaging.EventHubs.Producer;
     using Microsoft.Extensions.Logging;
@@ -136,16 +135,18 @@ namespace VirtualClient
         /// <param name="eventHubName">The name of the Event Hub within the namespace (e.g. telemetry-logs, telemetry-metrics).</param>
         /// <param name="eventHubNameSpace">Event hub namespace</param>
         /// <param name="tokenCredential">Azure Token credential to authenticate with </param>
-        public static EventHubTelemetryChannel CreateEventHubTelemetryChannel(string eventHubName, string eventHubNameSpace = null, TokenCredential tokenCredential = null, string eventHubConnectionString = null)
+        /// <param name="clientOptions">Options for configuring the Event Hub producer client. For example, these can be used to support the use of a proxy.</param>
+        public static EventHubTelemetryChannel CreateEventHubTelemetryChannel(string eventHubName, string eventHubNameSpace = null, TokenCredential tokenCredential = null, string eventHubConnectionString = null, EventHubProducerClientOptions clientOptions = null)
         {
             EventHubProducerClient client;
+
             if (!string.IsNullOrEmpty(eventHubConnectionString))
             {
-                client = new EventHubProducerClient(eventHubConnectionString, eventHubName);
+                client = new EventHubProducerClient(eventHubConnectionString, eventHubName, clientOptions);
             }
             else
             {
-                client = new EventHubProducerClient(eventHubNameSpace, eventHubName, tokenCredential);
+                client = new EventHubProducerClient(eventHubNameSpace, eventHubName, tokenCredential, clientOptions);
             }
 
             EventHubTelemetryChannel channel = new EventHubTelemetryChannel(client, enableDiagnostics: true);
@@ -160,7 +161,8 @@ namespace VirtualClient
         /// <param name="settings">Defines the settings for each individual Event Hub targeted.</param>
         /// <param name="level">The logging severity level.</param>
         /// <param name="flushTimeout">A timeout to apply to flush operations.</param>
-        public static IEnumerable<ILoggerProvider> CreateEventHubLoggerProviders(DependencyEventHubStore eventHubStore, EventHubLogSettings settings, LogLevel level, TimeSpan? flushTimeout = null)
+        /// <param name="clientOptions">Options for configuring the Event Hub producer client. For example, these can be used to support the use of a proxy.</param>
+        public static IEnumerable<ILoggerProvider> CreateEventHubLoggerProviders(DependencyEventHubStore eventHubStore, EventHubLogSettings settings, LogLevel level, TimeSpan? flushTimeout = null, EventHubProducerClientOptions clientOptions = null)
         {
             List<ILoggerProvider> loggerProviders = new List<ILoggerProvider>();
 
@@ -189,7 +191,8 @@ namespace VirtualClient
                         eventHubName: settings.TracesHubName,
                         eventHubNameSpace: authenticationContext.EventHubNamespace,
                         authenticationContext.TokenCredential,
-                        authenticationContext.ConnectionString);
+                        authenticationContext.ConnectionString,
+                        clientOptions);
 
                     tracesChannel.EventTransmissionError += (sender, args) =>
                     {
@@ -207,7 +210,8 @@ namespace VirtualClient
                         eventHubName: settings.MetricsHubName,
                         eventHubNameSpace: authenticationContext.EventHubNamespace,
                         authenticationContext.TokenCredential,
-                        authenticationContext.ConnectionString);
+                        authenticationContext.ConnectionString,
+                        clientOptions);
 
                     metricsChannel.EventTransmissionError += (sender, args) =>
                     {
@@ -226,7 +230,8 @@ namespace VirtualClient
                         eventHubName: settings.EventsHubName,
                         eventHubNameSpace: authenticationContext.EventHubNamespace,
                         authenticationContext.TokenCredential,
-                        authenticationContext.ConnectionString);
+                        authenticationContext.ConnectionString,
+                        clientOptions);
 
                     systemEventsChannel.EventTransmissionError += (sender, args) =>
                     {

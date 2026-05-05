@@ -11,12 +11,14 @@ namespace VirtualClient
     using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
+    using System.Net;
     using System.Reflection;
     using System.Runtime.InteropServices;
     using System.Security.Cryptography.X509Certificates;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
+    using Azure.Messaging.EventHubs.Producer;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
@@ -945,7 +947,28 @@ namespace VirtualClient
 
                     case "eventhub":
                         DependencyEventHubStore store = EndpointUtility.CreateEventHubStoreReference(DependencyStore.Telemetry, endpoint: loggerParameters, this.CertificateManager ?? new CertificateManager());
-                        CommandBase.AddEventHubLogging(loggingProviders, configuration, store, loggingLevel);
+
+                        // Supports the use of a Proxy for routing Event Hub traffic. This allows clients to use secure endpoints inside of their network 
+                        // to route traffic to the Event Hub namespace (vs. a direct connection).
+                        // (e.g. http://proxy-dmz.contoso.com:135).
+                        EventHubProducerClientOptions clientOptions = new EventHubProducerClientOptions();
+                        string proxyUri = platformSpecifics.GetEnvironmentVariable(EnvironmentVariable.VC_EVENT_HUB_PROXY);
+
+                        if (!string.IsNullOrWhiteSpace(proxyUri))
+                        {
+                            clientOptions.ConnectionOptions.TransportType = Azure.Messaging.EventHubs.EventHubsTransportType.AmqpWebSockets;
+                            clientOptions.ConnectionOptions.Proxy = new System.Net.WebProxy(new Uri(proxyUri), true);
+
+                            string proxyUsername = platformSpecifics.GetEnvironmentVariable(EnvironmentVariable.VC_EVENT_HUB_PROXY_USERNAME);
+                            string proxyPassword = platformSpecifics.GetEnvironmentVariable(EnvironmentVariable.VC_EVENT_HUB_PROXY_PASSWORD);
+
+                            if (!string.IsNullOrWhiteSpace(proxyUsername) && !string.IsNullOrWhiteSpace(proxyPassword))
+                            {
+                                clientOptions.ConnectionOptions.Proxy.Credentials = new NetworkCredential(proxyUsername, proxyPassword);
+                            }
+                        }
+
+                        CommandBase.AddEventHubLogging(loggingProviders, configuration, store, loggingLevel, clientOptions);
                         break;
 
                     case "proxy":
@@ -1090,7 +1113,7 @@ namespace VirtualClient
             }
         }
 
-        private static void AddEventHubLogging(List<ILoggerProvider> loggingProviders, IConfiguration configuration, DependencyEventHubStore eventHubStore, LogLevel level)
+        private static void AddEventHubLogging(List<ILoggerProvider> loggingProviders, IConfiguration configuration, DependencyEventHubStore eventHubStore, LogLevel level, EventHubProducerClientOptions clientOptions = null)
         {
             if (eventHubStore != null)
             {
@@ -1098,7 +1121,7 @@ namespace VirtualClient
 
                 if (settings.IsEnabled)
                 {
-                    IEnumerable<ILoggerProvider> eventHubProviders = DependencyFactory.CreateEventHubLoggerProviders(eventHubStore, settings, level);
+                    IEnumerable<ILoggerProvider> eventHubProviders = DependencyFactory.CreateEventHubLoggerProviders(eventHubStore, settings, level, clientOptions: clientOptions);
                     if (eventHubProviders?.Any() == true)
                     {
                         loggingProviders.AddRange(eventHubProviders);
