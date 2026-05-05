@@ -311,8 +311,22 @@ namespace VirtualClient.Actions
         /// <param name="disksToTest">The disks under test.</param>
         protected DiskWorkloadProcess CreateWorkloadProcess(string executable, string commandArguments, string testedInstance, params Disk[] disksToTest)
         {
-            string[] testFiles = disksToTest.Select(disk => this.GetTestFiles(disk.GetPreferredAccessPath(this.Platform))).ToArray();
-            string diskSpdArguments = $"{commandArguments} {string.Join(" ", testFiles)}";
+            string diskSpdArguments;
+            string[] testFiles;
+
+            if (DiskFilters.TryGetDiskIndexes(this.DiskFilter, out _))
+            {
+                // DiskSpd has a native syntax for targeting a physical drive by its index: #<N>.
+                // This is the correct format for raw physical disk access; DiskSpd uses
+                // IOCTL_DISK_GET_DRIVE_GEOMETRY_EX internally to determine the drive capacity.
+                testFiles = disksToTest.Select(disk => $"#{disk.Index}").ToArray();
+                diskSpdArguments = $"{commandArguments} {string.Join(" ", testFiles)}";
+            }
+            else
+            {
+                testFiles = disksToTest.Select(disk => this.GetTestFiles(disk.GetPreferredAccessPath(this.Platform))).ToArray();
+                diskSpdArguments = $"{commandArguments} {string.Join(" ", testFiles)}";
+            }
 
             IProcessProxy process = this.SystemManagement.ProcessManager.CreateProcess(executable, diskSpdArguments);
 
@@ -413,16 +427,47 @@ namespace VirtualClient.Actions
                     // Apply parameters to the DiskSpd command line options.
                     await this.EvaluateParametersAsync(telemetryContext);
 
-                    IEnumerable<Disk> disks = await this.SystemManagement.DiskManager.GetDisksAsync(cancellationToken);
+                    IEnumerable<Disk> disksToTest;
 
-                    if (disks?.Any() != true)
+                    if (DiskFilters.TryGetDiskIndexes(this.DiskFilter, out IEnumerable<int> diskIndexes) && diskIndexes != null)
                     {
-                        throw new WorkloadException(
-                            "Unexpected scenario. The disks defined for the system could not be properly enumerated.",
-                            ErrorReason.WorkloadUnexpectedAnomaly);
-                    }
+                        // Explicit index range supplied (e.g. DiskFilter=DiskIndex:6-180 or DiskIndex:6,7,8).
+                        // Build disk list directly without any OS enumeration.
+                        disksToTest = diskIndexes.Select(i => new Disk(i, $@"\\.\PHYSICALDISK{i}")).ToList();
 
-                    IEnumerable<Disk> disksToTest = this.GetDisksToTest(disks);
+                        this.Logger.LogMessage($"{nameof(DiskSpdExecutor)}.SelectDisks", telemetryContext.Clone()
+                            .AddContext("disks", disksToTest)
+                            .AddContext("diskFilter", this.DiskFilter));
+                    }
+                    else if (DiskFilters.TryGetDiskIndexes(this.DiskFilter, out _))
+                    {
+                        // DiskIndex:hdd sentinel — discover HDD indices at runtime via Get-PhysicalDisk.
+                        // This sees offline JBOD drives that DiskPart/DiskManager cannot enumerate,
+                        // and filters to MediaType=HDD to exclude OS SSDs/NVMe devices.
+                        disksToTest = await this.DiscoverRawDisksAsync(cancellationToken);
+
+                        this.Logger.LogMessage($"{nameof(DiskSpdExecutor)}.SelectDisks", telemetryContext.Clone()
+                            .AddContext("disks", disksToTest)
+                            .AddContext("discoveryMethod", "GetPhysicalDisk"));
+                    }
+                    else
+                    {
+                        IEnumerable<Disk> disks = await this.SystemManagement.DiskManager.GetDisksAsync(cancellationToken);
+
+                        if (disks?.Any() != true)
+                        {
+                            throw new WorkloadException(
+                                "Unexpected scenario. The disks defined for the system could not be properly enumerated.",
+                                ErrorReason.WorkloadUnexpectedAnomaly);
+                        }
+
+                        disksToTest = this.GetDisksToTest(disks);
+
+                        this.Logger.LogMessage($"{nameof(DiskSpdExecutor)}.SelectDisks", telemetryContext.Clone()
+                            .AddContext("disks", disksToTest));
+
+                        telemetryContext.AddContext(nameof(disks), disks);
+                    }
 
                     if (disksToTest?.Any() != true)
                     {
@@ -433,13 +478,9 @@ namespace VirtualClient.Actions
                             ErrorReason.DependencyNotFound);
                     }
 
-                    this.Logger.LogMessage($"{nameof(DiskSpdExecutor)}.SelectDisks", telemetryContext.Clone()
-                        .AddContext("disks", disksToTest));
-
                     disksToTest.ToList().ForEach(disk => this.Logger.LogTraceMessage($"Disk Target: '{disk}'"));
 
                     telemetryContext.AddContext("executable", this.ExecutablePath);
-                    telemetryContext.AddContext(nameof(disks), disks);
                     telemetryContext.AddContext(nameof(disksToTest), disksToTest);
 
                     this.workloadProcesses.AddRange(this.CreateWorkloadProcesses(this.ExecutablePath, this.CommandLine, disksToTest, this.ProcessModel));
@@ -486,6 +527,47 @@ namespace VirtualClient.Actions
 
                 return Task.WhenAll(workloadTasks);
             }
+        }
+
+        /// <summary>
+        /// Discovers physical disk indices at runtime by running <c>Get-PhysicalDisk</c> via PowerShell.
+        /// <c>Get-PhysicalDisk</c> enumerates offline drives (e.g. JBOD) that DiskPart/DiskManager does not.
+        /// Used when <c>DiskFilter=DiskIndex:hdd</c> is specified.
+        /// </summary>
+        protected virtual async Task<IEnumerable<Disk>> DiscoverRawDisksAsync(CancellationToken cancellationToken)
+        {
+            // Filter to HDD media type only 
+            // This excludes OS SSDs (disk0-5) and other non-HDD devices that Get-PhysicalDisk
+            // would otherwise return, ensuring only JBOD HDDs are targeted.
+            // Output: one integer DeviceId per line (sorted numerically), e.g. "6\r\n7\r\n8\r\n...\r\n180"
+            const string psArguments = "-NonInteractive -NoProfile -Command "
+                + "\"Get-PhysicalDisk | Where-Object { $_.MediaType -eq 'HDD' } | Select-Object -ExpandProperty DeviceId | Sort-Object { [int]$_ }\"";
+
+            List<Disk> disks = new List<Disk>();
+
+            using (IProcessProxy process = this.SystemManagement.ProcessManager.CreateProcess("powershell.exe", psArguments))
+            {
+                await process.StartAndWaitAsync(cancellationToken);
+
+                if (process.ExitCode != 0)
+                {
+                    throw new WorkloadException(
+                        $"Failed to discover raw disks using 'Get-PhysicalDisk'. "
+                        + $"Exit code: {process.ExitCode}. {process.StandardError}",
+                        ErrorReason.WorkloadUnexpectedAnomaly);
+                }
+
+                foreach (string line in process.StandardOutput.ToString()
+                    .Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries))
+                {
+                    if (int.TryParse(line.Trim(), out int index))
+                    {
+                        disks.Add(new Disk(index, $@"\\.\PHYSICALDISK{index}"));
+                    }
+                }
+            }
+
+            return disks;
         }
 
         /// <summary>
@@ -667,6 +749,15 @@ namespace VirtualClient.Actions
                     $"to be defined (e.g. 496G).",
                     ErrorReason.InvalidProfileDefinition);
             }
+
+            if (DiskFilters.TryGetDiskIndexes(this.DiskFilter, out _) && this.DiskFill)
+            {
+                throw new WorkloadException(
+                    $"Invalid profile definition. The '{nameof(DiskSpdExecutor.DiskFill)}' option cannot be used together with " +
+                    $"a 'DiskIndex:' disk filter. Disk fill operations create test files on a mounted volume and are " +
+                    $"not applicable to raw physical device access.",
+                    ErrorReason.InvalidProfileDefinition);
+            }
         }
 
         private void CaptureMetrics(DiskWorkloadProcess workload, EventContext telemetryContext)
@@ -717,7 +808,14 @@ namespace VirtualClient.Actions
 
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        await this.LogProcessDetailsAsync(workload.Process, telemetryContext, "DiskSpd", logToFile: true);
+                        string logFileName = null;
+                        if (workload.TestFiles?.Any() == true && workload.TestFiles.First().StartsWith("#", StringComparison.Ordinal))
+                        {
+                            string diskIndex = workload.TestFiles.First().TrimStart('#');
+                            logFileName = $"{this.Scenario}_disk{diskIndex}";
+                        }
+
+                        await this.LogProcessDetailsAsync(workload.Process, telemetryContext, "DiskSpd", logToFile: true, logFileName: logFileName);
 
                         if (this.DiskFill)
                         {

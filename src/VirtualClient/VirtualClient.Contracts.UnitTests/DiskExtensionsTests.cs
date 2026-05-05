@@ -189,5 +189,52 @@ namespace VirtualClient.Contracts
                 Assert.AreEqual(expectedMountPointName, actualMountPointName);
             }
         }
+
+        [Test]
+        public void GetPreferredAccessPathThrowsForBareDiskWithNoVolumes_Windows()
+        {
+            // GetPreferredAccessPath is for file-based workloads only. A disk with no volumes
+            // cannot be used for file I/O, so the original throw behavior is correct.
+            // Raw disk access bypasses this method entirely via RawDiskTarget in DiskSpdExecutor.
+            Disk bareDisk = this.fixture.CreateDisk(1, PlatformID.Win32NT, os: false, @"\\.\PHYSICALDISK1");
+
+            Assert.Throws<WorkloadException>(() => bareDisk.GetPreferredAccessPath(PlatformID.Win32NT));
+        }
+
+        [Test]
+        public void GetPreferredAccessPathThrowsForBareDiskWithNoVolumes_Unix()
+        {
+            // Same as Windows: a bare Linux disk with no volumes cannot be used for file I/O.
+            Disk bareDisk = this.fixture.CreateDisk(1, PlatformID.Unix, os: false, @"/dev/sdb");
+
+            Assert.Throws<WorkloadException>(() => bareDisk.GetPreferredAccessPath(PlatformID.Unix));
+        }
+
+        [Test]
+        public void GetPreferredAccessPathReturnsVolumeMountPointForFormattedNonOsDisk_Windows()
+        {
+            // A formatted non-OS Windows disk with a volume should return the volume access path.
+            this.disks = this.fixture.CreateDisks(PlatformID.Win32NT, true);
+            Disk dataDisk = this.disks.First(d => !d.IsOperatingSystem());
+
+            string path = dataDisk.GetPreferredAccessPath(PlatformID.Win32NT);
+            string expectedPath = dataDisk.Volumes.First().AccessPaths.First();
+
+            Assert.AreEqual(expectedPath, path);
+        }
+
+        [Test]
+        public void GetPreferredAccessPathReturnsVolumeMountPointForFormattedNonOsDisk_Unix()
+        {
+            this.disks = this.fixture.CreateDisks(PlatformID.Unix, true);
+            Disk dataDisk = this.disks.First(d => !d.IsOperatingSystem());
+
+            string path = dataDisk.GetPreferredAccessPath(PlatformID.Unix);
+            string expectedPath = dataDisk.Volumes
+                .OrderByDescending(v => v.SizeInBytes(PlatformID.Unix))
+                .First().AccessPaths.First();
+
+            Assert.AreEqual(expectedPath, path);
+        }
     }
 }
