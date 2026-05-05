@@ -261,6 +261,24 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Returns true/false whether the value is a URI containing an 'api-key' query string parameter.
+        /// </summary>
+        /// <param name="value">The value to evaluate.</param>
+        /// <returns>True if the value is a URI containing an 'api-key' query string parameter. False if not.</returns>
+        public static bool IsApiKeyUri(string value)
+        {
+            if (Uri.TryCreate(value, UriKind.Absolute, out Uri uri))
+            {
+                if (!string.IsNullOrWhiteSpace(uri.Query) && Regex.IsMatch(uri.Query, "api-key"))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// Returns true/false whether the value is a custom Virtual Client connection string 
         /// (e.g. EndpointUrl=https://any.blob.core.windows.net;ManagedIdentityId=307591a4-abb2-4559-af59-b47177d140cf).
         /// </summary>

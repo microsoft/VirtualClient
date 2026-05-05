@@ -861,6 +861,40 @@ namespace VirtualClient
             }
         }
 
+        [Test]
+        public async Task ProfileExecutorLogsExplicitTelemetryWhenExperimentTimeoutIsReached()
+        {
+            // Scenario:
+            // An explicit timeout is provided and the profile executor reaches that timeout.
+            // The executor should emit explicit telemetry indicating the experiment timeout was reached.
+            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies, logger: this.mockFixture.Logger))
+            {
+                executor.ExecuteActions = true;
+                executor.ExecuteDependencies = false;
+
+                ProfileTiming explicitTimeout = new ProfileTiming(TimeSpan.FromMicroseconds(50));
+                Task executionTask = executor.ExecuteAsync(explicitTimeout, CancellationToken.None);
+
+                while (!executionTask.IsCompleted)
+                {
+                    await Task.Delay(10).ConfigureAwait(false);
+                }
+
+                executionTask.ThrowIfErrored();
+
+                Assert.IsTrue(explicitTimeout.IsTimedOut);
+
+                var timeoutMessages = this.mockFixture.Logger.MessagesLogged("ProfileExecutor.ExperimentTimeoutReached");
+                Assert.IsNotEmpty(timeoutMessages);
+                Assert.AreEqual(1, timeoutMessages.Count());
+
+                EventContext context = timeoutMessages.First().Item3 as EventContext;
+                Assert.IsNotNull(context);
+                Assert.IsTrue(context.Properties.ContainsKey("timeout"));
+                Assert.IsTrue(context.Properties.ContainsKey("timeoutTimestamp"));
+            }
+        }
+
         private class TestProfileExecutor : ProfileExecutor
         {
             public TestProfileExecutor(ExecutionProfile profile, IServiceCollection dependencies, ComponentSettings settings = null, IEnumerable<string> scenarios = null, ILogger logger = null)

@@ -65,9 +65,9 @@
             "Type": "LinuxPackageInstallation",
             "Parameters": {
                 "Scenario": "InstallLinuxPackages",
-                "Packages-Apt": "build-essential,libevent-dev,pkg-config,zlib1g-dev,libssl-dev,autoconf,automake,make,libpcre3-dev,gcc,unzip,openssl",
-                "Packages-Yum": "zlib-devel,pcre-devel,libevent-devel,openssl-devel,git,gcc-c++,make,autoconf,automake",
-                "Packages-Dnf": "zlib-devel,libevent-devel,openssl-devel,git,gcc,gcc-c++,make,autoconf,icu,automake,unzip,binutils,libstdc++-devel,kernel-headers,glibc-devel,perl,perl-Module-CoreList"
+                "Packages-Apt": "build-essential,libevent-dev,pkg-config,zlib1g-dev,libssl-dev,autoconf,automake,make,libpcre3-dev,gcc,unzip,openssl,numactl",
+                "Packages-Yum": "zlib-devel,pcre-devel,libevent-devel,openssl-devel,git,gcc-c++,make,autoconf,automake,numactl",
+                "Packages-Dnf": "zlib-devel,libevent-devel,openssl-devel,git,gcc,gcc-c++,make,autoconf,icu,automake,unzip,binutils,libstdc++-devel,kernel-headers,glibc-devel,perl,perl-Module-CoreList,numactl"
             }
         },
         {

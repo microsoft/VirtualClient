@@ -6,7 +6,6 @@
     "SupportedOperatingSystems": "Windows"
   },
   "Parameters": {
-    "GpuModel": "",
     "BlenderVersion": "4.2.0",
     "Scenes": "monster,junkshop,classroom",
     "DeviceTypes": "CPU"
@@ -24,24 +23,6 @@
     }
   ],
   "Dependencies": [
-    {
-      "Type": "DependencyPackageInstallation",
-      "Parameters": {
-        "Scenario": "InstallAMDGPUDriverPackage",
-        "BlobContainer": "packages",
-        "BlobName": "amdgpudriver.zip",
-        "PackageName": "amdgpudriver",
-        "Extract": true
-      }
-    },
-    {
-      "Type": "AMDGPUDriverInstallation",
-      "Parameters": {
-        "Scenario": "InstallAMDGPUDriver",
-        "GpuModel": "$.Parameters.GpuModel",
-        "PackageName": "amdgpudriver"
-      }
-    },
     {
       "Type": "DependencyPackageInstallation",
       "Parameters": {

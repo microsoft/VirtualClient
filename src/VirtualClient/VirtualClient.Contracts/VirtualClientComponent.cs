@@ -780,6 +780,13 @@ namespace VirtualClient.Contracts
                         catch (OperationCanceledException)
                         {
                             // Expected for cases where a cancellation token is cancelled.
+                            if (cancellationToken.IsCancellationRequested)
+                            {
+                                EventContext cancelContext = telemetryContext.Clone()
+                                    .AddContext("executionCancelled", true);
+
+                                this.Logger.LogMessage($"{this.TypeName}.ExecutionCancelled", LogLevel.Warning, cancelContext);
+                            }
                         }
                         catch (Exception)
                         {

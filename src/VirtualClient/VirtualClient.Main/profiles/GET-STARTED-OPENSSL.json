@@ -22,7 +22,7 @@
             "Parameters": {
                 "Scenario": "InstallOpenSSLWorkloadPackage",
                 "BlobContainer": "packages",
-                "BlobName": "openssl.3.5.0.zip",
+                "BlobName": "openssl.3.0.0.zip",
                 "PackageName": "openssl",
                 "Extract": true
             }

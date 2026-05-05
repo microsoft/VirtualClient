@@ -179,7 +179,7 @@ namespace VirtualClient.Actions
             {
                 using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
-                    this.sysbenchLoggingArguments = this.BuildSysbenchLoggingArguments(SysbenchMode.Run);
+                    this.sysbenchLoggingArguments = this.BuildSysbenchLoggingArguments();
                     this.sysbenchExecutionArguments = $"{this.sysbenchLoggingArguments} --workload {this.Workload} --hostIpAddress {this.ServerIpAddress} --durationSecs {this.Duration.TotalSeconds} --password {this.SuperUserPassword}";
 
                     string script = $"{this.SysbenchPackagePath}/run-workload.py ";
