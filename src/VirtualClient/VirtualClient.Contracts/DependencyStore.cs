@@ -62,6 +62,11 @@ namespace VirtualClient
         public const string StoreTypeAzureCDN = "AzureCDN";
 
         /// <summary>
+        /// Store Type = DockerImage
+        /// </summary>
+        public const string StoreTypeDockerImage = "DockerImage";
+
+        /// <summary>
         /// Telemetry store name.
         /// </summary>
         public const string Telemetry = nameof(DependencyStore.Telemetry);

@@ -3,6 +3,8 @@
 
 namespace VirtualClient
 {
+    using Microsoft.CodeAnalysis;
+    using Microsoft.Extensions.Logging;
     using System;
     using System.Collections.Generic;
     using System.CommandLine;
@@ -13,9 +15,10 @@ namespace VirtualClient
     using System.Linq;
     using System.Net;
     using System.Runtime.InteropServices;
+    using System.Security.Cryptography.X509Certificates;
     using System.Text.RegularExpressions;
-    using Microsoft.CodeAnalysis;
-    using Microsoft.Extensions.Logging;
+    using System.Threading;
+    using VirtualClient.Common;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Contracts;
@@ -32,6 +35,7 @@ namespace VirtualClient
         private static readonly ICertificateManager defaultCertificateManager = new CertificateManager();
         private static readonly IFileSystem defaultFileSystem = new FileSystem();
         private static readonly PlatformSpecifics defaultPlatformSpecifics = new PlatformSpecifics(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture);
+        private static readonly ProcessManager defaultProcessManager = ProcessManager.Create(Environment.OSVersion.Platform);
         private static readonly char[] argumentTrimChars = new char[] { '\'', '"', ' ' };
 
         /// <summary>
@@ -1526,6 +1530,47 @@ namespace VirtualClient
 
             return option;
         }
+
+        /// <summary>
+        /// Container image for workload execution.
+        /// When provided, VC runs workloads inside this container.
+        /// </summary>
+        public static Option CreateImageOption(bool required = false, object defaultValue = null)
+        {
+            Option<string> option = new Option<string>(new string[] { "--image" })
+            {
+                Name = "Image",
+                Description = "Docker image for containerized execution. When provided, workloads run inside the container.",
+                ArgumentHelpName = "Image",
+                AllowMultipleArgumentsPerToken = false
+            };
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+            return option;
+        }
+
+        /// <summary>
+        /// Image Pull Policy controls whether Docker should download (pull) a container image from a registry before running it.
+        /// </summary>
+        public static Option CreatePullPolicyOption(bool required = false)
+        {
+            //// Policy 
+            //// : IfNotPresent (default)	- Pull the image from the registry only if it does not exist locally	- Avoid unnecessary network calls and speed up execution when the image is already available
+            //// : Never	- Never pull the image from the registry, even if it does not exist locally	- Ensure you always use the locally available image
+            //// : Always	- Always pull the image from the registry, even if it exists locally	- Ensure you always have the latest version
+
+            Option<bool> option = new Option<bool>(new string[] { "--pull-policy" })
+            {
+                Name = "PullPolicy",
+                Description = "Image pull policy: Always, IfNotPresent, Never. Default: IfNotPresent",
+                AllowMultipleArgumentsPerToken = false
+            };
+
+            OptionFactory.SetOptionRequirements(option, required);
+
+            return option;
+        }
+
 
         /// <summary>
         /// Applies backwards compatibility to the set of command line arguments.

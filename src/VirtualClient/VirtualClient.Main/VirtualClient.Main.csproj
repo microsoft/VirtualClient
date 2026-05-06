@@ -67,6 +67,18 @@
 
         <Copy SourceFiles="@(ScriptFiles)" DestinationFiles="@(ScriptFiles->'$(OutputPath)scripts\%(RecursiveDir)%(Filename)%(Extension)')" />
     </Target>
+	
+	<!--
+	Copies Image files into the target output directory.
+	-->
+	<Target Name="CopyImageToOutputDirectory" AfterTargets="Build">
+		<ItemGroup>
+			<ImageFiles Include="$(RepoPath)\out\images\**\*.*" />
+			<ImageFiles Include="images\**\*.*" />
+		</ItemGroup>
+
+		<Copy SourceFiles="@(ImageFiles)" DestinationFiles="@(ImageFiles->'$(OutputPath)images\%(RecursiveDir)%(Filename)%(Extension)')" />
+	</Target>
 
     <!--
     Copies "built-in" toolsets into the target output directory. These contain toolsets that
