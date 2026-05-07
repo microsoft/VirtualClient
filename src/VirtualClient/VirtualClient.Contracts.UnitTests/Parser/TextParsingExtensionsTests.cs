@@ -119,6 +119,7 @@ namespace VirtualClient.Contracts.Parser
         [Test]
         [TestCase("\"key1=value1,,,key2=value2,,,key3=value3\"")]
         [TestCase("\'key1=value1,,,key2=value2,,,key3=value3\'")]
+        [Ignore("This is not the right behavior. When a user includes escaped quotation marks, this is purposeful and not intended to be stripped out.")]
         public void TextParsingExtensionsHandlesQuotationsSurroundingDelimitedStrings(string delimitedString)
         {
             var result = TextParsingExtensions.ParseDelimitedValues(delimitedString);

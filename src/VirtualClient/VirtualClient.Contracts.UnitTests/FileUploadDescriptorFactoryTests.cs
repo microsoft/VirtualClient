@@ -129,7 +129,7 @@ namespace VirtualClient.Contracts
         public void FileUploadDescriptorFactoryCreatesTheExpectedDescriptorWithDefaultContentPathTemplate_Scenario_1()
         {
             //  Default Template:
-            //  {experimentId}/{agentId}/{toolName}/{scenario}
+            //  {experimentId}/{agentId}/{role}/{scenario}
             this.Setup();
 
             string expectedExperimentId = Guid.NewGuid().ToString();
@@ -175,7 +175,7 @@ namespace VirtualClient.Contracts
         public void FileUploadDescriptorFactoryCreatesTheExpectedDescriptorWithDefaultContentPathTemplate_Scenario_2()
         {
             //  Default Template:
-            //  {experimentId}/{agentId}/{toolName}/{role}/{scenario}
+            //  {experimentId}/{agentId}/{role}/{scenario}
             this.Setup();
 
             string expectedExperimentId = Guid.NewGuid().ToString();

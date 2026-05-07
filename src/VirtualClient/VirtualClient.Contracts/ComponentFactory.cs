@@ -129,7 +129,11 @@ namespace VirtualClient.Contracts
 
             VirtualClientComponent component = (VirtualClientComponent)Activator.CreateInstance(componentType, dependencies, effectiveParameters);
             component.ComponentType = componentDescription.ComponentType;
-            component.ContentPathTemplate = componentSettings.ContentPathTemplate;
+
+            if (!string.IsNullOrWhiteSpace(componentSettings.ContentPathTemplate))
+            {
+                component.ContentPathTemplate = componentSettings.ContentPathTemplate;
+            }
 
             // Metadata is merged at each level down the hierarchy. Metadata at higher levels
             // takes priority overriding metadata at lower levels (i.e. withReplace: false).

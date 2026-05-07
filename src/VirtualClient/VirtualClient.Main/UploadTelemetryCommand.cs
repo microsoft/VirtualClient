@@ -11,16 +11,13 @@ namespace VirtualClient
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
-    using Newtonsoft.Json;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
     using VirtualClient.Contracts.Extensibility;
     using VirtualClient.Logging;
-    using VirtualClient.Monitors;
 
     /// <summary>
     /// Command executes operations to upload metrics and events from files on the system
@@ -72,65 +69,56 @@ namespace VirtualClient
         public IEnumerable<string> TargetFiles { get; set; }
 
         /// <summary>
-        /// Provides features for accessing the local file system.
-        /// </summary>
-        protected IFileSystem FileSystem { get; set; }
-
-        /// <summary>
         /// Executes the telemetry upload operations.
         /// </summary>
         /// <param name="args">The arguments provided to the application on the command line.</param>
+        /// <param name="dependencies">Dependencies/services created for the application.</param>
         /// <param name="cancellationTokenSource">Provides a token that can be used to cancel the command operations.</param>
         /// <returns>The exit code for the command operations.</returns>
-        public override async Task<int> ExecuteAsync(string[] args, CancellationTokenSource cancellationTokenSource)
+        protected override async Task<int> ExecuteAsync(string[] args, IServiceCollection dependencies, CancellationTokenSource cancellationTokenSource)
         {
             this.Validate();
             int exitCode = 0;
-            
-            if (this.FileSystem == null)
-            {
-                this.FileSystem = new FileSystem();
-            }
 
-            if (string.IsNullOrWhiteSpace(this.MatchExpression))
-            {
-                this.SetDefaultMatchExpression();
-            }
-
-            IEnumerable<string> targetFiles = this.GetTargetFiles(this.FileSystem);
-            if (targetFiles?.Any() == true)
-            {
-                this.Timeout = ProfileTiming.OneIteration();
-                this.Profiles = new List<DependencyProfileReference>
+            this.Timeout = ProfileTiming.OneIteration();
+            this.Profiles = new List<DependencyProfileReference>
                 {
                     new DependencyProfileReference("UPLOAD-TELEMETRY.json")
                 };
 
-                if (this.Parameters == null)
-                {
-                    this.Parameters = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
-                }
-
-                this.Parameters["Format"] = this.DataFormat;
-                this.Parameters["Schema"] = this.DataSchema;
-                this.Parameters["TargetFiles"] = string.Join(';', targetFiles);
-
-                if (this.Intrinsic != null)
-                {
-                    this.Parameters["Intrinsic"] = this.Intrinsic;
-                }
-
-                exitCode = await base.ExecuteAsync(args, cancellationTokenSource);
-            }
-            else
+            if (this.Parameters == null)
             {
-                ConsoleLogger.Default.LogMessage(
-                    $"No telemetry data point files found matching the expression '{this.MatchExpression}'.", 
-                    LogLevel.Warning, 
-                    EventContext.None);
-
-                exitCode = 1;
+                this.Parameters = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
             }
+
+            this.Parameters["Format"] = this.DataFormat;
+            this.Parameters["Schema"] = this.DataSchema;
+
+            if (this.Intrinsic != null)
+            {
+                this.Parameters["Intrinsic"] = this.Intrinsic;
+            }
+
+            if (this.MatchExpression != null)
+            {
+                this.Parameters["MatchExpression"] = this.MatchExpression;
+            }
+
+            if (this.Recursive != null)
+            {
+                this.Parameters["Recursive"] = this.Recursive;
+            }
+
+            if (this.TargetFiles?.Any() == true)
+            {
+                this.Parameters["TargetFiles"] = string.Join(';', this.TargetFiles);
+            }
+            else if (!string.IsNullOrWhiteSpace(this.TargetDirectory))
+            {
+                this.Parameters["TargetDirectory"] = this.TargetDirectory;
+            }
+
+            exitCode = await base.ExecuteAsync(args, cancellationTokenSource);
 
             return exitCode;
         }
@@ -151,63 +139,6 @@ namespace VirtualClient
             }
 
             return effectiveLoggerProviders;
-        }
-
-        private IEnumerable<string> GetTargetFiles(IFileSystem fileSystem)
-        {
-            // Note:
-            // Hashsets help prevent against duplicate entries. This ensures we do not
-            // upload duplicate telemetry during the operations.
-            HashSet<string> targetFiles = new HashSet<string>();
-
-            if (this.TargetFiles?.Any() == true)
-            {
-                targetFiles.AddRange(this.TargetFiles.Select(file => file.Trim()));
-            }
-            else
-            {
-                SearchOption searchOption = this.Recursive == true ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
-                IEnumerable<string> allFiles = fileSystem.Directory.EnumerateFiles(this.TargetDirectory, "*.*", searchOption);
-
-                if (allFiles?.Any() == true)
-                {
-                    Regex fileMatch = new Regex(this.MatchExpression, RegexOptions.IgnoreCase);
-
-                    foreach (string file in allFiles)
-                    {
-                        if (fileMatch.IsMatch(file))
-                        {
-                            targetFiles.Add(file);
-                        }
-                    }
-                }
-                else
-                {
-                    ConsoleLogger.Default.LogMessage(
-                        $"No telemetry data point files exist in the target directory '{this.TargetDirectory}' matching the expression '{this.MatchExpression}'.",
-                        LogLevel.Warning,
-                        EventContext.None);
-                }
-            }
-
-            return targetFiles;
-        }
-
-        private void SetDefaultMatchExpression()
-        {
-            switch (this.DataSchema)
-            {
-                case DataSchema.Events:
-                    this.MatchExpression = @"\.events$";
-                    break;
-
-                case DataSchema.Metrics:
-                    this.MatchExpression = @"\.metrics$";
-                    break;
-
-                default:
-                    throw new NotSupportedException($"Data schema '{this.DataSchema}' is not supported.");
-            }
         }
 
         private void Validate()

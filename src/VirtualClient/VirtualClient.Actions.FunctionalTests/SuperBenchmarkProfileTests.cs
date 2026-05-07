@@ -39,7 +39,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("SETUP-NVIDIA-A100.json")]
+        [TestCase("SETUP-GPU-NVIDIA-A100.json")]
         public async Task SuperBenchmarkWorkloadProfileExecutesTheExpectedDependenciesAndReboot(string profile)
         {
             List<string> expectedCommands = new List<string>
@@ -74,7 +74,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("SETUP-NVIDIA-A100.json")]
+        [TestCase("SETUP-GPU-NVIDIA-A100.json")]
         public async Task SuperBenchmarkWorkloadProfileExecutesTheExpectedDependenciesAndWorkloadsAfterReboot(string profile)
         {
             IEnumerable<string> expectedCommands = this.GetProfileExpectedCommands(PlatformID.Unix);

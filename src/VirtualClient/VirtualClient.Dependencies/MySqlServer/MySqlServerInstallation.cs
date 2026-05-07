@@ -5,6 +5,7 @@ namespace VirtualClient.Dependencies.MySqlServer
 {
     using System;
     using System.Collections.Generic;
+    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
@@ -14,6 +15,7 @@ namespace VirtualClient.Dependencies.MySqlServer
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// Installation component for MySQL
@@ -79,6 +81,8 @@ namespace VirtualClient.Dependencies.MySqlServer
 
             telemetryContext.AddContext(nameof(installationState), installationState);
 
+            await this.AddServerVersionAsync(telemetryContext, cancellationToken);
+
             if (installationState == null && !this.SkipInitialize)
             {
                 switch (this.Action)
@@ -118,6 +122,32 @@ namespace VirtualClient.Dependencies.MySqlServer
                         process.ThrowIfDependencyInstallationFailed(process.StandardError.ToString());
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// Returns Server Version Version.
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
+        private async Task AddServerVersionAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            try
+            {
+                IProcessProxy mysqlversionprocess = await this.ExecuteCommandAsync("sudo", $"mysql -e \"SELECT VERSION();\"", Environment.CurrentDirectory, telemetryContext, cancellationToken);
+                string mysqlVersion = mysqlversionprocess.StandardOutput.ToString();
+
+                Regex regex = new Regex(@"(\d+\.\d+\.\d+)");
+                Match match = regex.Match(mysqlVersion);
+
+                if (match.Success)
+                {
+                    this.MetadataContract.Add("mysql_version", match.Groups[1].Value, MetadataContract.DependenciesCategory);
+                    this.MetadataContract.Apply(telemetryContext);
+                }
+            }
+            catch (Exception)
+            {
             }
         }
 

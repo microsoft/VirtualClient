@@ -12,6 +12,7 @@ namespace VirtualClient.Actions
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
     using Polly;
+    using VirtualClient.Common;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Rest;
@@ -22,6 +23,7 @@ namespace VirtualClient.Actions
     /// Allows an action defined in a profile to be sent to one or more remote instances of the
     /// Virtual Client for execution.
     /// </summary>
+    [SupportedPlatforms("linux-arm64,linux-x64,win-arm64,win-x64")]
     internal class ClientServerProxyExecutor : VirtualClientComponentCollection
     {
         private static readonly List<string> CompletedStatuses = new List<string>

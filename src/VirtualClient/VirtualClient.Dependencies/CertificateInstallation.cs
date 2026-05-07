@@ -1,4 +1,7 @@
-﻿namespace VirtualClient.Dependencies
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+namespace VirtualClient.Dependencies
 {
     using System;
     using System.Collections.Generic;
@@ -17,9 +20,11 @@
     /// Virtual Client component that installs certificates from Azure Key Vault
     /// into the appropriate certificate store for the operating system.
     /// </summary>
+    [SupportedPlatforms("linux-arm64,linux-x64,win-arm64,win-x64")]
     public class CertificateInstallation : VirtualClientComponent
     {
         private ISystemManagement systemManagement;
+        private IAuthorizationManager authorizationManager;
         private IFileSystem fileSystem;
         private ProcessManager processManager;
 
@@ -34,22 +39,23 @@
             this.systemManagement = dependencies.GetService<ISystemManagement>();
             this.fileSystem = this.systemManagement.FileSystem;
             this.processManager = this.systemManagement.ProcessManager;
+            this.authorizationManager = dependencies.GetService<IAuthorizationManager>();
         }
 
         /// <summary>
-        /// Gets the Azure Key Vault URI for which the access token will be requested.
-        /// Example: https://anyvault.vault.azure.net/
+        /// Gets an access token to use to authenticate with the target Key Vault.
         /// </summary>
-        public string KeyVaultUri
+        public string AccessToken
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(this.KeyVaultUri));
+                this.Parameters.TryGetValue(nameof(this.AccessToken), out IConvertible accessToken);
+                return accessToken?.ToString();
             }
         }
 
         /// <summary>
-        /// The name of the certificate to be retrieved
+        /// The name of the certificate to be downloaded from the Key Vault to install.
         /// </summary>
         public string CertificateName
         {
@@ -60,42 +66,26 @@
         }
 
         /// <summary>
-        /// Gets the path to the file where the access token is saved.
+        /// Gets the path to the file to which the certificate will be written.
         /// </summary>
-        public string AccessTokenPath 
+        public string FilePath
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(this.AccessTokenPath));
+                this.Parameters.TryGetValue(nameof(this.FilePath), out IConvertible filePath);
+                return filePath?.ToString();
             }
         }
 
         /// <summary>
-        /// Flag to decode whether to retrieve certificate with private key
+        /// The ID of the Azure tenant in which the Key Vault exists.
         /// </summary>
-        public bool WithPrivateKey
+        public string TenantId
         {
             get
             {
-                return this.Parameters.GetValue<bool>(nameof(this.WithPrivateKey), true);
-            }
-        }
-
-        /// <summary>
-        /// Gets the access token used to authenticate with Azure services.
-        /// </summary>
-        public string AccessToken { get; set; }
-
-        /// <summary>
-        /// Initializes the component by resolving the access token from parameters or, if necessary, from a file.
-        /// </summary>
-        protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            this.AccessToken = this.Parameters.GetValue<string>(nameof(this.AccessToken), string.Empty);
-
-            if (string.IsNullOrWhiteSpace(this.AccessToken) && !string.IsNullOrWhiteSpace(this.AccessTokenPath))
-            {
-                this.AccessToken = await this.fileSystem.File.ReadAllTextAsync(this.AccessTokenPath);
+                this.Parameters.TryGetValue(nameof(this.TenantId), out IConvertible tenantId);
+                return tenantId?.ToString();
             }
         }
 
@@ -107,42 +97,102 @@
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            this.CertificateName.ThrowIfNullOrWhiteSpace(nameof(this.CertificateName));
-
             try
             {
-                IKeyVaultManager keyVault = this.GetKeyVaultManager();
-                X509Certificate2 certificate = await keyVault.GetCertificateAsync(this.CertificateName, cancellationToken, null, this.WithPrivateKey);
+                X509Certificate2 certificate = await this.DownloadCertificateAsync(cancellationToken);
 
-                if (this.Platform == PlatformID.Win32NT)
+                if (!cancellationToken.IsCancellationRequested)
                 {
-                    await this.InstallCertificateOnWindowsAsync(certificate, cancellationToken);
-                }
-                else if (this.Platform == PlatformID.Unix)
-                {
-                    await this.InstallCertificateOnUnixAsync(certificate, cancellationToken);
-                }
-                else
-                {
-                    throw new PlatformNotSupportedException($"The '{nameof(CertificateInstallation)}' component is not supported on platform '{this.Platform}'.");
+                    if (!string.IsNullOrWhiteSpace(this.FilePath))
+                    {
+                        await this.ExportCertificate(certificate, cancellationToken);
+                    }
+                    else
+                    {
+                        if (this.Platform == PlatformID.Win32NT)
+                        {
+                            await this.InstallCertificateOnWindowsAsync(certificate, cancellationToken);
+                        }
+                        else if (this.Platform == PlatformID.Unix)
+                        {
+                            await this.InstallCertificateOnUnixAsync(certificate, cancellationToken);
+                        }
+                    }
                 }
             }
             catch (Exception exc)
             {
                 throw new DependencyException(
-                    $"An error occurred installing the certificate '{this.CertificateName}' from Key Vault. See inner exception for details.",
-                    exc);
+                    $"An error occurred installing the certificate '{this.CertificateName}' from the Key Vault.",
+                    exc,
+                    ErrorReason.DependencyInstallationFailed);
             }
         }
 
         /// <summary>
-        /// Installs the certificate in the appropriate certificate store on a Windows system.
+        /// Exports/writes the certificate to file.
         /// </summary>
-        protected virtual Task InstallCertificateOnWindowsAsync(X509Certificate2 certificate, CancellationToken cancellationToken)
+        protected virtual Task ExportCertificate(X509Certificate2 certificate, CancellationToken cancellationToken)
+        {
+            // 1. Export the certificate to a byte array (PKCS #12 / PFX format)
+            // We include the private key and set the Exportable flag if necessary.
+            byte[] pfxBytes = certificate.Export(X509ContentType.Pfx, string.Empty);
+
+            // 2. Write the bytes to the file system
+            return this.fileSystem.File.WriteAllBytesAsync(this.FilePath, pfxBytes);
+        }
+
+        /// <summary>
+        /// Gets the Key Vault manager to use to retrieve certificates from Key Vault.
+        /// </summary>
+        protected virtual async Task<X509Certificate2> DownloadCertificateAsync(CancellationToken cancellationToken)
+        {
+            X509Certificate2 certificate = null;
+            IKeyVaultManager keyVaultManager = this.Dependencies.GetService<IKeyVaultManager>();
+            DependencyKeyVaultStore keyVaultStore = keyVaultManager.StoreDescription as DependencyKeyVaultStore;
+
+            // Order of priority:
+            // 1) access token
+            // 2) access token file
+            // 3) Key Vault URI + tenant ID.
+            // 4) Key Vault info provided on command line (URI + connection details).
+            string accessToken = null;
+            if (!string.IsNullOrWhiteSpace(this.AccessToken))
+            {
+                accessToken = this.AccessToken;
+            }
+            else if (keyVaultStore.Credentials == null)
+            {
+                Uri resourceUri = new Uri(keyVaultManager.StoreDescription.ToString());
+                accessToken = await this.authorizationManager.GetAccessTokenAsync(resourceUri, this.TenantId, cancellationToken);
+            }
+
+            if (!string.IsNullOrWhiteSpace(accessToken))
+            {
+                var tokenCredential = new AccessTokenCredential(accessToken);
+                var store = new DependencyKeyVaultStore(
+                    DependencyStore.KeyVault,
+                    new Uri(keyVaultStore.ToString()),
+                    tokenCredential);
+
+                certificate = await (new KeyVaultManager(store)).GetCertificateAsync(this.CertificateName, cancellationToken, null, withPrivateKey: true);
+            }
+            else
+            {
+                certificate = await keyVaultManager.GetCertificateAsync(this.CertificateName, cancellationToken, null, withPrivateKey: true);
+            }
+
+            return certificate;
+        }
+
+        /// <summary>
+        /// Installs the certificate to the local certificate store.
+        /// </summary>
+        /// <param name="certificate">The certificate to install locally.</param>
+        protected virtual Task InstallCertificateAsync(X509Certificate2 certificate)
         {
             return Task.Run(() =>
             {
-                Console.WriteLine($"Certificate Store = CurrentUser/Personal");
                 using (X509Store store = new X509Store(StoreName.My, StoreLocation.CurrentUser, OpenFlags.ReadWrite))
                 {
                     store.Open(OpenFlags.ReadWrite);
@@ -152,10 +202,12 @@
             });
         }
 
-        /// <summary>
-        /// Installs the certificate in the appropriate certificate store on a Unix/Linux system.
-        /// </summary>
-        protected virtual async Task InstallCertificateOnUnixAsync(X509Certificate2 certificate, CancellationToken cancellationToken)
+        private Task InstallCertificateOnWindowsAsync(X509Certificate2 certificate, CancellationToken cancellationToken)
+        {
+            return this.InstallCertificateAsync(certificate);
+        }
+
+        private async Task InstallCertificateOnUnixAsync(X509Certificate2 certificate, CancellationToken cancellationToken)
         {
             // On Unix/Linux systems, we install the certificate in the default location for the
             // user as well as in a static location. In the future we will likely use the static location
@@ -191,12 +243,7 @@
                     this.fileSystem.Directory.CreateDirectory(certificateDirectory);
                 }
 
-                using (X509Store store = new X509Store(StoreName.My, StoreLocation.CurrentUser, OpenFlags.ReadWrite))
-                {
-                    store.Open(OpenFlags.ReadWrite);
-                    store.Add(certificate);
-                    store.Close();
-                }
+                await this.InstallCertificateAsync(certificate);
 
                 await this.fileSystem.File.WriteAllBytesAsync(
                     this.Combine(certificateDirectory, $"{certificate.Thumbprint}.pfx"),
@@ -213,36 +260,8 @@
             catch (UnauthorizedAccessException)
             {
                 throw new UnauthorizedAccessException(
-                    $"Access permissions denied for certificate directory '{certificateDirectory}'. Execute the installer with " +
-                    $"sudo/root privileges to install SDK certificates in privileged locations.");
-            }
-        }
-
-        /// <summary>
-        /// Gets the Key Vault manager to use to retrieve certificates from Key Vault.
-        /// </summary>
-        protected IKeyVaultManager GetKeyVaultManager()
-        {
-            IKeyVaultManager keyVaultManager = this.Dependencies.GetService<IKeyVaultManager>();
-            keyVaultManager.ThrowIfNull(nameof(keyVaultManager));
-
-            if (keyVaultManager.StoreDescription != null)
-            {
-                return keyVaultManager;
-            }
-            else if (!string.IsNullOrWhiteSpace(this.AccessToken))
-            {
-                this.KeyVaultUri.ThrowIfNullOrWhiteSpace(nameof(this.KeyVaultUri), "The KeyVaultUri parameter is required when authenticating with Key Vault using an access token.");
-
-                AccessTokenCredential tokenCredential = new AccessTokenCredential(this.AccessToken);
-
-                DependencyKeyVaultStore dependencyKeyVault = new DependencyKeyVaultStore(DependencyStore.KeyVault, new Uri(this.KeyVaultUri), tokenCredential);
-                return new KeyVaultManager(dependencyKeyVault);
-            }
-            else
-            {
-                throw new InvalidOperationException($"The Key Vault manager has not been properly initialized. " +
-                    $"Either valid --KeyVault or --Token or --TokenPath must be passed in order to set up authentication with Key Vault.");
+                    $"Access permissions denied for certificate directory '{certificateDirectory}'. Execute the application with " +
+                    $"sudo/root privileges to install certificates in privileged locations.");
             }
         }
     }

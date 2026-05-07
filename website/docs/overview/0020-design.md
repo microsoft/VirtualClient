@@ -176,7 +176,7 @@ packages are typically stored in an Azure storage account blob store. However, V
 and they will be incorporated at runtime without need of download. 
 
 In addition to workload and dependency packages stored in a Storage Account location, there are some packages that are packaged directly with the Virtual Client application itself.
-The are called "built-in packages". There is no specific rhyme or reason to what is determined to qualify as a built-in package; however, they are as a general rule dependencies
+These are called "built-in packages". There is no specific rhyme or reason to what is determined to qualify as a built-in package; however, they are as a general rule dependencies
 that are needed by more than 1 workload and often operating-system specific libraries/toolsets/binaries. Technically, any of the workload packages and dependencies could be
 bundled with the Virtual Client itself removing the requirement at runtime of downloading any packages. This is not done by default because it would cause the size of
 the Virtual Client package to be very large. This is an issue for deployment simplicity and reliability in cloud environments. With that said, the Virtual Client
@@ -234,7 +234,7 @@ and how metadata is supplied on the command line as well as what the contents of
 * [Data/Telemetry Support](../guides/0040-telemetry.md)
 
 ``` bash
-VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --timeout=1440 --experimentId=2451d02e-b22b-4e8a-9a1f-5436512dbc01 --agentId=virtualmachine01 --metadata:"anyCorrelationId=identifier,,,property2=123,,,property3=true"
+VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --timeout=1440 --experiment-id=2451d02e-b22b-4e8a-9a1f-5436512dbc01 --client-id=virtualmachine01 --metadata:"anyCorrelationId=identifier,,,property2=123,,,property3=true"
 ```
 
 ``` json
@@ -269,7 +269,7 @@ passes in a connection string or SAS URI to the target "content" store on the co
 * [Blob Store Support](../guides/0600-integration-blob-storage.md)
 
 ``` bash
-VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --timeout=1440 --contentStore={ConnectionString or SASTokenUri}
+VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --timeout=1440 --content-store={ConnectionString or SASTokenUri}
 ```
 
 ## Application Development Concepts

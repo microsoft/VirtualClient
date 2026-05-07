@@ -1,24 +1,23 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure;
-using Azure.Core;
-using Azure.Security.KeyVault.Certificates;
-using Azure.Security.KeyVault.Keys;
-using Azure.Security.KeyVault.Secrets;
-using Moq;
-using NUnit.Framework;
-using Polly;
-using System;
-using System.Net;
-using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
-using System.Threading;
-using System.Threading.Tasks;
-using VirtualClient.Contracts;
-
 namespace VirtualClient
 {
+    using System;
+    using System.Net;
+    using System.Security.Cryptography;
+    using System.Security.Cryptography.X509Certificates;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using Azure;
+    using Azure.Core;
+    using Azure.Security.KeyVault.Certificates;
+    using Azure.Security.KeyVault.Keys;
+    using Azure.Security.KeyVault.Secrets;
+    using Moq;
+    using NUnit.Framework;
+    using Polly;
+
     [TestFixture]
     [Category("Unit")]
     public class KeyVaultManagerTests
@@ -70,7 +69,7 @@ namespace VirtualClient
                 .ReturnsAsync(Response.FromValue(publicKeyCertificate, Mock.Of<Response>()));
 
             this.certificateClientMock
-                .Setup(c => c.DownloadCertificateAsync("mycert", It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Setup(c => c.DownloadCertificateAsync(It.IsAny<DownloadCertificateOptions>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Response.FromValue(this.GenerateTestCertificateWithPrivateKey(), Mock.Of<Response>()));
 
             // Initialize the KeyVaultManager with the mocked clients

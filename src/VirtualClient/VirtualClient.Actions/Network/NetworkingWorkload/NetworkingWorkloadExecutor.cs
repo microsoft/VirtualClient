@@ -16,6 +16,7 @@ namespace VirtualClient.Actions.NetworkPerformance
     using Polly;
     using VirtualClient;
     using VirtualClient.Api;
+    using VirtualClient.Common;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
@@ -24,6 +25,7 @@ namespace VirtualClient.Actions.NetworkPerformance
     /// <summary>
     /// Azure Networking Workload Executor tests networking between 2 VMs (client and server).
     /// </summary>
+    [SupportedPlatforms("linux-arm64,linux-x64,win-arm64,win-x64")]
     public class NetworkingWorkloadExecutor : VirtualClientComponent
     {
         private static readonly object LockObject = new object();

@@ -3,23 +3,20 @@
 
 namespace VirtualClient
 {
-    using Azure.Storage.Blobs;
-    using Microsoft.CodeAnalysis;
-    using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.Extensions.Logging;
-    using Newtonsoft.Json;
-    using Polly;
     using System;
     using System.Collections.Generic;
-    using System.ComponentModel;
     using System.Globalization;
     using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
     using System.Runtime.InteropServices;
+    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
-    using VirtualClient.Common;
+    using Microsoft.CodeAnalysis;
+    using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
+    using Newtonsoft.Json;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
@@ -35,12 +32,36 @@ namespace VirtualClient
     /// </summary>
     internal class ExecuteProfileCommand : CommandBase
     {
+        private const string ExecuteCommandProfile = "EXECUTE-COMMAND.json";
+        private const string ExecuteScriptProfile = "EXECUTE-SCRIPT.json";
+        private const string ExecuteSshCommandProfile = "EXECUTE-SSH-COMMAND.json";
         private const string FileUploadMonitorProfile = "MONITORS-FILE-UPLOAD.json";
+
+        private static readonly Regex PowerShellExpression = new Regex(
+            "pwsh.exe|pwsh|powershell.exe|powershell",
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+        /// <summary>
+        /// The full command line.
+        /// </summary>
+        public string Command { get; set; }
 
         /// <summary>
         /// True if VC should exit/crash on first/any error(s) regardless of their severity. Default = false.
         /// </summary>
         public bool? FailFast { get; set; }
+
+        /// <summary>
+        /// Returns true if the user command line arguments provided indicates a PowerShell (pwsh) 
+        /// command (vs. a profile execution).
+        /// </summary>
+        protected bool IsPowerShell
+        {
+            get
+            {
+                return ExecuteProfileCommand.PowerShellExpression.IsMatch(this.Command);
+            }
+        }
 
         /// <summary>
         /// True if the profile dependencies should be installed as the only operations. False if
@@ -49,9 +70,9 @@ namespace VirtualClient
         public bool InstallDependencies { get; set; }
 
         /// <summary>
-        /// The path to the environment layout .json file.
+        /// The environment layout definition.
         /// </summary>
-        public string LayoutPath { get; set; }
+        public EnvironmentLayout Layout { get; set; }
 
         /// <summary>
         /// A seed that can be used to guarantee identical randomization bases for workloads that
@@ -84,103 +105,98 @@ namespace VirtualClient
         protected PlatformExtensions Extensions { get; set; }
 
         /// <summary>
+        /// Normalizes the PowerShell command for execution in a non-interactive
+        /// environment.
+        /// </summary>
+        /// <param name="commandLine">The command line arguments provided by the user.</param>
+        /// <returns>A PowerShell command ready for non-interactive execution.</returns>
+        protected static string NormalizeForPowerShell(string commandLine)
+        {
+            string normalizedCommand = commandLine;
+            if (!Regex.IsMatch(commandLine, "-NonInteractive", RegexOptions.IgnoreCase))
+            {
+                int indexToInsert = -1;
+                List<string> commandArgs = commandLine.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
+
+                for (int i = 0; i < commandArgs.Count; i++)
+                {
+                    if (ExecuteProfileCommand.PowerShellExpression.IsMatch(commandArgs[i]))
+                    {
+                        indexToInsert = i + 1;
+                        break;
+                    }
+                }
+
+                if (indexToInsert >= 0)
+                {
+                    commandArgs.Insert(indexToInsert, "-NonInteractive");
+                }
+
+                normalizedCommand = string.Join(' ', commandArgs);
+            }
+
+            return normalizedCommand;
+        }
+
+        /// <summary>
         /// Executes the profile operations.
         /// </summary>
         /// <param name="args">The arguments provided to the application on the command line.</param>
+        /// <param name="dependencies">Dependencies/services created for the application.</param>
         /// <param name="cancellationTokenSource">Provides a token that can be used to cancel the command operations.</param>
         /// <returns>The exit code for the command operations.</returns>
-        public override async Task<int> ExecuteAsync(string[] args, CancellationTokenSource cancellationTokenSource)
+        protected override async Task<int> ExecuteAsync(string[] args, IServiceCollection dependencies, CancellationTokenSource cancellationTokenSource)
         {
             int exitCode = 0;
             ILogger logger = null;
             IPackageManager packageManager = null;
             ISystemManagement systemManagement = null;
-            IServiceCollection dependencies = null;
             CancellationToken cancellationToken = cancellationTokenSource.Token;
 
             try
             {
-                // When timing constraints/hints are not provided on the command line, we run the
-                // application until it is explicitly stopped by the user or automation.
-                if (this.Timeout == null && this.Iterations == null)
-                {
-                    this.Timeout = ProfileTiming.OneIteration();
-                }
-
-                this.SetGlobalTelemetryProperties(args);
-
-                // 1) Setup any dependencies required to execute the workload profile.
-                dependencies = this.InitializeDependencies(args);
                 logger = dependencies.GetService<ILogger>();
                 packageManager = dependencies.GetService<IPackageManager>();
                 systemManagement = dependencies.GetService<ISystemManagement>();
 
                 EventContext telemetryContext = EventContext.Persisted();
 
-                if (this.IsCleanRequested)
-                {
-                    await this.CleanAsync(systemManagement, cancellationToken, logger);
-                }
-
                 logger.LogMessage($"Platform.Initialize", telemetryContext);
-                this.LogContextToConsole(dependencies);
 
-                // Extracts and registers any packages that are pre-existing on the system (e.g. they exist in
-                // the 'packages' directory already).
-                await this.InitializePackagesAsync(packageManager, cancellationToken);
-
-                // Ensure all Virtual Client types are loaded from .dlls in the execution directory.
-                ComponentTypeCache.Instance.LoadComponentTypes(AppDomain.CurrentDomain.BaseDirectory);
-
-                // Installs any extensions that are pre-existing on the system (e.g. they exist in
-                // the 'packages' directory already).
-                this.Extensions = await this.DiscoverExtensionsAsync(packageManager, cancellationToken);
-                if (this.Extensions?.Binaries?.Any() == true)
+                if (this.Profiles?.Any() == true)
                 {
-                    await this.LoadExtensionsBinariesAsync(this.Extensions, cancellationToken);
-                }
+                    this.LogContextToConsole(dependencies);
 
-                IEnumerable<string> profileNames = await this.EvaluateProfilesAsync(dependencies);
-                this.SetGlobalTelemetryProperties(profileNames, dependencies);
-                this.SetHostMetadataTelemetryProperties(profileNames, dependencies);
+                    // Extracts and registers any packages that are pre-existing on the system (e.g. they exist in
+                    // the 'packages' directory already).
+                    await this.InitializePackagesAsync(packageManager, cancellationToken);
 
-                IEnumerable<string> effectiveProfiles = await this.EvaluateProfilesAsync(dependencies, true, cancellationToken);
+                    // Ensure all Virtual Client types are loaded from .dlls in the execution directory.
+                    ComponentTypeCache.Instance.LoadComponentTypes(AppDomain.CurrentDomain.BaseDirectory);
 
-                if (this.InstallDependencies)
-                {
-                    await this.ExecuteProfileDependenciesInstallationAsync(effectiveProfiles, dependencies, cancellationTokenSource);
+                    // Installs any extensions that are pre-existing on the system (e.g. they exist in
+                    // the 'packages' directory already).
+                    this.Extensions = await this.DiscoverExtensionsAsync(packageManager, cancellationToken);
+                    if (this.Extensions?.Binaries?.Any() == true)
+                    {
+                        await this.LoadExtensionsBinariesAsync(this.Extensions, cancellationToken);
+                    }
+
+                    IEnumerable<string> profileNames = await this.EvaluateProfilesAsync(dependencies);
+                    this.SetGlobalTelemetryProperties(profileNames, dependencies);
+                    this.SetHostMetadataTelemetryProperties(profileNames, dependencies);
+
+                    IEnumerable<string> effectiveProfiles = await this.EvaluateProfilesAsync(dependencies, true, cancellationToken);
+
+                    if (this.InstallDependencies)
+                    {
+                        await this.ExecuteProfileDependenciesInstallationAsync(effectiveProfiles, dependencies, cancellationTokenSource);
+                    }
+                    else
+                    {
+                        await this.ExecuteProfileAsync(effectiveProfiles, dependencies, cancellationTokenSource);
+                    }
                 }
-                else
-                {
-                    await this.ExecuteProfileAsync(effectiveProfiles, dependencies, cancellationTokenSource);
-                }
-            }
-            catch (OperationCanceledException)
-            {
-                // Expected when the Ctrl-C is pressed to cancel operation.
-            }
-            catch (NotSupportedException exc)
-            {
-                Program.LogErrorMessage(logger, exc, EventContext.Persisted());
-                exitCode = (int)ErrorReason.NotSupported;
-            }
-            catch (StartupException exc)
-            {
-                // The type of exceptions are captured upstream by the profile
-                // execution components.
-                Program.LogErrorMessage(logger, exc, EventContext.Persisted());
-                exitCode = (int)exc.Reason;
-            }
-            catch (VirtualClientException exc)
-            {
-                // The type of exceptions are captured upstream by the profile
-                // execution components.
-                exitCode = (int)exc.Reason;
-            }
-            catch (Exception exc)
-            {
-                Program.LogErrorMessage(logger, exc, EventContext.Persisted());
-                exitCode = 1;
             }
             finally
             {
@@ -196,7 +212,6 @@ namespace VirtualClient
                     Program.LogMessage(logger, $"{nameof(ExecuteProfileCommand)}.RebootingSystem", exitingContext);
                 }
 
-                Program.LogMessage(logger, $"{nameof(ExecuteProfileCommand)}.End", exitingContext);
                 Program.LogMessage(logger, $"Exit Code: {exitCode}", exitingContext);
 
                 TimeSpan remainingWait = TimeSpan.FromMinutes(2);
@@ -211,10 +226,7 @@ namespace VirtualClient
                 }
 
                 Program.LogMessage(logger, $"Flush Telemetry", exitingContext);
-                VirtualClientRuntime.ExecuteFlushActions(TimeSpan.FromSeconds(30));
-
                 Program.LogMessage(logger, $"Flushed", exitingContext);
-                VirtualClientRuntime.ExecuteFlushActions(TimeSpan.FromMinutes(1));
 
                 // Allow components to handle any final cleanup operations.
                 VirtualClientRuntime.ExecuteCleanupActions();
@@ -291,11 +303,6 @@ namespace VirtualClient
                     string profileName = profileReference.ProfileName;
                     profileFullPath = systemManagement.PlatformSpecifics.GetProfilePath(profileName);
 
-                    if (BackwardsCompatibility.TryMapProfile(profileName, out string remappedProfile))
-                    {
-                        profileName = remappedProfile;
-                    }
-
                     // If the profile defined is not a full path to a profile located on the system, then we
                     // fallback to looking for the profile in the 'profiles' directory within the Virtual Client
                     // parent directory itself or in any platform extensions locations.
@@ -325,15 +332,86 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Initializes the command runtime before dependency initialization and execution.
+        /// </summary>
+        protected override void Initialize(string[] args, PlatformSpecifics platformSpecifics)
+        {
+            if (this.Targets?.Any() == true && string.IsNullOrWhiteSpace(this.Command))
+            {
+                throw new NotSupportedException(
+                    "Command line usage is not supported. A command must be defined to execute on the target systems (via SSH). " +
+                    "Use the --command option.");
+            }
+
+            if (this.Profiles?.Any() != true 
+                && string.IsNullOrWhiteSpace(this.Command) 
+                && !this.IsArchiveLogsRequested 
+                && !this.IsCleanRequested)
+            {
+                throw new NotSupportedException(
+                    "Command line usage is not supported. The intended command or profile execution intentions are unclear. " +
+                    "Use the --profile or --command options.");
+            }
+
+            // When timing constraints/hints are not provided on the command line, we run the
+            // application until it is explicitly stopped by the user or automation.
+            if (this.Timeout == null && this.Iterations == null)
+            {
+                this.Timeout = ProfileTiming.OneIteration();
+            }
+
+            if (this.Profiles?.Any() == true || !string.IsNullOrWhiteSpace(this.Command))
+            {
+                // 1) Local command execution.
+                if (!string.IsNullOrWhiteSpace(this.Command))
+                {
+                    List<DependencyProfileReference> profiles = new List<DependencyProfileReference>();
+                    IConvertible package = null;
+                    this.Parameters?.TryGetValue("Package", out package);
+
+                    if (this.Targets?.Any() == true)
+                    {
+                        profiles.Add(new DependencyProfileReference(ExecuteProfileCommand.ExecuteSshCommandProfile));
+                    }
+                    else if (package != null)
+                    {
+                        profiles.Add(new DependencyProfileReference(ExecuteProfileCommand.ExecuteScriptProfile));
+                    }
+
+                    if (this.Profiles?.Any() == true)
+                    {
+                        profiles.AddRange(this.Profiles);
+                    }
+
+                    this.Profiles = profiles;
+                    if (this.Parameters == null)
+                    {
+                        this.Parameters = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
+                    }
+
+                    string[] commandArguments = this.Command?.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                    PlatformSpecifics.TryGetCommandName(commandArguments, out string commandName);
+
+                    string fullCommand = this.Command;
+                    if (this.IsPowerShell)
+                    {
+                        fullCommand = ExecuteProfileCommand.NormalizeForPowerShell(this.Command);
+                    }
+
+                    this.Parameters["Command"] = fullCommand;
+                    this.Parameters["Scenario"] = $"Execute_{Regex.Replace(commandName, "[^a-zA-Z0-9]", "_")}";
+                }
+            }
+        }
+
+        /// <summary>
         /// Initializes dependencies required by Virtual Client application operations.
         /// </summary>
-        protected override IServiceCollection InitializeDependencies(string[] args)
+        protected override IServiceCollection InitializeDependencies(string[] args, PlatformSpecifics platformSpecifics)
         {
-            IServiceCollection dependencies = base.InitializeDependencies(args);
-            PlatformSpecifics platformSpecifics = dependencies.GetService<PlatformSpecifics>();
+            IServiceCollection dependencies = base.InitializeDependencies(args, platformSpecifics);
             ISystemManagement systemManagement = dependencies.GetService<ISystemManagement>();
             ILogger logger = dependencies.GetService<ILogger>();
-            Program.Logger = logger;
 
             dependencies.AddSingleton<ProfileTiming>(this.Timeout ?? this.Iterations);
 
@@ -417,42 +495,6 @@ namespace VirtualClient
         }
 
         /// <summary>
-        /// Loads/Reads the environment layout file provided to the Virtual Client on the command line.
-        /// </summary>
-        protected async Task<EnvironmentLayout> ReadEnvironmentLayoutAsync(IServiceCollection dependencies, CancellationToken cancellationToken)
-        {
-            EnvironmentLayout layout = null;
-
-            if (!cancellationToken.IsCancellationRequested)
-            {
-                if (!string.IsNullOrWhiteSpace(this.LayoutPath))
-                {
-                    ISystemManagement systemManagement = dependencies.GetService<ISystemManagement>();
-                    ILogger logger = dependencies.GetService<ILogger>();
-
-                    string layoutFullPath = systemManagement.PlatformSpecifics.StandardizePath(Path.GetFullPath(this.LayoutPath));
-
-                    if (!systemManagement.FileSystem.File.Exists(layoutFullPath))
-                    {
-                        throw new StartupException(
-                            $"Invalid path specified. An environment layout file does not exist at path '{layoutFullPath}'.",
-                            ErrorReason.LayoutInvalid);
-                    }
-
-                    string layoutContent = await RetryPolicies.FileOperations
-                        .ExecuteAsync(() =>
-                        {
-                             return systemManagement.FileSystem.File.ReadAllTextAsync(layoutFullPath);
-                        });
-
-                    layout = layoutContent.FromJson<EnvironmentLayout>();
-                }
-            }
-
-            return layout;
-        }
-
-        /// <summary>
         /// Loads/reads the execution profile file provided to the Virtual Client on the command line.
         /// </summary>
         protected async Task<ExecutionProfile> ReadExecutionProfileAsync(string path, IServiceCollection dependencies, CancellationToken cancellationToken)
@@ -499,21 +541,24 @@ namespace VirtualClient
             // added on application startup.
             base.SetGlobalTelemetryProperties(args);
 
-            DependencyProfileReference profile = this.Profiles.First();
-            string profilePath = profile.ProfileName;
-            string profileName = Path.GetFileName(profilePath);
-            string platformSpecificProfileName = PlatformSpecifics.GetProfileName(profileName, Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture);
-
-            // Additional persistent/global telemetry properties in addition to the ones
-            // added on application startup.
-            EventContext.PersistentProperties.AddRange(new Dictionary<string, object>
+            if (this.Profiles?.Any() == true)
             {
-                // Ex: PERF-CPU-OPENSSL (win-x64)
-                [MetadataContract.ExecutionProfile] = platformSpecificProfileName,
+                DependencyProfileReference profile = this.Profiles.First();
+                string profilePath = profile.ProfileName;
+                string profileName = Path.GetFileName(profilePath);
+                string platformSpecificProfileName = PlatformSpecifics.GetProfileName(profileName, Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture);
 
-                // Ex: PERF-CPU-OPENSSL.json
-                [MetadataContract.ExecutionProfileName] = profileName
-            });
+                // Additional persistent/global telemetry properties in addition to the ones
+                // added on application startup.
+                EventContext.PersistentProperties.AddRange(new Dictionary<string, object>
+                {
+                    // Ex: PERF-CPU-OPENSSL (win-x64)
+                    [MetadataContract.ExecutionProfile] = platformSpecificProfileName,
+
+                    // Ex: PERF-CPU-OPENSSL.json
+                    [MetadataContract.ExecutionProfileName] = profileName
+                });
+            }
         }
 
         /// <summary>
@@ -586,7 +631,7 @@ namespace VirtualClient
                 new Dictionary<string, object>
                 {
                     { "exitWait", this.ExitWait },
-                    { "layout", this.LayoutPath },
+                    { "layout", this.Layout?.ToString() },
                     { "logToFile", this.LogToFile },
                     { "iterations", this.Iterations?.ProfileIterations },
                     { "profiles", string.Join(",", profiles.Select(p => Path.GetFileName(p))) },
@@ -636,16 +681,10 @@ namespace VirtualClient
 
             this.SetGlobalTelemetryProperties(profile);
 
-            // The environment layout provides information for other Virtual Client instances
-            // that may be a part of the workload execution. This enables support for client/server
-            // workload requirements.
-            EnvironmentLayout environmentLayout = await this.ReadEnvironmentLayoutAsync(dependencies, cancellationToken)
-                .ConfigureAwait(false);
-
-            if (environmentLayout != null)
+            if (this.Layout != null)
             {
-                dependencies.AddSingleton<EnvironmentLayout>(environmentLayout);
-                telemetryContext.AddContext("layout", environmentLayout);
+                dependencies.AddSingleton<EnvironmentLayout>(this.Layout);
+                telemetryContext.AddContext("layout", this.Layout);
             }
 
             logger.LogMessage($"ProfileExecution.Begin", telemetryContext);
@@ -727,16 +766,10 @@ namespace VirtualClient
 
             this.SetGlobalTelemetryProperties(profile);
 
-            // The environment layout provides information for other Virtual Client instances
-            // that may be a part of the workload execution. This enables support for client/server
-            // workload requirements.
-            EnvironmentLayout environmentLayout = await this.ReadEnvironmentLayoutAsync(dependencies, cancellationToken)
-                .ConfigureAwait(false);
-
-            if (environmentLayout != null)
+            if (this.Layout != null)
             {
-                dependencies.AddSingleton<EnvironmentLayout>(environmentLayout);
-                telemetryContext.AddContext("layout", environmentLayout);
+                dependencies.AddSingleton<EnvironmentLayout>(this.Layout);
+                telemetryContext.AddContext("layout", this.Layout);
             }
 
             logger.LogMessage($"ProfileExecution.Begin", telemetryContext);
@@ -791,11 +824,11 @@ namespace VirtualClient
                 profile.Parameters.AddRange(this.Parameters, true);
             }
 
-            ValidationResult result = ExecutionProfileValidation.Instance.Validate(profile);
-            result.ThrowIfInvalid();
-
             // Process conditional parameters (ParametersOn feature)
             await profile.EvaluateConditionalParametersAsync(dependencies);
+
+            ValidationResult result = ExecutionProfileValidation.Instance.Validate(profile);
+            result.ThrowIfInvalid();
 
             profile.Inline();
         }
@@ -837,10 +870,9 @@ namespace VirtualClient
             ConsoleLogger.Default.LogMessage($"State Directory: {platformSpecifics.StateDirectory}", telemetryContext);
             ConsoleLogger.Default.LogMessage($"Temp Directory: {platformSpecifics.TempDirectory}", telemetryContext);
 
-            if (!string.IsNullOrWhiteSpace(this.LayoutPath))
+            if (this.Layout != null)
             {
-                string layoutFullPath = platformSpecifics.StandardizePath(Path.GetFullPath(this.LayoutPath));
-                ConsoleLogger.Default.LogMessage($"Environment Layout: {layoutFullPath}", telemetryContext);
+                ConsoleLogger.Default.LogMessage($"Environment Layout: {this.Layout}", telemetryContext);
             }
 
             if (this.Timeout?.Duration != null)

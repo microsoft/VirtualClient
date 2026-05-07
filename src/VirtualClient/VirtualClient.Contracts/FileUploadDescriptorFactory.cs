@@ -16,7 +16,7 @@ namespace VirtualClient.Contracts
     /// </summary>
     public static class FileUploadDescriptorFactory
     {
-        internal const string DefaultContentPathTemplate = "{experimentId}/{agentId}/{toolName}/{role}/{scenario}";
+        internal const string DefaultContentPathTemplate = "{experimentId}/{clientId}/{toolName}/{role}/{scenario}";
 
         private static readonly Regex TemplatePlaceholderExpression = new Regex(@"\{(.*?)\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 

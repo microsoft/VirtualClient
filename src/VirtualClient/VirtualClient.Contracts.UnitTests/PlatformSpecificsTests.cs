@@ -53,6 +53,145 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
+        [TestCase("execute", "execute")]
+        [TestCase("execute --option-a=one --option-b=two --option_c=three", "execute")]
+        [TestCase("execute --option-a one --option-b \"two\" --option_c 'three'", "execute")]
+        [TestCase("execute.exe", "execute")]
+        [TestCase("execute.exe --option-a=one --option-b=two --option_c=three", "execute")]
+        [TestCase("execute.exe --option-a one --option-b \"two\" --option_c 'three'", "execute")]
+        [TestCase("./execute", "execute")]
+        [TestCase("../execute --option-a=one --option-b=two --option_c=three", "execute")]
+        [TestCase("/home/user/tools/execute --option-a one --option-b \"two\" --option_c 'three'", "execute")]
+        [TestCase(".\\execute.exe", "execute")]
+        [TestCase(".\\execute.exe --option-a=one --option-b=two --option_c=three", "execute")]
+        [TestCase("C:\\Users\\User\\tools\\execute.exe --option-a one --option-b \"two\" --option_c 'three'", "execute")]
+        public void GetCommmandNameSupportsTheExpectedRangeOfCommands(string commandLine, string expectedCommandName)
+        {
+            Assert.IsTrue(PlatformSpecifics.TryGetCommandName(commandLine, out string actualCommandName), $"Failed: {commandLine}");
+            Assert.AreEqual(expectedCommandName, actualCommandName, $"Failed: {commandLine}");
+        }
+
+        [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
+        [TestCase("bash -c \"hostnamectl\"", "hostnamectl")]
+        [TestCase("bash -c \"execute.sh\"", "execute")]
+        [TestCase("bash -c \"execute.sh one two three\"", "execute")]
+        [TestCase("bash -c \"execute.sh --option-a=one --option-b=two --option_c=three\"", "execute")]
+        [TestCase("bash -c \"./execute.sh --option-a=one --option-b=two --option_c=three\"", "execute")]
+        [TestCase("bash -c \"../execute.sh --option-a=one --option-b=two --option_c=three\"", "execute")]
+        [TestCase("bash -c \"/home/user/tools/execute.sh --option-a=one --option-b=two --option_c=three\"", "execute")]
+        [TestCase("bash -c \"sudo execute.sh\"", "execute")]
+        [TestCase("bash -c \"sudo execute.sh one two three\"", "execute")]
+        [TestCase("bash -c \"sudo execute.sh --option-a=one --option-b=two --option_c=three\"", "execute")]
+        [TestCase("bash -c \"sudo ./execute.sh --option-a=one --option-b=two --option_c=three\"", "execute")]
+        [TestCase("bash -c \"sudo ../execute.sh --option-a=one --option-b=two --option_c=three\"", "execute")]
+        [TestCase("bash -c \"sudo /home/user/tools/execute.sh --option-a=one --option-b=two --option_c=three\"", "execute")]
+        [TestCase("sudo bash -c \"execute.sh\"", "execute")]
+        [TestCase("sudo bash -c \"execute.sh one two three\"", "execute")]
+        [TestCase("sudo bash -c \"execute.sh --option-a=one --option-b=two --option_c=three\"", "execute")]
+        [TestCase("sudo bash -c \"./execute.sh --option-a=one --option-b=two --option_c=three\"", "execute")]
+        [TestCase("sudo bash -c \"../execute.sh --option-a=one --option-b=two --option_c=three\"", "execute")]
+        [TestCase("sudo bash -c \"/home/user/tools/execute.sh --option-a=one --option-b=two --option_c=three\"", "execute")]
+        [TestCase("sudo bash -c \"/home/user/tools/bash/execute.sh --option-a=one --option-b=two --option_c=three\"", "execute")]
+        public void GetCommmandNameSupportsTheExpectedRangeOfBashCommands(string commandLine, string expectedCommandName)
+        {
+            Assert.IsTrue(PlatformSpecifics.TryGetCommandName(commandLine, out string actualCommandName), $"Failed: {commandLine}");
+            Assert.AreEqual(expectedCommandName, actualCommandName, $"Failed: {commandLine}");
+        }
+
+        [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
+        [TestCase("cmd /C \"execute.exe\"", "execute")]
+        [TestCase("cmd /C \"execute.exe one two three\"", "execute")]
+        [TestCase("cmd /C \"execute.exe --option-a=one --option-b=two --option_c=three\"", "execute")]
+        [TestCase("cmd /C \"execute.cmd\"", "execute")]
+        [TestCase("cmd /C \"execute.cmd one two three\"", "execute")]
+        [TestCase("cmd /C \"execute.cmd --option-a=one --option-b=two --option_c=three\"", "execute")]
+        [TestCase("cmd /C \"execute.bat\"", "execute")]
+        [TestCase("cmd /C \"execute.bat one two three\"", "execute")]
+        [TestCase("cmd /C \"execute.bat --option-a=one --option-b=two --option_c=three\"", "execute")]
+        [TestCase("cmd.exe /C \"execute.exe\"", "execute")]
+        [TestCase("cmd.exe /C \"execute.exe one two three\"", "execute")]
+        [TestCase("cmd.exe /C \"execute.exe --option-a=one --option-b=two --option_c=three\"", "execute")]
+        [TestCase("cmd.exe /C \"execute.cmd\"", "execute")]
+        [TestCase("cmd.exe /C \"execute.cmd one two three\"", "execute")]
+        [TestCase("cmd.exe /C \"execute.cmd --option-a=one --option-b=two --option_c=three\"", "execute")]
+        [TestCase("cmd.exe /C \"execute.bat\"", "execute")]
+        [TestCase("cmd.exe /C \"execute.bat one two three\"", "execute")]
+        [TestCase("cmd.exe /C \"execute.bat --option-a=one --option-b=two --option_c=three\"", "execute")]
+        [TestCase("cmd /C \".\\execute.bat --option-a=one --option-b=two --option_c=three\"", "execute")]
+        [TestCase("cmd /C \"..\\execute.bat --option-a=one --option-b=two --option_c=three\"", "execute")]
+        [TestCase("cmd /C \"C:\\Users\\User\\tools\\execute.bat --option-a=one --option-b=two --option_c=three\"", "execute")]
+        [TestCase("cmd /C \"C:\\Users\\User\\tools\\cmd\\execute.bat --option-a=one --option-b=two --option_c=three\"", "execute")]
+        public void GetCommmandNameSupportsTheExpectedRangeOfCmdCommands(string commandLine, string expectedCommandName)
+        {
+            Assert.IsTrue(PlatformSpecifics.TryGetCommandName(commandLine, out string actualCommandName), $"Failed: {commandLine}");
+            Assert.AreEqual(expectedCommandName, actualCommandName, $"Failed: {commandLine}");
+        }
+
+        [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
+        [TestCase("Invoke-This.ps1", "Invoke-This")]
+        [TestCase("Invoke-This.ps1 -OptionA one -OptionB=two -OptionC three", "Invoke-This")]
+        [TestCase("pwsh Invoke-This.ps1 -OptionA one -OptionB=two -OptionC three", "Invoke-This")]
+        [TestCase("pwsh.exe Invoke-This.ps1 -OptionA one -OptionB=two -OptionC three", "Invoke-This")]
+        [TestCase("pwsh \"Invoke-This.ps1 -OptionA one -OptionB=two -OptionC three\"", "Invoke-This")]
+        [TestCase("pwsh.exe \"Invoke-This.ps1 -OptionA one -OptionB=two -OptionC three\"", "Invoke-This")]
+        [TestCase("pwsh -C \"Invoke-This.ps1 -OptionA one -OptionB=two -OptionC three\"", "Invoke-This")]
+        [TestCase("pwsh.exe -C \"Invoke-This.ps1 -OptionA one -OptionB=two -OptionC three\"", "Invoke-This")]
+        [TestCase("pwsh -Command \"Invoke-This.ps1 -OptionA one -OptionB=two -OptionC three\"", "Invoke-This")]
+        [TestCase("pwsh.exe -Command \"Invoke-This.ps1 -OptionA one -OptionB=two -OptionC three\"", "Invoke-This")]
+        [TestCase("pwsh -Command \"Import-Module AnyModule.psd1;Invoke-This -OptionA one -OptionB=two -OptionC three\"", "pwsh")]
+        [TestCase("pwsh.exe -Command \"Import-Module AnyModule.psm1;Invoke-This -OptionA one -OptionB=two -OptionC three\"", "pwsh")]
+        [TestCase("powershell -Command \"Import-Module AnyModule.psd1 && Invoke-This -OptionA one -OptionB=two -OptionC three\"", "powershell")]
+        [TestCase("powershell.exe -Command \"Import-Module AnyModule.psm1 && Invoke-This -OptionA one -OptionB=two -OptionC three\"", "powershell")]
+        [TestCase("C:\\ProgramFiles\\PowerShell7\\pwsh.exe -Command \"Import-Module AnyModule.psm1;Invoke-This -OptionA one -OptionB=two -OptionC three\"", "pwsh")]
+        [TestCase("/home/user/powershell7.5.4/pwsh -Command \"Import-Module AnyModule.psd1;Invoke-This -OptionA one -OptionB=two -OptionC three\"", "pwsh")]
+        public void GetCommmandNameSupportsTheExpectedRangeOfPowerShellCommands(string commandLine, string expectedCommandName)
+        {
+            Assert.IsTrue(PlatformSpecifics.TryGetCommandName(commandLine, out string actualCommandName), $"Failed: {commandLine}");
+            Assert.AreEqual(expectedCommandName, actualCommandName, $"Failed: {commandLine}");
+        }
+
+        [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
+        [TestCase("execute.py --option-a=one --option-b=two --option_c=three", "execute")]
+        [TestCase("py \"execute.py --option-a=one --option-b=two --option_c=three\"", "execute")]
+        [TestCase("py.exe \"execute.py --option-a=one --option-b=two --option_c=three\"", "execute")]
+        [TestCase("python \"execute.py --option-a=one --option-b=two --option_c=three\"", "execute")]
+        [TestCase("python.exe \"execute.py --option-a=one --option-b=two --option_c=three\"", "execute")]
+        [TestCase("python3 \"execute.py --option-a=one --option-b=two --option_c=three\"", "execute")]
+        [TestCase("python3.exe \"execute.py --option-a=one --option-b=two --option_c=three\"", "execute")]
+        [TestCase("py -c \"import sys; print(sys.version)\"", "py")]
+        [TestCase("py -c \"print('Hello from inline Python')\"", "py")]
+        [TestCase("python3 -c \"print('Hello from inline Python')\"", "python3")]
+        [TestCase("python3 -c \"import sys; print(sys.version)\"", "python3")]
+        [TestCase("python.exe -c \"print('Hello from inline Python')\"", "python")]
+        [TestCase("python.exe -c \"import sys; print(sys.version)\"", "python")]
+        [TestCase("/home/user/python/python3 -c \"print('Hello from inline Python')\"", "python3")]
+        [TestCase("C:\\ProgramFiles\\Python3\\python.exe -c \"import sys; print(sys.version)\"", "python")]
+        public void GetCommmandNameSupportsTheExpectedRangeOfPythonCommands(string commandLine, string expectedCommandName)
+        {
+            Assert.IsTrue(PlatformSpecifics.TryGetCommandName(commandLine, out string actualCommandName), $"Failed: {commandLine}");
+            Assert.AreEqual(expectedCommandName, actualCommandName, $"Failed: {commandLine}");
+        }
+
+        [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
+        [TestCase("anycommand /NOTTHECOMMAND --option-a=one --option-b=two --option_c=three", "anycommand")]
+        [TestCase("anycommand.exe /NOT_THE_COMMAND --option-a=one --option-b=two --option_c=three", "anycommand")]
+        [TestCase("./anycommand /NOTTHECOMMAND --option-a=one --option-b=two --option_c=three", "anycommand")]
+        [TestCase(".\\anycommand /NOTTHECOMMAND --option-a=one --option-b=two --option_c=three", "anycommand")]
+        [TestCase("/home/user/tools/anycommand /NOTTHECOMMAND --option-a=one --option-b=two --option_c=three", "anycommand")]
+        [TestCase("C:\\Users\\User\\tools\\anycommand /NOTTHECOMMAND --option-a=one --option-b=two --option_c=three", "anycommand")]
+        public void GetCommmandNameSupportsCommandAnomalies(string commandLine, string expectedCommandName)
+        {
+            Assert.IsTrue(PlatformSpecifics.TryGetCommandName(commandLine, out string actualCommandName), $"Failed: {commandLine}");
+            Assert.AreEqual(expectedCommandName, actualCommandName, $"Failed: {commandLine}");
+        }
+
+        [Test]
         public void GetPackagePathReturnsTheExpectedPathOnUnixSystems()
         {
             PlatformSpecifics platformSpecifics = new TestPlatformSpecifics2(PlatformID.Unix, Architecture.X64, "/home/anyuser/virtualclient");

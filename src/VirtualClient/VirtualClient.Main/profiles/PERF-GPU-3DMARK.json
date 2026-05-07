@@ -1,0 +1,48 @@
+{
+    "Description": "3DMark TimeSpy GPU Performance Workload",
+    "Metadata": {
+        "RecommendedMinimumExecutionTime": "02:00:00",
+        "SupportedPlatforms": "win-x64",
+        "SupportedOperatingSystems": "Windows",
+        "PreliminaryRequirements": "Please note that the GPU hardware driver and related toolsets (e.g. Nvidia CUDA) MUST be already installed on the system for the workloads to function correctly."
+    },
+    "Parameters": {
+        "LicenseKey": null
+    },
+    "Actions": [
+        {
+            "Type": "ThreeDMarkExecutor",
+            "Parameters": {
+                "Scenario": "TimeSpy",
+                "LicenseKey": "$.Parameters.LicenseKey",
+                "PackageName": "3dmark",
+                "PsExecPackageName": "pstools",
+                "PsExecSession": 2,
+                "SupportedPlatforms": "win-x64",
+                "Tags": "GPU,3DMark,Gaming"
+            }
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallPsToolsPackage",
+                "BlobContainer": "packages",
+                "BlobName": "pstools.2.51.zip",
+                "PackageName": "pstools",
+                "Extract": true
+            }
+        },
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "Install3DMarkWorkloadPackage",
+                "BlobContainer": "packages",
+                "BlobName": "3DMark.zip",
+                "PackageName": "3DMark",
+                "Extract": true
+            }
+        }
+    ]
+}

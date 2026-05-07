@@ -5,7 +5,6 @@ namespace VirtualClient
 {
     using System;
     using System.Collections.Generic;
-    using System.IO;
     using System.Threading;
     using System.Threading.Tasks;
     using VirtualClient.Contracts;
@@ -16,9 +15,9 @@ namespace VirtualClient
     internal class GetAccessTokenCommand : ExecuteProfileCommand
     {
         /// <summary>
-        /// Key vault initialization is not required for getting an access token.
+        /// A path to a file to which the access token should be written.
         /// </summary>
-        protected override bool ShouldInitializeKeyVault => false;
+        public string OutputFilePath { get; set; }
 
         /// <summary>
         /// The tenant ID associated with your Microsoft Entra ID (formerly Azure Active Directory).
@@ -26,12 +25,9 @@ namespace VirtualClient
         public string TenantId { get; set; }
 
         /// <summary>
-        /// Executes the access token acquisition operations using the configured profile.
+        /// Initializes the command state before execution.
         /// </summary>
-        /// <param name="args">The arguments provided to the application on the command line.</param>
-        /// <param name="cancellationTokenSource">Provides a token that can be used to cancel the command operations.</param>
-        /// <returns>The exit code for the command operations.</returns>
-        public override Task<int> ExecuteAsync(string[] args, CancellationTokenSource cancellationTokenSource)
+        protected override void Initialize(string[] args, PlatformSpecifics platformSpecifics)
         {
             this.Timeout = ProfileTiming.OneIteration();
             this.Profiles = new List<DependencyProfileReference>
@@ -44,10 +40,8 @@ namespace VirtualClient
                 this.Parameters = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
             }
 
-            this.Parameters["KeyVaultUri"] = this.KeyVault;
+            this.Parameters["FilePath"] = this.OutputFilePath;
             this.Parameters["TenantId"] = this.TenantId;
-            
-            return base.ExecuteAsync(args, cancellationTokenSource);
         }
     }
 }

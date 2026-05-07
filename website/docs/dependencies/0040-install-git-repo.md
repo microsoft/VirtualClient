@@ -47,7 +47,7 @@ In this example, VC clones https://github.com/eembc/coremark.git into the runtim
 ## Example
 In this example, VC installs Chocolatey, installs Git on the system and then clones https://github.com/aspnet/Benchmarks.git into the runtime packages directory
 
-* [Profile Example with Chocolatey](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-ASPNETBENCH.json)
+* [Profile Example with Chocolatey](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-WEB-ASPNET-BOMBARDIER.json)
 
   <div class="code-section">
 

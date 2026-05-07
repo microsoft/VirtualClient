@@ -19,6 +19,7 @@ namespace VirtualClient.Actions.NetworkPerformance
     /// <summary>
     /// CPS(Connections Per Second) Tool Client Executor. 
     /// </summary>
+    [SupportedPlatforms("linux-arm64,linux-x64,win-arm64,win-x64")]
     public class CPSExecutor : NetworkingWorkloadToolExecutor
     {
         /// <summary>

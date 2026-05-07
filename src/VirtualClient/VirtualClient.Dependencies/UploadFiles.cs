@@ -7,6 +7,7 @@ namespace VirtualClient.Dependencies
     using System.Collections.Generic;
     using System.IO.Abstractions;
     using System.Linq;
+    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
@@ -22,7 +23,7 @@ namespace VirtualClient.Dependencies
     [SupportedPlatforms("linux-arm64,linux-x64,win-arm64,win-x64")]
     public class UploadFiles : VirtualClientComponent
     {
-        private const string DefaultContentPathTemplate = "{experimentId}/{agentId}";
+        private const string DefaultContentPathTemplate = "{experimentId}/{clientId}";
         private IFileSystem fileSystem;
 
         /// <summary>
@@ -35,14 +36,14 @@ namespace VirtualClient.Dependencies
         }
 
         /// <summary>
-        /// Set to true to request the files be deleted after they are
-        /// uploaded (i.e. self-cleaning).
+        /// A regular expression that defines files to exclude from upload.
         /// </summary>
-        public bool DeleteOnUpload
+        public string Exclude
         {
             get
             {
-                return this.Parameters.GetValue<bool>(nameof(this.DeleteOnUpload), false);
+                this.Parameters.TryGetValue(nameof(this.Exclude), out IConvertible exclude);
+                return exclude?.ToString();
             }
         }
 
@@ -56,6 +57,17 @@ namespace VirtualClient.Dependencies
             get
             {
                 return this.Parameters.GetValue<bool>(nameof(this.Flatten), false);
+            }
+        }
+
+        /// <summary>
+        /// True/false whether to search for files in subdirectories. Default = true.
+        /// </summary>
+        public bool Recursive
+        {
+            get
+            {
+                return this.Parameters.GetValue<bool>(nameof(this.Recursive), true);
             }
         }
 
@@ -104,13 +116,19 @@ namespace VirtualClient.Dependencies
                 null,
                 this.Parameters,
                 this.Metadata,
-                timestamped: this.Timestamped,
-                flatten: this.Flatten);
+                flatten: this.Flatten,
+                timestamped: this.Timestamped);
 
             if (uploadDescriptors?.Any() != true)
             {
                 this.Logger.LogWarning($"No files found in target directory '{this.TargetDirectory}'.", telemetryContext);
                 return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(this.Exclude))
+            {
+                Regex excludeExpression = new Regex(this.Exclude, RegexOptions.IgnoreCase | RegexOptions.Compiled);
+                uploadDescriptors = uploadDescriptors.Where(desc => !excludeExpression.IsMatch(desc.FilePath));
             }
 
             this.Logger.LogMessage(
@@ -120,7 +138,6 @@ namespace VirtualClient.Dependencies
 
             foreach (FileUploadDescriptor descriptor in uploadDescriptors)
             {
-                descriptor.DeleteOnUpload = this.DeleteOnUpload;
                 await this.RequestFileUploadAsync(descriptor);
             }
         }

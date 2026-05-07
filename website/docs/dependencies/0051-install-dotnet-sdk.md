@@ -22,7 +22,7 @@ The following section describes the parameters used by the individual component 
 ## Example
 The following section describes the parameters used by the individual component in the profile.
 
-* [Profile Example](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-ASPNETBENCH.json)
+* [Profile Example](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-WEB-ASPNET-BOMBARDIER.json)
 
   ```json
   {

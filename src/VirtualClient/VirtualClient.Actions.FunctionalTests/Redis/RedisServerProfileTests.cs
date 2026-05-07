@@ -8,7 +8,7 @@ namespace VirtualClient.Actions
     using System.Linq;
     using System.Net;
     using System.Runtime.InteropServices;
-    using System.Text;
+    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using Moq;
@@ -35,7 +35,7 @@ namespace VirtualClient.Actions
 
             ComponentTypeCache.Instance.LoadComponentTypes(TestDependencies.TestDirectory);
 
-            this.mockFixture.SetupPackage("wget", expectedFiles: "linux-x64/wget2");
+            this.mockFixture.SetupPackage("wget", null, "linux-x64/wget2");
             this.mockFixture.SetupFile("redis", "redis-6.2.1/src/redis-server", new byte[0]);
             this.mockFixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new CpuInfo("AnyName", "AnyDescription", 1, 4, 1, 0, true));
@@ -45,31 +45,20 @@ namespace VirtualClient.Actions
         [TestCase("PERF-REDIS.json")]
         public async Task RedisMemtierWorkloadProfileInstallsTheExpectedDependenciesOfServerOnUnixPlatform(string profile)
         {
-            using var memoryProcess = new InMemoryProcess
-            {
-                StandardOutput = new ConcurrentBuffer(
-                       new StringBuilder("Redis server v=7.0.15 sha=00000000 malloc=jemalloc-5.1.0 bits=64 build=abc123")),
-                OnStart = () => true,
-                OnHasExited = () => true
-            };
+            this.mockFixture
+                .TrackProcesses()
+                .SetupProcessOutput(
+                    "redis-server.*--version",
+                    "Redis server v=7.0.15 sha=00000000 malloc=jemalloc-5.1.0 bits=64 build=abc123");
 
-            this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
-            {
-                IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
-                if (arguments?.Contains("redis-server") == true && arguments?.Contains("--version") == true)
-                {
-                    return memoryProcess;
-                }
-
-                return process;
-            };
             using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
             {
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None)
                     .ConfigureAwait(false);
 
-                // Workload dependency package expectations  
                 WorkloadAssert.WorkloadPackageInstalled(this.mockFixture, "redis");
+                
+                this.mockFixture.Tracking.AssertCommandsExecuted("redis-server.*--version");
             }
         }
 
@@ -77,16 +66,12 @@ namespace VirtualClient.Actions
         [TestCase("PERF-REDIS.json")]
         public async Task RedisMemtierWorkloadProfileExecutesTheWorkloadAsExpectedOfServerOnUnixPlatformMultiVM(string profile)
         {
-            List<string> expectedCommands = new List<string>();
+            this.mockFixture
+                .TrackProcesses()
+                .SetupProcessOutput(
+                    "redis-server.*--version",
+                    "Redis server v=7.0.15 sha=00000000 malloc=jemalloc-5.1.0 bits=64 build=abc123");
 
-            int port = 6379;
-            Enumerable.Range(0, 4).ToList().ForEach(core =>
-                expectedCommands.Add($"sudo bash -c \"numactl -C {core} /.+/redis-server --port {port + core} --protected-mode no --io-threads 4 --maxmemory-policy noeviction --ignore-warnings ARM64-COW-BUG --save &\""));
-
-            // Setup the expectations for the workload
-            // - Workload package is installed and exists.
-            // - Workload binaries/executables exist on the file system.
-            // - Expected processes are executed.
             IPAddress.TryParse("1.2.3.5", out IPAddress ipAddress);
             IApiClient apiClient = this.mockFixture.ApiClientManager.GetOrCreateApiClient("1.2.3.5", ipAddress);
 
@@ -105,29 +90,20 @@ namespace VirtualClient.Actions
             });
 
             await apiClient.CreateStateAsync(nameof(ServerState), state, CancellationToken.None);
-            using var memoryProcess = new InMemoryProcess
-            {
-                StandardOutput = new ConcurrentBuffer(
-                        new StringBuilder("Redis server v=7.0.15 sha=00000000 malloc=jemalloc-5.1.0 bits=64 build=abc123")),
-                OnStart = () => true,
-                OnHasExited = () => true
-            };
-
-            this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
-            {
-                IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
-                if (arguments?.Contains("redis-server") == true && arguments?.Contains("--version") == true)
-                {
-                    return memoryProcess;
-                }
-
-                return process;
-            };
 
             using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
             {
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None);
-                WorkloadAssert.CommandsExecuted(this.mockFixture, expectedCommands.ToArray());
+
+                this.mockFixture.Tracking.AssertCommandsExecuted(true,
+                    $"sudo chmod \\+x.*redis-server",
+                    $"sudo bash -c \\\"numactl -C 0.*redis-server --port 6379.*\\\"",
+                    $"sudo bash -c \\\"numactl -C 1.*redis-server --port 6380.*\\\"",
+                    $"sudo bash -c \\\"numactl -C 2.*redis-server --port 6381.*\\\"",
+                    $"sudo bash -c \\\"numactl -C 3.*redis-server --port 6382.*\\\"");
+
+                this.mockFixture.Tracking.AssertCommandExecutedTimes("chmod.*redis-server", 1);
+                this.mockFixture.Tracking.AssertCommandExecutedTimes("numactl.*redis-server", 4);
             }
         }
     }

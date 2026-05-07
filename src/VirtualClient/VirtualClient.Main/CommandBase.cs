@@ -11,23 +11,25 @@ namespace VirtualClient
     using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
+    using System.Net;
     using System.Reflection;
     using System.Runtime.InteropServices;
     using System.Security.Cryptography.X509Certificates;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
+    using Azure.Messaging.EventHubs.Producer;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Logging.Abstractions;
+    using Org.BouncyCastle.Asn1.X509;
     using VirtualClient.Cleanup;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Configuration;
     using VirtualClient.Contracts;
-    using VirtualClient.Contracts.Extensibility;
     using VirtualClient.Contracts.Metadata;
     using VirtualClient.Contracts.Proxy;
     using VirtualClient.Identity;
@@ -57,6 +59,36 @@ namespace VirtualClient
         /// The port(s) to use to listen to HTTP traffic for the Virtual Client REST API.
         /// </summary>
         public IDictionary<string, int> ApiPorts { get; set; }
+
+        /// <summary>
+        /// Used to create workaround for scenarios where we want to use an option as either
+        /// a flag or as one with a value (e.g. --archive-logs --archive-logs=/home/user/archive/logs).
+        /// </summary>
+        public IList<string> ArchiveLogTargets { get; set; }
+
+        /// <summary>
+        /// A path to archive any existing log files before execution. Default = the user profile/home directory.
+        /// </summary>
+        public string ArchiveLogsPath
+        {
+            get
+            {
+                string archivePath = null;
+                if (this.ArchiveLogTargets != null)
+                {
+                    if (this.ArchiveLogTargets.Count == 0)
+                    {
+                        archivePath = "{Default}";
+                    }
+                    else
+                    {
+                        archivePath = this.ArchiveLogTargets.FirstOrDefault();
+                    }
+                }
+
+                return archivePath;
+            }
+        }
 
         /// <summary>
         /// A set of target resources to clean (e.g. logs, packages, state, all).
@@ -119,6 +151,17 @@ namespace VirtualClient
         public string ExperimentId { get; set; }
 
         /// <summary>
+        /// True if a request to archive existing log files is provided.
+        /// </summary>
+        public bool IsArchiveLogsRequested
+        {
+            get
+            {
+                return !string.IsNullOrWhiteSpace(this.ArchiveLogsPath);
+            }
+        }
+
+        /// <summary>
         /// True if a request to perform clean operations was requested on the
         /// command line.
         /// </summary>
@@ -131,16 +174,14 @@ namespace VirtualClient
         }
 
         /// <summary>
-        /// True if the application should run with isolation in place. This flag causes
-        /// the application to use logs, packages, state and temp directories that are unique
-        /// to the experiment ID defined.
+        /// A set of target resources to keep isolated (e.g. logs, packages, state, all).
         /// </summary>
-        public bool Isolated { get; set; }
+        public IList<string> IsolationTargets { get; set; }
 
         /// <summary>
-        /// Describes the target Key vault from where secrets and certificates should be accessed.
+        /// Describes the target Key Vault store where secrets and certificates should be accessed.
         /// </summary>
-        public string KeyVault { get; set; }
+        public DependencyStore KeyVaultStore { get; set; }
 
         /// <summary>
         /// An alternate directory to which write log files. Setting this overrides
@@ -224,7 +265,7 @@ namespace VirtualClient
         /// <summary>
         /// The target agents/systems to establish an SSH session (e.g. anyuser@192.168.1.15;pass_w_@rd).
         /// </summary>
-        public IEnumerable<string> TargetAgents { get; set; }
+        public IEnumerable<string> Targets { get; set; }
 
         /// <summary>
         /// An alternate directory to which temp files/documents should be written. Setting this overrides
@@ -265,24 +306,163 @@ namespace VirtualClient
         /// <param name="args">The arguments provided to the application on the command line.</param>
         /// <param name="cancellationTokenSource">Provides a token that can be used to cancel the command operations.</param>
         /// <returns>The exit code for the command operations.</returns>
-        public abstract Task<int> ExecuteAsync(string[] args, CancellationTokenSource cancellationTokenSource);
+        public async Task<int> ExecuteAsync(string[] args, CancellationTokenSource cancellationTokenSource)
+        {
+            int exitCode = 0;
+            ILogger logger = null;
+
+            try
+            {
+                CancellationToken cancellationToken = cancellationTokenSource.Token;
+                PlatformID osPlatform = Environment.OSVersion.Platform;
+                Architecture cpuArchitecture = RuntimeInformation.ProcessArchitecture;
+
+                PlatformSpecifics.ThrowIfNotSupported(osPlatform);
+                PlatformSpecifics.ThrowIfNotSupported(cpuArchitecture);
+                PlatformSpecifics platformSpecifics = new PlatformSpecifics(osPlatform, cpuArchitecture);
+
+                if (this.LoggingLevel == null)
+                {
+                    // Default log level is Debug/Verbose to ensure standard output + error
+                    // for processes executed is output to console/screen.
+                    this.LoggingLevel = LogLevel.Debug;
+                }
+
+                // Ensure a valid experiment ID and client ID are defined if not
+                // provided on the command line.
+                if (string.IsNullOrWhiteSpace(this.ClientId))
+                {
+                    this.ClientId = Environment.MachineName.ToLowerInvariant();
+                }
+
+                if (string.IsNullOrWhiteSpace(this.ExperimentId))
+                {
+                    this.ExperimentId = Guid.NewGuid().ToString().ToLowerInvariant();
+                }
+
+                this.Initialize(args, platformSpecifics);
+                this.SetGlobalTelemetryProperties(args);
+
+                // Users can override the location of the "logs", "packages" and "state" folders on the command line
+                // or by using environment variables. This is used in scenarios where VC may be used as a base for other
+                // applications that want to have a shared resource + dependency directories.
+                this.EvaluateDirectoryPathOverrides(platformSpecifics);
+
+                ComponentTypeCache.Instance.LoadComponentTypes(AppDomain.CurrentDomain.BaseDirectory);
+
+                // Setup any dependencies required by the application.
+                IServiceCollection dependencies = this.InitializeDependencies(args, platformSpecifics);
+                logger = dependencies.GetService<ILogger>();
+
+                if (this.IsArchiveLogsRequested)
+                {
+                    await this.ArchiveLogsAsync(dependencies, cancellationToken, logger);
+                }
+
+                if (this.IsCleanRequested)
+                {
+                    await this.CleanAsync(dependencies, cancellationToken, logger);
+                }
+
+                exitCode = await this.ExecuteAsync(args, dependencies, cancellationTokenSource);
+            }
+            catch (OperationCanceledException)
+            {
+                // Expected when the Ctrl-C is pressed to cancel operation.
+            }
+            catch (NotSupportedException exc)
+            {
+                Program.LogErrorMessage(logger, exc, EventContext.Persisted());
+                exitCode = (int)ErrorReason.NotSupported;
+            }
+            catch (StartupException exc)
+            {
+                // The type of exceptions are captured upstream by the profile
+                // execution components.
+                Program.LogErrorMessage(logger, exc, EventContext.Persisted());
+                exitCode = (int)exc.Reason;
+            }
+            catch (VirtualClientException exc)
+            {
+                // The type of exceptions are captured upstream by the profile
+                // execution components.
+                exitCode = (int)exc.Reason;
+            }
+            catch (Exception exc)
+            {
+                Program.LogErrorMessage(logger, exc, EventContext.Persisted());
+                exitCode = 1;
+            }
+
+            return exitCode;
+        }
+
+        /// <summary>
+        /// Executes the default workload execution command.
+        /// </summary>
+        /// <param name="args">The arguments provided to the application on the command line.</param>
+        /// <param name="dependencies">Dependencies/services created for the application.</param>
+        /// <param name="cancellationTokenSource">Provides a token that can be used to cancel the command operations.</param>
+        /// <returns>The exit code for the command operations.</returns>
+        protected abstract Task<int> ExecuteAsync(string[] args, IServiceCollection dependencies, CancellationTokenSource cancellationTokenSource);
+
+        /// <summary>
+        /// Archives any existing log files in the logs directory.
+        /// </summary>
+        /// <param name="dependencies">Provides system management functions required to execute the clean operations.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operations.</param>
+        /// <param name="logger"></param>
+        protected async Task ArchiveLogsAsync(IServiceCollection dependencies, CancellationToken cancellationToken, ILogger logger = null)
+        {
+            EventContext telemetryContext = EventContext.Persisted();
+            ISystemManagement systemManagement = dependencies.GetService<ISystemManagement>();
+            PlatformSpecifics platformSpecifics = systemManagement.PlatformSpecifics;
+
+            string archiveDirectory = this.ArchiveLogsPath;
+
+            if (archiveDirectory == "{Default}")
+            {
+                string rootDirectory = null;
+                if (systemManagement.Platform == PlatformID.Unix)
+                {
+                    rootDirectory = platformSpecifics.GetEnvironmentVariable(EnvironmentVariable.HOME);
+                }
+                else
+                {
+                    rootDirectory = platformSpecifics.GetEnvironmentVariable(EnvironmentVariable.USERPROFILE);
+                }
+
+                archiveDirectory = platformSpecifics.Combine(rootDirectory, "archive", "logs");
+            }
+
+            telemetryContext.AddContext("archivePath", archiveDirectory);
+
+            // The logging has to come at the end in case any of the loggers write
+            // log files to the /logs directory. These might get deleted by the clean
+            // operations. Having the logging last helps ensure we do not miss those logs.
+            (logger ?? NullLogger.Instance).LogMessage($"ArchiveLogs", LogLevel.Information, telemetryContext);
+
+
+            await systemManagement.ArchiveLogsDirectoryAsync(archiveDirectory, cancellationToken);
+        }
 
         /// <summary>
         /// Executes clean/reset operations within the Virtual Client application folder. This is used to 
         /// cleanup resources such as the "logs", "packages" and "state" directories.
         /// </summary>
-        /// <param name="systemManagement">Provides system management functions required to execute the clean operations.</param>
+        /// <param name="dependencies">Provides system management functions required to execute the clean operations.</param>
         /// <param name="cancellationToken">A token that can be used to cancel the operations.</param>
         /// <param name="logger"></param>
-        protected async Task CleanAsync(ISystemManagement systemManagement, CancellationToken cancellationToken, ILogger logger = null)
+        protected async Task CleanAsync(IServiceCollection dependencies, CancellationToken cancellationToken, ILogger logger = null)
         {
-            VirtualClient.Contracts.CleanTargets targets = null;
+            VirtualClient.Contracts.ResourceTargets targets = null;
             DateTime? logRetentionDate = null;
             EventContext telemetryContext = EventContext.Persisted();
-            Type commandType = this.GetType();
 
             try
             {
+                ISystemManagement systemManagement = dependencies.GetService<ISystemManagement>();
+
                 if (this.LogRetention != null)
                 {
                     logRetentionDate = DateTime.UtcNow.Subtract(this.LogRetention.Value);
@@ -293,11 +473,11 @@ namespace VirtualClient
                     if (this.CleanTargets?.Any() != true)
                     {
                         // --clean used as a flag
-                        targets = VirtualClient.Contracts.CleanTargets.Create();
+                        targets = VirtualClient.Contracts.ResourceTargets.Create();
                     }
                     else
                     {
-                        targets = VirtualClient.Contracts.CleanTargets.Create(this.CleanTargets);
+                        targets = VirtualClient.Contracts.ResourceTargets.Create(this.CleanTargets);
                     }
 
                     telemetryContext.AddContext("cleanTargets", this.CleanTargets);
@@ -307,7 +487,7 @@ namespace VirtualClient
                         telemetryContext.AddContext("logRetention", this.LogRetention);
                     }
 
-                    if (targets.CleanLogs)
+                    if (targets.TargetLogs)
                     {
                         try
                         {
@@ -320,17 +500,17 @@ namespace VirtualClient
                         }
                     }
 
-                    if (targets.CleanPackages)
+                    if (targets.TargetPackages)
                     {
                         await systemManagement.CleanPackagesDirectoryAsync(cancellationToken);
                     }
 
-                    if (targets.CleanState)
+                    if (targets.TargetState)
                     {
                         await systemManagement.CleanStateDirectoryAsync(cancellationToken);
                     }
 
-                    if (targets.CleanTemp)
+                    if (targets.TargetTemp)
                     {
                         await systemManagement.CleanTempDirectoryAsync(cancellationToken);
                     }
@@ -354,7 +534,7 @@ namespace VirtualClient
                 // The logging has to come at the end in case any of the loggers write
                 // log files to the /logs directory. These might get deleted by the clean
                 // operations. Having the logging last helps ensure we do not miss those logs.
-                (logger ?? NullLogger.Instance).LogMessage($"{commandType.Name}.CleanLogs", LogLevel.Trace, telemetryContext);
+                (logger ?? NullLogger.Instance).LogMessage($"CleanLogs", LogLevel.Information, telemetryContext);
             }
         }
 
@@ -366,13 +546,31 @@ namespace VirtualClient
         /// <param name="platformSpecifics">Defines the fundamental directory paths for the application.</param>
         protected void EvaluateDirectoryPathOverrides(PlatformSpecifics platformSpecifics)
         {
+            ResourceTargets isolationTargets = ResourceTargets.None;
+            if (this.IsolationTargets != null)
+            {
+                if (this.IsolationTargets?.Any() != true)
+                {
+                    // --isolated used as a flag
+                    isolationTargets = ResourceTargets.Create();
+                }
+                else
+                {
+                    isolationTargets = ResourceTargets.Create(this.IsolationTargets);
+                }
+            }
+
+            // Logs Directory
+            // -------------------------------------------------
             // Priority (logs directory):
             // 1) --log-dir command line option
             // 2) VC_LOGS_DIR environment variable
+            // 3) Default location
+            string logDirectory = platformSpecifics.LogsDirectory;
             if (!string.IsNullOrWhiteSpace(this.LogDirectory))
             {
                 // Users can override on the command line with the --log-dir option.
-                platformSpecifics.LogsDirectory = this.EvaluatePathReplacements(this.LogDirectory);
+                logDirectory = this.LogDirectory;
             }
             else
             {
@@ -380,17 +578,35 @@ namespace VirtualClient
                 string environmentVariableValue = platformSpecifics.GetEnvironmentVariable(EnvironmentVariable.VC_LOGS_DIR);
                 if (!string.IsNullOrWhiteSpace(environmentVariableValue))
                 {
-                    platformSpecifics.LogsDirectory = this.EvaluatePathReplacements(environmentVariableValue);
+                    logDirectory = environmentVariableValue;
                 }
             }
 
+            // Fully qualify the log directory.
+            if (!Path.IsPathRooted(logDirectory))
+            {
+                logDirectory = Path.GetFullPath(logDirectory);
+            }
+
+            if (isolationTargets.TargetLogs && !logDirectory.EndsWith(this.ExperimentId, StringComparison.OrdinalIgnoreCase))
+            {
+                logDirectory = platformSpecifics.Combine(logDirectory, this.ExperimentId);
+            }
+
+            platformSpecifics.LogsDirectory = this.EvaluatePathReplacements(logDirectory, platformSpecifics);
+
+
+            // Packages Directory
+            // -------------------------------------------------
             // Priority (packages directory):
             // 1) --package-dir command line option
             // 2) VC_PACKAGES_DIR environment variable
+            // 3) Default location
+            string packageDirectory = platformSpecifics.PackagesDirectory;
             if (!string.IsNullOrWhiteSpace(this.PackageDirectory))
             {
                 // Users can override on the command line with the --package-dir option.
-                platformSpecifics.PackagesDirectory = this.EvaluatePathReplacements(this.PackageDirectory);
+                packageDirectory = this.PackageDirectory;
             }
             else
             {
@@ -398,17 +614,34 @@ namespace VirtualClient
                 string environmentVariableValue = platformSpecifics.GetEnvironmentVariable(EnvironmentVariable.VC_PACKAGES_DIR);
                 if (!string.IsNullOrWhiteSpace(environmentVariableValue))
                 {
-                    platformSpecifics.PackagesDirectory = this.EvaluatePathReplacements(environmentVariableValue);
+                    packageDirectory = environmentVariableValue;
                 }
             }
 
+            // Fully qualify the package directory.
+            if (!Path.IsPathRooted(packageDirectory))
+            {
+                packageDirectory = Path.GetFullPath(packageDirectory);
+            }
+
+            if (isolationTargets.TargetPackages && !packageDirectory.EndsWith(this.ExperimentId, StringComparison.OrdinalIgnoreCase))
+            {
+                packageDirectory = platformSpecifics.Combine(packageDirectory, this.ExperimentId);
+            }
+
+            platformSpecifics.PackagesDirectory = this.EvaluatePathReplacements(packageDirectory, platformSpecifics);
+
+            // State Directory
+            // -------------------------------------------------
             // Priority (state directory):
             // 1) --state-dir command line option
             // 2) VC_STATE_DIR environment variable
+            // 3) Default location
+            string stateDirectory = platformSpecifics.StateDirectory;
             if (!string.IsNullOrWhiteSpace(this.StateDirectory))
             {
                 // Users can override on the command line with the --state-dir option.
-                platformSpecifics.StateDirectory = this.EvaluatePathReplacements(this.StateDirectory);
+                stateDirectory = this.StateDirectory;
             }
             else
             {
@@ -416,17 +649,34 @@ namespace VirtualClient
                 string environmentVariableValue = platformSpecifics.GetEnvironmentVariable(EnvironmentVariable.VC_STATE_DIR);
                 if (!string.IsNullOrWhiteSpace(environmentVariableValue))
                 {
-                    platformSpecifics.StateDirectory = this.EvaluatePathReplacements(environmentVariableValue);
+                    stateDirectory = environmentVariableValue;
                 }
             }
 
+            // Fully qualify the state directory.
+            if (!Path.IsPathRooted(stateDirectory))
+            {
+                stateDirectory = OptionFactory.ToFullPath(stateDirectory);
+            }
+
+            if (isolationTargets.TargetState && !stateDirectory.EndsWith(this.ExperimentId, StringComparison.OrdinalIgnoreCase))
+            {
+                stateDirectory = platformSpecifics.Combine(stateDirectory, this.ExperimentId);
+            }
+
+            platformSpecifics.StateDirectory = this.EvaluatePathReplacements(stateDirectory, platformSpecifics);
+
+            // Temp Directory
+            // -------------------------------------------------
             // Priority (temp directory):
             // 1) --temp-dir command line option
             // 2) VC_TEMP_DIR environment variable
+            // 3) Default location
+            string tempDirectory = platformSpecifics.TempDirectory;
             if (!string.IsNullOrWhiteSpace(this.TempDirectory))
             {
                 // Users can override on the command line with the --temp-dir option.
-                platformSpecifics.TempDirectory = this.EvaluatePathReplacements(this.TempDirectory);
+                tempDirectory = this.TempDirectory;
             }
             else
             {
@@ -434,9 +684,22 @@ namespace VirtualClient
                 string environmentVariableValue = platformSpecifics.GetEnvironmentVariable(EnvironmentVariable.VC_TEMP_DIR);
                 if (!string.IsNullOrWhiteSpace(environmentVariableValue))
                 {
-                    platformSpecifics.TempDirectory = this.EvaluatePathReplacements(environmentVariableValue);
+                    tempDirectory = environmentVariableValue;
                 }
             }
+
+            // Fully qualify the temp directory.
+            if (!Path.IsPathRooted(tempDirectory))
+            {
+                tempDirectory = Path.GetFullPath(tempDirectory);
+            }
+
+            if (isolationTargets.TargetTemp && !tempDirectory.EndsWith(this.ExperimentId, StringComparison.OrdinalIgnoreCase))
+            {
+                tempDirectory = platformSpecifics.Combine(tempDirectory, this.ExperimentId);
+            }
+
+            platformSpecifics.TempDirectory = this.EvaluatePathReplacements(tempDirectory, platformSpecifics);
         }
 
         /// <summary>
@@ -491,17 +754,20 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Initializes the command runtime before dependency initialization and execution.
+        /// </summary>
+        protected virtual void Initialize(string[] args, PlatformSpecifics platformSpecifics)
+        {
+            // Allows derived command classes to modify any of the existing
+            // properties before setting global telemetry, initializing dependencies,
+            // and execution.
+        }
+
+        /// <summary>
         /// Initializes dependencies required by Virtual Client application operations.
         /// </summary>
-        protected virtual IServiceCollection InitializeDependencies(string[] args)
+        protected virtual IServiceCollection InitializeDependencies(string[] args, PlatformSpecifics platformSpecifics)
         {
-            PlatformID osPlatform = Environment.OSVersion.Platform;
-            Architecture cpuArchitecture = RuntimeInformation.ProcessArchitecture;
-
-            PlatformSpecifics.ThrowIfNotSupported(osPlatform);
-            PlatformSpecifics.ThrowIfNotSupported(cpuArchitecture);
-            PlatformSpecifics platformSpecifics = new PlatformSpecifics(osPlatform, cpuArchitecture);
-
             if (this.Metadata?.Any() == true)
             {
                 // Metadata passed into VC on the command line.
@@ -513,18 +779,6 @@ namespace VirtualClient
                 // Parameters passed into VC on the command line.
                 VirtualClientRuntime.CommandLineParameters = new ReadOnlyDictionary<string, IConvertible>(this.Parameters);
             }
-
-            // Ensure that isolation is in place for controller operations. This helps
-            // protect against race conditions with package management/download/extract operations.
-            if (this.TargetAgents?.Any() == true)
-            {
-                this.Isolated = true;
-            }
-
-            // Users can override the location of the "logs", "packages" and "state" folders on the command line
-            // or by using environment variables. This is used in scenarios where VC may be used as a base for other
-            // applications that want to have a shared resource + dependency directories.
-            this.EvaluateDirectoryPathOverrides(platformSpecifics);
 
             if (this.Verbose)
             {
@@ -539,14 +793,12 @@ namespace VirtualClient
             IConvertible telemetrySource = null;
             this.Parameters?.TryGetValue(GlobalParameter.TelemetrySource, out telemetrySource);
 
-            ComponentTypeCache.Instance.LoadComponentTypes(AppDomain.CurrentDomain.BaseDirectory);
-
-            ISystemManagement systemManagement = DependencyFactory.CreateSystemManager(this.ClientId, this.ExperimentId, platformSpecifics, this.Isolated);
+            ISystemManagement systemManagement = DependencyFactory.CreateSystemManager(this.ClientId, this.ExperimentId, platformSpecifics, this.ExecutionSystem);
             IApiManager apiManager = new ApiManager(systemManagement.FirewallManager);
+            IAuthorizationManager authorizationManager = new AuthorizationManager();
             IProfileManager profileManager = new ProfileManager();
             ISshClientFactory sshClientFactory = new SshClientFactory();
             List<IBlobManager> blobStores = new List<IBlobManager>();
-            IKeyVaultManager keyVaultManager = new KeyVaultManager();
             ApiClientManager apiClientManager = new ApiClientManager(this.ApiPorts);
 
             // Ensure the core/fundamental directories exist.
@@ -586,34 +838,13 @@ namespace VirtualClient
                     blobStores.Add(DependencyFactory.CreateBlobManager(this.ContentStore));
                 }
 
-                if (this.KeyVault != null && this.ShouldInitializeKeyVault)
-                {
-                    DependencyKeyVaultStore keyVaultStore = EndpointUtility.CreateKeyVaultStoreReference(DependencyStore.KeyVault, endpoint: this.KeyVault, this.CertificateManager ?? new CertificateManager());
-                    keyVaultManager = DependencyFactory.CreateKeyVaultManager(keyVaultStore);
-                }
-
-                if (this.PackageStore != null && PackageStore.StoreType == DependencyStore.StoreTypeAzureCDN)
-                {
-                    DependencyBlobStore blobStore = this.PackageStore as DependencyBlobStore;
-                    IConvertible packageSource = null;
-                    this.Parameters?.TryGetValue(GlobalParameter.PackageStoreSource, out packageSource);
-
-                    ILogger debugLogger = DependencyFactory.CreateFileLoggerProvider(platformSpecifics.GetLogsPath("proxy-traces.log"), TimeSpan.FromSeconds(5), LogLevel.Warning)
-                        .CreateLogger("Proxy");
-
-                    blobStores.Add(DependencyFactory.CreateProxyBlobManager(new DependencyProxyStore(DependencyBlobStore.Packages, blobStore.EndpointUri), packageSource?.ToString(), debugLogger));
-
-                    // Enabling ApiClientManager to save Proxy API will allow downstream to access proxy endpoints as required.
-                    apiClientManager.GetOrCreateProxyApiClient(Guid.NewGuid().ToString(), blobStore.EndpointUri);
-                }
-                else if (this.PackageStore != null)
+                if (this.PackageStore != null)
                 {
                     blobStores.Add(DependencyFactory.CreateBlobManager(this.PackageStore));
                 }
-
-                // Use default public package store if none is defined.
-                if (this.PackageStore == null)
+                else
                 {
+                    // Use default public package store if none is defined.
                     blobStores.Add(DependencyFactory.CreateBlobManager(
                         EndpointUtility.CreateBlobStoreReference(DependencyStore.Packages, CommandBase.defaultPackageStoreUri, this.CertificateManager)));
                 }
@@ -623,13 +854,13 @@ namespace VirtualClient
             dependencies.AddSingleton<PlatformSpecifics>(platformSpecifics);
             dependencies.AddSingleton<IApiManager>(apiManager);
             dependencies.AddSingleton<IApiClientManager>(apiClientManager);
+            dependencies.AddSingleton<IAuthorizationManager>(authorizationManager);
             dependencies.AddSingleton<IConfiguration>(configuration);
             dependencies.AddSingleton<IDiskManager>(systemManagement.DiskManager);
             dependencies.AddSingleton<IExpressionEvaluator>(ProfileExpressionEvaluator.Instance);
             dependencies.AddSingleton<IEnumerable<IBlobManager>>(blobStores);
             dependencies.AddSingleton<IFileSystem>(systemManagement.FileSystem);
             dependencies.AddSingleton<IFirewallManager>(systemManagement.FirewallManager);
-            dependencies.AddSingleton<IKeyVaultManager>(keyVaultManager);
             dependencies.AddSingleton<IPackageManager>(systemManagement.PackageManager);
             dependencies.AddSingleton<IProfileManager>(profileManager);
             dependencies.AddSingleton<ISshClientFactory>(sshClientFactory);
@@ -637,6 +868,7 @@ namespace VirtualClient
             dependencies.AddSingleton<ISystemInfo>(systemManagement);
             dependencies.AddSingleton<ISystemManagement>(systemManagement);
             dependencies.AddSingleton<ProcessManager>(systemManagement.ProcessManager);
+            
 
             IList<ILoggerProvider> loggerProviders = this.InitializeLoggerProviders(dependencies, telemetrySource?.ToString());
             ILogger logger = loggerProviders.Any() ? new LoggerFactory(loggerProviders).CreateLogger("VirtualClient") : NullLogger.Instance;
@@ -644,11 +876,16 @@ namespace VirtualClient
             systemManagement.SetLogger(logger);
             dependencies.AddSingleton<ILogger>(logger);
 
+            if (this.KeyVaultStore != null)
+            {
+                dependencies.AddSingleton<IKeyVaultManager>(DependencyFactory.CreateKeyVaultManager(this.KeyVaultStore));
+            }
+
             // Add in any SSH targets to the dependencies.
-            if (this.TargetAgents?.Any() == true)
+            if (this.Targets?.Any() == true)
             {
                 List<ISshClientProxy> sshClients = new List<ISshClientProxy>();
-                foreach (string targetAgent in this.TargetAgents)
+                foreach (string targetAgent in this.Targets)
                 {
                     if (SshClientProxy.TryGetSshTargetInformation(targetAgent, out string host, out string username, out string password))
                     {
@@ -677,7 +914,7 @@ namespace VirtualClient
             foreach (string loggerDefinition in loggerDefinitions)
             {
                 string loggerName = loggerDefinition;
-                string loggerParameters = string.Empty;
+                string loggerParameters = null;
 
                 // e.g.
                 // --logger=eventhub;sb://anynamespace.servicebus.net?cid=4F93d5a6-7833-4434-8a93-27b0d2ae624c&tid=77ab...
@@ -689,7 +926,10 @@ namespace VirtualClient
                     loggerParameters = loggerDefinition.Substring(indexOfDelimiter + 1).Trim();
                 }
 
-                loggerParameters = this.EvaluatePathReplacements(loggerParameters);
+                if (!string.IsNullOrWhiteSpace(loggerParameters))
+                {
+                    loggerParameters = this.EvaluatePathReplacements(loggerParameters, platformSpecifics);
+                }
 
                 switch (loggerName.ToLowerInvariant())
                 {
@@ -698,16 +938,37 @@ namespace VirtualClient
                         break;
 
                     case "csv":
-                        CommandBase.AddCsvLogging(loggingProviders, platformSpecifics);
+                        CommandBase.AddCsvLogging(loggingProviders, loggerParameters ?? platformSpecifics.LogsDirectory);
                         break;
 
                     case "file":
-                        CommandBase.AddFileLogging(loggingProviders, configuration, platformSpecifics, loggingLevel);
+                        CommandBase.AddFileLogging(loggingProviders, loggerParameters ?? platformSpecifics.LogsDirectory, configuration, loggingLevel);
                         break;
 
                     case "eventhub":
                         DependencyEventHubStore store = EndpointUtility.CreateEventHubStoreReference(DependencyStore.Telemetry, endpoint: loggerParameters, this.CertificateManager ?? new CertificateManager());
-                        CommandBase.AddEventHubLogging(loggingProviders, configuration, store, loggingLevel);
+
+                        // Supports the use of a Proxy for routing Event Hub traffic. This allows clients to use secure endpoints inside of their network 
+                        // to route traffic to the Event Hub namespace (vs. a direct connection).
+                        // (e.g. http://proxy-dmz.contoso.com:135).
+                        EventHubProducerClientOptions clientOptions = new EventHubProducerClientOptions();
+                        string proxyUri = platformSpecifics.GetEnvironmentVariable(EnvironmentVariable.VC_EVENT_HUB_PROXY);
+
+                        if (!string.IsNullOrWhiteSpace(proxyUri))
+                        {
+                            clientOptions.ConnectionOptions.TransportType = Azure.Messaging.EventHubs.EventHubsTransportType.AmqpWebSockets;
+                            clientOptions.ConnectionOptions.Proxy = new System.Net.WebProxy(new Uri(proxyUri), true);
+
+                            string proxyUsername = platformSpecifics.GetEnvironmentVariable(EnvironmentVariable.VC_EVENT_HUB_PROXY_USERNAME);
+                            string proxyPassword = platformSpecifics.GetEnvironmentVariable(EnvironmentVariable.VC_EVENT_HUB_PROXY_PASSWORD);
+
+                            if (!string.IsNullOrWhiteSpace(proxyUsername) && !string.IsNullOrWhiteSpace(proxyPassword))
+                            {
+                                clientOptions.ConnectionOptions.Proxy.Credentials = new NetworkCredential(proxyUsername, proxyPassword);
+                            }
+                        }
+
+                        CommandBase.AddEventHubLogging(loggingProviders, configuration, store, loggingLevel, clientOptions);
                         break;
 
                     case "proxy":
@@ -790,9 +1051,9 @@ namespace VirtualClient
                 .HandleTraces());
         }
 
-        private static void AddCsvLogging(List<ILoggerProvider> loggingProviders, PlatformSpecifics platformSpecifics)
+        private static void AddCsvLogging(List<ILoggerProvider> loggingProviders, string logDirectory)
         {
-            IEnumerable<ILoggerProvider> logProviders = DependencyFactory.CreateCsvFileLoggerProviders(platformSpecifics.LogsDirectory);
+            IEnumerable<ILoggerProvider> logProviders = DependencyFactory.CreateCsvFileLoggerProviders(logDirectory);
 
             if (logProviders?.Any() == true)
             {
@@ -852,7 +1113,7 @@ namespace VirtualClient
             }
         }
 
-        private static void AddEventHubLogging(List<ILoggerProvider> loggingProviders, IConfiguration configuration, DependencyEventHubStore eventHubStore, LogLevel level)
+        private static void AddEventHubLogging(List<ILoggerProvider> loggingProviders, IConfiguration configuration, DependencyEventHubStore eventHubStore, LogLevel level, EventHubProducerClientOptions clientOptions = null)
         {
             if (eventHubStore != null)
             {
@@ -860,7 +1121,7 @@ namespace VirtualClient
 
                 if (settings.IsEnabled)
                 {
-                    IEnumerable<ILoggerProvider> eventHubProviders = DependencyFactory.CreateEventHubLoggerProviders(eventHubStore, settings, level);
+                    IEnumerable<ILoggerProvider> eventHubProviders = DependencyFactory.CreateEventHubLoggerProviders(eventHubStore, settings, level, clientOptions: clientOptions);
                     if (eventHubProviders?.Any() == true)
                     {
                         loggingProviders.AddRange(eventHubProviders);
@@ -869,10 +1130,10 @@ namespace VirtualClient
             }
         }
 
-        private static void AddFileLogging(List<ILoggerProvider> loggingProviders, IConfiguration configuration, PlatformSpecifics platformSpecifics, LogLevel level)
+        private static void AddFileLogging(List<ILoggerProvider> loggingProviders, string logDirectory, IConfiguration configuration, LogLevel level)
         {
             IEnumerable<ILoggerProvider> logProviders = DependencyFactory.CreateFileLoggerProviders(
-                platformSpecifics.LogsDirectory, 
+                logDirectory, 
                 FileLogSettings.Default(), 
                 level);
 
@@ -904,9 +1165,9 @@ namespace VirtualClient
             }
         }
 
-        private static void AddSummaryLogging(List<ILoggerProvider> loggingProviders, string loggerParameters)
+        private static void AddSummaryLogging(List<ILoggerProvider> loggingProviders, string logFilePath)
         {
-            ILoggerProvider summaryLoggerProvider = new SummaryFileLoggerProvider(loggerParameters);
+            ILoggerProvider summaryLoggerProvider = new SummaryFileLoggerProvider(logFilePath);
             loggingProviders.Add(summaryLoggerProvider);
         }
 
@@ -933,7 +1194,7 @@ namespace VirtualClient
             }
         }
 
-        private string EvaluatePathReplacements(string path)
+        private string EvaluatePathReplacements(string path, PlatformSpecifics platformSpecifics)
         {
             if (this.pathReplacements == null)
             {
@@ -942,7 +1203,15 @@ namespace VirtualClient
                 {
                     { "experimentId", this.ExperimentId },
                     { "agentId", this.ClientId },
-                    { "clientId", this.ClientId }
+                    { "clientId", this.ClientId },
+                    { "clientInstance", this.ClientInstance.ToString() },
+
+                    // Default directory/path placeholders are supported as well.
+                    { "logDir", platformSpecifics.LogsDirectory },
+                    { "packageDir", platformSpecifics.PackagesDirectory },
+                    { "stateDir", platformSpecifics.StateDirectory },
+                    { "tempDir", platformSpecifics.TempDirectory },
+                    { "timestamp", VirtualClientRuntime.ExecutionStartTime.ToString("yyyy.MM.dd_hh.mm.ss") }
                 };
 
                 if (this.Metadata?.Any() == true)
@@ -951,13 +1220,7 @@ namespace VirtualClient
                 }
             }
 
-            return FileContext.ResolvePathTemplate(path, this.pathReplacements);
+            return FileContext.ResolvePathTemplate(path, this.pathReplacements, throwIfNotMatched: true);
         }
-
-        /// <summary>
-        /// Determines whether the Key Vault manager should be initialized during dependency setup.
-        /// Can be overridden by derived commands that need to skip Key Vault initialization.
-        /// </summary>
-        protected virtual bool ShouldInitializeKeyVault => true;
     }
 }

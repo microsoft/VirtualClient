@@ -40,17 +40,6 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// The command line argument defined in the profile.
-        /// </summary>
-        public string CommandLine
-        {
-            get
-            {
-                return this.Parameters.GetValue<string>(nameof(StressAppTestExecutor.CommandLine));
-            }
-        }
-
-        /// <summary>
         /// The duration of the StressAppTest workload.
         /// </summary>
         public TimeSpan Duration
@@ -62,13 +51,61 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// The UseCpuStressfulMemoryCopy argument defined in the profile, Switch to toggle StressAppTest built-in option to use more CPU-Stressful memory copy
+        /// Switch to toggle StressAppTest built-in option to use more CPU-Stressful memory copy (-W flag).
         /// </summary>
         public bool UseCpuStressfulMemoryCopy
         {
             get
             {
                 return this.Parameters.GetValue<bool>(nameof(StressAppTestExecutor.UseCpuStressfulMemoryCopy));
+            }
+        }
+
+        /// <summary>
+        /// Optional. Megabytes of RAM to test (-M flag). When not specified, stressapptest auto-detects (~94% of system memory).
+        /// </summary>
+        public int? MemoryInMB
+        {
+            get
+            {
+                if (this.Parameters.TryGetValue(nameof(StressAppTestExecutor.MemoryInMB), out IConvertible value) && value != null)
+                {
+                    return value.ToInt32(null);
+                }
+
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Optional. Number of memory copy threads to run (-m flag). When not specified, stressapptest defaults to 2 threads per CPU.
+        /// </summary>
+        public int? ThreadCount
+        {
+            get
+            {
+                if (this.Parameters.TryGetValue(nameof(StressAppTestExecutor.ThreadCount), out IConvertible value) && value != null)
+                {
+                    return value.ToInt32(null);
+                }
+
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Optional. Number of CPU stress threads to run (-C flag). When not specified, no CPU stress threads are added.
+        /// </summary>
+        public int? CpuStressThreadCount
+        {
+            get
+            {
+                if (this.Parameters.TryGetValue(nameof(StressAppTestExecutor.CpuStressThreadCount), out IConvertible value) && value != null)
+                {
+                    return value.ToInt32(null);
+                }
+
+                return null;
             }
         }
 
@@ -139,17 +176,29 @@ namespace VirtualClient.Actions
             if (this.Duration <= TimeSpan.Zero)
             {
                 throw new WorkloadException(
-                    $"Unexpected profile definition.The action in the profile does not contain the " +
-                    $"required value for'{nameof(this.Duration)}' arguments defined. {nameof(this.Duration)} should be greater than 0",
+                    $"Unexpected profile definition. The action in the profile does not contain the " +
+                    $"required value for '{nameof(this.Duration)}' arguments defined. {nameof(this.Duration)} should be greater than 0.",
                     ErrorReason.InvalidProfileDefinition);
             }
 
-            if (this.CommandLine.Contains("-l"))
+            if (this.MemoryInMB.HasValue && this.MemoryInMB.Value <= 0)
             {
                 throw new WorkloadException(
-                    $"Unexpected profile definition.The action in the profile does not contain the " +
-                    $"required value for'{nameof(this.CommandLine)}' arguments defined. {nameof(this.CommandLine)} should not contain a custom log file, with " +
-                    $"-l parameter. That is being appended programatically",
+                    $"Unexpected profile definition. The '{nameof(this.MemoryInMB)}' parameter must be greater than 0.",
+                    ErrorReason.InvalidProfileDefinition);
+            }
+
+            if (this.ThreadCount.HasValue && this.ThreadCount.Value <= 0)
+            {
+                throw new WorkloadException(
+                    $"Unexpected profile definition. The '{nameof(this.ThreadCount)}' parameter must be greater than 0.",
+                    ErrorReason.InvalidProfileDefinition);
+            }
+
+            if (this.CpuStressThreadCount.HasValue && this.CpuStressThreadCount.Value < 0)
+            {
+                throw new WorkloadException(
+                    $"Unexpected profile definition. The '{nameof(this.CpuStressThreadCount)}' parameter must be greater than or equal to 0.",
                     ErrorReason.InvalidProfileDefinition);
             }
         }
@@ -163,11 +212,26 @@ namespace VirtualClient.Actions
             {
                 using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
-                    string commandLineArguments = this.CommandLine;
-                    commandLineArguments += " -s " + this.Duration.TotalSeconds;
-                    if (this.UseCpuStressfulMemoryCopy && !commandLineArguments.Contains("-W"))
+                    string commandLineArguments = "-s " + this.Duration.TotalSeconds;
+
+                    if (this.UseCpuStressfulMemoryCopy)
                     {
                         commandLineArguments += " -W";
+                    }
+
+                    if (this.MemoryInMB.HasValue)
+                    {
+                        commandLineArguments += " -M " + this.MemoryInMB.Value;
+                    }
+
+                    if (this.ThreadCount.HasValue)
+                    {
+                        commandLineArguments += " -m " + this.ThreadCount.Value;
+                    }
+
+                    if (this.CpuStressThreadCount.HasValue)
+                    {
+                        commandLineArguments += " -C " + this.CpuStressThreadCount.Value;
                     }
 
                     // Example command with arguments: ./stressapptest -s 60 -l stressapptestLogs_202301131037407031.txt

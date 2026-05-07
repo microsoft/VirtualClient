@@ -38,5 +38,14 @@ namespace VirtualClient
         /// </summary>
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
         Task<IEnumerable<Disk>> GetDisksAsync(CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Sets the SAN (Storage Area Network) policy so that newly discovered disks are brought
+        /// online and writable rather than left offline or read-only. On Windows this runs the
+        /// DiskPart command <c>san policy=onlineall</c>, which prevents JBOD disks from being
+        /// marked read-only by the OS. This operation is a no-op on Linux.
+        /// </summary>
+        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+        Task SetSanPolicyAsync(CancellationToken cancellationToken);
     }
 }

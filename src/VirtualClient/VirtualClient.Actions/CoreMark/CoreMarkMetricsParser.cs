@@ -46,23 +46,23 @@ namespace VirtualClient.Actions
             metrics.AddRange(this.CoreMarkResult.GetMetrics(nameIndex: 0, valueIndex: 1, unit: "NA", namePrefix: string.Empty, ignoreFormatError: true));
             // CoreMark result doesn't define the unit so needs manually assign units.
             metrics.Where(m => m.Name == "CoreMark Size").FirstOrDefault().Unit = "bytes";
-            metrics.Where(m => m.Name == "CoreMark Size").FirstOrDefault().Verbosity = 2;
+            metrics.Where(m => m.Name == "CoreMark Size").FirstOrDefault().Verbosity = 5;
             metrics.Where(m => m.Name == "Total ticks").FirstOrDefault().Unit = "ticks";
-            metrics.Where(m => m.Name == "Total ticks").FirstOrDefault().Verbosity = 2;
+            metrics.Where(m => m.Name == "Total ticks").FirstOrDefault().Verbosity = 5;
             metrics.Where(m => m.Name == "Total time (secs)").FirstOrDefault().Unit = "secs";
-            metrics.Where(m => m.Name == "Total time (secs)").FirstOrDefault().Verbosity = 2;
+            metrics.Where(m => m.Name == "Total time (secs)").FirstOrDefault().Verbosity = 5;
             metrics.Where(m => m.Name == "Iterations/Sec").FirstOrDefault().Unit = "iterations/sec";
             metrics.Where(m => m.Name == "Iterations/Sec").FirstOrDefault().Relativity = MetricRelativity.HigherIsBetter;
-            metrics.Where(m => m.Name == "Iterations/Sec").FirstOrDefault().Verbosity = 0;
+            metrics.Where(m => m.Name == "Iterations/Sec").FirstOrDefault().Verbosity = 1;
             metrics.Where(m => m.Name == "Iterations").FirstOrDefault().Unit = "iterations";
             metrics.Where(m => m.Name == "Iterations").FirstOrDefault().Relativity = MetricRelativity.Undefined;
-            metrics.Where(m => m.Name == "Iterations").FirstOrDefault().Verbosity = 2;
+            metrics.Where(m => m.Name == "Iterations").FirstOrDefault().Verbosity = 5;
 
             // This line won't be there if it's running single thread.
             if (metrics.Any(m => m.Name == "Parallel PThreads"))
             {
                 metrics.Where(m => m.Name == "Parallel PThreads").FirstOrDefault().Unit = "threads";
-                metrics.Where(m => m.Name == "Parallel PThreads").FirstOrDefault().Verbosity = 2;
+                metrics.Where(m => m.Name == "Parallel PThreads").FirstOrDefault().Verbosity = 5;
             }
 
             return metrics;

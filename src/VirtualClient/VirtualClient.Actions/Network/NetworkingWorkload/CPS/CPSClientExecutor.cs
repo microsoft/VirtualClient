@@ -7,11 +7,13 @@ namespace VirtualClient.Actions.NetworkPerformance
     using System.Collections.Generic;
     using System.Linq;
     using Microsoft.Extensions.DependencyInjection;
+    using VirtualClient.Common;
     using VirtualClient.Contracts;
 
     /// <summary>
     /// CPS(Connections Per Second) Tool Client Executor. 
     /// </summary>
+    [SupportedPlatforms("linux-arm64,linux-x64,win-arm64,win-x64")]
     public class CPSClientExecutor : CPSExecutor
     {
         /// <summary>

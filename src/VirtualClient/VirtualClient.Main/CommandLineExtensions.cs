@@ -19,6 +19,8 @@ namespace VirtualClient
     /// </summary>
     public static class CommandLineExtensions
     {
+        private static readonly Regex OptionExpression = new Regex(@"^(-[a-z0-9]|--[a-z0-9-_]+)", RegexOptions.IgnoreCase);
+
         /// <summary>
         /// Adds the default settings/configuration to the command line builder.
         /// </summary>
@@ -42,135 +44,46 @@ namespace VirtualClient
         }
 
         /// <summary>
-        /// Throws an <see cref="ArgumentException"/> if the parse results indicate an error in
-        /// the processing of the command line arguments supplied.
+        /// Throws an <see cref="ArgumentException"/> if there are unsupported options defined on
+        /// in the arguments (command line) provided to the application.
         /// </summary>
-        public static void ThrowOnUsageError(this ParseResult parseResults)
+        public static void WithOptionValidation(this Command command, string[] args)
         {
-            parseResults.ThrowIfNull(nameof(parseResults));
+            // The System.CommandLine library does not do a good job of handling unsupported/unrecognized
+            // options provided by the user on the command line. Effectively, the parser just handles them
+            // even if they are NOT defined on the Command definition. This leads to confusing situations for users
+            // where they might have simply misspelled the option.
+            command.TreatUnmatchedTokensAsErrors = true;
 
-            if (!CommandLineExtensions.ContainsHelpFlag(parseResults) && !CommandLineExtensions.ContainsVersionFlag(parseResults))
+            command.AddValidator(result =>
             {
-                // Scenario 1:
-                // General parsing errors for the command line options.
-                if (parseResults.Errors?.Any() == true)
+                List<string> suppliedOptions = new List<string>();
+                foreach (var arg in args)
                 {
-                    throw new ArgumentException($"Invalid Usage. {string.Join(" ", parseResults.Errors.Select(e => e.Message))}");
+                    Match optionMatch = CommandLineExtensions.OptionExpression.Match(arg);
+                    if (optionMatch.Success)
+                    {
+                        suppliedOptions.Add(optionMatch.Groups[1].Value);
+                    }
                 }
 
-                // The System.CommandLine library does not do a good job of handling unsupported/unrecognized
-                // options provided by the user on the command line. Effectively, the parser just handles them
-                // even if they are NOT defined on the Command definition. This leads to confusing situations for users
-                // where they might have simply misspelled the option.
-                //
-                // Deeper Context:
-                // When the System.CommandLine library encounters an option on the command line that it does not recognize,
-                // it parses the option as a positional Argument vs. as an Option.
-                //
-                // e.g.
-                // Option = --profile
-                // Argument = PERF-CPU-OPENSSL.json
-                // Option = --timeout
-                // Argument = 01:00:00
-                // Argument = --unrecognized-option
-                // Argument = Value for the unrecognized option
-                List<string> unsupportedOptions = new List<string>();
-
-                if (parseResults.Tokens?.Any() == true)
+                if (suppliedOptions.Any())
                 {
-                    // Scenario 2:
-                    // There are no options supported on the command line at all.
-                    ICommand command = parseResults.CommandResult.Command;
-                    IReadOnlyList<IOption> supportedOptions = command.Options;
-                    if (supportedOptions?.Any() != true)
-                    {
-                        IEnumerable<Token> userCommandLineOptions = parseResults.Tokens.Where(t => t.Type == TokenType.Option);
-                        if (userCommandLineOptions?.Any() == true)
-                        {
+                    IEnumerable<string> supportedOptions = result.Command.Options
+                        .SelectMany(opt => opt.Aliases)
+                        .Where(alias => alias.StartsWith('-'));
 
-                            unsupportedOptions.AddRange(userCommandLineOptions.Select(o => o.Value));
-                        }
-                    }
-
-                    // Scenario 3:
-                    // There are no options on the command line that are not valid for the command.
-                    IEnumerable<Token> arguments = parseResults.Tokens.Where(t => t.Type == TokenType.Argument);
-                    if (arguments?.Any() == true)
-                    {
-                        Regex optionMatchExpression = new Regex("--[a-z]+", RegexOptions.IgnoreCase);
-                        foreach (Token argument in arguments)
-                        {
-                            if (optionMatchExpression.IsMatch(argument.Value?.Trim()))
-                            {
-                                unsupportedOptions.Add(argument.Value);
-                            }
-                        }
-                    }
-
-                    if (unsupportedOptions.Any())
+                    IEnumerable<string> unsupportedOptions = suppliedOptions.Except(supportedOptions);
+                    if (unsupportedOptions?.Any() == true)
                     {
                         throw new ArgumentException(
                             $"Invalid Usage. The following command line options are not supported: {string.Join(", ", unsupportedOptions)}. " +
-                            $"Confirm the options are supported and that they are not simply misspelled.");
+                            $"Confirm the command line options used and that they are not simply misspelled.");
                     }
                 }
-            }
-        }
 
-        private static bool ContainsHelpFlag(ParseResult parseResults)
-        {
-            bool containsHelpFlag = false;
-            List<string> helpFlags = new List<string>
-            {
-                "/?",
-                "-h",
-                "--help"
-            };
-
-            if (parseResults?.Tokens?.Where(t => t.Type == TokenType.Option)?.Any(token => helpFlags.Contains(token.Value?.Trim())) == true)
-            {
-                containsHelpFlag = true;
-            }
-
-            return containsHelpFlag;
-        }
-
-        private static bool ContainsVersionFlag(ParseResult parseResults)
-        {
-            bool containsVersionFlag = false;
-            Option versionOption = OptionFactory.CreateVersionOption();
-            if (parseResults?.Tokens?.Any(token => versionOption.Aliases.Contains(token.Value.ToLower())) == true)
-            {
-                containsVersionFlag = true;
-            }
-
-            return containsVersionFlag;
-        }
-
-        private static void StandardizeForSingleQuoteSupport(List<string> args)
-        {
-            Regex singleQuoteExpression = new Regex(@"\s*'(.*?)'\s*", RegexOptions.IgnoreCase);
-            Regex doubleQuoteExpression = new Regex("\"");
-
-            List<string> standardizedArguments = new List<string>();
-
-            foreach (string arg in args)
-            {
-                Match singleQuotedArgument = singleQuoteExpression.Match(arg);
-                if (singleQuotedArgument.Success)
-                {
-                    string normalizedArgument = singleQuotedArgument.Groups[1].Value;
-                    
-                    // We have to address any internal double-quotes in the argument to
-                    // avoid parsing errors. We just escape them.
-                    //
-                    // e.g. 
-                    {
-                        
-                    }
-                    standardizedArguments.Add($"\"{singleQuotedArgument.Groups[1].Value}\"");
-                }
-            }
+                return string.Empty;
+            });
         }
 
         private static Task OutputVersionAsync(InvocationContext context, Func<InvocationContext, Task> nextTask)

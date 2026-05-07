@@ -47,7 +47,6 @@ namespace VirtualClient.Actions
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(StressAppTestExecutor.PackageName), "stressapptest" },
-                { nameof(StressAppTestExecutor.CommandLine), "" },
                 { nameof(StressAppTestExecutor.Scenario), "ApplyStress" },
                 { nameof(StressAppTestExecutor.Duration), "00:01:00" },
                 { nameof(StressAppTestExecutor.UseCpuStressfulMemoryCopy), false }
@@ -161,14 +160,52 @@ namespace VirtualClient.Actions
             }
 
             this.mockFixture.Parameters[nameof(StressAppTestExecutor.Scenario)] = "ApplyStress";
-            this.mockFixture.Parameters[nameof(StressAppTestExecutor.CommandLine)] = "-l logfile.txt";
+            this.mockFixture.Parameters[nameof(StressAppTestExecutor.Duration)] = "00:00:00";
+            using (TestStressAppTestExecutor executor = new TestStressAppTestExecutor(this.mockFixture))
+            {
+                Assert.Throws<WorkloadException>(() => executor.Validate());
+            }
+        }
+
+        [Test]
+        [TestCase(PlatformID.Unix)]
+        public void StressAppTestExecutorThrowsWhenMemoryInMBIsInvalid(PlatformID platform)
+        {
+            this.SetupTest(platform);
+
+            this.mockFixture.Parameters[nameof(StressAppTestExecutor.MemoryInMB)] = 0;
             using (TestStressAppTestExecutor executor = new TestStressAppTestExecutor(this.mockFixture))
             {
                 Assert.Throws<WorkloadException>(() => executor.Validate());
             }
 
-            this.mockFixture.Parameters[nameof(StressAppTestExecutor.CommandLine)] = "";
-            this.mockFixture.Parameters[nameof(StressAppTestExecutor.Duration)] = "00:00:00";
+            this.mockFixture.Parameters[nameof(StressAppTestExecutor.MemoryInMB)] = -1;
+            using (TestStressAppTestExecutor executor = new TestStressAppTestExecutor(this.mockFixture))
+            {
+                Assert.Throws<WorkloadException>(() => executor.Validate());
+            }
+        }
+
+        [Test]
+        [TestCase(PlatformID.Unix)]
+        public void StressAppTestExecutorThrowsWhenThreadCountIsInvalid(PlatformID platform)
+        {
+            this.SetupTest(platform);
+
+            this.mockFixture.Parameters[nameof(StressAppTestExecutor.ThreadCount)] = 0;
+            using (TestStressAppTestExecutor executor = new TestStressAppTestExecutor(this.mockFixture))
+            {
+                Assert.Throws<WorkloadException>(() => executor.Validate());
+            }
+        }
+
+        [Test]
+        [TestCase(PlatformID.Unix)]
+        public void StressAppTestExecutorThrowsWhenCpuStressThreadCountIsInvalid(PlatformID platform)
+        {
+            this.SetupTest(platform);
+
+            this.mockFixture.Parameters[nameof(StressAppTestExecutor.CpuStressThreadCount)] = -1;
             using (TestStressAppTestExecutor executor = new TestStressAppTestExecutor(this.mockFixture))
             {
                 Assert.Throws<WorkloadException>(() => executor.Validate());
@@ -239,6 +276,145 @@ namespace VirtualClient.Actions
             TimeSpan timespanBasedDuration = executor.Duration;
 
             Assert.AreEqual(integerBasedDuration, timespanBasedDuration);
+        }
+
+        [Test]
+        [TestCase(PlatformID.Unix, @"/linux-x64/stressapptest")]
+        public async Task StressAppTestExecutorIncludesMemoryParameterInCommandLine(PlatformID platform, string command)
+        {
+            this.SetupTest(platform);
+            this.mockFixture.Parameters[nameof(StressAppTestExecutor.MemoryInMB)] = 1024;
+
+            using (TestStressAppTestExecutor executor = new TestStressAppTestExecutor(this.mockFixture))
+            {
+                bool commandExecuted = false;
+                this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
+                {
+                    if (arguments.Contains("-M 1024"))
+                    {
+                        commandExecuted = true;
+                    }
+
+                    return new InMemoryProcess
+                    {
+                        StartInfo = new ProcessStartInfo
+                        {
+                            FileName = exe,
+                            Arguments = arguments
+                        },
+                        ExitCode = 0,
+                        OnStart = () => true,
+                        OnHasExited = () => true
+                    };
+                };
+
+                await executor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+                Assert.IsTrue(commandExecuted);
+            }
+        }
+
+        [Test]
+        [TestCase(PlatformID.Unix, @"/linux-x64/stressapptest")]
+        public async Task StressAppTestExecutorIncludesThreadCountParameterInCommandLine(PlatformID platform, string command)
+        {
+            this.SetupTest(platform);
+            this.mockFixture.Parameters[nameof(StressAppTestExecutor.ThreadCount)] = 8;
+
+            using (TestStressAppTestExecutor executor = new TestStressAppTestExecutor(this.mockFixture))
+            {
+                bool commandExecuted = false;
+                this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
+                {
+                    if (arguments.Contains("-m 8"))
+                    {
+                        commandExecuted = true;
+                    }
+
+                    return new InMemoryProcess
+                    {
+                        StartInfo = new ProcessStartInfo
+                        {
+                            FileName = exe,
+                            Arguments = arguments
+                        },
+                        ExitCode = 0,
+                        OnStart = () => true,
+                        OnHasExited = () => true
+                    };
+                };
+
+                await executor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+                Assert.IsTrue(commandExecuted);
+            }
+        }
+
+        [Test]
+        [TestCase(PlatformID.Unix, @"/linux-x64/stressapptest")]
+        public async Task StressAppTestExecutorIncludesCpuStressThreadCountParameterInCommandLine(PlatformID platform, string command)
+        {
+            this.SetupTest(platform);
+            this.mockFixture.Parameters[nameof(StressAppTestExecutor.CpuStressThreadCount)] = 4;
+
+            using (TestStressAppTestExecutor executor = new TestStressAppTestExecutor(this.mockFixture))
+            {
+                bool commandExecuted = false;
+                this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
+                {
+                    if (arguments.Contains("-C 4"))
+                    {
+                        commandExecuted = true;
+                    }
+
+                    return new InMemoryProcess
+                    {
+                        StartInfo = new ProcessStartInfo
+                        {
+                            FileName = exe,
+                            Arguments = arguments
+                        },
+                        ExitCode = 0,
+                        OnStart = () => true,
+                        OnHasExited = () => true
+                    };
+                };
+
+                await executor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+                Assert.IsTrue(commandExecuted);
+            }
+        }
+
+        [Test]
+        [TestCase(PlatformID.Unix, @"/linux-x64/stressapptest")]
+        public async Task StressAppTestExecutorOmitsOptionalParametersWhenNotSpecified(PlatformID platform, string command)
+        {
+            this.SetupTest(platform);
+
+            using (TestStressAppTestExecutor executor = new TestStressAppTestExecutor(this.mockFixture))
+            {
+                bool commandCorrect = false;
+                this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
+                {
+                    if (!arguments.Contains("-M") && !arguments.Contains("-m ") && !arguments.Contains("-C"))
+                    {
+                        commandCorrect = true;
+                    }
+
+                    return new InMemoryProcess
+                    {
+                        StartInfo = new ProcessStartInfo
+                        {
+                            FileName = exe,
+                            Arguments = arguments
+                        },
+                        ExitCode = 0,
+                        OnStart = () => true,
+                        OnHasExited = () => true
+                    };
+                };
+
+                await executor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+                Assert.IsTrue(commandCorrect);
+            }
         }
 
         private class TestStressAppTestExecutor : StressAppTestExecutor

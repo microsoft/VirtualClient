@@ -115,7 +115,7 @@ aspects of the workload execution.
 
   | Parameter                 | Purpose                                                                         | Accepted Values |
   |---------------------------|-------------------------------------------------------------------------------|-----------------|
-  | Scenario                  | Scenario use to define the given action of profile. This can be used to specify exact actions to run or exclude from the profile.  | Any string |
+  | Scenario                  | Scenario used to define the given action of profile. This can be used to specify exact actions to run or exclude from the profile.  | Any string |
   | MetricsScenario           | The name to use as the "scenario" for all metrics output for the particular profile action. | |
   | CommandLine               | The command line parameters for FIO tool set. |     Any Valid FIO arguments            |
   | DiskFilter                | Filter allowing the user to select the disks on which to test. | See the link 'Testing Disks' at the top for more details. |
@@ -138,25 +138,25 @@ aspects of the workload execution.
 
   ``` bash
   # Run the workload on the system (default = largest disks)
-  ./VirtualClient --profile=PERF-IO-FIO.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
+  ./VirtualClient --profile=PERF-IO-FIO.json --system=Demo --timeout=1440
 
   # The example above runs on the same disks as having DiskFilter=BiggestSize
-  ./VirtualClient --profile=PERF-IO-FIO.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=DiskFilter=BiggestSize
+  ./VirtualClient --profile=PERF-IO-FIO.json --system=Demo --timeout=1440 --parameters=DiskFilter=BiggestSize
 
   # Run the workload against the operating system disk
-  ./VirtualClient --profile=PERF-IO-FIO.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=DiskFilter=OSDisk
+  ./VirtualClient --profile=PERF-IO-FIO.json --system=Demo --timeout=1440 --parameters=DiskFilter=OSDisk
 
   # Run the workload against all of the disks except the operating system disk.
-  ./VirtualClient --profile=PERF-IO-FIO.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=DiskFilter=OSDisk:false
+  ./VirtualClient --profile=PERF-IO-FIO.json --system=Demo --timeout=1440 --parameters=DiskFilter=OSDisk:false
 
   # Run the workload on specific drives/disks
-  ./VirtualClient --profile=PERF-IO-FIO.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=DiskFilter=DiskPath:/dev/sdc1,/dev/sdd1
+  ./VirtualClient --profile=PERF-IO-FIO.json --system=Demo --timeout=1440 --parameters=DiskFilter=DiskPath:/dev/sdc1,/dev/sdd1
 
   # Run against smaller disks on the system
-  ./VirtualClient --profile=PERF-IO-FIO.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=DiskFilter=OSDisk:false&smallestSize,,,DiskFillSize=26G,,,FileSize=26G
+  ./VirtualClient --profile=PERF-IO-FIO.json --system=Demo --timeout=1440 --parameters=DiskFilter=OSDisk:false&smallestSize,,,DiskFillSize=26G,,,FileSize=26G
 
   # Run specific scenarios only. Each action in a profile as a 'Scenario' name.
-  ./VirtualClient --profile=PERF-IO-FIO.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --scenarios=RandomWrite_4k_BlockSize,RandomWrite_8k_BlockSize,RandomRead_8k_BlockSize,RandomRead_4k_BlockSize
+  ./VirtualClient --profile=PERF-IO-FIO.json --system=Demo --timeout=1440 --scenarios=RandomWrite_4k_BlockSize,RandomWrite_8k_BlockSize,RandomRead_8k_BlockSize,RandomRead_4k_BlockSize
   ```
 
 -----------------------------------------------------------------------
@@ -230,7 +230,7 @@ Therefore, they are performed on different disks
   | SequentialWriteBlockSize  | Sequential write component's Block size. If it is provided it overwrites the DefaultSequentialIOBlockSize for Sequential write component.  |
   | SequentialWriteNumJobs | Sequential write component's Number of jobs. If it is provided it overwrites the DefaultNumJobs for Sequential write component. |
   | ProcessModel              |  Allows the user to override the default value you can selection Single Process for all disk(SingleProcess) or 1 process for each disk under test (SingleProcessPerDisk). |
-  | Scenario                  | Scenario use to define the given action of profile  |
+  | Scenario                  | Scenario used to define the given action of profile  |
   | Tags                      | Tags usefull for telemetry data |
 
 * **Profile Runtimes**  
@@ -243,5 +243,5 @@ Therefore, they are performed on different disks
 
   ``` bash
   # Run the workload on the system
-  ./VirtualClient --profile=PERF-IO-FIO-OLTP.json --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
+  ./VirtualClient --profile=PERF-IO-FIO-OLTP.json --timeout=1440
   ```

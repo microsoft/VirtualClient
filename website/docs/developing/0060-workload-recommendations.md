@@ -34,7 +34,7 @@ The following sections describes some of the aspects of good options for workloa
 The following section offers a few other recommendations when selecting a workload for easy integrated into the Virtual Client.
 
 * #### Simple Command Line Tools are Preferred
-  All platforms support executables and there is a lot of of pre-existing OS/systems integration support. Command line executables can typically be compiled 
+  All platforms support executables and there is a lot of pre-existing OS/systems integration support. Command line executables can typically be compiled 
   to support multiple OS platforms (Windows vs. Linux) as well as CPU architectures. Command line executables are easy to port around (e.g. copy, download etc...).
   Workloads that require GUI support should be generally avoided as they introduce significant challenges for automation. They are often difficult to 
   integrate into automation workflows and may not even run in certain server OS environments.

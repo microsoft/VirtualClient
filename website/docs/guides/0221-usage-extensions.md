@@ -169,7 +169,7 @@ is covered more in-depth in the `Developing Extensions` documentation noted at t
   ```
 
 ### Script-Based Extensions
-The script-based extensions model allows developers and users to provide interpreted scripts written in languages such as Python or PowerShell to to a build of the
+The script-based extensions model allows developers and users to provide interpreted scripts written in languages such as Python or PowerShell to a build of the
 Virtual Client runtime/executable. Virtual Client has out-of-box support for running custom scripts and for defining the full workflow specifics within a custom profile.
 This extensions model does not typically require any work in the Virtual Client codebase. Users/developers place their scripts locally in the system or as an extension in a Virtual Client package the same as
 other packages and include any content or binaries (if required) to support the script executions. The folder structure for extensions is covered more in-depth in the 

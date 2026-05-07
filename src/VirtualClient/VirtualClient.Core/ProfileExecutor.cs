@@ -268,6 +268,16 @@ namespace VirtualClient
                         }
 
                         // If we timeout or a reboot is requested, we will request all background processes to cancel/exit.
+                        if (timing.IsTimedOut)
+                        {
+                            EventContext timeoutContext = EventContext.Persisted()
+                                .AddContext("timeout", timing.Duration)
+                                .AddContext("timeoutTimestamp", timing.Timeout);
+
+                            this.Logger.LogMessage($"{nameof(ProfileExecutor)}.ExperimentTimeoutReached", LogLevel.Warning, timeoutContext);
+                            ConsoleLogger.Default.LogWarning("Profile: Experiment timeout reached. Canceling in-progress workloads.");
+                        }
+
                         await tokenSource.CancelAsync();
 
                         // We allow the user to supply an instruction on the command line to force the application
@@ -428,7 +438,7 @@ namespace VirtualClient
 
                                         try
                                         {
-                                            ProfileExecutor.OutputComponentStart("Action", action);
+                                            action.OutputComponentStart();
                                             await action.ExecuteAsync(cancellationToken).ConfigureAwait(false);
                                         }
                                         finally
@@ -516,7 +526,7 @@ namespace VirtualClient
 
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        ProfileExecutor.OutputComponentStart("Monitor", monitor);
+                        monitor.OutputComponentStart();
                         monitoringTasks.Add(monitor.ExecuteAsync(cancellationToken));
                     }
                 }
@@ -625,7 +635,7 @@ namespace VirtualClient
                             // also being correlated with the parent context defined at the beginning of the profile execution.
                             EventContext.Persist(Guid.NewGuid(), parentContext.ActivityId);
 
-                            ProfileExecutor.OutputComponentStart("Dependency", dependency);
+                            dependency.OutputComponentStart();
                             await dependency.ExecuteAsync(cancellationToken).ConfigureAwait(false);
                         }
                         catch (VirtualClientException)
@@ -657,18 +667,6 @@ namespace VirtualClient
                         }
                     }
                 }
-            }
-        }
-
-        private static void OutputComponentStart(string componentType, VirtualClientComponent component)
-        {
-            if (!string.IsNullOrWhiteSpace(component.Scenario))
-            {
-                ConsoleLogger.Default.LogInformation($"Profile: {componentType} = {component.TypeName} (scenario={component.Scenario})");
-            }
-            else
-            {
-                ConsoleLogger.Default.LogInformation($"Profile: {componentType} = {component.TypeName}");
             }
         }
 

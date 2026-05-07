@@ -17,6 +17,7 @@ namespace VirtualClient.Contracts
     public class FileContext
     {
         private const string FileTimestampFormat = "yyyy-MM-ddTHH-mm-ss-ffffffK";
+        private static readonly char[] TrimChars = new char[] { '/', '\\' };
         private static readonly Regex PathReservedCharacterExpression = new Regex(@"[""<>:|?*\\/]+", RegexOptions.Compiled);
         private static readonly Regex TemplatePlaceholderExpression = new Regex(@"\{(.*?)\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
@@ -114,11 +115,12 @@ namespace VirtualClient.Contracts
         /// </summary>
         /// <param name="pathTemplate">A path template containing placeholders to resolve (e.g. {experimentId}-summary.txt).</param>
         /// <param name="replacements">Provides the replacement values for the placeholders in the path template.</param>
+        /// <param name="throwIfNotMatched">True to throw an exception if any one or more of the placeholder references are not matched.</param>
         /// <returns>
         /// A path having matching placeholders replaced with actual values 
         /// (e.g. {experimentId}-summary.txt -> afda108a-4be9-4fe2-a9ef-7b787150896a-summary.txt).
         /// </returns>
-        public static string ResolvePathTemplate(string pathTemplate, IDictionary<string, IConvertible> replacements)
+        public static string ResolvePathTemplate(string pathTemplate, IDictionary<string, IConvertible> replacements, bool throwIfNotMatched = false)
         {
             string resolvedTemplate = pathTemplate;
             MatchCollection matches = FileContext.TemplatePlaceholderExpression.Matches(pathTemplate);
@@ -156,12 +158,20 @@ namespace VirtualClient.Contracts
 
                     if (!placeholderMatched)
                     {
-                        resolvedTemplate = resolvedTemplate.Replace(match.Value, string.Empty);
+                        if (throwIfNotMatched)
+                        {
+                            throw new ArgumentException(
+                                $"Invalid path placeholder reference. The placeholder '{{{templatePlaceholder}}}' does not have a corresponding replacement. " +
+                                $"This placeholder is either not a supported out-of-box option or is not defined in the metadata provided to the application " +
+                                $"on the command line.");
+                        }
+
+                        resolvedTemplate = Regex.Replace(resolvedTemplate, $@"{match.Value}\s*[/\\]*", string.Empty, RegexOptions.IgnoreCase);
                     }
                 }
             }
 
-            return resolvedTemplate;
+            return resolvedTemplate?.TrimEnd(FileContext.TrimChars);
         }
 
         private static bool TryResolvePlaceholder(IDictionary<string, IConvertible> metadata, string propertyName, out string resolvedValue)

@@ -16,16 +16,18 @@ namespace VirtualClient.Actions
     using VirtualClient;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
-    using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
 
     /// <summary>
     /// PostgreSQL Executor
     /// </summary>
+    [SupportedPlatforms("linux-x64")]
     public class HammerDBExecutor : VirtualClientComponent
     {
+        private static string createDBTclName = "createDB.tcl";
         private readonly IStateManager stateManager;
+        private static readonly List<int> Factors = new List<int> { 1, 10, 30, 100, 300, 1000, 3000, 10000, 30000, 100000 };
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HammerDBExecutor"/> class.
@@ -45,24 +47,14 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Defines the name of the createDB TCL file.
+        /// The specifed action that controls the execution of the dependency.
         /// </summary>
-        public string CreateDBTclName
+        public string Action
         {
             get
             {
-                return "createDB.tcl";
-            }
-        }
-
-        /// <summary>
-        /// Defines the name of the runTransactions TCL file.
-        /// </summary>
-        public string RunTransactionsTclName
-        {
-            get
-            {
-                return "runTransactions.tcl";
+                this.Parameters.TryGetValue(nameof(this.Action), out IConvertible action);
+                return action?.ToString();
             }
         }
 
@@ -85,7 +77,7 @@ namespace VirtualClient.Actions
             get
             {
                 byte[] hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes("default"));
-                return Convert.ToBase64String(hashBytes);
+                return Convert.ToHexString(hashBytes);
             }
         }
 
@@ -125,14 +117,13 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Number of threads.
+        /// Workload duration.
         /// </summary>
-        public int? Threads
+        public TimeSpan Duration
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(HammerDBClientExecutor.Threads), out IConvertible threads);
-                return threads?.ToInt32(CultureInfo.InvariantCulture);
+                return this.Parameters.GetTimeSpanValue(nameof(this.Duration));
             }
         }
 
@@ -145,6 +136,19 @@ namespace VirtualClient.Actions
             {
                 this.Parameters.TryGetValue(nameof(HammerDBClientExecutor.Workload), out IConvertible workload);
                 return workload?.ToString();
+            }
+        }
+
+        /// <summary>
+        /// The scale factor option passed to HammerDB (TPCH only).
+        /// 1 = 1GB, 10 = 10GB, etc.
+        /// </summary>
+        public string ScaleFactor
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(HammerDBClientExecutor.ScaleFactor), out IConvertible scaleFactor);
+                return scaleFactor?.ToString();
             }
         }
 
@@ -182,6 +186,11 @@ namespace VirtualClient.Actions
         protected string HammerDBPackagePath { get; set; }
 
         /// <summary>
+        /// The true HammerDB scenario arguments used to prepare the database.
+        /// </summary>
+        protected string HammerDBScenarioArguments { get; set; }
+
+        /// <summary>
         /// An interface that can be used to communicate with the underlying system.
         /// </summary>
         protected ISystemManagement SystemManager => this.Dependencies.GetService<ISystemManagement>();
@@ -196,7 +205,7 @@ namespace VirtualClient.Actions
             HammerDBState state = await this.stateManager.GetStateAsync<HammerDBState>(nameof(HammerDBState), cancellationToken)
                ?? new HammerDBState();
 
-            if (state.DatabaseCreated != 2)
+            if (!state.DatabasePopulated)
             {
                 await this.Logger.LogMessageAsync($"{this.TypeName}.{this.Scenario}", telemetryContext.Clone(), async () =>
                 {
@@ -205,7 +214,8 @@ namespace VirtualClient.Actions
                         await this.PrepareSQLDatabase(telemetryContext, cancellationToken);
                     }
                 });
-                state.DatabaseCreated++;
+
+                state.DatabasePopulated = true;
                 await this.stateManager.SaveStateAsync<HammerDBState>(nameof(HammerDBState), state, cancellationToken);
             }
         }
@@ -298,9 +308,8 @@ namespace VirtualClient.Actions
         private async Task PrepareSQLDatabase(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             string command = "python3";
-
-            string arguments = $"{this.HammerDBPackagePath}/populate-database.py --createDBTCLPath {this.CreateDBTclName}";
-
+            string arguments = $"{this.PlatformSpecifics.Combine(this.HammerDBPackagePath, "populate-database.py")} --createDBTCLPath {createDBTclName}";
+            
             using (IProcessProxy process = await this.ExecuteCommandAsync(
                 command,
                 arguments,
@@ -318,16 +327,15 @@ namespace VirtualClient.Actions
 
         private async Task ConfigureCreateHammerDBFile(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string command = $"python3";
-            string arguments = $"{this.HammerDBPackagePath}/configure-workload-generator.py --workload {this.Workload} --sqlServer {this.SQLServer} --port {this.Port}" +
-                    $" --virtualUsers {this.VirtualUsers} --warehouseCount {this.WarehouseCount} --password {this.SuperUserPassword} --dbName {this.DatabaseName} --hostIPAddress {this.ServerIpAddress}";
+            await this.GenerateCommandLineArguments(cancellationToken);
 
             using (IProcessProxy process = await this.ExecuteCommandAsync(
-                command,
-                arguments,
+                $"python3",
+                this.HammerDBScenarioArguments,
                 this.HammerDBPackagePath,
                 telemetryContext,
-                cancellationToken))
+                cancellationToken,
+                runElevated: true))
             {
                 if (!cancellationToken.IsCancellationRequested)
                 {
@@ -335,6 +343,33 @@ namespace VirtualClient.Actions
                     process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
                 }
             }
+        }
+
+        private Task GenerateCommandLineArguments(CancellationToken cancellationToken)
+        {
+            string arguments = $"{this.PlatformSpecifics.Combine(this.HammerDBPackagePath, "configure-workload-generator.py")} --workload {this.Workload} --sqlServer {this.SQLServer} --port {this.Port}" +
+                    $" --virtualUsers {this.VirtualUsers} --password {this.SuperUserPassword} --dbName {this.DatabaseName} --hostIPAddress {this.ServerIpAddress}";
+
+            if (this.Workload.Equals("tpcc", StringComparison.OrdinalIgnoreCase))
+            {
+                arguments = $"{arguments} --warehouseCount {this.WarehouseCount} --duration {this.Duration.TotalMinutes}";
+            }
+            else if (this.Workload.Equals("tpch", StringComparison.OrdinalIgnoreCase))
+            {
+                if (!Factors.Contains(Convert.ToInt32(this.ScaleFactor)))
+                {
+                    throw new WorkloadException(
+                        $"The scale factor '{this.ScaleFactor}' is not supported. Supported scale factors include: " +
+                        $"{string.Join(", ", Factors)}",
+                        ErrorReason.InvalidProfileDefinition);
+                }
+
+                arguments = $"{arguments} --scaleFactor {this.ScaleFactor} --duration {Math.Round(this.Duration.TotalMinutes / 1.25)}";
+            }
+
+            this.HammerDBScenarioArguments = arguments;
+
+            return Task.CompletedTask;
         }
 
         private static Task OpenFirewallPortsAsync(int port, IFirewallManager firewallManager, CancellationToken cancellationToken)
@@ -406,16 +441,16 @@ namespace VirtualClient.Actions
                 }
             }
 
-            public int DatabaseCreated
+            public bool DatabasePopulated
             {
                 get
                 {
-                    return this.Properties.GetValue<int>(nameof(HammerDBState.DatabaseCreated), 0);
+                    return this.Properties.GetValue<bool>(nameof(HammerDBState.DatabasePopulated), false);
                 }
 
                 set
                 {
-                    this.Properties[nameof(HammerDBState.DatabaseCreated)] = value;
+                    this.Properties[nameof(HammerDBState.DatabasePopulated)] = value;
                 }
             }
         }

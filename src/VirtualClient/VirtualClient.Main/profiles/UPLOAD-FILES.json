@@ -2,9 +2,7 @@
     "Description": "Uploads files from a directory to a content store location.",
     "Parameters": {
         "TargetDirectory": null,
-        "Timestamped": false,
-        "FlattenStructure": false,
-        "DeleteOnUpload": false
+        "FlattenStructure": false
     },
     "Actions": [
         {
@@ -21,8 +19,6 @@
             "Parameters": {
                 "Scenario": "UploadFiles",
                 "TargetDirectory": "$.Parameters.TargetDirectory",
-                "Timestamped": "$.Parameters.Timestamped",
-                "DeleteOnUpload": "$.Parameters.DeleteOnUpload",
                 "Flatten": "$.Parameters.FlattenStructure"
             }
         }

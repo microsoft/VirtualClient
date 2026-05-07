@@ -76,29 +76,12 @@ namespace VirtualClient.Contracts
             Assert.AreEqual(expectedContentEncoding, instance.ContentEncoding);
             Assert.AreEqual(expectedContentType, instance.ContentType);
             Assert.AreEqual(expectedFilePath, instance.FilePath);
-            Assert.IsFalse(instance.DeleteOnUpload);
             Assert.IsNotNull(instance.Manifest);
             Assert.IsNotEmpty(instance.Manifest);
             Assert.IsTrue(instance.Manifest.ContainsKey("experimentId"));
             Assert.IsTrue(instance.Manifest.TryGetValue("agentId", out IConvertible agent) && agent.ToString() == "Agent01");
             Assert.IsTrue(instance.Manifest.TryGetValue("toolName", out IConvertible tool) && tool.ToString() == "NTttcp");
             Assert.IsTrue(instance.Manifest.TryGetValue("component", out IConvertible component) && component.ToString() == "NTttcpExecutor");
-
-            instance = new FileUploadDescriptor(expectedBlobPath, expectedContainer, expectedContentEncoding, expectedContentType, expectedFilePath, expectedManifest, deleteOnUpload: true);
-
-            Assert.AreEqual(expectedBlobName, instance.BlobName);
-            Assert.AreEqual(expectedBlobPath, instance.BlobPath);
-            Assert.AreEqual(expectedContainer, instance.ContainerName);
-            Assert.AreEqual(expectedContentEncoding, instance.ContentEncoding);
-            Assert.AreEqual(expectedContentType, instance.ContentType);
-            Assert.AreEqual(expectedFilePath, instance.FilePath);
-            Assert.IsTrue(instance.DeleteOnUpload);
-            Assert.IsNotNull(instance.Manifest);
-            Assert.IsNotEmpty(instance.Manifest);
-            Assert.IsTrue(instance.Manifest.ContainsKey("experimentId"));
-            Assert.IsTrue(instance.Manifest.TryGetValue("agentId", out agent) && agent.ToString() == "Agent01");
-            Assert.IsTrue(instance.Manifest.TryGetValue("toolName", out tool) && tool.ToString() == "NTttcp");
-            Assert.IsTrue(instance.Manifest.TryGetValue("component", out component) && component.ToString() == "NTttcpExecutor");
         }
 
         [Test]

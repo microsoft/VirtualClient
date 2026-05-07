@@ -83,7 +83,7 @@ namespace VirtualClient.Common.ProcessAffinity
             LinuxProcessAffinityConfiguration config = new LinuxProcessAffinityConfiguration(new[] { 0 });
             
             string command = config.GetCommandWithAffinity(null, "myworkload --arg1 --arg2");
-            
+
             Assert.AreEqual("\"numactl -C 0 myworkload --arg1 --arg2\"", command);
         }
 
@@ -93,7 +93,7 @@ namespace VirtualClient.Common.ProcessAffinity
             LinuxProcessAffinityConfiguration config = new LinuxProcessAffinityConfiguration(new[] { 0, 1, 2 });
             
             string command = config.GetCommandWithAffinity(null, "myworkload --arg1 --arg2");
-            
+
             Assert.AreEqual("\"numactl -C 0-2 myworkload --arg1 --arg2\"", command);
         }
 
@@ -103,7 +103,7 @@ namespace VirtualClient.Common.ProcessAffinity
             LinuxProcessAffinityConfiguration config = new LinuxProcessAffinityConfiguration(new[] { 1, 3, 5 });
             
             string command = config.GetCommandWithAffinity(null, "myworkload");
-            
+
             Assert.AreEqual("\"numactl -C 1,3,5 myworkload\"", command);
         }
 
@@ -163,11 +163,58 @@ namespace VirtualClient.Common.ProcessAffinity
         {
             // Cores should be sorted before optimization
             LinuxProcessAffinityConfiguration config = new LinuxProcessAffinityConfiguration(new[] { 5, 0, 2, 1, 3 });
-            
+
             string command = config.GetCommandWithAffinity("test", null);
-            
+
             // Should sort and optimize: 0-3,5
             Assert.IsTrue(command.Contains("-C 0-3,5"));
+        }
+
+        [Test]
+        public void GetAffinityProcessInfoReturnsNumactlAsExecutable()
+        {
+            LinuxProcessAffinityConfiguration config = new LinuxProcessAffinityConfiguration(new[] { 0 });
+
+            var (executable, arguments) = config.GetAffinityProcessInfo("mycommand");
+
+            Assert.AreEqual("numactl", executable);
+        }
+
+        [Test]
+        public void GetAffinityProcessInfoReturnsCorrectArgumentsWithCommand()
+        {
+            LinuxProcessAffinityConfiguration config = new LinuxProcessAffinityConfiguration(new[] { 8, 9, 10, 11, 12, 13, 14, 15 });
+
+            var (executable, arguments) = config.GetAffinityProcessInfo("bash /path/to/script.sh", "--latency --threads 64");
+
+            Assert.AreEqual("numactl", executable);
+            Assert.AreEqual("-C 8-15 bash /path/to/script.sh --latency --threads 64", arguments);
+        }
+
+        [Test]
+        public void GetAffinityProcessInfoReturnsCorrectArgumentsWithoutArguments()
+        {
+            LinuxProcessAffinityConfiguration config = new LinuxProcessAffinityConfiguration(new[] { 0, 1, 2 });
+
+            var (executable, arguments) = config.GetAffinityProcessInfo("bash /path/to/script.sh");
+
+            Assert.AreEqual("numactl", executable);
+            Assert.AreEqual("-C 0-2 bash /path/to/script.sh", arguments);
+        }
+
+        [Test]
+        public void GetAffinityProcessInfoHandlesArgumentsWithEmbeddedDoubleQuotes()
+        {
+            LinuxProcessAffinityConfiguration config = new LinuxProcessAffinityConfiguration(new[] { 0, 1 });
+
+            var (executable, arguments) = config.GetAffinityProcessInfo(
+                "bash /path/runwrk.sh",
+                "--latency --header \"Accept: application/json\"");
+
+            Assert.AreEqual("numactl", executable);
+            Assert.AreEqual(
+                "-C 0,1 bash /path/runwrk.sh --latency --header \"Accept: application/json\"",
+                arguments);
         }
     }
 }

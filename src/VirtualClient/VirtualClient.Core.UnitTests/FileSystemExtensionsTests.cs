@@ -4,29 +4,28 @@
 namespace VirtualClient
 {
     using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.IO.Abstractions;
-    using System.Text;
-    using System.Threading.Tasks;
-    using NUnit.Framework;
-    using Moq;
-    using Polly;
     using System.IO;
-    using System.Threading;
+    using System.IO.Abstractions;
     using System.Text.RegularExpressions;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using Moq;
+    using NUnit.Framework;
+    using Polly;
 
     [TestFixture]
     [Category("Unit")]
     public class FileSystemExtensionsTests
     {
         private Mock<IFile> mockFile;
+        private Mock<IFileSystem> mockFileSystem;
         private Mock<ISyncPolicy> mockPolicy;
 
         [OneTimeSetUp]
         public void SetupTests()
         {
             this.mockFile = new Mock<IFile>();
+            this.mockFileSystem = new Mock<IFileSystem>();
             this.mockPolicy = new Mock<ISyncPolicy>();
         }
 

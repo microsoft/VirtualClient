@@ -12,13 +12,13 @@ Virtual Client to output verbose tracing information to the console.
 # be downloaded from the VC workload package store.
 #
 # On Windows
-VirtualClient.exe --profile=PERF-CPU-COREMARK.json --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}"
+VirtualClient.exe --profile=PERF-CPU-COREMARK.json --timeout=180
 
 # On Linux
-./VirtualClient --profile=PERF-CPU-COREMARK.json --timeout=03:00:00 --packages="{BlobStoreConnectionString|SAS URI}"
+./VirtualClient --profile=PERF-CPU-COREMARK.json --timeout=03:00:00
 
 # Run the workload profile for a single iteration.
-./VirtualClient --profile=PERF-CPU-COREMARK.json --packages="{BlobStoreConnectionString|SAS URI}"
+./VirtualClient --profile=PERF-CPU-COREMARK.json
 ```
 
 ## Scenario: Running a Client Server Workload
@@ -32,13 +32,13 @@ provides examples of a valid environment layout for that particular workload pro
 
 ``` bash
 # Run the workload using the default port for hosting the REST API
-VirtualClient.exe --profile=PERF-NETWORK.json --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --layout-path=C:\any\path\to\layout.json
+VirtualClient.exe --profile=PERF-NETWORK.json --timeout=180 --layout-path=C:\any\path\to\layout.json
 
 # Run the workload using a specific port for hosting the REST API
-VirtualClient.exe --profile=PERF-NETWORK.json --timeout=180 --api-port=4501 --packages="{BlobStoreConnectionString|SAS URI}" --layout-path=C:\any\path\to\layout.json
+VirtualClient.exe --profile=PERF-NETWORK.json --timeout=180 --api-port=4501 --layout-path=C:\any\path\to\layout.json
 
 # Run the workload using a specific port for hosting the REST API different for the Client and Server roles
-VirtualClient.exe --profile=PERF-NETWORK.json --timeout=180 --api-port=4501/Client,4502/Server --packages="{BlobStoreConnectionString|SAS URI}" --layout-path=C:\any\path\to\layout.json
+VirtualClient.exe --profile=PERF-NETWORK.json --timeout=180 --api-port=4501/Client,4502/Server --layout-path=C:\any\path\to\layout.json
 ```
 
 ## Scenario: Pass in Metadata for Correlation
@@ -47,7 +47,7 @@ the application can be correlated with the data captured by the automation syste
 will be included in ALL metrics, counters, logs etc... telemetry that is emitted by the application.
 
 ``` bash
-VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --timeout=03:00:00 --packages="{BlobStoreConnectionString|SAS URI}" --metadata="experimentGroup=Group A,,,nodeId=eB3fc2d9-157b-4efc-b39c-a454a0779a5b,,,tipSessionId=73e8ae54-e0a0-48b6-9bda-4a269672b9b1,,,cluster=cluster01,,,region=East US 2"
+VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --timeout=03:00:00 --metadata="experimentGroup=Group A,,,nodeId=eB3fc2d9-157b-4efc-b39c-a454a0779a5b,,,tipSessionId=73e8ae54-e0a0-48b6-9bda-4a269672b9b1,,,cluster=cluster01,,,region=East US 2"
 ```
 
 ## Scenario: Instruct the Application to Fail Fast
@@ -57,7 +57,7 @@ Note that this generally refers to 'Actions' in the profile. The application alw
 typically implemented to handle exceptions due to the requirement they continue to operate in the background even on failure.
 
 ``` bash
-VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --timeout=03:00:00 --packages="{BlobStoreConnectionString|SAS URI}" --fail-fast
+VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --timeout=03:00:00 --fail-fast
 ```
 
 ## Scenario: Write the Output of Processes to the File System
@@ -68,10 +68,10 @@ how to instruct the application to log the output of processes to files in the l
 # Log the workload process output to the file system.
 #
 # On Windows
-VirtualClient.exe --profile=PERF-IO-FIO.json --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --log-to-file
+VirtualClient.exe --profile=PERF-IO-FIO.json --timeout=180 --log-to-file
 
 # On Linux
-./VirtualClient --profile=PERF-IO-FIO.json --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --log-to-file
+./VirtualClient --profile=PERF-IO-FIO.json --timeout=180 --log-to-file
 ```
 
 ## Scenario: Instruct the Application to Perform an Initial Cleanup
@@ -86,48 +86,65 @@ user would want to cleanup the local state files. The following examples show ho
 # Perform a full clean. This will remove ALL log files/directories, any packages previously downloaded minus
 # those that are "built-in" or part of the Virtual Client package itself and any state files previously written.
 # This essentially resets Virtual Client back to the state it was in before the first run on the system.
-./VirtualClient --profile=PERF-CPU-COREMARK.json --timeout=180 --packages="{ConnectionString|SAS URI}" --clean
-./VirtualClient --profile=PERF-CPU-COREMARK.json --timeout=180 --packages="{ConnectionString|SAS URI}" --clean=all
+./VirtualClient --profile=PERF-CPU-COREMARK.json --timeout=180 --clean
+./VirtualClient --profile=PERF-CPU-COREMARK.json --timeout=180 --clean=all
 
 # Clean specific target resources.
-./VirtualClient --profile=PERF-CPU-COREMARK.json --timeout=180 --packages="{ConnectionString|SAS URI}" --clean=logs
-./VirtualClient --profile=PERF-CPU-COREMARK.json --timeout=180 --packages="{ConnectionString|SAS URI}" --clean=packages
-./VirtualClient --profile=PERF-CPU-COREMARK.json --timeout=180 --packages="{ConnectionString|SAS URI}" --clean=state
+./VirtualClient --profile=PERF-CPU-COREMARK.json --timeout=180 --clean=logs
+./VirtualClient --profile=PERF-CPU-COREMARK.json --timeout=180 --clean=packages
+./VirtualClient --profile=PERF-CPU-COREMARK.json --timeout=180 --clean=state
 
 # Clean multiple specific target resources all together.
-./VirtualClient --profile=PERF-CPU-COREMARK.json --timeout=180 --packages="{ConnectionString|SAS URI}" --clean=logs,state
-./VirtualClient --profile=PERF-CPU-COREMARK.json --timeout=180 --packages="{ConnectionString|SAS URI}" --clean=logs,packages,state
+./VirtualClient --profile=PERF-CPU-COREMARK.json --timeout=180 --clean=logs,state
+./VirtualClient --profile=PERF-CPU-COREMARK.json --timeout=180 --clean=logs,packages,state
 
 # Apply a log retention period to the log files. This will cause log files older than the period to
 # be removed but will preserve any remaining. Note that this is the same as --clean=logs --log-retention=02.00:00:00.
-./VirtualClient --profile=PERF-CPU-COREMARK.json --timeout=180 --packages="{ConnectionString|SAS URI}" --log-retention=02.00:00:00
+./VirtualClient --profile=PERF-CPU-COREMARK.json --timeout=180 --log-retention=02.00:00:00
 
 # Log retentions can be in 'minutes' as well (e.g. 2800 minutes = 2 days). Note that this is the same as --clean=logs --log-retention=2880.
-./VirtualClient --profile=PERF-CPU-COREMARK.json --timeout=180 --packages="{ConnectionString|SAS URI}" --log-retention=2880
+./VirtualClient --profile=PERF-CPU-COREMARK.json --timeout=180 --log-retention=2880
 ```
 
 ## Scenario: Upload Metrics and Logs to an Event Hub
 The Virtual Client supports the ability to upload metrics, counters, logs etc... to an [Azure Event Hub](https://azure.microsoft.com/en-us/services/event-hubs/?OCID=AID2200277_SEM_092bba0f3fec11eb8ce6dbef46f6464a:G:s&ef_id=092bba0f3fec11eb8ce6dbef46f6464a:G:s&msclkid=092bba0f3fec11eb8ce6dbef46f6464a).
 Event Hubs are a highly-scalable messaging platform in the Azure Cloud that can be integrated out-of-the-box with other big-data platforms such as Azure Data Explorer (ADX/Kusto).
-Note that the Virtual Client does have a set of explicit expectations for how the Event Hubs are setup. The following documentation covers what is required:
+Note that the Virtual Client does have a set of explicit expectations for how the Event Hubs are setup. See the following documentation for additional details.
 
-* [Event Hub Integration](./0610-integration-event-hub.md) 
+* [Event Hub Support](./0610-integration-event-hub.md) 
 
 ``` bash
 # To send data to an Event Hub, supply a connection string to the Event Hub namespace on the command line.
-VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --logger="eventhub;{ConnectionString|SAS URI}"
+VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --timeout=180 --logger="eventhub;Endpoint=sb://anynamespace.servicebus.windows.net/;SharedAccessKeyName=DefaultAccessPolicy;SharedAccessKey=..."
+```
+
+## Scenario: Use a Different Packages Store
+Whereas the open source instance of Virtual Client provides a package store for workload package downloads, users can use their own storage accounts for package
+downloads. This is useful when developing extensions to the Virtual Client platform. See the following documentation for additional details.
+
+* [Storage Account Support](./0600-integration-blob-storage.md)
+
+``` bash
+# Pass a connection string in to use a different storage account for package downloads.
+VirtualClient.exe --profile=PERF-CUSTOM-WORKLOAD.json --packages="DefaultEndpointsProtocol=https;AccountName=anypackages;AccountKey=...;EndpointSuffix=core.windows.net"
+
+# Pass a Microsoft Entra App + certificate reference in to use a different storage account for package downloads.
+VirtualClient.exe --profile=PERF-CUSTOM-WORKLOAD.json --packages="https://anystorage.blob.windows.net?cid=606ecc0e-ed9e...&tid=95a8ded1-8bec...&crtt=a2b8daef124..."
 ```
 
 ## Scenario: Upload Log Files to a Content Store
 Most components in the Virtual Client allow the user to upload information or files produced by the execution of workloads and monitors to
-a cloud Blob store. In order to enable this, the connection string or SAS URI to the Blob store should be supplied on the command line. See the documentation
-on monitor profiles below for additional details on which profiles support this.
+a cloud Blob store. In order to enable this, the connection string or SAS URI to the Blob store should be supplied on the command line. See the following documentation for 
+additional details.
 
-* [Blob Store Support](./0600-integration-blob-storage.md)
-* [Monitor Profiles](../monitors/0200-monitor-profiles.md)
+* [Storage Account Support](./0600-integration-blob-storage.md)
 
 ``` bash
-VirtualClient.exe --profile=PERF-NETWORK.json --timeout=180 --packages="{ConnectionString|SAS URI}" --content="{ConnectionString|SAS URI}" --parameters=ProfilingEnabled=true,,,ProfilingMode=Interval
+# Pass a connection string in to use a different storage account for log/content file uploads.
+VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --timeout=180 --content="DefaultEndpointsProtocol=https;AccountName=anycontent;AccountKey=...;EndpointSuffix=core.windows.net"
+
+# Pass a Microsoft Entra App + certificate reference in to use a different storage account for log/content file uploads.
+VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --timeout=180 --content="https://anycontent.blob.windows.net?cid=606ecc0e-ed9e...&tid=95a8ded1-8bec...&crtt=a2b8daef124..."
 ```
 
 ## Scenario: Change the Amount of Operational Trace Telemetry Emitted
@@ -136,26 +153,26 @@ amount of information is not desirable. The logging level (or severity) can be c
 
 ``` bash
 # Emit traces for 'Warning' level and above only.
-VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --timeout=03:00:00 --packages="{ConnectionString|SAS URI}" --log-level=Warning
+VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --timeout=03:00:00 --log-level=Warning
 
 # Emit traces for 'Error' level and above only.
-VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --timeout=03:00:00 --packages="{ConnectionString|SAS URI}" --log-level=Error
+VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --timeout=03:00:00 --log-level=Error
 
 # Emit traces for 'Critical' level and above only.
-VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --timeout=03:00:00 --packages="{ConnectionString|SAS URI}" --log-level=Critical
+VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --timeout=03:00:00 --log-level=Critical
 ```
 
 Correspondingly, there are times when more operational traces are desirable (e.g. for debugging scenarios). The default logging level is 'Information'.
 
 ``` bash
 # Emit all traces (...the most verbose option)
-VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --timeout=03:00:00 --packages="{ConnectionString|SAS URI}" --log-level=Trace
+VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --timeout=03:00:00 --log-level=Trace
 
 # Emit traces for 'Debug' level and above.
-VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --timeout=03:00:00 --packages="{ConnectionString|SAS URI}" --log-level=Debug
+VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --timeout=03:00:00 --log-level=Debug
 
 # Emit traces for 'Information' level and above only.
-VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --timeout=03:00:00 --packages="{ConnectionString|SAS URI}" --log-level=Information
+VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --timeout=03:00:00 --log-level=Information
 ```
 
 ## Scenario: Change the Default Location for Log Files
@@ -165,11 +182,11 @@ available.
 
 ``` bash
 # Define an alternate location for log files on the command line.
-/home/user/virtualclient$ VirtualClient --profile=PERF-CPU-OPENSSL.json --timeout=03:00:00 --packages="{ConnectionString|SAS URI}" --log-dir="/home/user/logs"
+/home/user/virtualclient$ VirtualClient --profile=PERF-CPU-OPENSSL.json --timeout=03:00:00 --log-dir="/home/user/logs"
 
 # Define an alternate location for log files using an environment variable.
 /home/user/virtualclient$ export VC_LOGS_DIR="/home/user/logs"
-/home/user/virtualclient$ VirtualClient --profile=PERF-CPU-OPENSSL.json --timeout=03:00:00 --packages="{ConnectionString|SAS URI}"
+/home/user/virtualclient$ VirtualClient --profile=PERF-CPU-OPENSSL.json --timeout=03:00:00
 ```
 
 ## Scenario: Change the Default Location for Package Downloads
@@ -179,11 +196,11 @@ available.
 
 ``` bash
 # Define an alternate location for package downloads on the command line.
-/home/user/virtualclient$ VirtualClient --profile=PERF-CPU-OPENSSL.json --timeout=03:00:00 --packages="{ConnectionString|SAS URI}" --package-dir="/home/user/packages"
+/home/user/virtualclient$ VirtualClient --profile=PERF-CPU-OPENSSL.json --timeout=03:00:00 --package-dir="/home/user/packages"
 
 # Define an alternate location for package downloads using an environment variable.
 /home/user/virtualclient$ export VC_PACKAGES_DIR="/home/user/packages"
-/home/user/virtualclient$ VirtualClient --profile=PERF-CPU-OPENSSL.json --timeout=03:00:00 --packages="{ConnectionString|SAS URI}"
+/home/user/virtualclient$ VirtualClient --profile=PERF-CPU-OPENSSL.json --timeout=03:00:00
 ```
 
 ## Supported Environment Variables

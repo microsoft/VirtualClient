@@ -5,7 +5,7 @@ The following profiles run customer-representative or benchmarking scenarios usi
 * [Testing Disks](../../guides/0220-usage-testing-disks.md)
 
 ## PERF-IO-DISKSPD.json
-Runs an high stress IO-intensive workload using the DiskSpd toolset to test performance of disks on the system. This profile is a Windows-only profile. 
+Runs a high stress IO-intensive workload using the DiskSpd toolset to test performance of disks on the system. This profile is a Windows-only profile. 
 The profile runs the workload in-parallel on ALL disks that match the "DiskFilter" parameter (see below) by default.
 
 Additionally this profile is designed to auto-scale to the number of cores on the system on which it runs. It uses a simple algorithm to determine 2 key
@@ -102,7 +102,7 @@ aspects of the workload execution.
 
   | Parameter                 | Purpose                                                                         | Accepted Values |
   |---------------------------|-------------------------------------------------------------------------------|-----------------|
-  | Scenario                  | Scenario use to define the given action of profile. This can be used to specify exact actions to run or exclude from the profile.  | Any string |
+  | Scenario                  | Scenario used to define the given action of profile. This can be used to specify exact actions to run or exclude from the profile.  | Any string |
   | MetricsScenario           | The name to use as the "scenario" for all metrics output for the particular profile action. | |
   | CommandLine               | The command line parameters for FIO tool set. |     Any Valid FIO arguments            |
   | DiskFilter                | Filter allowing the user to select the disks on which to test. | See the link 'Testing Disks' at the top for more details. |
@@ -124,23 +124,23 @@ aspects of the workload execution.
 
   ``` bash
   # Run the workload on the system (default = largest disks)
-  VirtualClient.exe --profile=PERF-IO-DISKSPD.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
+  VirtualClient.exe --profile=PERF-IO-DISKSPD.json --system=Demo --timeout=1440
 
   # The example above runs on the same disks as having DiskFilter=BiggestSize
-  VirtualClient.exe --profile=PERF-IO-DISKSPD.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=DiskFilter=BiggestSize
+  VirtualClient.exe --profile=PERF-IO-DISKSPD.json --system=Demo --timeout=1440 --parameters=DiskFilter=BiggestSize
 
   # Run the workload against the operating system disk
-  VirtualClient.exe --profile=PERF-IO-DISKSPD.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=DiskFilter=OSDisk
+  VirtualClient.exe --profile=PERF-IO-DISKSPD.json --system=Demo --timeout=1440 --parameters=DiskFilter=OSDisk
 
   # Run the workload against all of the disks except the operating system disk.
-  VirtualClient.exe --profile=PERF-IO-DISKSPD.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=DiskFilter=OSDisk:false
+  VirtualClient.exe --profile=PERF-IO-DISKSPD.json --system=Demo --timeout=1440 --parameters=DiskFilter=OSDisk:false
 
   # Run the workload on specific drives/disks
-  VirtualClient.exe --profile=PERF-IO-DISKSPD.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=DiskFilter=DiskPath:C:\,D:\
+  VirtualClient.exe --profile=PERF-IO-DISKSPD.json --system=Demo --timeout=1440 --parameters=DiskFilter=DiskPath:C:\,D:\
 
   # A more advanced disk filter supplied
-  VirtualClient.exe --profile=PERF-IO-DISKSPD.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=DiskFilter=OSDisk:false&smallestSize,,,DiskFillSize=26G,,,FileSize=26G
+  VirtualClient.exe --profile=PERF-IO-DISKSPD.json --system=Demo --timeout=1440 --parameters=DiskFilter=OSDisk:false&smallestSize,,,DiskFillSize=26G,,,FileSize=26G
 
   # Run specific scenarios only. Each action in a profile as a 'Scenario' name.
-  VirtualClient.exe --profile=PERF-IO-DISKSPD.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --scenarios=RandomWrite_4k_BlockSize,RandomWrite_8k_BlockSize,RandomRead_8k_BlockSize,RandomRead_4k_BlockSize
+  VirtualClient.exe --profile=PERF-IO-DISKSPD.json --system=Demo --timeout=1440 --scenarios=RandomWrite_4k_BlockSize,RandomWrite_8k_BlockSize,RandomRead_8k_BlockSize,RandomRead_4k_BlockSize
   ```

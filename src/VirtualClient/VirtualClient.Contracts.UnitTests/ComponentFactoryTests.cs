@@ -82,7 +82,6 @@ namespace VirtualClient.Contracts
                 Assert.IsNotNull(component);
                 Assert.IsNotNull(component.Parameters);
                 Assert.IsFalse(component.LogToFile);
-                Assert.IsTrue(component.LogTimestamped);
                 Assert.IsNull(component.ContentPathTemplate);
                 Assert.IsNull(component.LogFileName);
                 Assert.IsNull(component.LogFolderName);
@@ -108,7 +107,6 @@ namespace VirtualClient.Contracts
                 Assert.IsNotNull(component);
                 Assert.IsNotNull(component.Parameters);
                 Assert.IsTrue(component.LogToFile);
-                Assert.IsFalse(component.LogTimestamped);
                 Assert.AreEqual("test.log", component.LogFileName);
                 Assert.AreEqual("test", component.LogFolderName);
             }

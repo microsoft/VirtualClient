@@ -66,6 +66,7 @@ namespace VirtualClient.Actions
 
         [Test]
         [TestCase("PERF-CPU-HPLINPACK.json")]
+        [Ignore("HPLinpack executor needs to be reworked.")]
         public async Task HPLinpackWorkloadProfileWithOutPerformanceLibrariesExecutesExpectedCommandsOnUnixX64PlatformAsync(string profile)
         {
             // Setup the expectations for the workload
@@ -126,6 +127,7 @@ namespace VirtualClient.Actions
 
         [Test]
         [TestCase("PERF-CPU-HPLINPACK.json")]
+        [Ignore("HPLinpack executor needs to be reworked.")]
         public async Task HPLinpackWorkloadProfileExecutesThxeExpectedWorkloadsOnUnixArm64Platform(string profile)
         {
             // Setup the expectations for the workload

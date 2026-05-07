@@ -18,10 +18,8 @@ for evaluating the performance of the CPU for processing calculations.
   * linux-x64
   * linux-arm64
   * win-x64
-  * win-arm64
 
   **Note**: On Windows platform, the **gcc** compiler version is required to be 10 or higher.  
-  **Note**: Not supported currently on Ubuntu 24.
 
 * **Supports Disconnected Scenarios**  
   * No. Internet connection required.
@@ -39,7 +37,7 @@ for evaluating the performance of the CPU for processing calculations.
   | Parameter                 | Purpose                                                                         | Default value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
   | CompilerName              | Optional. The name of the compiler to use for compiling CoreMark on the system. | gcc |
-  | CompilerVersion           | Optional. The version of the compiler to use.  | 10 |
+  | CompilerVersion           | Optional. The version of the compiler to use.  | The default version for the OS/distro.<br/><br/><ul><li>See [Linux Defaults](https://documentation.ubuntu.com/ubuntu-for-developers/reference/availability/gcc/).</li><li>See [Windows Defaults](https://cygwin.com/packages/summary/gcc-core.html)</li></ul> |
   | RunPeak                   | Optional. True to run the workload 'Peak' scenario, False to run the workload 'Base' scenario. | false (Base) |
   | Threads                   | Optional. Determines the number of threads to use for running the benchmark. | # logical processors |
   | Copies                    | Optional. Determines the number of copies of the benchmark to run concurrently. | # logical processors |
@@ -64,7 +62,7 @@ for evaluating the performance of the CPU for processing calculations.
 
   ``` csharp
   # Execute the workload profile
-  ./VirtualClient --profile=PERF-SPECCPU-FPRATE.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
+  ./VirtualClient --profile=PERF-SPECCPU-FPRATE.json --system=Azure --timeout=1440
   ```
 
 ## PERF-SPECCPU-FPSPEED.json
@@ -77,7 +75,6 @@ for evaluating the performance of the CPU for processing calculations.
   * linux-x64
   * linux-arm64
   * win-x64
-  * win-arm64
 
   **Note**: Not supported currently on Ubuntu 24.
 
@@ -97,7 +94,7 @@ for evaluating the performance of the CPU for processing calculations.
   | Parameter                 | Purpose                                                                         | Default value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
   | CompilerName              | Optional. The name of the compiler to use for compiling CoreMark on the system. | gcc |
-  | CompilerVersion           | Optional. The version of the compiler to use.  | 10 |
+  | CompilerVersion           | Optional. The version of the compiler to use.  | The default version for the OS/distro.<br/><br/><ul><li>See [Linux Defaults](https://documentation.ubuntu.com/ubuntu-for-developers/reference/availability/gcc/).</li><li>See [Windows Defaults](https://cygwin.com/packages/summary/gcc-core.html)</li></ul> |
   | RunPeak                   | Optional. True to run the workload 'Peak' scenario, False to run the workload 'Base' scenario. | false (Base) |
   | Threads                   | Optional. Determines the number of threads to use for running the benchmark. | # logical processors |
   | Copies                    | Optional. Determines the number of copies of the benchmark to run concurrently. | # logical processors |
@@ -118,7 +115,7 @@ for evaluating the performance of the CPU for processing calculations.
 
   ``` bash
   # Execute the workload profile
-  ./VirtualClient --profile=PERF-SPECCPU-FPSPEED.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
+  ./VirtualClient --profile=PERF-SPECCPU-FPSPEED.json --system=Azure --timeout=1440
   ```
 
 ## PERF-SPECCPU-INTRATE.json
@@ -131,7 +128,6 @@ for evaluating the performance of the CPU for processing calculations.
   * linux-x64
   * linux-arm64
   * win-x64
-  * win-arm64
 
 * **Supports Disconnected Scenarios**  
   * No. Internet connection required.
@@ -149,7 +145,7 @@ for evaluating the performance of the CPU for processing calculations.
   | Parameter                 | Purpose                                                                         | Default value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
   | CompilerName              | Optional. The name of the compiler to use for compiling CoreMark on the system. | gcc |
-  | CompilerVersion           | Optional. The version of the compiler to use.  | 10 |
+  | CompilerVersion           | Optional. The version of the compiler to use.  | The default version for the OS/distro.<br/><br/><ul><li>See [Linux Defaults](https://documentation.ubuntu.com/ubuntu-for-developers/reference/availability/gcc/).</li><li>See [Windows Defaults](https://cygwin.com/packages/summary/gcc-core.html)</li></ul> |
   | RunPeak                   | Optional. True to run the workload 'Peak' scenario, False to run the workload 'Base' scenario. | false (Base) |
   | Threads                   | Optional. Determines the number of threads to use for running the benchmark. | # logical processors |
   | Copies                    | Optional. Determines the number of copies of the benchmark to run concurrently. | # logical processors |
@@ -169,7 +165,7 @@ for evaluating the performance of the CPU for processing calculations.
 
   ``` bash
   # Execute the workload profile
-  ./VirtualClient --profile=PERF-SPECCPU-INTRATE.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
+  ./VirtualClient --profile=PERF-SPECCPU-INTRATE.json --system=Azure --timeout=1440
   ```
 
 ## PERF-SPECCPU-INTSPEED.json
@@ -182,7 +178,6 @@ for evaluating the performance of the CPU for processing calculations.
   * linux-x64
   * linux-arm64
   * win-x64
-  * win-arm64
 
 * **Supports Disconnected Scenarios**  
   * No. Internet connection required.
@@ -200,7 +195,7 @@ for evaluating the performance of the CPU for processing calculations.
   | Parameter                 | Purpose                                                                         | Default value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
   | CompilerName              | Optional. The name of the compiler to use for compiling CoreMark on the system. | gcc |
-  | CompilerVersion           | Optional. The version of the compiler to use.  | 10 |
+  | CompilerVersion           | Optional. The version of the compiler to use.  | The default version for the OS/distro.<br/><br/><ul><li>See [Linux Defaults](https://documentation.ubuntu.com/ubuntu-for-developers/reference/availability/gcc/).</li><li>See [Windows Defaults](https://cygwin.com/packages/summary/gcc-core.html)</li></ul> |
   | RunPeak                   | Optional. True to run the workload 'Peak' scenario, False to run the workload 'Base' scenario. | false (Base) |
   | Threads                   | Optional. Determines the number of threads to use for running the benchmark. | # logical processors |
   | Copies                    | Optional. Determines the number of copies of the benchmark to run concurrently. | # logical processors |
@@ -220,5 +215,5 @@ for evaluating the performance of the CPU for processing calculations.
 
   ``` bash
   # Execute the workload profile
-  ./VirtualClient --profile=PERF-SPECCPU-INTSPEED.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
+  ./VirtualClient --profile=PERF-SPECCPU-INTSPEED.json --system=Azure --timeout=1440
   ```

@@ -10,12 +10,51 @@ namespace VirtualClient.Cleanup
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using VirtualClient.Common;
 
     /// <summary>
     /// Extension methods that support runtime cleanup operations.
     /// </summary>
     public static class CleanupExtensions
     {
+        /// <summary>
+        /// Cleans the default "logs" directory provided deleting any files and folders that are beyond the
+        /// defined retention period.
+        /// </summary>
+        /// <param name="systemManagement">The system management instance.</param>
+        /// <param name="archivePath">The path to which the logs should be archived.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+        public static async Task ArchiveLogsDirectoryAsync(this ISystemManagement systemManagement, string archivePath, CancellationToken cancellationToken)
+        {
+            IFileSystem fileSystem = systemManagement.FileSystem;
+            ProcessManager processManager = systemManagement.ProcessManager;
+            string logsDirectory = systemManagement.PlatformSpecifics.GetLogsPath();
+
+            if (!fileSystem.Directory.Exists(archivePath))
+            {
+                fileSystem.Directory.CreateDirectory(archivePath);
+            }
+
+            string command = null;
+            string commandArguments = null;
+
+            if (systemManagement.Platform == PlatformID.Unix)
+            {
+                command = "rsync";
+                commandArguments = $"-av --ignore-existing \"{logsDirectory}/\" \"{archivePath}/\"";
+            }
+            else
+            {
+                command = "robocopy";
+                commandArguments = $"\"{logsDirectory}\" \"{archivePath}\" /E /XO /XC /R:5 /W:5 /NS /NC /NJH /NJS";
+            }
+
+            using (IProcessProxy copyProcess = processManager.CreateProcess(command, commandArguments))
+            {
+                await copyProcess.StartAndWaitAsync(cancellationToken);
+            }
+        }
+
         /// <summary>
         /// Cleans the default "contentuploads" directory provided deleting any files and folders that are beyond the
         /// defined retention period.

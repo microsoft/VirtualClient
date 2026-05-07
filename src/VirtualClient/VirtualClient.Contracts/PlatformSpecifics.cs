@@ -9,10 +9,8 @@ namespace VirtualClient.Contracts
     using System.Linq;
     using System.Runtime.InteropServices;
     using System.Text.RegularExpressions;
-    using Newtonsoft.Json.Linq;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
-    using YamlDotNet.Core.Tokens;
 
     /// <summary>
     /// Defines platform-specific information and properties for dependencies and
@@ -44,6 +42,29 @@ namespace VirtualClient.Contracts
         /// Regular expression for identifying text containing relative paths within.
         /// </summary>
         public static readonly Regex RelativePathExpression = new Regex(@"\.{1,}[\\\/]{1,2}[\x21\x23-\x7E]*", RegexOptions.Compiled);
+
+        /// <summary>
+        /// When determining the name of the command, we want to exclude certain terms
+        /// that define the hosting/terminal environment (e.g. pwsh, python).
+        /// </summary>
+        /// <remarks>
+        /// Examples:
+        /// pwsh S:\any\Script.ps1 -> Script
+        /// pwsh -Command S:\any\Script.ps1 -> Script
+        /// </remarks>
+        private static readonly Regex CommandTerminalExpression = new Regex(
+            @"^bash|^cmd|^pwsh|^powershell|^python|^python3|^py|^-[a-z-_]|[\(\)]+", 
+            RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+        private static readonly Regex GenericCommandExpression = new Regex(
+            @"(py|python|python3)(?:\.exe)*\s+-c|(pwsh|powershell)(?:\.exe)*\s+.+Import-Module",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+        private static readonly Regex ValidFileNameExpression = new Regex(
+            @"^(?!(?:CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(?:\.[^.]*)?$)[^<>:""/\\|?*\x00-\x1F]*[^<>:""/\\|?*\x00-\x1F .]$",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+        private static readonly char[] CommandTrimChars = new char[] { ' ', '"', '\'', '/' };
 
         /// <summary>
         /// Initializes a new version of the <see cref="PlatformSpecifics"/> class.
@@ -362,6 +383,125 @@ namespace VirtualClient.Contracts
                 default:
                     throw new NotSupportedException($"The CPU/processor architecture '{architecture}' is not supported.");
             }
+        }
+
+        /// <summary>
+        /// Returns the name of the command being executed.
+        /// </summary>
+        /// <param name="commandArguments">The command line arguments.</param>
+        /// <param name="commandName">The name of the command.</param>
+        public static bool TryGetCommandName(string commandArguments, out string commandName)
+        {
+            commandName = null;
+
+            // It is difficult to determine a random command from PowerShell or Python. We default to the terminal name here.
+            Match genericCommand = PlatformSpecifics.GenericCommandExpression.Match(commandArguments);
+            if (genericCommand.Success)
+            {
+                for (int group = 1; group < genericCommand.Groups.Count; group++)
+                {
+                    if (!string.IsNullOrWhiteSpace(genericCommand.Groups[group].Value))
+                    {
+                        commandName = genericCommand.Groups[group].Value.Trim();
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                string[] commandLineArguments = commandArguments.Split(' ', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+                foreach (string argument in commandLineArguments)
+                {
+                    string normalizedArgument = argument?.Trim(PlatformSpecifics.CommandTrimChars);
+                    if (normalizedArgument?.Length > 1)
+                    {
+                        if (string.Equals(normalizedArgument, "sudo"))
+                        {
+                            continue;
+                        }
+
+                        // Default command name is the terminal itself (e.g. pwsh, python, cmd, bash).
+                        Match terminalMatch = PlatformSpecifics.CommandTerminalExpression.Match(normalizedArgument);
+                        if (terminalMatch.Success)
+                        {
+                            if (commandName == null)
+                            {
+                                commandName = Path.GetFileNameWithoutExtension(terminalMatch.Value.Trim());
+                            }
+
+                            continue;
+                        }
+
+                        // Find the first argument that is not a shell/terminal or command line option. We must also
+                        // account for scenarios where we are referencing a script inline on the command line
+                        // (e.g. python.exe -c "print('Hello from inline Python')" ).
+                        string fileName = Path.GetFileNameWithoutExtension(normalizedArgument);
+                        if (!PlatformSpecifics.ValidFileNameExpression.IsMatch(fileName))
+                        {
+                            continue;
+                        }
+
+                        commandName = fileName;
+                        break;
+                    }
+                }
+            }
+
+            return !string.IsNullOrWhiteSpace(commandName);
+        }
+
+        /// <summary>
+        /// Returns the name of the command being executed.
+        /// </summary>
+        /// <param name="commandArguments">The command line arguments.</param>
+        /// <param name="commandName">The name of the command.</param>
+        public static bool TryGetCommandName(string[] commandArguments, out string commandName)
+        {
+            commandName = null;
+
+            foreach (string argument in commandArguments)
+            {
+                string normalizedArgument = argument?.Trim(PlatformSpecifics.CommandTrimChars);
+                if (normalizedArgument?.Length > 1)
+                {
+                    if (string.Equals(normalizedArgument, "sudo"))
+                    {
+                        continue;
+                    }
+
+                    // It is difficult to determine a random command from Python. We default to the terminal name here.
+                    if (Regex.IsMatch(normalizedArgument, "py -c|py.exe -c|python -c|python.exe -c|python3 -c|python3.exe -c", RegexOptions.IgnoreCase))
+                    {
+                        commandName = "python";
+                        break;
+                    }
+
+                    // It is difficult to determine a random command from PowerShell. We default to the terminal name here.
+                    if (Regex.IsMatch(normalizedArgument, "Import-Module[^;&&]+(.+)", RegexOptions.IgnoreCase))
+                    {
+                        commandName = "python";
+                        break;
+                    }
+
+                    // Default command name is the terminal itself (e.g. pwsh, python, cmd, bash).
+                    Match terminalMatch = PlatformSpecifics.CommandTerminalExpression.Match(normalizedArgument);
+                    if (terminalMatch.Success)
+                    {
+                        if (commandName == null)
+                        {
+                            commandName = Path.GetFileNameWithoutExtension(terminalMatch.Value.Trim());
+                        }
+
+                        continue;
+                    }
+
+                    // Find the first argument that is not a shell/terminal or command line option.
+                    commandName = Path.GetFileNameWithoutExtension(normalizedArgument);
+                    break;
+                }
+            }
+
+            return !string.IsNullOrWhiteSpace(commandName);
         }
 
         /// <summary>

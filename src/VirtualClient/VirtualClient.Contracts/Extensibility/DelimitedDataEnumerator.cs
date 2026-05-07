@@ -269,7 +269,7 @@ namespace VirtualClient.Contracts.Extensibility
             {
                 if (this.csvLines == null)
                 {
-                    this.csvLines = Regex.Split(this.delimitedContent, @"\r\n|\n");
+                    this.csvLines = Regex.Split(this.delimitedContent, @"\r\n|\n")?.Where(line => !string.IsNullOrWhiteSpace(line)).ToArray();
                 }
 
                 if (this.csvLines?.Any() == true && this.csvLines.Length >= 2)

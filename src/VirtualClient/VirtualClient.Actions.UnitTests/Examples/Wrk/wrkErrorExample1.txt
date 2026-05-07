@@ -1,0 +1,10 @@
+﻿Running 2m test @ http://10.1.0.15/api_new/10kb
+  1 threads and 10000 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency   102.45ms   17.10ms 134.53ms   76.19%
+    Req/Sec     0.67      1.15     2.00     66.67%
+  21 requests in 2.50m, 6.69KB read
+  Socket errors: connect 0, read 1645610, write 16, timeout 0
+  Non-2xx or 3xx responses: 21
+Requests/sec:      0.14
+Transfer/sec:      45.63B

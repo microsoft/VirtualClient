@@ -41,8 +41,8 @@ BFS(Breadth First Search) and SSSP(Single Source Shortest Path).
 
   ``` bash
   # Execute the workload profile
-  VirtualClient.exe --profile=PERF-GRAPH500.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
+  VirtualClient.exe --profile=PERF-GRAPH500.json --system=Demo --timeout=1440
 
    # Override the profile default parameters to use a different scale factor
-  VirtualClient.exe --profile=PERF-GRAPH500.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters="Scale=20"
+  VirtualClient.exe --profile=PERF-GRAPH500.json --system=Demo --timeout=1440 --parameters="Scale=20"
   ```

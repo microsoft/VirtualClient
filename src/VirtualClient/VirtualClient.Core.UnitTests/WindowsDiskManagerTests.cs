@@ -1670,6 +1670,106 @@ namespace VirtualClient
             actualDisks.ToList().ForEach(disk => Assert.IsTrue(disk.Volumes.Count() == 2));
         }
 
+        [Test]
+        public async Task WindowsDiskManagerCallsTheExpectedDiskPartCommandsToSetSanPolicy()
+        {
+            this.testProcess.OnHasExited = () => true;
+            this.testProcess.OnStart = () => true;
+
+            List<string> expectedCommands = new List<string>
+            {
+                "san",
+                "san policy=onlineall",
+                "exit"
+            };
+
+            List<string> actualCommands = new List<string>();
+
+            this.standardInput.BytesWritten += (sender, data) =>
+            {
+                string input = data.ToString().Trim();
+                actualCommands.Add(input);
+
+                if (input == "san")
+                {
+                    // Simulate a policy that is NOT already OnlineAll.
+                    this.testProcess.StandardOutput.Append("SAN Policy  : Offline Shared");
+                }
+                else if (input.Contains("san policy=onlineall"))
+                {
+                    this.testProcess.StandardOutput.Append("DiskPart successfully changed the SAN policy for the current operating system.");
+                }
+                else if (input == "exit")
+                {
+                    // Expected
+                }
+                else
+                {
+                    Assert.Fail($"Unexpected command called: {input}");
+                }
+            };
+
+            await this.diskManager.SetSanPolicyAsync(CancellationToken.None).ConfigureAwait(false);
+
+            Assert.IsNotEmpty(actualCommands);
+            Assert.AreEqual(expectedCommands.Count, actualCommands.Count);
+            CollectionAssert.AreEquivalent(expectedCommands, actualCommands);
+        }
+
+        [Test]
+        public async Task WindowsDiskManagerSkipsSettingSanPolicyWhenItIsAlreadyOnlineAll()
+        {
+            this.testProcess.OnHasExited = () => true;
+            this.testProcess.OnStart = () => true;
+
+            // Only "san" and "exit" — no "san policy=onlineall".
+            List<string> expectedCommands = new List<string>
+            {
+                "san",
+                "exit"
+            };
+
+            List<string> actualCommands = new List<string>();
+
+            this.standardInput.BytesWritten += (sender, data) =>
+            {
+                string input = data.ToString().Trim();
+                actualCommands.Add(input);
+
+                if (input == "san")
+                {
+                    // Simulate a policy that is already OnlineAll.
+                    this.testProcess.StandardOutput.Append("SAN Policy  : Online All");
+                }
+                else if (input == "exit")
+                {
+                    // Expected
+                }
+                else
+                {
+                    Assert.Fail($"Unexpected command called: {input}");
+                }
+            };
+
+            await this.diskManager.SetSanPolicyAsync(CancellationToken.None).ConfigureAwait(false);
+
+            Assert.IsNotEmpty(actualCommands);
+            Assert.AreEqual(expectedCommands.Count, actualCommands.Count);
+            CollectionAssert.AreEquivalent(expectedCommands, actualCommands);
+        }
+
+        [Test]
+        public void WindowsDiskManagerThrowsWhenSettingSanPolicyTimesOut()
+        {
+            this.testProcess.OnHasExited = () => true;
+            this.testProcess.OnStart = () => true;
+
+            // Do not write any response to standard output — the WaitForResponseAsync will time out.
+            this.standardInput.BytesWritten += (sender, data) => { };
+
+            Assert.ThrowsAsync<ProcessException>(() => this.diskManager.SetSanPolicyAsync(CancellationToken.None));
+        }
+
         private class TestWindowsDiskManager : WindowsDiskManager
         {
             public TestWindowsDiskManager(ProcessManager processManager)

@@ -60,6 +60,7 @@ namespace VirtualClient.Dependencies.MySqlServer
 
             string[] expectedCommands =
             {
+                $"sudo mysql -e \"SELECT VERSION();\"",
                 $"python3 {this.packagePath}/install.py --distro Ubuntu",
             };
 

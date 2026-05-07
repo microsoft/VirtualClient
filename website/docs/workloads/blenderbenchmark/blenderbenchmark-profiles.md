@@ -43,8 +43,8 @@ Runs the Blender Workloads.
 
   ``` bash
   # Execute the workload profile
-  VirtualClient.exe --profile=PERF-BLENDER-AMD.json --system=Demo --packageStore="{BlobConnectionString|SAS Uri}" --parameters="GpuModel=v620"
+  VirtualClient.exe --profile=PERF-BLENDER-AMD.json --system=Demo --parameters="GpuModel=v620"
 
   # Override the profile default parameters to run different blender version
-  VirtualClient.exe --profile=PERF-BLENDER-AMD.json --system=Demo --packageStore="{BlobConnectionString|SAS Uri}" --parameters="GpuModel=v620,,,BlenderVersion=3.5.0"
+  VirtualClient.exe --profile=PERF-BLENDER-AMD.json --system=Demo --parameters="GpuModel=v620,,,BlenderVersion=3.5.0"
   ```

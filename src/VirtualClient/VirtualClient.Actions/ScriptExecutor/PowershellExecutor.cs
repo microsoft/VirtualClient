@@ -16,6 +16,7 @@ namespace VirtualClient.Actions
     /// <summary>
     /// The Generic Script executor for Powershell
     /// </summary>
+    [SupportedPlatforms("linux-arm64,linux-x64,win-arm64,win-x64")]
     public class PowerShellExecutor : ScriptExecutor
     {
         private const string PowerShellExecutableName = "powershell";

@@ -45,8 +45,8 @@ Runs the HPCG benchmark workload.
 
   ``` bash
   # Execute the workload profile
-  ./VirtualClient --profile=PERF-CPU-HPCG.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
+  ./VirtualClient --profile=PERF-CPU-HPCG.json --system=Demo --timeout=1440
   
    # Override the profile default parameters to use a different GCC compiler version
-  ./VirtualClient --profile=PERF-CPU-HPCG.json --system=Demo --timeout=1440 --parameters="CompilerVersion=9" --packageStore="{BlobConnectionString|SAS Uri}"
+  ./VirtualClient --profile=PERF-CPU-HPCG.json --system=Demo --timeout=1440 --parameters="CompilerVersion=9"
   ```

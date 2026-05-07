@@ -1,0 +1,87 @@
+{
+  "Description": ".NET benchmarking Workload",
+  "Metadata": {
+    "RecommendedMinimumExecutionTime": "00:05:00",
+    "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64",
+    "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows"
+  },
+  "Parameters": {
+    "DotNetVersion": "8.0.204",
+    "TargetFramework": "net8.0",
+    "ServerPort": 9876
+  },
+  "Actions": [
+    {
+      "Type": "AspNetServerExecutor",
+      "Parameters": {
+        "Role": "Server",
+        "Scenario": "ExecuteJsonSerializationBenchmark",
+        "PackageName": "aspnetbenchmarks",
+        "DotNetSdkPackageName": "dotnetsdk",
+        "TargetFramework": "$.Parameters.TargetFramework",
+        "ServerPort": "$.Parameters.ServerPort"
+      }
+    },
+    {
+      "Type": "BombardierExecutor",
+      "Parameters": {
+        "Role": "Client",
+        "Scenario": "ExecuteJsonSerializationBenchmark",
+        "PackageName": "bombardier",
+        "CommandArguments": "--duration 15s --connections 256 --timeout 10s --fasthttp --insecure -l http://{ServerIp}:9876/json --print r --format json",
+        "WarmUp": false,
+        "Timeout": "00:05:00"
+      }
+    }
+  ],
+  "Dependencies": [
+    {
+      "Type": "ChocolateyInstallation",
+      "Parameters": {
+        "Scenario": "InstallChocolatey",
+        "PackageName": "chocolatey"
+      }
+    },
+    {
+      "Type": "ChocolateyPackageInstallation",
+      "Parameters": {
+        "Scenario": "InstallGit",
+        "PackageName": "chocolatey",
+        "Packages": "git"
+      }
+    },
+    {
+      "Type": "GitRepoClone",
+      "Parameters": {
+        "Scenario": "CloneAspNetBenchmarksRepo",
+        "RepoUri": "https://github.com/aspnet/Benchmarks.git",
+        "Commit": "cf5b6ee",
+        "PackageName": "aspnetbenchmarks"
+      }
+    },
+    {
+      "Type": "DotNetInstallation",
+      "Parameters": {
+        "Scenario": "InstallDotNetSdk",
+        "DotNetVersion": "$.Parameters.DotNetVersion",
+        "PackageName": "dotnetsdk"
+      }
+    },
+    {
+      "Type": "DependencyPackageInstallation",
+      "Parameters": {
+        "Scenario": "InstallBombardierPackage",
+        "BlobContainer": "packages",
+        "BlobName": "bombardier.1.2.5.zip",
+        "PackageName": "bombardier",
+        "Extract": true
+      }
+    },
+    {
+      "Type": "ApiServer",
+      "Parameters": {
+        "Scenario": "StartAPIServer"
+      }
+    }
+  ]
+}

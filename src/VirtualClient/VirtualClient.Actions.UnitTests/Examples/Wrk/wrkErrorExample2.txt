@@ -1,0 +1,14 @@
+﻿Running 30s test @ http://10.1.0.13/index.html
+  5 threads and 100 connections
+  Thread calibration: mean lat.: 1.019ms, rate sampling interval: 10ms
+  Thread calibration: mean lat.: 1.009ms, rate sampling interval: 10ms
+  Thread calibration: mean lat.: 0.988ms, rate sampling interval: 10ms
+  Thread calibration: mean lat.: 0.963ms, rate sampling interval: 10ms
+  Thread calibration: mean lat.: 0.958ms, rate sampling interval: 10ms
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency     0.98ms  468.49us   8.97ms   70.07%
+    Req/Sec   420.73     49.56     0.89k    84.45%
+  59956 requests in 30.00s, 18.64MB read
+  Non-2xx or 3xx responses: 59956
+Requests/sec:   1998.42
+Transfer/sec:    636.13KB

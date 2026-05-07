@@ -52,5 +52,13 @@ namespace VirtualClient
         /// An identity token credential to use for authentication against the Key vault. 
         /// </summary>
         public TokenCredential Credentials { get; }
+
+        /// <summary>
+        /// A string representation of the Key Vault store.
+        /// </summary>
+        public override string ToString()
+        {
+            return this.EndpointUri.ToString();
+        }
     }
 }

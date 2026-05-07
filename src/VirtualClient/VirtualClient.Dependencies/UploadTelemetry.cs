@@ -6,6 +6,7 @@ namespace VirtualClient.Dependencies
     using System;
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
+    using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
     using System.Text.RegularExpressions;
@@ -18,6 +19,7 @@ namespace VirtualClient.Dependencies
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
     using VirtualClient.Contracts.Extensibility;
+    using VirtualClient.Logging;
     using MetadataContract = VirtualClient.Contracts.Metadata.MetadataContract;
 
     /// <summary>
@@ -36,6 +38,11 @@ namespace VirtualClient.Dependencies
             : base(dependencies, parameters)
         {
             this.fileSystem = this.Dependencies.GetService<IFileSystem>();
+
+            if (string.IsNullOrWhiteSpace(this.MatchExpression))
+            {
+                this.SetDefaultMatchExpression();
+            }
         }
 
         /// <summary>
@@ -62,6 +69,37 @@ namespace VirtualClient.Dependencies
         }
 
         /// <summary>
+        /// A regular expression to apply for matching files in the target
+        /// directory.  Note that this instruction does not apply when targeting 
+        /// specific files.
+        /// </summary>
+        public string MatchExpression
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(this.MatchExpression), out IConvertible matchExpression);
+                return matchExpression?.ToString().Trim();
+            }
+
+            private set
+            {
+                this.Parameters[nameof(this.MatchExpression)] = value;
+            }
+        }
+
+        /// <summary>
+        /// True to apply a recursive search to the target directory. Note that
+        /// this instruction does not apply when targeting specific files.
+        /// </summary>
+        public bool Recursive
+        {
+            get
+            {
+                return this.Parameters.GetValue<bool>(nameof(this.Recursive), false);
+            }
+        }
+
+        /// <summary>
         /// The type of telemetry data points to process. Supported values = Events, Metrics.
         /// </summary>
         public DataSchema Schema
@@ -73,7 +111,19 @@ namespace VirtualClient.Dependencies
         }
 
         /// <summary>
-        /// A set of metrics file paths to parse.
+        /// The directory to search for data point files.
+        /// </summary>
+        public string TargetDirectory
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(this.TargetDirectory), out IConvertible directory);
+                return directory?.ToString().Trim();
+            }
+        }
+
+        /// <summary>
+        /// A set of data point files to parse.
         /// </summary>
         public IEnumerable<string> TargetFiles
         {
@@ -197,39 +247,81 @@ namespace VirtualClient.Dependencies
         [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1117:Parameters should be on same line or separate lines", Justification = "Better readability in this case")]
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            if (this.TargetFiles?.Any() == true)
-            { 
-                await this.Logger.LogMessageAsync($"{this.TypeName}.ProcessTelemetry", telemetryContext.Clone().AddContext("files", this.TargetFiles),
-                    async () =>
+            IEnumerable<string> targetFiles = this.GetTargetFiles();
+            telemetryContext.AddContext("targetFiles", targetFiles);
+
+            if (targetFiles?.Any() == true)
+            {
+                DateTime ingestionTimestamp = DateTime.UtcNow;
+                foreach (string file in targetFiles)
+                {
+                    EventContext relatedContext = telemetryContext.Clone();
+                    relatedContext.AddContext("file", file);
+
+                    try
                     {
-                        DateTime ingestionTimestamp = DateTime.UtcNow;
-                        foreach (string file in this.TargetFiles)
+                        this.Logger.LogMessage($"{this.TypeName}.ProcessFile", LogLevel.Information, relatedContext);
+
+                        switch (this.Schema)
                         {
-                            EventContext relatedContext = telemetryContext.Clone();
-                            relatedContext.AddContext("file", file);
+                            case DataSchema.Events:
+                                await this.ProcessEventDataAsync(file, ingestionTimestamp, relatedContext);
+                                break;
 
-                            try
-                            {
-                                this.Logger.LogMessage($"{this.TypeName}.ProcessFile", LogLevel.Information, relatedContext);
-
-                                switch (this.Schema)
-                                {
-                                    case DataSchema.Events:
-                                        await this.ProcessEventDataAsync(file, ingestionTimestamp, relatedContext);
-                                        break;
-
-                                    case DataSchema.Metrics:
-                                        await this.ProcessMetricsDataAsync(file, ingestionTimestamp, relatedContext);
-                                        break;
-                                }
-                            }
-                            catch (Exception exc)
-                            {
-                                this.Logger.LogMessage($"{this.TypeName}.ProcessFileError", LogLevel.Error, relatedContext.AddError(exc));
-                            }
+                            case DataSchema.Metrics:
+                                await this.ProcessMetricsDataAsync(file, ingestionTimestamp, relatedContext);
+                                break;
                         }
-                    });
+                    }
+                    catch (Exception exc)
+                    {
+                        this.Logger.LogMessage($"{this.TypeName}.ProcessFileError", LogLevel.Error, relatedContext.AddError(exc));
+                    }
+                }
             }
+        }
+
+        /// <summary>
+        /// Returns the set of target files to process.
+        /// </summary>
+        protected IEnumerable<string> GetTargetFiles()
+        {
+            // Note:
+            // Hashsets help prevent against duplicate entries. This ensures we do not
+            // upload duplicate telemetry during the operations.
+            HashSet<string> targetFiles = new HashSet<string>();
+
+            if (this.TargetFiles?.Any() == true)
+            {
+                targetFiles.AddRange(this.TargetFiles.Select(file => file.Trim()));
+            }
+            else
+            {
+                SearchOption searchOption = this.Recursive == true ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
+                IEnumerable<string> allFiles = this.fileSystem.Directory.EnumerateFiles(this.TargetDirectory, "*.*", searchOption);
+
+                if (allFiles?.Any() == true)
+                {
+                    Regex fileMatch = new Regex(this.MatchExpression, RegexOptions.IgnoreCase);
+
+                    foreach (string file in allFiles)
+                    {
+                        if (fileMatch.IsMatch(file))
+                        {
+                            targetFiles.Add(file);
+                        }
+                    }
+                }
+                else
+                {
+                    ConsoleLogger.Default.LogMessage(
+                        $"No telemetry data point files exist in the target directory '{this.TargetDirectory}' matching the expression '{this.MatchExpression}'.",
+                        LogLevel.Warning,
+                        EventContext.None);
+                }
+            }
+
+            return targetFiles;
         }
 
         /// <summary>
@@ -338,6 +430,38 @@ namespace VirtualClient.Dependencies
                         }
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// Validates the component parameters.
+        /// </summary>
+        protected override void Validate()
+        {
+            base.Validate();
+
+            if (this.TargetFiles?.Any() != true && string.IsNullOrWhiteSpace(this.TargetDirectory))
+            {
+                throw new DependencyException(
+                    $"Invalid usage. Either a set of target files or a target directory must be supplied on the command line.",
+                    ErrorReason.InvalidProfileDefinition);
+            }
+        }
+
+        private void SetDefaultMatchExpression()
+        {
+            switch (this.Schema)
+            {
+                case DataSchema.Events:
+                    this.MatchExpression = @"\.events\.csv$";
+                    break;
+
+                case DataSchema.Metrics:
+                    this.MatchExpression = @"\.metrics\.csv$";
+                    break;
+
+                default:
+                    throw new NotSupportedException($"Data schema '{this.Schema}' is not supported.");
             }
         }
     }

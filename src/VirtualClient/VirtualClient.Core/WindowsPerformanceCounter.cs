@@ -18,12 +18,19 @@ namespace VirtualClient
     /// </summary>
     public class WindowsPerformanceCounter : IPerformanceMetric, IDisposable
     {
+        /// <summary>
+        /// The maximum number of consecutive capture failures before the counter is disabled.
+        /// </summary>
+        public const int MaxConsecutiveFailures = 5;
+
         private PerformanceCounter counter;
         private ConcurrentBag<float> counterValues;
         private SemaphoreSlim semaphore;
         private DateTime? captureStartTime;
         private DateTime nextCounterVerificationTime;
         private bool disposed;
+        private int consecutiveFailures;
+        private Exception lastError;
 
         /// <summary>
         /// Intialize a new instance of the <see cref="WindowsPerformanceCounter"/> class.
@@ -157,6 +164,22 @@ namespace VirtualClient
         public CaptureStrategy Strategy { get; }
 
         /// <summary>
+        /// Gets a value indicating whether this counter has been disabled due to
+        /// repeated consecutive capture failures.
+        /// </summary>
+        public bool IsDisabled { get; private set; }
+
+        /// <summary>
+        /// Gets the number of consecutive capture failures.
+        /// </summary>
+        public int ConsecutiveFailures => this.consecutiveFailures;
+
+        /// <summary>
+        /// Gets the last error that occurred during capture.
+        /// </summary>
+        public Exception LastError => this.lastError;
+
+        /// <summary>
         /// The set of counter values that have been captured during the current
         /// interval.
         /// </summary>
@@ -191,6 +214,11 @@ namespace VirtualClient
         /// <inheritdoc />
         public void Capture()
         {
+            if (this.IsDisabled)
+            {
+                return;
+            }
+
             try
             {
                 this.semaphore.Wait(CancellationToken.None);
@@ -198,6 +226,8 @@ namespace VirtualClient
                 if (this.TryGetCounterValue(out float? counterValue))
                 {
                     this.counterValues.Add(counterValue.Value);
+                    Interlocked.Exchange(ref this.consecutiveFailures, 0);
+                    this.lastError = null;
 
                     if (this.captureStartTime == null)
                     {
@@ -205,10 +235,31 @@ namespace VirtualClient
                     }
                 }
             }
+            catch (Exception exc)
+            {
+                this.lastError = exc;
+                int failures = Interlocked.Increment(ref this.consecutiveFailures);
+                if (failures >= WindowsPerformanceCounter.MaxConsecutiveFailures)
+                {
+                    this.IsDisabled = true;
+                }
+
+                throw;
+            }
             finally
             {
                 this.semaphore.Release();
             }
+        }
+
+        /// <summary>
+        /// Resets the disabled state so the counter can be retried.
+        /// </summary>
+        public void ResetDisabledState()
+        {
+            this.IsDisabled = false;
+            Interlocked.Exchange(ref this.consecutiveFailures, 0);
+            this.lastError = null;
         }
 
         /// <summary>

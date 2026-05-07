@@ -123,6 +123,8 @@ namespace VirtualClient.Dependencies
             {
                 "sudo update-alternatives --remove-all gcc",
                 "sudo update-alternatives --remove-all gfortran",
+                "sudo update-alternatives --remove-all g++",
+                "sudo update-alternatives --remove-all gcov",
                 "sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y",
                 "sudo apt update",
                 "sudo apt install build-essential gcc-123 g++-123 gfortran-123 -y --quiet",

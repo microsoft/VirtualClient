@@ -240,15 +240,17 @@ namespace VirtualClient.Actions
                         }
                         else
                         {
-                            // Linux: Wrap command with numactl for CPU binding
+                            // Linux: Wrap command with numactl for CPU binding.
+                            // Pass null for command and include the executable path in the arguments
+                            // so that GetCommandWithAffinity returns "numactl -C {cores} {exe} {args}"
+                            // wrapped in double quotes for bash -c.
+                            string fullCommandLine = $"{this.WorkloadExecutablePath} {commandArguments}";
                             LinuxProcessAffinityConfiguration linuxConfig = (LinuxProcessAffinityConfiguration)affinityConfig;
-                            string fullCommand = linuxConfig.GetCommandWithAffinity(
-                                this.WorkloadExecutablePath,
-                                commandArguments);
+                            string wrappedCommand = linuxConfig.GetCommandWithAffinity(null, fullCommandLine);
 
                             workloadProcess = this.processManager.CreateProcess(
                                 "/bin/bash",
-                                $"-c \"{fullCommand}\"",
+                                $"-c {wrappedCommand}",
                                 this.WorkloadPackage.Path);
                         }
                     }

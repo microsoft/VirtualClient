@@ -124,6 +124,94 @@ namespace VirtualClient
             Assert.AreEqual((double)captures.Last(), snapshot.Value);
         }
 
+        [Test]
+        public void WindowsPerformanceCounterDisablesAfterMaxConsecutiveFailures()
+        {
+            this.performanceCounter.OnGetCounterValue = () => throw new InvalidOperationException("Instance '7' does not exist in the specified Category.");
+
+            for (int i = 0; i < WindowsPerformanceCounter.MaxConsecutiveFailures; i++)
+            {
+                Assert.Throws<InvalidOperationException>(() => this.performanceCounter.Capture());
+            }
+
+            Assert.IsTrue(this.performanceCounter.IsDisabled);
+            Assert.AreEqual(WindowsPerformanceCounter.MaxConsecutiveFailures, this.performanceCounter.ConsecutiveFailures);
+        }
+
+        [Test]
+        public void WindowsPerformanceCounterSkipsCaptureWhenDisabled()
+        {
+            this.performanceCounter.OnGetCounterValue = () => throw new InvalidOperationException("test");
+
+            for (int i = 0; i < WindowsPerformanceCounter.MaxConsecutiveFailures; i++)
+            {
+                Assert.Throws<InvalidOperationException>(() => this.performanceCounter.Capture());
+            }
+
+            Assert.IsTrue(this.performanceCounter.IsDisabled);
+
+            // Subsequent calls should return immediately without throwing
+            Assert.DoesNotThrow(() => this.performanceCounter.Capture());
+        }
+
+        [Test]
+        public void WindowsPerformanceCounterResetsFailureCountOnSuccess()
+        {
+            int callCount = 0;
+            this.performanceCounter.OnGetCounterValue = () =>
+            {
+                callCount++;
+                if (callCount <= 3)
+                {
+                    throw new InvalidOperationException("transient");
+                }
+
+                return 42.0f;
+            };
+
+            for (int i = 0; i < 3; i++)
+            {
+                Assert.Throws<InvalidOperationException>(() => this.performanceCounter.Capture());
+            }
+
+            Assert.IsFalse(this.performanceCounter.IsDisabled);
+            Assert.AreEqual(3, this.performanceCounter.ConsecutiveFailures);
+
+            this.performanceCounter.Capture();
+            Assert.IsFalse(this.performanceCounter.IsDisabled);
+            Assert.AreEqual(0, this.performanceCounter.ConsecutiveFailures);
+            Assert.IsNull(this.performanceCounter.LastError);
+        }
+
+        [Test]
+        public void WindowsPerformanceCounterResetDisabledStateAllowsRetry()
+        {
+            this.performanceCounter.OnGetCounterValue = () => throw new InvalidOperationException("broken");
+
+            for (int i = 0; i < WindowsPerformanceCounter.MaxConsecutiveFailures; i++)
+            {
+                Assert.Throws<InvalidOperationException>(() => this.performanceCounter.Capture());
+            }
+
+            Assert.IsTrue(this.performanceCounter.IsDisabled);
+
+            this.performanceCounter.ResetDisabledState();
+            Assert.IsFalse(this.performanceCounter.IsDisabled);
+            Assert.AreEqual(0, this.performanceCounter.ConsecutiveFailures);
+
+            Assert.Throws<InvalidOperationException>(() => this.performanceCounter.Capture());
+        }
+
+        [Test]
+        public void WindowsPerformanceCounterStoresLastError()
+        {
+            var expectedException = new InvalidOperationException("Instance '42' does not exist");
+            this.performanceCounter.OnGetCounterValue = () => throw expectedException;
+
+            Assert.Throws<InvalidOperationException>(() => this.performanceCounter.Capture());
+            Assert.AreEqual(expectedException, this.performanceCounter.LastError);
+        }
+
         private class TestWindowsPerformanceCounter : WindowsPerformanceCounter
         {
             public TestWindowsPerformanceCounter(string category, string name, string instance, CaptureStrategy captureStrategy)

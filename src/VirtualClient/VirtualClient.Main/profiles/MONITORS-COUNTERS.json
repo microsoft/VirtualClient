@@ -40,6 +40,7 @@
             "Type": "WindowsPerformanceCounterMonitor",
             "Parameters": {
                 "Scenario": "CaptureCounters",
+                "CounterProvider": "Default",
                 "MonitorFrequency": "$.Parameters.MonitorFrequency",
                 "MonitorWarmupPeriod": "$.Parameters.MonitorWarmupPeriod",
                 "Counters01": "Hyper-V Hypervisor Logical Processor=\\(_Total\\)",
@@ -55,7 +56,7 @@
                 "Counters11": "Memory=(Page Reads/sec|Page Writes/sec|Pages/sec|Pages Input/sec|Pages Output/sec)",
                 "Counters12": "PhysicalDisk=\\(_Total\\)",
                 "Counters13": "Processor=\\(_Total\\)",
-                "Counters14": "Processor=\\([0-9]+\\)\\\\% (C[0-9]+|Idle|Interrupt|Privileged|Processor|User) Time",
+                "Counters14": "Processor=\\([0-9,]+\\)\\\\% (C[0-9]+|Idle|Interrupt|Privileged|Processor|User) Time",
                 "Counters15": "System=.",
                 "Comments": "The counters defined are formatted as {category}={counter_match_expression}. The match expression is a regular expression to allow for handling variability of counters available on different systems. JSON content has eccentricities. Use 4-backslashes to represent a single backslash and 2-backslashes to represent a regular expression character escape."
             }

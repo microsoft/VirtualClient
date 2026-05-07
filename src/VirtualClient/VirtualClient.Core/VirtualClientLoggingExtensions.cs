@@ -18,6 +18,7 @@ namespace VirtualClient
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Logging;
 
     /// <summary>
     /// Extension methods for logging facilities in the Virtual Client.
@@ -407,7 +408,7 @@ namespace VirtualClient
                         await fileSystem.File.WriteAllTextAsync(logFilePath, outputBuilder.ToString());
                     });
 
-                    if (upload && component.TryGetContentStoreManager(out IBlobManager blobManager))
+                    if (upload && !component.DeferUploads && component.TryGetContentStoreManager(out IBlobManager blobManager))
                     {
                         string effectiveToolName = component.GetLogDirectoryName(processDetails.ToolName);
 
@@ -434,6 +435,22 @@ namespace VirtualClient
                 // Best effort but we should never crash VC if the logging fails. Metric capture
                 // is more important to the operations of VC. We do want to log the failure.
                 component.Logger?.LogErrorMessage(exc, telemetryContext, LogLevel.Warning);
+            }
+        }
+
+        /// <summary>
+        /// Outputs a message to the console/standard output for the start of a component execution.
+        /// </summary>
+        /// <param name="component">The component starting execution.</param>
+        internal static void OutputComponentStart(this VirtualClientComponent component)
+        {
+            if (!string.IsNullOrWhiteSpace(component.Scenario))
+            {
+                ConsoleLogger.Default.LogInformation($"Profile: {component.ComponentType} = {component.TypeName} (scenario={component.Scenario})");
+            }
+            else
+            {
+                ConsoleLogger.Default.LogInformation($"Profile: {component.ComponentType} = {component.TypeName}");
             }
         }
 

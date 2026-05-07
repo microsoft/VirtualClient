@@ -177,5 +177,14 @@ namespace VirtualClient.Contracts
 
             return this.hashCode.Value;
         }
+
+        /// <summary>
+        /// Returns a string representation of the client instance
+        /// (e.g. client01,10.1.0.1,Client).
+        /// </summary>
+        public override string ToString()
+        {
+            return string.Join(",", this.Name, this.IPAddress, this.Role);
+        }
     }
 }

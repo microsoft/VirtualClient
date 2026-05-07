@@ -21,7 +21,7 @@ To measure throughput, we can request a specific html file from the server and t
 s_time -connect {ServerIp}:{ServerPort} -www /test_1k.html -time {Duration.TotalSeconds} -ciphersuites TLS_AES_128_GCM_SHA256 -tls1_3
 ```
 
-This command requests a html file of size 1K and uses AES_128_GCM_SHA256 algorithm for its secure transaction. 
+This command requests an html file of size 1K and uses AES_128_GCM_SHA256 algorithm for its secure transaction. 
 
 # Chosen algorithms
 
@@ -130,7 +130,7 @@ echo "$FOOTER"
 echo "Generated $FILENAME with size approximately ${SIZE_KB}KB."
 ```
 
-For eg., to generate a html file size of 100KiB run the script as follows
+For eg., to generate an html file size of 100KiB run the script as follows
 ```bash
 ./generate_html.sh test_100KiB.html 100
 ```

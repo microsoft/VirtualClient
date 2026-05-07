@@ -6,6 +6,7 @@ namespace VirtualClient.Contracts
     using System;
     using System.Collections.Generic;
     using System.IO;
+    using System.IO.Abstractions;
     using System.Linq;
     using System.Runtime.InteropServices;
     using System.Text;
@@ -747,6 +748,80 @@ namespace VirtualClient.Contracts
             // be used. In test scenarios, this will be the current machine name.
             ClientInstance actualInstance = component.GetLayoutClientInstance();
             Assert.IsTrue(object.ReferenceEquals(expectedInstance, actualInstance));
+        }
+
+        [Test]
+        [TestCase(@"C:", @"C:\file.txt", @"C:\")]
+        [TestCase(@"c:", @"c:\file.txt", @"c:\")]
+        [TestCase(@"c:", @"C:\file.txt", @"C:\")]
+        [TestCase(@"C:\", @"C:\file.txt", @"C:\")]
+        [TestCase(@"S:\", @"S:\file.txt", @"S:\")]
+        [TestCase(@"C:", @"C:\directory1\file.txt", @"directory1")]
+        [TestCase(@"C:\", @"C:\directory1\file.txt", @"directory1")]
+        [TestCase(@"C:\", @"C:\directory1\directory2\file.txt", @"directory1\directory2")]
+        [TestCase(@"C:\", @"C:\directory1\directory2\directory3\file.txt", @"directory1\directory2\directory3")]
+        [TestCase(@"C:\directory1", @"C:\directory1\file.txt", @"")]
+        [TestCase(@"C:\directory1", @"C:\directory1\directory2\file.txt", @"directory2")]
+        [TestCase(@"C:\directory1", @"C:\directory1\directory2\directory3\file.txt", @"directory2\directory3")]
+        [TestCase(@"C:\directory1\directory2", @"C:\directory1\directory2\directory3\file.txt", @"directory3")]
+        [TestCase(@"C:\directory1\directory2\directory3", @"C:\directory1\directory2\directory3\file.txt", @"")]
+        public void GetRelativeSubdirectoryExtensionsHandlesExpectedWindowsPathScenarios(string rootDirectory, string filePath, string expectedRelativeSubdirectory)
+        {
+            this.Setup(PlatformID.Win32NT);
+
+            this.fixture.FileSystem.Setup(fs => fs.Path.GetDirectoryName(filePath))
+                .Returns(filePath.Substring(0, filePath.LastIndexOf(@"\") + 1));
+
+            string relativeSubdirectory = this.fixture.FileSystem.Object.GetRelativeSubdirectory(rootDirectory, filePath);
+            Assert.AreEqual(expectedRelativeSubdirectory, relativeSubdirectory);
+        }
+
+        [Test]
+        [Platform("Win")]
+        [TestCase(@"C:", @"C:\file.txt", @"C:\")]
+        [TestCase(@"c:", @"c:\file.txt", @"c:\")]
+        [TestCase(@"c:", @"C:\file.txt", @"C:\")]
+        [TestCase(@"C:\", @"C:\file.txt", @"C:\")]
+        [TestCase(@"S:\", @"S:\file.txt", @"S:\")]
+        [TestCase(@"C:\", @"C:\directory1\file.txt", @"directory1")]
+        [TestCase(@"C:\", @"C:\directory1\directory2\file.txt", @"directory1\directory2")]
+        [TestCase(@"C:\", @"C:\directory1\directory2\directory3\file.txt", @"directory1\directory2\directory3")]
+        [TestCase(@"C:", @"C:\directory1\file.txt", @"directory1")]
+        [TestCase(@"C:\directory1", @"C:\directory1\file.txt", @"")]
+        [TestCase(@"C:\directory1", @"C:\directory1\directory2\file.txt", @"directory2")]
+        [TestCase(@"C:\directory1", @"C:\directory1\directory2\directory3\file.txt", @"directory2\directory3")]
+        [TestCase(@"C:\directory1\directory2", @"C:\directory1\directory2\directory3\file.txt", @"directory3")]
+        [TestCase(@"C:\directory1\directory2\directory3", @"C:\directory1\directory2\directory3\file.txt", @"")]
+        public void GetRelativeSubdirectoryExtensionsHandlesExpectedWindowsPathScenarios_Parity_Check(string rootDirectory, string filePath, string expectedRelativeSubdirectory)
+        {
+            IFileSystem fileSystem = new FileSystem();
+
+            string relativeSubdirectory = fileSystem.GetRelativeSubdirectory(rootDirectory, filePath);
+            Assert.AreEqual(expectedRelativeSubdirectory, relativeSubdirectory);
+
+            // Full parity check with
+            Assert.AreEqual(Path.GetDirectoryName(filePath), Path.Combine(rootDirectory, relativeSubdirectory));
+        }
+
+        [Test]
+        [TestCase("/", @"/file.txt", "")]
+        [TestCase("/", @"/home/file.txt", "home")]
+        [TestCase("/", @"/home/directory1/file.txt", "home/directory1")]
+        [TestCase("/", @"/home/directory1/directory2/file.txt", "home/directory1/directory2")]
+        [TestCase("/", @"/home/directory1/directory2/directory3/file.txt", "home/directory1/directory2/directory3")]
+        [TestCase("/home", @"/home/directory1/file.txt", "directory1")]
+        [TestCase("/home/directory1", @"/home/directory1/directory2/file.txt", "directory2")]
+        [TestCase("/home/directory1", @"/home/directory1/directory2/directory3/file.txt", "directory2/directory3")]
+        [TestCase("/home/directory1/directory2", @"/home/directory1/directory2/directory3/file.txt", "directory3")]
+        public void GetRelativeSubdirectoryExtensionsHandlesExpectedUnixPathScenarios(string rootDirectory, string filePath, string expectedRelativeSubdirectory)
+        {
+            this.Setup(PlatformID.Unix);
+
+            this.fixture.FileSystem.Setup(fs => fs.Path.GetDirectoryName(filePath))
+                .Returns(filePath.Substring(0, filePath.LastIndexOf("/") + 1));
+
+            string relativeSubdirectory = this.fixture.FileSystem.Object.GetRelativeSubdirectory(rootDirectory, filePath);
+            Assert.AreEqual(expectedRelativeSubdirectory, relativeSubdirectory);
         }
 
         [Test]

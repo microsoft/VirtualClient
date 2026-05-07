@@ -167,7 +167,7 @@ namespace VirtualClient
                     null,
                     this.Roles?.FirstOrDefault()));
 
-            return this.UploadFileAsync(blobManager, this.fileSystem, descriptor, cancellationToken, deleteFile: true);
+            return this.UploadFileAsync(blobManager, this.fileSystem, descriptor, cancellationToken);
         }
     }
 }

@@ -8,6 +8,7 @@ namespace VirtualClient.UnitTests
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.Extensions.DependencyInjection;
     using NUnit.Framework;
     using VirtualClient.Contracts;
 
@@ -16,20 +17,12 @@ namespace VirtualClient.UnitTests
     public class GetAccessTokenCommandTests
     {
         [Test]
-        public void ShouldInitializeKeyVault_IsFalse_Always()
-        {
-            var command = new TestGetAccessTokenCommand();
-
-            Assert.That(command.ShouldInitializeKeyVaultPublic(), Is.False);
-        }
-
-        [Test]
         public async Task ExecuteAsync_InitializesParametersDictionary_WhenNull()
         {
             var command = new TestGetAccessTokenCommand
             {
                 Parameters = null,
-                KeyVault = "https://myvault.vault.azure.net/",
+                KeyVaultStore = new DependencyKeyVaultStore(DependencyStore.KeyVault, new Uri("https://myvault.vault.azure.net/")),
                 TenantId = "00000000-0000-0000-0000-000000000001"
             };
 
@@ -45,7 +38,7 @@ namespace VirtualClient.UnitTests
             var command = new TestGetAccessTokenCommand
             {
                 Parameters = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase),
-                KeyVault = "https://myvault.vault.azure.net/",
+                KeyVaultStore = new DependencyKeyVaultStore(DependencyStore.KeyVault, new Uri("https://myvault.vault.azure.net/")),
                 TenantId = "00000000-0000-0000-0000-000000000001"
             };
 
@@ -55,48 +48,12 @@ namespace VirtualClient.UnitTests
         }
 
         [Test]
-        public async Task ExecuteAsync_SetsExpectedParameters()
-        {
-            var command = new TestGetAccessTokenCommand
-            {
-                Parameters = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase),
-                KeyVault = "https://myvault.vault.azure.net/",
-                TenantId = "00000000-0000-0000-0000-000000000001"
-            };
-
-            await command.ExecuteAsync(Array.Empty<string>(), new CancellationTokenSource());
-
-            Assert.That(command.Parameters["KeyVaultUri"], Is.EqualTo(command.KeyVault));
-            Assert.That(command.Parameters["TenantId"], Is.EqualTo(command.TenantId));
-        }
-
-        [Test]
-        public async Task ExecuteAsync_OverwritesExistingParameterValues()
-        {
-            var command = new TestGetAccessTokenCommand
-            {
-                Parameters = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase)
-                {
-                    ["KeyVaultUri"] = "https://old.vault.azure.net/",
-                    ["TenantId"] = "old-tenant"
-                },
-                KeyVault = "https://myvault.vault.azure.net/",
-                TenantId = "00000000-0000-0000-0000-000000000001"
-            };
-
-            await command.ExecuteAsync(Array.Empty<string>(), new CancellationTokenSource());
-
-            Assert.That(command.Parameters["KeyVaultUri"], Is.EqualTo(command.KeyVault));
-            Assert.That(command.Parameters["TenantId"], Is.EqualTo(command.TenantId));
-        }
-
-        [Test]
         public async Task ExecuteAsync_SetsTimeoutToOneIteration()
         {
             var command = new TestGetAccessTokenCommand
             {
                 Parameters = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase),
-                KeyVault = "https://myvault.vault.azure.net/",
+                KeyVaultStore = new DependencyKeyVaultStore(DependencyStore.KeyVault, new Uri("https://myvault.vault.azure.net/")),
                 TenantId = "00000000-0000-0000-0000-000000000001"
             };
 
@@ -113,13 +70,11 @@ namespace VirtualClient.UnitTests
 
         internal class TestGetAccessTokenCommand : GetAccessTokenCommand
         {
-            public bool ShouldInitializeKeyVaultPublic() => this.ShouldInitializeKeyVault;
-
             /// <summary>
             /// Follows the BootstrapCommandTests pattern: do not run the ExecuteProfileCommand pipeline.
             /// We only validate side-effects from GetAccessTokenCommand.ExecuteAsync (profiles/parameters).
             /// </summary>
-            public override Task<int> ExecuteAsync(string[] args, CancellationTokenSource cancellationTokenSource)
+            protected override Task<int> ExecuteAsync(string[] args, IServiceCollection dependencies, CancellationTokenSource cancellationTokenSource)
             {
                 this.ExecuteGetTokenOnly(args, cancellationTokenSource);
                 return Task.FromResult(0);
@@ -139,7 +94,6 @@ namespace VirtualClient.UnitTests
                     this.Parameters = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
                 }
 
-                this.Parameters["KeyVaultUri"] = this.KeyVault;
                 this.Parameters["TenantId"] = this.TenantId;
 
                 return Task.CompletedTask;

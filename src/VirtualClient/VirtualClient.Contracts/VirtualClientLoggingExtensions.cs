@@ -641,6 +641,7 @@ namespace VirtualClient.Contracts
         /// <param name="eventContext">Provided correlation identifiers and context properties for the event.</param>
         /// <param name="toolResults">The raw results produced by the workload/monitor etc. from which the metrics were parsed.</param>
         /// <param name="toolVersion">The version of the tool/toolset.</param>
+        /// <param name="metricLevel">A severity level to apply to the metric.</param>
         public static void LogMetrics(
             this ILogger logger,
             string toolName,
@@ -653,7 +654,8 @@ namespace VirtualClient.Contracts
             IEnumerable<string> tags,
             EventContext eventContext,
             string toolResults = null,
-            string toolVersion = null)
+            string toolVersion = null,
+            LogLevel metricLevel = LogLevel.Information)
         {
             logger.ThrowIfNull(nameof(logger));
 
@@ -682,6 +684,63 @@ namespace VirtualClient.Contracts
 
             // A specific message to inform logger end of logging metrics so that it can write metrics in one batch.
             VirtualClientLoggingExtensions.LogMessage(logger, $"{scenarioName}.LogMetricsEnd", LogLevel.Trace, LogType.MetricsCollection, eventContext);
+        }
+
+        /// <summary>
+        /// Logs the test metrics/results to the target telemetry data store(s).
+        /// </summary>
+        /// <param name="logger">The logger instance.</param>
+        /// <param name="metric">The metric to log.</param>
+        /// <param name="toolName">The name of the workload tool that produced the test metrics/results (e.g. GeekBench, FIO).</param>
+        /// <param name="scenarioName">The name of the test (e.g. fio_randwrite_4GB_4k_d1_th1_direct).</param>
+        /// <param name="scenarioStartTime">The time at which the test began.</param>
+        /// <param name="scenarioEndTime">The time at which the test ended.</param>
+        /// <param name="scenarioArguments">The command line parameters provided to the workload tool.</param>
+        /// <param name="eventContext">Provided correlation identifiers and context properties for the event.</param>
+        /// <param name="tags">Tags associated with the test.</param>
+        /// <param name="toolResults">The raw results produced by the workload/monitor etc. from which the metrics were parsed.</param>
+        /// <param name="toolVersion">The version of the tool/toolset.</param>
+        /// <param name="metricLevel">A severity level to apply to the metric.</param>
+        public static void LogMetric(
+            this ILogger logger,
+            Metric metric,
+            string toolName,
+            string scenarioName,
+            DateTime scenarioStartTime,
+            DateTime scenarioEndTime,
+            string scenarioArguments,
+            EventContext eventContext,
+            IEnumerable<string> tags = null,
+            string toolResults = null,
+            string toolVersion = null,
+            LogLevel metricLevel = LogLevel.Information)
+        {
+            logger.ThrowIfNull(nameof(logger));
+            metric.ThrowIfNull(nameof(metric));
+            scenarioName.ThrowIfNullOrWhiteSpace(nameof(scenarioName));
+            toolName.ThrowIfNullOrWhiteSpace(nameof(toolName));
+            eventContext.ThrowIfNull(nameof(eventContext));
+
+            VirtualClientLoggingExtensions.LogMetric(
+                logger,
+                toolName,
+                scenarioName,
+                scenarioStartTime,
+                scenarioEndTime,
+                metric.Name,
+                metric.Value,
+                metric.Unit,
+                metric.Categorization,
+                scenarioArguments,
+                tags,
+                eventContext,
+                metric.Relativity,
+                metric.Verbosity,
+                metric.Description,
+                toolResults,
+                toolVersion,
+                metric.Metadata,
+                metricLevel);
         }
 
         /// <summary>

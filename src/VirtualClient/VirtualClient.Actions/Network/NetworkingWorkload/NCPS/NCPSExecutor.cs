@@ -20,6 +20,7 @@ namespace VirtualClient.Actions.NetworkPerformance
     /// <summary>
     /// NCPS(New Connections Per Second) Tool Executor. 
     /// </summary>
+    [SupportedPlatforms("linux-arm64,linux-x64,win-arm64,win-x64")]
     public class NCPSExecutor : NetworkingWorkloadToolExecutor
     {
         private IFileSystem fileSystem;
@@ -269,7 +270,7 @@ namespace VirtualClient.Actions.NetworkPerformance
         }
 
         /// <inheritdoc/>
-        protected override Task<IProcessProxy> ExecuteWorkloadAsync(string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken, TimeSpan? timeout = null)
+        protected override Task ExecuteWorkloadAsync(string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken, TimeSpan? timeout = null)
         {
             EventContext relatedContext = telemetryContext.Clone()
                 .AddContext("command", this.ExecutablePath)
@@ -320,8 +321,6 @@ namespace VirtualClient.Actions.NetworkPerformance
                         }
                     });
                 }
-
-                return process;
             });
         }
 

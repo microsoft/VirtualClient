@@ -65,11 +65,14 @@ namespace VirtualClient.Actions
         public async Task LMbenchExecutorExecutesTheExpectedCommandForLatMemRd()
         {
             this.Parameters[nameof(LMbenchExecutor.BinaryName)] = "lat_mem_rd";
+            this.Parameters[nameof(LMbenchExecutor.BinaryCommandLine)] = "4096 128";
+
             this.ProcessManager.OnProcessCreated = (process) =>
             {
-                string lmbenchOutput = System.IO.File.ReadAllText(this.Combine(LMbenchExecutorTests.Examples, "latmemrd_example_results.txt"));
+                string lmbenchOutput = System.IO.File.ReadAllText(this.Combine(LMbenchExecutorTests.Examples, "latmemrd_stride_64_example_results.txt"));
                 process.StandardOutput.Append(lmbenchOutput);
             };
+
             using (TestLMbenchExecutor lmbenchExecutor = new TestLMbenchExecutor(this.Dependencies, this.Parameters))
             {
                 await lmbenchExecutor.ExecuteAsync(EventContext.None, CancellationToken.None);
@@ -88,8 +91,7 @@ namespace VirtualClient.Actions
             {
                 "BENCHMARK_BCOPY",
                 "BENCHMARK_MEM",
-                "BENCHMARK_MMAP",
-                "BENCHMARK_FILE"
+                "BENCHMARK_MMAP"
             };
 
             using (TestLMbenchExecutor lmbenchExecutor = new TestLMbenchExecutor(this.Dependencies, this.Parameters))

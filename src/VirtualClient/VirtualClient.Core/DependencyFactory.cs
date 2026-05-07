@@ -10,7 +10,6 @@ namespace VirtualClient
     using System.Linq;
     using System.Net;
     using System.Security.Cryptography.X509Certificates;
-    using System.Threading.Tasks;
     using Azure.Core;
     using Azure.Messaging.EventHubs.Producer;
     using Microsoft.Extensions.Logging;
@@ -136,22 +135,22 @@ namespace VirtualClient
         /// <param name="eventHubName">The name of the Event Hub within the namespace (e.g. telemetry-logs, telemetry-metrics).</param>
         /// <param name="eventHubNameSpace">Event hub namespace</param>
         /// <param name="tokenCredential">Azure Token credential to authenticate with </param>
-        public static EventHubTelemetryChannel CreateEventHubTelemetryChannel(string eventHubName, string eventHubNameSpace = null, TokenCredential tokenCredential = null, string eventHubConnectionString = null)
+        /// <param name="clientOptions">Options for configuring the Event Hub producer client. For example, these can be used to support the use of a proxy.</param>
+        public static EventHubTelemetryChannel CreateEventHubTelemetryChannel(string eventHubName, string eventHubNameSpace = null, TokenCredential tokenCredential = null, string eventHubConnectionString = null, EventHubProducerClientOptions clientOptions = null)
         {
             EventHubProducerClient client;
+
             if (!string.IsNullOrEmpty(eventHubConnectionString))
             {
-                client = new EventHubProducerClient(eventHubConnectionString, eventHubName);
+                client = new EventHubProducerClient(eventHubConnectionString, eventHubName, clientOptions);
             }
             else
             {
-                client = new EventHubProducerClient(eventHubNameSpace, eventHubName, tokenCredential);
+                client = new EventHubProducerClient(eventHubNameSpace, eventHubName, tokenCredential, clientOptions);
             }
 
             EventHubTelemetryChannel channel = new EventHubTelemetryChannel(client, enableDiagnostics: true);
 
-            VirtualClientRuntime.DataChannels.Add(channel);
-            VirtualClientRuntime.CleanupTasks.Add(new Action_(() => channel.Dispose()));
             return channel;
         }
 
@@ -161,7 +160,9 @@ namespace VirtualClient
         /// <param name="eventHubStore">Describes the Event Hub namespace dependency store.</param>
         /// <param name="settings">Defines the settings for each individual Event Hub targeted.</param>
         /// <param name="level">The logging severity level.</param>
-        public static IEnumerable<ILoggerProvider> CreateEventHubLoggerProviders(DependencyEventHubStore eventHubStore, EventHubLogSettings settings, LogLevel level)
+        /// <param name="flushTimeout">A timeout to apply to flush operations.</param>
+        /// <param name="clientOptions">Options for configuring the Event Hub producer client. For example, these can be used to support the use of a proxy.</param>
+        public static IEnumerable<ILoggerProvider> CreateEventHubLoggerProviders(DependencyEventHubStore eventHubStore, EventHubLogSettings settings, LogLevel level, TimeSpan? flushTimeout = null, EventHubProducerClientOptions clientOptions = null)
         {
             List<ILoggerProvider> loggerProviders = new List<ILoggerProvider>();
 
@@ -190,7 +191,8 @@ namespace VirtualClient
                         eventHubName: settings.TracesHubName,
                         eventHubNameSpace: authenticationContext.EventHubNamespace,
                         authenticationContext.TokenCredential,
-                        authenticationContext.ConnectionString);
+                        authenticationContext.ConnectionString,
+                        clientOptions);
 
                     tracesChannel.EventTransmissionError += (sender, args) =>
                     {
@@ -198,7 +200,7 @@ namespace VirtualClient
                     };
 
                     // Traces logging is affected by --log-level values defined on the command line.
-                    ILoggerProvider tracesLoggerProvider = new EventHubTelemetryLoggerProvider(tracesChannel, level)
+                    ILoggerProvider tracesLoggerProvider = new EventHubTelemetryLoggerProvider(tracesChannel, level, flushTimeout)
                         .HandleTraces();
 
                     loggerProviders.Add(tracesLoggerProvider);
@@ -208,7 +210,8 @@ namespace VirtualClient
                         eventHubName: settings.MetricsHubName,
                         eventHubNameSpace: authenticationContext.EventHubNamespace,
                         authenticationContext.TokenCredential,
-                        authenticationContext.ConnectionString);
+                        authenticationContext.ConnectionString,
+                        clientOptions);
 
                     metricsChannel.EventTransmissionError += (sender, args) =>
                     {
@@ -217,7 +220,7 @@ namespace VirtualClient
 
                     // Metrics are NOT affected by --log-level values defined on the command line. Metrics are
                     // always written.
-                    ILoggerProvider metricsLoggerProvider = new EventHubTelemetryLoggerProvider(metricsChannel, LogLevel.Trace)
+                    ILoggerProvider metricsLoggerProvider = new EventHubTelemetryLoggerProvider(metricsChannel, LogLevel.Trace, flushTimeout)
                         .HandleMetrics();
 
                     loggerProviders.Add(metricsLoggerProvider);
@@ -227,7 +230,8 @@ namespace VirtualClient
                         eventHubName: settings.EventsHubName,
                         eventHubNameSpace: authenticationContext.EventHubNamespace,
                         authenticationContext.TokenCredential,
-                        authenticationContext.ConnectionString);
+                        authenticationContext.ConnectionString,
+                        clientOptions);
 
                     systemEventsChannel.EventTransmissionError += (sender, args) =>
                     {
@@ -236,7 +240,7 @@ namespace VirtualClient
 
                     // System Events are NOT affected by --log-level values defined on the command line. Events are
                     // always written.
-                    ILoggerProvider eventsLoggerProvider = new EventHubTelemetryLoggerProvider(systemEventsChannel, LogLevel.Trace)
+                    ILoggerProvider eventsLoggerProvider = new EventHubTelemetryLoggerProvider(systemEventsChannel, LogLevel.Trace, flushTimeout)
                         .HandleSystemEvents();
 
                     loggerProviders.Add(eventsLoggerProvider);
@@ -583,8 +587,6 @@ namespace VirtualClient
                 };
             }
 
-            VirtualClientRuntime.DataChannels.Add(channel);
-
             return channel;
         }
 
@@ -594,8 +596,9 @@ namespace VirtualClient
         /// <param name="agentId">The ID of the agent as part of the larger experiment in operation.</param>
         /// <param name="experimentId">The ID of the larger experiment in operation.</param>
         /// <param name="platformSpecifics">Provides features for platform-specific operations (e.g. Windows, Unix).</param>
+        /// <param name="executionSystem">The name of the execution system launching the application.</param>
         /// <param name="isolated">Instructs the factory to construct dependencies for cross-process/isolated runs.</param>
-        public static ISystemManagement CreateSystemManager(string agentId, string experimentId, PlatformSpecifics platformSpecifics, bool isolated = false)
+        public static ISystemManagement CreateSystemManager(string agentId, string experimentId, PlatformSpecifics platformSpecifics, string executionSystem = null, bool isolated = false)
         {
             agentId.ThrowIfNullOrWhiteSpace(nameof(agentId));
             experimentId.ThrowIfNullOrWhiteSpace(nameof(experimentId));
@@ -619,6 +622,7 @@ namespace VirtualClient
             return new SystemManagement
             {
                 AgentId = agentId,
+                ExecutionSystem = executionSystem,
                 ExperimentId = experimentId.ToLowerInvariant(),
                 DiskManager = diskManager,
                 FileSystem = fileSystem,

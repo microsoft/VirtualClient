@@ -11,10 +11,12 @@ namespace VirtualClient
     using System.Net.Http;
     using System.Reflection;
     using System.Runtime.InteropServices;
+    using System.Text;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using AutoFixture;
+    using Azure.Core;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
@@ -88,6 +90,11 @@ namespace VirtualClient
         /// A mock API client manager.
         /// </summary>
         public Mock<IApiClientManager> ApiClientManager { get; set; }
+
+        /// <summary>
+        /// A mock authorization manager.
+        /// </summary>
+        public Mock<IAuthorizationManager> AuthorizationManager { get; set; }
 
         /// <summary>
         /// A mock certificate manager.
@@ -256,6 +263,11 @@ namespace VirtualClient
         /// A mock profile timing/timeout definition.
         /// </summary>
         public ProfileTiming Timing { get; set; }
+
+        /// <summary>
+        /// Gets the process tracking instance. This is populated after the <see cref="TrackProcesses"/> method is called.
+        /// </summary>
+        public FixtureTracking Tracking => this.ProcessManager.Tracking;
 
         /// <summary>
         /// Returns the contents of the file at the path defined by the path segments
@@ -457,6 +469,7 @@ namespace VirtualClient
 
             this.ApiClient = new Mock<IApiClient>(mockBehavior);
             this.ApiClientManager = new Mock<IApiClientManager>(mockBehavior);
+            this.AuthorizationManager = new Mock<IAuthorizationManager>(mockBehavior);
             this.CertificateManager = new Mock<ICertificateManager>(mockBehavior);
             this.FileSystem = new Mock<IFileSystem>(mockBehavior);
             this.File = new Mock<IFile>(mockBehavior);
@@ -483,6 +496,9 @@ namespace VirtualClient
 
                     return mockFile.Object;
                 });
+
+            this.AuthorizationManager.Setup(auth => auth.GetAccessTokenAsync(It.IsAny<Uri>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Convert.ToBase64String(Encoding.UTF8.GetBytes("Any access token")));
 
             this.KeyVaultManager = new Mock<IKeyVaultManager>(mockBehavior);
             this.FileSystem.Setup(fs => fs.Path.GetDirectoryName(It.IsAny<string>()))
@@ -620,6 +636,7 @@ namespace VirtualClient
 
             this.Dependencies = new ServiceCollection();
             this.Dependencies.AddSingleton<ILogger>((p) => this.Logger);
+            this.Dependencies.AddSingleton<IAuthorizationManager>(this.AuthorizationManager.Object);
             this.Dependencies.AddSingleton<IConfiguration>(new ConfigurationBuilder().Build());
             this.Dependencies.AddSingleton<ICertificateManager>((p) => this.CertificateManager.Object);
             this.Dependencies.AddSingleton<IExpressionEvaluator>(ProfileExpressionEvaluator.Instance);
@@ -657,6 +674,36 @@ namespace VirtualClient
                 this.Layout = new EnvironmentLayout(clients);
             }
 
+            return this;
+        }
+
+        /// <summary>
+        /// Enables automatic tracking of all process executions.
+        /// </summary>
+        /// <param name="reset">True to clear any previously tracked commands.</param>
+        /// <returns>The fixture instance for method chaining.</returns>
+        public MockFixture TrackProcesses(bool reset = true)
+        {
+            this.ProcessManager.TrackProcesses(reset);
+            return this;
+        }
+
+        /// <summary>
+        /// Sets up automatic output for processes whose full command line matches
+        /// the pattern provided.
+        /// </summary>
+        /// <param name="commandPattern">A regex pattern matching the command.</param>
+        /// <param name="standardOutput">The standard output to return for matching commands.</param>
+        /// <param name="standardError">The standard error output (optional).</param>
+        /// <param name="exitCode">The exit code for the process (default: 0).</param>
+        /// <returns>The fixture instance for method chaining.</returns>
+        public MockFixture SetupProcessOutput(
+            string commandPattern,
+            string standardOutput,
+            string standardError = null,
+            int exitCode = 0)
+        {
+            this.ProcessManager.SetupProcessOutput(commandPattern, standardOutput, standardError, exitCode);
             return this;
         }
 

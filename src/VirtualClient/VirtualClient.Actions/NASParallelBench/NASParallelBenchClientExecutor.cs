@@ -45,7 +45,9 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Name of the benchmark to be executed.
         /// </summary>
-        public string Benchmark => this.Parameters.GetValue<string>(nameof(NASParallelBenchClientExecutor.Benchmark));
+        public string Benchmark => this.ApplyParameters(
+            this.Parameters.GetValue<string>(nameof(NASParallelBenchClientExecutor.Benchmark)),
+            this.Parameters);
 
         /// <summary>
         /// The user who has the ssh identity registered for.
@@ -61,6 +63,19 @@ namespace VirtualClient.Actions
                 }
 
                 return username;
+            }
+        }
+
+        /// <summary>
+        /// The number of threads to use for OpenMP parallelism (OMP_NUM_THREADS).
+        /// Defaults to the system processor count if not specified.
+        /// </summary>
+        public int ThreadCount
+        {
+            get
+            {
+                int threadCount = this.Parameters.GetValue<int>(nameof(NASParallelBenchClientExecutor.ThreadCount), 0);
+                return threadCount > 0 ? threadCount : Environment.ProcessorCount;
             }
         }
 
@@ -102,7 +117,7 @@ namespace VirtualClient.Actions
 
                 // Number of threads used by the process.
                 // Open Multi Threading number of threads.
-                string ompNumThreads = $"export OMP_NUM_THREADS={Environment.ProcessorCount}";
+                string ompNumThreads = $"export OMP_NUM_THREADS={this.ThreadCount}";
                 string command = string.Empty;
                 string args = string.Empty;
                 string scenarioArguments = string.Empty;

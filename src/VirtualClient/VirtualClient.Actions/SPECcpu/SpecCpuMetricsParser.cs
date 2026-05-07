@@ -6,10 +6,12 @@ namespace VirtualClient.Actions
     using System;
     using System.Collections.Generic;
     using System.Data;
+    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Text.RegularExpressions;
     using global::VirtualClient;
     using global::VirtualClient.Contracts;
+    using MathNet.Numerics;
     using DataTableExtensions = global::VirtualClient.Contracts.DataTableExtensions;
 
     /// <summary>
@@ -17,20 +19,97 @@ namespace VirtualClient.Actions
     /// </summary>
     public class SpecCpuMetricsParser : MetricsParser
     {
+        private static readonly IDictionary<string, SummaryMetric> SummaryMetricMapping = new Dictionary<string, SummaryMetric>(StringComparer.OrdinalIgnoreCase)
+        {
+            {
+                "SPECrate2017_fp_base",
+                new SummaryMetric
+                {
+                    MetricName = "SPECrate(R)2017_fp_base",
+                    MetricDescription = "SPEC CPU floating point base rate summary score.",
+                    Workload = "floating_point_base_rate"
+                }
+            },
+            {
+                "SPECrate2017_fp_peak",
+                new SummaryMetric
+                {
+                    MetricName = "SPECrate(R)2017_fp_peak",
+                    MetricDescription = "SPEC CPU floating point peak rate summary score.",
+                    Workload = "floating_point_peak_rate"
+                }
+            },
+            {
+                "SPECrate2017_int_base",
+                new SummaryMetric
+                {
+                    MetricName = "SPECrate(R)2017_int_base",
+                    MetricDescription = "SPEC CPU integer base rate summary score.",
+                    Workload = "integer_base_rate"
+                }
+            },
+            {
+                "SPECrate2017_int_peak",
+                new SummaryMetric
+                {
+                    MetricName = "SPECrate(R)2017_int_peak",
+                    MetricDescription = "SPEC CPU integer peak rate summary score.",
+                    Workload = "integer_peak_rate"
+                }
+            },
+            {
+                "SPECspeed2017_fp_base",
+                new SummaryMetric
+                {
+                    MetricName = "SPECspeed(R)2017_fp_base",
+                    MetricDescription = "SPEC CPU floating point base speed summary score.",
+                    Workload = "floating_point_base_speed"
+                }
+            },
+            {
+                "SPECspeed2017_fp_peak",
+                new SummaryMetric
+                {
+                    MetricName = "SPECspeed(R)2017_fp_peak",
+                    MetricDescription = "SPEC CPU floating point peak speed summary score.",
+                    Workload = "floating_point_peak_speed"
+                }
+            },
+            {
+                "SPECspeed2017_int_base",
+                new SummaryMetric
+                {
+                    MetricName = "SPECspeed(R)2017_int_base",
+                    MetricDescription = "SPEC CPU integer base speed summary score.",
+                    Workload = "integer_base_speed"
+                }
+            },
+            {
+                "SPECspeed2017_int_peak",
+                new SummaryMetric
+                {
+                    MetricName = "SPECspeed(R)2017_int_peak",
+                    MetricDescription = "SPEC CPU integer peak speed summary score.",
+                    Workload = "integer_peak_speed"
+                }
+            }
+        };
+
         /// <summary>
         /// Separate the column values by 2 or more spaces.
         /// </summary>
         private static readonly Regex SpecCpuDataTableDelimiter = new Regex(@"(\s){2,}", RegexOptions.ExplicitCapture);
-
-        private List<Metric> metrics = new List<Metric>();
+        private bool isCsv;
 
         /// <summary>
         /// Constructor for <see cref="SpecCpuMetricsParser"/>
         /// </summary>
         /// <param name="rawText">Raw text to parse.</param>
-        public SpecCpuMetricsParser(string rawText)
+        /// <param name="csv">The content is from the SPEC CSV results file.</param>
+        public SpecCpuMetricsParser(string rawText, bool csv = false)
             : base(rawText)
         {
+            this.isCsv = csv;
         }
 
         /// <summary>
@@ -59,22 +138,23 @@ namespace VirtualClient.Actions
         {
             try
             {
-                this.Preprocess();
-                this.ParseSpecCpuResult();
-                this.ParseSpecCpuSummaryResult();
+                IEnumerable<Metric> metrics = null;
+                if (this.isCsv)
+                {
+                    metrics = this.ParseMetricsFromCsv();
+                }
+                else
+                {
+                    metrics = this.ParseMetricsFromStandardOutput();
+                }
 
-                this.metrics.AddRange(this.SpecCpu.GetMetrics(nameIndex: 0, valueIndex: 3, unit: "Score", namePrefix: "SPECcpu-base-", metricRelativity: MetricRelativity.HigherIsBetter));
-                this.metrics.AddRange(this.SpecCpu.GetMetrics(nameIndex: 0, valueIndex: 7, unit: "Score", namePrefix: "SPECcpu-peak-", ignoreFormatError: true, metricRelativity: MetricRelativity.HigherIsBetter));
-                this.metrics.AddRange(this.SpecCpuSummary.GetMetrics(nameIndex: 0, valueIndex: 1, unit: "Score", namePrefix: string.Empty, ignoreFormatError: true, metricRelativity: MetricRelativity.HigherIsBetter));
+                this.SetWorkloadMetadata(metrics);
 
-                // Every score in SPECcpu is critical metric.
-                this.metrics.ForEach(m => m.Verbosity = 0);
-
-                return this.metrics;
+                return metrics?.OrderBy(m => m.Name).ToList();
             }
             catch (Exception exc)
             {
-                throw new WorkloadResultsException("Failed to parse SPECcpu metrics from results.", exc, ErrorReason.InvalidResults);
+                throw new WorkloadResultsException("Failed to parse SPEC CPU benchmark metrics from results.", exc, ErrorReason.InvalidResults);
             }
         }
 
@@ -82,7 +162,7 @@ namespace VirtualClient.Actions
         protected override void Preprocess()
         {
             /*
-             * Only capture data in selected test section, which is
+                Only capture data in selected test section, which is
                 =================================================================================
                 500.perlbench_r     256        757        538  *     256        694        587  *
                 502.gcc_r           256        634        572  *     256        511        710  *
@@ -138,6 +218,267 @@ namespace VirtualClient.Actions
             };
             this.SpecCpuSummary = DataTableExtensions.ConvertToDataTable(
                 this.Sections[nameof(this.SpecCpuSummary)], SpecCpuMetricsParser.SpecCpuDataTableDelimiter, nameof(this.SpecCpuSummary), columnNames);
+        }
+
+        private IEnumerable<Metric> ParseMetricsFromCsv()
+        {
+            List<Metric> metrics = new List<Metric>();
+
+            /*
+                Only capture data in selected test section, which is
+                =================================================================================
+                "Selected Results Table"
+
+                Benchmark,"Base # Copies","Est. Base Run Time","Est. Base Rate","Base Selected","Base Status","Peak # Copies","Est. Peak Run Time","Est. Peak Rate","Peak Selected","Peak Status",Description
+                503.bwaves_r,8,774.54528,103.575608,1,S,,,,,NR,"SelectedIteration (base #2; peak NR)"
+                507.cactuBSSN_r,8,529.532167,19.12632,1,S,,,,,NR,"SelectedIteration (base #1; peak NR)"
+                508.namd_r,8,355.876987,21.355696,1,S,,,,,NR,"SelectedIteration (base #2; peak NR)"
+                510.parest_r,8,855.489505,24.463184,1,S,,,,,NR,"SelectedIteration (base #1; peak NR)"
+                511.povray_r,8,777.63715,24.021488,1,S,,,,,NR,"SelectedIteration (base #1; peak NR)"
+                519.lbm_r,8,613.604624,13.741744,1,S,,,,,NR,"SelectedIteration (base #2; peak NR)"
+                521.wrf_r,8,575.203376,31.1542,1,S,,,,,NR,"SelectedIteration (base #1; peak NR)"
+                526.blender_r,8,543.972241,22.3982,1,S,,,,,NR,"SelectedIteration (base #1; peak NR)"
+                527.cam4_r,8,444.302751,31.49204,1,S,,,,,NR,"SelectedIteration (base #1; peak NR)"
+                538.imagick_r,8,731.398457,27.20268,1,S,,,,,NR,"SelectedIteration (base #1; peak NR)"
+                544.nab_r,8,488.412998,27.566832,1,S,,,,,NR,"SelectedIteration (base #2; peak NR)"
+                549.fotonik3d_r,8,940.704803,33.141112,1,S,,,,,NR,"SelectedIteration (base #1; peak NR)"
+                554.roms_r,8,609.94932,20.841072,1,S,,,,,NR,"SelectedIteration (base #2; peak NR)"
+
+                SPECrate2017_fp_base,26.914269,,26.914269
+                SPECrate2017_fp_peak,"Not Run",,,,,,,"Not Run"
+            */
+
+            Match resultsSection = Regex.Match(this.RawText, "\"Selected Results Table\"[\\s\\S]+?SPEC(?:rate|speed)2017_(?:fp|int)_peak.*", RegexOptions.IgnoreCase);
+            if (!resultsSection.Success)
+            {
+                throw new SchemaException($"Invalid results. SPEC CPU benchmark outcomes/information cannot be found in the results provided.");
+            }
+
+            IEnumerable<string> results = Regex.Split(resultsSection.Groups[0].Value, "[\r\n]").Where(l => !string.IsNullOrWhiteSpace(l));
+            foreach (string line in results)
+            {
+                string[] fields = line.Split(',', StringSplitOptions.TrimEntries);
+                if (fields.Length > 2)
+                {
+                    if (fields[0].StartsWith("Benchmark"))
+                    {
+                        continue;
+                    }
+
+                    if (this.TryParseBaseMetric(fields, out Metric baseMetric))
+                    {
+                        metrics.Add(baseMetric);
+                    }
+
+                    if (this.TryParsePeakMetric(fields, out Metric peakMetric))
+                    {
+                        metrics.Add(peakMetric);
+                    }
+
+                    if (this.TryParseSummaryMetric(fields, out Metric summaryMetric))
+                    {
+                        metrics.Add(summaryMetric);
+                    }
+                }
+            }
+
+            return metrics;
+        }
+
+        private IEnumerable<Metric> ParseMetricsFromStandardOutput()
+        {
+            List<Metric> metrics = new List<Metric>();
+
+            this.Preprocess();
+            this.ParseSpecCpuResult();
+            this.ParseSpecCpuSummaryResult();
+
+            metrics.AddRange(this.SpecCpu.GetMetrics(nameIndex: 0, valueIndex: 3, unit: "score", namePrefix: "SPECcpu-base-", metricRelativity: MetricRelativity.HigherIsBetter));
+            metrics.AddRange(this.SpecCpu.GetMetrics(nameIndex: 0, valueIndex: 7, unit: "score", namePrefix: "SPECcpu-peak-", ignoreFormatError: true, metricRelativity: MetricRelativity.HigherIsBetter));
+            metrics.AddRange(this.SpecCpuSummary.GetMetrics(nameIndex: 0, valueIndex: 1, unit: "score", namePrefix: string.Empty, ignoreFormatError: true, metricRelativity: MetricRelativity.HigherIsBetter));
+
+            // Every score in SPECcpu is critical metric.
+            metrics.ForEach(m => m.Verbosity = 0);
+
+            return metrics;
+        }
+
+        private void SetWorkloadMetadata(IEnumerable<Metric> metrics)
+        {
+            string workloadTemplate = null;
+            IEnumerable<Metric> summaryMetrics = metrics.Where(m => Regex.IsMatch(m.Name, "SPECrate|SPECspeed"));
+            foreach (Metric metric in summaryMetrics)
+            {
+                var matchingEntry = SpecCpuMetricsParser.SummaryMetricMapping.FirstOrDefault(m => string.Equals(m.Value.MetricName, metric.Name));
+                if (matchingEntry.Value != null)
+                {
+                    string workload = matchingEntry.Value.Workload;
+                    metric.Metadata["workload"] = workload;
+
+                    if (workloadTemplate == null)
+                    {
+                        // e.g.
+                        // floating_point_base_rate -> floating_point_{0}_rate
+                        // floating_point_peak_rate -> floating_point_{0}_rate
+                        workloadTemplate = Regex.Replace(matchingEntry.Value.Workload, "base|peak", "{0}", RegexOptions.IgnoreCase);
+                    }
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(workloadTemplate))
+            {
+                StringComparison ignoreCase = StringComparison.OrdinalIgnoreCase;
+                IEnumerable<Metric> benchmarkMetrics = metrics.Except(summaryMetrics);
+                foreach (Metric metric in benchmarkMetrics)
+                {
+                    if (metric.Name.Contains("base", ignoreCase))
+                    {
+                        // e.g.
+                        // floating_point_base_rate
+                        // floating_Point_base_speed
+                        metric.Metadata["workload"] = string.Format(workloadTemplate, "base");
+                    }
+                    else if (metric.Name.Contains("peak", ignoreCase))
+                    {
+                        // e.g.
+                        // integer_peak_rate
+                        // integer_peak_speed
+                        metric.Metadata["workload"] = string.Format(workloadTemplate, "peak");
+                    }
+                }
+            }
+        }
+
+        private bool TryParseBaseMetric(string[] fields, out Metric metric)
+        {
+            /*
+                "Selected Results Table"
+
+                Benchmark,"Base # Copies","Est. Base Run Time","Est. Base Rate","Base Selected","Base Status","Peak # Copies","Est. Peak Run Time","Est. Peak Rate","Peak Selected","Peak Status",Description
+                503.bwaves_r,8,774.54528,103.575608,1,S,,,,,NR,"SelectedIteration (base #2; peak NR)"
+                507.cactuBSSN_r,8,529.532167,19.12632,1,S,,,,,NR,"SelectedIteration (base #1; peak NR)"
+            */
+
+            metric = null;
+
+            // Benchmark
+            string benchmark = fields[0].Trim();
+
+            if (!Regex.IsMatch(benchmark, "^SPECrate|SPECspeed", RegexOptions.IgnoreCase))
+            {
+                // Est. Base Rate
+                if (double.TryParse(fields[3], out double baseScore))
+                {
+                    // Base # Copies
+                    double.TryParse(fields[1], out double baseCopies);
+
+                    // Est. Base Run Time
+                    double.TryParse(fields[2], out double baseRunTime);
+
+                    metric = new Metric(
+                        $"SPECcpu-base-{benchmark}",
+                        baseScore,
+                        unit: "score",
+                        relativity: MetricRelativity.HigherIsBetter,
+                        description: $"SPEC CPU '{benchmark}' benchmark base score.",
+                        metadata: new Dictionary<string, IConvertible>
+                        {
+                            { "benchmark", benchmark },
+                            { "numCopies", baseCopies },
+                            { "runTime", baseRunTime }
+                        });
+
+                    metric.Verbosity = 0;
+                }
+            }
+
+            return metric != null;
+        }
+
+        private bool TryParsePeakMetric(string[] fields, out Metric metric)
+        {
+            /*
+                "Selected Results Table"
+
+                Benchmark,"Base # Copies","Base Run Time","Base Rate","Base Selected","Base Status","Peak # Copies","Peak Run Time","Peak Rate","Peak Selected","Peak Status",Description
+                503.bwaves_r,128,1649.037039,778.384,1,S,128,1649.037039,778.384,1,S,"SelectedIteration (base #1; peak #1)"
+                507.cactuBSSN_r,128,221.93356,730.16448,1,S,128,220.578603,734.649728,1,S,"SelectedIteration (base #3; peak #3)"
+            */
+
+            metric = null;
+
+            // Benchmark
+            string benchmark = fields[0].Trim();
+
+            if (!Regex.IsMatch(benchmark, "^SPECrate|SPECspeed", RegexOptions.IgnoreCase))
+            {
+                // Peak Rate
+                if (double.TryParse(fields[8], out double peakScore))
+                {
+                    // Peak # Copies
+                    double.TryParse(fields[6], out double peakCopies);
+
+                    // Peak Run Time
+                    double.TryParse(fields[7], out double peakRunTime);
+
+                    metric = new Metric(
+                        $"SPECcpu-peak-{benchmark}",
+                        peakScore,
+                        unit: "score",
+                        relativity: MetricRelativity.HigherIsBetter,
+                        description: $"SPEC CPU '{benchmark}' benchmark peak score.",
+                        metadata: new Dictionary<string, IConvertible>
+                        {
+                            { "benchmark", benchmark },
+                            { "numCopies", peakCopies },
+                            { "runTime", peakRunTime }
+                        });
+
+                    metric.Verbosity = 0;
+                }
+            }
+
+            return metric != null;
+        }
+
+        private bool TryParseSummaryMetric(string[] fields, out Metric metric)
+        {
+            /*
+                "Selected Results Table"
+
+                Benchmark,"Base # Copies","Base Run Time","Base Rate","Base Selected","Base Status","Peak # Copies","Peak Run Time","Peak Rate","Peak Selected","Peak Status",Description
+                ...
+                ...
+                SPECspeed2017_int_base,12.279658,,12.279658
+                SPECspeed2017_int_peak,12.293316,,,,,,,12.293316
+            */
+
+            metric = null;
+
+            // Benchmark
+            string benchmark = fields[0].Trim();
+
+            if (SpecCpuMetricsParser.SummaryMetricMapping.TryGetValue(benchmark, out SummaryMetric description) && double.TryParse(fields[1], out double score))
+            {
+                metric = new Metric(
+                    description.MetricName,
+                    score,
+                    unit: "score",
+                    relativity: MetricRelativity.HigherIsBetter,
+                    description: description.MetricDescription);
+
+                metric.Verbosity = 0;
+            }
+
+            return metric != null;
+        }
+
+        [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1401:Fields should be private", Justification = "Just a POCO class.")]
+        private class SummaryMetric
+        {
+            public string MetricName;
+            public string MetricDescription;
+            public string Workload;
         }
     }
 }

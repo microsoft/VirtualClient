@@ -7,7 +7,7 @@ iterations using double precision (64 bit) floating point values.
 * [Spack Github](https://github.com/spack/spack)
 
 ## What is Being Measured?
-The HPCG rating is is a weighted GFLOP/s (billion floating operations per second) value that is composed of the operations performed in the PCG iteration
+The HPCG rating is a weighted GFLOP/s (billion floating operations per second) value that is composed of the operations performed in the PCG iteration
 phase over the time taken. The overhead time of problem construction and any modifications to improve performance are divided by 500 iterations 
 (the amortization weight) and added to the runtime.
 

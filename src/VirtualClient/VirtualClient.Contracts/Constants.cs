@@ -131,6 +131,11 @@ namespace VirtualClient.Contracts
     public static class EnvironmentVariable
     {
         /// <summary>
+        /// Name = HOME
+        /// </summary>
+        public const string HOME = nameof(HOME);
+
+        /// <summary>
         /// Name = JAVA_HOME
         /// </summary>
         public const string JAVA_HOME = nameof(JAVA_HOME);
@@ -161,9 +166,24 @@ namespace VirtualClient.Contracts
         public const string USER = nameof(USER);
 
         /// <summary>
-        /// Name = VC_PASSWORD
+        /// Name = USERPROFILE
         /// </summary>
-        public const string VC_PASSWORD = nameof(VC_PASSWORD);
+        public const string USERPROFILE = nameof(USERPROFILE);
+
+        /// <summary>
+        /// Name = VC_EVENT_HUB_PROXY
+        /// </summary>
+        public const string VC_EVENT_HUB_PROXY = nameof(VC_EVENT_HUB_PROXY);
+
+        /// <summary>
+        /// Name = VC_EVENT_HUB_PROXY_USERNAME
+        /// </summary>
+        public const string VC_EVENT_HUB_PROXY_USERNAME = nameof(VC_EVENT_HUB_PROXY_USERNAME);
+
+        /// <summary>
+        /// Name = VC_EVENT_HUB_PROXY_PASSWORD
+        /// </summary>
+        public const string VC_EVENT_HUB_PROXY_PASSWORD = nameof(VC_EVENT_HUB_PROXY_PASSWORD);
 
         /// <summary>
         /// Name = VC_LOGS_DIR
@@ -179,6 +199,11 @@ namespace VirtualClient.Contracts
         /// Name = VC_PACKAGES_DIR
         /// </summary>
         public const string VC_PACKAGES_DIR = nameof(VC_PACKAGES_DIR);
+
+        /// <summary>
+        /// Name = VC_PASSWORD
+        /// </summary>
+        public const string VC_PASSWORD = nameof(VC_PASSWORD);
 
         /// <summary>
         /// Name = VC_STATE_DIR
@@ -236,6 +261,32 @@ namespace VirtualClient.Contracts
         /// application/json
         /// </summary>
         public const string Json = "application/json";
+    }
+
+    /// <summary>
+    /// Logging options.
+    /// </summary>
+    public static class LogOption
+    {
+        /// <summary>
+        /// DeleteOnUpload
+        /// </summary>
+        public const string DeleteOnUpload = nameof(DeleteOnUpload);
+
+        /// <summary>
+        /// Upload
+        /// </summary>
+        public const string Upload = nameof(Upload);
+
+        /// <summary>
+        /// UploadManifest
+        /// </summary>
+        public const string UploadManifest = nameof(UploadManifest);
+
+        /// <summary>
+        /// Timestamped
+        /// </summary>
+        public const string Timestamped = nameof(Timestamped);
     }
 
     /// <summary>

@@ -108,8 +108,15 @@ namespace VirtualClient
         /// <inheritdoc />
         public async Task ConnectAsync(CancellationToken cancellationToken = default)
         {
-            await this.SessionClient.ConnectAsync(cancellationToken);
-            await this.SessionScpClient.ConnectAsync(cancellationToken);
+            if (!this.SessionClient.IsConnected)
+            {
+                await this.SessionClient.ConnectAsync(cancellationToken);
+            }
+
+            if (!this.SessionScpClient.IsConnected)
+            {
+                await this.SessionScpClient.ConnectAsync(cancellationToken);
+            }
         }
 
         /// <inheritdoc />
@@ -447,6 +454,14 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Returns a string representation of the SSH client/target (e.g. demo@10.1.2.5);
+        /// </summary>
+        public override string ToString()
+        {
+            return $"{this.ConnectionInfo.Username}@{this.ConnectionInfo.Host}";
+        }
+
+        /// <summary>
         /// Copies the file on the remote system to a stream.
         /// </summary>
         /// <param name="remoteFilePath">The path on the remote system for the file to copy to the local system.</param>
@@ -668,7 +683,7 @@ namespace VirtualClient
             {
                 Task execution = sshCommand.ExecuteAsync(cancellationToken);
                 StringBuilder standardOutput = new StringBuilder();
-                DateTime startTime = DateTime.Now;
+                DateTime startTime = DateTime.UtcNow;
 
                 using (var reader = new StreamReader(sshCommand.OutputStream))
                 {
@@ -683,7 +698,7 @@ namespace VirtualClient
 
                                 if (outputReceived != null)
                                 {
-                                    outputReceived.Invoke(new SshCommandOutputInfo(line, DateTime.Now - startTime));
+                                    outputReceived.Invoke(new SshCommandOutputInfo(line, DateTime.UtcNow - startTime));
                                 }
                             }
                             catch
@@ -702,6 +717,8 @@ namespace VirtualClient
                         Id = $"{this.SessionClient.ConnectionInfo.Username}{this.SessionClient.ConnectionInfo.Host},{sshCommand.CommandText}".GetHashCode(),
                         CommandLine = sshCommand.CommandText,
                         ExitCode = sshCommand.ExitStatus ?? 0,
+                        ExitTime = DateTime.UtcNow,
+                        StartTime = startTime,
                         StandardOutput = standardOutput.ToString(),
                         StandardError = sshCommand.Error,
                         ToolName = "SSH"

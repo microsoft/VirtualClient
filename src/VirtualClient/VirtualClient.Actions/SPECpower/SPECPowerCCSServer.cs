@@ -8,15 +8,16 @@ namespace VirtualClient.Actions
     using System.Threading;
     using System.Threading.Tasks;
     using global::VirtualClient.Common.Extensions;
-    using global::VirtualClient.Common.Platform;
     using global::VirtualClient.Common.Telemetry;
     using global::VirtualClient.Contracts;
     using global::VirtualClient.Contracts.Metadata;
     using Microsoft.Extensions.DependencyInjection;
+    using VirtualClient.Common;
 
     /// <summary>
     /// Manages the SPEC Power "CCS" server. (Control and Collect System)
     /// </summary>
+    [SupportedPlatforms("linux-arm64,linux-x64,win-arm64,win-x64")]
     public class SPECPowerCCSServer : SPECPowerProcess
     {
         private const string WindowsClassPath = "./ccs.jar;./check.jar;../ssj/ssj.jar;../ssj/lib/jfreechart-1.0.13.jar;../ssj/lib/jcommon-1.0.16.jar";

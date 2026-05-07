@@ -59,7 +59,7 @@ namespace VirtualClient.Actions
                 $"sudo gcc -dumpversion",
                 $"sudo chmod -R ugo=rwx {this.mockPackage.Path}",
                 $"sudo umount {this.mockFixture.GetPackagePath()}/speccpu_mount",
-                $"sudo bash runspeccpu.sh \"--config vc-linux-x64.cfg --iterations 2 --copies 4 --threads 8 --tune all --reportable intrate\""
+                $"bash runspeccpu.sh \"--config vc-linux-x64.cfg --iterations 2 --copies 4 --threads 8 --tune all --reportable intrate\""
             };
 
             int processCount = 0;
@@ -180,7 +180,7 @@ namespace VirtualClient.Actions
                 $"sudo gcc -dumpversion",
                 $"sudo chmod -R ugo=rwx {this.mockPackage.Path}",
                 $"sudo umount {this.mockFixture.GetPackagePath()}/speccpu_mount",
-                $"sudo bash runspeccpu.sh \"--config vc-linux-x64.cfg --iterations 2 --copies 4 --threads 8 --tune all --noreportable 549.fotonik3d_r\""
+                $"bash runspeccpu.sh \"--config vc-linux-x64.cfg --iterations 2 --copies 4 --threads 8 --tune all --noreportable 549.fotonik3d_r\""
             };
 
             int processCount = 0;
@@ -245,7 +245,7 @@ namespace VirtualClient.Actions
             this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 int coreCount = Environment.ProcessorCount;
-                if (arguments == $"bash runspeccpu.sh \"--config vc-linux-x64.cfg --iterations 2 --copies {coreCount} --threads {coreCount} --tune base --reportable fprate\"")
+                if (arguments == $"runspeccpu.sh \"--config vc-linux-x64.cfg --iterations 2 --copies {coreCount} --threads {coreCount} --tune base --reportable fprate\"")
                 {
                     commandCalled = true;
                 }
@@ -283,7 +283,7 @@ namespace VirtualClient.Actions
 
             this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
-                if (arguments == $"bash runspeccpu.sh \"--config vc-linux-x64.cfg --iterations 2 --copies {coreCount} --threads {coreCount} --tune all --reportable intspeed\"")
+                if (arguments == $"runspeccpu.sh \"--config vc-linux-x64.cfg --iterations 2 --copies {coreCount} --threads {coreCount} --tune all --reportable intspeed\"")
                 {
                     commandCalled = true;
                 }
@@ -321,7 +321,7 @@ namespace VirtualClient.Actions
 
             this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
-                if (arguments == $"bash runspeccpu.sh \"--config vc-linux-x64.cfg --iterations 1 --copies {coreCount} --threads {coreCount} --tune all --noreportable intspeed\"")
+                if (arguments == $"runspeccpu.sh \"--config vc-linux-x64.cfg --iterations 1 --copies {coreCount} --threads {coreCount} --tune all --noreportable intspeed\"")
                 {
                     commandCalled = true;
                 }
@@ -425,6 +425,96 @@ namespace VirtualClient.Actions
             }
 
             Assert.IsTrue(commandCalled);
+        }
+
+        [Test]
+        public async Task SpecCpuExecutorAppliesGcc15WorkaroundWhenGccVersionIs15OrGreaterOnLinux()
+        {
+            this.SetupLinux();
+
+            string writtenConfigText = null;
+            this.mockFixture.File.Setup(f => f.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Callback<string, string, CancellationToken>((path, content, token) => writtenConfigText = content)
+                .Returns(Task.CompletedTask);
+
+            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            {
+                if (exe == "sudo" && arguments == "gcc -dumpversion")
+                {
+                    return new InMemoryProcess
+                    {
+                        StartInfo = new ProcessStartInfo { FileName = exe, Arguments = arguments },
+                        StandardOutput = new ConcurrentBuffer(new StringBuilder("15")),
+                        ExitCode = 0,
+                        OnStart = () => true,
+                        OnHasExited = () => true
+                    };
+                }
+
+                return new InMemoryProcess
+                {
+                    StartInfo = new ProcessStartInfo { FileName = exe, Arguments = arguments },
+                    ExitCode = 0,
+                    OnStart = () => true,
+                    OnHasExited = () => true
+                };
+            };
+
+            using (TestSpecCpuExecutor specCpuExecutor = new TestSpecCpuExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                await specCpuExecutor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+            }
+
+            Assert.IsNotNull(writtenConfigText);
+            Assert.IsTrue(writtenConfigText.Contains("%define GCCge15"), "Config should contain '%define GCCge15' when GCC version is 15 or greater.");
+            Assert.IsTrue(writtenConfigText.Contains("%define GCCge10"), "Config should also contain '%define GCCge10' when GCC version is 15 or greater.");
+            Assert.IsFalse(writtenConfigText.Contains("$Gcc15Workaround$"), "Placeholder '$Gcc15Workaround$' should be replaced.");
+            Assert.IsFalse(writtenConfigText.Contains("$Gcc10Workaround$"), "Placeholder '$Gcc10Workaround$' should be replaced.");
+        }
+
+        [Test]
+        public async Task SpecCpuExecutorDoesNotApplyGcc15WorkaroundWhenGccVersionIsLessThan15OnLinux()
+        {
+            this.SetupLinux();
+
+            string writtenConfigText = null;
+            this.mockFixture.File.Setup(f => f.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Callback<string, string, CancellationToken>((path, content, token) => writtenConfigText = content)
+                .Returns(Task.CompletedTask);
+
+            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            {
+                if (exe == "sudo" && arguments == "gcc -dumpversion")
+                {
+                    return new InMemoryProcess
+                    {
+                        StartInfo = new ProcessStartInfo { FileName = exe, Arguments = arguments },
+                        StandardOutput = new ConcurrentBuffer(new StringBuilder("10")),
+                        ExitCode = 0,
+                        OnStart = () => true,
+                        OnHasExited = () => true
+                    };
+                }
+
+                return new InMemoryProcess
+                {
+                    StartInfo = new ProcessStartInfo { FileName = exe, Arguments = arguments },
+                    ExitCode = 0,
+                    OnStart = () => true,
+                    OnHasExited = () => true
+                };
+            };
+
+            using (TestSpecCpuExecutor specCpuExecutor = new TestSpecCpuExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                await specCpuExecutor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+            }
+
+            Assert.IsNotNull(writtenConfigText);
+            Assert.IsFalse(writtenConfigText.Contains("%define GCCge15"), "Config should NOT contain '%define GCCge15' when GCC version is less than 15.");
+            Assert.IsTrue(writtenConfigText.Contains("%define GCCge10"), "Config should contain '%define GCCge10' when GCC version is 10.");
+            Assert.IsFalse(writtenConfigText.Contains("$Gcc15Workaround$"), "Placeholder '$Gcc15Workaround$' should be replaced.");
+            Assert.IsFalse(writtenConfigText.Contains("$Gcc10Workaround$"), "Placeholder '$Gcc10Workaround$' should be replaced.");
         }
 
         private void SetupLinux()

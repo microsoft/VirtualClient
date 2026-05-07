@@ -7,17 +7,53 @@ The following is the widely used tools for benchmarking performance of a Postgre
  [HammerDB Tool](https://www.hammerdb.com/docs/index.html)
 
 ## What is Being Measured?
-HammerDB is used to generate various traffic patterns against Redis instances. These toolsets performs creation of Database and perform transactions against
-the PostgreSQL server and provides NOPM (number of orders per minute), and TPM (transactions per minute).
+HammerDB is used to generate various traffic patterns against PostgreSQL instances, supporting both transactional (OLTP) and analytical (OLAP) workloads:
+
+### TPCC Workload (Online Transaction Processing)
+The TPCC benchmark simulates a complete computing environment where a population of terminal operators executes transactions against a database. It represents typical business application scenarios with:
+- **New Order transactions**: Processing customer orders
+- **Payment transactions**: Customer payment processing
+- **Order Status queries**: Checking order status
+- **Delivery transactions**: Processing delivered orders
+- **Stock Level queries**: Monitoring inventory levels
+
+TPCC provides metrics focused on transaction throughput:
+- **NOPM (New Orders Per Minute)**: The primary metric measuring transaction processing capability
+- **TPM (Transactions Per Minute)**: Total transaction throughput across all transaction types
+
+### TPCH Workload (Online Analytical Processing)
+The TPCH benchmark consists of a suite of business-oriented ad-hoc queries and concurrent data modifications. It represents decision support scenarios with:
+- **Complex analytical queries**: Multi-table joins and aggregations
+- **Business intelligence operations**: Data warehousing and reporting
+- **Ad-hoc query processing**: Varied query patterns and complexity
+- **Large dataset analysis**: Scalable data processing scenarios
+
+TPCH provides metrics focused on query performance and analytical processing:
+- **Query execution times**: Individual query performance measurements
+- **QphH (Queries per Hour)**: Composite throughput metric
+- **Geometric mean of query times**: Overall system analytical performance
 
 ## Workload Metrics
 The following metrics are examples of those captured by the Virtual Client when running the HammerDB tool against a
 PostgreSQL server.
 
-| Metric Name  | Value  |
-|--------------|----------------|
-| Number Of Operations Per Minute|	12855 |
-| Transactions Per Minute	| 29441|
+### TPCC Workload Metrics
+| Metric Name  | Example Value  | Description |
+|--------------|----------------|-------------|
+| New Orders Per Minute (NOPM) | 12,855 | Primary TPCC metric measuring transaction processing capability |
+| Transactions Per Minute (TPM) | 29,441 | Total transaction throughput across all transaction types |
+| Average Response Time | 0.85 ms | Average transaction response time |
+
+### TPCH Workload Metrics
+| Metric Name  | Example Value  | Description |
+|--------------|----------------|-------------|
+| Query 1 Execution Time | 2.34 seconds | Individual query performance (22 queries total) |
+| Query 6 Execution Time | 0.89 seconds | Fastest executing query example |
+| Query 9 Execution Time | 15.67 seconds | Complex multi-table join query |
+| Geometric Mean Query Time | 4.52 seconds | Overall analytical performance indicator |
+| QphH (Queries per Hour) | 1,847 | Composite throughput metric for decision support |
+| Power Test Score | 2,156 | Single-user query execution performance |
+| Throughput Test Score | 1,923 | Multi-user concurrent query performance |
 
 ## Useful PostgreSQL Server Commands
 The following section contains commands that were useful when onboarding this workload that help in the process of investigations and debugging.

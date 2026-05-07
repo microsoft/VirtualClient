@@ -32,9 +32,9 @@ SET GLOBAL MAX_PREPARED_STMT_COUNT=100000;
 ```
 
 ### Common MySQL Issues
-Should VC throw an error that the MySQL server has failed to start, usually this means there an issue with the MySQL configuration file. The config file is a very delicate 
+Should VC throw an error that the MySQL server has failed to start, usually this means there is an issue with the MySQL configuration file. The config file is a very delicate 
 thing, and too many changes may altogether destroy the integrity of the service. From experience, it can be very difficult to debug and find a root cause for the service 
-failing to start. In this case, it may be easiest to uninstall the MySQL server altogether an allow VC to re-install it. Furthermore, ensure that the state json 
+failing to start. In this case, it may be easiest to uninstall the MySQL server altogether and allow VC to re-install it. Furthermore, ensure that the state json 
 (state/sysbencholtpstate.json) is removed on both the server and client; the SysbenchOLTPServerExecutor takes care of some required database preparation on its side, and 
 should the state not be reset, the server will believe it ran MySQL configuration and bypass a necessary step. More on this later.
 

@@ -1,5 +1,5 @@
 {
-    "Description": "OpenSSL 3.5.0 Benchmark with TLS",
+    "Description": "OpenSSL Benchmark with TLS",
     "Metadata": {
         "RecommendedMinimumExecutionTime": "03:00:00",
         "SupportedPlatforms": "linux-x64,linux-arm64,win-x64",
@@ -342,7 +342,7 @@
             "Parameters": {
                 "Scenario": "InstallOpenSSLPackage",
                 "BlobContainer": "packages",
-                "BlobName": "openssl.3.5.0.zip",
+                "BlobName": "openssl.3.0.0.zip",
                 "PackageName": "openssl",
                 "Extract": true
             }

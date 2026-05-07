@@ -72,6 +72,44 @@ namespace VirtualClient.Monitors
         }
 
         /// <summary>
+        /// Defines the counter provider to use. Supported values: "Default" and "WMI".
+        /// When set to "Default", the monitor auto-selects WMI on systems with more than
+        /// 64 logical processors where the legacy .NET PerformanceCounter API fails.
+        /// When set to "WMI", the WMI provider is always used regardless of LP count.
+        /// </summary>
+        public string CounterProvider
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.CounterProvider), "Default");
+            }
+        }
+
+        /// <summary>
+        /// The name of the counter provider for telemetry labeling.
+        /// </summary>
+        protected virtual string CounterProviderName => this.UseWmiProvider ? "WMI" : ".NET SDK";
+
+        /// <summary>
+        /// Returns true when the WMI provider should be used, based on the CounterProvider
+        /// parameter and the system's logical processor count.
+        /// </summary>
+        protected bool UseWmiProvider
+        {
+            get
+            {
+                if (string.Equals(this.CounterProvider, "WMI", StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+
+                // Auto-select WMI when the system has >64 logical processors.
+                // The legacy .NET PerformanceCounter API fails on these systems.
+                return Environment.ProcessorCount > 64;
+            }
+        }
+
+        /// <summary>
         /// The list of performance counter categories to capture.
         /// </summary>
         protected IEnumerable<string> Categories
@@ -137,6 +175,11 @@ namespace VirtualClient.Monitors
                         {
                             foreach (WindowsPerformanceCounter counter in this.Counters.Values)
                             {
+                                if (counter.IsDisabled)
+                                {
+                                    continue;
+                                }
+
                                 try
                                 {
                                     counter.Capture();
@@ -266,6 +309,12 @@ namespace VirtualClient.Monitors
         /// <exception cref="DependencyException">No performance counter categories were found on the system.</exception>
         protected virtual void LoadCounters(EventContext telemetryContext, CancellationToken cancellationToken)
         {
+            if (this.UseWmiProvider)
+            {
+                this.LoadWmiCounters(telemetryContext, cancellationToken);
+                return;
+            }
+
             if (this.categories?.Any() != true)
             {
                 IEnumerable<PerformanceCounterCategory> existingCategories = PerformanceCounterCategory.GetCategories()
@@ -353,7 +402,7 @@ namespace VirtualClient.Monitors
 
                             if (metrics.Any())
                             {
-                                this.Logger.LogPerformanceCounters(".NET SDK", metrics, metrics.Min(m => m.StartTime), DateTime.UtcNow, telemetryContext);
+                                this.Logger.LogPerformanceCounters(this.CounterProviderName, metrics, metrics.Min(m => m.StartTime), DateTime.UtcNow, telemetryContext);
                             }
                         }
                     }
@@ -381,6 +430,82 @@ namespace VirtualClient.Monitors
                     $"The monitor frequency defined/provided for the '{this.TypeName}' component '{this.MonitorFrequency}' is not valid. " +
                     $"The frequency must be greater than zero.",
                     ErrorReason.InvalidProfileDefinition);
+            }
+        }
+
+        /// <summary>
+        /// Loads performance counters via WMI (CimSession) for categories that have
+        /// a known WMI class mapping. Called when <see cref="UseWmiProvider"/> is true.
+        /// </summary>
+        protected void LoadWmiCounters(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            foreach (string category in this.Categories.Distinct())
+            {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    break;
+                }
+
+                string wmiClass = WindowsWmiPerformanceCounter.GetWmiClassName(category);
+                if (wmiClass == null)
+                {
+                    this.Logger.LogMessage(
+                        $"{this.TypeName}.WmiCategoryNotSupported",
+                        LogLevel.Warning,
+                        telemetryContext.Clone().AddContext("category", category));
+                    continue;
+                }
+
+                try
+                {
+                    var allInstances = WindowsWmiPerformanceCounter.QueryAllInstances(category);
+                    if (!allInstances.Any())
+                    {
+                        continue;
+                    }
+
+                    int added = 0;
+                    foreach (var instance in allInstances)
+                    {
+                        string instanceKey = string.IsNullOrEmpty(instance.Key) ? null : instance.Key;
+
+                        foreach (var prop in instance.Value)
+                        {
+                            string originalCounterName = WindowsWmiPerformanceCounter.MapWmiPropertyToCounterName(prop.Key);
+                            string counterName = WindowsPerformanceCounter.GetCounterName(
+                                category, originalCounterName, instanceKey);
+
+                            if (!this.Counters.ContainsKey(counterName) && this.IsSupportedCounter(category, counterName))
+                            {
+                                var wmiCounter = new WindowsWmiPerformanceCounter(
+                                    category, prop.Key, instanceKey ?? string.Empty, CaptureStrategy.Average);
+
+                                wmiCounter.MetricName = counterName;
+                                this.Counters[counterName] = wmiCounter;
+                                added++;
+                            }
+                        }
+                    }
+
+                    if (added > 0)
+                    {
+                        this.Logger.LogMessage(
+                            $"{this.TypeName}.WmiCountersLoaded",
+                            LogLevel.Information,
+                            telemetryContext.Clone()
+                                .AddContext("category", category)
+                                .AddContext("wmiClass", wmiClass)
+                                .AddContext("countersAdded", added)
+                                .AddContext("wmiInstances", allInstances.Count));
+                    }
+                }
+                catch (Exception exc)
+                {
+                    this.Logger.LogMessage(
+                        $"{this.TypeName}.WmiDiscoveryError",
+                        LogLevel.Warning,
+                        telemetryContext.Clone().AddError(exc));
+                }
             }
         }
 

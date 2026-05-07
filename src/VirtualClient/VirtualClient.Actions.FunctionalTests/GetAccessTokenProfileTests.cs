@@ -45,7 +45,7 @@ namespace VirtualClient.Actions
         {
             this.dependencyFixture.Setup(platform);
 
-            var mandatoryParameters = new List<string> { "KeyVaultUri", "TenantId" };
+            var mandatoryParameters = new List<string> { "TenantId" };
             using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.dependencyFixture.Dependencies))
             {
                 Assert.IsEmpty(executor.Profile.Actions);

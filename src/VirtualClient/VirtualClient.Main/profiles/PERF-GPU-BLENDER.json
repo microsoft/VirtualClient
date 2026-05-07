@@ -1,0 +1,37 @@
+{
+  "Description": "Blender GPU/CPU Performance Workload",
+  "Metadata": {
+    "RecommendedMinimumExecutionTime": "00:10:00",
+    "SupportedPlatforms": "win-x64",
+    "SupportedOperatingSystems": "Windows"
+  },
+  "Parameters": {
+    "BlenderVersion": "4.2.0",
+    "Scenes": "monster,junkshop,classroom",
+    "DeviceTypes": "CPU"
+  },
+  "Actions": [
+    {
+      "Type": "BlenderBenchmarkExecutor",
+      "Parameters": {
+        "Scenario": "BlenderCPUAndGPUPerformance",
+        "PackageName": "blenderbenchmark",
+        "BlenderVersion": "$.Parameters.BlenderVersion",
+        "Scenes": "$.Parameters.Scenes",
+        "DeviceTypes": "$.Parameters.DeviceTypes"
+      }
+    }
+  ],
+  "Dependencies": [
+    {
+      "Type": "DependencyPackageInstallation",
+      "Parameters": {
+        "Scenario": "InstallBlenderBenchmarkCliPackage",
+        "BlobContainer": "packages",
+        "BlobName": "blenderbenchmarkcli-3.3.0.zip",
+        "PackageName": "blenderbenchmark",
+        "Extract": true
+      }
+    }
+  ]
+}

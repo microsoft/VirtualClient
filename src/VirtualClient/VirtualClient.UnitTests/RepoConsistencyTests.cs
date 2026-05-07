@@ -12,6 +12,8 @@ namespace VirtualClient
     using System.Text.RegularExpressions;
     using System.Xml;
     using NUnit.Framework;
+    using VirtualClient.Common;
+    using VirtualClient.Contracts;
     using Match = System.Text.RegularExpressions.Match;
 
     [TestFixture]
@@ -157,6 +159,33 @@ namespace VirtualClient
             }
         }
 
+        ////[Test]
+        ////[Platform(Include = "Win")]
+        ////public void ValidateThatRepoActionExecutorsHaveSupportedPlatformAttributes()
+        ////{
+        ////    if (TryFindRepoRootDirectory(out DirectoryInfo repoRootDirectory))
+        ////    {
+        ////        List<string> classesMissingAttribute = new List<string>();
+        ////        ComponentTypeCache.Instance.LoadComponentTypes(Path.GetDirectoryName(TestAssembly.Location));
+
+        ////        foreach (CachedComponentType componentType in ComponentTypeCache.Instance)
+        ////        {
+        ////            SupportedPlatformsAttribute supportedPlatforms = componentType.Type.GetCustomAttribute<SupportedPlatformsAttribute>();
+
+        ////            if (supportedPlatforms == null)
+        ////            {
+        ////                classesMissingAttribute.Add(componentType.Type.Name);
+        ////            }
+        ////        }
+
+        ////        if (classesMissingAttribute.Any())
+        ////        {
+        ////            Assert.Fail(
+        ////                $"The following classes are missing the [SupportedPlatforms] attribute: {string.Join(Environment.NewLine, classesMissingAttribute.Select(c => $"- {c}"))}");
+        ////        }
+        ////    }
+        ////}
+
         private static IEnumerable<string> GetProjectFiles(DirectoryInfo repoRootDirectory)
         {
             return Directory.GetFiles(Path.Combine(repoRootDirectory.FullName, "src"), "*.*proj", SearchOption.AllDirectories);
@@ -171,6 +200,19 @@ namespace VirtualClient
         private static IEnumerable<string> GetTargetsFiles(DirectoryInfo repoRootDirectory)
         {
             return Directory.GetFiles(Path.Combine(repoRootDirectory.FullName, "src"), "*.targets", SearchOption.AllDirectories);
+        }
+
+        private static IEnumerable<Type> GetComponentTypes(DirectoryInfo repoRootDirectory)
+        {
+            ComponentTypeCache.Instance.LoadComponentTypes(repoRootDirectory.FullName);
+
+            IEnumerable<Type> componentTypes = Assembly.GetAssembly(typeof(RepoConsistencyTests))
+                .GetReferencedAssemblies()
+                .Select(Assembly.Load)
+                .SelectMany(assembly => assembly.GetTypes())
+                .Where(t => t.IsAssignableTo(typeof(VirtualClientComponent)));
+
+            return componentTypes;
         }
 
         private static bool TryFindRepoRootDirectory(out DirectoryInfo repoRootDirectory)
@@ -191,6 +233,13 @@ namespace VirtualClient
             }
 
             return repoRootDirectory != null;
+        }
+
+        private class ClassInfo
+        {
+            public Type ClassType { get; set; }
+
+            public IEnumerable<string> SupportedPlatforms { get; set; }
         }
     }
 }

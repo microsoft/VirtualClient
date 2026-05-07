@@ -4,6 +4,7 @@
 namespace VirtualClient.Contracts
 {
     using System.Collections.Generic;
+    using System.Linq;
     using Newtonsoft.Json;
     using VirtualClient.Common.Extensions;
 
@@ -25,10 +26,18 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
-        /// The type of IP address of the Virtual Client instance
-        /// (e.g. Public vs. Private).
+        /// The set of client instances that are part of the experiment.
         /// </summary>
         [JsonProperty(PropertyName = "clients", Required = Required.Always)]
         public IEnumerable<ClientInstance> Clients { get; }
+
+        /// <summary>
+        /// Returns a string representation of the environment layout
+        /// (e.g. client01,10.1.0.1,Client;client02,10.1.0.2,Server).
+        /// </summary>
+        public override string ToString()
+        {
+            return string.Join(";", this.Clients.Select(client => client.ToString()));
+        }
     }
 }

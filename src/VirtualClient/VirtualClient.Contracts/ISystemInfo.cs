@@ -20,6 +20,11 @@ namespace VirtualClient.Contracts
         string AgentId { get; }
 
         /// <summary>
+        /// The name of the execution system launching the application.
+        /// </summary>
+        string ExecutionSystem { get; }
+
+        /// <summary>
         /// The ID of the larger experiment in operation.
         /// </summary>
         string ExperimentId { get; }

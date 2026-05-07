@@ -1,8 +1,8 @@
 # OpenSSL
-OpenSSL 3.0 is an open-source industry standard transport layer security (TLS, SSL) toolset. The OpenSSL toolset includes a feature/command (openssl speed) that enables measuring
+OpenSSL is an open-source industry standard transport layer security (TLS, SSL) toolset. The OpenSSL toolset includes a feature/command (openssl speed) that enables measuring
 the performance of the CPU in processing operations associated with various cryptography/encryption algorithms supported by the toolset (e.g. md5, sha1, sha256, aes-256-cbc).
 
-This toolset was compiled directly from the open source GitHub repo in order to take advantage of 3.0 beta features sets and expanded support for additional
+This toolset was compiled directly from the open source GitHub repo in order to take advantage of newer feature sets and expanded support for additional
 cryptography algorithms/operations.
 
 * [OpenSSL GitHub](https://github.com/openssl/openssl)
@@ -11,10 +11,10 @@ cryptography algorithms/operations.
 * [OpenSSL speed](https://www.openssl.org/docs/manmaster/man1/openssl-speed.html)
 
 ## What is Being Measured?
-OpenSSL 3.0 is designed to be a very simple benchmarking tool. It produces a set of measurements each testing the performance of the CPU for handling a particular cryptography
+OpenSSL is designed to be a very simple benchmarking tool. It produces a set of measurements each testing the performance of the CPU for handling a particular cryptography
 algorithm across a set of buffer sizes (e.g. 16-byte, 64-byte, 256-byte, 1024-byte, 8192-byte and 16384-byte).
 
-The OpenSSL 3.0 build used by the VC Team runs the following CPU-intensive cryptography algorithm tests:
+The OpenSSL build used by the VC Team runs the following CPU-intensive cryptography algorithm tests:
 
 * md5
 * sha1

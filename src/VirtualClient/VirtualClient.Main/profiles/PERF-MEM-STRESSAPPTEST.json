@@ -7,16 +7,21 @@
     },
     "Parameters": {
         "Duration": "00:01:00",
-        "UseCpuStressfulMemoryCopy": false
+        "UseCpuStressfulMemoryCopy": false,
+        "MemoryInMB": null,
+        "ThreadCount": null,
+        "CpuStressThreadCount": null
     },
     "Actions": [
         {
             "Type": "StressAppTestExecutor",
             "Parameters": {
                 "Scenario": "ApplySystemStress",
-                "CommandLine": "",
                 "Duration": "$.Parameters.Duration",
                 "UseCpuStressfulMemoryCopy": "$.Parameters.UseCpuStressfulMemoryCopy",
+                "MemoryInMB": "$.Parameters.MemoryInMB",
+                "ThreadCount": "$.Parameters.ThreadCount",
+                "CpuStressThreadCount": "$.Parameters.CpuStressThreadCount",
                 "PackageName": "stressapptest"
             }
         }

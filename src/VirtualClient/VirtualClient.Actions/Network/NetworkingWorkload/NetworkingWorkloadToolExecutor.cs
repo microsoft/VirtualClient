@@ -248,7 +248,7 @@ namespace VirtualClient.Actions.NetworkPerformance
         /// <param name="telemetryContext">Provides context information to include with telemetry events emitted.</param>
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
         /// <param name="timeout">The absolute timeout for the workload.</param>
-        protected virtual Task<IProcessProxy> ExecuteWorkloadAsync(string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken, TimeSpan? timeout = null)
+        protected virtual Task ExecuteWorkloadAsync(string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken, TimeSpan? timeout = null)
         {
             throw new NotImplementedException();
         }

@@ -60,7 +60,7 @@ Virtual Client will look for certificates in the following store locations on Wi
   certificates.
 
 ## Event Hubs Authentication
-Virtual Client supports connection string-style as well as URI-style definitions. The the following sections covers authentication options for 
+Virtual Client supports connection string-style as well as URI-style definitions. The following sections cover authentication options for 
 Azure Event Hub namespace access.
 
 ### URI-Style References
@@ -238,6 +238,17 @@ The following documentation illustrates how to use connection string-style refer
     ``` bash
     --event-hub="Endpoint=sb://aaa.servicebus.windows.net/;SharedAccessKeyName=TelemetrySharedAccessKey;SharedAccessKey=bbbbbbbbbb..."
     ```
+
+### Proxy Support
+Virtual Client supports using a proxy to relay Event Hub communications. The application will use a simple web proxy model passing the AMQP protocol traffic to the proxy
+using simple HTTP/web sockets communications. The proxy supports anonymous authentication as well as basic authentication (i.e. username and password). Set the following
+environment variables to enable support for proxy communications:
+
+| Environment Variable        | Description |
+|-----------------------------|-------------|
+| VC_EVENT_HUB_PROXY          | The host name or IP address of the proxy server to use for Event Hub communications routing. |
+| VC_EVENT_HUB_PROXY_USERNAME | The username to use for basic authentication with the proxy endpoint. If not defined, anonymous authentication will be used. |
+| VC_EVENT_HUB_PROXY_PASSWORD | The password to use for basic authentication with the proxy endpoint. If not defined, anonymous authentication will be used. |
 
 ### Create Event Hub Namespace
 The Virtual Client emits data for each one of these categories into a distinct/singular target Event Hub within an Event Hub namespace (a 1-to-1 mapping).

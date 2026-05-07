@@ -19,6 +19,82 @@ namespace VirtualClient.Contracts
         public const string DefaultDiskFilter = "BiggestSize";
 
         /// <summary>
+        /// Attempts to parse a "DiskIndex:" filter string and extract explicit physical disk indexes.
+        /// </summary>
+        /// <remarks>
+        /// Supported forms:
+        /// <list type="bullet">
+        ///   <item><c>DiskIndex:6-180</c> — inclusive range, populates <paramref name="indexes"/> with 6..180.</item>
+        ///   <item><c>DiskIndex:6,10,15</c> — comma-separated list, populates <paramref name="indexes"/> with {6, 10, 15}.</item>
+        ///   <item>
+        ///     <c>DiskIndex:hdd</c> — auto-discover sentinel; returns <c>true</c> with <paramref name="indexes"/> set to
+        ///     <c>null</c>, signalling the caller to perform OS-based HDD discovery (e.g. <c>Get-PhysicalDisk</c> on Windows).
+        ///   </item>
+        /// </list>
+        /// </remarks>
+        /// <param name="diskFilter">The disk filter string (e.g. the value of the <c>DiskFilter</c> parameter).</param>
+        /// <param name="indexes">
+        ///   The parsed disk indexes when an explicit range or list is provided; <c>null</c> when the value is "hdd"
+        ///   (indicating OS-based auto-discovery should be used instead).
+        /// </param>
+        /// <returns>
+        ///   <c>true</c> if <paramref name="diskFilter"/> begins with "DiskIndex:" (whether explicit or the "hdd" sentinel);
+        ///   <c>false</c> if the filter is not a DiskIndex filter at all.
+        /// </returns>
+        public static bool TryGetDiskIndexes(string diskFilter, out IEnumerable<int> indexes)
+        {
+            indexes = null;
+
+            if (string.IsNullOrWhiteSpace(diskFilter))
+            {
+                return false;
+            }
+
+            const string prefix = "DiskIndex:";
+
+            if (!diskFilter.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            string value = diskFilter.Substring(prefix.Length).Trim();
+
+            // "DiskIndex:hdd" is a sentinel meaning "discover HDD disks at runtime via Get-PhysicalDisk".
+            if (value.Equals("hdd", StringComparison.OrdinalIgnoreCase))
+            {
+                // indexes remains null — caller should perform OS-based auto-discovery.
+                return true;
+            }
+
+            List<int> parsed = new List<int>();
+
+            if (value.Contains('-'))
+            {
+                string[] parts = value.Split('-', 2);
+                if (int.TryParse(parts[0].Trim(), out int start) && int.TryParse(parts[1].Trim(), out int end))
+                {
+                    for (int i = start; i <= end; i++)
+                    {
+                        parsed.Add(i);
+                    }
+                }
+            }
+            else
+            {
+                foreach (string token in value.Split(',', StringSplitOptions.RemoveEmptyEntries))
+                {
+                    if (int.TryParse(token.Trim(), out int idx))
+                    {
+                        parsed.Add(idx);
+                    }
+                }
+            }
+
+            indexes = parsed;
+            return true;
+        }
+
+        /// <summary>
         /// Filters the disks based on filter strings
         /// </summary>
         /// <param name="disks">Input disks</param>
@@ -31,8 +107,15 @@ namespace VirtualClient.Contracts
             // filterName1:value1&filterName2:value2&filterDoesNotRequireValue&filter4:value4
             List<string> filters = filterString.Split("&", StringSplitOptions.RemoveEmptyEntries).ToList();
 
+            // Allow callers to opt into keeping offline disks (e.g. bare/unformatted disks for raw disk I/O).
+            bool includeOffline = filters.Any(f => f.Trim().Equals(Filters.IncludeOffline, StringComparison.OrdinalIgnoreCase));
+
             disks = DiskFilters.FilterStoragePathByPrefix(disks, platform);
-            disks = DiskFilters.FilterOfflineDisksOnWindows(disks, platform);
+            if (!includeOffline)
+            {
+                disks = DiskFilters.FilterOfflineDisksOnWindows(disks, platform);
+            }
+
             disks = DiskFilters.FilterReadOnlyDisksOnWindows(disks, platform);
 
             foreach (string filter in filters)
@@ -84,6 +167,18 @@ namespace VirtualClient.Contracts
                         // C:,D:,
                         // /dev/sda, /dev/sdb
                         disks = DiskFilters.DiskPathFilter(disks, filterValue);
+                        break;
+
+                    case Filters.IncludeOffline:
+                        // Already handled before the filter loop; treated as a no-op here.
+                        break;
+
+                    case Filters.AccessPath:
+                        disks = DiskFilters.AccessPathFilter(disks, filterValue);
+                        break;
+
+                    case Filters.Logical:
+                        disks = DiskFilters.LogicalDiskFilter(disks);
                         break;
 
                     default:
@@ -144,12 +239,29 @@ namespace VirtualClient.Contracts
             return disks;
         }
 
+        private static IEnumerable<Disk> AccessPathFilter(IEnumerable<Disk> disks, string accessPathPattern)
+        {
+            // Find disks where any volume has an access path containing the given pattern.
+            disks = disks.Where(d => d.Volumes.Any(v => v.AccessPaths.Any(
+                p => p.Contains(accessPathPattern, StringComparison.OrdinalIgnoreCase))));
+            return disks;
+        }
+
+        private static IEnumerable<Disk> LogicalDiskFilter(IEnumerable<Disk> disks)
+        {
+            // LVM device mapper paths: /dev/dm-N or /dev/mapper/*
+            disks = disks.Where(d =>
+                d.DevicePath?.StartsWith("/dev/dm", StringComparison.OrdinalIgnoreCase) == true
+                || d.DevicePath?.StartsWith("/dev/mapper", StringComparison.OrdinalIgnoreCase) == true);
+            return disks;
+        }
+
         private static IEnumerable<Disk> FilterStoragePathByPrefix(IEnumerable<Disk> disks, PlatformID platform)
         {
             if (platform == PlatformID.Unix)
             {
                 // There are NVMe disks that show up in lshw output, that are not really storage devices. This filter filters by common prefixes.
-                List<string> validPrefixes = new List<string> { "/dev/hd", "/dev/sd", "/dev/nvme", "/dev/xvd" };
+                List<string> validPrefixes = new List<string> { "/dev/hd", "/dev/sd", "/dev/nvme", "/dev/xvd", "/dev/dm", "/dev/mapper" };
 
                 // Match for either accessPath or devicePath.
                 disks = disks.Where(d => validPrefixes.Any(vp => d.DevicePath?.Trim().StartsWith(vp, StringComparison.OrdinalIgnoreCase) == true));
@@ -248,6 +360,22 @@ namespace VirtualClient.Contracts
             /// Disk path filter.
             /// </summary>
             public const string DiskPath = "diskpath";
+
+            /// <summary>
+            /// Include offline disks filter. By default offline disks are excluded on Windows.
+            /// Use this filter to include them (e.g. bare/unformatted disks for raw disk I/O).
+            /// </summary>
+            public const string IncludeOffline = "includeoffline";
+
+            /// <summary>
+            /// Access path filter. Matches disks with a volume access path containing the given value.
+            /// </summary>
+            public const string AccessPath = "accesspath";
+
+            /// <summary>
+            /// Logical disk filter. Matches LVM device mapper disks (/dev/dm-*, /dev/mapper/*).
+            /// </summary>
+            public const string Logical = "logical";
         }
     }
 }

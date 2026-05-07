@@ -78,6 +78,7 @@ namespace VirtualClient.Contracts
             // The following information should be copied from the original component to the new component:
             //
             // Properties
+            originalComponent.Parameters[nameof(VirtualClientComponent.ContentPathTemplate)] = "any/path/template";
             originalComponent.Parameters[nameof(VirtualClientComponent.Seed)] = 7777;
             originalComponent.Parameters[nameof(VirtualClientComponent.FailFast)] = true;
             originalComponent.Parameters[nameof(VirtualClientComponent.LogToFile)] = true;
@@ -99,10 +100,14 @@ namespace VirtualClient.Contracts
             VirtualClientComponent component = new TestVirtualClientComponent(originalComponent);
 
             Assert.IsTrue(object.ReferenceEquals(originalComponent.Dependencies, component.Dependencies));
+            Assert.AreEqual(originalComponent.AgentId, component.AgentId);
             Assert.AreEqual(originalComponent.ClientRequestId, component.ClientRequestId);
-            Assert.AreEqual(originalComponent.Seed, component.Seed);
-            Assert.AreEqual(originalComponent.FailFast, component.FailFast);
-            Assert.AreEqual(originalComponent.LogToFile, component.LogToFile);
+            Assert.AreEqual(originalComponent.ComponentType, component.ComponentType);
+            Assert.AreEqual(originalComponent.CpuArchitecture, component.CpuArchitecture);
+            Assert.AreEqual(originalComponent.ExperimentId, component.ExperimentId);
+            Assert.AreEqual(originalComponent.ParametersEvaluated, component.ParametersEvaluated);
+            Assert.AreEqual(originalComponent.Platform, component.Platform);
+            Assert.AreEqual(originalComponent.PlatformSpecifics, component.PlatformSpecifics);
             CollectionAssert.AreEquivalent(originalComponent.SupportedPlatforms, component.SupportedPlatforms);
             CollectionAssert.AreEquivalent(originalComponent.SupportedRoles, component.SupportedRoles);
 
@@ -661,6 +666,53 @@ namespace VirtualClient.Contracts
                 && context.Properties["metricDescription"].ToString() == "Indicates the component or toolset execution failed for the scenario defined."
                 && context.Properties["metricRelativity"].ToString() == MetricRelativity.LowerIsBetter.ToString()
                 && context.Properties["toolName"].ToString() == component.TypeName);
+        }
+
+        [Test]
+        public async Task VirtualClientComponentLogsExplicitTelemetryWhenExecutionIsCancelled()
+        {
+            // Scenario:
+            // The cancellation token is cancelled while the component is executing.
+            // The component should emit explicit telemetry indicating the execution was cancelled.
+            using (CancellationTokenSource cts = new CancellationTokenSource())
+            {
+                TestVirtualClientComponent component = new TestVirtualClientComponent(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+                component.OnExecute = (EventContext telemetryContext, CancellationToken cancellationToken) =>
+                {
+                    cts.Cancel();
+                    cancellationToken.ThrowIfCancellationRequested();
+                };
+
+                await component.ExecuteAsync(cts.Token);
+
+                var cancelMessages = this.mockFixture.Logger.MessagesLogged($"{component.TypeName}.ExecutionCancelled");
+                Assert.IsNotEmpty(cancelMessages);
+                Assert.AreEqual(1, cancelMessages.Count());
+
+                EventContext context = cancelMessages.First().Item3 as EventContext;
+                Assert.IsNotNull(context);
+                Assert.IsTrue(context.Properties.ContainsKey("executionCancelled"));
+                Assert.AreEqual(true, context.Properties["executionCancelled"]);
+            }
+        }
+
+        [Test]
+        public async Task VirtualClientComponentDoesNotLogCancellationTelemetryWhenTokenIsNotCancelled()
+        {
+            // Scenario:
+            // The component throws OperationCanceledException for reasons other than
+            // cancellation token being cancelled (e.g. Task.Delay cancellation).
+            // No cancellation telemetry should be emitted.
+            TestVirtualClientComponent component = new TestVirtualClientComponent(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            component.OnExecute = (EventContext telemetryContext, CancellationToken cancellationToken) =>
+            {
+                throw new OperationCanceledException();
+            };
+
+            await component.ExecuteAsync(CancellationToken.None);
+
+            var cancelMessages = this.mockFixture.Logger.MessagesLogged($"{component.TypeName}.ExecutionCancelled");
+            Assert.IsEmpty(cancelMessages);
         }
 
         [Test]
