@@ -8,9 +8,9 @@
     },
     "Metadata": {
         "RecommendedMinimumExecutionTime": "(4-cores)=02:00:00,(16-cores)=06:00:00,(64-cores)=12:00:00",
-        "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64",
+        "SupportedPlatforms": "linux-x64,linux-arm64,win-x64",
         "SupportedOperatingSystems": "Azure Linux,CentOS,Debian,RedHat,Suse,Ubuntu,Windows",
-        "Notes": "Using a private package 'speccpu.2017.1.1.9-danielbowers.zip' to enable support for speccpu on Ubuntu 24",
+        "Notes": "Using a private package 'speccpu.2017.1.1.9-danielbowers.zip' to enable support for speccpu on Ubuntu 24. SPEC CPU 2017 was not initially designed for win-arm64.",
         "Limitations": "The following benchmarks don't work on Windows: 607, 621, 627, 628, 638, 649"
     },
     "Parameters": {
@@ -19,7 +19,6 @@
         "RunPeak": false,
         "Threads": "{LogicalCoreCount}",
         "Copies": "{LogicalCoreCount}",
-        "Benchmarks": "{calculate(\"{Platform}\".StartsWith(\"linux\") ? \"fpspeed\" : \"603 619 644 654\")}",
         "BaseOptimizingFlags": "-g -O3 -march={calculate(\"{Architecture}\" == \"x64\" ? \"native\" : \"armv8-a\")} -frecord-gcc-switches",
         "PeakOptimizingFlags": "-g -Ofast -march={calculate(\"{Architecture}\" == \"x64\" ? \"native\" : \"armv8-a\")} -flto -frecord-gcc-switches"
     },
@@ -27,10 +26,151 @@
         {
             "Type": "SpecCpuExecutor",
             "Parameters": {
-                "Scenario": "ExecuteSPECBenchmark",
+                "Scenario": "benchmark_603.bwaves_s",
                 "Iterations": "$.Parameters.Iterations",
                 "SpecProfile": "fpspeed",
-                "Benchmarks": "$.Parameters.Benchmarks",
+                "Benchmarks": "603",
+                "PackageName": "speccpu2017",
+                "RunPeak": "$.Parameters.RunPeak",
+                "Threads": "$.Parameters.Threads",
+                "Copies": "$.Parameters.Copies",
+                "BaseOptimizingFlags": "$.Parameters.BaseOptimizingFlags",
+                "PeakOptimizingFlags": "$.Parameters.PeakOptimizingFlags"
+            }
+        },
+        {
+            "Type": "SpecCpuExecutor",
+            "Parameters": {
+                "Scenario": "benchmark_607.cactuBSSN_s",
+                "Iterations": "$.Parameters.Iterations",
+                "SpecProfile": "fpspeed",
+                "Benchmarks": "607",
+                "PackageName": "speccpu2017",
+                "RunPeak": "$.Parameters.RunPeak",
+                "Threads": "$.Parameters.Threads",
+                "Copies": "$.Parameters.Copies",
+                "BaseOptimizingFlags": "$.Parameters.BaseOptimizingFlags",
+                "PeakOptimizingFlags": "$.Parameters.PeakOptimizingFlags",
+                "SupportedPlatforms": "linux-x64,linux-arm64"
+            }
+        },
+        {
+            "Type": "SpecCpuExecutor",
+            "Parameters": {
+                "Scenario": "benchmark_619.lbm_s",
+                "Iterations": "$.Parameters.Iterations",
+                "SpecProfile": "fpspeed",
+                "Benchmarks": "619",
+                "PackageName": "speccpu2017",
+                "RunPeak": "$.Parameters.RunPeak",
+                "Threads": "$.Parameters.Threads",
+                "Copies": "$.Parameters.Copies",
+                "BaseOptimizingFlags": "$.Parameters.BaseOptimizingFlags",
+                "PeakOptimizingFlags": "$.Parameters.PeakOptimizingFlags"
+            }
+        },
+        {
+            "Type": "SpecCpuExecutor",
+            "Parameters": {
+                "Scenario": "benchmark_621.wrf_s",
+                "Iterations": "$.Parameters.Iterations",
+                "SpecProfile": "fpspeed",
+                "Benchmarks": "621",
+                "PackageName": "speccpu2017",
+                "RunPeak": "$.Parameters.RunPeak",
+                "Threads": "$.Parameters.Threads",
+                "Copies": "$.Parameters.Copies",
+                "BaseOptimizingFlags": "$.Parameters.BaseOptimizingFlags",
+                "PeakOptimizingFlags": "$.Parameters.PeakOptimizingFlags",
+                "SupportedPlatforms": "linux-x64,linux-arm64"
+            }
+        },
+        {
+            "Type": "SpecCpuExecutor",
+            "Parameters": {
+                "Scenario": "benchmark_627.cam4_s",
+                "Iterations": "$.Parameters.Iterations",
+                "SpecProfile": "fpspeed",
+                "Benchmarks": "627",
+                "PackageName": "speccpu2017",
+                "RunPeak": "$.Parameters.RunPeak",
+                "Threads": "$.Parameters.Threads",
+                "Copies": "$.Parameters.Copies",
+                "BaseOptimizingFlags": "$.Parameters.BaseOptimizingFlags",
+                "PeakOptimizingFlags": "$.Parameters.PeakOptimizingFlags",
+                "SupportedPlatforms": "linux-x64,linux-arm64"
+            }
+        },
+        {
+            "Type": "SpecCpuExecutor",
+            "Parameters": {
+                "Scenario": "benchmark_628.pop2_s",
+                "Iterations": "$.Parameters.Iterations",
+                "SpecProfile": "fpspeed",
+                "Benchmarks": "628",
+                "PackageName": "speccpu2017",
+                "RunPeak": "$.Parameters.RunPeak",
+                "Threads": "$.Parameters.Threads",
+                "Copies": "$.Parameters.Copies",
+                "BaseOptimizingFlags": "$.Parameters.BaseOptimizingFlags",
+                "PeakOptimizingFlags": "$.Parameters.PeakOptimizingFlags",
+                "SupportedPlatforms": "linux-x64,linux-arm64"
+            }
+        },
+        {
+            "Type": "SpecCpuExecutor",
+            "Parameters": {
+                "Scenario": "benchmark_638.imagick_s",
+                "Iterations": "$.Parameters.Iterations",
+                "SpecProfile": "fpspeed",
+                "Benchmarks": "638",
+                "PackageName": "speccpu2017",
+                "RunPeak": "$.Parameters.RunPeak",
+                "Threads": "$.Parameters.Threads",
+                "Copies": "$.Parameters.Copies",
+                "BaseOptimizingFlags": "$.Parameters.BaseOptimizingFlags",
+                "PeakOptimizingFlags": "$.Parameters.PeakOptimizingFlags",
+                "SupportedPlatforms": "linux-x64,linux-arm64"
+            }
+        },
+        {
+            "Type": "SpecCpuExecutor",
+            "Parameters": {
+                "Scenario": "benchmark_644.nab_s",
+                "Iterations": "$.Parameters.Iterations",
+                "SpecProfile": "fpspeed",
+                "Benchmarks": "644",
+                "PackageName": "speccpu2017",
+                "RunPeak": "$.Parameters.RunPeak",
+                "Threads": "$.Parameters.Threads",
+                "Copies": "$.Parameters.Copies",
+                "BaseOptimizingFlags": "$.Parameters.BaseOptimizingFlags",
+                "PeakOptimizingFlags": "$.Parameters.PeakOptimizingFlags"
+            }
+        },
+        {
+            "Type": "SpecCpuExecutor",
+            "Parameters": {
+                "Scenario": "benchmark_649.fotonik3d_s",
+                "Iterations": "$.Parameters.Iterations",
+                "SpecProfile": "fpspeed",
+                "Benchmarks": "649",
+                "PackageName": "speccpu2017",
+                "RunPeak": "$.Parameters.RunPeak",
+                "Threads": "$.Parameters.Threads",
+                "Copies": "$.Parameters.Copies",
+                "BaseOptimizingFlags": "$.Parameters.BaseOptimizingFlags",
+                "PeakOptimizingFlags": "$.Parameters.PeakOptimizingFlags",
+                "SupportedPlatforms": "linux-x64,linux-arm64"
+            }
+        },
+        {
+            "Type": "SpecCpuExecutor",
+            "Parameters": {
+                "Scenario": "benchmark_654.roms_s",
+                "Iterations": "$.Parameters.Iterations",
+                "SpecProfile": "fpspeed",
+                "Benchmarks": "654",
                 "PackageName": "speccpu2017",
                 "RunPeak": "$.Parameters.RunPeak",
                 "Threads": "$.Parameters.Threads",
@@ -46,7 +186,7 @@
             "Parameters": {
                 "Scenario": "MaskAptDailyTimers",
                 "SupportedPlatforms": "linux-x64,linux-arm64",
-                "Command": "bash -c 'systemctl mask apt-daily.timer apt-daily-upgrade.timer apt-daily.service apt-daily-upgrade.service; systemctl stop apt-daily.timer apt-daily-upgrade.timer apt-daily.service apt-daily-upgrade.service; exit 0'"
+                "Command": "bash -c \"systemctl mask apt-daily.timer apt-daily-upgrade.timer apt-daily.service apt-daily-upgrade.service; systemctl stop apt-daily.timer apt-daily-upgrade.timer apt-daily.service apt-daily-upgrade.service; exit 0\""
             }
         },
         {

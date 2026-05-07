@@ -18,7 +18,6 @@ for evaluating the performance of the CPU for processing calculations.
   * linux-x64
   * linux-arm64
   * win-x64
-  * win-arm64
 
   **Note**: On Windows platform, the **gcc** compiler version is required to be 10 or higher.  
 
@@ -76,7 +75,6 @@ for evaluating the performance of the CPU for processing calculations.
   * linux-x64
   * linux-arm64
   * win-x64
-  * win-arm64
 
   **Note**: Not supported currently on Ubuntu 24.
 
@@ -130,7 +128,6 @@ for evaluating the performance of the CPU for processing calculations.
   * linux-x64
   * linux-arm64
   * win-x64
-  * win-arm64
 
 * **Supports Disconnected Scenarios**  
   * No. Internet connection required.
@@ -181,7 +178,6 @@ for evaluating the performance of the CPU for processing calculations.
   * linux-x64
   * linux-arm64
   * win-x64
-  * win-arm64
 
 * **Supports Disconnected Scenarios**  
   * No. Internet connection required.
