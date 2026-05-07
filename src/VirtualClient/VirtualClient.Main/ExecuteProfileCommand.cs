@@ -9,7 +9,9 @@ namespace VirtualClient
     using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
+    using System.Numerics;
     using System.Runtime.InteropServices;
+    using System.Security.Cryptography;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
@@ -452,52 +454,9 @@ namespace VirtualClient
         }
 
         /// <summary>
-        /// Initializes the profile that will be executed.
+        /// Initializes the execution profile from the file path provided.
         /// </summary>
-        protected async Task<ExecutionProfile> InitializeProfilesAsync(IEnumerable<string> profiles, IServiceCollection dependencies, CancellationToken cancellationToken)
-        {
-            List<string> allProfiles = new List<string>();
-            ExecutionProfile profile = await this.ReadExecutionProfileAsync(profiles.First(), dependencies, cancellationToken)
-                .ConfigureAwait(false);
-
-            await this.InitializeProfileAsync(profile, dependencies);
-
-            if (profiles.Count() > 1)
-            {
-                foreach (string additionalProfile in profiles.Skip(1))
-                {
-                    ExecutionProfile otherProfile = await this.ReadExecutionProfileAsync(additionalProfile, dependencies, cancellationToken)
-                        .ConfigureAwait(false);
-
-                    await this.InitializeProfileAsync(otherProfile, dependencies);
-                    profile = profile.MergeWith(otherProfile);
-                }
-            }
-
-            ISystemManagement systemManagement = dependencies.GetService<ISystemManagement>();
-
-            // Adding file upload monitoring if the user has supplied a content store or Proxy Api Uri.
-            if (this.ContentStore != null || this.ProxyApiUri != null)
-            {
-                string fileUploadMonitorProfilePath = systemManagement.PlatformSpecifics.GetProfilePath(ExecuteProfileCommand.FileUploadMonitorProfile);
-                ExecutionProfile fileUploadMonitorProfile = await this.ReadExecutionProfileAsync(fileUploadMonitorProfilePath, dependencies, cancellationToken)
-                    .ConfigureAwait(false);
-
-                await this.InitializeProfileAsync(fileUploadMonitorProfile, dependencies);
-                profile = profile.MergeWith(fileUploadMonitorProfile);
-            }
-
-            MetadataContract.Persist(
-                profile.Metadata.Keys.ToDictionary(key => key, entry => profile.Metadata[entry] as object).ObscureSecrets(),
-                MetadataContract.DefaultCategory);
-
-            return profile;
-        }
-
-        /// <summary>
-        /// Loads/reads the execution profile file provided to the Virtual Client on the command line.
-        /// </summary>
-        protected async Task<ExecutionProfile> ReadExecutionProfileAsync(string path, IServiceCollection dependencies, CancellationToken cancellationToken)
+        protected async Task<ExecutionProfile> InitializeProfileAsync(string path, IServiceCollection dependencies, CancellationToken cancellationToken)
         {
             // string profilePath = path;
             ExecutionProfile profile = null;
@@ -525,9 +484,36 @@ namespace VirtualClient
                     profile = new ExecutionProfile(profileShim);
                     profile.ProfileFormat = "YAML";
                 }
+
+                await this.InitializeProfileAsync(profile, dependencies);
             }
 
             return profile;
+        }
+
+        /// <summary>
+        /// Loads/reads the execution profile files provided to the Virtual Client on the command line.
+        /// </summary>
+        protected async Task<IEnumerable<ExecutionProfileDescriptor>> InitializeProfilesAsync(IEnumerable<string> profilePaths, IServiceCollection dependencies, CancellationToken cancellationToken)
+        {
+            List<ExecutionProfileDescriptor> profiles = new List<ExecutionProfileDescriptor>();
+            foreach (string path in profilePaths)
+            {
+                ExecutionProfile profile = await this.InitializeProfileAsync(path, dependencies, cancellationToken);
+                profiles.Add(new ExecutionProfileDescriptor(path, profile));
+            }
+
+            ISystemManagement systemManagement = dependencies.GetService<ISystemManagement>();
+
+            // Adding file upload monitoring if the user has supplied a content store or Proxy Api Uri.
+            if (this.ContentStore != null || this.ProxyApiUri != null)
+            {
+                string fileUploadMonitorProfilePath = systemManagement.PlatformSpecifics.GetProfilePath(ExecuteProfileCommand.FileUploadMonitorProfile);
+                ExecutionProfile fileUploadMonitorProfile = await this.InitializeProfileAsync(fileUploadMonitorProfilePath, dependencies, cancellationToken);
+                profiles.Add(new ExecutionProfileDescriptor(ExecuteProfileCommand.FileUploadMonitorProfile, fileUploadMonitorProfile));
+            }
+
+            return profiles;
         }
 
         /// <summary>
@@ -565,13 +551,20 @@ namespace VirtualClient
         /// Initializes the global/persistent telemetry properties that will be included
         /// with all telemetry emitted from the Virtual Client.
         /// </summary>
-        protected void SetGlobalTelemetryProperties(ExecutionProfile profile)
+        protected void SetGlobalTelemetryProperties(IEnumerable<ExecutionProfileDescriptor> profileDescriptors)
         {
             // Additional persistent/global telemetry properties in addition to the ones
             // added on application startup.
             EventContext.PersistentProperties.AddRange(new Dictionary<string, object>
             {
-                [MetadataContract.ExecutionProfileDescription] = profile.Description
+                [MetadataContract.ExecutionProfileDescription] = profileDescriptors.First().Profile.Description,
+
+                // e.g.
+                // [
+                //     "PERF-CPU-OPENSSL,1379108519360051496811242709812062010091621048031",
+                //     "MONITORS-STANDARD,871556463443511354564085041804477113899614667690"
+                // ]
+                [MetadataContract.ExecutionProfileHash] = profileDescriptors.Select(d => $"{d.ProfileName},{d.Profile.GetPredictableHashCode(includeMetadata: false)}").ToArray()
             });
         }
 
@@ -647,7 +640,7 @@ namespace VirtualClient
             return await packageManager.DiscoverExtensionsAsync(cancellationToken);
         }
 
-        private async Task ExecuteProfileDependenciesInstallationAsync(IEnumerable<string> profiles, IServiceCollection dependencies, CancellationTokenSource cancellationTokenSource)
+        private async Task ExecuteProfileDependenciesInstallationAsync(IEnumerable<string> profilePaths, IServiceCollection dependencies, CancellationTokenSource cancellationTokenSource)
         {
             CancellationToken cancellationToken = cancellationTokenSource.Token;
             IFileSystem fileSystem = dependencies.GetService<IFileSystem>();
@@ -658,8 +651,12 @@ namespace VirtualClient
 
             // The user can supply more than 1 profile on the command line. The individual profiles will be merged
             // into a single profile for execution.
-            ExecutionProfile profile = await this.InitializeProfilesAsync(profiles, dependencies, cancellationToken)
-                .ConfigureAwait(false);
+            IEnumerable<ExecutionProfileDescriptor> profileDescriptors = await this.InitializeProfilesAsync(profilePaths, dependencies, cancellationToken);
+            ExecutionProfile profile = profileDescriptors.Select(d => d.Profile).Merge();
+            this.SetGlobalTelemetryProperties(profileDescriptors);
+
+            // Refresh the telemetry context.
+            telemetryContext = EventContext.Persisted();
 
             telemetryContext.AddContext("executionProfileActions", profile.Actions?.Select(d => new
             {
@@ -678,8 +675,6 @@ namespace VirtualClient
                 type = d.Type,
                 parameters = d.Parameters?.ObscureSecrets()
             }));
-
-            this.SetGlobalTelemetryProperties(profile);
 
             if (this.Layout != null)
             {
@@ -710,18 +705,16 @@ namespace VirtualClient
                     this.ExitWaitTimeout = DateTime.UtcNow.SafeAdd(this.ExitWait);
                 };
 
-                await profileExecutor.ExecuteAsync(ProfileTiming.OneIteration(), cancellationToken)
-                    .ConfigureAwait(false);
+                await profileExecutor.ExecuteAsync(ProfileTiming.OneIteration(), cancellationToken);
             }
 
             // If the dependencies installed include any packages that contain extensions, the extensions will
             // be installed/integrated into the VC runtime. This might include additional profiles or binaries
             // that contain actions, monitors or dependency component definitions.
-            await this.DiscoverExtensionsAsync(systemManagement.PackageManager, CancellationToken.None)
-                .ConfigureAwait(false);
+            await this.DiscoverExtensionsAsync(systemManagement.PackageManager, CancellationToken.None);
         }
 
-        private async Task ExecuteProfileAsync(IEnumerable<string> profiles, IServiceCollection dependencies, CancellationTokenSource cancellationTokenSource)
+        private async Task ExecuteProfileAsync(IEnumerable<string> profilePaths, IServiceCollection dependencies, CancellationTokenSource cancellationTokenSource)
         {
             CancellationToken cancellationToken = cancellationTokenSource.Token;
             IFileSystem fileSystem = dependencies.GetService<IFileSystem>();
@@ -732,8 +725,12 @@ namespace VirtualClient
 
             // The user can supply more than 1 profile on the command line. The individual profiles will be merged
             // into a single profile for execution.
-            ExecutionProfile profile = await this.InitializeProfilesAsync(profiles, dependencies, cancellationToken)
-                .ConfigureAwait(false);
+            IEnumerable<ExecutionProfileDescriptor> profileDescriptors = await this.InitializeProfilesAsync(profilePaths, dependencies, cancellationToken);
+            ExecutionProfile profile = profileDescriptors.Select(d => d.Profile).Merge();
+            this.SetGlobalTelemetryProperties(profileDescriptors);
+
+            // Refresh the telemetry context.
+            telemetryContext = EventContext.Persisted();
 
             telemetryContext.AddContext("executionProfileActions", profile.Actions?.Select(d => new
             {
@@ -763,8 +760,6 @@ namespace VirtualClient
                         $"a length of time that is longer than the minimum required execution time.");
                 }
             }
-
-            this.SetGlobalTelemetryProperties(profile);
 
             if (this.Layout != null)
             {
@@ -954,6 +949,22 @@ namespace VirtualClient
                     $"Iterations not supported. One or more of the profiles supplied on the command line have metadata indicating that " +
                     "iterations (e.g. --iterations) is not supported.");
             }
+        }
+
+        internal class ExecutionProfileDescriptor
+        {
+            public ExecutionProfileDescriptor(string profileName, ExecutionProfile profile)
+            {
+                profileName.ThrowIfNullOrWhiteSpace(nameof(profileName));
+                profile.ThrowIfNull(nameof(profile));
+
+                this.ProfileName = Path.GetFileNameWithoutExtension(profileName);
+                this.Profile = profile;
+            }
+
+            public string ProfileName { get; }
+
+            public ExecutionProfile Profile { get; }
         }
     }
 }

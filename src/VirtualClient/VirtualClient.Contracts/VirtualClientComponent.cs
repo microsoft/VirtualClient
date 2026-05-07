@@ -785,7 +785,7 @@ namespace VirtualClient.Contracts
                                 EventContext cancelContext = telemetryContext.Clone()
                                     .AddContext("executionCancelled", true);
 
-                                this.Logger.LogMessage($"{this.TypeName}.ExecutionCancelled", LogLevel.Warning, cancelContext);
+                                this.Logger.LogMessage($"{this.TypeName}.ExecutionCancelled", LogLevel.Information, cancelContext);
                             }
                         }
                         catch (Exception)

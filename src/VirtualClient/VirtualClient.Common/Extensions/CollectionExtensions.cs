@@ -6,6 +6,9 @@ namespace VirtualClient.Common.Extensions
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Numerics;
+    using System.Security.Cryptography;
+    using System.Text;
 
     /// <summary>
     /// Extensions methods for collection classes used as part of the standard
@@ -76,6 +79,38 @@ namespace VirtualClient.Common.Extensions
             {
                 dictionary.Add(entry);
             }
+        }
+
+        /// <summary>
+        /// Computes a repeatable, predictable hash code for the byte array value provided.
+        /// </summary>
+        /// <param name="values">The string values from which to compute the hash code.</param>
+        /// <returns>A repeatable, predictable hash code.</returns>
+        public static BigInteger ComputeHashCode(this IEnumerable<string> values)
+        {
+            if (values?.Any() != true)
+            {
+                return -1;
+            }
+
+            byte[] hashBytes = SHA1.HashData(Encoding.UTF8.GetBytes(string.Join("|", values).ToUpperInvariant()));
+
+            // Normalize Endianness
+            // SHA-1 output is naturally Big-Endian. 
+            // BigInteger constructor in .NET expects Little-Endian by default.
+            // To be safe across architectures, we force a specific order.
+            if (!BitConverter.IsLittleEndian)
+            {
+                Array.Reverse(hashBytes);
+            }
+
+            // Ensure the integer is interpreted as positive
+            // BigInteger uses the last bit for the sign (positive/negative).
+            // To ensure a positive number, we append a zero byte.
+            byte[] unsignedBytes = new byte[hashBytes.Length + 1];
+            Buffer.BlockCopy(hashBytes, 0, unsignedBytes, 0, hashBytes.Length);
+
+            return new BigInteger(unsignedBytes);
         }
 
         /// <summary>
