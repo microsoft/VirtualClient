@@ -26,7 +26,7 @@
         {
             "Type": "SpecCpuExecutor",
             "Parameters": {
-                "Scenario": "500",
+                "Scenario": "benchmark_500.perlbench_r",
                 "Iterations": "$.Parameters.Iterations",
                 "SpecProfile": "intrate",
                 "Benchmarks": "500",
@@ -42,7 +42,7 @@
         {
             "Type": "SpecCpuExecutor",
             "Parameters": {
-                "Scenario": "502",
+                "Scenario": "benchmark_502.gcc_r",
                 "Iterations": "$.Parameters.Iterations",
                 "SpecProfile": "intrate",
                 "Benchmarks": "502",
@@ -58,7 +58,7 @@
         {
             "Type": "SpecCpuExecutor",
             "Parameters": {
-                "Scenario": "505",
+                "Scenario": "benchmark_505.mcf_r",
                 "Iterations": "$.Parameters.Iterations",
                 "SpecProfile": "intrate",
                 "Benchmarks": "505",
@@ -73,7 +73,7 @@
         {
             "Type": "SpecCpuExecutor",
             "Parameters": {
-                "Scenario": "520",
+                "Scenario": "benchmark_520.omnetpp_r",
                 "Iterations": "$.Parameters.Iterations",
                 "SpecProfile": "intrate",
                 "Benchmarks": "520",
@@ -89,7 +89,7 @@
         {
             "Type": "SpecCpuExecutor",
             "Parameters": {
-                "Scenario": "523",
+                "Scenario": "benchmark_523.xalancbmk_r",
                 "Iterations": "$.Parameters.Iterations",
                 "SpecProfile": "intrate",
                 "Benchmarks": "523",
@@ -105,7 +105,7 @@
         {
             "Type": "SpecCpuExecutor",
             "Parameters": {
-                "Scenario": "525",
+                "Scenario": "benchmark_525.x264_r",
                 "Iterations": "$.Parameters.Iterations",
                 "SpecProfile": "intrate",
                 "Benchmarks": "525",
@@ -120,7 +120,7 @@
         {
             "Type": "SpecCpuExecutor",
             "Parameters": {
-                "Scenario": "531",
+                "Scenario": "benchmark_531.deepsjeng_r",
                 "Iterations": "$.Parameters.Iterations",
                 "SpecProfile": "intrate",
                 "Benchmarks": "531",
@@ -136,7 +136,7 @@
         {
             "Type": "SpecCpuExecutor",
             "Parameters": {
-                "Scenario": "541",
+                "Scenario": "benchmark_541.leela_r",
                 "Iterations": "$.Parameters.Iterations",
                 "SpecProfile": "intrate",
                 "Benchmarks": "541",
@@ -151,7 +151,7 @@
         {
             "Type": "SpecCpuExecutor",
             "Parameters": {
-                "Scenario": "548",
+                "Scenario": "benchmark_548.exchange2_r",
                 "Iterations": "$.Parameters.Iterations",
                 "SpecProfile": "intrate",
                 "Benchmarks": "548",
@@ -166,7 +166,7 @@
         {
             "Type": "SpecCpuExecutor",
             "Parameters": {
-                "Scenario": "557",
+                "Scenario": "benchmark_557.xz_r",
                 "Iterations": "$.Parameters.Iterations",
                 "SpecProfile": "intrate",
                 "Benchmarks": "557",

@@ -26,7 +26,7 @@
         {
             "Type": "SpecCpuExecutor",
             "Parameters": {
-                "Scenario": "503",
+                "Scenario": "benchmark_503.bwaves_r",
                 "Iterations": "$.Parameters.Iterations",
                 "SpecProfile": "fprate",
                 "Benchmarks": "503",
@@ -41,7 +41,7 @@
         {
             "Type": "SpecCpuExecutor",
             "Parameters": {
-                "Scenario": "507",
+                "Scenario": "benchmark_507.cactuBSSN_r",
                 "Iterations": "$.Parameters.Iterations",
                 "SpecProfile": "fprate",
                 "Benchmarks": "507",
@@ -57,7 +57,7 @@
         {
             "Type": "SpecCpuExecutor",
             "Parameters": {
-                "Scenario": "508",
+                "Scenario": "benchmark_508.namd_r",
                 "Iterations": "$.Parameters.Iterations",
                 "SpecProfile": "fprate",
                 "Benchmarks": "508",
@@ -72,7 +72,7 @@
         {
             "Type": "SpecCpuExecutor",
             "Parameters": {
-                "Scenario": "510",
+                "Scenario": "benchmark_510.parest_r",
                 "Iterations": "$.Parameters.Iterations",
                 "SpecProfile": "fprate",
                 "Benchmarks": "510",
@@ -87,7 +87,7 @@
         {
             "Type": "SpecCpuExecutor",
             "Parameters": {
-                "Scenario": "511",
+                "Scenario": "benchmark_511.povray_r",
                 "Iterations": "$.Parameters.Iterations",
                 "SpecProfile": "fprate",
                 "Benchmarks": "511",
@@ -103,7 +103,7 @@
         {
             "Type": "SpecCpuExecutor",
             "Parameters": {
-                "Scenario": "519",
+                "Scenario": "benchmark_519.lbm_r",
                 "Iterations": "$.Parameters.Iterations",
                 "SpecProfile": "fprate",
                 "Benchmarks": "519",
@@ -118,7 +118,7 @@
         {
             "Type": "SpecCpuExecutor",
             "Parameters": {
-                "Scenario": "521",
+                "Scenario": "benchmark_521.wrf_r",
                 "Iterations": "$.Parameters.Iterations",
                 "SpecProfile": "fprate",
                 "Benchmarks": "521",
@@ -134,7 +134,7 @@
         {
             "Type": "SpecCpuExecutor",
             "Parameters": {
-                "Scenario": "526",
+                "Scenario": "benchmark_526.blender_r",
                 "Iterations": "$.Parameters.Iterations",
                 "SpecProfile": "fprate",
                 "Benchmarks": "526",
@@ -150,7 +150,7 @@
         {
             "Type": "SpecCpuExecutor",
             "Parameters": {
-                "Scenario": "527",
+                "Scenario": "benchmark_527.cam4_r",
                 "Iterations": "$.Parameters.Iterations",
                 "SpecProfile": "fprate",
                 "Benchmarks": "527",
@@ -166,7 +166,7 @@
         {
             "Type": "SpecCpuExecutor",
             "Parameters": {
-                "Scenario": "538",
+                "Scenario": "benchmark_538.imagick_r",
                 "Iterations": "$.Parameters.Iterations",
                 "SpecProfile": "fprate",
                 "Benchmarks": "538",
@@ -182,7 +182,7 @@
         {
             "Type": "SpecCpuExecutor",
             "Parameters": {
-                "Scenario": "544",
+                "Scenario": "benchmark_544.nab_r",
                 "Iterations": "$.Parameters.Iterations",
                 "SpecProfile": "fprate",
                 "Benchmarks": "544",
@@ -197,7 +197,7 @@
         {
             "Type": "SpecCpuExecutor",
             "Parameters": {
-                "Scenario": "549",
+                "Scenario": "benchmark_549.fotonik3d_r",
                 "Iterations": "$.Parameters.Iterations",
                 "SpecProfile": "fprate",
                 "Benchmarks": "549",
@@ -212,7 +212,7 @@
         {
             "Type": "SpecCpuExecutor",
             "Parameters": {
-                "Scenario": "554",
+                "Scenario": "benchmark_554.roms_r",
                 "Iterations": "$.Parameters.Iterations",
                 "SpecProfile": "fprate",
                 "Benchmarks": "554",

@@ -26,7 +26,7 @@
         {
             "Type": "SpecCpuExecutor",
             "Parameters": {
-                "Scenario": "603",
+                "Scenario": "benchmark_603.bwaves_s",
                 "Iterations": "$.Parameters.Iterations",
                 "SpecProfile": "fpspeed",
                 "Benchmarks": "603",
@@ -41,7 +41,7 @@
         {
             "Type": "SpecCpuExecutor",
             "Parameters": {
-                "Scenario": "607",
+                "Scenario": "benchmark_607.cactuBSSN_s",
                 "Iterations": "$.Parameters.Iterations",
                 "SpecProfile": "fpspeed",
                 "Benchmarks": "607",
@@ -57,7 +57,7 @@
         {
             "Type": "SpecCpuExecutor",
             "Parameters": {
-                "Scenario": "619",
+                "Scenario": "benchmark_619.lbm_s",
                 "Iterations": "$.Parameters.Iterations",
                 "SpecProfile": "fpspeed",
                 "Benchmarks": "619",
@@ -72,7 +72,7 @@
         {
             "Type": "SpecCpuExecutor",
             "Parameters": {
-                "Scenario": "621",
+                "Scenario": "benchmark_621.wrf_s",
                 "Iterations": "$.Parameters.Iterations",
                 "SpecProfile": "fpspeed",
                 "Benchmarks": "621",
@@ -88,7 +88,7 @@
         {
             "Type": "SpecCpuExecutor",
             "Parameters": {
-                "Scenario": "627",
+                "Scenario": "benchmark_627.cam4_s",
                 "Iterations": "$.Parameters.Iterations",
                 "SpecProfile": "fpspeed",
                 "Benchmarks": "627",
@@ -104,7 +104,7 @@
         {
             "Type": "SpecCpuExecutor",
             "Parameters": {
-                "Scenario": "628",
+                "Scenario": "benchmark_628.pop2_s",
                 "Iterations": "$.Parameters.Iterations",
                 "SpecProfile": "fpspeed",
                 "Benchmarks": "628",
@@ -120,7 +120,7 @@
         {
             "Type": "SpecCpuExecutor",
             "Parameters": {
-                "Scenario": "638",
+                "Scenario": "benchmark_638.imagick_s",
                 "Iterations": "$.Parameters.Iterations",
                 "SpecProfile": "fpspeed",
                 "Benchmarks": "638",
@@ -136,7 +136,7 @@
         {
             "Type": "SpecCpuExecutor",
             "Parameters": {
-                "Scenario": "644",
+                "Scenario": "benchmark_644.nab_s",
                 "Iterations": "$.Parameters.Iterations",
                 "SpecProfile": "fpspeed",
                 "Benchmarks": "644",
@@ -151,7 +151,7 @@
         {
             "Type": "SpecCpuExecutor",
             "Parameters": {
-                "Scenario": "649",
+                "Scenario": "benchmark_649.fotonik3d_s",
                 "Iterations": "$.Parameters.Iterations",
                 "SpecProfile": "fpspeed",
                 "Benchmarks": "649",
@@ -167,7 +167,7 @@
         {
             "Type": "SpecCpuExecutor",
             "Parameters": {
-                "Scenario": "654",
+                "Scenario": "benchmark_654.roms_s",
                 "Iterations": "$.Parameters.Iterations",
                 "SpecProfile": "fpspeed",
                 "Benchmarks": "654",
