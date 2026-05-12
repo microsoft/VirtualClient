@@ -8,12 +8,16 @@ namespace VirtualClient.Actions.NetworkPerformance
     using System.Globalization;
     using System.IO.Abstractions;
     using System.Linq;
+    using System.Net.Http;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
+    using Newtonsoft.Json.Linq;
     using Polly;
+    using VirtualClient;
     using VirtualClient.Common;
+    using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
@@ -28,6 +32,7 @@ namespace VirtualClient.Actions.NetworkPerformance
         private const string SendOutputFileName = "ntttcp-results-send.xml";
         private const string ReceiveOutputFileName = "ntttcp-results-recv.xml";
         private const int ReversePortOffset = 100;
+        private const string FullDuplexClientReceiverReadyStateId = "FullDuplexClientReceiverReady";
         private static readonly TimeSpan DefaultWarmupTime = TimeSpan.FromSeconds(10);
         private static readonly TimeSpan DefaultCooldownTime = TimeSpan.FromSeconds(10);
 
@@ -470,8 +475,21 @@ namespace VirtualClient.Actions.NetworkPerformance
                                 // Start receiver first to ensure it is listening before sender connects.
                                 Task receiveTask = receiveProcess.StartAndWaitAsync(cancellationToken, timeout);
 
-                                // Brief delay to allow receiver to bind.
+                                // Brief delay to allow receiver to bind locally.
                                 await Task.Delay(TimeSpan.FromSeconds(2), cancellationToken).ConfigureAwait(false);
+
+                                // Full-duplex cross-machine handshake: ensure both receivers are
+                                // ready before either sender starts. Without this, the server's
+                                // sender can start connecting to the client's reverse port before
+                                // the client's receiver is listening, causing connection failures.
+                                if (this.IsInServerRole)
+                                {
+                                    await this.WaitForClientReceiverReadyAsync(relatedContext, cancellationToken);
+                                }
+                                else if (this.IsInClientRole)
+                                {
+                                    await this.SignalClientReceiverReadyAsync(relatedContext, cancellationToken);
+                                }
 
                                 Task sendTask = sendProcess.StartAndWaitAsync(cancellationToken, timeout);
 
@@ -560,6 +578,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                             {
                                 sendProcess.SafeKill(this.Logger);
                                 receiveProcess.SafeKill(this.Logger);
+                                await this.CleanupFullDuplexHandshakeStateAsync(cancellationToken);
                             }
                         }
                     });
@@ -740,6 +759,68 @@ namespace VirtualClient.Actions.NetworkPerformance
             {
                 await this.SystemManagement.FileSystem.File.DeleteAsync(this.ReceiveResultsPath)
                     .ConfigureAwait(false);
+            }
+        }
+
+        /// <summary>
+        /// Signals to the server that the client's receiver is ready for incoming connections.
+        /// Used in full-duplex mode to prevent the server's sender from starting before
+        /// the client's receiver is listening.
+        /// </summary>
+        private async Task SignalClientReceiverReadyAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            this.Logger.LogTraceMessage($"Synchronization: {this.TypeName} signaling client receiver ready...");
+
+            State readyState = new State();
+            readyState.Properties["Ready"] = true;
+
+            Item<State> stateItem = new Item<State>(NTttcpExecutor.FullDuplexClientReceiverReadyStateId, readyState);
+            HttpResponseMessage response = await NetworkingWorkloadExecutor.ServerApiClient.UpdateStateAsync(
+                NTttcpExecutor.FullDuplexClientReceiverReadyStateId,
+                JObject.FromObject(stateItem),
+                cancellationToken).ConfigureAwait(false);
+
+            response.ThrowOnError<WorkloadException>();
+        }
+
+        /// <summary>
+        /// Waits for the client to signal that its receiver is ready.
+        /// Used on the server side in full-duplex mode to delay starting the sender
+        /// until the client's receiver is listening.
+        /// </summary>
+        private async Task WaitForClientReceiverReadyAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            this.Logger.LogTraceMessage($"Synchronization: {this.TypeName} waiting for client receiver ready...");
+
+            await NetworkingWorkloadExecutor.LocalApiClient.PollForExpectedStateAsync<State>(
+                NTttcpExecutor.FullDuplexClientReceiverReadyStateId,
+                (state) => true,
+                TimeSpan.FromMinutes(2),
+                cancellationToken,
+                pollingInterval: TimeSpan.FromSeconds(1));
+
+            this.Logger.LogTraceMessage($"Synchronization: {this.TypeName} client receiver ready confirmed.");
+        }
+
+        /// <summary>
+        /// Cleans up the full-duplex handshake state after the test completes.
+        /// </summary>
+        private async Task CleanupFullDuplexHandshakeStateAsync(CancellationToken cancellationToken)
+        {
+            try
+            {
+                if (this.IsInServerRole)
+                {
+                    HttpResponseMessage response = await NetworkingWorkloadExecutor.LocalApiClient.DeleteStateAsync(
+                        NTttcpExecutor.FullDuplexClientReceiverReadyStateId,
+                        cancellationToken).ConfigureAwait(false);
+
+                    response?.Dispose();
+                }
+            }
+            catch
+            {
+                // Best effort cleanup.
             }
         }
 
