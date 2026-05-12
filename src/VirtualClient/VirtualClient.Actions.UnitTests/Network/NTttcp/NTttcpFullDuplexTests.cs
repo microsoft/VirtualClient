@@ -57,8 +57,8 @@ namespace VirtualClient.Actions
             this.mockFixture.Parameters["DevInterruptsDifferentiator"] = "mlx";
             this.mockFixture.Parameters["DuplexMode"] = "Full";
 
-            string clientResults = File.ReadAllText(this.mockFixture.Combine(NTttcpFullDuplexTests.ExamplesDirectory, "ClientOutput.xml"));
-            string serverResults = File.ReadAllText(this.mockFixture.Combine(NTttcpFullDuplexTests.ExamplesDirectory, "ServerOutput.xml"));
+            string clientResults = File.ReadAllText(Path.Combine(NTttcpFullDuplexTests.ExamplesDirectory, "ClientOutput.xml"));
+            string serverResults = File.ReadAllText(Path.Combine(NTttcpFullDuplexTests.ExamplesDirectory, "ServerOutput.xml"));
 
             this.mockFixture.FileSystem.Setup(rt => rt.File.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync((string path, CancellationToken ct) =>
