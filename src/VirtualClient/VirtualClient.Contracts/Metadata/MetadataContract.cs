@@ -93,6 +93,11 @@ namespace VirtualClient.Contracts.Metadata
         internal const string ExecutionProfileDescription = "executionProfileDescription";
 
         /// <summary>
+        /// A hash code for the execution profile.
+        /// </summary>
+        internal const string ExecutionProfileHash = "executionProfileHash";
+
+        /// <summary>
         /// The name of the profile that describes the overall execution workflow.
         /// </summary>
         internal const string ExecutionProfileName = "executionProfileName";

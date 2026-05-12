@@ -128,6 +128,27 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
+        /// Merges the set of profiles together into a single profile. This merges profile parameters, metadata,
+        /// actions, dependencies and monitors.
+        /// </summary>
+        /// <param name="profiles">The profiles to merge.</param>
+        /// <returns>A single merged profile containing the contents of all profiles.</returns>
+        public static ExecutionProfile Merge(this IEnumerable<ExecutionProfile> profiles)
+        {
+            ExecutionProfile profile = profiles.First();
+
+            if (profiles.Count() > 1)
+            {
+                foreach (ExecutionProfile additionalProfile in profiles.Skip(1))
+                {
+                    profile = profile.MergeWith(additionalProfile);
+                }
+            }
+
+            return profile;
+        }
+
+        /// <summary>
         /// Merges the two profiles together into a single profile. This merges profile parameters, metadata,
         /// actions, dependencies and monitors. Note that the profile description remains unchanged.
         /// </summary>

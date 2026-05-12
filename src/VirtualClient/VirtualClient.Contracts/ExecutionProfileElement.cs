@@ -135,16 +135,72 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
-        /// Generates a unique string representation of this.
+        /// Generates a unique string representation of this instance
+        /// <list type="bullet">
+        /// <item>
+        /// <term>Example 1</term>
+        /// <description>Type:ParallelExecution,,,ComponentType:Action,,,Metadata:Key1=Value1;Key2=Value2,,,Parameters:Key1=Value1;Key2=Value2</description>
+        /// </item>
+        /// <item>
+        /// <term>Example 2</term>
+        /// <description>Type:ParallelExecution,,,ComponentType:Action,,,Metadata:Key1=Value1;Key2=Value2,,,Parameters:Key1=Value1;Key2=Value2,,,Component:(Type:OpenSslExecutor,,,ComponentType:Action,,,Metadata:Key1=Value1;Key2=Value2,,,Parameters:Key1=Value1;Key2=Value2).</description>
+        /// </item>
+        /// <item>
+        /// <term>Example 3</term>
+        /// <description>Type:ParallelExecution,,,ComponentType:Action,,,Metadata:Key1=Value1;Key2=Value2,,,Parameters:Key1=Value1;Key2=Value2,,,Component:(Type:OpenSslExecutor,,,ComponentType:Action,,,Metadata:Key1=Value1;Key2=Value2,,,Parameters:Key1=Value1;Key2=Value2),,,Extension:(Contacts={'email':'example@example.com'})</description>
+        /// </item>
+        /// </list>
         /// </summary>
         /// <returns>A string representation of this.</returns>
         public override string ToString()
         {
-            StringBuilder builder = new StringBuilder();
-            builder.Append(this.Type)
-                .AppendJoin(";", this.Parameters.Select(p => $"{p.Key};{p.Value}"));
+            return this.ToString(includeMetadata: true);
+        }
 
-            return builder.ToString();
+        /// <summary>
+        /// Generates a unique string representation of this instance
+        /// <list type="bullet">
+        /// <item>
+        /// <term>Example 1</term>
+        /// <description>Type:ParallelExecution,,,ComponentType:Action,,,Metadata:Key1=Value1;Key2=Value2,,,Parameters:Key1=Value1;Key2=Value2</description>
+        /// </item>
+        /// <item>
+        /// <term>Example 2</term>
+        /// <description>Type:ParallelExecution,,,ComponentType:Action,,,Metadata:Key1=Value1;Key2=Value2,,,Parameters:Key1=Value1;Key2=Value2,,,Component:(Type:OpenSslExecutor,,,ComponentType:Action,,,Metadata:Key1=Value1;Key2=Value2,,,Parameters:Key1=Value1;Key2=Value2).</description>
+        /// </item>
+        /// <item>
+        /// <term>Example 3</term>
+        /// <description>Type:ParallelExecution,,,ComponentType:Action,,,Metadata:Key1=Value1;Key2=Value2,,,Parameters:Key1=Value1;Key2=Value2,,,Component:(Type:OpenSslExecutor,,,ComponentType:Action,,,Metadata:Key1=Value1;Key2=Value2,,,Parameters:Key1=Value1;Key2=Value2),,,Extension:(Contacts={'email':'example@example.com'})</description>
+        /// </item>
+        /// </list>
+        /// </summary>
+        /// <returns>A string representation of this.</returns>
+        public string ToString(bool includeMetadata)
+        {
+            StringBuilder builder = new StringBuilder();
+            builder.Append($"Type:{this.Type},,,ComponentType:{this.ComponentType}");
+
+            if (includeMetadata && this.Metadata?.Any() == true)
+            {
+                builder.Append($",,,Metadata:[{string.Join(";", this.Metadata.Select(m => $"{m.Key}={m.Value}"))}]");
+            }
+
+            if (this.Parameters?.Any() == true)
+            {
+                builder.Append($",,,Parameters:[{string.Join(";", this.Parameters.Select(p => $"{p.Key}={p.Value}"))}]");
+            }
+
+            if (this.Components?.Any() == true)
+            {
+                builder.Append($",,,Components:[{string.Join(";", this.Components.Select(c => $"({c.ToString(includeMetadata)})"))}]");
+            }
+
+            if (this.Extensions?.Any() == true)
+            {
+                builder.Append($",,,Extensions:[{string.Join(";", this.Extensions.Select(e => $"({e.Key}={e.Value?.ToString()})"))}]");
+            }
+
+            return builder.ToString().RemoveWhitespace();
         }
     }
 }

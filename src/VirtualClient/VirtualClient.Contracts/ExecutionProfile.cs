@@ -8,9 +8,14 @@ namespace VirtualClient.Contracts
     using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
+    using System.Numerics;
+    using System.Security.Cryptography;
     using System.Text;
+    using System.Text.Json;
     using System.Threading.Tasks;
     using Newtonsoft.Json;
+    using Newtonsoft.Json.Converters;
+    using Newtonsoft.Json.Serialization;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
 
@@ -130,18 +135,6 @@ namespace VirtualClient.Contracts
         public TimeSpan? MinimumExecutionInterval { get; }
 
         /// <summary>
-        /// The set of supported platform/architectures for the profile.
-        /// </summary>
-        [JsonProperty(PropertyName = "SupportedPlatforms", Required = Required.Default, Order = 45)]
-        public List<string> SupportedPlatforms { get; }
-
-        /// <summary>
-        /// The set of supported operating systems for the profile.
-        /// </summary>
-        [JsonProperty(PropertyName = "SupportedOperatingSystems", Required = Required.Default, Order = 50)]
-        public List<string> SupportedOperatingSystems { get; }
-
-        /// <summary>
         /// Metadata properties associated with the profile.
         /// </summary>
         [JsonProperty(PropertyName = "Metadata", Required = Required.Default, Order = 60)]
@@ -241,19 +234,83 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
+        /// Calculates a repeatable, predictable hash code of this instance.
+        /// </summary>
+        /// <param name="includeMetadata">
+        /// True/false whether metadata information should be included in the hashing process. Note that metadata does not typically
+        /// affect the runtime behavior of the profile and is more informational in nature. Therefore, it is not included in the hash by default.
+        /// </param>
+        /// <returns>A predictable hash code for this instance across CPU architectures.</returns>
+        public BigInteger GetPredictableHashCode(bool includeMetadata = false)
+        {
+            SHA256 hashAlgorithm = SHA256.Create();
+
+            // Note that we ONLY include parts of the execution profile that affect the runtime behavior. We DO NOT
+            // for example include the metadata because it is informational only.
+            List<string> hashValues = new List<string>();
+
+            if (!string.IsNullOrWhiteSpace(this.Description))
+            {
+                hashValues.Add(this.Description.ToUpperInvariant());
+            }
+
+            if (this.MinimumExecutionInterval != null)
+            {
+                hashValues.Add(this.MinimumExecutionInterval.ToString());
+            }
+
+            if (includeMetadata && this.Metadata?.Any() == true)
+            {
+                this.Metadata?.ToList().ForEach(metadata => hashValues.Add($"{metadata.Key.ToUpperInvariant()}={metadata.Value}"));
+            }
+
+            this.Parameters?.ToList().ForEach(parameter => hashValues.Add($"{parameter.Key.ToUpperInvariant()}={parameter.Value}"));
+            this.Actions?.ForEach(action => hashValues.Add(action.ToString(includeMetadata)));
+            this.Dependencies?.ForEach(dependency => hashValues.Add(dependency.ToString(includeMetadata)));
+            this.Monitors?.ForEach(monitor => hashValues.Add(monitor.ToString(includeMetadata)));
+
+            return hashValues.ComputeHashCode();
+        }
+
+        /// <summary>
         /// Generates a unique string representation of this.
         /// </summary>
         /// <returns>A string representation of this.</returns>
         public override string ToString()
         {
-            return new StringBuilder()
-                .Append(this.Description)
-                .Append(this.MinimumExecutionInterval)
-                .AppendJoin(";", this.Parameters.Select(p => $"{p.Key};{p.Value}"))
-                .AppendJoin(";", this.Metadata.Select(m => $"{m.Key};{m.Value}"))
-                .AppendJoin(";", this.Actions)
-                .AppendJoin(";", this.Dependencies)
-                .AppendJoin(";", this.Monitors).ToString();
+            StringBuilder builder = new StringBuilder().Append($"Description:{this.Description}");
+
+            if (this.MinimumExecutionInterval != null)
+            { 
+                builder.Append($"|MinimumExecutionInterval:{this.MinimumExecutionInterval}");
+            }
+
+            if (this.Metadata?.Any() == true)
+            {
+                builder.Append($"|Metadata:[{string.Join(";", this.Metadata.Select(m => $"{m.Key}={m.Value}"))}]");
+            }
+
+            if (this.Parameters?.Any() == true)
+            {
+                builder.Append($"|Parameters:[{string.Join(";", this.Parameters.Select(p => $"{p.Key}={p.Value}"))}]");
+            }
+
+            if (this.Actions?.Any() == true)
+            {
+                builder.Append($"|Actions:[{string.Join(",", this.Actions.Select(a => a.ToString()))}]");
+            }
+
+            if (this.Dependencies?.Any() == true)
+            {
+                builder.Append($"|Dependencies:[{string.Join(",", this.Dependencies.Select(d => d.ToString()))}]");
+            }
+
+            if (this.Monitors?.Any() == true)
+            {
+                builder.Append($"|Monitors:[{string.Join(",", this.Monitors.Select(m => m.ToString()))}]");
+            }
+
+            return builder.ToString().RemoveWhitespace();
         }
     }
 }
