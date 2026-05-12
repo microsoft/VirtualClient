@@ -165,39 +165,37 @@ namespace VirtualClient.Actions
             SuperBenchmarkState state = await this.stateManager.GetStateAsync<SuperBenchmarkState>($"{nameof(SuperBenchmarkState)}", cancellationToken)
                 ?? new SuperBenchmarkState();
 
-            // if (!state.SuperBenchmarkInitialized)
-            // {
-                // This is to grant directory folders for 
-            await this.systemManager.MakeFilesExecutableAsync(this.PlatformSpecifics.CurrentDirectory, this.Platform, cancellationToken);
-
-            string cloneDir = this.PlatformSpecifics.Combine(this.PlatformSpecifics.PackagesDirectory, "superbenchmark");
-            if (!this.fileSystem.Directory.Exists(cloneDir))
+            if (!state.SuperBenchmarkInitialized)
             {
-                await this.ExecuteSbCommandAsync("git", $"clone -b v{this.Version} https://github.com/microsoft/superbenchmark", this.PlatformSpecifics.PackagesDirectory, telemetryContext, cancellationToken, true);
+                await this.systemManager.MakeFilesExecutableAsync(this.PlatformSpecifics.CurrentDirectory, this.Platform, cancellationToken);
+
+                string cloneDir = this.PlatformSpecifics.Combine(this.PlatformSpecifics.PackagesDirectory, "superbenchmark");
+                if (!this.fileSystem.Directory.Exists(cloneDir))
+                {
+                    await this.ExecuteSbCommandAsync("git", $"clone -b v{this.Version} https://github.com/microsoft/superbenchmark", this.PlatformSpecifics.PackagesDirectory, telemetryContext, cancellationToken, true);
+                }
+
+                foreach (string file in this.fileSystem.Directory.GetFiles(this.PlatformSpecifics.GetScriptPath("superbenchmark")))
+                {
+                    this.fileSystem.File.Copy(
+                        file,
+                        this.Combine(this.SuperBenchmarkDirectory, Path.GetFileName(file)),
+                        true);
+                }
+
+                string initializeArgs = $"initialize.sh {this.Username}";
+
+                if (!string.IsNullOrEmpty(this.DockerContainerPath))
+                {
+                    initializeArgs = $"initialize.sh {this.Username} {this.DockerContainerPath}";
+                }
+
+                await this.ExecuteSbCommandAsync("bash", initializeArgs, this.SuperBenchmarkDirectory, telemetryContext, cancellationToken, true);
+                string commandWithVenv = $"-c \"source ./venv/bin/activate && sb deploy --host-list localhost -i {this.ContainerVersion}\"";
+                await this.ExecuteSbCommandAsync("bash", commandWithVenv, this.SuperBenchmarkDirectory, telemetryContext, cancellationToken, false);
+
+                state.SuperBenchmarkInitialized = true;
             }
-
-            foreach (string file in this.fileSystem.Directory.GetFiles(this.PlatformSpecifics.GetScriptPath("superbenchmark")))
-            {
-                this.fileSystem.File.Copy(
-                    file,
-                    this.Combine(this.SuperBenchmarkDirectory, Path.GetFileName(file)),
-                    true);
-            }
-
-            string initializeArgs = $"initialize.sh {this.Username}";
-
-            if (!string.IsNullOrEmpty(this.DockerContainerPath))
-            {
-                initializeArgs = $"initialize.sh {this.Username} {this.DockerContainerPath}";
-            }
-
-            await this.ExecuteSbCommandAsync("bash", initializeArgs, this.SuperBenchmarkDirectory, telemetryContext, cancellationToken, true);
-            // await this.ExecuteSbCommandAsync("sb", $"deploy --host-list localhost -i {this.ContainerVersion}", this.SuperBenchmarkDirectory, telemetryContext, cancellationToken, false);
-            string commandWithVenv = $"-c \"source ./venv/bin/activate && sb deploy --host-list localhost -i {this.ContainerVersion}\"";
-            await this.ExecuteSbCommandAsync("bash", commandWithVenv, this.SuperBenchmarkDirectory, telemetryContext, cancellationToken, false);
-
-            state.SuperBenchmarkInitialized = true;
-            // }
 
             await this.stateManager.SaveStateAsync<SuperBenchmarkState>($"{nameof(SuperBenchmarkState)}", state, cancellationToken);
         }
