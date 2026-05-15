@@ -69,7 +69,7 @@ namespace VirtualClient
                 foreach (string filePath in profiles)
                 {
                     string profileName = Path.GetFileName(filePath);
-                    ExecutionProfile profile = await this.ReadExecutionProfileAsync(filePath, dependencies, cancellationToken);
+                    ExecutionProfile profile = await this.InitializeProfileAsync(filePath, dependencies, cancellationToken);
 
                     if (profile.ProfileFormat == "JSON")
                     {

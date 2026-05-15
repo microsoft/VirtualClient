@@ -884,7 +884,7 @@ namespace VirtualClient
 
                 Assert.IsTrue(explicitTimeout.IsTimedOut);
 
-                var timeoutMessages = this.mockFixture.Logger.MessagesLogged("ProfileExecutor.ExperimentTimeoutReached");
+                var timeoutMessages = this.mockFixture.Logger.MessagesLogged("ProfileExecutor.ExecutionTimeout");
                 Assert.IsNotEmpty(timeoutMessages);
                 Assert.AreEqual(1, timeoutMessages.Count());
 

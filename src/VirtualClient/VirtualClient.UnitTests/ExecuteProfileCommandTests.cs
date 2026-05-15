@@ -158,8 +158,8 @@ namespace VirtualClient
                 .Setup(file => file.ReadAllTextAsync(It.Is<string>(file => file.EndsWith(defaultMonitorProfile)), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(File.ReadAllText(this.mockFixture.Combine(ExecuteProfileCommandTests.ProfilesDirectory, defaultMonitorProfile)));
 
-            ExecutionProfile profile = await this.command.InitializeProfilesAsync(profiles,this.mockFixture.Dependencies, CancellationToken.None)
-                .ConfigureAwait(false);
+            ExecutionProfile profile = (await this.command.InitializeProfilesAsync(profiles, this.mockFixture.Dependencies, CancellationToken.None))
+                .Select(d => d.Profile).Merge();
 
             Assert.AreEqual(2, profile.Actions.Count);
             Assert.AreEqual(1, profile.Dependencies.Count);
@@ -193,8 +193,8 @@ namespace VirtualClient
                 .Setup(file => file.ReadAllTextAsync(It.Is<string>(file => file.EndsWith(defaultMonitorProfile)), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(File.ReadAllText(this.mockFixture.Combine(ExecuteProfileCommandTests.ProfilesDirectory, defaultMonitorProfile)));
 
-            ExecutionProfile profile = await this.command.InitializeProfilesAsync(profiles, this.mockFixture.Dependencies, CancellationToken.None)
-                .ConfigureAwait(false);
+            ExecutionProfile profile = (await this.command.InitializeProfilesAsync(profiles, this.mockFixture.Dependencies, CancellationToken.None))
+                .Select(d => d.Profile).Merge();
 
             bool isCommandMetadataSubset = this.command.Metadata.All(kvp =>
             profile.Metadata.TryGetValue(kvp.Key, out var value) && value.Equals(kvp.Value));
@@ -225,8 +225,8 @@ namespace VirtualClient
                 .Setup(file => file.ReadAllTextAsync(It.Is<string>(file => file.EndsWith(defaultMonitorProfile)), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(File.ReadAllText(this.mockFixture.Combine(ExecuteProfileCommandTests.ProfilesDirectory, defaultMonitorProfile)));
 
-            ExecutionProfile profile = await this.command.InitializeProfilesAsync(profiles, this.mockFixture.Dependencies, CancellationToken.None)
-                .ConfigureAwait(false);
+            ExecutionProfile profile = (await this.command.InitializeProfilesAsync(profiles, this.mockFixture.Dependencies, CancellationToken.None))
+                .Select(d => d.Profile).Merge();
 
             bool isCommandParametersSubset = this.command.Parameters.All(kvp =>
             profile.Parameters.TryGetValue(kvp.Key, out var value) && value.Equals(kvp.Value));
@@ -259,8 +259,8 @@ namespace VirtualClient
                 .Setup(file => file.ReadAllTextAsync(It.Is<string>(file => file.EndsWith(defaultMonitorProfile)), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(File.ReadAllText(this.mockFixture.Combine(ExecuteProfileCommandTests.ProfilesDirectory, defaultMonitorProfile)));
 
-            ExecutionProfile profile = await this.command.InitializeProfilesAsync(profiles, this.mockFixture.Dependencies, CancellationToken.None)
-                .ConfigureAwait(false);
+            ExecutionProfile profile = (await this.command.InitializeProfilesAsync(profiles, this.mockFixture.Dependencies, CancellationToken.None))
+                .Select(d => d.Profile).Merge();
 
             Assert.IsTrue(profile.Actions.Any());
             Assert.IsTrue(profile.Actions.Count == 2);
@@ -289,8 +289,8 @@ namespace VirtualClient
                 .Setup(file => file.ReadAllTextAsync(It.Is<string>(file => file.EndsWith(profile1)), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(File.ReadAllText(this.mockFixture.Combine(ExecuteProfileCommandTests.ProfilesDirectory, profile1)));
 
-            ExecutionProfile profile = await this.command.InitializeProfilesAsync(profiles, this.mockFixture.Dependencies, CancellationToken.None)
-                .ConfigureAwait(false);
+            ExecutionProfile profile = (await this.command.InitializeProfilesAsync(profiles, this.mockFixture.Dependencies, CancellationToken.None))
+                .Select(d => d.Profile).Merge();
 
             Assert.IsTrue(profile.Actions.Any());
             Assert.IsTrue(profile.Actions.Count == 2);
@@ -332,8 +332,8 @@ namespace VirtualClient
                 .Setup(file => file.ReadAllTextAsync(It.Is<string>(file => file.EndsWith(defaultMonitorProfile)), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(File.ReadAllText(this.mockFixture.Combine(ExecuteProfileCommandTests.ProfilesDirectory, defaultMonitorProfile)));
 
-            ExecutionProfile profile = await this.command.InitializeProfilesAsync(profiles, this.mockFixture.Dependencies, CancellationToken.None)
-                .ConfigureAwait(false);
+            ExecutionProfile profile = (await this.command.InitializeProfilesAsync(profiles, this.mockFixture.Dependencies, CancellationToken.None))
+                .Select(d => d.Profile).Merge();
 
             Assert.IsFalse(profile.Actions.Any());
             Assert.IsTrue(profile.Dependencies.Any());
@@ -361,7 +361,8 @@ namespace VirtualClient
             };
 
             IEnumerable<string> profilePaths = await this.command.EvaluateProfilesAsync(this.mockFixture.Dependencies);
-            ExecutionProfile profile = await this.command.InitializeProfilesAsync(profilePaths, this.mockFixture.Dependencies, CancellationToken.None);
+            ExecutionProfile profile = (await this.command.InitializeProfilesAsync(profiles, this.mockFixture.Dependencies, CancellationToken.None))
+                .Select(d => d.Profile).Merge();
 
             Assert.IsFalse((bool)profile.Parameters["Parameter1"]);
             Assert.AreEqual("base1", profile.Parameters["Parameter2"].ToString());
@@ -393,7 +394,8 @@ namespace VirtualClient
             };
 
             IEnumerable<string> profilePaths = await this.command.EvaluateProfilesAsync(this.mockFixture.Dependencies);
-            ExecutionProfile profile = await this.command.InitializeProfilesAsync(profilePaths, this.mockFixture.Dependencies, CancellationToken.None);
+            ExecutionProfile profile = (await this.command.InitializeProfilesAsync(profiles, this.mockFixture.Dependencies, CancellationToken.None))
+                .Select(d => d.Profile).Merge();
 
             Assert.IsFalse((bool)profile.Parameters["Parameter1"]);
             Assert.AreEqual("base2", profile.Parameters["Parameter2"].ToString());
@@ -425,7 +427,8 @@ namespace VirtualClient
             };
 
             IEnumerable<string> profilePaths = await this.command.EvaluateProfilesAsync(this.mockFixture.Dependencies);
-            ExecutionProfile profile = await this.command.InitializeProfilesAsync(profilePaths, this.mockFixture.Dependencies, CancellationToken.None);
+            ExecutionProfile profile = (await this.command.InitializeProfilesAsync(profiles, this.mockFixture.Dependencies, CancellationToken.None))
+                .Select(d => d.Profile).Merge();
 
             Assert.IsTrue((bool)profile.Parameters["Parameter1"]);
             Assert.AreEqual("base3", profile.Parameters["Parameter2"].ToString());
@@ -457,7 +460,8 @@ namespace VirtualClient
             };
 
             IEnumerable<string> profilePaths = await this.command.EvaluateProfilesAsync(this.mockFixture.Dependencies);
-            ExecutionProfile profile = await this.command.InitializeProfilesAsync(profilePaths, this.mockFixture.Dependencies, CancellationToken.None);
+            ExecutionProfile profile = (await this.command.InitializeProfilesAsync(profiles, this.mockFixture.Dependencies, CancellationToken.None))
+                .Select(d => d.Profile).Merge();
 
             Assert.IsFalse((bool)profile.Parameters["Parameter1"]);
             Assert.AreEqual("base4", profile.Parameters["Parameter2"].ToString());
@@ -490,7 +494,8 @@ namespace VirtualClient
             };
 
             IEnumerable<string> profilePaths = await this.command.EvaluateProfilesAsync(this.mockFixture.Dependencies);
-            ExecutionProfile profile = await this.command.InitializeProfilesAsync(profilePaths, this.mockFixture.Dependencies, CancellationToken.None);
+            ExecutionProfile profile = (await this.command.InitializeProfilesAsync(profiles, this.mockFixture.Dependencies, CancellationToken.None))
+                .Select(d => d.Profile).Merge();
 
             Assert.IsFalse((bool)profile.Parameters["Parameter1"]);
             Assert.AreEqual("base4", profile.Parameters["Parameter2"].ToString());
@@ -520,7 +525,7 @@ namespace VirtualClient
                 return base.EvaluateProfilesAsync(dependencies, initialize, cancellationToken);
             }
 
-            public new Task<ExecutionProfile> InitializeProfilesAsync(IEnumerable<string> profiles, IServiceCollection dependencies, CancellationToken cancellationToken)
+            public new Task<IEnumerable<ExecutionProfileDescriptor>> InitializeProfilesAsync(IEnumerable<string> profiles, IServiceCollection dependencies, CancellationToken cancellationToken)
             {
                 return base.InitializeProfilesAsync(profiles, dependencies, cancellationToken);
             }
