@@ -1,12 +1,12 @@
+sudo apt update
+sudo apt install -y python3-venv python3-full
+
 # Ansible will use sudo which needs explicit password input. This command removes that step.
-echo '$1 ALL=(ALL) NOPASSWD:ALL' | (sudo EDITOR='tee -a' visudo) 
+echo '$1 ALL=(ALL) NOPASSWD:ALL' | (sudo EDITOR='tee -a' visudo)
 
 # Remove any existing system-installed Ansible to avoid version conflicts
 sudo apt remove -y ansible || true
 sudo pip3 uninstall -y ansible ansible-base ansible-core || true
-
-# Install ansible-core compatible with Python 3.8 (Ubuntu 20.04)
-python3 -m pip install --user "ansible-core>=2.12,<2.14"
 
 # Ensure the pip user-installed ansible is in PATH and takes precedence
 export PATH=/home/$1/.local/bin:$PATH
@@ -33,17 +33,17 @@ if [[ -n "${2:-}" ]]; then
   # Start Docker back up
   sudo systemctl start docker
 
-  # (Optional) Warm-up/check NVIDIA devices as you had in the commented section
-  # sudo docker run --rm --gpus all nvidia/cuda:11.0.3-base nvidia-smi
 else
   echo "No second argument provided; skipping Docker data-root configuration."
 fi
 
-# Command to install sb dependencies.
+# Clean up any broken previous attempts
+rm -rf ./venv
+# create a new virtual environment
+python3 -m venv ./venv
+# activate the virtual environment
+source ./venv/bin/activate
+
+# Commands to build sb.
 python3 -m pip install .
-
-# Command to build sb.
-make postinstall 
-
-# This command initiates /dev/nvidiactl and /dev/nvidia-uvm directories, which sb checks before running.
-sudo docker run --rm --gpus all nvidia/cuda:11.0.3-base nvidia-smi 
+make postinstall

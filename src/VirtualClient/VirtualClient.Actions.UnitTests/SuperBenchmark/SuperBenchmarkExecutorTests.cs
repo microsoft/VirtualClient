@@ -149,7 +149,7 @@ namespace VirtualClient.Actions
         public async Task SuperBenchmarkExecutorDeploySuperBenchContainer()
         {
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
-            string expectedCommand = $"sb deploy --host-list localhost -i testContainer";
+            string expectedCommand = $"bash -c \"source ./venv/bin/activate && sb deploy --host-list localhost -i testContainer\"";
 
             bool commandExecuted = false;
             this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
@@ -184,7 +184,7 @@ namespace VirtualClient.Actions
         public async Task SuperBenchmarkExecutorRunsTheExpectedWorkloadCommand()
         {
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
-            string expectedCommand = $"sb run --host-list localhost -c Test.yaml";
+            string expectedCommand = $"bash -c \"source ./venv/bin/activate && sb run --host-list localhost -c Test.yaml\"";
 
             bool commandExecuted = false;
             this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
@@ -224,8 +224,8 @@ namespace VirtualClient.Actions
                 $"sudo chmod -R 2777 \"{this.mockFixture.PlatformSpecifics.CurrentDirectory}\"",
                 $"sudo git clone -b v0.0.1 https://github.com/microsoft/superbenchmark",
                 $"sudo bash initialize.sh testuser",
-                $"sb deploy --host-list localhost -i testContainer",
-                $"sb run --host-list localhost -c Test.yaml"
+                $"bash -c \"source ./venv/bin/activate && sb deploy --host-list localhost -i testContainer\"",
+                $"bash -c \"source ./venv/bin/activate && sb run --host-list localhost -c Test.yaml\""
             };
 
             int processCount = 0;
@@ -278,8 +278,8 @@ namespace VirtualClient.Actions
                 $"sudo chmod -R 2777 \"{this.mockFixture.PlatformSpecifics.CurrentDirectory}\"",
                 $"sudo git clone -b v0.0.1 https://github.com/microsoft/superbenchmark",
                 $"sudo bash initialize.sh testuser /docker/path",
-                $"sb deploy --host-list localhost -i testContainer",
-                $"sb run --host-list localhost -c Test.yaml"
+                $"bash -c \"source ./venv/bin/activate && sb deploy --host-list localhost -i testContainer\"",
+                $"bash -c \"source ./venv/bin/activate && sb run --host-list localhost -c Test.yaml\""
             };
 
             int processCount = 0;
@@ -320,7 +320,7 @@ namespace VirtualClient.Actions
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
             List<string> expectedCommands = new List<string>
             {
-                $"sb run --host-list localhost -c Test.yaml"
+                $"bash -c \"source ./venv/bin/activate && sb run --host-list localhost -c Test.yaml\""
             };
 
             int processCount = 0;

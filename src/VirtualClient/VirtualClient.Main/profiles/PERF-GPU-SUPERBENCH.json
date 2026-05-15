@@ -3,7 +3,7 @@
     "MinimumExecutionInterval": "00:01:00",
     "Metadata": {
         "RecommendedMinimumExecutionTime": "08:00:00",
-        "SupportedPlatforms": "linux-x64",
+        "SupportedPlatforms": "linux-x64,linux-arm64",
         "SupportedOperatingSystems": "Ubuntu",
         "PreliminaryRequirements": "Please note that the GPU hardware driver and related toolsets (e.g. Nvidia CUDA) MUST be already installed on the system for the workloads to function correctly."
     },
@@ -18,10 +18,10 @@
             "Parameters": {
                 "Scenario": "Models",
                 "Username": "$.Parameters.Username",
-                "Version": "0.9.0",
+                "Version": "0.12.0",
                 "DockerContainerPath": "$.Parameters.DockerContainerPath",
                 "ConfigurationFile": "$.Parameters.ConfigurationFile",
-                "ContainerVersion": "superbench/superbench:v0.9.0-cuda12.1"
+                "ContainerVersion": "superbench/superbench:v0.12.0-cuda12.9"
             }
         }
     ]
