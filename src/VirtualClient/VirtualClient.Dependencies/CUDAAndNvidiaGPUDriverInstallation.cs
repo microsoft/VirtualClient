@@ -42,7 +42,7 @@ namespace VirtualClient.Dependencies
             this.stateManager = this.systemManager.StateManager;
             this.fileSystem = this.systemManager.FileSystem;
             this.packageManager = this.systemManager.PackageManager;
-        }        
+        } 
 
         /// <summary>
         /// The version of CUDA to be installed in Linux Systems
@@ -327,12 +327,13 @@ namespace VirtualClient.Dependencies
 
         private List<string> VersionSpecificInstallationCommands(LinuxDistribution linuxDistribution)
         {
-            string runFileName = this.LinuxLocalRunFile.Split('/').Last();
-            List<string> commands = new List<string>()
+            List<string> commands = new List<string>();
+            if (!string.IsNullOrEmpty(this.LinuxLocalRunFile))
             {
-                $"wget {this.LinuxLocalRunFile}",
-                $"sh {runFileName} --silent --toolkit"
-            };
+                string runFileName = this.LinuxLocalRunFile.Split('/').Last();
+                commands.Add($"wget {this.LinuxLocalRunFile}");
+                commands.Add($"sh {runFileName} --silent --toolkit");
+            }
 
             switch (linuxDistribution)
             {

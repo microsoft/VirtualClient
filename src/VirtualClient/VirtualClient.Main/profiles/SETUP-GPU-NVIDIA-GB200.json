@@ -9,7 +9,6 @@
         "SpecialRequirements": "This is an NVIDIA GPU Driver dependency. It can only be installed on the system having an NVIDIA GB200 GPU card/chip."
     },
     "Parameters": {
-        "ConfigurationFile": "default.yaml",
         "Username": "",
         "LinuxCudaVersion": "13.1",
         "LinuxDriverVersion": "590",
