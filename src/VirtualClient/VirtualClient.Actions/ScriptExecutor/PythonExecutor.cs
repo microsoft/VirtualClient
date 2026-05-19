@@ -45,17 +45,6 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// The name of the registered Python runtime package. Default is "python3".
-        /// </summary>
-        public string PythonPackageName
-        {
-            get
-            {
-                return this.Parameters.GetValue<string>(nameof(this.PythonPackageName), "python3");
-            }
-        }
-
-        /// <summary>
         /// Executes the Python script.
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
@@ -96,7 +85,9 @@ namespace VirtualClient.Actions
         /// </summary>
         private async Task<string> ResolvePythonExecutableAsync(string defaultCommand, CancellationToken cancellationToken)
         {
-            DependencyPath pythonPackage = await this.GetPackageAsync(this.PythonPackageName, cancellationToken, throwIfNotfound: false);
+            // The Python runtime is always registered under package name "python3"
+            // regardless of the UsePython3 setting, which only controls the executable name.
+            DependencyPath pythonPackage = await this.GetPackageAsync("python3", cancellationToken, throwIfNotfound: false);
 
             if (pythonPackage != null)
             {
