@@ -5,12 +5,14 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
+    using System.IO.Abstractions;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
+    using VirtualClient.Contracts;
 
     /// <summary>
     /// The Generic Script executor for Python
@@ -43,17 +45,25 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// The name of the registered Python runtime package. Default is "python3".
+        /// </summary>
+        public string PythonPackageName
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.PythonPackageName), "python3");
+            }
+        }
+
+        /// <summary>
         /// Executes the Python script.
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
             {
-                string command = "python";
-                if (this.UsePython3)
-                {
-                    command = "python3";
-                }
+                string command = this.UsePython3 ? "python3" : "python";
+                command = await this.ResolvePythonExecutableAsync(command, cancellationToken);
 
                 string commandArguments = $"{this.ExecutablePath} {this.CommandLine}";
 
@@ -78,6 +88,35 @@ namespace VirtualClient.Actions
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Attempts to resolve the Python executable from the registered package.
+        /// Falls back to the bare command name if the package is not registered or the executable is not found.
+        /// </summary>
+        private async Task<string> ResolvePythonExecutableAsync(string defaultCommand, CancellationToken cancellationToken)
+        {
+            DependencyPath pythonPackage = await this.GetPackageAsync(this.PythonPackageName, cancellationToken, throwIfNotfound: false);
+
+            if (pythonPackage != null)
+            {
+                IFileSystem fileSystem = this.systemManagement.FileSystem;
+                DependencyPath platformSpecificPackage = this.ToPlatformSpecificPath(pythonPackage, this.Platform, this.CpuArchitecture);
+
+                string packagePath = fileSystem.Directory.Exists(platformSpecificPackage.Path)
+                    ? platformSpecificPackage.Path
+                    : pythonPackage.Path;
+
+                string executableName = this.Platform == PlatformID.Win32NT ? "python.exe" : defaultCommand;
+                string pythonExecutable = this.Combine(packagePath, executableName);
+
+                if (fileSystem.File.Exists(pythonExecutable))
+                {
+                    return pythonExecutable;
+                }
+            }
+
+            return defaultCommand;
         }
     }
 }
