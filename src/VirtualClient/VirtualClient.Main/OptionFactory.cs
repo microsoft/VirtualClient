@@ -1701,7 +1701,7 @@ namespace VirtualClient
             }
             else if (EndpointUtility.IsApiKeyUri(endpoint))
             {
-                store = new DependencyBlobStore(DependencyBlobStore.Packages, new Uri(endpoint));
+                store = new DependencyBlobStore(storeName, new Uri(endpoint));
             }
             else
             {
