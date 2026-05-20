@@ -504,7 +504,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                                     await this.LogProcessDetailsAsync(
                                         sendProcess,
                                         relatedContext,
-                                        "NTttcp",
+                                        "NTttcp-Send",
                                         results: new KeyValuePair<string, string>(this.SendResultsPath, sendResults));
 
                                     this.CaptureDirectionalMetrics(
@@ -518,7 +518,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                                 }
                                 else
                                 {
-                                    await this.LogProcessDetailsAsync(sendProcess, relatedContext, "NTttcp");
+                                    await this.LogProcessDetailsAsync(sendProcess, relatedContext, "NTttcp-Send");
                                     this.Logger.LogMessage($"{this.TypeName}.FullDuplexSendFailed", LogLevel.Warning, relatedContext);
                                 }
 
@@ -531,7 +531,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                                     await this.LogProcessDetailsAsync(
                                         receiveProcess,
                                         relatedContext,
-                                        "NTttcp",
+                                        "NTttcp-Receive",
                                         results: new KeyValuePair<string, string>(this.ReceiveResultsPath, receiveResults));
 
                                     this.CaptureDirectionalMetrics(
@@ -545,7 +545,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                                 }
                                 else
                                 {
-                                    await this.LogProcessDetailsAsync(receiveProcess, relatedContext, "NTttcp");
+                                    await this.LogProcessDetailsAsync(receiveProcess, relatedContext, "NTttcp-Receive");
                                     this.Logger.LogMessage($"{this.TypeName}.FullDuplexReceiveFailed", LogLevel.Warning, relatedContext);
                                 }
 
