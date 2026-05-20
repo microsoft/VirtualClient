@@ -205,6 +205,110 @@ namespace VirtualClient.Actions
             }
         }
 
+        [Test]
+        [TestCase(PlatformID.Win32NT, @"\win-x64\", @"genericScript.py", true)]
+        [TestCase(PlatformID.Win32NT, @"\win-x64\", @"genericScript.py", false)]
+        [TestCase(PlatformID.Unix, @"/linux-x64/", @"genericScript.py", true)]
+        [TestCase(PlatformID.Unix, @"/linux-x64/", @"genericScript.py", false)]
+        public async Task PythonExecutorUsesPackageExecutableWhenPythonPackageIsRegistered(PlatformID platform, string platformSpecificPath, string script, bool runElevated)
+        {
+            this.SetupTest(platform);
+            this.mockFixture.Parameters[nameof(PythonExecutor.RunElevated)] = runElevated;
+            this.mockFixture.Parameters[nameof(PythonExecutor.ScriptPath)] = script;
+            this.mockFixture.Parameters[nameof(PythonExecutor.UsePython3)] = true;
+
+            DependencyPath pythonPackage = new DependencyPath("python3", this.mockFixture.PlatformSpecifics.GetPackagePath("python3"));
+            this.mockFixture.SetupPackage(pythonPackage);
+
+            string expectedPythonExe = platform == PlatformID.Win32NT
+                ? $"{pythonPackage.Path}{platformSpecificPath}python.exe"
+                : $"{pythonPackage.Path}{platformSpecificPath}python3";
+
+            string fullCommand = $"{this.mockPackage.Path}{platformSpecificPath}{script} parameter1 parameter2";
+
+            using (TestPythonExecutor executor = new TestPythonExecutor(this.mockFixture))
+            {
+                bool commandExecuted = false;
+                string expectedCommand = $"{(PlatformID.Unix.Equals(platform) && runElevated ? "sudo" : string.Empty)} {expectedPythonExe} {fullCommand}".Trim();
+                this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
+                {
+                    if (expectedCommand == $"{exe} {arguments}")
+                    {
+                        commandExecuted = true;
+                    }
+
+                    return new InMemoryProcess
+                    {
+                        StartInfo = new ProcessStartInfo
+                        {
+                            FileName = exe,
+                            Arguments = arguments
+                        },
+                        ExitCode = 0,
+                        OnStart = () => true,
+                        OnHasExited = () => true
+                    };
+                };
+
+                await executor.ExecuteAsync(CancellationToken.None)
+                    .ConfigureAwait(false);
+
+                Assert.IsTrue(commandExecuted);
+            }
+        }
+
+        [Test]
+        [TestCase(PlatformID.Win32NT, @"\win-x64\", @"genericScript.py")]
+        public async Task PythonExecutorFallsBackToBareCommandWhenPackageExecutableNotFound(PlatformID platform, string platformSpecificPath, string script)
+        {
+            this.SetupTest(platform);
+            this.mockFixture.Parameters[nameof(PythonExecutor.ScriptPath)] = script;
+            this.mockFixture.Parameters[nameof(PythonExecutor.UsePython3)] = true;
+
+            DependencyPath pythonPackage = new DependencyPath("python3", this.mockFixture.PlatformSpecifics.GetPackagePath("python3"));
+            this.mockFixture.SetupPackage(pythonPackage);
+
+            string pythonExePath = platform == PlatformID.Win32NT
+                ? $"{pythonPackage.Path}{platformSpecificPath}python.exe"
+                : $"{pythonPackage.Path}{platformSpecificPath}python3";
+
+            // The python executable does not exist in the package
+            this.mockFixture.FileSystem.Setup(fe => fe.File.Exists(pythonExePath))
+                .Returns(false);
+
+            string fullCommand = $"{this.mockPackage.Path}{platformSpecificPath}{script} parameter1 parameter2";
+
+            using (TestPythonExecutor executor = new TestPythonExecutor(this.mockFixture))
+            {
+                bool commandExecuted = false;
+                string expectedCommand = $"python3 {fullCommand}";
+                this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
+                {
+                    if (expectedCommand == $"{exe} {arguments}")
+                    {
+                        commandExecuted = true;
+                    }
+
+                    return new InMemoryProcess
+                    {
+                        StartInfo = new ProcessStartInfo
+                        {
+                            FileName = exe,
+                            Arguments = arguments
+                        },
+                        ExitCode = 0,
+                        OnStart = () => true,
+                        OnHasExited = () => true
+                    };
+                };
+
+                await executor.ExecuteAsync(CancellationToken.None)
+                    .ConfigureAwait(false);
+
+                Assert.IsTrue(commandExecuted);
+            }
+        }
+
         private class TestPythonExecutor : PythonExecutor
         {
             public TestPythonExecutor(MockFixture fixture)
