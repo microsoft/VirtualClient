@@ -31,7 +31,8 @@
                 "OpenSourceDriver": "$.Parameters.OpenSourceDriver",
                 "LinuxDriverVersion": "$.Parameters.LinuxDriverVersion",
                 "Username": "$.Parameters.Username",
-                "LinuxLocalRunFile": "$.Parameters.LinuxLocalRunFile"
+                "LinuxLocalRunFile": "$.Parameters.LinuxLocalRunFile",
+                "CudaRequired": "$.Parameters.CudaRequired"
             }
         },
         {
