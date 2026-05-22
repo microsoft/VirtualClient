@@ -42,7 +42,7 @@ namespace VirtualClient.Dependencies
             this.stateManager = this.systemManager.StateManager;
             this.fileSystem = this.systemManager.FileSystem;
             this.packageManager = this.systemManager.PackageManager;
-        } 
+        }
 
         /// <summary>
         /// The version of CUDA to be installed in Linux Systems
@@ -115,7 +115,7 @@ namespace VirtualClient.Dependencies
         {
             get
             {
-                return this.Parameters.GetValue<bool>(nameof(CudaAndNvidiaGPUDriverInstallation.CudaRequired), false);
+                return this.Parameters.GetValue<bool>(nameof(CudaAndNvidiaGPUDriverInstallation.CudaRequired), true);
             }
 
             set
@@ -230,11 +230,21 @@ namespace VirtualClient.Dependencies
                 new Dictionary<string, object>
                 {
                     { "gpuVendor", "Nvidia" },
-                    { "gpuDriverVersion_nvidia", this.LinuxDriverVersion },
-                    { "cudaVersion", this.LinuxCudaVersion }
+                    { "gpuDriverVersion_nvidia", this.LinuxDriverVersion }
                 },
                 MetadataContract.DependenciesCategory,
                 true);
+
+            if (this.CudaRequired)
+            {
+                MetadataContract.Persist(
+                    new Dictionary<string, object>
+                    {
+                        { "cudaVersion", this.LinuxCudaVersion }
+                    },
+                    MetadataContract.DependenciesCategory,
+                    true);
+            }
 
             // The .bashrc file is used to define commands that should be run whenever the system
             // is booted. For the purpose of the CUDA driver installation, we want to include extra
@@ -381,9 +391,6 @@ namespace VirtualClient.Dependencies
                     if (this.OpenSourceDriver)
                     {
                         commands.Add($"apt install nvidia-driver-{this.LinuxDriverVersion}-open nvidia-dkms-{this.LinuxDriverVersion}-open -y");
-                        commands.Add($"apt install nvidia-fabricmanager-{this.LinuxDriverVersion} -y");
-                        commands.Add("systemctl enable nvidia-fabricmanager");
-                        commands.Add("systemctl start nvidia-fabricmanager");
                     }
                     else
                     {
