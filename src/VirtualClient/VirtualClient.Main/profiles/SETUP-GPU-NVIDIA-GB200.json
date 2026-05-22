@@ -11,8 +11,10 @@
     "Parameters": {
         "Username": "",
         "LinuxCudaVersion": "13.1",
+        "OpenSourceDriver": true,
         "LinuxDriverVersion": "590",
-        "LinuxLocalRunFile": "https://developer.download.nvidia.com/compute/cuda/13.1.1/local_installers/cuda_13.1.1_590.48.01_linux_sbsa.run"
+        "LinuxLocalRunFile": "https://developer.download.nvidia.com/compute/cuda/13.1.1/local_installers/cuda_13.1.1_590.48.01_linux_sbsa.run",
+        "CudaRequired": true
     },
     "Dependencies": [
         {
@@ -26,6 +28,7 @@
             "Parameters": {
                 "Scenario": "InstallNvidiaCuda",
                 "LinuxCudaVersion": "$.Parameters.LinuxCudaVersion",
+                "OpenSourceDriver": "$.Parameters.OpenSourceDriver",
                 "LinuxDriverVersion": "$.Parameters.LinuxDriverVersion",
                 "Username": "$.Parameters.Username",
                 "LinuxLocalRunFile": "$.Parameters.LinuxLocalRunFile"
