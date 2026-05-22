@@ -22,7 +22,7 @@ VirtualClient.exe --profile=PERF-CPU-COREMARK.json --timeout=180
 ```
 
 ## Scenario: Running a Client Server Workload
-Some workload profiles require multiple systems to operate. For example the CPS, NTttcp and SockPerf workloads requires a client system and a server
+Some workload profiles require multiple systems to operate. For example the NCPS, NTttcp and SockPerf workloads require a client system and a server
 system to be valid. Multi-system workload profiles require and environment layout to be supplied to the Virtual Client. An environment
 layout describes the topology...where the other Virtual Client instances are and what roles they will play. To get familiar
 with defining an environment layouts, see the documentation below. Note that each of the workload profiles has documentation that

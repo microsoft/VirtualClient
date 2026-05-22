@@ -5,7 +5,7 @@ and reliability.
 The workloads that are a part of the suite include:
 
 * **CPS**  
-  This workload that is used to measure network socket connection establishment efficiencies and reliability between a client and a server.
+  This legacy workload measures network socket connection establishment efficiencies and reliability between a client and a server. It is deprecated in favor of NCPS for the standard PERF-NETWORK profile.
 
 * **NCPS**  
   This workload (New Connections Per Second) is an enhanced version of CPS that provides more granular connection establishment metrics, throughput measurements, and advanced statistical analysis between a client and a server.
@@ -21,9 +21,6 @@ The workloads that are a part of the suite include:
 
 ## What is Being Tested?
 The following performance analysis scenarios are covered as part of the network workload suite.
-
-* CPS
-  * Network connection establishment reliability and speed on both Unix/Linux and Windows systems.
 
 * NCPS
   * Enhanced network connection establishment performance with detailed metrics on both Unix/Linux and Windows systems.

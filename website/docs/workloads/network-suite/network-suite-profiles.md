@@ -43,8 +43,8 @@ VirtualClient.exe --profile=PERF-NETWORK.json --system=Demo --timeout=1440 --cli
 ```
 
 ## PERF-NETWORK.json
-Runs the suite of workloads on the system to evaluate the average and peak performance of the network hardware and stack. On Linux systems, the CPS, NTttcp and SockPerf workloads
-are used. On Windows systems the CPS, NTttcp and Latte workloads are used.
+Runs the suite of workloads on the system to evaluate the average and peak performance of the network hardware and stack. On Linux systems, the NCPS, NTttcp and SockPerf workloads
+are used. On Windows systems the NCPS, NTttcp and Latte workloads are used.
 
 :::danger
 *By default, the systems have settings applied to ensure the OS is configured for full network performance. These settings require the systems to be rebooted in order to be applied.
@@ -99,7 +99,6 @@ sysctl -w net.core.busy_read=50
 * **Scenarios**  
   The following scenarios are covered by this workload profile.
 
-  * CPS. Connection establishment speed and reliability, 16 concurrent connections.
   * NCPS. Connection establishment speed and reliability, 16 concurrent connections.
   * NTttcp. Network communications throughput and bandwidth with the following scenarios.
     * TCP protocol, 4K network buffer, 1 thread
@@ -131,8 +130,6 @@ sysctl -w net.core.busy_read=50
   | ConfigureNetwork          | Optional. True to configure the system network settings for peak performance (will reboot system). False to make no changes to the system network settings.               | True (will reboot system)  |
   | EnableBusyPoll            | Optional. True to configure busy poll in the system network settings for Linux systems. False to make no changes. This setting depends upon 'ConfigureNetwork' = true.    | True        |
   | DisableFirewall           | Optional. True to disable the firewall on Linux systems. False to make no changes. This setting depends upon 'ConfigureNetwork' = true.  | True        |
-  | CpsDuration               | Optional. The amount of time (in seconds) to run the CPS workload. | 300 secs |
-  | CpsPort                   | Optional. The starting port on which connections will be established between client and server when running the CPS workload. The CPS workload will use connections on additional ports starting with this port for each of the number of connections (e.g. 16) defined in the component/action. | 7201 |
   | NcpsDuration              | Optional. The amount of time (in seconds) to run the NCPS workload. | 300 secs |
   | NcpsPort                  | Optional. The starting port on which connections will be established between client and server when running the NCPS workload. The NCPS workload will use connections on additional ports starting with this port for each of the number of connections (e.g. 16) defined in the component/action. | 9800 |
   | LattePort                 | Optional. The starting port on which connections will be established between client and server when running the Latte workload. The Latte workload will use connections on additional ports starting with this port. | 6100 |
