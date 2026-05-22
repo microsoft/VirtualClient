@@ -270,10 +270,10 @@ VirtualClient.exe --profile=PERF-NETWORK.json --profile=MONITORS-PROFILING.json 
         {
             "Type": "NetworkingWorkloadExecutor",
             "Parameters": {
-                "Scenario": "CPS",
-                "ToolName": "CPS",
-                "PackageName": "Networking",
-                "Connections": "16",
+                "Scenario": "NCPS_T16",
+                "ToolName": "NCPS",
+                "PackageName": "networking",
+                "ThreadCount": 16,
                 "TestDuration": "300",
                 "WarmupTime" : "60",
                 "ProfilingEnabled": "$.Parameters.ProfilingEnabled",
