@@ -668,3 +668,122 @@ sequential order as they are defined within the profile. These components begin 
 -----------> Action 2
 -----------> Action 3
 -----------> Action 4
+```
+
+## Parallel and Sequential Execution Options
+Virtual Client supports a few different components that can be used to execute groups of child components in parallel or in sequence as a block.
+The following section illustrates usage examples for these components.
+
+### ParallelExecution
+Executes all child components **in parallel**. Each component starts at the same time and runs independently.
+The `ParallelExecution` component will complete when all components have finished exactly one iteration.
+
+``` json
+{ 
+    "Type": "ParallelExecution", 
+    "Components": [ 
+        { 
+            "Type": "TestExecutor", 
+            "Parameters": { 
+                "Scenario": "ScenarioA" 
+            } 
+        }, 
+        { 
+            "Type": "TestExecutor", 
+            "Parameters": { 
+                "Scenario": "ScenarioB" 
+            } 
+        } 
+    ] 
+}
+```
+
+### SequentialExecution
+Executes all child components **one after another** in the order they are listed. Each component starts only after the previous one 
+completes. The The `SequentialExecution` component will complete when all components have finished exactly one iteration.
+
+#### Supported Parameters
+
+| Parameter     | Purpose                                      | Default Value |
+|---------------|----------------------------------------------|---------------|
+| Deterministic | Defines true/false whether the sequential execution should be deterministic. When set to true, each component will be executed at least once regardless of any individual component failures. When set to false, the components will execute sequentially until any one fails. No subsequent components will be executed after the failure. | false |
+| LoopCount     | Specifies the number of times to repeat the execution of each child component under the sequential execution | 1 |
+
+```json
+{ 
+    "Type": "SequentialExecution",
+    "Parameters": {
+        "LoopCount": 2
+    },
+    "Components": [ 
+        { 
+            "Type": "TestExecutor1", 
+            "Parameters": { 
+                "Scenario": "ScenarioA" 
+            } 
+        }, 
+        { 
+            "Type": "TestExecutor2", 
+            "Parameters": { 
+                "Scenario": "ScenarioB" 
+            } 
+        } 
+    ] 
+},
+{ 
+    "Type": "SequentialExecution",
+    "Parameters": {
+        "Deterministic": true
+    },
+    "Components": [ 
+        { 
+            "Type": "TestExecutor3", 
+            "Parameters": { 
+                "Scenario": "ScenarioA" 
+            } 
+        }, 
+        { 
+            "Type": "TestExecutor4", 
+            "Parameters": { 
+                "Scenario": "ScenarioB" 
+            } 
+        } 
+    ] 
+}
+```
+
+### ParallelLoopExecution
+Executes all child components **in parallel**, and **repeats** this execution for a specified duration or minimum number of 
+iterations. Each component runs in its own loop, independently, until the overall duration or the minimum iteration count is 
+reached.
+
+#### Supported Parameters
+
+| Parameter          | Purpose                                                     | Default Value |
+|--------------------|-------------------------------------------------------------|---------------|
+| Duration           | Maximum time to run the parallel loop (hh:mm:ss format).    | -1 (no limit) |
+| MinimumIterations  | Minimum number of times each child component should run. Set this value to 1 to ensure each component executes to completion at least once. | 0 |
+
+```json
+{ 
+    "Type": "ParallelLoopExecution",
+    "Parameters": {
+        "Duration": "00:10:00",
+        "MinimumIterations": 3
+    },
+    "Components": [ 
+        { 
+            "Type": "TestExecutor1", 
+            "Parameters": { 
+                "Scenario": "ScenarioA" 
+            } 
+        }, 
+        { 
+            "Type": "TestExecutor2", 
+            "Parameters": { 
+                "Scenario": "ScenarioB" 
+            } 
+        } 
+    ] 
+}
+```

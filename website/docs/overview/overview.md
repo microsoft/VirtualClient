@@ -36,7 +36,7 @@ for using them.
 | [BlenderBenchmark](https://microsoft.github.io/VirtualClient/docs/workloads/blenderbenchmark) | GPU/Graphics Rendering Performance | win-x64 | [GNU LGPL](https://projects.blender.org/infrastructure/blender-open-data/src/branch/main/LICENSE) |
 | [CoreMark](https://microsoft.github.io/VirtualClient/docs/workloads/coremark/coremark) | CPU Performance | linux-x64, linux-arm64 | [Apache+Custom](https://github.com/eembc/coremark/blob/main/LICENSE.md)  |
 | [CoreMark Pro](https://microsoft.github.io/VirtualClient/docs/workloads/coremark) | Precision CPU | linux-x64, linux-arm64, win-x64, win-arm64 | [Apache+Custom](https://github.com/eembc/coremark-pro/blob/main/LICENSE.md) |
-| [CPS](https://microsoft.github.io/VirtualClient/docs/workloads/network-suite) | Network Connection Reliability | linux-x64, linux-arm64, win-x64, win-arm64 | Microsoft-Developed  |
+| [NCPS](https://microsoft.github.io/VirtualClient/docs/workloads/network-suite) | Network Connection Reliability | linux-x64, linux-arm64, win-x64, win-arm64 | Microsoft-Developed  |
 | [DCGMI](https://microsoft.github.io/VirtualClient/docs/workloads/dcgmi)| GPU Qualification| linux-x64 | [Apache-2.0](https://github.com/NVIDIA/DCGM/blob/master/LICENSE)
 | [DeathStarBench](https://microsoft.github.io/VirtualClient/docs/workloads/deathstarbench) | Docker Swarm/Container Microservices | linux-x64, linux-arm64, win-x64, win-arm64 | [Apache-2.0](https://github.com/delimitrou/DeathStarBench/blob/master/LICENSE)  |
 | [DiskSpd](https://microsoft.github.io/VirtualClient/docs/workloads/diskspd) | Disk I/O Performance | win-x64, win-arm64 | [MIT](https://github.com/microsoft/diskspd/blob/master/LICENSE)  |
