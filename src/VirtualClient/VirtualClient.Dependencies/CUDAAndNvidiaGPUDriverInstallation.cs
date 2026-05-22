@@ -42,7 +42,7 @@ namespace VirtualClient.Dependencies
             this.stateManager = this.systemManager.StateManager;
             this.fileSystem = this.systemManager.FileSystem;
             this.packageManager = this.systemManager.PackageManager;
-        }        
+        }
 
         /// <summary>
         /// The version of CUDA to be installed in Linux Systems
@@ -57,6 +57,22 @@ namespace VirtualClient.Dependencies
             set
             {
                 this.Parameters[nameof(CudaAndNvidiaGPUDriverInstallation.LinuxCudaVersion)] = value;
+            }
+        }
+
+        /// <summary>
+        /// Whether the open-source version of the linux driver is used (required for certain NVIDIA GPU systems such as GB200)
+        /// </summary>
+        public bool OpenSourceDriver
+        {
+            get
+            {
+                return this.Parameters.GetValue<bool>(nameof(CudaAndNvidiaGPUDriverInstallation.OpenSourceDriver), false);
+            }
+
+            set
+            {
+                this.Parameters[nameof(CudaAndNvidiaGPUDriverInstallation.OpenSourceDriver)] = value;
             }
         }
 
@@ -89,6 +105,22 @@ namespace VirtualClient.Dependencies
             set
             {
                 this.Parameters[nameof(CudaAndNvidiaGPUDriverInstallation.LinuxLocalRunFile)] = value;
+            }
+        }
+
+        /// <summary>
+        /// Whether CUDA is installed directly onto the host machine (not required for Superbench)
+        /// </summary>
+        public bool CudaRequired
+        {
+            get
+            {
+                return this.Parameters.GetValue<bool>(nameof(CudaAndNvidiaGPUDriverInstallation.CudaRequired), true);
+            }
+
+            set
+            {
+                this.Parameters[nameof(CudaAndNvidiaGPUDriverInstallation.CudaRequired)] = value;
             }
         }
 
@@ -198,11 +230,21 @@ namespace VirtualClient.Dependencies
                 new Dictionary<string, object>
                 {
                     { "gpuVendor", "Nvidia" },
-                    { "gpuDriverVersion_nvidia", this.LinuxDriverVersion },
-                    { "cudaVersion", this.LinuxCudaVersion }
+                    { "gpuDriverVersion_nvidia", this.LinuxDriverVersion }
                 },
                 MetadataContract.DependenciesCategory,
                 true);
+
+            if (this.CudaRequired)
+            {
+                MetadataContract.Persist(
+                    new Dictionary<string, object>
+                    {
+                        { "cudaVersion", this.LinuxCudaVersion }
+                    },
+                    MetadataContract.DependenciesCategory,
+                    true);
+            }
 
             // The .bashrc file is used to define commands that should be run whenever the system
             // is booted. For the purpose of the CUDA driver installation, we want to include extra
@@ -235,9 +277,13 @@ namespace VirtualClient.Dependencies
                 // keeping the commands in here for reference in case we may need cleanup in future.
                 // cleanupCommands,
                 prerequisiteCommands,
-                installationCommands,
-                postInstallationCommands
+                installationCommands
             };
+
+            if (this.CudaRequired)
+            {
+                commandsLists.Add(postInstallationCommands);
+            }
 
             foreach (var commandsList in commandsLists)
             {
@@ -327,12 +373,13 @@ namespace VirtualClient.Dependencies
 
         private List<string> VersionSpecificInstallationCommands(LinuxDistribution linuxDistribution)
         {
-            string runFileName = this.LinuxLocalRunFile.Split('/').Last();
-            List<string> commands = new List<string>()
+            List<string> commands = new List<string>();
+            if (this.CudaRequired)
             {
-                $"wget {this.LinuxLocalRunFile}",
-                $"sh {runFileName} --silent --toolkit"
-            };
+                string runFileName = this.LinuxLocalRunFile.Split('/').Last();
+                commands.Add($"wget {this.LinuxLocalRunFile}");
+                commands.Add($"sh {runFileName} --silent --toolkit");
+            }
 
             switch (linuxDistribution)
             {
@@ -340,8 +387,16 @@ namespace VirtualClient.Dependencies
                 case LinuxDistribution.Ubuntu:
                     commands.Add("apt update");
                     commands.Add("apt upgrade -y");
-                    commands.Add($"apt install nvidia-driver-{this.LinuxDriverVersion}-server nvidia-dkms-{this.LinuxDriverVersion}-server -y");
-                    commands.Add($"apt install cuda-drivers-fabricmanager-{this.LinuxDriverVersion} -y");
+
+                    if (this.OpenSourceDriver)
+                    {
+                        commands.Add($"apt install nvidia-driver-{this.LinuxDriverVersion}-open nvidia-dkms-{this.LinuxDriverVersion}-open -y");
+                    }
+                    else
+                    {
+                        commands.Add($"apt install nvidia-driver-{this.LinuxDriverVersion}-server nvidia-dkms-{this.LinuxDriverVersion}-server -y");
+                        commands.Add($"apt install cuda-drivers-fabricmanager-{this.LinuxDriverVersion} -y");
+                    }
 
                     break;
 
