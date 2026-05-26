@@ -200,6 +200,43 @@ namespace VirtualClient.Actions
         }
 
         [Test]
+        public void DiskSpdParserVerifyWriteOnlyV220FormatWithSocketNodeCoreColumns()
+        {
+            // DiskSpd v2.2.0 changed the CPU table to include Socket | Node | Group | Core | CPU columns.
+            // The parser must normalise this extended header without throwing a KeyNotFoundException.
+            string results = File.ReadAllText(MockFixture.GetDirectory(typeof(DiskSpdMetricsParserTests), "Examples", "DiskSpd", "DiskSpdExample-WriteOnly-v2.2.0.txt"));
+            var parser = new DiskSpdMetricsParser(results, "diskspd.exe -b4K -r4K -t160 -o3 -w100 -d900 -Suw -W15 -D -L -Rtext D:\\diskspd-test.dat");
+
+            IList<Metric> metrics = parser.Parse();
+
+            // cpu metrics – rows 0,1 and avg from the truncated table
+            MetricAssert.Exists(metrics, "cpu usage 0", 98.74, "percentage");
+            MetricAssert.Exists(metrics, "cpu usage 1", 98.69, "percentage");
+            MetricAssert.Exists(metrics, "cpu usage average", 98.59, "percentage");
+            MetricAssert.Exists(metrics, "cpu user average", 0.75, "percentage");
+            MetricAssert.Exists(metrics, "cpu kernel average", 97.84, "percentage");
+
+            // Total IO
+            MetricAssert.Exists(metrics, "total bytes 0", 9466327040, "bytes");
+            MetricAssert.Exists(metrics, "total throughput 0", 10.03, "MiB/s");
+            MetricAssert.Exists(metrics, "total iops 0", 2567.89, "iops");
+            MetricAssert.Exists(metrics, "total bytes total", 8265251819520, "bytes");
+            MetricAssert.Exists(metrics, "total throughput total", 8758.14, "MiB/s");
+            MetricAssert.Exists(metrics, "total iops total", 2242082.85, "iops");
+
+            // Write IO
+            MetricAssert.Exists(metrics, "write bytes total", 8265251819520, "bytes");
+            MetricAssert.Exists(metrics, "write throughput total", 8758.14, "MiB/s");
+            MetricAssert.Exists(metrics, "write iops total", 2242082.85, "iops");
+
+            // Latency
+            MetricAssert.Exists(metrics, "write latency min", 0.013, "ms");
+            MetricAssert.Exists(metrics, "write latency 50th", 0.146, "ms");
+            MetricAssert.Exists(metrics, "write latency 99th", 12.018, "ms");
+            MetricAssert.Exists(metrics, "total latency max", 5543.894, "ms");
+        }
+
+        [Test]
         public void DiskSpdParserVerifyForCoreCountGreaterThan64WhichAddsProcessorGrouping()
         {
             string results = File.ReadAllText(MockFixture.GetDirectory(typeof(DiskSpdMetricsParserTests), "Examples", "DiskSpd", "Write8k.txt"));
