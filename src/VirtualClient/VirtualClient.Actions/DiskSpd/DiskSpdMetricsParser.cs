@@ -111,7 +111,28 @@ namespace VirtualClient.Actions
              * Group | CPU |  Usage |  User  |  Kernel |  Idle
              */
 
-            if (this.PreprocessedText.Contains("Group"))
+            /*
+             * DiskSpd v2.2.0 added Socket, Node, Core columns to the CPU table:
+             *
+             * Socket | Node | Group | Core | CPU |  Usage |  User  | Kernel |  Idle
+             *
+             * Normalize this to the existing Group | CPU format by:
+             *   1. Replacing the extended header so sectionizing produces a "CPU" section.
+             *   2. Stripping Socket, Node, Core from every data row.
+             */
+            if (this.PreprocessedText.Contains("Socket | Node | Group | Core | CPU"))
+            {
+                this.PreprocessedText = this.PreprocessedText.Replace(
+                    "Socket | Node | Group | Core | CPU",
+                    $"CPU{Environment.NewLine}Group | CPU");
+
+                this.PreprocessedText = Regex.Replace(
+                    this.PreprocessedText,
+                    @"^\s*(\d+)\s*\|\s*(\d+)\s*\|\s*(\d+)\s*\|\s*(\d+)\s*\|\s*(\d+)\s*\|",
+                    " $3| $5|",
+                    RegexOptions.Multiline);
+            }
+            else if (this.PreprocessedText.Contains("Group"))
             {
                 this.PreprocessedText = this.PreprocessedText.Replace("Group", $"CPU{Environment.NewLine}Group");
             }
