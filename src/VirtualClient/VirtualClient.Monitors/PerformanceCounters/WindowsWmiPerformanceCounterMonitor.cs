@@ -14,14 +14,13 @@ namespace VirtualClient.Monitors
 
     /// <summary>
     /// Monitor captures performance counters from Windows systems using WMI
-    /// (CimSession querying Win32_PerfFormattedData_* classes). Required on
-    /// bare-metal systems with more than 64 logical processors where the legacy
-    /// .NET PerformanceCounter API fails.
+    /// (CimSession querying Win32_PerfFormattedData_* classes). Opt-in alternative
+    /// to the default .NET PerformanceCounter API path.
     /// </summary>
     /// <remarks>
     /// This subclass always uses the WMI provider regardless of the CounterProvider
-    /// parameter or logical processor count. It can be referenced directly in profiles
-    /// as an alternative to setting CounterProvider=WMI on the base class.
+    /// parameter. It can be referenced directly in profiles as an alternative to
+    /// setting CounterProvider=WMI on the base class.
     /// </remarks>
     public class WindowsWmiPerformanceCounterMonitor : WindowsPerformanceCounterMonitor
     {
@@ -37,7 +36,7 @@ namespace VirtualClient.Monitors
         protected override string CounterProviderName => "WMI";
 
         /// <summary>
-        /// Always uses WMI for counter discovery, bypassing the auto-detection logic.
+        /// Always uses WMI for counter discovery.
         /// </summary>
         protected override void LoadCounters(EventContext telemetryContext, CancellationToken cancellationToken)
         {
