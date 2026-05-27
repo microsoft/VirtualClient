@@ -5,15 +5,16 @@
         "SupportedPlatforms": "linux-x64",
         "SupportedOperatingSystems": "Linux",
         "SupportedLinuxGpuModel": "NVIDIA A100",
-        "SupportedLinuxDistros": "Ubuntu20",
+        "SupportedLinuxDistros": "Ubuntu24",
         "SpecialRequirements": "This is an NVIDIA GPU Driver dependency. It can only be installed on the system having an NVIDIA A100 GPU card/chip."
     },
     "Parameters": {
-        "ConfigurationFile": "default.yaml",
         "Username": "",
         "LinuxCudaVersion": "12.0",
+        "OpenSourceDriver": false,
         "LinuxDriverVersion": "525",
-        "LinuxLocalRunFile": "https://developer.download.nvidia.com/compute/cuda/12.0.0/local_installers/cuda_12.0.0_525.60.13_linux.run"
+        "LinuxLocalRunFile": "https://developer.download.nvidia.com/compute/cuda/12.0.0/local_installers/cuda_12.0.0_525.60.13_linux.run",
+        "CudaRequired": true
     },
     "Dependencies": [
         {
@@ -27,9 +28,11 @@
             "Parameters": {
                 "Scenario": "InstallNvidiaCuda",
                 "LinuxCudaVersion": "$.Parameters.LinuxCudaVersion",
+                "OpenSourceDriver": "$.Parameters.OpenSourceDriver",
                 "LinuxDriverVersion": "$.Parameters.LinuxDriverVersion",
                 "Username": "$.Parameters.Username",
-                "LinuxLocalRunFile": "$.Parameters.LinuxLocalRunFile"
+                "LinuxLocalRunFile": "$.Parameters.LinuxLocalRunFile",
+                "CudaRequired": "$.Parameters.CudaRequired"
             }
         },
         {

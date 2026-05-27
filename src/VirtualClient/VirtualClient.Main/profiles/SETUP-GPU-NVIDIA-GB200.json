@@ -9,11 +9,12 @@
         "SpecialRequirements": "This is an NVIDIA GPU Driver dependency. It can only be installed on the system having an NVIDIA GB200 GPU card/chip."
     },
     "Parameters": {
-        "ConfigurationFile": "default.yaml",
         "Username": "",
         "LinuxCudaVersion": "13.1",
+        "OpenSourceDriver": true,
         "LinuxDriverVersion": "590",
-        "LinuxLocalRunFile": "https://developer.download.nvidia.com/compute/cuda/13.1.1/local_installers/cuda_13.1.1_590.48.01_linux_sbsa.run"
+        "LinuxLocalRunFile": "https://developer.download.nvidia.com/compute/cuda/13.1.1/local_installers/cuda_13.1.1_590.48.01_linux_sbsa.run",
+        "CudaRequired": true
     },
     "Dependencies": [
         {
@@ -27,9 +28,11 @@
             "Parameters": {
                 "Scenario": "InstallNvidiaCuda",
                 "LinuxCudaVersion": "$.Parameters.LinuxCudaVersion",
+                "OpenSourceDriver": "$.Parameters.OpenSourceDriver",
                 "LinuxDriverVersion": "$.Parameters.LinuxDriverVersion",
                 "Username": "$.Parameters.Username",
-                "LinuxLocalRunFile": "$.Parameters.LinuxLocalRunFile"
+                "LinuxLocalRunFile": "$.Parameters.LinuxLocalRunFile",
+                "CudaRequired": "$.Parameters.CudaRequired"
             }
         },
         {
