@@ -4,14 +4,14 @@
         "RecommendedMinimumExecutionTime": "00:30:00",
         "SupportedPlatforms": "linux-arm64",
         "SupportedOperatingSystems": "Ubuntu",
-        "SupportedPerformanceLibraries": "23.04.1, 24.10, 25.04.1"
+        "SupportedPerformanceLibraries": "23.04.1, 24.10, 25.04.1, 26.01.1"
     },
     "Parameters": {
         "CompilerVersion": null,
         "ProblemSizeN": null,
         "BlockSizeNB": "256",
         "NumberOfProcesses": "{LogicalCoreCount}",
-        "PerformanceLibraryVersion": "25.04.1",
+        "PerformanceLibraryVersion": "26.01.1",
         "BindToCores": false,
         "CCFLAGS": "-O3 -march=armv8-a"
     },

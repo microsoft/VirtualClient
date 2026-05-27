@@ -151,7 +151,7 @@ This profile runs HPLinpack workload with ARM performance libraries.
   | CompilerVersion           | Version of the GCC compiler to use.                                                | Default version of GCC for the Linux distro. |
   | CCFLAGS                   | GCC compiler flags                                                                 | -O3 -march=armv8-a  |
   | NumberOfProcesses         | The number of processes to launch in parallel.                                     |  # logical processors |
-  | PerformanceLibraryVersion | The version of the performance libraries you would like to use. Supported versions for ARM include: 23.04.1, 24.10, 25.04.1 | 25.04.1  |
+  | PerformanceLibraryVersion | The version of the performance libraries you would like to use. Supported versions for ARM include: 23.04.1, 24.10, 25.04.1, 26.01.1 | 26.01.1  |
   | ProblemSizeN              | The order of coefficient matrix of set of linear equations that we want to solve   | Calculated to use approximately 80% of available memory on the system. |
   
 * **Profile Runtimes**  
@@ -170,7 +170,7 @@ This profile runs HPLinpack workload with ARM performance libraries.
   ./VirtualClient --profile=PERF-CPU-HPLINPACK-ARM.json --system=Demo" --parameters="CompilerVersion=11,,,CCFLAGS=-O2 -flto -march=armv8.2-a"
 
   # Execute the workload profile with a specific version of the ARM performance libraries
-  ./VirtualClient --profile=PERF-CPU-HPLINPACK-ARM.json --system=Demo --parameters="PerformanceLibraryVersion=25.04.1"
+  ./VirtualClient --profile=PERF-CPU-HPLINPACK-ARM.json --system=Demo --parameters="PerformanceLibraryVersion=26.01.1"
   ```
 
 ## PERF-CPU-HPLINPACK-INTEL.json
