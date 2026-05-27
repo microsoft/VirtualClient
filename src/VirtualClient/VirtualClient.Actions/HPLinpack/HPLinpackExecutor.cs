@@ -369,8 +369,11 @@ namespace VirtualClient.Actions
                     case "25.04.1":
                         this.hplArmPerfLibrary = "arm-performance-libraries_25.04.1.sh";
                         break;
+                    case "26.01.1":
+                        this.hplArmPerfLibrary = "arm-performance-libraries_26.01.1.sh";
+                        break;
                     default:
-                        throw new WorkloadException($"The HPL workload currently only supports versions 23.04.1, 24.10 and 25.04.1 of the ARM performance libraries");
+                        throw new WorkloadException($"The HPL workload currently only supports versions 23.04.1, 24.10, 25.04.1 and 26.01.1 of the ARM performance libraries");
                 }
 
                 this.armPerfLibrariesPath = this.Combine(this.PerformanceLibraryPackagePath, "linux-arm64");
@@ -460,9 +463,12 @@ namespace VirtualClient.Actions
                     case "25.04.1":
                         await this.fileSystem.File.ReplaceInFileAsync(makeFilePath, @"LAlib *= *[^\n]*", "LAlib = /opt/arm/armpl_25.04.1_gcc/lib/libarmpl.a", cancellationToken);
                         break;
+                    case "26.01.1":
+                        await this.fileSystem.File.ReplaceInFileAsync(makeFilePath, @"LAlib *= *[^\n]*", "LAlib = /opt/arm/armpl_26.01.1_gcc/lib/libarmpl.a", cancellationToken);
+                        break;
                     default:
                         throw new WorkloadException(
-                            $"The HPL workload is currently only supports the perf libraries versions 23.04.1, 24.10 and 25.04.1 on the following platform/architectures: " +
+                            $"The HPL workload is currently only supports the perf libraries versions 23.04.1, 24.10, 25.04.1 and 26.01.1 on the following platform/architectures: " +
                             $"'{PlatformSpecifics.LinuxArm64}'.",
                             ErrorReason.PlatformNotSupported);
                 }
