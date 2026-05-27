@@ -73,9 +73,10 @@ namespace VirtualClient.Monitors
 
         /// <summary>
         /// Defines the counter provider to use. Supported values: "Default" and "WMI".
-        /// When set to "Default", the monitor auto-selects WMI on systems with more than
-        /// 64 logical processors where the legacy .NET PerformanceCounter API fails.
-        /// When set to "WMI", the WMI provider is always used regardless of LP count.
+        /// When set to "Default" (or any value other than "WMI"), the .NET PerformanceCounter
+        /// API is used. When set to "WMI", the WMI provider is used. The provider is selected
+        /// strictly from this parameter; the monitor does not infer a provider from system
+        /// characteristics such as logical processor count.
         /// </summary>
         public string CounterProvider
         {
@@ -91,21 +92,14 @@ namespace VirtualClient.Monitors
         protected virtual string CounterProviderName => this.UseWmiProvider ? "WMI" : ".NET SDK";
 
         /// <summary>
-        /// Returns true when the WMI provider should be used, based on the CounterProvider
-        /// parameter and the system's logical processor count.
+        /// Returns true only when the <see cref="CounterProvider"/> parameter is explicitly
+        /// set to "WMI". No implicit/automatic selection is performed.
         /// </summary>
         protected bool UseWmiProvider
         {
             get
             {
-                if (string.Equals(this.CounterProvider, "WMI", StringComparison.OrdinalIgnoreCase))
-                {
-                    return true;
-                }
-
-                // Auto-select WMI when the system has >64 logical processors.
-                // The legacy .NET PerformanceCounter API fails on these systems.
-                return Environment.ProcessorCount > 64;
+                return string.Equals(this.CounterProvider, "WMI", StringComparison.OrdinalIgnoreCase);
             }
         }
 
