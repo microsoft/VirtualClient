@@ -38,6 +38,7 @@ namespace VirtualClient.Dependencies
 
         private const string UpgradeCommand = "apt upgrade -y";
         private const string InstallDriverCommand = "apt install nvidia-driver-550-server nvidia-dkms-550-server -y";
+        private const string InstallOpenSourceDriverCommand = "apt install nvidia-driver-550-open nvidia-dkms-550-open -y";
         private const string InstallFabricManagerCommand = "apt install cuda-drivers-fabricmanager-550 -y";
 
         private MockFixture fixture;
@@ -72,6 +73,25 @@ namespace VirtualClient.Dependencies
 
             WorkloadException exc = Assert.ThrowsAsync<WorkloadException>(() => this.component.ExecuteAsync(CancellationToken.None));
             Assert.AreEqual(ErrorReason.LinuxDistributionNotSupported, exc.Reason);
+        }
+
+        [Test]
+        public async Task CUDAAndNvidiaGPUDriverInstallationDependencyStartsCorrectProcessesOnExecuteWithOpenSourceDriver()
+        {
+            this.SetupDefaultMockBehavior(PlatformID.Unix, openSourceDriver: true);
+
+            this.SetupProcessManager("sudo", UpdateCommand, Environment.CurrentDirectory);
+            this.SetupProcessManager("sudo", BuildEssentialInstallationCommand, Environment.CurrentDirectory);
+            this.SetupProcessManager("sudo", GetRunFileCommand, Environment.CurrentDirectory);
+            this.SetupProcessManager("sudo", RunRunFileCommand, Environment.CurrentDirectory);
+            this.SetupProcessManager("sudo", ExportPathCommand, Environment.CurrentDirectory);
+            this.SetupProcessManager("sudo", ExportLibraryPathCommand, Environment.CurrentDirectory);
+            this.SetupProcessManager("sudo", UpgradeCommand, Environment.CurrentDirectory);
+            this.SetupProcessManager("sudo", InstallOpenSourceDriverCommand, Environment.CurrentDirectory);
+
+            await this.component.ExecuteAsync(CancellationToken.None);
+
+            this.mockProcessManager.Verify();
         }
 
         [Test]
@@ -153,7 +173,7 @@ namespace VirtualClient.Dependencies
             this.mockProcessManager.Verify();                            
         }
 
-        private void SetupDefaultMockBehavior(PlatformID platformID)
+        private void SetupDefaultMockBehavior(PlatformID platformID, bool openSourceDriver = false, bool cudaRequired = true)
         {
             this.fixture.Setup(platformID);
             this.mockPackage = new DependencyPath("NvidiaDrivers", this.fixture.GetPackagePath("NvidiaDrivers"));
@@ -166,6 +186,8 @@ namespace VirtualClient.Dependencies
                 { "LinuxDriverVersion", "550" },
                 { "Username", "anyuser" },
                 { "LinuxLocalRunFile", "https://developer.download.nvidia.com/compute/cuda/12.4.0/local_installers/cuda_12.4.0_550.54.14_linux.run" },
+                { "OpenSourceDriver", openSourceDriver },
+                { "CudaRequired", cudaRequired },
                 { "RebootRequired", false }
             };
 
