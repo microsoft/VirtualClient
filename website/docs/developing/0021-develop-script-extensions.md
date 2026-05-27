@@ -42,17 +42,17 @@ a script on the command line, the full script command should be surrounded in qu
 # e.g.
 # Windows Examples
 # Scripts can be referenced directly on the command line.
-VirtualClient.exe "pwsh C:\Users\AnyUser\VirtualClient\content\win-arm64\packages\custom_scripts.1.0.0\Invoke-FirmwareUpdate.ps1 -LogDirectory C:\Users\AnyUser\VirtualClient\content\win-arm64\logs\firmware_updates"
+VirtualClient.exe --command="pwsh C:\Users\AnyUser\VirtualClient\content\win-arm64\packages\custom_scripts.1.0.0\Invoke-FirmwareUpdate.ps1 -LogDirectory C:\Users\AnyUser\VirtualClient\content\win-arm64\logs\firmware_updates"
 
 # Relative paths can be used as well and are relative to the Virtual Client application.
-VirtualClient.exe "pwsh .\packages\custom_scripts.1.0.0\Invoke-FirmwareUpdate.ps1 -LogDirectory .\logs\firmware_updates"
+VirtualClient.exe --command="pwsh .\packages\custom_scripts.1.0.0\Invoke-FirmwareUpdate.ps1 -LogDirectory .\logs\firmware_updates"
 
 # e.g.
 # Linux Examples
-VirtualClient "python C:\Users\AnyUser\VirtualClient\content\win-arm64\packages\custom_scripts.1.0.0\update_firmware.py --log-directory=/home/anyuser/VirtualClient/content/linux-arm64/logs/firmware_updates"
+VirtualClient --command="python C:\Users\AnyUser\VirtualClient\content\win-arm64\packages\custom_scripts.1.0.0\update_firmware.py --log-directory=/home/anyuser/VirtualClient/content/linux-arm64/logs/firmware_updates"
 
 # Relative paths...
-VirtualClient "python ./packages/custom_scripts.1.0.0/update_firmware.py --log-directory=./logs/firmware_updates"
+VirtualClient --command="python ./packages/custom_scripts.1.0.0/update_firmware.py --log-directory=./logs/firmware_updates"
 ```
 
 Your scripts do not really even need to write log files. Virtual Client allows the user to request the output of any script or toolset ran from the command line
@@ -60,10 +60,10 @@ to be written to file by simply including the ```--log-to-file``` flag on the co
 
 ``` bash
 # Windows Examples
-VirtualClient.exe "pwsh .\packages\custom_scripts.1.0.0\Invoke-FirmwareUpdate.ps1 -LogDirectory .\logs\firmware_updates" --log-to-file
+VirtualClient.exe --command="pwsh .\packages\custom_scripts.1.0.0\Invoke-FirmwareUpdate.ps1 -LogDirectory .\logs\firmware_updates" --log-to-file
 
 # Linux Examples
-VirtualClient "python ./packages/custom_scripts.1.0.0/update_firmware.py --log-directory=./logs/firmware_updates" --log-to-file
+VirtualClient --command="python ./packages/custom_scripts.1.0.0/update_firmware.py --log-directory=./logs/firmware_updates" --log-to-file
 ```
 
 ## Script Extensions Design Principles

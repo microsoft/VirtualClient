@@ -28,7 +28,7 @@ directory.
 # Note that the "./packages" and "./logs" paths are relative to the Virtual Client executable/application directory.
 # Also note that any forward-slashes in the paths are handled as backslashes on Windows systems. The use of forward-slashes
 # is merely for consistency (in look and feel) across platforms on the command line.
-C:\Users\AnyUser\VirtualClient\win-x64> VirtualClient.exe "./packages/custom-scripts.1.0.0/execute_openssl.py --log-dir ../logs/openssl_test"
+C:\Users\AnyUser\VirtualClient\win-x64> VirtualClient.exe --command="./packages/custom-scripts.1.0.0/execute_openssl.py --log-dir ../logs/openssl_test" --log-to-file
 
 # Linux Examples
 # ---------------------------
