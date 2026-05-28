@@ -1,0 +1,19 @@
+DATA = $(shell date '+%Y%m%d')
+
+all: $(DATA).bwtest $(DATA).bwtest.dbg perfrunner
+
+perfrunner: 
+	cp $(DATA).bwtest perfrunner
+
+$(DATA).bwtest: clean Streams.cpp
+	g++ -DLINUX -o $(DATA).bwtest Streams.cpp read.s readq.s copy.s copyq.s scale.s scaleq.s add.s addq.s triad.s triadq.s write.s writeq.s ptr_lat.s rw.s rrw.s read_sve.s write_sve.s copy_sve.s scale_sve.s add_sve.s triad_sve.s ptr_rmw.s -Wall -O2 -march=armv8-a+sve -lnuma
+
+$(DATA).bwtest.dbg: Streams.cpp
+	g++ -DLINUX -o $(DATA).bwtest.dbg Streams.cpp read.s readq.s copy.s copyq.s scale.s scaleq.s add.s addq.s triad.s triadq.s write.s writeq.s ptr_lat.s rw.s rrw.s read_sve.s write_sve.s copy_sve.s scale_sve.s add_sve.s triad_sve.s ptr_rmw.s -Wall -O0 -g -march=armv8-a+sve -lnuma
+
+$(DATA).bwtest.hlm: Streams.cpp
+	g++ -DLINUX -DHLM -D__aarch64__ -o $(DATA).bwtest.hlm Streams.cpp read.s readq.s copy.s copyq.s scale.s scaleq.s add.s addq.s triad.s triadq.s write.s writeq.s ptr_lat.s rw.s rrw.s read_sve.s write_sve.s copy_sve.s scale_sve.s add_sve.s triad_sve.s ptr_rmw.s -Wall -O2 -static -march=armv8-a+sve -lnuma
+
+clean: 
+	rm -f *.bwtest *.dbg *.hlm perfrunner
+

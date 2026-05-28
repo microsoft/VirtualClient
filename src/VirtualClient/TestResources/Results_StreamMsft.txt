@@ -1,0 +1,18 @@
+Read and write vector size is 64.0 MB
+Scale and Copy vector size is 128.0 MB
+Triad and Add vector size is 192.0 MB
+Test executed with 1 cores
+Latency Array size is 32.000 MB per core so total size is 32.000 MB
+Number of threads is 1
+Loops are using NEON instructions
+Number of latency threads is 1
+Number of Iterations is 6
+Number of Internal Iterations is 1 for BW
+Number of Internal Iterations is 1 for Latency
+Function    Best Rate MB/s
+Read:      144    141    140    113    110    114
+Copy:      277    272    265    117    115    120
+Scale:     275    270    268    118    117    119
+Add:       419    412    407    115    114    116
+Triad:     415    411    405    116    114    116
+Write:     128    126    124    127    125    129

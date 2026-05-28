@@ -1,0 +1,9 @@
+Latency Array size is 32.000 MB per core so total size is 32.000 MB
+Number of threads is 0
+Loops are using NEON instructions
+Number of latency threads is 1
+Number of Iterations is 6
+Number of Internal Iterations is 1 for BW
+Number of Internal Iterations is 1 for Latency
+Function    Best Latency ns
+LATENCY 108.97    108.00    111.43
