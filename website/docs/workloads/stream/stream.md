@@ -26,7 +26,7 @@ The following performance analysis tests are ran as part of the STREAM workload.
 * linux-x64
 * linux-arm64
 
-### MSFT STREAM Parameters (Can't be used by STREAM and STREAMTriad) :
+### MSFT STREAM Parameters:
   --rnd-threads RND_THREADS: Number of total threads to randomize the work.
   --threads THREADS: Number of threads to split the work.
   --lat-threads LAT_THREADS: Number of threads running latency test

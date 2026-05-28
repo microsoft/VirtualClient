@@ -13,7 +13,7 @@ that are available.
 
 ### Workload-Specific Metrics
 
-The following metrics are emitted by the STREAM or STREAMTRIAD (Intel-specialized) workload itself.
+The following metrics are emitted by the STREAM workload itself.
 
 | Metric Name            | Example Value (min) | Example Value (max) | Example Value (avg) | Unit |
 |------------------------|---------------------|---------------------|---------------------|------|
