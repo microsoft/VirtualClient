@@ -72,7 +72,7 @@ Runs a Memory-intensive workload using the STREAM Benchmark to test the bandwidt
   The following section provides a few basic examples of how to use the workload profile. Additional usage examples can be found in the
   'Usage Scenarios/Examples' link at the top.
 
-  <div style="font-size:10pt">
+  <div style={{ fontSize: '10pt' }}>
 
   ``` csharp
   ./VirtualClient --profile=PERF-MEM-STREAM.json --timeout=60 --packageStore="{BlobConnectionString|SAS Uri}"
@@ -106,7 +106,7 @@ maximize the utilization of Intel processors.
   The following section provides a few basic examples of how to use the workload profile. Additional usage examples can be found in the
   'Usage Scenarios/Examples' link at the top.
 
-  <div style="font-size:10pt">
+  <div style={{ fontSize: '10pt' }}>
 
   ``` csharp
   ./VirtualClient --profile=PERF-MEM-STREAMTRIAD.json --timeout=60 --packageStore="{BlobConnectionString|SAS Uri}"
@@ -173,7 +173,7 @@ Note: The default parameters are according to the parameters documentation inord
 [MakeFile](./streammsftmakefile.txt) 
 
 
-  <div style="font-size:10pt">
+  <div style={{ fontSize: '10pt' }}>
 
   ``` csharp
   ./VirtualClient --profile=PERF-MEM-STREAMMSFT.json --timeout=60 --packageStore="{BlobConnectionString|SAS Uri}"
