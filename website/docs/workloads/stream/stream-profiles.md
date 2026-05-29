@@ -1,187 +1,161 @@
-﻿# STREAM Workload Profiles
+# STREAM Workload Profiles
 The following profiles run customer-representative or benchmarking scenarios using the STREAM workload.
 
-* [Getting Started](https://microsoft.github.io/VirtualClient/)
-* [Workload Details](./stream.md)
-* [Workload Packages](https://github.com/microsoft/VirtualClient/blob/main/website/docs/developing/dependency-packages.md)
+* [Workload Details](./stream.md)  
 
------------------------------------------------------------------------
+## PERF-MEM-STREAM.json
+Runs a memory-intensive workload using the STREAM benchmark to test the sustainable memory bandwidth of the system. STREAM measures memory bandwidth 
+using four simple vector kernels (Copy, Scale, Add, and Triad) designed to stress the memory subsystem with minimal dependency on cache.
 
-### Preliminaries
-The profiles below require the ability to download workload packages and dependencies from a package store. In order to download the workload packages, connection 
-information must be supplied on the command line. See the 'Workload Packages' documentation above for details on how that works.
+* [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-MEM-STREAM.json)
 
------------------------------------------------------------------------
-
-### PERF-MEM-STREAM.json
-Runs a Memory-intensive workload using the STREAM Benchmark to test the bandwidth of the Memory. This profile compiles the workload using 'gcc'.
-
-* **OS/Architecture Platforms**
+* **Supported Platform/Architectures**
   * linux-x64
   * linux-arm64
+  * win-x64
+  * win-arm64
 
-* **Supported Operating Systems**
-  * Ubuntu 18
-  * Ubuntu 20
-  * Ubuntu 22
-
-* **Supported Compilers**  
-  The following compilers are supported with the workload for this profile. See profile parameters and usage examples below.
-
-  * GCC Compiler Versions = 8, 9, 10, 11
+* **Supports Disconnected Scenarios**  
+  * No. Internet connection required.
 
 * **Dependencies**  
-  The following dependencies must be met to run this workload profile.
+  The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
+  * Internet connection.
+  * Blob storage account from which the required dependencies package can be downloaded.
+	* https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-MEM-STREAM.json
 
-  * Workload package must exist in the 'packages' directory or connection information for the package store supplied on the command line (see 'Workload Packages' link above).
+  Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
+  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
 
 * **Profile Parameters**  
-  The following parameters can be optionally supplied on the command line to modify the behaviors of the workload. See the 'Usage Scenarios/Examples' above for examples on how to supply parameters to 
-  Virtual Client profiles.
+  The following parameters can be optionally supplied on the command line to modify the behaviors of the workload.
 
-  | Parameter                 | Purpose                                                       |Default                                                                      |
-  |---------------------------|---------------------------------------------------------------|-----------------------------------------------------------------------------|
-  | CompilerVersion           | Not Required. Compiler's Version to install.                  |                                                                           |
-  | CompilerParameters        | Not Required. Parameters use to compile the stream binary.    |-fopenmp -mcmodel=large -D_OPENMP -DNTIMES=5000 -DSTREAM_ARRAY_SIZE=100000000|
+  | Parameter                 | Purpose                                                                         | Default value |
+  |---------------------------|---------------------------------------------------------------------------------|---------------|
+  | CompilerVersion           | Optional. The version of the compiler to use.  | The default version for the OS/distro. |
+  | CompilerParameters        | Optional. Compiler flags used to compile the STREAM binary. | -fopenmp -mcmodel=large -D_OPENMP -DNTIMES=5000 -DSTREAM_ARRAY_SIZE=100000000 |
+  | ThreadCount               | Optional. The number of threads to use for running the benchmark. | # of physical cores |
+  | CommandArgumentsWindows   | Optional. Command-line arguments for the Windows version of STREAM. | -n 50 -s 320000000 |
 
-* **Component/Action Parameters**  
-  The following parameters are available in the profile components/actions.
+* **Profile Runtimes**  
+  See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
+  actions. These timings can be used to determine minimum required runtimes for the Virtual Client in order to get results. These are often estimates based on the
+  number of system cores. 
 
-  | Parameter                 | Purpose                                                                                                                 |Default      |
-  |---------------------------|-------------------------------------------------------------------------------------------------------------------------|-------------|
-  | CompilerVersion           | Not Required. Compiler's Version to install.                                                                            |             |
-  | CompilerParameters        | Not Required. Parameters use to compile the stream binary.                                           |-fopenmp -mcmodel=large -D_OPENMP -DNTIMES=5000 -DSTREAM_ARRAY_SIZE=100000000|
-  | Toolset                   | Defines the STREAM toolset to use. Valid values include: STREAM and STREAMTriad. Note that the STREAMTriad toolset can be used on Intel CPU systems only. | STREAM |
-
-* **Compiler Flags**  
-
-  | Parameter                    | Purpose                                                                                                                                                |
-  |------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
-  | -fopenmp -D_OPENMP           | Using OpenMP for multiple processors.                                                                                                                  |
-  | -DNTIMES                     | Flag DNTIMES is for Stream which defines number of iterations of the workload each iteration takes around 10-50 milliseconds depending on VMSKU.       |
-  | -DSTREAM_ARRAY_SIZE=100000000| Array size used by the Stream.                                                                                                                         |
-  | -mcmodel=large               | It avoids integer overflow while providing array size 100000000.As it uses 64 bit integer instead of default 32 bit integer                            | 
-
-* **Workload Runtimes**  
-  The following timings represent the length of time required to run a single round of tests ran. These timings can be used to determine
-  minimum required runtimes for the Virtual Client in order to get results. These are estimates based on the use of prescribed VM SKUs.
-  It is practical to allow for minimum 1 to 2 hours extra runtime to ensure the tests can complete full test runs.
-  * Expected Runtime  = 10 secs
+  * Recommended Minimum Execution Time = 10 minutes
 
 * **Usage Examples**  
-  The following section provides a few basic examples of how to use the workload profile. Additional usage examples can be found in the
-  'Usage Scenarios/Examples' link at the top.
+  The following section provides a few basic examples of how to use the workload profile.
 
-  <div style={{ fontSize: '10pt' }}>
+  ``` bash
+  # Execute the workload profile
+  ./VirtualClient --profile=PERF-MEM-STREAM.json --system=Azure --timeout=60 --packageStore="{BlobConnectionString|SAS Uri}"
 
-  ``` csharp
-  ./VirtualClient --profile=PERF-MEM-STREAM.json --timeout=60 --packageStore="{BlobConnectionString|SAS Uri}"
+  # Override the compiler version
+  ./VirtualClient --profile=PERF-MEM-STREAM.json --system=Azure --timeout=60 --parameters="CompilerVersion=11" --packageStore="{BlobConnectionString|SAS Uri}"
+
+  # Override the thread count
+  ./VirtualClient --profile=PERF-MEM-STREAM.json --system=Azure --timeout=60 --parameters="ThreadCount=8" --packageStore="{BlobConnectionString|SAS Uri}"
   ```
-  </div>
 
-### PERF-MEM-STREAMTRIAD.json
-Runs a Memory-intensive workload using the STREAM Benchmark to test memory bandwidth. This profile is designed by the Intel team to 
-maximize the utilization of Intel processors.
+## PERF-MEM-STREAMTRIAD.json
+Runs a memory-intensive workload using the Intel-optimized STREAM Triad benchmark to test memory bandwidth. This profile is specifically designed 
+by the Intel team to maximize the utilization of Intel processors. The STREAMTriad toolset focuses on the Triad kernel which is often considered 
+the most representative of real-world memory access patterns.
+
+* [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-MEM-STREAMTRIAD.json)
 
 * **Supported Platform/Architectures**
   * linux-x64
 
-* **Supported Operating Systems**
-  * Ubuntu 18
-  * Ubuntu 20
-  * Ubuntu 22
+* **Supports Disconnected Scenarios**  
+  * No. Internet connection required.
 
 * **Dependencies**  
-  The following dependencies must be met to run this workload profile.
+  The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
+  * Internet connection.
+  * Blob storage account from which the required dependencies package can be downloaded.
+	* https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-MEM-STREAMTRIAD.json
 
-  * Workload package must exist in the 'packages' directory or connection information for the package store supplied on the command line (see 'Workload Packages' link above).
+  Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
+  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
 
-* **Workload Runtimes**  
-  The following timings represent the length of time required to run a single round of tests ran. These timings can be used to determine
-  minimum required runtimes for the Virtual Client in order to get results. These are estimates based on the use of prescribed VM SKUs.
-  It is practical to allow for minimum 1 to 2 hours extra runtime to ensure the tests can complete full test runs.
-  * Expected Runtime  = 10 secs
+* **Profile Parameters**  
+  The following parameters can be optionally supplied on the command line to modify the behaviors of the workload.
+
+  | Parameter                 | Purpose                                                                         | Default value |
+  |---------------------------|---------------------------------------------------------------------------------|---------------|
+  | ThreadCount               | Optional. The number of threads to use for running the benchmark. | # of physical cores |
+
+* **Profile Runtimes**  
+  See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
+  actions. These timings can be used to determine minimum required runtimes for the Virtual Client in order to get results. These are often estimates based on the
+  number of system cores. 
+
+  * Recommended Minimum Execution Time = 10 minutes
 
 * **Usage Examples**  
-  The following section provides a few basic examples of how to use the workload profile. Additional usage examples can be found in the
-  'Usage Scenarios/Examples' link at the top.
+  The following section provides a few basic examples of how to use the workload profile.
 
-  <div style={{ fontSize: '10pt' }}>
+  ``` bash
+  # Execute the workload profile
+  ./VirtualClient --profile=PERF-MEM-STREAMTRIAD.json --system=Azure --timeout=60 --packageStore="{BlobConnectionString|SAS Uri}"
 
-  ``` csharp
-  ./VirtualClient --profile=PERF-MEM-STREAMTRIAD.json --timeout=60 --packageStore="{BlobConnectionString|SAS Uri}"
+  # Override the thread count
+  ./VirtualClient --profile=PERF-MEM-STREAMTRIAD.json --system=Azure --timeout=60 --parameters="ThreadCount=16" --packageStore="{BlobConnectionString|SAS Uri}"
   ```
-  </div>
 
-### PERF-MEM-STREAMMSFT.json
-Runs a Memory-intensive workload using the STREAM Benchmark to test memory bandwidth. This profile is designed by Microsoft team to maximize the performance of 1P programs.
+## PERF-MEM-STREAMMSFT.json
+Runs a memory-intensive workload using Microsoft's optimized STREAM implementation to test memory bandwidth. This profile is specifically designed 
+by the Microsoft team to provide additional metrics including detailed latency measurements and support for ARM64 architectures. The implementation 
+includes additional memory operations (Read and Write) beyond the standard STREAM kernels.
+
+* [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-MEM-STREAMMSFT.json)
 
 * **Supported Platform/Architectures**
   * linux-arm64
 
-* **Supported Operating Systems**
-  * Ubuntu 18
-  * Ubuntu 20
-  * Ubuntu 22
-
-* **Supported Compilers**  
-  The following compilers are supported with the workload for this profile. See profile parameters and usage examples below.
-
-  * G++ Compiler Versions = 8, 9, 10, 11
+* **Supports Disconnected Scenarios**  
+  * No. Internet connection required.
 
 * **Dependencies**  
-  The following dependencies must be met to run this workload profile.
+  The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
+  * Internet connection.
+  * Blob storage account from which the required dependencies package can be downloaded.
+	* https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-MEM-STREAMMSFT.json
 
-  * Workload package must exist in the 'packages' directory or connection information for the package store supplied on the command line (see 'Workload Packages' link above).
+  Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
+  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
 
-* **Workload Runtimes**  
-  The following timings represent the length of time required to run a single round of tests ran. These timings can be used to determine
-  minimum required runtimes for the Virtual Client in order to get results. These are estimates based on the use of prescribed VM SKUs.
-  It is practical to allow for minimum 1 to 2 hours extra runtime to ensure the tests can complete full test runs.
-  * Expected Runtime  = 10 secs
+* **Profile Parameters**  
+  The following parameters can be optionally supplied on the command line to modify the behaviors of the workload.
+
+  | Parameter                 | Purpose                                                                         | Default value |
+  |---------------------------|---------------------------------------------------------------------------------|---------------|
+  | CompilerVersion           | Optional. The version of the compiler to use.  | The default version for the OS/distro. |
+  | CommandLineParameters     | Optional. Command-line arguments for the STREAMMSFT benchmark. | --internal-iter 1000 --internal-iter-lat 1000 |
+  | ThreadCount               | Optional. The number of threads to use for running the benchmark. | # of physical cores |
+
+* **Profile Runtimes**  
+  See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
+  actions. These timings can be used to determine minimum required runtimes for the Virtual Client in order to get results. These are often estimates based on the
+  number of system cores. 
+
+  * Recommended Minimum Execution Time = 10 minutes
 
 * **Usage Examples**  
-  The following section provides a few basic examples of how to use the workload profile. Additional usage examples can be found in the
-  'Usage Scenarios/Examples' link at the top.
-  
-* **Profile Parameters**  
-  The following parameters can be optionally supplied on the command line to modify the behaviors of the workload. See the 'Usage Scenarios/Examples' above for examples on how to supply parameters to 
-  Virtual Client profiles.
+  The following section provides a few basic examples of how to use the workload profile.
 
-  | Parameter                 | Purpose                                                       |Default                                                                      |
-  |---------------------------|---------------------------------------------------------------|-----------------------------------------------------------------------------|
-  | CompilerName              | Not Required. Compiler used to compile.                       |gcc                                                                          |
-  | CompilerVersion           | Not Required. Compiler's Version to install.                  |10                                                                           |
-  | CommandLineParameters     | Not Required. Parameters to be used in MSFT Stream.    |--internal-iter 1000 --internal-iter-lat 1000|
-  | ThreadCount               | Not Required. Number of threads use to run the workload | No. of Physical Cores. |
+  ``` bash
+  # Execute the workload profile
+  ./VirtualClient --profile=PERF-MEM-STREAMMSFT.json --system=Azure --timeout=60 --packageStore="{BlobConnectionString|SAS Uri}"
 
-* **Component/Action Parameters**  
-  The following parameters are available in the profile components/actions.
+  # Override the compiler version
+  ./VirtualClient --profile=PERF-MEM-STREAMMSFT.json --system=Azure --timeout=60 --parameters="CompilerVersion=11" --packageStore="{BlobConnectionString|SAS Uri}"
 
-  | Parameter                 | Purpose                                                                                                                 |Default      |
-  |---------------------------|-------------------------------------------------------------------------------------------------------------------------|-------------|
-  | CompilerName              | Not Required. Compiler used to compile.                                                                                 |gcc          |
-  | CompilerVersion           | Not Required. Compiler's Version to install.                                                                            |10           |
-  | CommandLineParameters     | Not Required. Parameters to be used in MSFT Stream.                                                                     |--internal-iter 1000 --internal-iter-lat 1000|
-  | ThreadCount               | Not Required. Number of threads use to run the workload                                                                 | No. of Physical Cores. |
-  | Toolset                   | Defines the STREAM toolset to use. Valid values include: STREAM , STREAMTriad and STREAMMsft. Note that the STREAMTriad toolset can be used on Intel CPU systems only. | STREAMMSFT |
-Note: The default parameters are according to the parameters documentation inorder to have stable results.
-[Msft Stream Parameters](./stream.md) 
+  # Override command-line parameters
+  ./VirtualClient --profile=PERF-MEM-STREAMMSFT.json --system=Azure --timeout=60 --parameters="CommandLineParameters='--internal-iter 2000 --internal-iter-lat 2000'" --packageStore="{BlobConnectionString|SAS Uri}"
 
-* **Make file for Msft Stream with**
-
-[MakeFile](./streammsftmakefile.txt) 
-
-
-  <div style={{ fontSize: '10pt' }}>
-
-  ``` csharp
-  ./VirtualClient --profile=PERF-MEM-STREAMMSFT.json --timeout=60 --packageStore="{BlobConnectionString|SAS Uri}"
+  # Override the thread count
+  ./VirtualClient --profile=PERF-MEM-STREAMMSFT.json --system=Azure --timeout=60 --parameters="ThreadCount=32" --packageStore="{BlobConnectionString|SAS Uri}"
   ```
-  </div>
------------------------------------------------------------------------
-
-### Resources
-
-* [Azure VM Sizes](https://docs.microsoft.com/en-us/azure/virtual-machines/sizes)
-* [Azure Managed Disks](https://azure.microsoft.com/en-us/pricing/details/managed-disks/)
