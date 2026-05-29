@@ -2,8 +2,7 @@
 The following profiles run customer-representative or benchmarking scenarios using the STREAM workload.
 
 * [Getting Started](https://microsoft.github.io/VirtualClient/)
-* [Workload Details](./stream.md)  
-* [Workload Profile Metrics](./stream-metrics.md)  
+* [Workload Details](./stream.md)
 * [Workload Packages](https://github.com/microsoft/VirtualClient/blob/main/website/docs/developing/dependency-packages.md)
 
 -----------------------------------------------------------------------
