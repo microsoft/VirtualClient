@@ -1,0 +1,36 @@
+{
+    "Description": "Stream Performance Workload",
+    "Metadata": {
+        "DocumentationLink": "https://msazure.visualstudio.com/One/_git/CRC-AIR-Workloads?version=GBmaster&path=/docs/workloads",
+        "RecommendedMinimumExecutionTime": "00:10:00",
+        "SupportedPlatforms": "linux-x64",
+        "SupportedOperatingSystems": "Ubuntu",
+        "SupportedValuesOfToolset": "STREAM,STREAMTriad,STREAMMsft"
+    },
+    "Parameters": {
+        "ThreadCount": "{PhysicalCoreCount}"
+    },
+    "Actions": [
+        {
+            "Type": "StreamExecutor",
+            "Parameters": {
+                "Scenario": "STREAM-Triad",
+                "Toolset": "STREAMTriad",
+                "PackageName": "stream",
+                "ThreadCount": "$.Parameters.ThreadCount"
+            }
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallStreamPackage",
+                "BlobContainer": "packages",
+                "BlobName": "stream.1.0.0-1.zip",
+                "PackageName": "stream",
+                "Extract": true
+            }
+        }
+    ]
+}
