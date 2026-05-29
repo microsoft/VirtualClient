@@ -1,19 +1,4 @@
-﻿# STREAM Workload Metrics
-
-The following document illustrates the type of results that are emitted by the STREAM workload and captured by the
-Virtual Client for net impact analysis.
-
-### System Metrics
-Different metrics are captured from the system depending upon which monitor profiles are used. If a monitor profile is not
-defined, the default MONITORS-DEFAULT.json profile is used. See the following documentation to determine monitor profiles
-that are available.
-
-* [Monitor Profiles](https://github.com/microsoft/VirtualClient/blob/main/website/docs/monitors/monitor-profiles.md)
-* [Monitor Profiles (internal only)](../../monitors/monitor-profiles.md)
-
-### Workload-Specific Metrics
-
-The following metrics are emitted by the STREAM or STREAMTRIAD (Intel-specialized) workload itself.
+﻿The following metrics are emitted by the STREAM or STREAMTRIAD (Intel-specialized) workload itself.
 
 | Metric Name            | Example Value (min) | Example Value (max) | Example Value (avg) | Unit |
 |------------------------|---------------------|---------------------|---------------------|------|

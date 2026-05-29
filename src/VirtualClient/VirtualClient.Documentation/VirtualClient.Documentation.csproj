@@ -19,6 +19,7 @@
     <ItemGroup>
       <Content Remove="..\..\..\website\docs\workloads\ctstraffic\ctsTrafficUsage.docx" />
       <Content Remove="..\..\..\website\docs\workloads\geekbench\geekbench-metrics.md" />
+      <Content Remove="..\..\..\website\docs\workloads\stream\stream-metrics.md" />
     </ItemGroup>
 
     <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Module.props))\Module.props" />

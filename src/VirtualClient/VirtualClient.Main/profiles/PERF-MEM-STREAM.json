@@ -1,68 +1,68 @@
 {
-  "Description": "STREAM Performance Workload - Sustainable Memory Bandwidth in High Performance Computers Benchmark",
-  "Metadata": {
+    "Description": "STREAM Performance Workload - Sustainable Memory Bandwidth in High Performance Computers Benchmark",
+    "Metadata": {
         "DocumentationLink": "https://msazure.visualstudio.com/One/_git/CRC-AIR-Workloads?version=GBmaster&path=/docs/workloads",
         "RecommendedMinimumExecutionTime": "00:10:00",
         "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64",
         "SupportedOperatingSystems": "Windows,Ubuntu",
         "SupportedValuesOfToolset": "STREAM,STREAMTriad,STREAMMsft"
-  },
-  "Parameters": {
-    "CompilerVersion": "",
-    "CompilerParameters": "-fopenmp -mcmodel=large -D_OPENMP -DNTIMES=5000 -DSTREAM_ARRAY_SIZE=100000000",
-    "ThreadCount": "{PhysicalCoreCount}",
-    "CommandArgumentsWindows": "-n 50 -s 320000000"
-  },
-  "Actions": [
-    {
-      "Type": "StreamExecutor",
-      "Parameters": {
-        "Scenario": "STREAM",
-        "Toolset": "STREAM",
-        "PackageName": "stream",
-        "CompilerParameters": "$.Parameters.CompilerParameters",
-        "ThreadCount": "$.Parameters.ThreadCount",
-        "CommandArgumentsWindows": "$.Parameters.CommandArgumentsWindows"
-      }
-    }
-  ],
-  "Dependencies": [
-    {
-      "Type": "CompilerInstallation",
-      "Parameters": {
-        "Scenario": "InstallCompiler",
-        "SupportedPlatforms": "linux-x64,linux-arm64",
-        "CompilerVersion": "$.Parameters.CompilerVersion"
-      }
     },
-    {
-      "Type": "DependencyPackageInstallation",
-      "Parameters": {
-        "Scenario": "InstallStreamPackage",
-        "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64",
-        "BlobContainer": "packages",
-        "BlobName": "stream.1.0.0-2.zip",
-        "PackageName": "stream",
-        "Extract": true
-      }
+    "Parameters": {
+        "CompilerVersion": "",
+        "CompilerParameters": "-fopenmp -mcmodel=large -D_OPENMP -DNTIMES=5000 -DSTREAM_ARRAY_SIZE=100000000",
+        "ThreadCount": "{PhysicalCoreCount}",
+        "CommandArgumentsWindows": "-n 50 -s 320000000"
     },
-    {
-      "Type": "WgetPackageInstallation",
-      "Parameters": {
-        "Scenario": "Install_Visual_Cpp_Redistributable_x64",
-        "SupportedPlatforms": "win-x64",
-        "PackageName": "visual_c++_redistributable",
-        "PackageUri": "https://aka.ms/vs/17/release/vc_redist.x64.exe"
-      }
-    },
-    {
-      "Type": "WgetPackageInstallation",
-      "Parameters": {
-        "Scenario": "Install_Visual_Cpp_Redistributable_arm64",
-        "SupportedPlatforms": "win-arm64",
-        "PackageName": "visual_c++_redistributable",
-        "PackageUri": "https://aka.ms/vs/17/release/vc_redist.arm64.exe"
-      }
-    }
-  ]
+    "Actions": [
+        {
+            "Type": "StreamExecutor",
+            "Parameters": {
+                "Scenario": "STREAM",
+                "Toolset": "STREAM",
+                "PackageName": "stream",
+                "CompilerParameters": "$.Parameters.CompilerParameters",
+                "ThreadCount": "$.Parameters.ThreadCount",
+                "CommandArgumentsWindows": "$.Parameters.CommandArgumentsWindows"
+            }
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "CompilerInstallation",
+            "Parameters": {
+                "Scenario": "InstallCompiler",
+                "SupportedPlatforms": "linux-x64,linux-arm64",
+                "CompilerVersion": "$.Parameters.CompilerVersion"
+            }
+        },
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallStreamPackage",
+                "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64",
+                "BlobContainer": "packages",
+                "BlobName": "stream.1.0.0-2.zip",
+                "PackageName": "stream",
+                "Extract": true
+            }
+        },
+        {
+            "Type": "WgetPackageInstallation",
+            "Parameters": {
+                "Scenario": "Install_Visual_Cpp_Redistributable_x64",
+                "SupportedPlatforms": "win-x64",
+                "PackageName": "visual_c++_redistributable",
+                "PackageUri": "https://aka.ms/vs/17/release/vc_redist.x64.exe"
+            }
+        },
+        {
+            "Type": "WgetPackageInstallation",
+            "Parameters": {
+                "Scenario": "Install_Visual_Cpp_Redistributable_arm64",
+                "SupportedPlatforms": "win-arm64",
+                "PackageName": "visual_c++_redistributable",
+                "PackageUri": "https://aka.ms/vs/17/release/vc_redist.arm64.exe"
+            }
+        }
+    ]
 }

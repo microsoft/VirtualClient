@@ -54,8 +54,6 @@ Runs a Memory-intensive workload using the STREAM Benchmark to test the bandwidt
   | CompilerParameters        | Not Required. Parameters use to compile the stream binary.                                           |-fopenmp -mcmodel=large -D_OPENMP -DNTIMES=5000 -DSTREAM_ARRAY_SIZE=100000000|
   | Toolset                   | Defines the STREAM toolset to use. Valid values include: STREAM and STREAMTriad. Note that the STREAMTriad toolset can be used on Intel CPU systems only. | STREAM |
 
-
-
 * **Compiler Flags**  
 
   | Parameter                    | Purpose                                                                                                                                                |
