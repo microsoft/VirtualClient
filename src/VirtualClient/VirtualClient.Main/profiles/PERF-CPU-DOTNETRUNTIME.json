@@ -1,0 +1,36 @@
+{
+    "Description": "DotNetRuntime CPU Performance workload",
+    "Parameters": {
+        "NumberOfJvmInstances": "1",
+        "NumberOfWarehouses": "8",
+        "RampUpSeconds": "60",
+        "MeasurementSeconds": "3600",
+        "FixedThroughput": "16000"
+    },
+    "Actions": [
+        {
+            "Type": "DotNetRuntimeExecutor",
+            "Parameters": {
+                "Scenario": "CpuOperationThroughput",
+                "NumberOfJvmInstances": "$.Parameters.NumberOfJvmInstances",
+                "PackageName": "dotnetruntime",
+                "NumberOfWarehouses": "$.Parameters.NumberOfWarehouses",
+                "RampUpSeconds": "$.Parameters.RampUpSeconds",
+                "MeasurementSeconds": "$.Parameters.MeasurementSeconds",
+                "FixedThroughput": "$.Parameters.FixedThroughput"
+            }
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallDotNetRuntimePackage",
+                "BlobContainer": "packages",
+                "BlobName": "dotnetruntime.4.6.27817.3-1.zip",
+                "PackageName": "dotnetruntime",
+                "Extract": true
+            }
+        }
+    ]
+}
