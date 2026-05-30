@@ -1,0 +1,72 @@
+{
+    "Description": "Elasticsearch Rally Workload",
+    "Metadata": {
+        "RecommendedMinimumExecutionTime": "24:00:00",
+        "SupportedPlatforms": "linux-x64,linux-arm64",
+        "SupportedOperatingSystems": "Debian,Ubuntu"
+    },
+    "Parameters": {
+        "DiskFilter": "osdisk:false&biggestsize",
+        "ElasticsearchVersion": "9.2.3",
+        "RallyVersion": "2.12.0",
+        "Port": "9200"
+    },
+    "Actions": [
+        {
+            "Type": "ElasticsearchRallyServerExecutor",
+            "Parameters": {
+                "Scenario": "SetupElasticsearchRallyCluster",
+                "Port": "$.Parameters.Port",
+                "ElasticsearchVersion": "$.Parameters.ElasticsearchVersion",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "PackageName": "elasticsearchrally",
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "ElasticsearchRallyClientExecutor",
+            "Parameters": {
+                "MetricScenario": "ESRally_Race_so_vector_index-and-search",
+                "RallyTrackName": "so_vector",
+                "RallyCommandLineArguments": "--challenge=index-and-search --include-tasks=index-append,knn-search-10-50-match-all",
+                "RallyVersion": "$.Parameters.RallyVersion",
+                "ElasticsearchVersion": "$.Parameters.ElasticsearchVersion",
+                "Port": "$.Parameters.Port",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "Role": "Client"
+            }
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "FormatDisks",
+            "Parameters": {
+                "Scenario": "FormatDisks"
+            },
+            "Role": "Server"
+        },
+        {
+            "Type": "MountDisks",
+            "Parameters": {
+                "Scenario": "CreateMountPoints",
+                "MountLocation": "mnt"
+            },
+            "Role": "Server"
+        },
+        {
+            "Type": "LinuxPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallLinuxPackages",
+                "Packages": "python3,python3-pip,python3-venv,pipx,git,pbzip2",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "ApiServer",
+            "Parameters": {
+                "Scenario": "StartAPIServer",
+                "Role": "Server"
+            }
+        }
+    ]
+}
