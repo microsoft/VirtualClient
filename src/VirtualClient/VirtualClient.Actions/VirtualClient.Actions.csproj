@@ -22,13 +22,14 @@
         <!--
         Scripts/content that needs to be copied into the build output 'scripts' directory.
         -->
-        <ScriptFiles Include="FIO\*.fio" />
-        <ScriptFiles Include="SPECcpu\*.cfg;SPECcpu\*.sh;SPECcpu\*.bat" />
-        <ScriptFiles Include="Lzbench\*.sh" />
-        <ScriptFiles Include="HammerDB\*.sh" />
-        <ScriptFiles Include="SuperBenchmark\*.yaml;SuperBenchmark\*.sh;SuperBenchmark\*.ini" />
-        <ScriptFiles Include="MLPerf\**\*.py" />
+		<ScriptFiles Include="ElasticsearchRally\*.ini" />
+		<ScriptFiles Include="FIO\*.fio" />
+		<ScriptFiles Include="HammerDB\*.sh" />
+		<ScriptFiles Include="Lzbench\*.sh" />
+		<ScriptFiles Include="MLPerf\**\*.py" />
 		<ScriptFiles Include="MLPerf\Makefile.docker" />
+		<ScriptFiles Include="SPECcpu\*.cfg;SPECcpu\*.sh;SPECcpu\*.bat" />
+        <ScriptFiles Include="SuperBenchmark\*.yaml;SuperBenchmark\*.sh;SuperBenchmark\*.ini" />
         <ScriptFiles Include="Wrk\*.sh" />
     </ItemGroup>
 
