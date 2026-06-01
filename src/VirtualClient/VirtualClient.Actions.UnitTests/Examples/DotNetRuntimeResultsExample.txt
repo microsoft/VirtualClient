@@ -1,0 +1,12 @@
+===============================================================================
+TOTALS FOR: COMPANY with 8 warehouses                                   
+........ .NET fixed throughput benchmark 1.0 Results (time in seconds) ........
+                   Count     Total    Min     Max     Avg    Heap Space
+    New Order:   9142643   4568.99   0.000  ******   0.000   total        0.0MB
+      Payment:   6101520   2572.06   0.000  ******   0.000    used        0.0MB
+  OrderStatus:    691503    368.25   0.000  39.781   0.001
+     Delivery:    671169   3068.53   0.000  ******   0.005
+  Stock Level:    671171    693.12   0.000  79.547   0.001
+  Cust Report:   3060386   1945.34   0.000  ******   0.001
+
+           throughput =      11284.51 bops       
