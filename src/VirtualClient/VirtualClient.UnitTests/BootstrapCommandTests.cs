@@ -8,6 +8,7 @@ namespace VirtualClient
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
+    using Moq;
     using NUnit.Framework;
     using VirtualClient.Contracts;
 
@@ -46,7 +47,7 @@ namespace VirtualClient
                 "A Key Vault URI must be provided on the command line (--key-vault) to install a certificate.",
                 error.Message);
 
-            command.KeyVaultStore = new DependencyKeyVaultStore(DependencyStore.KeyVault, new Uri("https://any.vault"));
+            command.KeyVaultStore = "https://any.vault";
             error = Assert.Throws<ArgumentException>(() => command.Validate());
 
             Assert.AreEqual(
@@ -74,7 +75,7 @@ namespace VirtualClient
                 var command = new TestBootstrapCommand
                 {
                     CertificateName = "any-cert",
-                    KeyVaultStore = new DependencyKeyVaultStore(DependencyStore.KeyVault, new Uri("https://any.vault.azure.net")),
+                    KeyVaultStore = "https://any.vault.azure.net",
                     TenantId = Guid.NewGuid().ToString()
                 };
 
@@ -95,7 +96,7 @@ namespace VirtualClient
                 {
                     AccessToken = "anyT@k3n",
                     CertificateName = "any-cert",
-                    KeyVaultStore = new DependencyKeyVaultStore(DependencyStore.KeyVault, new Uri("https://any.vault.azure.net")),
+                    KeyVaultStore = "https://any.vault.azure.net",
                     TenantId = Guid.NewGuid().ToString()
                 };
 
@@ -116,7 +117,7 @@ namespace VirtualClient
                 var command = new TestBootstrapCommand
                 {
                     PackageName = "any-package.zip",
-                    PackageStore = new DependencyBlobStore(DependencyStore.Packages, "https://any.storage"),
+                    PackageStore = "https://any.blob.windows.net",
                     Name = "any-package"
                 };
 
@@ -136,7 +137,7 @@ namespace VirtualClient
                 var command = new TestBootstrapCommand
                 {
                     PackageName = "any-package.zip",
-                    PackageStore = new DependencyBlobStore(DependencyStore.Packages, "https://any.storage"),
+                    PackageStore = "https://any.blob.windows.net",
                     Name = "any-package"
                 };
 

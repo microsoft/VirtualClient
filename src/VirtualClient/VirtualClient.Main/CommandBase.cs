@@ -19,6 +19,7 @@ namespace VirtualClient
     using System.Threading;
     using System.Threading.Tasks;
     using Azure.Messaging.EventHubs.Producer;
+    using Azure.Storage.Blobs.Models;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
@@ -41,7 +42,6 @@ namespace VirtualClient
     /// </summary>
     public abstract class CommandBase
     {
-        private const string defaultPackageStoreUri = "https://packages.virtualclient.microsoft.com";
         private IDictionary<string, IConvertible> pathReplacements;
 
         /// <summary>
@@ -108,9 +108,9 @@ namespace VirtualClient
         public Guid ClientInstance { get; }
 
         /// <summary>
-        /// Describes the target store to which content files/logs should be uploaded.
+        /// Describes the target store/endpoint to which content files/logs should be uploaded.
         /// </summary>
-        public DependencyStore ContentStore { get; set; }
+        public string ContentStore { get; set; }
 
         /// <summary>
         /// Parameter defines the content path format/structure using a template to use when uploading content
@@ -181,7 +181,7 @@ namespace VirtualClient
         /// <summary>
         /// Describes the target Key Vault store where secrets and certificates should be accessed.
         /// </summary>
-        public DependencyStore KeyVaultStore { get; set; }
+        public string KeyVaultStore { get; set; }
 
         /// <summary>
         /// An alternate directory to which write log files. Setting this overrides
@@ -235,9 +235,9 @@ namespace VirtualClient
         public string PackageDirectory { get; set; }
 
         /// <summary>
-        /// Describes the target store from which dependency packages should be downloaded.
+        /// Describes the target store/endpoint from which dependency packages should be downloaded.
         /// </summary>
-        public DependencyStore PackageStore { get; set; }
+        public string PackageStore { get; set; }
 
         /// <summary>
         /// The workload/monitoring profiles to execute (e.g. PERF-CPU-OPENSSL.json).
@@ -338,6 +338,11 @@ namespace VirtualClient
                 if (string.IsNullOrWhiteSpace(this.ExperimentId))
                 {
                     this.ExperimentId = Guid.NewGuid().ToString().ToLowerInvariant();
+                }
+
+                if (string.IsNullOrWhiteSpace(this.PackageStore))
+                {
+                    this.PackageStore = EndpointUtility.DefaultPackageStoreUri;
                 }
 
                 this.Initialize(args, platformSpecifics);
@@ -796,69 +801,23 @@ namespace VirtualClient
             ISystemManagement systemManagement = DependencyFactory.CreateSystemManager(this.ClientId, this.ExperimentId, platformSpecifics, this.ExecutionSystem);
             IApiManager apiManager = new ApiManager(systemManagement.FirewallManager);
             IAuthorizationManager authorizationManager = new AuthorizationManager();
+            ICertificateManager certificateManager = new CertificateManager();
             IProfileManager profileManager = new ProfileManager();
             ISshClientFactory sshClientFactory = new SshClientFactory();
-            List<IBlobManager> blobStores = new List<IBlobManager>();
             ApiClientManager apiClientManager = new ApiClientManager(this.ApiPorts);
 
             // Ensure the core/fundamental directories exist.
             this.CreateCoreDirectories(platformSpecifics, systemManagement.FileSystem);
-
-            // The Virtual Client supports a proxy API interface. When a proxy API is used, all dependencies/blobs will be download
-            // through the proxy endpoint. All content/files will be uploaded through the proxy endpoint. All telemetry will be uploaded
-            // the proxy endpoint (with the exception of file logging which remains as-is). This enables Virtual Client to support disconnected
-            // scenarios where the system on which the Virtual Client is running does not have public internet access but can access a system
-            // on the same local network that has that access (e.g. hardware manufacturing facility scenarios).
-            if (this.ProxyApiUri != null)
-            {
-                X509Certificate2 certificate = null;
-                if (EndpointUtility.TryParseCertificateReference(this.ProxyApiUri, out string issuer, out string subject))
-                {
-                    certificate = this.CertificateManager.GetCertificateFromStoreAsync(issuer, subject).GetAwaiter().GetResult();
-                }
-
-                IConvertible contentSource = null;
-                IConvertible packageSource = null;
-                this.Parameters?.TryGetValue(GlobalParameter.ContestStoreSource, out contentSource);
-                this.Parameters?.TryGetValue(GlobalParameter.PackageStoreSource, out packageSource);
-
-                ILogger debugLogger = DependencyFactory.CreateFileLoggerProvider(platformSpecifics.GetLogsPath("proxy-traces.log"), TimeSpan.FromSeconds(5), LogLevel.Warning)
-                    .CreateLogger("Proxy");
-
-                blobStores.Add(DependencyFactory.CreateProxyBlobManager(new DependencyProxyStore(DependencyBlobStore.Content, this.ProxyApiUri), contentSource?.ToString(), debugLogger, certificate));
-                blobStores.Add(DependencyFactory.CreateProxyBlobManager(new DependencyProxyStore(DependencyBlobStore.Packages, this.ProxyApiUri), packageSource?.ToString(), debugLogger, certificate));
-
-                // Enabling ApiClientManager to save Proxy API will allow downstream to access proxy endpoints as required.
-                apiClientManager.GetOrCreateProxyApiClient(Guid.NewGuid().ToString(), this.ProxyApiUri, certificate);
-            }
-            else
-            {
-                if (this.ContentStore != null)
-                {
-                    blobStores.Add(DependencyFactory.CreateBlobManager(this.ContentStore));
-                }
-
-                if (this.PackageStore != null)
-                {
-                    blobStores.Add(DependencyFactory.CreateBlobManager(this.PackageStore));
-                }
-                else
-                {
-                    // Use default public package store if none is defined.
-                    blobStores.Add(DependencyFactory.CreateBlobManager(
-                        EndpointUtility.CreateBlobStoreReference(DependencyStore.Packages, CommandBase.defaultPackageStoreUri, this.CertificateManager)));
-                }
-            }
-
+            
             IServiceCollection dependencies = new ServiceCollection();
             dependencies.AddSingleton<PlatformSpecifics>(platformSpecifics);
             dependencies.AddSingleton<IApiManager>(apiManager);
             dependencies.AddSingleton<IApiClientManager>(apiClientManager);
             dependencies.AddSingleton<IAuthorizationManager>(authorizationManager);
+            dependencies.AddSingleton<ICertificateManager>(certificateManager);
             dependencies.AddSingleton<IConfiguration>(configuration);
             dependencies.AddSingleton<IDiskManager>(systemManagement.DiskManager);
             dependencies.AddSingleton<IExpressionEvaluator>(ProfileExpressionEvaluator.Instance);
-            dependencies.AddSingleton<IEnumerable<IBlobManager>>(blobStores);
             dependencies.AddSingleton<IFileSystem>(systemManagement.FileSystem);
             dependencies.AddSingleton<IFirewallManager>(systemManagement.FirewallManager);
             dependencies.AddSingleton<IPackageManager>(systemManagement.PackageManager);
@@ -868,17 +827,19 @@ namespace VirtualClient
             dependencies.AddSingleton<ISystemInfo>(systemManagement);
             dependencies.AddSingleton<ISystemManagement>(systemManagement);
             dependencies.AddSingleton<ProcessManager>(systemManagement.ProcessManager);
-            
+
+            IEnumerable<IBlobManager> blobStores = this.InitializeBlobStoreManagers(platformSpecifics, apiClientManager, certificateManager);
+            dependencies.AddSingleton<IEnumerable<IBlobManager>>(blobStores);
 
             IList<ILoggerProvider> loggerProviders = this.InitializeLoggerProviders(dependencies, telemetrySource?.ToString());
             ILogger logger = loggerProviders.Any() ? new LoggerFactory(loggerProviders).CreateLogger("VirtualClient") : NullLogger.Instance;
-
             systemManagement.SetLogger(logger);
             dependencies.AddSingleton<ILogger>(logger);
 
             if (this.KeyVaultStore != null)
             {
-                dependencies.AddSingleton<IKeyVaultManager>(DependencyFactory.CreateKeyVaultManager(this.KeyVaultStore));
+                IKeyVaultManager keyVaultManager = DependencyFactory.CreateKeyVaultManager(this.KeyVaultStore, certificateManager);
+                dependencies.AddSingleton<IKeyVaultManager>(keyVaultManager);
             }
 
             // Add in any SSH targets to the dependencies.
@@ -901,6 +862,73 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Creates packages and content store providers.
+        /// </summary>
+        protected virtual IEnumerable<IBlobManager> InitializeBlobStoreManagers(PlatformSpecifics platformSpecifics, ApiClientManager apiClientManager, ICertificateManager certificateManager)
+        {
+            // TODO:
+            // This logic is not in the right place. The initialization of the blob managers should be moved further upstream 
+            // to the OptionFactory in the future. The OptionFactory is responsible for taking the command line options and creating the
+            // appropriate dependency store references. It is additionally easier to test the logic in the option factory.
+            //
+            List<IBlobManager> blobStores = new List<IBlobManager>();
+
+            // The Virtual Client supports a proxy API interface. When a proxy API is used, all dependencies/blobs will be download
+            // through the proxy endpoint. All content/files will be uploaded through the proxy endpoint. All telemetry will be uploaded
+            // the proxy endpoint (with the exception of file logging which remains as-is). This enables Virtual Client to support disconnected
+            // scenarios where the system on which the Virtual Client is running does not have public internet access but can access a system
+            // on the same local network that has that access (e.g. hardware manufacturing facility scenarios).
+            if (this.ProxyApiUri != null)
+            {
+                X509Certificate2 certificate = null;
+                if (EndpointUtility.TryParseCertificateReference(this.ProxyApiUri, out string issuer, out string subject))
+                {
+                    certificate = this.CertificateManager.GetCertificateFromStoreAsync(issuer, subject).GetAwaiter().GetResult();
+                }
+
+                IConvertible contentSource = null;
+                IConvertible packageSource = null;
+                this.Parameters?.TryGetValue(GlobalParameter.ContestStoreSource, out contentSource);
+                this.Parameters?.TryGetValue(GlobalParameter.PackageStoreSource, out packageSource);
+
+                ILogger debugLogger = DependencyFactory.CreateFileLoggerProvider(platformSpecifics.GetLogsPath("proxy-traces.log"), TimeSpan.FromSeconds(5), LogLevel.Warning)
+                    .CreateLogger("Proxy");
+
+                blobStores.Add(DependencyFactory.CreateProxyBlobManager(DependencyBlobStore.Content, this.ProxyApiUri, contentSource?.ToString(), debugLogger, certificate));
+                blobStores.Add(DependencyFactory.CreateProxyBlobManager(DependencyBlobStore.Packages, this.ProxyApiUri, packageSource?.ToString(), debugLogger, certificate));
+
+                // Enabling ApiClientManager to save Proxy API will allow downstream to access proxy endpoints as required.
+                apiClientManager.GetOrCreateProxyApiClient(Guid.NewGuid().ToString(), this.ProxyApiUri, certificate);
+            }
+            else
+            {
+                if (this.ContentStore != null)
+                {
+                    IBlobManager contentBlobManager = DependencyFactory.CreateBlobManager(
+                        DependencyStore.Content, 
+                        this.ContentStore, 
+                        certificateManager, 
+                        platformSpecifics);
+
+                    blobStores.Add(contentBlobManager);
+                }
+
+                if (this.PackageStore != null)
+                {
+                    IBlobManager packageBlobManager = DependencyFactory.CreateBlobManager(
+                        DependencyStore.Packages,
+                        this.PackageStore,
+                        certificateManager,
+                        platformSpecifics);
+
+                    blobStores.Add(packageBlobManager);
+                }
+            }
+
+            return blobStores;
+        }
+
+        /// <summary>
         /// Creates a logger instance based on the specified configuration and loggers.
         /// </summary>
         protected virtual IList<ILoggerProvider> InitializeLoggerProviders(IServiceCollection dependencies, string source = null)
@@ -910,6 +938,7 @@ namespace VirtualClient
             LogLevel loggingLevel = this.LoggingLevel ?? LogLevel.Information;
             PlatformSpecifics platformSpecifics = dependencies.GetService<PlatformSpecifics>();
             IConfiguration configuration = dependencies.GetService<IConfiguration>();
+            ICertificateManager certificateManager = dependencies.GetService<ICertificateManager>();
 
             foreach (string loggerDefinition in loggerDefinitions)
             {
@@ -946,33 +975,11 @@ namespace VirtualClient
                         break;
 
                     case "eventhub":
-                        DependencyEventHubStore store = EndpointUtility.CreateEventHubStoreReference(DependencyStore.Telemetry, endpoint: loggerParameters, this.CertificateManager ?? new CertificateManager());
-
-                        // Supports the use of a Proxy for routing Event Hub traffic. This allows clients to use secure endpoints inside of their network 
-                        // to route traffic to the Event Hub namespace (vs. a direct connection).
-                        // (e.g. http://proxy-dmz.contoso.com:135).
-                        EventHubProducerClientOptions clientOptions = new EventHubProducerClientOptions();
-                        string proxyUri = platformSpecifics.GetEnvironmentVariable(EnvironmentVariable.VC_EVENT_HUB_PROXY);
-
-                        if (!string.IsNullOrWhiteSpace(proxyUri))
-                        {
-                            clientOptions.ConnectionOptions.TransportType = Azure.Messaging.EventHubs.EventHubsTransportType.AmqpWebSockets;
-                            clientOptions.ConnectionOptions.Proxy = new System.Net.WebProxy(new Uri(proxyUri), true);
-
-                            string proxyUsername = platformSpecifics.GetEnvironmentVariable(EnvironmentVariable.VC_EVENT_HUB_PROXY_USERNAME);
-                            string proxyPassword = platformSpecifics.GetEnvironmentVariable(EnvironmentVariable.VC_EVENT_HUB_PROXY_PASSWORD);
-
-                            if (!string.IsNullOrWhiteSpace(proxyUsername) && !string.IsNullOrWhiteSpace(proxyPassword))
-                            {
-                                clientOptions.ConnectionOptions.Proxy.Credentials = new NetworkCredential(proxyUsername, proxyPassword);
-                            }
-                        }
-
-                        CommandBase.AddEventHubLogging(loggingProviders, configuration, store, loggingLevel, clientOptions);
+                        CommandBase.AddEventHubLogging(loggingProviders, loggerParameters, platformSpecifics, certificateManager, configuration, loggingLevel);
                         break;
 
                     case "proxy":
-                        CommandBase.AddProxyApiLogging(loggingProviders, configuration, platformSpecifics, loggerParameters, this.CertificateManager, source);
+                        CommandBase.AddProxyApiLogging(loggingProviders, configuration, platformSpecifics, loggerParameters, certificateManager, source);
                         break;
 
                     case "summary":
@@ -1113,20 +1120,14 @@ namespace VirtualClient
             }
         }
 
-        private static void AddEventHubLogging(List<ILoggerProvider> loggingProviders, IConfiguration configuration, DependencyEventHubStore eventHubStore, LogLevel level, EventHubProducerClientOptions clientOptions = null)
+        private static void AddEventHubLogging(List<ILoggerProvider> loggingProviders, string endpoint, PlatformSpecifics platformSpecifics, ICertificateManager certificateManager, IConfiguration configuration, LogLevel level)
         {
-            if (eventHubStore != null)
-            {
-                EventHubLogSettings settings = configuration.GetSection(nameof(EventHubLogSettings)).Get<EventHubLogSettings>();
+            EventHubLogSettings settings = configuration.GetSection(nameof(EventHubLogSettings)).Get<EventHubLogSettings>();
 
-                if (settings.IsEnabled)
-                {
-                    IEnumerable<ILoggerProvider> eventHubProviders = DependencyFactory.CreateEventHubLoggerProviders(eventHubStore, settings, level, clientOptions: clientOptions);
-                    if (eventHubProviders?.Any() == true)
-                    {
-                        loggingProviders.AddRange(eventHubProviders);
-                    }
-                }
+            if (settings.IsEnabled)
+            {
+                IEnumerable<ILoggerProvider> eventHubProviders = DependencyFactory.CreateEventHubLoggerProviders(endpoint, settings, level, certificateManager, platformSpecifics);
+                loggingProviders.AddRange(eventHubProviders);
             }
         }
 

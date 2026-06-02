@@ -308,7 +308,8 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         /// <param name="certificateManager">Optional parameter defines the certificate manager to use for accessing certificates on the system.</param>
         /// <param name="fileSystem">Optional parameter to use to validate file system paths.</param>
-        public static Option CreateContentStoreOption(bool required = true, object defaultValue = null, ICertificateManager certificateManager = null, IFileSystem fileSystem = null)
+        /// <param name="platformSpecifics">Optional parameter provides platform-specific information.</param>
+        public static Option CreateContentStoreOption(bool required = true, object defaultValue = null, ICertificateManager certificateManager = null, IFileSystem fileSystem = null, PlatformSpecifics platformSpecifics = null)
         {
             // Note:
             // We will be adding support for other cloud stores in the future (e.g. AWS, Google). The logic on the command
@@ -317,13 +318,7 @@ namespace VirtualClient
 
             // Note:
             // Only the first 3 of these will display in help output (i.e. --help).
-            Option<DependencyStore> option = new Option<DependencyStore>(
-                new string[] { "--content", "--content-store" },
-                new ParseArgument<DependencyStore>(result => OptionFactory.ParseBlobStore(
-                    result,
-                    DependencyStore.Content,
-                    certificateManager ?? OptionFactory.defaultCertificateManager,
-                    fileSystem ?? OptionFactory.defaultFileSystem)))
+            Option<string> option = new Option<string>(new string[] { "--content", "--content-store" })
             {
                 Name = "ContentStore",
                 Description = "An endpoint URI or connection string to the Storage Account to which content logs/files can be uploaded.",
@@ -678,13 +673,7 @@ namespace VirtualClient
         /// <param name="fileSystem">Optional parameter to use to validate file system paths.</param>
         public static Option CreateKeyVaultStoreOption(bool required = false, object defaultValue = null, ICertificateManager certificateManager = null, IFileSystem fileSystem = null)
         {
-            Option<DependencyStore> option = new Option<DependencyStore>(
-                new string[] { "--key-vault" },
-                new ParseArgument<DependencyStore>(result => OptionFactory.ParseKeyVaultStore(
-                    result,
-                    DependencyStore.KeyVault,
-                    certificateManager ?? OptionFactory.defaultCertificateManager,
-                    fileSystem ?? OptionFactory.defaultFileSystem)))
+            Option<string> option = new Option<string>(new string[] { "--key-vault" })
             {
                 Name = "KeyVaultStore",
                 Description = "An endpoint URI or connection string to the Key Vault from which secrets and certificates can be accessed.",
@@ -1043,17 +1032,12 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         /// <param name="certificateManager">Optional parameter defines the certificate manager to use for accessing certificates on the system.</param>
         /// <param name="fileSystem">Optional parameter to use to validate file system paths.</param>
-        public static Option CreatePackageStoreOption(bool required = true, object defaultValue = null, ICertificateManager certificateManager = null, IFileSystem fileSystem = null)
+        /// <param name="platformSpecifics">Optional parameter provides platform-specific information.</param>
+        public static Option CreatePackageStoreOption(bool required = true, object defaultValue = null, ICertificateManager certificateManager = null, IFileSystem fileSystem = null, PlatformSpecifics platformSpecifics = null)
         {
             // Note:
             // Only the first 3 of these will display in help output (i.e. --help).
-            Option<DependencyStore> option = new Option<DependencyStore>(
-                new string[] { "--packages", "--package-store" },
-                new ParseArgument<DependencyStore>(result => OptionFactory.ParseBlobStore(
-                    result,
-                    DependencyStore.Packages,
-                    certificateManager ?? OptionFactory.defaultCertificateManager,
-                    fileSystem ?? OptionFactory.defaultFileSystem)))
+            Option<string> option = new Option<string>(new string[] { "--packages", "--package-store" })
             {
                 Name = "PackageStore",
                 Description = "An endpoint URI or connection string to the Storage Account from which dependency packages can be downloaded and installed.",
@@ -1690,42 +1674,6 @@ namespace VirtualClient
             return delimitedValues;
         }
 
-        private static DependencyStore ParseBlobStore(ArgumentResult parsedResult, string storeName, ICertificateManager certificateManager, IFileSystem fileSystem)
-        {
-            DependencyStore store = null;
-            string endpoint = OptionFactory.GetValue(parsedResult);
-
-            if (EndpointUtility.IsFullyQualifiedFilePath(endpoint))
-            {
-                store = new DependencyFileStore(storeName, Path.GetFullPath(endpoint));
-            }
-            else if (EndpointUtility.IsApiKeyUri(endpoint))
-            {
-                store = new DependencyBlobStore(DependencyBlobStore.Packages, new Uri(endpoint));
-            }
-            else
-            {
-                store = EndpointUtility.CreateBlobStoreReference(storeName, endpoint, certificateManager);
-            }
-
-            // If the certificate is not found, the certificate manager will throw and exception. The logic that follows
-            // here would happen if the user provided invalid information that precedes the search for the actual certificate.
-            if (store == null)
-            {
-                throw new SchemaException(
-                    $"The value provided for the Storage Account endpoint is invalid. The value must be one of the following supported identifiers:{Environment.NewLine}" +
-                    $"1) A valid storage account or blob container SAS URI{Environment.NewLine}" +
-                    $"2) A URI with Microsoft Entra ID/App identity information (e.g. using certificate-based authentication){Environment.NewLine}" +
-                    $"3) A URI with Microsoft Azure Managed Identity information{Environment.NewLine}" +
-                    $"4) A directory path that exists on the system.{Environment.NewLine}{Environment.NewLine}{Environment.NewLine}" +
-                    $"See the following documentation for additional details and examples:{Environment.NewLine}" +
-                    $"- https://microsoft.github.io/VirtualClient/docs/guides/0010-command-line/{Environment.NewLine}" +
-                    $"- https://microsoft.github.io/VirtualClient/docs/guides/0600-integration-blob-storage/{Environment.NewLine}");
-            }
-
-            return store;
-        }
-
         private static EnvironmentLayout ParseEnvironmentLayout(ArgumentResult parsedResult, IFileSystem fileSystem, PlatformSpecifics platformSpecifics)
         {
             EnvironmentLayout layout = null;
@@ -1785,28 +1733,6 @@ namespace VirtualClient
             return layout;
         }
 
-        private static DependencyStore ParseKeyVaultStore(ArgumentResult parsedResult, string storeName, ICertificateManager certificateManager, IFileSystem fileSystem)
-        {
-            string endpoint = OptionFactory.GetValue(parsedResult);
-            DependencyStore store = EndpointUtility.CreateKeyVaultStoreReference(storeName, endpoint, certificateManager);
-
-            // If the certificate is not found, the certificate manager will throw and exception. The logic that follows
-            // here would happen if the user provided invalid information that precedes the search for the actual certificate.
-            if (store == null)
-            {
-                throw new SchemaException(
-                    $"The value provided for the Key Vault endpoint is invalid. The value must be one of the following supported identifiers:{Environment.NewLine}" +
-                    $"1) A valid storage account or blob container SAS URI{Environment.NewLine}" +
-                    $"2) A URI with Microsoft Entra ID/App identity information (e.g. using certificate-based authentication){Environment.NewLine}" +
-                    $"3) A URI with Microsoft Azure Managed Identity information{Environment.NewLine}" +
-                    $"4) A directory path that exists on the system.{Environment.NewLine}{Environment.NewLine}{Environment.NewLine}" +
-                    $"See the following documentation for additional details and examples:{Environment.NewLine}" +
-                    $"- https://microsoft.github.io/VirtualClient/docs/guides/0010-command-line/{Environment.NewLine}");
-            }
-
-            return store;
-        }
-
         private static string ParsePath(ArgumentResult arg)
         {
             return OptionFactory.ToFullPath(arg.Tokens?.FirstOrDefault()?.Value?.Trim());
@@ -1828,7 +1754,7 @@ namespace VirtualClient
                     || EndpointUtility.IsCustomConnectionString(profileReference)
                     || EndpointUtility.IsStorageAccountConnectionString(profileReference))
                 {
-                    profiles.Add(EndpointUtility.CreateProfileReference(profileReference, certificateManager));
+                    profiles.Add(DependencyFactory.CreateProfileReference(profileReference, certificateManager));
                 }
                 else
                 {

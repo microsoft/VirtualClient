@@ -22,7 +22,7 @@ namespace VirtualClient.UnitTests
             var command = new TestGetAccessTokenCommand
             {
                 Parameters = null,
-                KeyVaultStore = new DependencyKeyVaultStore(DependencyStore.KeyVault, new Uri("https://myvault.vault.azure.net/")),
+                KeyVaultStore = "https://myvault.vault.azure.net/",
                 TenantId = "00000000-0000-0000-0000-000000000001"
             };
 
@@ -38,7 +38,7 @@ namespace VirtualClient.UnitTests
             var command = new TestGetAccessTokenCommand
             {
                 Parameters = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase),
-                KeyVaultStore = new DependencyKeyVaultStore(DependencyStore.KeyVault, new Uri("https://myvault.vault.azure.net/")),
+                KeyVaultStore = "https://myvault.vault.azure.net/",
                 TenantId = "00000000-0000-0000-0000-000000000001"
             };
 
@@ -53,7 +53,7 @@ namespace VirtualClient.UnitTests
             var command = new TestGetAccessTokenCommand
             {
                 Parameters = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase),
-                KeyVaultStore = new DependencyKeyVaultStore(DependencyStore.KeyVault, new Uri("https://myvault.vault.azure.net/")),
+                KeyVaultStore = "https://myvault.vault.azure.net/",
                 TenantId = "00000000-0000-0000-0000-000000000001"
             };
 

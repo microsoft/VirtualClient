@@ -15,12 +15,6 @@ namespace VirtualClient.Configuration
         public bool IsEnabled { get; set; } = false;
 
         /// <summary>
-        /// The name of the Event Hub where performance counter telemetry
-        /// is written.
-        /// </summary>
-        public string CountersHubName { get; set; }
-
-        /// <summary>
         /// The name of the Event Hub where system event monitoring telemetry
         /// is written.
         /// </summary>
@@ -37,5 +31,19 @@ namespace VirtualClient.Configuration
         /// is written.
         /// </summary>
         public string TracesHubName { get; set; }
+
+        /// <summary>
+        /// The default settings for Virtual Client Event Hubs.
+        /// </summary>
+        public static EventHubLogSettings Default()
+        {
+            return new EventHubLogSettings
+            {
+                IsEnabled = true,
+                EventsHubName = "telemetry-events",
+                MetricsHubName = "telemetry-metrics",
+                TracesHubName = "telemetry-logs"
+            };
+        }
     }
 }

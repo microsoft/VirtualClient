@@ -9,6 +9,7 @@ namespace VirtualClient
     using System.IO;
     using System.Linq;
     using System.Net;
+    using System.Net.Http;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
@@ -24,7 +25,7 @@ namespace VirtualClient
     /// blob store.
     /// </summary>
     [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1118:Parameter should not span multiple lines", Justification = "Some error messages are too long to fit on a single line.")]
-    public class BlobManager : IBlobManager
+    public class BlobManager : IBlobManager, IDisposable
     {
         internal static readonly List<int> RetryableCodes = new List<int>
         {
@@ -42,13 +43,18 @@ namespace VirtualClient
                 || error.Message.Contains("is not the same as any computed signature", StringComparison.CurrentCultureIgnoreCase);
         }).WaitAndRetryAsync(10, (retries) => TimeSpan.FromSeconds(retries + 1));
 
+        private bool disposed;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="BlobManager"/> class.
         /// </summary>
         /// <param name="storeDescription">Provides the store details and requirement for the blob manager.</param>
-        public BlobManager(DependencyBlobStore storeDescription)
+        /// <param name="httpClient">The basic HTTP/REST client to use for downloading/uploading blobs to the Azure storage account.</param>
+        public BlobManager(DependencyBlobStore storeDescription, HttpClient httpClient = null)
         {
             storeDescription.ThrowIfNull(nameof(storeDescription));
+            this.RestClient = httpClient ?? new HttpClient();
+            this.RestClient.Timeout = Timeout.InfiniteTimeSpan;
             this.StoreDescription = storeDescription;
         }
 
@@ -56,6 +62,20 @@ namespace VirtualClient
         /// Represents the store description/details.
         /// </summary>
         public DependencyStore StoreDescription { get; }
+
+        /// <summary>
+        /// Allows for custom/special HTTP headers to be configured on the blob client.
+        /// </summary>
+        internal HttpClient RestClient { get; }
+
+        /// <summary>
+        /// Disposes of resources used by the instance.
+        /// </summary>
+        public void Dispose()
+        {
+            this.Dispose(true);
+            GC.SuppressFinalize(this);  
+        }
 
         /// <inheritdoc />
         public async Task<DependencyDescriptor> DownloadBlobAsync(DependencyDescriptor descriptor, Stream downloadStream, CancellationToken cancellationToken, IAsyncPolicy retryPolicy = null)
@@ -171,25 +191,10 @@ namespace VirtualClient
                     BlobDescriptor blobInfo = new BlobDescriptor(descriptor);
 
                     uploadStream.Position = 0;
-                    BlobRequestConditions uploadConditions = new BlobRequestConditions();
-
-                    if (blobDescriptor.ETag != null)
-                    {
-                        uploadConditions.IfMatch = new ETag(blobDescriptor.ETag);
-                    }
 
                     Response<BlobContentInfo> response = await this.UploadFromStreamAsync(
                         blobDescriptor,
                         uploadStream,
-                        new BlobUploadOptions
-                        {
-                            Conditions = uploadConditions,
-                            HttpHeaders = new BlobHttpHeaders
-                            {
-                                ContentEncoding = blobDescriptor.ContentEncoding.WebName,
-                                ContentType = blobDescriptor.ContentType
-                            }
-                        },
                         cancellationToken,
                         metadata);
 
@@ -290,6 +295,10 @@ namespace VirtualClient
             //    e.g. https://anystorageaccount.blob.core.windows.net/content?sv=2020-08-04&ss=b&srt=c&sp=rwlacx&se=2021-11-23T14:30:18Z&st=2021-11-23T02:19:18Z&spr=https&sig=jcql6El...
 
             BlobContainerClient containerClient = null;
+
+            BlobClientOptions options = new BlobClientOptions();
+            options.Transport = new Azure.Core.Pipeline.HttpClientTransport(this.RestClient);
+
             if (blobStore.EndpointUri != null)
             {
                 Uri containerUri = blobStore.EndpointUri;
@@ -300,18 +309,18 @@ namespace VirtualClient
 
                 if (blobStore.Credentials != null)
                 {
-                    containerClient = new BlobContainerClient(containerUri, blobStore.Credentials);
+                    containerClient = new BlobContainerClient(containerUri, blobStore.Credentials, options);
                 }
                 else
                 {
-                    containerClient = new BlobContainerClient(containerUri);
+                    containerClient = new BlobContainerClient(containerUri, options);
                 }
             }
             else if (!string.IsNullOrWhiteSpace(blobStore.ConnectionString))
             {
                 // The endpoint is either a storage account-level connection string
                 // or a Blob service-level connection string.
-                containerClient = new BlobContainerClient(blobStore.ConnectionString, descriptor.ContainerName.ToLowerInvariant());
+                containerClient = new BlobContainerClient(blobStore.ConnectionString, descriptor.ContainerName.ToLowerInvariant(), options);
             }
 
             if (containerClient == null)
@@ -323,6 +332,21 @@ namespace VirtualClient
             }
 
             return containerClient;
+        }
+
+        /// <summary>
+        /// Disposes of resources used by the instance.
+        /// </summary>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                if (!this.disposed)
+                {
+                    this.RestClient.Dispose();
+                    this.disposed = true;
+                }
+            }
         }
 
         /// <summary>
@@ -340,7 +364,7 @@ namespace VirtualClient
         /// <summary>
         /// Uploads the blob from the stream provided.
         /// </summary>
-        protected virtual async Task<Response<BlobContentInfo>> UploadFromStreamAsync(BlobDescriptor descriptor, Stream stream, BlobUploadOptions uploadOptions, CancellationToken cancellationToken, IDictionary<string, IConvertible> metadata = null)
+        protected virtual async Task<Response<BlobContentInfo>> UploadFromStreamAsync(BlobDescriptor descriptor, Stream stream, CancellationToken cancellationToken, IDictionary<string, IConvertible> metadata = null)
         {
             DependencyBlobStore blobStore = this.StoreDescription as DependencyBlobStore;
             BlobContainerClient containerClient = this.CreateContainerClient(descriptor, blobStore);
@@ -357,6 +381,23 @@ namespace VirtualClient
             {
                 // Do nothing if identity doesn't have container access.
             }
+
+            var uploadConditions = new BlobRequestConditions();
+
+            if (descriptor.ETag != null)
+            {
+                uploadConditions.IfMatch = new ETag(descriptor.ETag);
+            }
+
+            var uploadOptions = new BlobUploadOptions
+            {
+                Conditions = uploadConditions,
+                HttpHeaders = new BlobHttpHeaders
+                {
+                    ContentEncoding = descriptor.ContentEncoding?.WebName,
+                    ContentType = descriptor.ContentType
+                }
+            };
 
             Response<BlobContentInfo> response = await blobClient.UploadAsync(stream, uploadOptions, cancellationToken);
 

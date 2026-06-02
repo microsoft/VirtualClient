@@ -181,12 +181,12 @@ namespace VirtualClient
                 for (int i = 0; i < parallelism; i++)
                 {
                     string installationPath = Path.Combine(this.packagesDirectory, $"installation_{i}");
-                    DependencyBlobStore blobStore = EndpointUtility.CreateBlobStoreReference(
+                    IBlobManager blobManager = DependencyFactory.CreateBlobManager(
                         DependencyStore.Packages,
                         connection,
-                        new CertificateManager());
+                        new CertificateManager(),
+                        platformSpecifics);
 
-                    IBlobManager blobManager = DependencyFactory.CreateBlobManager(blobStore);
                     packageManagers.Add(new Tuple<IPackageManager, IBlobManager, string>(
                         new PackageManager(platformSpecifics, new FileSystem()),
                         blobManager,
@@ -258,12 +258,12 @@ namespace VirtualClient
 
                 for (int i = 0; i < parallelism; i++)
                 {
-                    DependencyBlobStore blobStore = EndpointUtility.CreateBlobStoreReference(
-                        DependencyStore.Packages,
-                        connection,
-                        new CertificateManager());
+                    IBlobManager blobManager = DependencyFactory.CreateBlobManager(
+                        DependencyStore.Packages, 
+                        connection, 
+                        new CertificateManager(), 
+                        platformSpecifics);
 
-                    IBlobManager blobManager = DependencyFactory.CreateBlobManager(blobStore);
                     packageManagers.Add(new Tuple<IPackageManager, IBlobManager>(
                         new IsolatedPackageManager(new PackageManager(platformSpecifics, new FileSystem())),
                         blobManager));

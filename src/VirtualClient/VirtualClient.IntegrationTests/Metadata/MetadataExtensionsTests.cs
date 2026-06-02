@@ -19,6 +19,7 @@ namespace VirtualClient.Metadata
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
     using VirtualClient.Contracts.Metadata;
+    using VirtualClient.Identity;
     using VirtualClient.Logging;
 
     [TestFixture]
@@ -45,14 +46,6 @@ namespace VirtualClient.Metadata
         [Test]
         public void MetadataContractTelemetryExample()
         {
-            // NOTE:
-            // Make sure to set the Event Hubs access policy in the environment variable as noted above.
-            EventHubTelemetryChannel channel = DependencyFactory.CreateEventHubTelemetryChannel(
-                this.eventHubAccessPolicy,
-                "telemetry-logs");
-
-            EventHubTelemetryLogger logger = new EventHubTelemetryLogger(channel, LogLevel.Trace);
-
             string experimentId = Guid.NewGuid().ToString();
             string profile = "DOES-NOT-EXIST-INTEGRATION-TEST-3.json";
             string platformArchitecture = PlatformSpecifics.GetPlatformArchitectureName(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture);
@@ -61,6 +54,16 @@ namespace VirtualClient.Metadata
                 Environment.MachineName,
                 experimentId,
                 new PlatformSpecifics(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture));
+
+            // NOTE:
+            // Make sure to set the Event Hubs access policy in the environment variable as noted above.
+            EventHubTelemetryChannel channel = DependencyFactory.CreateEventHubTelemetryChannel(
+                this.eventHubAccessPolicy,
+                "telemetry-logs",
+                new CertificateManager(),
+                systemManagement.PlatformSpecifics);
+
+            EventHubTelemetryLogger logger = new EventHubTelemetryLogger(channel, LogLevel.Trace);
 
             // Persisted properties and metadata contracts are applied to the telemetry output
             // by the Virtual Client. The properties within are included in the custom dimensions

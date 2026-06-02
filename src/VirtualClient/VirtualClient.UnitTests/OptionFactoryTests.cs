@@ -513,13 +513,6 @@ namespace VirtualClient
         }
 
         [Test]
-        public void ContentStoreOptionValidatesTheConnectionTokenProvided()
-        {
-            Option option = OptionFactory.CreateContentStoreOption();
-            Assert.Throws<SchemaException>(() => option.Parse($"--content-store=NotAValidConnectionStringOrSasTokenUri"));
-        }
-
-        [Test]
         [TestCase("--content-path-template")]
         [TestCase("--content-path")]
         public void ContentPathTemplateOptionSupportsExpectedAliases(string alias)
@@ -1267,37 +1260,6 @@ namespace VirtualClient
             ParseResult result = option.Parse($"--package-store={uri}");
             Assert.IsFalse(result.Errors.Any());
             Assert.AreEqual(uri.ToString(), result.Tokens[1].Value);
-        }
-
-        [Test]
-        public void PackageStoreOptionValidatesTheConnectionTokenProvided()
-        {
-            Option option = OptionFactory.CreatePackageStoreOption();
-            Assert.Throws<SchemaException>(() => option.Parse($"--package-store=NotAValidConnectionStringOrSasTokenUri"));
-        }
-
-        [Test]
-        public void PackageStoreOptionThrowsTheExpectedExceptionWhenTheUserDoesNotHavePermissionsToAccessTheCertificateStore()
-        {
-            var mockCertManager = new Mock<ICertificateManager>();
-            mockCertManager.Setup(c => c.GetCertificateFromStoreAsync(It.IsAny<string>(), It.IsAny<IEnumerable<StoreLocation>>(), It.IsAny<StoreName>()))
-                .Throws(() => new CryptographicException($"Permissions to certificate store denied."));
-
-            Option option = OptionFactory.CreatePackageStoreOption(certificateManager: mockCertManager.Object);
-            Assert.Throws<CryptographicException>(() => option.Parse(
-                $"--package-store=CertificateThumbprint=AAAAAA;ClientId=BBBBBBBB;TenantId=CCCCCCCC;EndpointUrl=https://anystorageaccount.blob.core.windows.net/packages"));
-        }
-
-        [Test]
-        public void PackageStoreOptionThrowsTheExpectedExceptionWhenTheUserDoesNotHavePermissionsToAccessTheCertificatesWithinTheStore()
-        {
-            var mockCertManager = new Mock<ICertificateManager>();
-            mockCertManager.Setup(c => c.GetCertificateFromStoreAsync(It.IsAny<string>(), It.IsAny<IEnumerable<StoreLocation>>(), It.IsAny<StoreName>()))
-                .Throws(() => new SecurityException($"Permissions to certificates denied."));
-
-            Option option = OptionFactory.CreatePackageStoreOption(certificateManager: mockCertManager.Object);
-            Assert.Throws<SecurityException>(() => option.Parse(
-                $"--package-store=CertificateThumbprint=AAAAAA;ClientId=BBBBBBBB;TenantId=CCCCCCCC;EndpointUrl=https://anystorageaccount.blob.core.windows.net/packages"));
         }
 
         [Test]

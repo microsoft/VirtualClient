@@ -139,7 +139,9 @@ namespace VirtualClient
                 if (string.IsNullOrWhiteSpace(this.AccessToken)
                     && string.IsNullOrWhiteSpace(this.TokenFilePath)
                     && string.IsNullOrWhiteSpace(this.TenantId)
-                    && (this.KeyVaultStore as DependencyKeyVaultStore)?.Credentials == null)
+                    && (string.IsNullOrWhiteSpace(this.KeyVaultStore) 
+                        || !EndpointUtility.IsCustomConnectionString(this.KeyVaultStore) 
+                        || (Uri.TryCreate(this.KeyVaultStore, UriKind.Absolute, out Uri endpointUri) && !EndpointUtility.IsCustomUri(endpointUri))))
                 {
                     throw new ArgumentException(
                         "The Azure tenant ID must be provided on the command line (--tenant-id) to install a certificate.");
