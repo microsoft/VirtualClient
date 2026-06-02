@@ -50,7 +50,7 @@ namespace VirtualClient
                 };
             };
 
-            this.blobManager.OnUploadFromStreamAsync = (descriptor, stream, options, metadata) =>
+            this.blobManager.OnUploadFromStreamAsync = (descriptor, stream, metadata) =>
             {
                 return new TestResponse<BlobContentInfo>()
                 {
@@ -422,7 +422,7 @@ namespace VirtualClient
             using (MemoryStream uploadStream = new MemoryStream())
             {
                 bool supported = false;
-                this.blobManager.OnUploadFromStreamAsync = (descriptor, stream, options, metadata) =>
+                this.blobManager.OnUploadFromStreamAsync = (descriptor, stream, metadata) =>
                 {
                     supported = true;
 
@@ -448,41 +448,13 @@ namespace VirtualClient
         {
             using (MemoryStream uploadStream = new MemoryStream())
             {
-                this.blobManager.OnUploadFromStreamAsync = (descriptor, stream, options, metadata) =>
+                this.blobManager.OnUploadFromStreamAsync = (descriptor, stream, metadata) =>
                 {
                     Assert.IsTrue(object.ReferenceEquals(this.mockDescriptor, descriptor));
-                    Assert.AreEqual(descriptor.ContentEncoding.WebName, options.HttpHeaders.ContentEncoding);
-                    Assert.AreEqual(descriptor.ContentType, options.HttpHeaders.ContentType);
 
                     return new TestResponse<BlobContentInfo>()
                     {
                         RawResponse = new TestResponse((int)HttpStatusCode.OK, "\"0x123456789\"")
-                        {
-                            ContentStream = new MemoryStream()
-                        }
-                    };
-                };
-
-                await this.blobManager.UploadBlobAsync(this.mockDescriptor, uploadStream, CancellationToken.None, retryPolicy: Policy.NoOpAsync())
-                    .ConfigureAwait(false);
-            }
-        }
-
-        [Test]
-        public async Task BlobManagerUsesETagsToEnableOptimisticConcurrencyOnBlobUploads()
-        {
-            using (MemoryStream uploadStream = new MemoryStream())
-            {
-                this.mockDescriptor.ETag = "\"0x123456789\"";
-                this.blobManager.OnUploadFromStreamAsync = (descriptor, stream, options, metadata) =>
-                {
-                    Assert.IsNotNull(options.Conditions);
-                    Assert.IsTrue(options.Conditions.IfMatch.HasValue);
-                    Assert.AreEqual(this.mockDescriptor.ETag, options.Conditions.IfMatch.Value.ToString());
-
-                    return new TestResponse<BlobContentInfo>()
-                    {
-                        RawResponse = new TestResponse((int)HttpStatusCode.OK, "\"0x987654321\"")
                         {
                             ContentStream = new MemoryStream()
                         }
@@ -525,7 +497,7 @@ namespace VirtualClient
                 };
 
                 bool confirmed = false;
-                this.blobManager.OnUploadFromStreamAsync = (descriptor, stream, options, metadata) =>
+                this.blobManager.OnUploadFromStreamAsync = (descriptor, stream, metadata) =>
                 {
                     CollectionAssert.AreEquivalent(expectedMetadata, metadata);
                     confirmed = true;
@@ -551,7 +523,7 @@ namespace VirtualClient
         {
             using (MemoryStream uploadStream = new MemoryStream())
             {
-                this.blobManager.OnUploadFromStreamAsync = (descriptor, stream, options, metadata) =>
+                this.blobManager.OnUploadFromStreamAsync = (descriptor, stream, metadata) =>
                 {
                     return new TestResponse<BlobContentInfo>()
                     {
@@ -575,7 +547,7 @@ namespace VirtualClient
             using (MemoryStream uploadStream = new MemoryStream())
             {
                 int uploadAttempts = 0;
-                this.blobManager.OnUploadFromStreamAsync = (descriptor, stream, options, metadata) =>
+                this.blobManager.OnUploadFromStreamAsync = (descriptor, stream, metadata) =>
                 {
                     uploadAttempts++;
                     throw new RequestFailedException("Transient Error");
@@ -596,7 +568,7 @@ namespace VirtualClient
             using (MemoryStream uploadStream = new MemoryStream())
             {
                 int uploadAttempts = 0;
-                this.blobManager.OnUploadFromStreamAsync = (descriptor, stream, options, metadata) =>
+                this.blobManager.OnUploadFromStreamAsync = (descriptor, stream, metadata) =>
                 {
                     uploadAttempts++;
                     throw new RequestFailedException(
@@ -617,7 +589,7 @@ namespace VirtualClient
             using (MemoryStream uploadStream = new MemoryStream())
             {
                 int uploadAttempts = 0;
-                this.blobManager.OnUploadFromStreamAsync = (descriptor, stream, options, metadata) =>
+                this.blobManager.OnUploadFromStreamAsync = (descriptor, stream, metadata) =>
                 {
                     if (uploadAttempts <= 1)
                     {
@@ -651,7 +623,7 @@ namespace VirtualClient
 
             public Func<BlobDescriptor, Stream, Response> OnDownloadToStreamAsync { get; set; }
 
-            public Func<BlobDescriptor, Stream, BlobUploadOptions, IDictionary<string, IConvertible>, Response<BlobContentInfo>> OnUploadFromStreamAsync { get; set; }
+            public Func<BlobDescriptor, Stream, IDictionary<string, IConvertible>, Response<BlobContentInfo>> OnUploadFromStreamAsync { get; set; }
 
             public new BlobContainerClient CreateContainerClient(BlobDescriptor descriptor, DependencyBlobStore blobStore)
             {
@@ -667,10 +639,10 @@ namespace VirtualClient
                 return Task.FromResult(response);
             }
 
-            protected override Task<Response<BlobContentInfo>> UploadFromStreamAsync(BlobDescriptor descriptor, Stream stream, BlobUploadOptions uploadOptions, CancellationToken cancellationToken, IDictionary<string, IConvertible> metadata = null)
+            protected override Task<Response<BlobContentInfo>> UploadFromStreamAsync(BlobDescriptor descriptor, Stream stream, CancellationToken cancellationToken, IDictionary<string, IConvertible> metadata = null)
             {
                 Response<BlobContentInfo> response = this.OnUploadFromStreamAsync != null
-                    ? this.OnUploadFromStreamAsync?.Invoke(descriptor, stream, uploadOptions, metadata)
+                    ? this.OnUploadFromStreamAsync?.Invoke(descriptor, stream, metadata)
                     : null;
 
                 return Task.FromResult(response);

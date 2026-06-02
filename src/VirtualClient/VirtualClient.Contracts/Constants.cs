@@ -171,6 +171,11 @@ namespace VirtualClient.Contracts
         public const string USERPROFILE = nameof(USERPROFILE);
 
         /// <summary>
+        /// Name = VC_APIM_SUBSCRIPTION_KEY
+        /// </summary>
+        public const string VC_APIM_SUBSCRIPTION_KEY = nameof(VC_APIM_SUBSCRIPTION_KEY);
+
+        /// <summary>
         /// Name = VC_EVENT_HUB_PROXY
         /// </summary>
         public const string VC_EVENT_HUB_PROXY = nameof(VC_EVENT_HUB_PROXY);
@@ -298,6 +303,17 @@ namespace VirtualClient.Contracts
         /// Metadata = SupportsIterations
         /// </summary>
         public const string SupportsIterations = nameof(SupportsIterations);
+    }
+
+    /// <summary>
+    /// HTTP request header names.
+    /// </summary>
+    public static class RequestHeader
+    {
+        /// <summary>
+        /// Ocp-Apim-Subscription-Key. Azure API management subscription key.
+        /// </summary>
+        public const string OcpApimSubscriptionKey = "Ocp-Apim-Subscription-Key";
     }
 
     /// <summary>

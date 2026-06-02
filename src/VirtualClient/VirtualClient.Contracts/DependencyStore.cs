@@ -52,6 +52,11 @@ namespace VirtualClient
         public const string StoreTypeAzureKeyVault = "AzureKeyVault";
 
         /// <summary>
+        /// Store Type = Proxy
+        /// </summary>
+        public const string StoreTypeProxy = "Proxy";
+
+        /// <summary>
         /// Store Type = ProxyApi
         /// </summary>
         public const string StoreTypeProxyApi = "ProxyApi";

@@ -6,8 +6,9 @@ namespace VirtualClient.Logging
     using System;
     using System.Collections;
     using System.Collections.Generic;
-    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
+    using System.Net.Http;
+    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
     using global::Azure.Messaging.EventHubs;
@@ -46,21 +47,37 @@ namespace VirtualClient.Logging
         /// <summary>
         /// Initialized a new instance of the <see cref="EventHubTelemetryChannel"/> class.
         /// </summary>
-        /// <param name="client">The client to use for publishing telemetry to the Event Hub.</param>
+        /// <param name="client">The AMQP client to use for publishing telemetry to the Event Hub.</param>
         /// <param name="sendEventOptions">Options to use when publishing batches of telemetry events.</param>
         /// <param name="enableDiagnostics">True/false whether event transmission diagnostics/debugging is enabled.</param>
         public EventHubTelemetryChannel(EventHubProducerClient client, SendEventOptions sendEventOptions = null, bool enableDiagnostics = false)
+            : this(enableDiagnostics)
         {
             client.ThrowIfNull(nameof(client));
+            this.AmqpClient = client;
+            this.sendEventOptions = sendEventOptions;
+        }
 
-            this.Client = client;
+        /// <summary>
+        /// Initialized a new instance of the <see cref="EventHubTelemetryChannel"/> class.
+        /// </summary>
+        /// <param name="client">The basic HTTP/REST client to use for publishing telemetry to the Event Hub.</param>
+        /// <param name="enableDiagnostics">True/false whether event transmission diagnostics/debugging is enabled.</param>
+        public EventHubTelemetryChannel(HttpClient client, bool enableDiagnostics = false)
+            : this(enableDiagnostics)
+        {
+            client.ThrowIfNull(nameof(client));
+            this.RestClient = client;
+        }
+
+        private EventHubTelemetryChannel(bool enableDiagnostics = false)
+        {
             this.Buffer = new Queue<EventData>();
 
             this.minCapacity = EventHubTelemetryChannel.DefaultMinCapacity;
             this.maxCapacity = EventHubTelemetryChannel.DefaultMaxCapacity;
             this.cancellationTokenSource = new CancellationTokenSource();
             this.autoFlushWaitHandle = new AutoResetEvent(false);
-            this.sendEventOptions = sendEventOptions;
             this.DiagnosticsEnabled = enableDiagnostics;
 
             if (enableDiagnostics)
@@ -128,10 +145,20 @@ namespace VirtualClient.Logging
         }
 
         /// <summary>
+        /// The client to use for publishing events to the Event Hub.
+        /// </summary>
+        public EventHubProducerClient AmqpClient { get; }
+
+        /// <summary>
         /// Gets or sets the intervel for which VC autoflushes telemetry.
         /// Making the interval too short will stress eventhub and create throttle.
         /// </summary>
         public TimeSpan AutoFlushInterval { get; set; } = TimeSpan.FromMilliseconds(5000);
+
+        /// <summary>
+        /// The client to use for publishing events to the Event Hub.
+        /// </summary>
+        public HttpClient RestClient { get; }
 
         /// <summary>
         /// Gets the channel diagnostics instance if enabled.
@@ -142,11 +169,6 @@ namespace VirtualClient.Logging
         /// Gets the telemetry buffer in which events/items are contained.
         /// </summary>
         protected Queue<EventData> Buffer { get; private set; }
-
-        /// <summary>
-        /// The client to use for publishing events to the Event Hub.
-        /// </summary>
-        protected EventHubProducerClient Client { get; }
 
         /// <summary>
         /// Add a telemetry item to the buffer.
@@ -292,13 +314,40 @@ namespace VirtualClient.Logging
         /// </summary>
         /// <param name="eventDataBatch"></param>
         /// <returns>A <see cref="Task"/> representing the result of the asynchronous operation.</returns>
-        protected virtual Task TransmitBatchAsync(IEnumerable<EventData> eventDataBatch)
+        protected virtual async Task TransmitBatchAsync(IEnumerable<EventData> eventDataBatch)
         {
-            // Context on CancellationToken.None Here:
-            // We purposefully DO NOT honor the channel CancellationToken here. We do not want the
-            // transmission logic to exit on cancellation but to keep trying to get the telemetry through.
-            // We prefer a delayed exit of the application to losing telemetry.
-            return this.Client.SendAsync(eventDataBatch, this.sendEventOptions, CancellationToken.None);
+            if (eventDataBatch?.Any() == true)
+            {
+                if (this.AmqpClient != null)
+                {
+                    // Context on CancellationToken.None Here:
+                    // We purposefully DO NOT honor the channel CancellationToken here. We do not want the
+                    // transmission logic to exit on cancellation but to keep trying to get the telemetry through.
+                    // We prefer a delayed exit of the application to losing telemetry.
+                    await this.AmqpClient.SendAsync(eventDataBatch, this.sendEventOptions, CancellationToken.None);
+                }
+                else
+                {
+                    foreach (EventData eventData in eventDataBatch)
+                    {
+                        string eventBody = Encoding.UTF8.GetString(eventData.Body.ToArray());
+                        using (var request = new HttpRequestMessage(HttpMethod.Post, this.RestClient.BaseAddress))
+                        {
+                            using (HttpContent content = new StringContent(eventBody, Encoding.UTF8, "application/json"))
+                            {
+                                request.Content = content;
+
+                                // Context on CancellationToken.None Here:
+                                // We purposefully DO NOT honor the channel CancellationToken here. We do not want the
+                                // transmission logic to exit on cancellation but to keep trying to get the telemetry through.
+                                // We prefer a delayed exit of the application to losing telemetry.
+                                HttpResponseMessage response = await this.RestClient.SendAsync(request, CancellationToken.None);
+                                response.EnsureSuccessStatusCode();
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -310,62 +359,75 @@ namespace VirtualClient.Logging
             {
                 lock (this.transmissionLock)
                 {
-                    if (this.Buffer.Count > 0)
+                    // AMQP transmissions can support batching, so we will allow the batch size to be determined by the number of events in the buffer up to the max event
+                    // data bytes allowed by Event Hub. Event Hub transmissions with HTTP use the REST client and do not support batching, so we need to set the batch size
+                    // to 1 in that case.
+                    int? maxBatchSize = this.RestClient != null ? 1 : null;
+                    this.TransmitEvents(maxBatchSize);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Transmits the events in the buffer to the target EventHub endpoint.
+        /// </summary>
+        private void TransmitEvents(int? maxBatchSize = null)
+        {
+            if (this.Buffer.Count > 0)
+            {
+                List<EventData> currentBatch = new List<EventData>();
+
+                try
+                {
+                    while (this.Buffer.Count > 0)
                     {
-                        List<EventData> currentBatch = new List<EventData>();
-
-                        try
+                        lock (this.bufferLock)
                         {
-                            while (this.Buffer.Count > 0)
+                            int currentBatchSize = 0;
+                            int batchSize = maxBatchSize ?? this.Buffer.Count;
+                            for (int currentEventIndex = 0; currentEventIndex < batchSize; currentEventIndex++)
                             {
-                                lock (this.bufferLock)
+                                EventData nextEventItem = this.Buffer.Dequeue();
+                                this.Diagnostics?.EventsTransmitted(1);
+
+                                if (nextEventItem != null)
                                 {
-                                    int currentBatchSize = 0;
-                                    for (int currentEventIndex = 0; currentEventIndex < this.Buffer.Count; currentEventIndex++)
+                                    currentBatch.Add(nextEventItem);
+                                    currentBatchSize += nextEventItem.Body.Length;
+
+                                    if (currentBatchSize > EventHubTelemetryChannel.MaxEventDataBytes || maxBatchSize == 1)
                                     {
-                                        EventData nextEventItem = this.Buffer.Dequeue();
-                                        this.Diagnostics?.EventsTransmitted(1);
-
-                                        if (nextEventItem != null)
-                                        {
-                                            currentBatch.Add(nextEventItem);
-                                            currentBatchSize += nextEventItem.Body.Length;
-
-                                            if (currentBatchSize > EventHubTelemetryChannel.MaxEventDataBytes)
-                                            {
-                                                break;
-                                            }
-                                        }
+                                        break;
                                     }
                                 }
-
-                                this.TransmitBatchAsync(currentBatch).GetAwaiter().GetResult();
-                                this.OnEventsTransmitted(currentBatch);
-                                currentBatch.Clear();
                             }
                         }
-                        catch (Exception exc)
-                        {
-                            if (currentBatch.Any())
-                            {
-                                lock (this.bufferLock)
-                                {
-                                    // If we failed to transmit the events, we need to add them back to the
-                                    // buffer so that we can retry transmission on the next attempt.
-                                    this.Diagnostics?.EventsTransmissionFailed(currentBatch.Count);
-                                    currentBatch.ForEach(eventItem =>
-                                    {
-                                        this.Buffer.Enqueue(eventItem);
-                                    });
-                                }
-                            }
 
-                            // Telemetry transmission is a best-effort process.  We do not want to crash
-                            // the hosting process on failures to send telemetry events.  Additionally, the
-                            // reliable buffer will retry on subsequent attempts.
-                            this.OnEventTransmissionError(currentBatch, exc);
+                        this.TransmitBatchAsync(currentBatch).GetAwaiter().GetResult();
+                        this.OnEventsTransmitted(currentBatch);
+                        currentBatch.Clear();
+                    }
+                }
+                catch (Exception exc)
+                {
+                    if (currentBatch.Any())
+                    {
+                        lock (this.bufferLock)
+                        {
+                            // If we failed to transmit the events, we need to add them back to the
+                            // buffer so that we can retry transmission on the next attempt.
+                            this.Diagnostics?.EventsTransmissionFailed(currentBatch.Count);
+                            currentBatch.ForEach(eventItem =>
+                            {
+                                this.Buffer.Enqueue(eventItem);
+                            });
                         }
                     }
+
+                    // Telemetry transmission is a best-effort process.  We do not want to crash
+                    // the hosting process on failures to send telemetry events.  Additionally, the
+                    // reliable buffer will retry on subsequent attempts.
+                    this.OnEventTransmissionError(currentBatch, exc);
                 }
             }
         }

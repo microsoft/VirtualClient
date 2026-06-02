@@ -328,6 +328,9 @@ namespace VirtualClient
                 tokenOption,
                 tokenFileOption,
 
+                 // --clean
+                OptionFactory.CreateCleanOption(required: false),
+
                 // --client-id
                 OptionFactory.CreateClientIdOption(required: false, Environment.MachineName),
 
@@ -357,6 +360,9 @@ namespace VirtualClient
 
                 // --log-level
                 OptionFactory.CreateLogLevelOption(required: false, LogLevel.Information),
+
+                // --log-retention
+                OptionFactory.CreateLogRetentionOption(required: false),
 
                 // --metadata
                 OptionFactory.CreateMetadataOption(required: false),

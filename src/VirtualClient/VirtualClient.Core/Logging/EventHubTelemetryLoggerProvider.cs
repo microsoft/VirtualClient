@@ -16,7 +16,6 @@ namespace VirtualClient.Logging
     [LoggerSpecialization(Name = SpecializationConstant.Telemetry)]
     public sealed class EventHubTelemetryLoggerProvider : ILoggerProvider
     {
-        private EventHubTelemetryChannel telemetryChannel;
         private LogLevel minumumLogLevel;
         private TimeSpan flushTimeout;
 
@@ -31,10 +30,12 @@ namespace VirtualClient.Logging
         public EventHubTelemetryLoggerProvider(EventHubTelemetryChannel channel, LogLevel level, TimeSpan? flushTimeout = null)
         {
             channel.ThrowIfNull(nameof(channel));
-            this.telemetryChannel = channel;
+            this.TelemetryChannel = channel;
             this.minumumLogLevel = level;
             this.flushTimeout = flushTimeout ?? TimeSpan.FromMinutes(1);
         }
+
+        internal EventHubTelemetryChannel TelemetryChannel { get; }
 
         /// <summary>
         /// Creates an <see cref="ILogger"/> instance that can be used to log events/messages
@@ -47,11 +48,11 @@ namespace VirtualClient.Logging
         /// </returns>
         public ILogger CreateLogger(string categoryName)
         {
-            EventHubTelemetryLogger logger = new EventHubTelemetryLogger(this.telemetryChannel, this.minumumLogLevel);
+            EventHubTelemetryLogger logger = new EventHubTelemetryLogger(this.TelemetryChannel, this.minumumLogLevel);
             VirtualClientRuntime.CleanupTasks.Add(new Action_(() =>
             {
-                this.telemetryChannel.Flush(this.flushTimeout);
-                this.telemetryChannel.Dispose();
+                this.TelemetryChannel.Flush(this.flushTimeout);
+                this.TelemetryChannel.Dispose();
             }));
 
             return logger;
