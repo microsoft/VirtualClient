@@ -64,7 +64,7 @@ namespace VirtualClient
             ICertificateManager certificateManager = this.dependencies.GetService<ICertificateManager>();
 
             Uri profileUri = this.profiles["Public"];
-            DependencyProfileReference profile = EndpointUtility.CreateProfileReference(profileUri.ToString(), certificateManager);
+            DependencyProfileReference profile = DependencyFactory.CreateProfileReference(profileUri.ToString(), certificateManager);
             string downloadFilePath = Path.Combine(this.profileDownloadDirectory, profile.ProfileName);
 
             IProfileManager profileManager = new ProfileManager();
@@ -83,7 +83,7 @@ namespace VirtualClient
             ICertificateManager certificateManager = this.dependencies.GetService<ICertificateManager>();
 
             Uri profileUri = this.profiles["PublicWithVirtualPath"];
-            DependencyProfileReference profile = EndpointUtility.CreateProfileReference(profileUri.ToString(), certificateManager);
+            DependencyProfileReference profile = DependencyFactory.CreateProfileReference(profileUri.ToString(), certificateManager);
             string downloadFilePath = Path.Combine(this.profileDownloadDirectory, profile.ProfileName);
 
             IProfileManager profileManager = new ProfileManager();
@@ -102,7 +102,7 @@ namespace VirtualClient
             ICertificateManager certificateManager = this.dependencies.GetService<ICertificateManager>();
 
             Uri profileUri = this.profiles["SasUri"];
-            DependencyProfileReference profile = EndpointUtility.CreateProfileReference(profileUri.ToString(), certificateManager);
+            DependencyProfileReference profile = DependencyFactory.CreateProfileReference(profileUri.ToString(), certificateManager);
             string downloadFilePath = Path.Combine(this.profileDownloadDirectory, profile.ProfileName);
 
             IProfileManager profileManager = new ProfileManager();
@@ -121,7 +121,7 @@ namespace VirtualClient
             ICertificateManager certificateManager = this.dependencies.GetService<ICertificateManager>();
 
             Uri profileUri = this.profiles["SasUriWithVirtualPath"];
-            DependencyProfileReference profile = EndpointUtility.CreateProfileReference(profileUri.ToString(), certificateManager);
+            DependencyProfileReference profile = DependencyFactory.CreateProfileReference(profileUri.ToString(), certificateManager);
             string downloadFilePath = Path.Combine(this.profileDownloadDirectory, profile.ProfileName);
 
             IProfileManager profileManager = new ProfileManager();
@@ -140,7 +140,7 @@ namespace VirtualClient
             ICertificateManager certificateManager = this.dependencies.GetService<ICertificateManager>();
 
             Uri profileUri = this.profiles["MicrosoftEntraId"];
-            DependencyProfileReference profile = EndpointUtility.CreateProfileReference(profileUri.ToString(), certificateManager);
+            DependencyProfileReference profile = DependencyFactory.CreateProfileReference(profileUri.ToString(), certificateManager);
             string downloadFilePath = Path.Combine(this.profileDownloadDirectory, profile.ProfileName);
 
             IProfileManager profileManager = new ProfileManager();
@@ -159,7 +159,7 @@ namespace VirtualClient
             ICertificateManager certificateManager = this.dependencies.GetService<ICertificateManager>();
 
             Uri profileUri = this.profiles["MicrosoftEntraIdWithVirtualPath"];
-            DependencyProfileReference profile = EndpointUtility.CreateProfileReference(profileUri.ToString(), certificateManager);
+            DependencyProfileReference profile = DependencyFactory.CreateProfileReference(profileUri.ToString(), certificateManager);
             string downloadFilePath = Path.Combine(this.profileDownloadDirectory, profile.ProfileName);
 
             IProfileManager profileManager = new ProfileManager();
