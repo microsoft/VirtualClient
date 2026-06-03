@@ -952,12 +952,8 @@ namespace VirtualClient
                 var store = new DependencyBlobStore(storeName, endpointUri);
                 blobManager = new BlobManager(store);
             }
-            else
+            else if (EndpointUtility.IsApiManagementUri(endpointUri))
             {
-                // Basic URI
-                // e.g.
-                // https://any.blob.core.windows.net
-                //
                 // API management
                 // e.g.
                 // https://any.azure-api.net
@@ -965,17 +961,25 @@ namespace VirtualClient
 
                 // Check for API management support.
                 string subscriptionKey = platformSpecifics.GetEnvironmentVariable(EnvironmentVariable.VC_APIM_SUBSCRIPTION_KEY);
-                if (!string.IsNullOrWhiteSpace(subscriptionKey))
+                if (string.IsNullOrWhiteSpace(subscriptionKey))
                 {
-                    HttpClient restClient = new HttpClient();
-                    restClient.Timeout = Timeout.InfiniteTimeSpan;
-                    restClient.DefaultRequestHeaders.Add(RequestHeader.OcpApimSubscriptionKey, subscriptionKey);
-                    blobManager = new BlobManager(store, restClient);
+                    throw new SchemaException(
+                        $"Required API key not defined. The URI provided for the blob store is an Azure API management endpoint but the required subscription/API key is not defined." +
+                        $"Set the '{EnvironmentVariable.VC_APIM_SUBSCRIPTION_KEY}' environment variable to the appropriate key value before executing the application.");
                 }
-                else
-                {
-                    blobManager = new BlobManager(store);
-                }
+
+                HttpClient restClient = new HttpClient();
+                restClient.Timeout = Timeout.InfiniteTimeSpan;
+                restClient.DefaultRequestHeaders.Add(RequestHeader.OcpApimSubscriptionKey, subscriptionKey);
+                blobManager = new BlobManager(store, restClient);
+            }
+            else
+            {
+                // Basic URI
+                // e.g.
+                // https://any.blob.core.windows.net
+                var store = new DependencyBlobStore(storeName, endpointUri, DependencyStore.StoreTypeProxy);
+                blobManager = new BlobManager(store);
             }
 
             return blobManager;
@@ -1114,28 +1118,31 @@ namespace VirtualClient
                     channel = new EventHubTelemetryChannel(client, enableDiagnostics: true);
                 }
             }
-            else
+            else if (EndpointUtility.IsApiManagementUri(endpointUri))
             {
-                // Check for API management targeting.
+                // Check for API management support.
                 string subscriptionKey = platformSpecifics.GetEnvironmentVariable(EnvironmentVariable.VC_APIM_SUBSCRIPTION_KEY);
-
-                if (!string.IsNullOrWhiteSpace(subscriptionKey))
+                if (string.IsNullOrWhiteSpace(subscriptionKey))
                 {
-                    // Supports the use of Azure API Management as a gateway for Event Hub traffic. This allows clients to use a secure API endpoint to route traffic to the
-                    // Event Hub namespace (vs. a direct connection).
-                    HttpClient restClient = new HttpClient();
-                    Uri baseUri = new Uri(endpointUri, eventHubName);
-
-                    if (!string.IsNullOrWhiteSpace(endpointUri.Query))
-                    {
-                        baseUri = new Uri($"{baseUri.AbsoluteUri}{endpointUri.Query}");
-                    }
-
-                    restClient.BaseAddress = baseUri;
-                    restClient.Timeout = Timeout.InfiniteTimeSpan;
-                    restClient.DefaultRequestHeaders.Add(RequestHeader.OcpApimSubscriptionKey, subscriptionKey);
-                    channel = new EventHubTelemetryChannel(restClient, enableDiagnostics: true);
+                    throw new SchemaException(
+                        $"Required API key not defined. The URI provided for the Event Hub is an Azure API management endpoint but the required subscription/API key is not defined." +
+                        $"Set the '{EnvironmentVariable.VC_APIM_SUBSCRIPTION_KEY}' environment variable to the appropriate key value before executing the application.");
                 }
+
+                // Supports the use of Azure API Management as a gateway for Event Hub traffic. This allows clients to use a secure API endpoint to route traffic to the
+                // Event Hub namespace (vs. a direct connection).
+                HttpClient restClient = new HttpClient();
+                Uri baseUri = new Uri(endpointUri, eventHubName);
+
+                if (!string.IsNullOrWhiteSpace(endpointUri.Query))
+                {
+                    baseUri = new Uri($"{baseUri.AbsoluteUri}{endpointUri.Query}");
+                }
+
+                restClient.BaseAddress = baseUri;
+                restClient.Timeout = Timeout.InfiniteTimeSpan;
+                restClient.DefaultRequestHeaders.Add(RequestHeader.OcpApimSubscriptionKey, subscriptionKey);
+                channel = new EventHubTelemetryChannel(restClient, enableDiagnostics: true);
             }
 
             return channel;

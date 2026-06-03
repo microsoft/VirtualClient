@@ -23,6 +23,24 @@ namespace VirtualClient
         }
 
         [Test]
+        [TestCase("https://any.azure-api.net")]
+        [TestCase("https://any.azure-api.net/")]
+        [TestCase("https://any.azure-api.net/any-container")]
+        public void EndpointUtilityConfirmsApiManagementUris(string uri)
+        {
+            Assert.IsTrue(EndpointUtility.IsApiManagementUri(new Uri(uri)));
+        }
+
+        [Test]
+        [TestCase("https://anystorage.blob.core.windows.net")]
+        [TestCase("https://any.servicebus.windows.net")]
+        [TestCase("https://packages.virtualclient.microsoft.com")]
+        public void EndpointUtilityConfirmsNonApiManagementUris(string uri)
+        {
+            Assert.IsFalse(EndpointUtility.IsApiManagementUri(new Uri(uri)));
+        }
+
+        [Test]
         [TestCase("EndpointUrl=https://anystorage.blob.core.windows.net;ManagedIdentityId=307591a4-abb2-4559-af59-b47177d140cf")]
         [TestCase("EventHubNamespace=any.servicebus.windows.net;ManagedIdentityId=307591a4-abb2-4559-af59-b47177d140cf")]
         [TestCase("EndpointUrl=https://anystorage.blob.core.windows.net;ClientId=11223344;TenantId=55667788")]
