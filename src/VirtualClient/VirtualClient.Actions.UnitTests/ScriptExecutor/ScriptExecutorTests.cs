@@ -380,6 +380,53 @@ namespace VirtualClient.Actions
             }
         }
 
+        [Test]
+        [TestCase(PlatformID.Win32NT)]
+        [TestCase(PlatformID.Unix)]
+        public async Task ScriptExecutorMovesMetricsFileAfterParsingNotDuring(PlatformID platform)
+        {
+            this.SetupTest(platform);
+
+            string metricsJson = @"{""metric1"": 100}";
+            bool metricsFileParsed = false;
+            bool metricsFileMoved = false;
+            int operationOrder = 0;
+            int parseOrder = 0;
+            int moveOrder = 0;
+
+            // Setup file system to return valid metrics content
+            this.mockFixture.FileSystem.Setup(fe => fe.File.ReadAllTextAsync(
+                It.Is<string>(path => path.Contains("test-metrics.json")),
+                It.IsAny<CancellationToken>()))
+                .ReturnsAsync(metricsJson)
+                .Callback(() =>
+                {
+                    metricsFileParsed = true;
+                    parseOrder = ++operationOrder;
+                });
+
+            // Capture the file move operation
+            this.mockFixture.File.Setup(fe => fe.Move(
+                It.Is<string>(path => path.Contains("test-metrics.json")),
+                It.IsAny<string>(),
+                It.IsAny<bool>()))
+                .Callback<string, string, bool>((source, dest, overwrite) =>
+                {
+                    metricsFileMoved = true;
+                    moveOrder = ++operationOrder;
+                });
+
+            using (TestScriptExecutor executor = new TestScriptExecutor(this.mockFixture))
+            {
+                await executor.InitializeAsync(EventContext.None, CancellationToken.None);
+                await executor.ExecuteAsync(EventContext.None, CancellationToken.None);
+
+                Assert.IsTrue(metricsFileParsed, "Metrics file should have been parsed");
+                Assert.IsTrue(metricsFileMoved, "Metrics file should have been moved");
+                Assert.Less(parseOrder, moveOrder, "Metrics file should be parsed BEFORE being moved to avoid race conditions");
+            }
+        }
+
         private class TestScriptExecutor : ScriptExecutor
         {
             public TestScriptExecutor(MockFixture fixture)
