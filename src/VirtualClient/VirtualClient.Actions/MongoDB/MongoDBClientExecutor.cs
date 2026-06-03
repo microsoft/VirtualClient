@@ -6,8 +6,6 @@ namespace VirtualClient.Actions.MongoDB
     using System;
     using System.Collections.Generic;
     using System.IO.Abstractions;
-    using System.Linq;
-    using System.Runtime.InteropServices;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
@@ -17,7 +15,6 @@ namespace VirtualClient.Actions.MongoDB
     using VirtualClient;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
-    using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
     using VirtualClient.Contracts.Metadata;

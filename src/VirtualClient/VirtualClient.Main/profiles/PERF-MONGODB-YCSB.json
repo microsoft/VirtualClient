@@ -8,50 +8,34 @@
     "Parameters": {
         "ThreadCount": "{calculate({LogicalCoreCount}/2)}",
         "WorkloadName": "workloada",
-        "Duration": "00:05:00",
+        "Duration": "01:00:00",
         "Database": "mongodb",
         "Port": "27017",
-        "FieldCount": "128",
-        "FieldLength": "128",
-        "OperationCount": "5000000",
         "RecordCount": "500000",
-        "YCSBPackageName": "ycsb",
-        "JdkPackageName": "javadevelopmentkit",
         "DiskFilter": "BiggestSize",
         "dbSize": "small",
-        "CommentOnDbSize": "dbSize is approx 8-10 GB"
+        "Comments": "db size is approx 8-10 GB"
     },
     "ParametersOn": [
         {
             "Condition": "{calculate(\"{dbSize}\" == \"small\")}",
             "RecordCount": "500000",
-            "FieldCount": "128",
-            "FieldLength": "128",
-            "CommentOnDbSize": "dbSize is approx 8-10 GB"
+            "Comments": "db size is approx 8-10 GB"
         },
         {
             "Condition": "{calculate(\"{dbSize}\" == \"medium\")}",
             "RecordCount": "2500000",
-            "FieldCount": "128",
-            "FieldLength": "128",
-            "Duration": "00:30:00",
-            "CommentOnDbSize": "dbSize is approx 40-50 GB"
+            "Comments": "db size is approx 40-50 GB"
         },
         {
             "Condition": "{calculate(\"{dbSize}\" == \"large\")}",
             "RecordCount": "20000000",
-            "FieldCount": "128",
-            "FieldLength": "128",
-            "Duration": "00:45:00",
-            "CommentOnDbSize": "dbSize is approx 320-400 GB"
+            "Comments": "db size is approx 320-400 GB"
         },
         {
             "Condition": "{calculate(\"{dbSize}\" == \"xlarge\")}",
             "RecordCount": "55000000",
-            "FieldCount": "128",
-            "FieldLength": "128",
-            "Duration": "01:00:00",
-            "CommentOnDbSize": "dbSize is approx 900 GB - 1 TB"
+            "Comments": "db size is approx 900 GB - 1 TB"
         }
     ],
     "Actions": [
@@ -68,16 +52,16 @@
         {
             "Type": "MongoDBClientExecutor",
             "Parameters": {
-                "Scenario": "loaddatabase",
+                "Scenario": "LoadDatabase",
                 "Role": "Client",
                 "LoadCommand": "load {Database} -s -p maxexecutiontime={Duration.TotalSeconds} -p recordcount={RecordCount} -p fieldcount={FieldCount} -p fieldlength={FieldLength} -threads {ThreadCount} -p mongodb.url=mongodb://{ServerIP}:{Port}/ycsb -P {PackagePath:ycsb}/ycsb-0.17.0/workloads/{WorkloadName}",
                 "Database": "$.Parameters.Database",
                 "Port": "$.Parameters.Port",
                 "Duration": "$.Parameters.Duration",
-                "FieldCount": "$.Parameters.FieldCount",
-                "FieldLength": "$.Parameters.FieldLength",
-                "YCSBPackageName": "$.Parameters.YCSBPackageName",
-                "JdkPackageName": "$.Parameters.JdkPackageName",
+                "FieldCount": "128",
+                "FieldLength": "128",
+                "YCSBPackageName": "ycsb",
+                "JdkPackageName": "javadevelopmentkit",
                 "RecordCount": "$.Parameters.RecordCount",
                 "ThreadCount": "$.Parameters.ThreadCount",
                 "WorkloadName": "$.Parameters.WorkloadName"
@@ -86,31 +70,32 @@
         {
             "Type": "MongoDBClientExecutor",
             "Parameters": {
-                "Scenario": "{WorkloadName}_fieldcount{FieldCount}_fieldlength{FieldLength}_OpCount{OperationCount}",
+                "Scenario": "RunWorkload",
+                "MetricScenario": "{WorkloadName}_FieldCount{FieldCount}_FieldLength{FieldLength}_OpCount{OperationCount}",
                 "Role": "Client",
                 "Database": "$.Parameters.Database",
                 "RunCommand": "run {Database} -s -p maxexecutiontime={Duration.TotalSeconds} -p operationcount={OperationCount} -p recordcount={RecordCount} -threads {ThreadCount} -p fieldcount={FieldCount} -p fieldlength={FieldLength} -p mongodb.url=mongodb://{ServerIP}:{Port}/ycsb -P {PackagePath:ycsb}/ycsb-0.17.0/workloads/{WorkloadName}",
                 "Port": "$.Parameters.Port",
                 "Duration": "$.Parameters.Duration",
                 "ThreadCount": "$.Parameters.ThreadCount",
-                "OperationCount": "$.Parameters.OperationCount",
-                "YCSBPackageName": "$.Parameters.YCSBPackageName",
-                "JdkPackageName": "$.Parameters.JdkPackageName",
+                "OperationCount": "5000000",
+                "YCSBPackageName": "ycsb",
+                "JdkPackageName": "javadevelopmentkit",
                 "RecordCount": "$.Parameters.RecordCount",
-                "FieldCount": "$.Parameters.FieldCount",
-                "FieldLength": "$.Parameters.FieldLength",
+                "FieldCount": "128",
+                "FieldLength": "128",
                 "WorkloadName": "$.Parameters.WorkloadName"
             }
         },
         {
             "Type": "MongoDBClientExecutor",
             "Parameters": {
-                "Scenario": "dropdatabase",
+                "Scenario": "DropDatabase",
                 "Role": "Client",
                 "Database": "$.Parameters.Database",
                 "Port": "$.Parameters.Port",
-                "YCSBPackageName": "$.Parameters.YCSBPackageName",
-                "JdkPackageName": "$.Parameters.JdkPackageName"
+                "YCSBPackageName": "ycsb",
+                "JdkPackageName": "javadevelopmentkit"
             }
         }
     ],
