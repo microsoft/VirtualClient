@@ -341,6 +341,20 @@ namespace VirtualClient.Core.UnitTests
         }
 
         [Test]
+        public void DependencyFactoryThrowsIfTheSubscriptionKeyIsNotDefinedWhenCreatingABlobManagerForApiManagementEndpoints()
+        {
+            // Setup:
+            // API management subscription key is NOT defined in the environment variables.
+            SchemaException error = Assert.Throws<SchemaException>(() => DependencyFactory.CreateBlobManager(
+                DependencyStore.Packages,
+                "\"https://any.azure-api.net",
+                this.mockFixture.CertificateManager.Object,
+                this.mockFixture.PlatformSpecifics));
+
+            Assert.IsTrue(error.Message.StartsWith("Required API key not defined. The URI provided for the blob store is an Azure API management endpoint"));
+        }
+
+        [Test]
         [TestCase("https://any.api.proxy", "https://any.api.proxy/")]
         [TestCase("https://any.api.proxy:9876", "https://any.api.proxy:9876/")]
         [TestCase("https://any.api.proxy?any=query&string=parameters", "https://any.api.proxy?any=query&string=parameters")]
@@ -576,6 +590,20 @@ namespace VirtualClient.Core.UnitTests
             Assert.AreEqual(expectedBaseUri, telemetryChannel.RestClient.BaseAddress.ToString());
             Assert.IsNotEmpty(telemetryChannel.RestClient.DefaultRequestHeaders);
             Assert.AreEqual(telemetryChannel.RestClient.DefaultRequestHeaders.GetValues(RequestHeader.OcpApimSubscriptionKey).FirstOrDefault(), expectedSubscriptionKey);
+        }
+
+        [Test]
+        public void DependencyFactoryThrowsIfTheSubscriptionKeyIsNotDefinedWhenCreatingAnEventHubTelemetryChannelForApiManagementEndpoints()
+        {
+            // Setup:
+            // API management subscription key is NOT defined in the environment variables.
+            SchemaException error = Assert.Throws<SchemaException>(() => DependencyFactory.CreateEventHubTelemetryChannel(
+                "https://any.azure-api.net",
+                "any-hub",
+                this.mockFixture.CertificateManager.Object,
+                this.mockFixture.PlatformSpecifics));
+
+            Assert.IsTrue(error.Message.StartsWith("Required API key not defined. The URI provided for the Event Hub is an Azure API management endpoint"));
         }
 
         [Test]

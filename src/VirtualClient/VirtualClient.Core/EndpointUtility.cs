@@ -7,11 +7,7 @@ namespace VirtualClient
     using System.Collections.Generic;
     using System.Linq;
     using System.Text.RegularExpressions;
-    using Azure.Core;
-    using Azure.Identity;
-    using VirtualClient.Common.Extensions;
     using VirtualClient.Contracts;
-    using VirtualClient.Identity;
 
     /// <summary>
     /// Provides features for managing requirements for remote endpoint access.
@@ -19,6 +15,17 @@ namespace VirtualClient
     public static class EndpointUtility
     {
         internal const string DefaultPackageStoreUri = "https://packages.virtualclient.microsoft.com";
+
+        /// <summary>
+        /// Returns true/false whether the value is a standard API management URI
+        /// (e.g. https://any.azure-api.net).
+        /// </summary>
+        /// <param name="endpointUri">The URI to evaluate.</param>
+        /// <returns>True if the value is a  Key Vault URI. False if not.</returns>
+        public static bool IsApiManagementUri(Uri endpointUri)
+        {
+            return Regex.IsMatch(endpointUri.AbsoluteUri, "azure-api.net", RegexOptions.IgnoreCase);
+        }
 
         /// <summary>
         /// Returns true/false whether the value is a custom Virtual Client connection string 

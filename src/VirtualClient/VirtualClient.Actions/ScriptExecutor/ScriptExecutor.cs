@@ -12,6 +12,7 @@ namespace VirtualClient.Actions
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
     using MimeMapping;
     using Polly;
     using VirtualClient.Common;
@@ -137,7 +138,6 @@ namespace VirtualClient.Actions
         {
             await this.EvaluateParametersAsync(cancellationToken);
 
-            string scriptFileLocation = string.Empty;
             if (PlatformSpecifics.IsFullyQualifiedPath(this.ScriptPath))
             {
                 this.ExecutablePath = this.ScriptPath;
@@ -171,13 +171,14 @@ namespace VirtualClient.Actions
                     ErrorReason.WorkloadDependencyMissing);
             }
 
+            this.ExecutableDirectory = this.fileSystem.Path.GetDirectoryName(this.ExecutablePath);
+
             this.MetricsFilePath = this.Combine(this.ExecutableDirectory, ScriptExecutor.MetricsFileName);
             if (this.fileSystem.File.Exists(this.MetricsFilePath))
             {
                 this.fileSystem.File.Delete(this.MetricsFilePath);
             }
 
-            this.ExecutableDirectory = this.fileSystem.Path.GetDirectoryName(this.ExecutablePath);
             this.ToolName = string.IsNullOrWhiteSpace(this.ToolName) ? $"{this.fileSystem.Path.GetFileNameWithoutExtension(this.ExecutablePath)}" : this.ToolName;
             await this.systemManagement.MakeFileExecutableAsync(this.ExecutablePath, this.Platform, cancellationToken);
         }
@@ -229,36 +230,56 @@ namespace VirtualClient.Actions
                 this.MetadataContract.Apply(telemetryContext);
 
                 bool metricsFileFound = false;
+                bool metricsFileParsed = false;
+                int metricsCount = 0;
 
                 try
                 {
+                    telemetryContext.AddContext("expectedMetricsFilePath", this.MetricsFilePath);
+
                     if (this.fileSystem.File.Exists(this.MetricsFilePath))
                     {
                         metricsFileFound = true;
-                        telemetryContext.AddContext("metricsFilePath", this.MetricsFilePath);
                         string results = await this.fileSystem.File.ReadAllTextAsync(this.MetricsFilePath);
 
                         if (!string.IsNullOrWhiteSpace(results))
                         {
                             JsonMetricsParser parser = new JsonMetricsParser(results, this.Logger, telemetryContext);
                             IList<Metric> workloadMetrics = parser.Parse();
+                            metricsCount = workloadMetrics?.Count ?? 0;
+                            metricsFileParsed = metricsCount > 0;
 
-                            this.Logger.LogMetrics(
-                                this.ToolName,
-                                (this.MetricScenario ?? this.Scenario) ?? "Script",
-                                process.StartTime,
-                                process.ExitTime,
-                                workloadMetrics,
-                                null,
-                                process.FullCommand(),
-                                this.Tags,
-                                telemetryContext);
+                            if (metricsFileParsed)
+                            {
+                                this.Logger.LogMetrics(
+                                    this.ToolName,
+                                    (this.MetricScenario ?? this.Scenario) ?? "Script",
+                                    process.StartTime,
+                                    process.ExitTime,
+                                    workloadMetrics,
+                                    null,
+                                    process.FullCommand(),
+                                    this.Tags,
+                                    telemetryContext);
+                            }
+                            else
+                            {
+                                // IMPROVED: Log warning when metrics file is empty or contains no valid metrics
+                                this.Logger.LogMessage(
+                                    $"{this.TypeName}.MetricsFileEmpty",
+                                    LogLevel.Warning,
+                                    telemetryContext.Clone()
+                                        .AddContext("metricsFilePath", this.MetricsFilePath)
+                                        .AddContext("reason", "Metrics file exists but contains no valid metrics"));
+                            }
                         }
                     }
                 }
                 finally
                 {
                     telemetryContext.AddContext(nameof(metricsFileFound), metricsFileFound);
+                    telemetryContext.AddContext(nameof(metricsFileParsed), metricsFileParsed);
+                    telemetryContext.AddContext(nameof(metricsCount), metricsCount);
                 }
             }
         }
@@ -273,7 +294,7 @@ namespace VirtualClient.Actions
             // e.g.
             // /logs/anytool/executecustomscript1
             // /logs/anytool/executecustomscript2
-            string destinitionLogsDir = this.Combine(this.GetLogDirectory(this.ToolName), DateTime.UtcNow.ToString("yyyy-MM-dd_hh-mm-ss"));
+            string destinationLogsDir = this.Combine(this.GetLogDirectory(this.ToolName), DateTime.UtcNow.ToString("yyyy-MM-dd_hh-mm-ss"));
 
             if (this.LogPaths?.Any() == true)
             {
@@ -291,7 +312,7 @@ namespace VirtualClient.Actions
                     {
                         foreach (string logFilePath in this.fileSystem.Directory.GetFiles(fullLogPath, "*", SearchOption.AllDirectories))
                         {
-                            var logs = await this.MoveLogsAsync(logFilePath, destinitionLogsDir, cancellationToken, sourceRootDirectory: fullLogPath);
+                            var logs = await this.MoveLogsAsync(logFilePath, destinationLogsDir, cancellationToken, sourceRootDirectory: fullLogPath);
                             await this.RequestLogUploadsAsync(logs);
                         }
                     }
@@ -299,17 +320,16 @@ namespace VirtualClient.Actions
                     // Check for Matching FileNames
                     foreach (string logFilePath in this.fileSystem.Directory.GetFiles(this.ExecutableDirectory, logPath, SearchOption.AllDirectories))
                     {
-                        var logs = await this.MoveLogsAsync(logFilePath, destinitionLogsDir, cancellationToken);
+                        var logs = await this.MoveLogsAsync(logFilePath, destinationLogsDir, cancellationToken);
                         await this.RequestLogUploadsAsync(logs);
                     }
                 }
             }
 
-            // Move test-metrics.json file if that exists
-            string metricsFilePath = this.Combine(this.ExecutableDirectory, "test-metrics.json");
-            if (this.fileSystem.File.Exists(metricsFilePath))
+            // Move test-metrics.json file if that exists.
+            if (this.fileSystem.File.Exists(this.MetricsFilePath))
             {
-                var logs = await this.MoveLogsAsync(metricsFilePath, destinitionLogsDir, cancellationToken);
+                var logs = await this.MoveLogsAsync(this.MetricsFilePath, destinationLogsDir, cancellationToken);
                 await this.RequestLogUploadsAsync(logs);
             }
         }
