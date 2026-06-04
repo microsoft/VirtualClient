@@ -95,17 +95,6 @@ namespace VirtualClient.Actions.MongoDB
         }
 
         /// <summary>
-        /// Version of workload from YCSB that will be run. Ex. workloada, workload..., workloadf.
-        /// </summary>
-        public string WorkloadName
-        {
-            get
-            {
-                return this.Parameters.GetValue<string>(nameof(MongoDBClientExecutor.WorkloadName));
-            }
-        }
-
-        /// <summary>
         /// The file path for YCSB workloads.
         /// </summary>
         protected string YcsbPackagePath { get; set; }

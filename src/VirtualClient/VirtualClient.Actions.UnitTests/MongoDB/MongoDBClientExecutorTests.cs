@@ -239,15 +239,6 @@ namespace VirtualClient.Actions.UnitTests.MongoDB
             Assert.AreEqual("load mongodb -s {ServerIP}:{Port} -recordcount 50000", executor.LoadCommand);
         }
 
-        [Test]
-        public void MongoDBClientExecutor_WorkloadName_ReturnsParameterValue()
-        {
-            // ACT
-            var executor = new MongoDBClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
-
-            // ASSERT
-            Assert.AreEqual("workloada", executor.WorkloadName);
-        }
 
         [Test]
         public void MongoDBClientExecutor_RunCommand_WithEmptyValue_ReturnsEmptyString()
