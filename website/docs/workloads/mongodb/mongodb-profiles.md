@@ -71,7 +71,7 @@ This profile loads a dataset into MongoDB and then runs various read, write, sca
   | Parameter                 | Purpose                                                                         | Default Value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
   | Duration                  | Optional. Defines the length of time to execute each YCSB workload scenario against the MongoDB server. | 00:05:00 |
-  | ThreadCount               | Optional. Number of threads to use during workload execution. | {calculate({LogicalCoreCount}/2)} |
+  | ThreadCount               | Optional. Number of threads to use during workload execution. | # logical processors / 2  |
   | RecordCount               | Optional. Number of records to load into the database. Affects database size: Small (500000) ~8-10 GB, Medium (2500000) ~40-50 GB, Large (20000000) ~320-400 GB, XLarge (55000000) ~900 GB-1 TB. | 2500000 |
   | Port                      | Optional. The port on which the MongoDB server will listen for traffic. | 27017 |
   | Database                  | Optional. The name of the MongoDB database to use for the workload. | mongodb |

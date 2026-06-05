@@ -42,7 +42,6 @@ namespace VirtualClient.Actions.UnitTests.MongoDB
 
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>
             {
-                ["Scenario"] = "runworkload",
                 ["JdkPackageName"] = this.mockJdkPackage.Name,
                 ["YCSBPackageName"] = this.mockYcsbPackage.Name,
                 ["WorkloadName"] = "workloada",
@@ -380,7 +379,8 @@ namespace VirtualClient.Actions.UnitTests.MongoDB
         {
             // ARRANGE
             this.mockFixture.Parameters["Scenario"] = "runworkload";
-            
+            this.mockFixture.Parameters["LoadCommand"] = null;
+
             using (TestMongoDBClientExecutor testInstance = new TestMongoDBClientExecutor(this.mockFixture))
             {
                 string ycsbExecutable = this.mockFixture.PlatformSpecifics.Combine(
@@ -416,7 +416,8 @@ namespace VirtualClient.Actions.UnitTests.MongoDB
             // ARRANGE
             this.mockFixture.Parameters["Scenario"] = "runworkload";
             this.mockFixture.Parameters["RunCommand"] = "run mongodb -s {ServerIP}:{Port}";
-            
+            this.mockFixture.Parameters["LoadCommand"] = null;
+
             using (TestMongoDBClientExecutor testInstance = new TestMongoDBClientExecutor(this.mockFixture))
             {
                 string ycsbExecutable = this.mockFixture.PlatformSpecifics.Combine(
@@ -459,8 +460,8 @@ namespace VirtualClient.Actions.UnitTests.MongoDB
         public async Task MongoDBClientExecutor_ExecuteAsync_WithRunScenario_ReplacesPortPlaceholder()
         {
             // ARRANGE
-            this.mockFixture.Parameters["Scenario"] = "runworkload";
             this.mockFixture.Parameters["RunCommand"] = "run mongodb -s {ServerIP}:{Port}";
+            this.mockFixture.Parameters["LoadCommand"] = null;
             this.mockFixture.Parameters["Port"] = 27019;
             
             using (TestMongoDBClientExecutor testInstance = new TestMongoDBClientExecutor(this.mockFixture))
@@ -737,11 +738,12 @@ namespace VirtualClient.Actions.UnitTests.MongoDB
         }
 
         [Test]
-        public async Task MongoDBClientExecutor_ExecuteAsync_WithDropDatabaseScenario_ChecksDatabaseExists()
+        public async Task MongoDBClientExecutor_ExecuteAsync_WithInitializeDatabase_ChecksDatabaseExists()
         {
             // ARRANGE
-            this.mockFixture.Parameters["Scenario"] = "dropdatabase";
-            
+            this.mockFixture.Parameters["LoadCommand"] = "load mongodb -s {ServerIP}:{Port} -recordcount 50000";
+            this.mockFixture.Parameters["RunCommand"] = null;
+
             using (TestMongoDBClientExecutor testInstance = new TestMongoDBClientExecutor(this.mockFixture))
             {
                 testInstance.SetYcsbPackagePath(this.mockYcsbPackage);
@@ -779,7 +781,7 @@ namespace VirtualClient.Actions.UnitTests.MongoDB
         public async Task MongoDBClientExecutor_ExecuteAsync_WithDropDatabaseScenario_DatabaseNotExists_DoesNotDrop()
         {
             // ARRANGE
-            this.mockFixture.Parameters["Scenario"] = "dropdatabase";
+            this.mockFixture.Parameters["RunCommand"] = null;
             
             using (TestMongoDBClientExecutor testInstance = new TestMongoDBClientExecutor(this.mockFixture))
             {
@@ -819,7 +821,7 @@ namespace VirtualClient.Actions.UnitTests.MongoDB
         public async Task MongoDBClientExecutor_ExecuteAsync_WithDropDatabaseVariantScenario_ExecutesDropLogic()
         {
             // ARRANGE
-            this.mockFixture.Parameters["Scenario"] = "dropdatabase_atlast";
+            this.mockFixture.Parameters["RunCommand"] = null;
 
             using (TestMongoDBClientExecutor testInstance = new TestMongoDBClientExecutor(this.mockFixture))
             {
@@ -852,48 +854,6 @@ namespace VirtualClient.Actions.UnitTests.MongoDB
                 Assert.IsTrue(checkDbCalled, "Drop database variant scenario should check database existence");
                 Assert.IsTrue(dropDbCalled, "Drop database variant scenario should execute drop logic");
             }
-        }
-
-        [Test]
-        public void MongoDBClientExecutor_Scenario_LoadDatabase_ConfiguresCorrectly()
-        {
-            // ARRANGE
-            this.mockFixture.Parameters["Scenario"] = "loaddatabase";
-
-            // ACT
-            var executor = new MongoDBClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
-            var scenario = this.mockFixture.Parameters["Scenario"];
-
-            // ASSERT
-            Assert.AreEqual("loaddatabase", scenario);
-        }
-
-        [Test]
-        public void MongoDBClientExecutor_Scenario_DropDatabase_ConfiguresCorrectly()
-        {
-            // ARRANGE
-            this.mockFixture.Parameters["Scenario"] = "dropdatabase";
-
-            // ACT
-            var executor = new MongoDBClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
-            var scenario = this.mockFixture.Parameters["Scenario"];
-
-            // ASSERT
-            Assert.AreEqual("dropdatabase", scenario);
-        }
-
-        [Test]
-        public void MongoDBClientExecutor_Scenario_RunWorkload_ConfiguresCorrectly()
-        {
-            // ARRANGE
-            this.mockFixture.Parameters["Scenario"] = "runworkload";
-
-            // ACT
-            var executor = new MongoDBClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
-            var scenario = this.mockFixture.Parameters["Scenario"];
-
-            // ASSERT
-            Assert.AreEqual("runworkload", scenario);
         }
 
         [Test]
