@@ -165,16 +165,8 @@ namespace VirtualClient.Actions.MongoDB
         {
             try
             {
-                // If loading database, log size after load
-                if (this.Scenario?.StartsWith("loaddatabase", StringComparison.OrdinalIgnoreCase) == true)
-                {
-                    await this.LoadDatabaseAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
-                    await this.LogDatabaseStatsAsync("MongoDB-StatsAfterLoad", telemetryContext, cancellationToken)
-                        .ConfigureAwait(false);
-                }
-
-                // Drop database if scenario is 'dropdatabase' and exit
-                else if (this.Scenario?.StartsWith("dropdatabase", StringComparison.OrdinalIgnoreCase) == true)
+                // Initialize - drop then load database
+                if (!string.IsNullOrEmpty(this.LoadCommand))
                 {
                     bool dbExists = await this.CheckDatabaseExistsAsync(telemetryContext, cancellationToken)
                         .ConfigureAwait(false);
@@ -194,6 +186,10 @@ namespace VirtualClient.Actions.MongoDB
                             LogLevel.Information,
                             telemetryContext.Clone().AddContext("database", "ycsb"));
                     }
+
+                    await this.LoadDatabaseAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
+                    await this.LogDatabaseStatsAsync("MongoDB-StatsAfterLoad", telemetryContext, cancellationToken)
+                        .ConfigureAwait(false);
                 }
                 else
                 {
@@ -225,6 +221,18 @@ namespace VirtualClient.Actions.MongoDB
             {
                 telemetryContext.AddError(ex);
                 this.Logger.LogTraceMessage($"{nameof(MongoDBClientExecutor)}.Exception", telemetryContext);
+            }
+        }
+
+        /// <summary>
+        /// Validates the configuration and input parameters for the workload.
+        /// </summary>
+        protected override void Validate()
+        {
+            if (!string.IsNullOrEmpty(this.LoadCommand) && !string.IsNullOrEmpty(this.RunCommand))
+            {
+                throw new WorkloadException(
+                    $"Both LoadCommand and RunCommand cannot be specified at the same time.", ErrorReason.InvalidProfileDefinition);
             }
         }
 

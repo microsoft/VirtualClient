@@ -4,7 +4,7 @@
         "RecommendedMinimumExecutionTime": "00:15:00",
         "SupportedPlatforms": "linux-x64,linux-arm64",
         "SupportedOperatingSystems": "Ubuntu",
-        "Notes": "Database sizes vary based on RecordCount: Small (500k records) ~8-10 GB, Medium (2.5M records) ~40-50 GB, Large (20M records) ~320-400 GB, XLarge (55M records) ~900 GB-1 TB. Default configuration uses Medium size (~40-50 GB) with 2.5M records."
+        "Notes": "Database sizes vary based on RecordCount: Small (500000 records) ~8-10 GB, Medium (2500000 records) ~40-50 GB, Large (20000000 records) ~320-400 GB, XLarge (55000000 records) ~900 GB-1 TB. Default configuration uses Medium size (~40-50 GB) with 2500000 records."
     },
     "Parameters": {
         "Port": 27017,
@@ -28,18 +28,18 @@
         {
             "Type": "MongoDBClientExecutor",
             "Parameters": {
-                "Scenario": "loaddatabase_initial",
+                "Scenario": "initialize_database",
                 "Role": "Client",
                 "Database": "$.Parameters.Database",
                 "Port": "$.Parameters.Port",
                 "LoadCommand": "load {Database} -s -p maxexecutiontime={Duration.TotalSeconds} -p recordcount={RecordCount} -p fieldcount={FieldCount} -p fieldlength={FieldLength} -threads {ThreadCount} -p mongodb.url=mongodb://{ServerIP}:{Port}/ycsb -P {PackagePath:ycsb}/ycsb-0.17.0/workloads/workloada",
                 "Duration": "$.Parameters.Duration",
-                "FieldCount": "128",
-                "FieldLength": "128",
                 "YCSBPackageName": "ycsb",
                 "JdkPackageName": "javadevelopmentkit",
                 "RecordCount": "$.Parameters.RecordCount",
-                "ThreadCount": "$.Parameters.ThreadCount"
+                "ThreadCount": "$.Parameters.ThreadCount",
+                "FieldCount": "128",
+                "FieldLength": "128"
             }
         },
         {
@@ -102,25 +102,6 @@
         {
             "Type": "MongoDBClientExecutor",
             "Parameters": {
-                "Scenario": "read50_rmw50",
-                "Role": "Client",
-                "MetricScenario": "{Scenario}_ops{OperationCount}_{FieldCount}_{FieldLength}_th{ThreadCount}",
-                "Database": "$.Parameters.Database",
-                "Port": "$.Parameters.Port",
-                "RunCommand": "run {Database} -s -p maxexecutiontime={Duration.TotalSeconds} -p operationcount={OperationCount} -p recordcount={RecordCount} -threads {ThreadCount} -p fieldcount={FieldCount} -p fieldlength={FieldLength} -p mongodb.url=mongodb://{ServerIP}:{Port}/ycsb -P {PackagePath:ycsb}/ycsb-0.17.0/workloads/workloadf",
-                "Duration": "$.Parameters.Duration",
-                "ThreadCount": "$.Parameters.ThreadCount",
-                "OperationCount": "5000000",
-                "YCSBPackageName": "ycsb",
-                "JdkPackageName": "javadevelopmentkit",
-                "RecordCount": "$.Parameters.RecordCount",
-                "FieldCount": "128",
-                "FieldLength": "128"
-            }
-        },
-        {
-            "Type": "MongoDBClientExecutor",
-            "Parameters": {
                 "Scenario": "read95_insert05",
                 "Role": "Client",
                 "MetricScenario": "{Scenario}_ops{OperationCount}_{FieldCount}_{FieldLength}_th{ThreadCount}",
@@ -135,34 +116,6 @@
                 "RecordCount": "$.Parameters.RecordCount",
                 "FieldCount": "128",
                 "FieldLength": "128"
-            }
-        },
-        {
-            "Type": "MongoDBClientExecutor",
-            "Parameters": {
-                "Scenario": "dropdatabase_after_d_before_e",
-                "Role": "Client",
-                "Database": "$.Parameters.Database",
-                "Port": "$.Parameters.Port",
-                "YCSBPackageName": "ycsb",
-                "JdkPackageName": "javadevelopmentkit"
-            }
-        },
-        {
-            "Type": "MongoDBClientExecutor",
-            "Parameters": {
-                "Scenario": "loaddatabase_after_d_before_e",
-                "Role": "Client",
-                "Database": "$.Parameters.Database",
-                "Port": "$.Parameters.Port",
-                "LoadCommand": "load {Database} -s -p maxexecutiontime={Duration.TotalSeconds} -p recordcount={RecordCount} -p fieldcount={FieldCount} -p fieldlength={FieldLength} -threads {ThreadCount} -p mongodb.url=mongodb://{ServerIP}:{Port}/ycsb -P {PackagePath:ycsb}/ycsb-0.17.0/workloads/workloada",
-                "Duration": "$.Parameters.Duration",
-                "FieldCount": "128",
-                "FieldLength": "128",
-                "YCSBPackageName": "ycsb",
-                "JdkPackageName": "javadevelopmentkit",
-                "RecordCount": "$.Parameters.RecordCount",
-                "ThreadCount": "$.Parameters.ThreadCount"
             }
         },
         {
@@ -187,12 +140,20 @@
         {
             "Type": "MongoDBClientExecutor",
             "Parameters": {
-                "Scenario": "dropdatabase_atlast",
+                "Scenario": "read50_rmw50",
                 "Role": "Client",
+                "MetricScenario": "{Scenario}_ops{OperationCount}_{FieldCount}_{FieldLength}_th{ThreadCount}",
                 "Database": "$.Parameters.Database",
                 "Port": "$.Parameters.Port",
+                "RunCommand": "run {Database} -s -p maxexecutiontime={Duration.TotalSeconds} -p operationcount={OperationCount} -p recordcount={RecordCount} -threads {ThreadCount} -p fieldcount={FieldCount} -p fieldlength={FieldLength} -p mongodb.url=mongodb://{ServerIP}:{Port}/ycsb -P {PackagePath:ycsb}/ycsb-0.17.0/workloads/workloadf",
+                "Duration": "$.Parameters.Duration",
+                "ThreadCount": "$.Parameters.ThreadCount",
+                "OperationCount": "5000000",
                 "YCSBPackageName": "ycsb",
-                "JdkPackageName": "javadevelopmentkit"
+                "JdkPackageName": "javadevelopmentkit",
+                "RecordCount": "$.Parameters.RecordCount",
+                "FieldCount": "128",
+                "FieldLength": "128"
             }
         }
     ],
