@@ -140,7 +140,7 @@
         {
             "Type": "MongoDBClientExecutor",
             "Parameters": {
-                "Scenario": "read50_rmw50",
+                "Scenario": "read50_readmodifywrite50",
                 "Role": "Client",
                 "MetricScenario": "{Scenario}_ops{OperationCount}_{FieldCount}_{FieldLength}_th{ThreadCount}",
                 "Database": "$.Parameters.Database",

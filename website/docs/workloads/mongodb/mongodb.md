@@ -210,8 +210,8 @@ Different database sizes require different amounts of disk space:
 
 ## Additional Resources
 For more detailed information on MongoDB workload profiles and testing scenarios, see:
-- [MongoDB Profile Components](./mongodb-profiles.md)
-- [YCSB Details and Usage](./YCSB.md)
-- [MongoDB Testing Scripts](./testing_scripts.md)
-- [YCSB Core Workloads Documentation](https://github.com/brianfrankcooper/YCSB/wiki/Core-Workloads)
-- [YCSB Core Properties](https://github.com/brianfrankcooper/YCSB/wiki/Core-Properties)
+* [MongoDB Workload Profiles](./mongodb-profiles.md)
+* [YCSB Details and Usage](./YCSB.md)
+* [MongoDB Testing Scripts](./testing_scripts.md)
+* [YCSB Core Workloads Documentation](https://github.com/brianfrankcooper/YCSB/wiki/Core-Workloads)
+* [YCSB Core Properties](https://github.com/brianfrankcooper/YCSB/wiki/Core-Properties)
