@@ -378,7 +378,7 @@ namespace VirtualClient.Actions.UnitTests.MongoDB
         public async Task MongoDBClientExecutor_ExecuteAsync_WithRunWorkloadScenario_ExecutesSuccessfully()
         {
             // ARRANGE
-            this.mockFixture.Parameters["Scenario"] = "runworkload";
+            this.mockFixture.Parameters["Scenario"] = "RunMongoDB";
             this.mockFixture.Parameters["LoadCommand"] = null;
 
             using (TestMongoDBClientExecutor testInstance = new TestMongoDBClientExecutor(this.mockFixture))
@@ -417,6 +417,7 @@ namespace VirtualClient.Actions.UnitTests.MongoDB
             this.mockFixture.Parameters["Scenario"] = "runworkload";
             this.mockFixture.Parameters["RunCommand"] = "run mongodb -s {ServerIP}:{Port}";
             this.mockFixture.Parameters["LoadCommand"] = null;
+            this.mockFixture.Parameters["Scenario"] = "RunMongoDB";
 
             using (TestMongoDBClientExecutor testInstance = new TestMongoDBClientExecutor(this.mockFixture))
             {
@@ -463,7 +464,8 @@ namespace VirtualClient.Actions.UnitTests.MongoDB
             this.mockFixture.Parameters["RunCommand"] = "run mongodb -s {ServerIP}:{Port}";
             this.mockFixture.Parameters["LoadCommand"] = null;
             this.mockFixture.Parameters["Port"] = 27019;
-            
+            this.mockFixture.Parameters["Scenario"] = "RunMongoDB";
+
             using (TestMongoDBClientExecutor testInstance = new TestMongoDBClientExecutor(this.mockFixture))
             {
                 string ycsbExecutable = this.mockFixture.PlatformSpecifics.Combine(
@@ -741,30 +743,43 @@ namespace VirtualClient.Actions.UnitTests.MongoDB
         public async Task MongoDBClientExecutor_ExecuteAsync_WithInitializeDatabase_ChecksDatabaseExists()
         {
             // ARRANGE
+            this.mockFixture.Parameters["Scenario"] = "initialize_database";
             this.mockFixture.Parameters["LoadCommand"] = "load mongodb -s {ServerIP}:{Port} -recordcount 50000";
             this.mockFixture.Parameters["RunCommand"] = null;
 
             using (TestMongoDBClientExecutor testInstance = new TestMongoDBClientExecutor(this.mockFixture))
             {
+                string ycsbExecutable = this.mockFixture.PlatformSpecifics.Combine(
+                    this.mockYcsbPackage.Path, "ycsb-0.17.0", "bin", "ycsb.sh");
+
                 testInstance.SetYcsbPackagePath(this.mockYcsbPackage);
                 testInstance.SetJdkPackagePath(this.mockJdkPackage);
+                testInstance.SetYcsbExecutablePath(ycsbExecutable);
                 testInstance.SetServerApiClient(this.mockFixture.ApiClient.Object);
 
                 bool checkDbCalled = false;
                 bool dropDbCalled = false;
-                
+
                 this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
                 {
+                    // Clear previous output
+                    this.mockFixture.Process.StandardOutput.Clear();
+
                     if (arguments.Contains("show dbs"))
                     {
                         checkDbCalled = true;
                         this.mockFixture.Process.StandardOutput.Append("ycsb 100MB\n");
                     }
-                    if (arguments.Contains("db.dropDatabase()"))
+                    else if (arguments.Contains("db.dropDatabase()"))
                     {
                         dropDbCalled = true;
                     }
-                    
+                    else if (arguments.Contains("load"))
+                    {
+                        // Return YCSB-formatted output for load command
+                        this.mockFixture.Process.StandardOutput.Append(this.mockWorkloadOutput);
+                    }
+
                     return this.mockFixture.Process;
                 };
 
@@ -781,19 +796,27 @@ namespace VirtualClient.Actions.UnitTests.MongoDB
         public async Task MongoDBClientExecutor_ExecuteAsync_WithDropDatabaseScenario_DatabaseNotExists_DoesNotDrop()
         {
             // ARRANGE
+            this.mockFixture.Parameters["Scenario"] = "initialize_database";
             this.mockFixture.Parameters["RunCommand"] = null;
-            
+
             using (TestMongoDBClientExecutor testInstance = new TestMongoDBClientExecutor(this.mockFixture))
             {
+                string ycsbExecutable = this.mockFixture.PlatformSpecifics.Combine(
+                    this.mockYcsbPackage.Path, "ycsb-0.17.0", "bin", "ycsb.sh");
+
                 testInstance.SetYcsbPackagePath(this.mockYcsbPackage);
                 testInstance.SetJdkPackagePath(this.mockJdkPackage);
+                testInstance.SetYcsbExecutablePath(ycsbExecutable);
                 testInstance.SetServerApiClient(this.mockFixture.ApiClient.Object);
 
                 bool checkDbCalled = false;
                 bool dropDbCalled = false;
-                
+
                 this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
                 {
+                    // Clear previous output
+                    this.mockFixture.Process.StandardOutput.Clear();
+
                     if (arguments.Contains("show dbs"))
                     {
                         checkDbCalled = true;
@@ -804,7 +827,17 @@ namespace VirtualClient.Actions.UnitTests.MongoDB
                     {
                         dropDbCalled = true;
                     }
-                    
+                    if (arguments.Contains("load mongodb"))
+                    {
+                        // Provide valid YCSB output for load command
+                        this.mockFixture.Process.StandardOutput.Append(this.mockWorkloadOutput);
+                    }
+                    if (arguments.Contains("db.stats()"))
+                    {
+                        // Provide database stats output
+                        this.mockFixture.Process.StandardOutput.Append("{\"db\": \"ycsb\", \"collections\": 1}");
+                    }
+
                     return this.mockFixture.Process;
                 };
 
@@ -821,12 +854,14 @@ namespace VirtualClient.Actions.UnitTests.MongoDB
         public async Task MongoDBClientExecutor_ExecuteAsync_WithDropDatabaseVariantScenario_ExecutesDropLogic()
         {
             // ARRANGE
+            this.mockFixture.Parameters["Scenario"] = "initialize_database";
             this.mockFixture.Parameters["RunCommand"] = null;
 
             using (TestMongoDBClientExecutor testInstance = new TestMongoDBClientExecutor(this.mockFixture))
             {
                 testInstance.SetYcsbPackagePath(this.mockYcsbPackage);
                 testInstance.SetJdkPackagePath(this.mockJdkPackage);
+                testInstance.SetYcsbExecutablePath(System.IO.Path.Combine(this.mockYcsbPackage.Path, "ycsb-0.17.0", "bin", "ycsb.sh"));
                 testInstance.SetServerApiClient(this.mockFixture.ApiClient.Object);
 
                 bool checkDbCalled = false;
@@ -834,6 +869,9 @@ namespace VirtualClient.Actions.UnitTests.MongoDB
 
                 this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
                 {
+                    // Clear previous output
+                    this.mockFixture.Process.StandardOutput.Clear();
+
                     if (arguments.Contains("show dbs"))
                     {
                         checkDbCalled = true;
@@ -842,6 +880,16 @@ namespace VirtualClient.Actions.UnitTests.MongoDB
                     if (arguments.Contains("db.dropDatabase()"))
                     {
                         dropDbCalled = true;
+                    }
+                    if (arguments.Contains("load mongodb"))
+                    {
+                        // Provide valid YCSB output for load command
+                        this.mockFixture.Process.StandardOutput.Append(this.mockWorkloadOutput);
+                    }
+                    if (arguments.Contains("db.stats()"))
+                    {
+                        // Provide database stats output
+                        this.mockFixture.Process.StandardOutput.Append("{\"db\": \"ycsb\", \"collections\": 1}");
                     }
 
                     return this.mockFixture.Process;

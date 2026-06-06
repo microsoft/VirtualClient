@@ -17,19 +17,12 @@
         private static readonly Regex MongoDBSectionDelimiter = new Regex(@"(\n)(\s)*(\n)", RegexOptions.ExplicitCapture);
 
         /// <summary>
-        /// Label for current running Scenario.
-        /// </summary>
-        private string scenario;
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="MongoDBMetricsParser"/> class.
         /// </summary>
         /// <param name="rawText">Raw text which is output of the MongoDB workload</param>
-        /// <param name="scenario">Scenario name</param>
-        public MongoDBMetricsParser(string scenario, string rawText)
+        public MongoDBMetricsParser(string rawText)
             : base(rawText)
         {
-            this.scenario = scenario;
         }
 
         /// <summary>

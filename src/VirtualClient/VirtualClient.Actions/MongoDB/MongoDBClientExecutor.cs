@@ -500,12 +500,12 @@ namespace VirtualClient.Actions.MongoDB
                     this.Logger.LogMessage(
                         $"{nameof(MongoDBClientExecutor)}.CaptureMetrics",
                         telemetryContext.Clone().AddContext("results", results));
-                    
-                    MongoDBMetricsParser resultsParser = new MongoDBMetricsParser(this.Scenario, results);
+
+                    MongoDBMetricsParser resultsParser = new MongoDBMetricsParser(results);
                     IList<Metric> metrics = resultsParser.Parse();
 
                     string metricScenarioName = this.NormalizeMetricScenarioName(this.MetricScenario ?? this.Scenario);
-                    
+
                     this.Logger.LogMetrics(
                         toolName: "MongoDBClient",
                         scenarioName: metricScenarioName,

@@ -26,7 +26,7 @@ namespace VirtualClient.Actions.UnitTests.MongoDB
         public void MongoDBMetricsParser_Constructor_SetsScenarioCorrectly()
         {
             // Arrange & Act
-            var parser = new MongoDBMetricsParser("TestScenario", "dummy text");
+            var parser = new MongoDBMetricsParser("dummy text");
 
             // Assert - We can't directly test private field, but constructor should not throw
             Assert.IsNotNull(parser);
@@ -38,7 +38,7 @@ namespace VirtualClient.Actions.UnitTests.MongoDB
             // Arrange
             Assert.IsTrue(System.IO.File.Exists(exampleOutputPath), $"Example output file not found at {exampleOutputPath}");
             string rawText = System.IO.File.ReadAllText(exampleOutputPath);
-            var parser = new MongoDBMetricsParser("MongoDBScenario", rawText);
+            var parser = new MongoDBMetricsParser(rawText);
 
             // Act
             IList<Metric> metrics = parser.Parse();
@@ -71,7 +71,7 @@ namespace VirtualClient.Actions.UnitTests.MongoDB
                 [UPDATE], Operations, 50
                 [UPDATE], AverageLatency(us), 300.0";
 
-            var parser = new MongoDBMetricsParser("TestScenario", minimalOutput);
+            var parser = new MongoDBMetricsParser(minimalOutput);
 
             // Act
             IList<Metric> metrics = parser.Parse();
@@ -98,7 +98,7 @@ namespace VirtualClient.Actions.UnitTests.MongoDB
                 [UPDATE], 95thPercentileLatency(us), 300
                 [CLEANUP], 99thPercentileLatency(us), 400";
 
-            var parser = new MongoDBMetricsParser("TestScenario", outputWithDifferentTypes);
+            var parser = new MongoDBMetricsParser(outputWithDifferentTypes);
 
             // Act
             IList<Metric> metrics = parser.Parse();
@@ -121,7 +121,7 @@ namespace VirtualClient.Actions.UnitTests.MongoDB
                 [UPDATE], Return=NOT_FOUND, 10
                 [UPDATE], Return=OK, 490";
 
-            var parser = new MongoDBMetricsParser("TestScenario", outputWithReturns);
+            var parser = new MongoDBMetricsParser(outputWithReturns);
 
             // Act
             IList<Metric> metrics = parser.Parse();
@@ -143,7 +143,7 @@ namespace VirtualClient.Actions.UnitTests.MongoDB
                 [READ], Operations, 100
                 [UPDATE], Operations, 100";
 
-            var parser = new MongoDBMetricsParser("TestScenario", outputWithoutOverall);
+            var parser = new MongoDBMetricsParser(outputWithoutOverall);
 
             // Act & Assert
             var exception = Assert.Throws<WorkloadException>(() => parser.Parse());
@@ -155,7 +155,7 @@ namespace VirtualClient.Actions.UnitTests.MongoDB
         public void Parse_ThrowsWorkloadException_WhenRawTextIsEmpty()
         {
             // Arrange
-            var parser = new MongoDBMetricsParser("TestScenario", "");
+            var parser = new MongoDBMetricsParser("");
 
             // Act & Assert
             var exception = Assert.Throws<WorkloadException>(() => parser.Parse());
@@ -166,7 +166,7 @@ namespace VirtualClient.Actions.UnitTests.MongoDB
         public void Parse_ThrowsWorkloadException_WhenRawTextIsNull()
         {
             // Arrange
-            var parser = new MongoDBMetricsParser("TestScenario", null);
+            var parser = new MongoDBMetricsParser(null);
 
             // Act & Assert
             Assert.Throws<WorkloadException>(() => parser.Parse());
@@ -187,7 +187,7 @@ namespace VirtualClient.Actions.UnitTests.MongoDB
                 Bad line
                 [UPDATE], AverageLatency(us), 300";
 
-            var parser = new MongoDBMetricsParser("TestScenario", outputWithMalformed);
+            var parser = new MongoDBMetricsParser(outputWithMalformed);
 
             // Act
             IList<Metric> metrics = parser.Parse();
@@ -211,7 +211,7 @@ namespace VirtualClient.Actions.UnitTests.MongoDB
                 [TOTAL_GC_TIME_%_G1_Young_Generation], Time(%), 0.5
                 [TOTAL_GC_TIME_G1_Concurrent_GC], Time(ms), 150";
 
-            var parser = new MongoDBMetricsParser("TestScenario", outputWithComplexUnits);
+            var parser = new MongoDBMetricsParser(outputWithComplexUnits);
 
             // Act
             IList<Metric> metrics = parser.Parse();
