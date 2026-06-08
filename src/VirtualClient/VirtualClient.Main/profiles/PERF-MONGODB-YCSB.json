@@ -66,7 +66,7 @@
             "Parameters": {
                 "Scenario": "Read_Mostly",
                 "Role": "Client",
-                "MetricScenario": "Read_Mostly_50_Read_50_Update_{RecordCount}_Records",
+                "MetricScenario": "Read_Mostly_95_Read_5_Update_{RecordCount}_Records",
                 "Database": "$.Parameters.Database",
                 "Port": "$.Parameters.Port",
                 "RunCommand": "run {Database} -s -p maxexecutiontime={Duration.TotalSeconds} -p operationcount={OperationCount} -p recordcount={RecordCount} -threads {ThreadCount} -p fieldcount={FieldCount} -p fieldlength={FieldLength} -p mongodb.url=mongodb://{ServerIP}:{Port}/ycsb -P {PackagePath:ycsb}/ycsb-0.17.0/workloads/workloadb",
