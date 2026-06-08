@@ -10,7 +10,7 @@
         "Port": 27017,
         "Database": "mongodb",
         "ThreadCount": "{calculate({LogicalCoreCount}/2)}",
-        "Duration": "00:05:00",
+        "Duration": "00:15:00",
         "RecordCount": "2500000",
         "DiskFilter": "BiggestSize"
     },

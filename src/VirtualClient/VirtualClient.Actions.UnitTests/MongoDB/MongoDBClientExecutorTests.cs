@@ -151,6 +151,11 @@ namespace VirtualClient.Actions.UnitTests.MongoDB
                 return base.ExecuteAsync(telemetryContext, cancellationToken);
             }
 
+            public new void Validate()
+            {
+                base.Validate();
+            }
+
             // Expose private methods via reflection for testing
             public Task<bool> CallCheckDatabaseExistsAsync(EventContext telemetryContext, CancellationToken cancellationToken)
             {
@@ -297,6 +302,68 @@ namespace VirtualClient.Actions.UnitTests.MongoDB
             // ASSERT
             Assert.IsTrue(command.Contains("{ServerIP}"), "Command should contain ServerIP placeholder");
             Assert.IsTrue(command.Contains("{Port}"), "Command should contain Port placeholder");
+        }
+
+        #endregion
+
+        #region Validation Tests
+
+        [Test]
+        public void MongoDBClientExecutor_Validate_ThrowsWhenBothLoadCommandAndRunCommandAreSet()
+        {
+            // ARRANGE
+            this.mockFixture.Parameters["LoadCommand"] = "load mongodb -s {ServerIP}:{Port} -recordcount 50000";
+            this.mockFixture.Parameters["RunCommand"] = "run mongodb -s {ServerIP}:{Port} -threads 100 -recordcount 1000";
+
+            // ACT & ASSERT
+            using (TestMongoDBClientExecutor testInstance = new TestMongoDBClientExecutor(this.mockFixture))
+            {
+                WorkloadException exception = Assert.Throws<WorkloadException>(() => testInstance.Validate());
+                Assert.IsTrue(exception.Message.Contains("Both LoadCommand and RunCommand cannot be specified at the same time"));
+                Assert.AreEqual(ErrorReason.InvalidProfileDefinition, exception.Reason);
+            }
+        }
+
+        [Test]
+        public void MongoDBClientExecutor_Validate_DoesNotThrowWhenOnlyLoadCommandIsSet()
+        {
+            // ARRANGE
+            this.mockFixture.Parameters["LoadCommand"] = "load mongodb -s {ServerIP}:{Port} -recordcount 50000";
+            this.mockFixture.Parameters["RunCommand"] = string.Empty;
+
+            // ACT & ASSERT
+            using (TestMongoDBClientExecutor testInstance = new TestMongoDBClientExecutor(this.mockFixture))
+            {
+                Assert.DoesNotThrow(() => testInstance.Validate());
+            }
+        }
+
+        [Test]
+        public void MongoDBClientExecutor_Validate_DoesNotThrowWhenOnlyRunCommandIsSet()
+        {
+            // ARRANGE
+            this.mockFixture.Parameters["LoadCommand"] = string.Empty;
+            this.mockFixture.Parameters["RunCommand"] = "run mongodb -s {ServerIP}:{Port} -threads 100 -recordcount 1000";
+
+            // ACT & ASSERT
+            using (TestMongoDBClientExecutor testInstance = new TestMongoDBClientExecutor(this.mockFixture))
+            {
+                Assert.DoesNotThrow(() => testInstance.Validate());
+            }
+        }
+
+        [Test]
+        public void MongoDBClientExecutor_Validate_DoesNotThrowWhenBothCommandsAreEmpty()
+        {
+            // ARRANGE
+            this.mockFixture.Parameters["LoadCommand"] = string.Empty;
+            this.mockFixture.Parameters["RunCommand"] = string.Empty;
+
+            // ACT & ASSERT
+            using (TestMongoDBClientExecutor testInstance = new TestMongoDBClientExecutor(this.mockFixture))
+            {
+                Assert.DoesNotThrow(() => testInstance.Validate());
+            }
         }
 
         #endregion
@@ -639,7 +706,7 @@ namespace VirtualClient.Actions.UnitTests.MongoDB
                 {
                     capturedCommand = exe;
                     capturedArguments = arguments;
-                    
+
                     // Simulate database exists in output
                     this.mockFixture.Process.StandardOutput.Append("admin   40.00 KiB\n");
                     this.mockFixture.Process.StandardOutput.Append("config  60.00 KiB\n");
