@@ -18,7 +18,7 @@
         {
             "Type": "MongoDBServerExecutor",
             "Parameters": {
-                "Scenario": "serversetup",
+                "Scenario": "ServerSetup",
                 "Role": "Server",
                 "Port": "$.Parameters.Port",
                 "Database": "$.Parameters.Database",
@@ -28,7 +28,7 @@
         {
             "Type": "MongoDBClientExecutor",
             "Parameters": {
-                "Scenario": "initialize_database",
+                "Scenario": "Initialize_Database",
                 "Role": "Client",
                 "Database": "$.Parameters.Database",
                 "Port": "$.Parameters.Port",
@@ -45,9 +45,9 @@
         {
             "Type": "MongoDBClientExecutor",
             "Parameters": {
-                "Scenario": "read50_write50",
+                "Scenario": "Update_Heavy",
                 "Role": "Client",
-                "MetricScenario": "{Scenario}_ops{OperationCount}_{FieldCount}_{FieldLength}_th{ThreadCount}",
+                "MetricScenario": "Update_Heavy_50_Read_50_Update_{RecordCount}_Records",
                 "Database": "$.Parameters.Database",
                 "Port": "$.Parameters.Port",
                 "RunCommand": "run {Database} -s -p maxexecutiontime={Duration.TotalSeconds} -p operationcount={OperationCount} -p recordcount={RecordCount} -threads {ThreadCount} -p fieldcount={FieldCount} -p fieldlength={FieldLength} -p mongodb.url=mongodb://{ServerIP}:{Port}/ycsb -P {PackagePath:ycsb}/ycsb-0.17.0/workloads/workloada",
@@ -64,9 +64,9 @@
         {
             "Type": "MongoDBClientExecutor",
             "Parameters": {
-                "Scenario": "read95_write05",
+                "Scenario": "Read_Mostly",
                 "Role": "Client",
-                "MetricScenario": "{Scenario}_ops{OperationCount}_{FieldCount}_{FieldLength}_th{ThreadCount}",
+                "MetricScenario": "Read_Mostly_50_Read_50_Update_{RecordCount}_Records",
                 "Database": "$.Parameters.Database",
                 "Port": "$.Parameters.Port",
                 "RunCommand": "run {Database} -s -p maxexecutiontime={Duration.TotalSeconds} -p operationcount={OperationCount} -p recordcount={RecordCount} -threads {ThreadCount} -p fieldcount={FieldCount} -p fieldlength={FieldLength} -p mongodb.url=mongodb://{ServerIP}:{Port}/ycsb -P {PackagePath:ycsb}/ycsb-0.17.0/workloads/workloadb",
@@ -83,9 +83,9 @@
         {
             "Type": "MongoDBClientExecutor",
             "Parameters": {
-                "Scenario": "read100",
+                "Scenario": "Read_Only",
                 "Role": "Client",
-                "MetricScenario": "{Scenario}_ops{OperationCount}_{FieldCount}_{FieldLength}_th{ThreadCount}",
+                "MetricScenario": "Read_Only_100_Read_{RecordCount}_Records",
                 "Database": "$.Parameters.Database",
                 "Port": "$.Parameters.Port",
                 "RunCommand": "run {Database} -s -p maxexecutiontime={Duration.TotalSeconds} -p operationcount={OperationCount} -p recordcount={RecordCount} -threads {ThreadCount} -p fieldcount={FieldCount} -p fieldlength={FieldLength} -p mongodb.url=mongodb://{ServerIP}:{Port}/ycsb -P {PackagePath:ycsb}/ycsb-0.17.0/workloads/workloadc",
@@ -102,9 +102,9 @@
         {
             "Type": "MongoDBClientExecutor",
             "Parameters": {
-                "Scenario": "read95_insert05",
+                "Scenario": "Read_Latest",
                 "Role": "Client",
-                "MetricScenario": "{Scenario}_ops{OperationCount}_{FieldCount}_{FieldLength}_th{ThreadCount}",
+                "MetricScenario": "Read_Latest_95_Read_5_Insert_{RecordCount}_Records",
                 "Database": "$.Parameters.Database",
                 "Port": "$.Parameters.Port",
                 "RunCommand": "run {Database} -s -p maxexecutiontime={Duration.TotalSeconds} -p operationcount={OperationCount} -p recordcount={RecordCount} -threads {ThreadCount} -p fieldcount={FieldCount} -p fieldlength={FieldLength} -p mongodb.url=mongodb://{ServerIP}:{Port}/ycsb -P {PackagePath:ycsb}/ycsb-0.17.0/workloads/workloadd",
@@ -121,9 +121,9 @@
         {
             "Type": "MongoDBClientExecutor",
             "Parameters": {
-                "Scenario": "scan95_insert05",
+                "Scenario": "Short_Range_Scan",
                 "Role": "Client",
-                "MetricScenario": "{Scenario}_ops{OperationCount}_{FieldCount}_{FieldLength}_th{ThreadCount}",
+                "MetricScenario": "Short_Range_Scan_95_Scan_5_Insert_{RecordCount}_Records",
                 "Database": "$.Parameters.Database",
                 "Port": "$.Parameters.Port",
                 "RunCommand": "run {Database} -s -p maxexecutiontime={Duration.TotalSeconds} -p operationcount={OperationCount} -p recordcount={RecordCount} -threads {ThreadCount} -p fieldcount={FieldCount} -p fieldlength={FieldLength} -p mongodb.url=mongodb://{ServerIP}:{Port}/ycsb -P {PackagePath:ycsb}/ycsb-0.17.0/workloads/workloade",
@@ -140,9 +140,9 @@
         {
             "Type": "MongoDBClientExecutor",
             "Parameters": {
-                "Scenario": "read50_readmodifywrite50",
+                "Scenario": "Read_Modify_Write",
                 "Role": "Client",
-                "MetricScenario": "{Scenario}_ops{OperationCount}_{FieldCount}_{FieldLength}_th{ThreadCount}",
+                "MetricScenario": "Read_Modify_Write_50_Read_50_Read_Modify_Write_{RecordCount}_Records",
                 "Database": "$.Parameters.Database",
                 "Port": "$.Parameters.Port",
                 "RunCommand": "run {Database} -s -p maxexecutiontime={Duration.TotalSeconds} -p operationcount={OperationCount} -p recordcount={RecordCount} -threads {ThreadCount} -p fieldcount={FieldCount} -p fieldlength={FieldLength} -p mongodb.url=mongodb://{ServerIP}:{Port}/ycsb -P {PackagePath:ycsb}/ycsb-0.17.0/workloads/workloadf",
@@ -292,4 +292,5 @@
             }
         }
     ]
+
 }
