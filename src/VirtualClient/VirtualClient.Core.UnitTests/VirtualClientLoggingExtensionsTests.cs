@@ -14,7 +14,9 @@ namespace VirtualClient
     using Moq;
     using NUnit.Framework;
     using VirtualClient.Common;
+    using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Telemetry;
+    using VirtualClient.Contracts;
 
     [TestFixture]
     [Category("Unit")]
@@ -549,6 +551,132 @@ namespace VirtualClient
                 await component.LogProcessDetailsAsync(mockProcess.Object, EventContext.None, logToTelemetry: false, logToFile: true, upload: false);
 
                 Assert.IsTrue(standardErrorConfirmed, "Standard error not confirmed.");
+            }
+        }
+
+        [Test]
+        public async Task LogProcessDetailsExtensionUploadsLogFilesByDefaultWhenAContentStoreIsProvided()
+        {
+            bool confirmed = false;
+            Mock<IProcessProxy> mockProcess = new Mock<IProcessProxy>().Setup();
+
+            using (TestExecutor component = new TestExecutor(this))
+            {
+                this.FileSystem
+                    .Setup(fs => fs.File.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                    .Callback<string, string, CancellationToken>((path, content, token) =>
+                    {
+                        if (path.StartsWith(this.PlatformSpecifics.ContentUploadsDirectory))
+                        {
+                            confirmed = true;
+                            FileUploadDescriptor descriptor = content.FromJson<FileUploadDescriptor>();
+                            Assert.IsNotNull(descriptor);
+                        }
+                    })
+                    .Returns(Task.CompletedTask);
+
+                await component.LogProcessDetailsAsync(mockProcess.Object, EventContext.None, logToTelemetry: false, logToFile: true);
+                Assert.IsTrue(confirmed);
+            }
+        }
+
+        [Test]
+        public async Task LogProcessDetailsExtensionSupportsDeferringLogFileUploads()
+        {
+            bool deferred = true;
+            Mock<IProcessProxy> mockProcess = new Mock<IProcessProxy>().Setup();
+
+            using (TestExecutor component = new TestExecutor(this))
+            {
+                component.Parameters[nameof(component.DeferUpload)] = true;
+
+                this.FileSystem
+                    .Setup(fs => fs.File.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                    .Callback<string, string, CancellationToken>((path, content, token) =>
+                    {
+                        if (path.StartsWith(this.PlatformSpecifics.ContentUploadsDirectory))
+                        {
+                            deferred = false;
+                        }
+                    })
+                    .Returns(Task.CompletedTask);
+
+                await component.LogProcessDetailsAsync(mockProcess.Object, EventContext.None, logToTelemetry: false, logToFile: true);
+                Assert.IsTrue(deferred);
+            }
+        }
+
+        [Test]
+        public async Task LogProcessDetailsExtensionDeletesLogFilesOnUploadsOnlyWhenExpected()
+        {
+            bool confirmed = false;
+            bool shouldBeDeleted = false;
+            Mock<IProcessProxy> mockProcess = new Mock<IProcessProxy>().Setup();
+
+            using (TestExecutor component = new TestExecutor(this))
+            {
+                // By default, log files should NOT be deleted on upload.
+                this.FileSystem
+                    .Setup(fs => fs.File.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                    .Callback<string, string, CancellationToken>((path, content, token) =>
+                    {
+                        if (path.StartsWith(this.PlatformSpecifics.ContentUploadsDirectory))
+                        {
+                            confirmed = true;
+                            FileUploadDescriptor descriptor = content.FromJson<FileUploadDescriptor>();
+                            Assert.IsNotNull(descriptor);
+                            Assert.AreEqual(shouldBeDeleted, descriptor.DeleteOnUpload, "Log file delete does not match expectation.");
+                        }
+                    })
+                    .Returns(Task.CompletedTask);
+
+                await component.LogProcessDetailsAsync(mockProcess.Object, EventContext.None, logToTelemetry: false, logToFile: true);
+                Assert.IsTrue(confirmed);
+
+                // If requested, however, log files should be deleted on upload.
+                confirmed = false;
+                shouldBeDeleted = true;
+                component.Parameters[nameof(component.DeleteOnUpload)] = true;
+
+                await component.LogProcessDetailsAsync(mockProcess.Object, EventContext.None, logToTelemetry: false, logToFile: true);
+                Assert.IsTrue(confirmed);
+            }
+        }
+
+        [Test]
+        public async Task LogProcessDetailsExtensionIncludesAManifestWithLogFilesOnUploadsOnlyWhenExpected()
+        {
+            bool confirmed = false;
+            bool shouldBeIncluded = false;
+            Mock<IProcessProxy> mockProcess = new Mock<IProcessProxy>().Setup();
+
+            using (TestExecutor component = new TestExecutor(this))
+            {
+                // By default, a manifest should NOT be included with log file uploads.
+                this.FileSystem
+                    .Setup(fs => fs.File.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                    .Callback<string, string, CancellationToken>((path, content, token) =>
+                    {
+                        if (path.StartsWith(this.PlatformSpecifics.ContentUploadsDirectory))
+                        {
+                            confirmed = true;
+                            FileUploadDescriptor descriptor = content.FromJson<FileUploadDescriptor>();
+                            Assert.IsNotNull(descriptor);
+                            Assert.AreEqual(shouldBeIncluded, descriptor.IncludeManifest, "Manifest inclusion does not match expectation.");
+                        }
+                    })
+                    .Returns(Task.CompletedTask);
+
+                await component.LogProcessDetailsAsync(mockProcess.Object, EventContext.None, logToTelemetry: false, logToFile: true);
+                Assert.IsTrue(confirmed);
+
+                // If requested, however, log files should be deleted on upload.
+                confirmed = false;
+                shouldBeIncluded = true;
+                component.Parameters[nameof(component.IncludeManifestOnUpload)] = true;
+
+                await component.LogProcessDetailsAsync(mockProcess.Object, EventContext.None, logToTelemetry: false, logToFile: true);
+                Assert.IsTrue(confirmed);
             }
         }
     }

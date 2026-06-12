@@ -5,6 +5,7 @@ namespace VirtualClient.Monitors
 {
     using System;
     using System.Collections.Generic;
+    using System.Globalization;
     using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
@@ -41,17 +42,6 @@ namespace VirtualClient.Monitors
         }
 
         /// <summary>
-        /// True/false whether log files should be deleted once uploaded. Default = false.
-        /// </summary>
-        public bool DeleteLogs
-        {
-            get
-            {
-                return this.Parameters.GetValue<bool>(nameof(this.DeleteLogs), false);
-            }
-        }
-
-        /// <summary>
         /// The source directory to watch for content upload requests/notifications.
         /// </summary>
         public string RequestsDirectory
@@ -59,17 +49,6 @@ namespace VirtualClient.Monitors
             get
             {
                 return this.Parameters.GetValue<string>(nameof(this.RequestsDirectory), this.PlatformSpecifics.ContentUploadsDirectory);
-            }
-        }
-
-        /// <summary>
-        /// True/false whether log uploaded should have a manifest included. Default = false.
-        /// </summary>
-        public bool IncludeManifest
-        {
-            get
-            {
-                return this.Parameters.GetValue<bool>(nameof(this.IncludeManifest), false);
             }
         }
 
@@ -193,6 +172,7 @@ namespace VirtualClient.Monitors
                             try
                             {
                                 bool deleteFile = false;
+                                bool includeManifest = false;
                                 string uploadDescriptorContent = await this.fileSystem.File.ReadAllTextAsync(uploadDescriptorFile, CancellationToken.None);
                                 FileUploadDescriptor descriptor = uploadDescriptorContent.FromJson<FileUploadDescriptor>();
 
@@ -207,14 +187,36 @@ namespace VirtualClient.Monitors
 
                                 try
                                 {
+                                    // The 'DeleteOnUpload' parameter can be defined at the individual profile component
+                                    // level or on the command line (e.g. --parameters="DeleteOnUpload=true"). The command line
+                                    // parameter takes precedence overriding individual component parameters.
+                                    if (this.DeleteOnUpload != null)
+                                    {
+                                        deleteFile = this.DeleteOnUpload.Value;
+                                    }
+                                    else
+                                    {
+                                        deleteFile = descriptor.DeleteOnUpload;
+                                    }
+
+                                    // The 'DeleteOnUpload' parameter can be defined at the individual profile component
+                                    // level or on the command line (e.g. --parameters="IncludeManifestOnUpload=true"). The command line
+                                    // parameter takes precedence overriding individual component parameters.
+                                    if (this.IncludeManifestOnUpload != null)
+                                    {
+                                        includeManifest = this.IncludeManifestOnUpload.Value;
+                                    }
+                                    else
+                                    {
+                                        includeManifest = descriptor.IncludeManifest;
+                                    }
+
                                     await this.UploadFileAsync(
                                         blobManager, 
                                         this.fileSystem,
                                         descriptor, 
                                         CancellationToken.None, 
-                                        includeManifest: this.IncludeManifest);
-
-                                    deleteFile = this.DeleteLogs;
+                                        includeManifest: includeManifest);
 
                                     await this.fileSystem.File.DeleteAsync(uploadDescriptorFile);
                                 }
@@ -289,12 +291,7 @@ namespace VirtualClient.Monitors
                                     this.fileSystem, 
                                     descriptor, 
                                     CancellationToken.None,
-                                    includeManifest: this.IncludeManifest);
-
-                                if (this.DeleteLogs)
-                                {
-                                    await this.fileSystem.File.DeleteAsync(filePath);
-                                }
+                                    includeManifest: false);
                             }
                             catch (IOException exc) when (exc.Message.Contains("being used by another process", StringComparison.OrdinalIgnoreCase))
                             {

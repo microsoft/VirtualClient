@@ -146,6 +146,16 @@ namespace VirtualClient.Contracts
                 component.ContentPathTemplate,
                 subPath);
 
+            if (component.DeleteOnUpload == true)
+            {
+                descriptor.DeleteOnUpload = true;
+            }
+
+            if (component.IncludeManifestOnUpload == true)
+            {
+                descriptor.IncludeManifest = true;
+            }
+
             return descriptor;
         }
 
