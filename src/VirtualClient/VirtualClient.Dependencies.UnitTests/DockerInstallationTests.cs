@@ -46,7 +46,7 @@ namespace VirtualClient.Dependencies
                 List<string> expectedCommands = new List<string>()
                 {
                     $"sudo {RequiredPackagesCommand}",
-                    $"sudo {AddOfficialGPGKeyCommand}", 
+                    $"sudo {AddOfficialGPGKeyCommand}",
                     $"sudo {SetUpRepositoryCommand}",
                     @$"sudo bash -c ""apt-get install docker-ce=$(apt-cache  madison docker-ce | grep {dockerInstallation.Version} | awk '{{print $3}}') docker-ce-cli=$(apt-cache madison docker-ce | grep {dockerInstallation.Version} | awk '{{print $3}}') containerd.io docker-compose-plugin --yes --quiet""",
                     @$"sudo bash -c ""apt-get install docker-ce docker-ce-cli containerd.io docker-compose-plugin --yes --quiet"""
@@ -68,9 +68,58 @@ namespace VirtualClient.Dependencies
                     };
                     return process;
                 };
-                
+
                 await dockerInstallation.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
                 Assert.AreEqual(4, commandExecuted);
+            }
+        }
+
+        [Test]
+        [TestCase("20.10.24")]
+        [TestCase(null)]
+        public async Task DockerInstallationRunsTheExpectedCommandsOnWindows(string version)
+        {
+            this.mockFixture = new MockFixture();
+            this.mockFixture.Setup(PlatformID.Win32NT);
+            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            {
+                { "Version", version }
+            };
+
+            using (TestDockerInstallation dockerInstallation = new TestDockerInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                string installDockerCommand = string.IsNullOrEmpty(version)
+                    ? "Install-Package -Name Docker -ProviderName DockerMsftProvider -Force"
+                    : $"Install-Package -Name Docker -ProviderName DockerMsftProvider -RequiredVersion {version} -Force";
+
+                List<string> expectedCommands = new List<string>()
+                {
+                    "Install-WindowsFeature -Name Containers",
+                    "Install-Module -Name DockerMsftProvider -Repository PSGallery -Force",
+                    installDockerCommand,
+                    "Start-Service Docker"
+                };
+
+                List<string> executedCommands = new List<string>();
+                this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+                {
+                    if (exe == "powershell" && expectedCommands.Any(c => c == arguments))
+                    {
+                        executedCommands.Add(arguments);
+                    }
+
+                    IProcessProxy process = new InMemoryProcess()
+                    {
+                        ExitCode = 0,
+                        OnStart = () => true,
+                        OnHasExited = () => true
+                    };
+                    return process;
+                };
+
+                await dockerInstallation.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+                Assert.AreEqual(4, executedCommands.Count);
+                CollectionAssert.AreEqual(expectedCommands, executedCommands);
             }
         }
 

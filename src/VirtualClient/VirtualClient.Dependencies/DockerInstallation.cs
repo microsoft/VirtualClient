@@ -15,7 +15,7 @@ namespace VirtualClient.Dependencies
     using VirtualClient.Contracts;
 
     /// <summary>
-    /// Provides functionality for installing specific version of docker on linux.
+    /// Provides functionality for installing Docker on linux and Windows Server.
     /// </summary>
     public class DockerInstallation : VirtualClientComponent
     {
@@ -74,7 +74,7 @@ namespace VirtualClient.Dependencies
                     case LinuxDistribution.Ubuntu:
                         if (this.Version != string.Empty)
                         {
-                            this.installDockerCommand = 
+                            this.installDockerCommand =
                                 @$"bash -c ""apt-get install docker-ce=$(apt-cache  madison docker-ce | grep {this.Version} | awk '{{print $3}}') " +
                                 @$"docker-ce-cli=$(apt-cache madison docker-ce | grep {this.Version} | awk '{{print $3}}') containerd.io docker-compose-plugin --yes --quiet""";
                         }
@@ -96,13 +96,15 @@ namespace VirtualClient.Dependencies
                             ErrorReason.LinuxDistributionNotSupported);
                 }
             }
+            else if (this.Platform == PlatformID.Win32NT)
+            {
+                // Windows Server Docker installation uses PowerShell. No pre-initialization needed.
+            }
             else
             {
-                // docker installation for windows to be added.
                 throw new WorkloadException(
-                    $"Docker Installtion is not supported on the current platform {this.Platform} through VC." +
-                    $"Supported Platforms include:" +
-                    $" Unix ",
+                    $"Docker installation is not supported on the current platform {this.Platform} through VC. " +
+                    $"Supported Platforms include: Unix, Win32NT",
                     ErrorReason.PlatformNotSupported);
             }
 
@@ -116,16 +118,24 @@ namespace VirtualClient.Dependencies
         /// <returns></returns>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            LinuxDistributionInfo distroInfo = await this.systemManager.GetLinuxDistributionAsync(cancellationToken)
-                .ConfigureAwait(false);
-
-            switch (distroInfo.LinuxDistribution)
+            if (this.Platform == PlatformID.Unix)
             {
-                case LinuxDistribution.Ubuntu:
-                    await this.DockerInstallInUbuntuAsync(telemetryContext, cancellationToken)
-                        .ConfigureAwait(false);
+                LinuxDistributionInfo distroInfo = await this.systemManager.GetLinuxDistributionAsync(cancellationToken)
+                    .ConfigureAwait(false);
 
-                    break;
+                switch (distroInfo.LinuxDistribution)
+                {
+                    case LinuxDistribution.Ubuntu:
+                        await this.DockerInstallInUbuntuAsync(telemetryContext, cancellationToken)
+                            .ConfigureAwait(false);
+
+                        break;
+                }
+            }
+            else if (this.Platform == PlatformID.Win32NT)
+            {
+                await this.DockerInstallInWindowsAsync(telemetryContext, cancellationToken)
+                    .ConfigureAwait(false);
             }
         }
 
@@ -158,6 +168,54 @@ namespace VirtualClient.Dependencies
 
             await this.ExecuteCommandAsync(this.installDockerCommand, Environment.CurrentDirectory, telemetryContext, cancellationToken)
                 .ConfigureAwait(false);
+        }
+
+        private async Task DockerInstallInWindowsAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            string enableContainersFeature = "Install-WindowsFeature -Name Containers";
+
+            string installDockerProvider = "Install-Module -Name DockerMsftProvider -Repository PSGallery -Force";
+
+            string installDocker = !string.IsNullOrEmpty(this.Version)
+                ? $"Install-Package -Name Docker -ProviderName DockerMsftProvider -RequiredVersion {this.Version} -Force"
+                : "Install-Package -Name Docker -ProviderName DockerMsftProvider -Force";
+
+            string startDockerService = "Start-Service Docker";
+
+            await this.ExecutePowerShellAsync(enableContainersFeature, telemetryContext, cancellationToken)
+                .ConfigureAwait(false);
+
+            await this.ExecutePowerShellAsync(installDockerProvider, telemetryContext, cancellationToken)
+                .ConfigureAwait(false);
+
+            await this.ExecutePowerShellAsync(installDocker, telemetryContext, cancellationToken)
+                .ConfigureAwait(false);
+
+            await this.ExecutePowerShellAsync(startDockerService, telemetryContext, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        private Task ExecutePowerShellAsync(string command, EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            return this.RetryPolicy.ExecuteAsync(async () =>
+            {
+                using (IProcessProxy process = this.systemManager.ProcessManager.CreateElevatedProcess(this.Platform, "powershell", command))
+                {
+                    this.CleanupTasks.Add(() => process.SafeKill(this.Logger));
+                    this.LogProcessTrace(process);
+
+                    await process.StartAndWaitAsync(cancellationToken)
+                        .ConfigureAwait(false);
+
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        await this.LogProcessDetailsAsync(process, telemetryContext)
+                            .ConfigureAwait(false);
+
+                        process.ThrowIfErrored<DependencyException>(errorReason: ErrorReason.DependencyInstallationFailed);
+                    }
+                }
+            });
         }
 
         private Task ExecuteCommandAsync(string commandLine, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken)
