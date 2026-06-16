@@ -15,7 +15,7 @@ namespace VirtualClient.Dependencies
     using VirtualClient.Contracts;
 
     /// <summary>
-    /// Provides functionality for installing Docker on Linux.
+    /// Provides functionality for installing specific version of docker on linux.
     /// </summary>
     public class DockerInstallation : VirtualClientComponent
     {
@@ -74,7 +74,7 @@ namespace VirtualClient.Dependencies
                     case LinuxDistribution.Ubuntu:
                         if (this.Version != string.Empty)
                         {
-                            this.installDockerCommand =
+                            this.installDockerCommand = 
                                 @$"bash -c ""apt-get install docker-ce=$(apt-cache  madison docker-ce | grep {this.Version} | awk '{{print $3}}') " +
                                 @$"docker-ce-cli=$(apt-cache madison docker-ce | grep {this.Version} | awk '{{print $3}}') containerd.io docker-compose-plugin --yes --quiet""";
                         }
@@ -98,11 +98,14 @@ namespace VirtualClient.Dependencies
             }
             else
             {
+                // docker installation for windows to be added.
                 throw new WorkloadException(
-                    $"Docker installation is not supported on the current platform {this.Platform} through VC. " +
-                    $"Supported Platform: Unix (Linux)",
+                    $"Docker Installtion is not supported on the current platform {this.Platform} through VC." +
+                    $"Supported Platforms include:" +
+                    $" Unix ",
                     ErrorReason.PlatformNotSupported);
             }
+
         }
 
         /// <summary>
@@ -113,19 +116,16 @@ namespace VirtualClient.Dependencies
         /// <returns></returns>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            if (this.Platform == PlatformID.Unix)
+            LinuxDistributionInfo distroInfo = await this.systemManager.GetLinuxDistributionAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            switch (distroInfo.LinuxDistribution)
             {
-                LinuxDistributionInfo distroInfo = await this.systemManager.GetLinuxDistributionAsync(cancellationToken)
-                    .ConfigureAwait(false);
+                case LinuxDistribution.Ubuntu:
+                    await this.DockerInstallInUbuntuAsync(telemetryContext, cancellationToken)
+                        .ConfigureAwait(false);
 
-                switch (distroInfo.LinuxDistribution)
-                {
-                    case LinuxDistribution.Ubuntu:
-                        await this.DockerInstallInUbuntuAsync(telemetryContext, cancellationToken)
-                            .ConfigureAwait(false);
-
-                        break;
-                }
+                    break;
             }
         }
 

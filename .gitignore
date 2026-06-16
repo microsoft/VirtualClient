@@ -314,5 +314,4 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 Tools/
-.context/
 context/
