@@ -5,6 +5,7 @@ namespace VirtualClient.Contracts
 {
     using System;
     using System.Collections.Generic;
+    using System.Globalization;
     using System.Linq;
     using System.Reflection;
     using System.Runtime.InteropServices;
@@ -197,18 +198,36 @@ namespace VirtualClient.Contracts
 
         /// <summary>
         /// True/false whether log files upload request processing should be deferred
-        /// for handling later when a content store is defined. Default = false.
+        /// for handling later when a content store is defined.
         /// </summary>
-        public bool DeferUploads
+        public bool? DeferUpload
         {
             get
             {
-                return this.Parameters.GetValue<bool>(nameof(this.DeferUploads), false);
+                this.Parameters.TryGetValue(nameof(this.DeferUpload), out IConvertible deferUpload);
+                return deferUpload?.ToBoolean(CultureInfo.InvariantCulture);
             }
 
             protected set
             {
-                this.Parameters[nameof(this.DeferUploads)] = false;
+                this.Parameters[nameof(this.DeferUpload)] = value;
+            }
+        }
+
+        /// <summary>
+        /// True/false whether log files should be deleted upon being successfully uploaded.
+        /// </summary>
+        public bool? DeleteOnUpload
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(this.DeleteOnUpload), out IConvertible delete);
+                return delete?.ToBoolean(CultureInfo.InvariantCulture);
+            }
+
+            protected set
+            {
+                this.Parameters[nameof(this.DeleteOnUpload)] = false;
             }
         }
 
@@ -317,6 +336,23 @@ namespace VirtualClient.Contracts
             protected set
             {
                 this.Parameters[nameof(this.LogToFile)] = value;
+            }
+        }
+
+        /// <summary>
+        /// True/false whether a manifest should be included with file uploads.
+        /// </summary>
+        public bool? IncludeManifestOnUpload
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(this.IncludeManifestOnUpload), out IConvertible includeManifest);
+                return includeManifest?.ToBoolean(CultureInfo.InvariantCulture);
+            }
+
+            protected set
+            {
+                this.Parameters[nameof(this.IncludeManifestOnUpload)] = value;
             }
         }
 

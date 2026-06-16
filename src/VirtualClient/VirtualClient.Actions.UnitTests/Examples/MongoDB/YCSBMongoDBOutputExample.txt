@@ -1,0 +1,36 @@
+/home/azureuser/VirtualClientScheduler/VirtualClient.2.1.3203.1966/content/linux-x64/packages/microsoft-jdk-21.0.1/linux-x64/bin/java  -classpath /home/azureuser/VirtualClientScheduler/VirtualClient.2.1.3203.1966/content/linux-x64/packages/ycsb-0.17.0/ycsb-0.17.0/conf:/home/azureuser/VirtualClientScheduler/VirtualClient.2.1.3203.1966/content/linux-x64/packages/ycsb-0.17.0/ycsb-0.17.0/lib/HdrHistogram-2.1.4.jar:/home/azureuser/VirtualClientScheduler/VirtualClient.2.1.3203.1966/content/linux-x64/packages/ycsb-0.17.0/ycsb-0.17.0/lib/core-0.17.0.jar:/home/azureuser/VirtualClientScheduler/VirtualClient.2.1.3203.1966/content/linux-x64/packages/ycsb-0.17.0/ycsb-0.17.0/lib/htrace-core4-4.1.0-incubating.jar:/home/azureuser/VirtualClientScheduler/VirtualClient.2.1.3203.1966/content/linux-x64/packages/ycsb-0.17.0/ycsb-0.17.0/lib/jackson-core-asl-1.9.4.jar:/home/azureuser/VirtualClientScheduler/VirtualClient.2.1.3203.1966/content/linux-x64/packages/ycsb-0.17.0/ycsb-0.17.0/lib/jackson-mapper-asl-1.9.4.jar:/home/azureuser/VirtualClientScheduler/VirtualClient.2.1.3203.1966/content/linux-x64/packages/ycsb-0.17.0/ycsb-0.17.0/mongodb-binding/lib/logback-classic-1.1.2.jar:/home/azureuser/VirtualClientScheduler/VirtualClient.2.1.3203.1966/content/linux-x64/packages/ycsb-0.17.0/ycsb-0.17.0/mongodb-binding/lib/logback-core-1.1.2.jar:/home/azureuser/VirtualClientScheduler/VirtualClient.2.1.3203.1966/content/linux-x64/packages/ycsb-0.17.0/ycsb-0.17.0/mongodb-binding/lib/mongo-java-driver-3.8.0.jar:/home/azureuser/VirtualClientScheduler/VirtualClient.2.1.3203.1966/content/linux-x64/packages/ycsb-0.17.0/ycsb-0.17.0/mongodb-binding/lib/mongodb-async-driver-2.0.1.jar:/home/azureuser/VirtualClientScheduler/VirtualClient.2.1.3203.1966/content/linux-x64/packages/ycsb-0.17.0/ycsb-0.17.0/mongodb-binding/lib/mongodb-binding-0.17.0.jar:/home/azureuser/VirtualClientScheduler/VirtualClient.2.1.3203.1966/content/linux-x64/packages/ycsb-0.17.0/ycsb-0.17.0/mongodb-binding/lib/slf4j-api-1.7.25.jar:/home/azureuser/VirtualClientScheduler/VirtualClient.2.1.3203.1966/content/linux-x64/packages/ycsb-0.17.0/ycsb-0.17.0/mongodb-binding/lib/snappy-java-1.1.7.1.jar site.ycsb.Client -t -db site.ycsb.db.MongoDbClient -s -p maxexecutiontime=300 -p operationcount=5000000 -p recordcount=500000 -threads 8 -p fieldcount=64 -p fieldlength=128 -P /home/azureuser/VirtualClientScheduler/VirtualClient.2.1.3203.1966/content/linux-x64/packages/ycsb-0.17.0/ycsb-0.17.0/workloads/workloada
+mongo client connection created with mongodb://localhost:27017/ycsb?w=1
+[OVERALL], RunTime(ms), 177015
+[OVERALL], Throughput(ops/sec), 28246.19382538203
+[TOTAL_GCS_G1_Young_Generation], Count, 330
+[TOTAL_GC_TIME_G1_Young_Generation], Time(ms), 326
+[TOTAL_GC_TIME_%_G1_Young_Generation], Time(%), 0.18416518374149085
+[TOTAL_GCS_G1_Concurrent_GC], Count, 0
+[TOTAL_GC_TIME_G1_Concurrent_GC], Time(ms), 0
+[TOTAL_GC_TIME_%_G1_Concurrent_GC], Time(%), 0.0
+[TOTAL_GCS_G1_Old_Generation], Count, 0
+[TOTAL_GC_TIME_G1_Old_Generation], Time(ms), 0
+[TOTAL_GC_TIME_%_G1_Old_Generation], Time(%), 0.0
+[TOTAL_GCs], Count, 330
+[TOTAL_GC_TIME], Time(ms), 326
+[TOTAL_GC_TIME_%], Time(%), 0.18416518374149085
+[READ], Operations, 2498425
+[READ], AverageLatency(us), 202.70430571259894
+[READ], MinLatency(us), 129
+[READ], MaxLatency(us), 1556479
+[READ], 95thPercentileLatency(us), 231
+[READ], 99thPercentileLatency(us), 256
+[READ], Return=OK, 2498425
+[CLEANUP], Operations, 8
+[CLEANUP], AverageLatency(us), 184.875
+[CLEANUP], MinLatency(us), 1
+[CLEANUP], MaxLatency(us), 1464
+[CLEANUP], 95thPercentileLatency(us), 1464
+[CLEANUP], 99thPercentileLatency(us), 1464
+[UPDATE], Operations, 2501575
+[UPDATE], AverageLatency(us), 354.05011122992516
+[UPDATE], MinLatency(us), 147
+[UPDATE], MaxLatency(us), 3090431
+[UPDATE], 95thPercentileLatency(us), 243
+[UPDATE], 99thPercentileLatency(us), 294
+[UPDATE], Return=OK, 2501575

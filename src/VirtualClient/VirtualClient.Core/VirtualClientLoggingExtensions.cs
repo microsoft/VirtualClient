@@ -408,7 +408,7 @@ namespace VirtualClient
                         await fileSystem.File.WriteAllTextAsync(logFilePath, outputBuilder.ToString());
                     });
 
-                    if (upload && !component.DeferUploads && component.TryGetContentStoreManager(out IBlobManager blobManager))
+                    if (upload && component.DeferUpload != true && component.TryGetContentStoreManager(out IBlobManager blobManager))
                     {
                         string effectiveToolName = component.GetLogDirectoryName(processDetails.ToolName);
 

@@ -27,7 +27,7 @@
                     "Parameters": {
                         "Scenario": "$.Parameters.Scenario",
                         "Command": "$.Parameters.Command",
-                        "DeferUploads": true,
+                        "DeferUpload": true,
                         "EnvironmentVariables": "EXPERIMENT_ID={ExperimentId},EXECUTION_SYSTEM={ExecutionSystem}",
                         "LogFileName": "$.Parameters.LogFileName",
                         "LogFolderName": "$.Parameters.LogFolderName",

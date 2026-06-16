@@ -36,8 +36,10 @@ namespace VirtualClient.Contracts
         /// <param name="contentType">The web content type for the blob (e.g. text/plain, application/octet-stream).</param>
         /// <param name="filePath">The path to the file containing the content to upload.</param>
         /// <param name="manifest">Properties that define a manifest (e.g. metadata) for the file and its contents.</param>
+        /// <param name="deleteOnUpload">True/false whether the file should be deleted upon being successfully uploaded. Default = false.</param>
+        /// <param name="includeManifest">True/false whether a manifest should be included with the file uploaded.</param>
         [JsonConstructor]
-        public FileUploadDescriptor(string blobPath, string containerName, string contentEncoding, string contentType, string filePath, IDictionary<string, IConvertible> manifest = null)
+        public FileUploadDescriptor(string blobPath, string containerName, string contentEncoding, string contentType, string filePath, IDictionary<string, IConvertible> manifest = null, bool deleteOnUpload = false, bool includeManifest = false)
         {
             blobPath.ThrowIfNullOrWhiteSpace(nameof(blobPath));
             containerName.ThrowIfNullOrWhiteSpace(nameof(containerName));
@@ -51,7 +53,9 @@ namespace VirtualClient.Contracts
             this.ContainerName = containerName;
             this.ContentEncoding = contentEncoding;
             this.ContentType = contentType;
+            this.DeleteOnUpload = deleteOnUpload;
             this.FilePath = filePath;
+            this.IncludeManifest = includeManifest;
             this.Manifest = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
 
             if (manifest?.Any() == true)
@@ -91,10 +95,22 @@ namespace VirtualClient.Contracts
         public string ContentType { get; }
 
         /// <summary>
+        /// True/false whether the file should be deleted upon being successfully uploaded.
+        /// </summary>
+        [JsonProperty(PropertyName = "deleteOnUpload", Required = Required.Always)]
+        public bool DeleteOnUpload { get; set; }
+
+        /// <summary>
         /// The full path to the file to upload.
         /// </summary>
         [JsonProperty(PropertyName = "filePath", Required = Required.Always)]
         public string FilePath { get; }
+
+        /// <summary>
+        /// True/false whether a manifest should be included alongside the file uploaded.
+        /// </summary>
+        [JsonProperty(PropertyName = "includeManifest", Required = Required.Always)]
+        public bool IncludeManifest { get; set; }
 
         /// <summary>
         /// Manifest/metadata information related to the file and. its contents
