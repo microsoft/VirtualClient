@@ -74,48 +74,6 @@ namespace VirtualClient.Dependencies
             }
         }
 
-        [Test]
-        [TestCase("20.10.24")]
-        [TestCase(null)]
-        public async Task DockerInstallationRunsTheExpectedCommandsOnWindows(string version)
-        {
-            this.mockFixture = new MockFixture();
-            this.mockFixture.Setup(PlatformID.Win32NT);
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
-            {
-                { "Version", version }
-            };
-
-            using (TestDockerInstallation dockerInstallation = new TestDockerInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
-            {
-                List<string> expectedCommands = new List<string>()
-                {
-                    @"Start-Process -FilePath 'dism.exe' -ArgumentList '/online', '/enable-feature', '/featurename:Containers', '/all', '/norestart' -Verb RunAs -Wait"
-                };
-
-                List<string> executedCommands = new List<string>();
-                this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
-                {
-                    if (exe == "powershell" && expectedCommands.Any(c => c == arguments))
-                    {
-                        executedCommands.Add(arguments);
-                    }
-
-                    IProcessProxy process = new InMemoryProcess()
-                    {
-                        ExitCode = 0,
-                        OnStart = () => true,
-                        OnHasExited = () => true
-                    };
-                    return process;
-                };
-
-                await dockerInstallation.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
-                Assert.AreEqual(1, executedCommands.Count);
-                CollectionAssert.AreEqual(expectedCommands, executedCommands);
-            }
-        }
-
         private class TestDockerInstallation : DockerInstallation
         {
             public TestDockerInstallation(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)

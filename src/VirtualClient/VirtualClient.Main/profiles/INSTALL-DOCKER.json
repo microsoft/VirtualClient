@@ -1,9 +1,9 @@
 {
-    "Description": "Installs Docker Engine on the system for container-based workloads.",
+    "Description": "Installs Docker Engine on Linux systems for container-based workloads.",
     "Metadata": {
         "RecommendedMinimumExecutionTime": "00:05:00",
-        "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64",
-        "SupportedOperatingSystems": "Ubuntu,WindowsServer"
+        "SupportedPlatforms": "linux-x64,linux-arm64",
+        "SupportedOperatingSystems": "Ubuntu"
     },
     "Parameters": {
         "DockerVersion": ""

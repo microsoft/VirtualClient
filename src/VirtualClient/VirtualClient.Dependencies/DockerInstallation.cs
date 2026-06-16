@@ -15,7 +15,7 @@ namespace VirtualClient.Dependencies
     using VirtualClient.Contracts;
 
     /// <summary>
-    /// Provides functionality for installing Docker on linux and Windows Server.
+    /// Provides functionality for installing Docker on Linux.
     /// </summary>
     public class DockerInstallation : VirtualClientComponent
     {
@@ -96,18 +96,13 @@ namespace VirtualClient.Dependencies
                             ErrorReason.LinuxDistributionNotSupported);
                 }
             }
-            else if (this.Platform == PlatformID.Win32NT)
-            {
-                // Windows Server Docker installation uses PowerShell. No pre-initialization needed.
-            }
             else
             {
                 throw new WorkloadException(
                     $"Docker installation is not supported on the current platform {this.Platform} through VC. " +
-                    $"Supported Platforms include: Unix, Win32NT",
+                    $"Supported Platform: Unix (Linux)",
                     ErrorReason.PlatformNotSupported);
             }
-
         }
 
         /// <summary>
@@ -131,11 +126,6 @@ namespace VirtualClient.Dependencies
 
                         break;
                 }
-            }
-            else if (this.Platform == PlatformID.Win32NT)
-            {
-                await this.DockerInstallInWindowsAsync(telemetryContext, cancellationToken)
-                    .ConfigureAwait(false);
             }
         }
 
@@ -168,35 +158,6 @@ namespace VirtualClient.Dependencies
 
             await this.ExecuteCommandAsync(this.installDockerCommand, Environment.CurrentDirectory, telemetryContext, cancellationToken)
                 .ConfigureAwait(false);
-        }
-
-        private Task DockerInstallInWindowsAsync(EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            string enableContainersFeature = @"Start-Process -FilePath 'dism.exe' -ArgumentList '/online', '/enable-feature', '/featurename:Containers', '/all', '/norestart' -Verb RunAs -Wait";
-            return this.ExecutePowerShellAsync(enableContainersFeature, telemetryContext, cancellationToken);
-        }
-
-        private Task ExecutePowerShellAsync(string command, EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            return this.RetryPolicy.ExecuteAsync(async () =>
-            {
-                using (IProcessProxy process = this.systemManager.ProcessManager.CreateElevatedProcess(this.Platform, "powershell", command))
-                {
-                    this.CleanupTasks.Add(() => process.SafeKill(this.Logger));
-                    this.LogProcessTrace(process);
-
-                    await process.StartAndWaitAsync(cancellationToken)
-                        .ConfigureAwait(false);
-
-                    if (!cancellationToken.IsCancellationRequested)
-                    {
-                        await this.LogProcessDetailsAsync(process, telemetryContext)
-                            .ConfigureAwait(false);
-
-                        process.ThrowIfErrored<DependencyException>(errorReason: ErrorReason.DependencyInstallationFailed);
-                    }
-                }
-            });
         }
 
         private Task ExecuteCommandAsync(string commandLine, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken)
