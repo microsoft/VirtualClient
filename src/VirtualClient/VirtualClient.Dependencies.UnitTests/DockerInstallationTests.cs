@@ -88,16 +88,9 @@ namespace VirtualClient.Dependencies
 
             using (TestDockerInstallation dockerInstallation = new TestDockerInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
-                string installDockerCommand = string.IsNullOrEmpty(version)
-                    ? "Install-Package -Name Docker -ProviderName DockerMsftProvider -Force"
-                    : $"Install-Package -Name Docker -ProviderName DockerMsftProvider -RequiredVersion {version} -Force";
-
                 List<string> expectedCommands = new List<string>()
                 {
-                    "Install-WindowsFeature -Name Containers",
-                    "Install-Module -Name DockerMsftProvider -Repository PSGallery -Force",
-                    installDockerCommand,
-                    "Start-Service Docker"
+                    @"Start-Process -FilePath 'dism.exe' -ArgumentList '/online', '/enable-feature', '/featurename:Containers', '/all', '/norestart' -Verb RunAs -Wait"
                 };
 
                 List<string> executedCommands = new List<string>();
@@ -118,7 +111,7 @@ namespace VirtualClient.Dependencies
                 };
 
                 await dockerInstallation.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
-                Assert.AreEqual(4, executedCommands.Count);
+                Assert.AreEqual(1, executedCommands.Count);
                 CollectionAssert.AreEqual(expectedCommands, executedCommands);
             }
         }

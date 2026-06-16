@@ -170,29 +170,10 @@ namespace VirtualClient.Dependencies
                 .ConfigureAwait(false);
         }
 
-        private async Task DockerInstallInWindowsAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        private Task DockerInstallInWindowsAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string enableContainersFeature = "Install-WindowsFeature -Name Containers";
-
-            string installDockerProvider = "Install-Module -Name DockerMsftProvider -Repository PSGallery -Force";
-
-            string installDocker = !string.IsNullOrEmpty(this.Version)
-                ? $"Install-Package -Name Docker -ProviderName DockerMsftProvider -RequiredVersion {this.Version} -Force"
-                : "Install-Package -Name Docker -ProviderName DockerMsftProvider -Force";
-
-            string startDockerService = "Start-Service Docker";
-
-            await this.ExecutePowerShellAsync(enableContainersFeature, telemetryContext, cancellationToken)
-                .ConfigureAwait(false);
-
-            await this.ExecutePowerShellAsync(installDockerProvider, telemetryContext, cancellationToken)
-                .ConfigureAwait(false);
-
-            await this.ExecutePowerShellAsync(installDocker, telemetryContext, cancellationToken)
-                .ConfigureAwait(false);
-
-            await this.ExecutePowerShellAsync(startDockerService, telemetryContext, cancellationToken)
-                .ConfigureAwait(false);
+            string enableContainersFeature = @"Start-Process -FilePath 'dism.exe' -ArgumentList '/online', '/enable-feature', '/featurename:Containers', '/all', '/norestart' -Verb RunAs -Wait";
+            return this.ExecutePowerShellAsync(enableContainersFeature, telemetryContext, cancellationToken);
         }
 
         private Task ExecutePowerShellAsync(string command, EventContext telemetryContext, CancellationToken cancellationToken)
