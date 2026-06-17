@@ -10,6 +10,7 @@ namespace VirtualClient.Actions
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
+    using VirtualClient.Common.Docker;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
@@ -21,6 +22,7 @@ namespace VirtualClient.Actions
     internal class DockerExecution : VirtualClientComponentCollection
     {
         private ISystemManagement systemManager;
+        private DockerContainerClient dockerClient;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DockerExecution"/> class.
@@ -31,6 +33,7 @@ namespace VirtualClient.Actions
             : base(dependencies, parameters)
         {
             this.systemManager = dependencies.GetService<ISystemManagement>();
+            this.dockerClient = new DockerContainerClient(this.Logger);
         }
 
         /// <summary>
@@ -86,43 +89,32 @@ namespace VirtualClient.Actions
             this.Logger?.LogInformation(
                 $"DockerExecution: Initializing container execution. Image={this.Image}, Components={this.Count}");
 
-            // Phase 1: Verify Docker is installed and running
-            // Phase 2: Build/pull the Docker image
-            // Phase 3: Prepare volume mounts
-            // Future phases will implement actual container execution
-
             return base.InitializeAsync(telemetryContext, cancellationToken);
         }
 
         /// <summary>
-        /// Executes child components within the Docker container.
+        /// Executes child components within the Docker container via docker exec.
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             this.Logger?.LogInformation(
                 $"DockerExecution: Starting container execution. Image={this.Image}");
 
-            // MVP: For now, execute child components on the host
-            // This demonstrates that DockerExecution properly wraps and delegates to child components
-            // Future implementation will:
-            // 1. Create a Docker container from the image
-            // 2. Mount volumes for packages, logs, state
-            // 3. Execute child components inside the container via 'docker exec'
-            // 4. Capture container stdout/stderr for error telemetry
-            // 5. Cleanup container (or keep alive if --keepContainerAlive flag set)
+            // Get container ID from environment (set by DockerCommand)
+            string containerId = Environment.GetEnvironmentVariable("VC_DOCKER_CONTAINER_ID");
 
-            // Execute each child component sequentially
-            foreach (VirtualClientComponent component in this)
+            if (string.IsNullOrWhiteSpace(containerId))
             {
-                this.Logger?.LogInformation(
-                    $"DockerExecution: Executing child component. Component={component.GetType().Name}");
+                this.Logger?.LogWarning(
+                    "DockerExecution: No container ID found. Executing components on host (non-container mode).");
 
-                await component.ExecuteAsync(cancellationToken).ConfigureAwait(false);
-
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    break;
-                }
+                // Fallback: execute on host if no container context
+                await this.ExecuteComponentsOnHostAsync(cancellationToken).ConfigureAwait(false);
+            }
+            else
+            {
+                // Execute components inside container via docker exec
+                await this.ExecuteComponentsInContainerAsync(containerId, cancellationToken).ConfigureAwait(false);
             }
 
             this.Logger?.LogInformation($"DockerExecution: Container execution completed.");
@@ -134,12 +126,85 @@ namespace VirtualClient.Actions
         protected override Task CleanupAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             this.Logger?.LogInformation($"DockerExecution: Cleaning up container resources.");
-
-            // Future: Remove Docker container and cleanup resources
-            // await this.StopContainerAsync(cancellationToken).ConfigureAwait(false);
-            // await this.RemoveContainerAsync(cancellationToken).ConfigureAwait(false);
-
             return base.CleanupAsync(telemetryContext, cancellationToken);
+        }
+
+        /// <summary>
+        /// Executes components on the host (fallback mode).
+        /// </summary>
+        private async Task ExecuteComponentsOnHostAsync(CancellationToken cancellationToken)
+        {
+            foreach (VirtualClientComponent component in this)
+            {
+                this.Logger?.LogInformation(
+                    $"DockerExecution: Executing child component on host. Component={component.GetType().Name}");
+
+                await component.ExecuteAsync(cancellationToken).ConfigureAwait(false);
+
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    break;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Executes components inside the Docker container.
+        /// </summary>
+        private async Task ExecuteComponentsInContainerAsync(string containerId, CancellationToken cancellationToken)
+        {
+            foreach (VirtualClientComponent component in this)
+            {
+                string componentName = component.GetType().Name;
+                this.Logger?.LogInformation(
+                    $"DockerExecution: Executing child component in container. Component={componentName}, Container={containerId}");
+
+                try
+                {
+                    // Build command to execute component in container
+                    // Note: For MVP, we execute components individually
+                    // Full implementation would handle parameters and profiles
+                    string command = $"/app/VirtualClient.Main --component={componentName}";
+
+                    this.Logger?.LogInformation($"DockerExecution: Running docker exec: {command}");
+
+                    var execResult = await this.dockerClient.ExecuteInContainerAsync(
+                        containerId,
+                        command,
+                        cancellationToken).ConfigureAwait(false);
+
+                    // Capture output for logging and telemetry
+                    if (!execResult.Success)
+                    {
+                        this.Logger?.LogError(
+                            $"DockerExecution: Component execution failed in container. " +
+                            $"Component={componentName}, ExitCode={execResult.ExitCode}, " +
+                            $"Error={execResult.StandardError}");
+
+                        // Emit telemetry event for error
+                        this.Logger?.LogError($"Container Error Output: {execResult.StandardError}");
+
+                        throw new InvalidOperationException(
+                            $"Component {componentName} failed inside container. Exit code: {execResult.ExitCode}. " +
+                            $"Error: {execResult.StandardError}");
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(execResult.StandardOutput))
+                    {
+                        this.Logger?.LogInformation($"Container Output: {execResult.StandardOutput}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    this.Logger?.LogError($"Exception executing component in container: {ex.Message}");
+                    throw;
+                }
+
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    break;
+                }
+            }
         }
     }
 }

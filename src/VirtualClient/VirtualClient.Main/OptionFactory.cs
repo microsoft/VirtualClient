@@ -1934,6 +1934,27 @@ namespace VirtualClient
             return option;
         }
 
+        /// <summary>
+        /// Creates the '--keep-container-alive' option for the docker subcommand.
+        /// </summary>
+        /// <param name="required">Whether the option is required.</param>
+        /// <param name="defaultValue">The default value for the option.</param>
+        /// <returns>An option that handles keep container alive flag.</returns>
+        public static Option CreateKeepContainerAliveFlag(bool required = false, object defaultValue = null)
+        {
+            Option<bool> option = new Option<bool>(
+                new string[] { "--keep-container-alive" },
+                description: "Keeps the Docker container alive after execution for debugging purposes. Default behavior is to clean up the container.")
+            {
+                Name = "KeepContainerAlive",
+                IsRequired = false
+            };
+
+            option.SetDefaultValue(defaultValue ?? false);
+
+            return option;
+        }
+
         private static Option SetOptionRequirements(Option option, bool required = false, object defaultValue = null, ValidateSymbol<OptionResult> validator = null)
         {
             option.IsRequired = required;

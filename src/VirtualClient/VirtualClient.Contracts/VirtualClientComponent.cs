@@ -99,14 +99,12 @@ namespace VirtualClient.Contracts
 
             this.systemInfo = dependencies.GetService<ISystemInfo>();
             this.AgentId = this.systemInfo.AgentId;
-            this.CpuArchitecture = this.systemInfo.CpuArchitecture;
             this.Dependencies = dependencies;
             this.ExperimentId = this.systemInfo.ExperimentId;
             this.Logger = NullLogger.Instance;
             this.Metadata = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
             this.MetadataContract = new MetadataContract();
             this.PlatformSpecifics = this.systemInfo.PlatformSpecifics;
-            this.Platform = this.systemInfo.Platform;
             this.SupportedRoles = new List<string>();
             this.CleanupTasks = new List<Action>();
             this.Extensions = new Dictionary<string, JToken>();
@@ -192,9 +190,22 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
-        /// The CPU/processor architecture (e.g. amd64, arm).
+        /// The CPU/processor architecture (e.g. amd64, arm). Returns the container architecture when
+        /// running in Docker context (VC_DOCKER_ARCH env var set), otherwise returns host architecture.
         /// </summary>
-        public Architecture CpuArchitecture { get; }
+        public Architecture CpuArchitecture
+        {
+            get
+            {
+                string envArch = Environment.GetEnvironmentVariable("VC_DOCKER_ARCH");
+                if (!string.IsNullOrEmpty(envArch) && Enum.TryParse<Architecture>(envArch, out Architecture containerArch))
+                {
+                    return containerArch;
+                }
+
+                return this.systemInfo.CpuArchitecture;
+            }
+        }
 
         /// <summary>
         /// True/false whether log files upload request processing should be deferred
@@ -442,9 +453,22 @@ namespace VirtualClient.Contracts
         public bool ParametersEvaluated { get; protected set; }
 
         /// <summary>
-        /// The OS/system platform (e.g. Windows, Unix).
+        /// The OS/system platform (e.g. Windows, Unix). Returns the container platform when running
+        /// in Docker context (VC_DOCKER_PLATFORM env var set), otherwise returns host platform.
         /// </summary>
-        public PlatformID Platform { get; }
+        public PlatformID Platform
+        {
+            get
+            {
+                string envPlatform = Environment.GetEnvironmentVariable("VC_DOCKER_PLATFORM");
+                if (!string.IsNullOrEmpty(envPlatform) && Enum.TryParse<PlatformID>(envPlatform, out PlatformID containerPlatform))
+                {
+                    return containerPlatform;
+                }
+
+                return this.systemInfo.Platform;
+            }
+        }
 
         /// <summary>
         /// Provides OS/system platform specific information.
@@ -675,13 +699,14 @@ namespace VirtualClient.Contracts
 
         /// <summary>
         /// The name of the platform/architecture for the system on which the application is
-        /// running (e.g. linux-x64, linux-arm64, win-x64, win-arm64).
+        /// running (e.g. linux-x64, linux-arm64, win-x64, win-arm64). Returns the container
+        /// platform name when running in Docker context (VC_DOCKER_PLATFORM env var set).
         /// </summary>
         protected string PlatformArchitectureName
         {
             get
             {
-                return this.PlatformSpecifics.PlatformArchitectureName;
+                return PlatformSpecifics.GetPlatformArchitectureName(this.Platform, this.CpuArchitecture);
             }
         }
 

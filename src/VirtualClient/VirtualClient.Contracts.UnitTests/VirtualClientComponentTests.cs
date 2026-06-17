@@ -724,6 +724,75 @@ namespace VirtualClient.Contracts
             Assert.IsFalse(VirtualClientComponent.IsSupported(component));
         }
 
+        [Test]
+        public void VirtualClientComponentPlatformReturnsContainerPlatformWhenDockerEnvVarSet()
+        {
+            this.mockFixture.Setup(PlatformID.Win32NT, System.Runtime.InteropServices.Architecture.X64);
+            TestVirtualClientComponent component = new TestVirtualClientComponent(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+
+            try
+            {
+                Environment.SetEnvironmentVariable("VC_DOCKER_PLATFORM", "Unix");
+
+                Assert.AreEqual(PlatformID.Unix, component.Platform);
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable("VC_DOCKER_PLATFORM", null);
+            }
+        }
+
+        [Test]
+        public void VirtualClientComponentPlatformReturnsHostPlatformWhenDockerEnvVarNotSet()
+        {
+            this.mockFixture.Setup(PlatformID.Win32NT, System.Runtime.InteropServices.Architecture.X64);
+            TestVirtualClientComponent component = new TestVirtualClientComponent(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+
+            Environment.SetEnvironmentVariable("VC_DOCKER_PLATFORM", null);
+
+            Assert.AreEqual(PlatformID.Win32NT, component.Platform);
+        }
+
+        [Test]
+        public void VirtualClientComponentCpuArchitectureReturnsContainerArchWhenDockerEnvVarSet()
+        {
+            this.mockFixture.Setup(PlatformID.Win32NT, System.Runtime.InteropServices.Architecture.X64);
+            TestVirtualClientComponent component = new TestVirtualClientComponent(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+
+            try
+            {
+                Environment.SetEnvironmentVariable("VC_DOCKER_ARCH", "Arm64");
+
+                Assert.AreEqual(System.Runtime.InteropServices.Architecture.Arm64, component.CpuArchitecture);
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable("VC_DOCKER_ARCH", null);
+            }
+        }
+
+        [Test]
+        public void VirtualClientComponentIsSupportedUsesContainerPlatformWhenDockerEnvVarsSet()
+        {
+            // Windows host targeting a Linux container — component supports linux-x64 only
+            this.mockFixture.Setup(PlatformID.Win32NT, System.Runtime.InteropServices.Architecture.X64);
+            TestVirtualClientComponent2 component = new TestVirtualClientComponent2(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+
+            try
+            {
+                Environment.SetEnvironmentVariable("VC_DOCKER_PLATFORM", "Unix");
+                Environment.SetEnvironmentVariable("VC_DOCKER_ARCH", "X64");
+
+                // linux-x64 is in [SupportedPlatforms("linux-x64,win-arm64,win-x64")]
+                Assert.IsTrue(component.IsSupported());
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable("VC_DOCKER_PLATFORM", null);
+                Environment.SetEnvironmentVariable("VC_DOCKER_ARCH", null);
+            }
+        }
+
         private class TestVirtualClientComponent : VirtualClientComponent
         {
             public TestVirtualClientComponent(VirtualClientComponent component)

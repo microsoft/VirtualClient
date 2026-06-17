@@ -498,7 +498,52 @@ namespace VirtualClient
                 OptionFactory.CreateLogLevelOption(required: false, LogLevel.Information),
 
                 // --verbose
-                OptionFactory.CreateVerboseFlag(required: false, false)
+                OptionFactory.CreateVerboseFlag(required: false, false),
+
+                // --keep-container-alive
+                OptionFactory.CreateKeepContainerAliveFlag(required: false, false),
+
+                // --logger
+                OptionFactory.CreateLoggerOption(required: false),
+
+                // --content
+                OptionFactory.CreateContentStoreOption(required: false),
+
+                // --client-id
+                OptionFactory.CreateClientIdOption(required: false, Environment.MachineName),
+
+                // --clean
+                OptionFactory.CreateCleanOption(required: false),
+
+                // --event-hub
+                OptionFactory.CreateEventHubStoreOption(required: false),
+
+                // --experiment-id
+                OptionFactory.CreateExperimentIdOption(required: false, Guid.NewGuid().ToString().ToLowerInvariant()),
+
+                // --iteration
+                OptionFactory.CreateIterationsOption(required: false),
+
+                // --key-vault
+                OptionFactory.CreateKeyVaultStoreOption(required: false),
+
+                // --metadata
+                OptionFactory.CreateMetadataOption(required: false),
+
+                // --layout
+                OptionFactory.CreateLayoutOption(required: false),
+
+                // --log-to-file
+                OptionFactory.CreateLogToFileFlag(required: false),
+
+                // --package-dir
+                OptionFactory.CreatePackageDirectoryOption(required: false),
+
+                // --scenarios
+                OptionFactory.CreateScenariosOption(required: false),
+
+                // --version
+                OptionFactory.CreateVersionOption(required: false)
             };
 
             dockerCommand.WithOptionValidation(args);
