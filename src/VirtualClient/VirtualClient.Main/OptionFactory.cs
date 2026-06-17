@@ -1914,6 +1914,26 @@ namespace VirtualClient
             return timing;
         }
 
+        /// <summary>
+        /// Command line option defines the Docker image to use for container execution.
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateDockerImageOption(bool required = true, object defaultValue = null)
+        {
+            Option<string> option = new Option<string>(
+                new string[] { "--image" },
+                description: "The Docker image to use for container execution (e.g. ubuntu:noble, redis:7.0-alpine).")
+            {
+                Name = "DockerImage",
+                ArgumentHelpName = "image"
+            };
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+
+            return option;
+        }
+
         private static Option SetOptionRequirements(Option option, bool required = false, object defaultValue = null, ValidateSymbol<OptionResult> validator = null)
         {
             option.IsRequired = required;

@@ -1,0 +1,44 @@
+{
+    "Description": "OpenSSL CPU performance benchmark running inside a Docker container.",
+    "Metadata": {
+        "RecommendedMinimumExecutionTime": "00:05:00",
+        "SupportedPlatforms": "linux-x64,linux-arm64",
+        "SupportedOperatingSystems": "Ubuntu"
+    },
+    "Parameters": {
+        "DockerImage": "ubuntu:noble",
+        "OpenSSLScenario": "SHA256"
+    },
+    "Actions": [
+        {
+            "Type": "DockerExecution",
+            "Parameters": {
+                "Image": "$.Parameters.DockerImage"
+            },
+            "Components": [
+                {
+                    "Type": "OpenSslExecutor",
+                    "Parameters": {
+                        "Scenario": "$.Parameters.OpenSSLScenario",
+                        "CommandArguments": "speed -elapsed -seconds 10 sha256",
+                        "PackageName": "openssl",
+                        "Tags": "CPU,OpenSSL,Cryptography,Docker"
+                    }
+                }
+            ]
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallOpenSSLWorkloadPackage",
+                "BlobContainer": "packages",
+                "BlobName": "openssl.3.0.0.zip",
+                "PackageName": "openssl",
+                "Extract": true
+            }
+        }
+    ]
+}
+
