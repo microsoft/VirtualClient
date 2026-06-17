@@ -171,6 +171,7 @@ namespace VirtualClient
                 CommandLineParser.CreateApiSubcommand(commandLineArgs, cancellationTokenSource),
                 CommandLineParser.CreateBootstrapSubcommand(commandLineArgs, cancellationTokenSource),
                 CommandLineParser.CreateConvertSubcommand(commandLineArgs, cancellationTokenSource),
+                CommandLineParser.CreateDockerSubcommand(commandLineArgs, cancellationTokenSource),
                 CommandLineParser.CreateGetTokenSubcommand(commandLineArgs, cancellationTokenSource),
                 CommandLineParser.CreateUploadFilesSubcommand(commandLineArgs, cancellationTokenSource),
                 CommandLineParser.CreateUploadTelemetrySubcommand(commandLineArgs, cancellationTokenSource)
@@ -466,6 +467,44 @@ namespace VirtualClient
             convertCommand.Handler = CommandHandler.Create<ConvertProfileCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
 
             return convertCommand;
+        }
+
+        private static Command CreateDockerSubcommand(string[] args, CancellationTokenSource cancellationTokenSource)
+        {
+            Command dockerCommand = new Command(
+                "docker",
+                "Executes a workload profile inside a Docker container.")
+            {
+                // REQUIRED
+                // -------------------------------------------------------------------
+                // --image
+                OptionFactory.CreateDockerImageOption(required: true),
+
+                // --profile
+                OptionFactory.CreateProfileOption(required: true),
+
+                // OPTIONAL
+                // -------------------------------------------------------------------
+                // --parameters
+                OptionFactory.CreateParametersOption(required: false),
+
+                // --timeout
+                OptionFactory.CreateTimeoutOption(required: false),
+
+                // --log-dir
+                OptionFactory.CreateLogDirectoryOption(required: false),
+
+                // --log-level
+                OptionFactory.CreateLogLevelOption(required: false, LogLevel.Information),
+
+                // --verbose
+                OptionFactory.CreateVerboseFlag(required: false, false)
+            };
+
+            dockerCommand.WithOptionValidation(args);
+            dockerCommand.Handler = CommandHandler.Create<DockerCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
+
+            return dockerCommand;
         }
 
         private static Command CreateGetTokenSubcommand(string[] args, CancellationTokenSource cancellationTokenSource)
