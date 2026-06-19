@@ -354,8 +354,20 @@ namespace VirtualClient.Actions
         private async Task KillServerInstancesAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             this.Logger.LogTraceMessage($"{this.TypeName}.KillServerInstances");
-            await this.ExecuteCommandAsync("pkill", "OrchardCore", this.aspnetOrchardDirectory, telemetryContext, cancellationToken);
-            await this.ExecuteCommandAsync("fuser", $"-n tcp -k {this.ServerPort}", this.aspnetOrchardDirectory, telemetryContext, cancellationToken);
+
+            // 'pkill'/'fuser' exist only on Unix; on Windows they fail to start ("The system cannot
+            // find the file specified"), which crashes the workload. On Windows the equivalent
+            // 'taskkill' is used to terminate the self-contained OrchardCore server (which also
+            // releases the TCP port it was holding).
+            if (this.Platform == PlatformID.Unix)
+            {
+                await this.ExecuteCommandAsync("pkill", "OrchardCore", this.aspnetOrchardDirectory, telemetryContext, cancellationToken);
+                await this.ExecuteCommandAsync("fuser", $"-n tcp -k {this.ServerPort}", this.aspnetOrchardDirectory, telemetryContext, cancellationToken);
+            }
+            else
+            {
+                await this.ExecuteCommandAsync("taskkill", "/F /IM OrchardCore.Cms.Web.exe", this.aspnetOrchardDirectory, telemetryContext, cancellationToken);
+            }
 
             await this.WaitAsync(TimeSpan.FromSeconds(3), cancellationToken);
         }
@@ -368,9 +380,19 @@ namespace VirtualClient.Actions
             {
                 try
                 {
-                    string command = "nohup";
                     string workingDirectory = this.aspnetOrchardDirectory;
-                    string commandArguments = $"{this.Combine(this.aspnetOrchardPublishPath, "OrchardCore.Cms.Web")} --urls http://*:{this.ServerPort}";
+
+                    // 'nohup' (run a process immune to hangups, detached) exists only on Unix. On
+                    // Windows it fails to start ("The system cannot find the file specified"), so the
+                    // self-contained OrchardCore server executable is launched directly instead.
+                    string serverExecutable = this.Combine(
+                        this.aspnetOrchardPublishPath,
+                        this.Platform == PlatformID.Unix ? "OrchardCore.Cms.Web" : "OrchardCore.Cms.Web.exe");
+
+                    string command = this.Platform == PlatformID.Unix ? "nohup" : serverExecutable;
+                    string commandArguments = this.Platform == PlatformID.Unix
+                        ? $"{serverExecutable} --urls http://*:{this.ServerPort}"
+                        : $"--urls http://*:{this.ServerPort}";
 
                     relatedContext.AddContext("command", command);
                     relatedContext.AddContext("commandArguments", commandArguments);

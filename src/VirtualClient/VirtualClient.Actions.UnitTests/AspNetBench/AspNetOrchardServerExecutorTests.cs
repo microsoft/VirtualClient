@@ -86,14 +86,16 @@ namespace VirtualClient.Actions
                 await executor.ExecuteAsync(CancellationToken.None);
 
                 this.mockFixture.Tracking.AssertCommandsExecuted(true,
-                    "pkill OrchardCore",
-                    "fuser -n tcp -k 5014",
+                    "taskkill /F /IM OrchardCore\\.Cms\\.Web\\.exe",
                     $"{Regex.Escape(this.mockDotNetPackage.Path)}\\\\dotnet\\.exe publish -c Release --sc -f net9\\.0 {Regex.Escape(this.mockOrchardCorePackage.Path)}\\\\src\\\\OrchardCore\\.Cms\\.Web\\\\OrchardCore\\.Cms\\.Web\\.csproj",
-                    $"nohup {Regex.Escape(this.mockOrchardCorePackage.Path)}\\\\src\\\\OrchardCore\\.Cms\\.Web\\\\bin\\\\Release\\\\net9\\.0\\\\win-x64\\\\publish\\\\OrchardCore\\.Cms\\.Web --urls http://\\*:5014"
+                    $"{Regex.Escape(this.mockOrchardCorePackage.Path)}\\\\src\\\\OrchardCore\\.Cms\\.Web\\\\bin\\\\Release\\\\net9\\.0\\\\win-x64\\\\publish\\\\OrchardCore\\.Cms\\.Web\\.exe --urls http://\\*:5014"
                 );
 
-                this.mockFixture.Tracking.AssertCommandExecutedTimes("pkill", 1);
-                this.mockFixture.Tracking.AssertCommandExecutedTimes("fuser", 1);
+                // On Windows the Linux-only 'pkill'/'fuser'/'nohup' commands must NOT be used.
+                this.mockFixture.Tracking.AssertCommandExecutedTimes("taskkill", 1);
+                this.mockFixture.Tracking.AssertCommandExecutedTimes("pkill", 0);
+                this.mockFixture.Tracking.AssertCommandExecutedTimes("fuser", 0);
+                this.mockFixture.Tracking.AssertCommandExecutedTimes("nohup", 0);
             }
         }
 
