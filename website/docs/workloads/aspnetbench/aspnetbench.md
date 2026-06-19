@@ -22,6 +22,15 @@ server process to be pinned to specific CPU cores for controlled performance mea
 * [Bombardier Documentation](../bombardier/bombardier.md)
 * [Wrk/Wrk2 Documentation](../wrk/wrk.md)
 
+## Platform Support
+The ASP.NET Kestrel and OrchardCore server components run on all supported platforms (`linux-x64`, `linux-arm64`,
+`win-x64`, `win-arm64`). Each profile's overall platform support is determined by the HTTP client (load generator) it uses:
+
+* **Bombardier** is cross-platform, so `PERF-WEB-ASPNET-BOMBARDIER` runs on both Linux and Windows
+  (`linux-x64`, `linux-arm64`, `win-x64`, `win-arm64`).
+* **Wrk** is Linux-only, so the Wrk-based profiles (`PERF-WEB-ASPNET-WRK`, `PERF-WEB-ASPNET-WRK-AFFINITY`,
+  `PERF-WEB-ASPNET-ORCHARD-WRK`) run on `linux-x64` and `linux-arm64` only.
+
 ## What is Being Measured?
 The client tools (Bombardier, Wrk or Wrk2) generate concurrent HTTP requests against the ASP.NET server and capture latency
 percentile distributions and throughput statistics.
