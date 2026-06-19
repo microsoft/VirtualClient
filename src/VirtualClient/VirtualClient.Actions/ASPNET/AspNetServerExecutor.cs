@@ -366,9 +366,21 @@ namespace VirtualClient.Actions
         {
             this.Logger.LogTraceMessage($"{this.TypeName}.KillServerInstances");
 
-            await this.ExecuteCommandAsync("pkill", "dotnet", this.aspnetBenchDirectory, telemetryContext, cancellationToken);
+            // The ASP.NET (Kestrel) benchmark server is hosted by the .NET runtime (dotnet). Both the
+            // server process(es) and the TCP port they hold must be released using platform-native
+            // commands. 'pkill'/'fuser' exist only on Unix; on Windows they fail to start
+            // ("The system cannot find the file specified"), which crashes the workload. On Windows the
+            // equivalent 'taskkill' is used instead (killing the process also releases its port).
+            if (this.Platform == PlatformID.Unix)
+            {
+                await this.ExecuteCommandAsync("pkill", "dotnet", this.aspnetBenchDirectory, telemetryContext, cancellationToken);
 
-            await this.ExecuteCommandAsync("fuser", $"-n tcp -k {this.ServerPort}", this.aspnetBenchDirectory, telemetryContext, cancellationToken);
+                await this.ExecuteCommandAsync("fuser", $"-n tcp -k {this.ServerPort}", this.aspnetBenchDirectory, telemetryContext, cancellationToken);
+            }
+            else
+            {
+                await this.ExecuteCommandAsync("taskkill", "/F /IM dotnet.exe", this.aspnetBenchDirectory, telemetryContext, cancellationToken);
+            }
 
             await this.WaitAsync(TimeSpan.FromSeconds(3), cancellationToken);
         }
