@@ -237,6 +237,58 @@ namespace VirtualClient.Actions
         }
 
         [Test]
+        public void DiskSpdParserVerifyWriteOnlyV220FormatOnSingleProcessorGroupSystem()
+        {
+            // Authentic DiskSpd 2.2.0 output captured from a single-processor-group Azure VM
+            // (4 vCPU / 2 cores, group count = 1). On such systems (<= 64 vCPUs) DiskSpd omits
+            // the Socket | Node | Group columns and emits just "Core | CPU", and titles the
+            // latency table "Total latency distribution:" (not the legacy "total:"). Prior to the
+            // fix this threw "The given key 'CPU' was not present in the dictionary" (and, once
+            // that was fixed, "The given key 'Latency' was not present in the dictionary").
+            string results = File.ReadAllText(MockFixture.GetDirectory(typeof(DiskSpdMetricsParserTests), "Examples", "DiskSpd", "DiskSpdExample-WriteOnly-v2.2.0-SingleGroup.txt"));
+            var parser = new DiskSpdMetricsParser(results, "diskspd.exe -c1G -b4K -r4K -t4 -o16 -w100 -d10 -Suw -W5 -D -L -Rtext C:\\diskspd-test.dat");
+
+            IList<Metric> metrics = parser.Parse();
+
+            // cpu metrics – the redundant Core column must be stripped so rows are keyed by the
+            // CPU number (0..3), not the Core number (0,0,1,1). The presence of "cpu * 2" and
+            // "cpu * 3" (Core only reaches 1) proves the rows are keyed by CPU, and the
+            // Usage/User/Kernel columns are not shifted by one.
+            MetricAssert.Exists(metrics, "cpu usage 0", 1.56, "percentage");
+            MetricAssert.Exists(metrics, "cpu usage 1", 1.56, "percentage");
+            MetricAssert.Exists(metrics, "cpu usage 2", 0.94, "percentage");
+            MetricAssert.Exists(metrics, "cpu usage 3", 0.47, "percentage");
+            MetricAssert.Exists(metrics, "cpu usage average", 1.13, "percentage");
+            MetricAssert.Exists(metrics, "cpu user 0", 0.31, "percentage");
+            MetricAssert.Exists(metrics, "cpu user 1", 0.62, "percentage");
+            MetricAssert.Exists(metrics, "cpu user 3", 0, "percentage");
+            MetricAssert.Exists(metrics, "cpu user average", 0.31, "percentage");
+            MetricAssert.Exists(metrics, "cpu kernel 0", 1.25, "percentage");
+            MetricAssert.Exists(metrics, "cpu kernel 2", 0.62, "percentage");
+            MetricAssert.Exists(metrics, "cpu kernel average", 0.82, "percentage");
+
+            // Total IO
+            MetricAssert.Exists(metrics, "total bytes 0", 5181440, "bytes");
+            MetricAssert.Exists(metrics, "total throughput 0", 0.49, "MiB/s");
+            MetricAssert.Exists(metrics, "total iops 0", 126.45, "iops");
+            MetricAssert.Exists(metrics, "total bytes total", 20819968, "bytes");
+            MetricAssert.Exists(metrics, "total throughput total", 1.98, "MiB/s");
+            MetricAssert.Exists(metrics, "total iops total", 508.09, "iops");
+
+            // Write IO
+            MetricAssert.Exists(metrics, "write bytes total", 20819968, "bytes");
+            MetricAssert.Exists(metrics, "write throughput total", 1.98, "MiB/s");
+            MetricAssert.Exists(metrics, "write iops total", 508.09, "iops");
+
+            // Latency – requires the "Total latency distribution:" header to be normalized.
+            MetricAssert.Exists(metrics, "write latency min", 86.700, "ms");
+            MetricAssert.Exists(metrics, "write latency 50th", 140.008, "ms");
+            MetricAssert.Exists(metrics, "write latency 99th", 161.752, "ms");
+            MetricAssert.Exists(metrics, "total latency 50th", 140.008, "ms");
+            MetricAssert.Exists(metrics, "total latency max", 164.312, "ms");
+        }
+
+        [Test]
         public void DiskSpdParserVerifyForCoreCountGreaterThan64WhichAddsProcessorGrouping()
         {
             string results = File.ReadAllText(MockFixture.GetDirectory(typeof(DiskSpdMetricsParserTests), "Examples", "DiskSpd", "Write8k.txt"));

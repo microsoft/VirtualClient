@@ -132,6 +132,23 @@ namespace VirtualClient.Actions
                     " $3| $5|",
                     RegexOptions.Multiline);
             }
+            else if (this.PreprocessedText.Contains("Core | CPU"))
+            {
+                /*
+                 * DiskSpd v2.2.0 on single-processor-group systems (<= 64 vCPUs) omits the
+                 * Socket, Node and Group columns and emits just "Core | CPU":
+                 *
+                 * Core | CPU |  Usage |  User  | Kernel |  Idle
+                 *
+                 * Give the table the "CPU" title so it sectionizes under the "CPU" key. The
+                 * redundant Core column is stripped from the section data later, in
+                 * ParseCPUResult (see RemoveCoreColumn), once the CPU table is isolated from
+                 * the IO tables whose rows also begin with two integer columns.
+                 */
+                this.PreprocessedText = this.PreprocessedText.Replace(
+                    "Core | CPU",
+                    $"CPU{Environment.NewLine}Core | CPU");
+            }
             else if (this.PreprocessedText.Contains("Group"))
             {
                 this.PreprocessedText = this.PreprocessedText.Replace("Group", $"CPU{Environment.NewLine}Group");
@@ -153,6 +170,16 @@ namespace VirtualClient.Actions
              *   %-ile |  Read (ms) | Write (ms) | Total (ms)
              */
             this.PreprocessedText = this.PreprocessedText.Replace($"total:{Environment.NewLine}", $"Latency{Environment.NewLine}");
+
+            /*
+             * DiskSpd v2.2.0 renamed the latency percentile section header from "total:" to
+             * "Total latency distribution:". Normalize the new header to the "Latency" section
+             * title as well, otherwise ParseLatencyResult throws KeyNotFoundException('Latency').
+             *
+             * Total latency distribution:
+             *   %-ile |  Read (ms) | Write (ms) | Total (ms)
+             */
+            this.PreprocessedText = this.PreprocessedText.Replace($"Total latency distribution:{Environment.NewLine}", $"Latency{Environment.NewLine}");
 
             // Change all the 'total:' to 'total|'
             this.PreprocessedText = this.PreprocessedText.Replace("total:", $"total|");
@@ -198,6 +225,10 @@ namespace VirtualClient.Actions
             if (this.Sections[sectionName].Contains("Group"))
             {
                 this.Sections[sectionName] = this.ProcessAndUpdateString(this.Sections[sectionName]);
+            }
+            else if (this.Sections[sectionName].Contains("Core"))
+            {
+                this.Sections[sectionName] = this.RemoveCoreColumn(this.Sections[sectionName]);
             }
 
             DataTable cpuUsage = DataTableExtensions.ConvertToDataTable(
@@ -310,6 +341,25 @@ namespace VirtualClient.Actions
                 {
                     lines[i] = Regex.Replace(lines[i], @$"\b{group}\s*\|\s*{cpu}\b", $"{(64 * group) + cpu}");
                 }
+            }
+
+            return string.Join('\n', lines);
+        }
+
+        private string RemoveCoreColumn(string input)
+        {
+            string[] lines = input.Split('\n');
+
+            // Header: "Core | CPU |  Usage | ..." -> "CPU |  Usage | ..."
+            lines[0] = lines[0].Replace("Core | CPU", "CPU");
+
+            for (int i = 1; i < lines.Length; i++)
+            {
+                // Data rows look like "<core> | <cpu> |  <usage> | ...". Drop the leading
+                // Core column, keeping CPU as the row identifier (matching the canonical
+                // single-column "CPU" format). The trailing average row has no Core column
+                // and is left unchanged.
+                lines[i] = Regex.Replace(lines[i], @"^\s*\d+\s*\|\s*(\d+)\s*\|", "$1|");
             }
 
             return string.Join('\n', lines);
