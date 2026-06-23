@@ -352,8 +352,18 @@
             "Parameters": {
                 "Scenario": "Install_Visual_Cpp_Redistributable_arm64",
                 "SupportedPlatforms": "win-arm64",
-                "PackageName": "visual_c++_redistributable",
+                "PackageName": "visual_cpp_redistributable",
                 "PackageUri": "https://aka.ms/vs/17/release/vc_redist.arm64.exe"
+            }
+        },
+        {
+            "Type": "ExecuteCommand",
+            "Parameters": {
+                "Scenario": "Install_Visual_Cpp_Redistributable_arm64",
+                "Command": "vc_redist.arm64.exe /install /quiet /norestart",
+                "WorkingDirectory": "{PackagePath:visual_cpp_redistributable}",
+                "LogFolderName": "configure_network",
+                "SupportedPlatforms": "win-arm64"
             }
         },
         {
