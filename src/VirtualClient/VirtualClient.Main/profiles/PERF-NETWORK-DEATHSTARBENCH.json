@@ -94,7 +94,7 @@
       "Type": "LinuxPackageInstallation",
       "Parameters": {
         "Scenario": "InstallLinuxPackages",
-        "Packages-Apt": "python3-pip,libssl-dev,libz-dev,luarocks,libssl1.0.0,python3.12-venv"
+        "Packages-Apt": "python3-pip,libssl-dev,libz-dev,luarocks,libssl1.0.0,python3-venv"
       }
     },
     {
