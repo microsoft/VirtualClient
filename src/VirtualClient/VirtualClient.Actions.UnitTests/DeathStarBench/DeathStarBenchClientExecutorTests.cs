@@ -148,7 +148,6 @@ namespace VirtualClient.Actions
                 // exactly the same as what is executed.
                 $"sudo bash {this.mockPackage.Path}/linux-x64/scripts/dockerComposeScript.sh",
                 $"sudo chmod +x \"/usr/local/bin/docker-compose\"",
-                $"sudo apt install python3-venv -y",
                 $"sudo python3 -m venv {this.mockPackage.Path}/linux-x64/venv",
                 $"sudo {this.mockPackage.Path}/linux-x64/venv/bin/pip install -U pip",
                 $"sudo {this.mockPackage.Path}/linux-x64/venv/bin/pip install -U setuptools",
@@ -200,7 +199,6 @@ namespace VirtualClient.Actions
                 $"sudo chmod +x \"{this.mockPackage.Path}/linux-x64/mediamicroservices/wrk2/deps/luajit/src/luajit\"",
                 $"sudo bash {this.mockPackage.Path}/linux-x64/scripts/dockerComposeScript.sh",
                 $"sudo chmod +x \"/usr/local/bin/docker-compose\"",
-                $"sudo apt install python3-venv -y",
                 $"sudo python3 -m venv {this.mockPackage.Path}/linux-x64/venv",
                 $"sudo {this.mockPackage.Path}/linux-x64/venv/bin/pip install -U pip",
                 $"sudo {this.mockPackage.Path}/linux-x64/venv/bin/pip install -U setuptools",
@@ -247,7 +245,6 @@ namespace VirtualClient.Actions
                 // exactly the same as what is executed.
                 $"sudo bash {this.mockPackage.Path}/linux-x64/scripts/dockerComposeScript.sh",
                 $"sudo chmod +x \"/usr/local/bin/docker-compose\"",
-                $"sudo apt install python3-venv -y",
                 $"sudo python3 -m venv {this.mockPackage.Path}/linux-x64/venv",
                 $"sudo {this.mockPackage.Path}/linux-x64/venv/bin/pip install -U pip",
                 $"sudo {this.mockPackage.Path}/linux-x64/venv/bin/pip install -U setuptools",
