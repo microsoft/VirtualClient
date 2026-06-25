@@ -246,6 +246,19 @@
         {
             "Type": "SysbenchConfiguration",
             "Parameters": {
+                "Scenario": "CleanupMySQLDatabase",
+                "Action": "Cleanup",
+                "DatabaseSystem": "MySQL",
+                "Benchmark": "OLTP",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "DatabaseScenario": "$.Parameters.DatabaseScenario",
+                "PackageName": "sysbench",
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "SysbenchConfiguration",
+            "Parameters": {
                 "Scenario": "PopulateMySQLDatabase",
                 "Action": "PopulateTables",
                 "DatabaseSystem": "MySQL",
