@@ -330,5 +330,80 @@ namespace VirtualClient.Actions
             MetricAssert.Exists(metrics, "total latency 75th", 2.819, "ms");
             MetricAssert.Exists(metrics, "total latency 90th", 7.472, "ms");
         }
+
+        [Test]
+        public void DiskSpdParserVerifyV220FormatOnMultiSocketSingleProcessorGroupSystem()
+        {
+            // Authentic DiskSpd 2.2 output captured from a 64-vCPU Azure VM (Standard_E64ds_v5:
+            // 2 sockets, 2 NUMA nodes, 1 processor group). Because DiskSpd emits each topology column
+            // (Socket/Node/Group/Core/Class) only when the system has more than one of that unit, this
+            // exactly-64-vCPU system produces the intermediate header "Socket | Node | Core | CPU" -
+            // it has the Socket and Node columns but NO Group column (64 vCPUs fit in one group). This
+            // is the customer's "exactly 64 vCPUs fails" case: it matches neither the full
+            // "Socket | Node | Group | Core | CPU" header nor the bare "Core | CPU" header that earlier
+            // fixes special-cased, so before NormalizeCpuTable it threw "The given key 'CPU' was not
+            // present in the dictionary" (the title was inserted mid-line, keying the section
+            // "Socket | Node | CPU").
+            string results = File.ReadAllText(MockFixture.GetDirectory(typeof(DiskSpdMetricsParserTests), "Examples", "DiskSpd", "DiskSpdExample-WriteOnly-v2.2.0-MultiSocketSingleGroup.txt"));
+            var parser = new DiskSpdMetricsParser(results, "diskspd.exe -c64M -b4K -r4K -t4 -o4 -w100 -d5 -Suw -W2 -D -L -Rtext C:\\dskspd\\testfile.dat");
+
+            IList<Metric> metrics = parser.Parse();
+
+            // cpu metrics - the Socket, Node and Core columns must all be stripped so rows are keyed by
+            // the CPU number (0..5). The User/Kernel values (e.g. cpu 1) prove the columns are not
+            // shifted after dropping three leading topology columns.
+            MetricAssert.Exists(metrics, "cpu usage 0", 1.25, "percentage");
+            MetricAssert.Exists(metrics, "cpu usage 1", 3.12, "percentage");
+            MetricAssert.Exists(metrics, "cpu usage 2", 0.62, "percentage");
+            MetricAssert.Exists(metrics, "cpu usage 3", 0.94, "percentage");
+            MetricAssert.Exists(metrics, "cpu usage average", 0.09, "percentage");
+            MetricAssert.Exists(metrics, "cpu user 1", 0.31, "percentage");
+            MetricAssert.Exists(metrics, "cpu kernel 1", 2.81, "percentage");
+            MetricAssert.Exists(metrics, "cpu kernel average", 0.09, "percentage");
+
+            // Total IO + Write IO + latency must still parse end-to-end.
+            MetricAssert.Exists(metrics, "total bytes total", 69226496, "bytes");
+            MetricAssert.Exists(metrics, "total throughput total", 13.18, "MiB/s");
+            MetricAssert.Exists(metrics, "write iops total", 3374.97, "iops");
+            MetricAssert.Exists(metrics, "write latency 50th", 4.738, "ms");
+            MetricAssert.Exists(metrics, "total latency max", 46.704, "ms");
+        }
+
+        [Test]
+        public void DiskSpdParserVerifyV220FormatOnMultiNumaMultiProcessorGroupSystem()
+        {
+            // Authentic DiskSpd 2.2 output captured from a 96-vCPU Azure VM (Standard_D96as_v5:
+            // 1 socket, 2 NUMA nodes, 2 processor groups). This produces the intermediate header
+            // "Node | Group | Core | CPU" - it has the Node, Group and Core columns but no Socket
+            // column. The Node and Core columns must be dropped while the Group column is RETAINED, so
+            // that the group-relative CPU number is mapped to a unique processor id across the group
+            // boundary (group 1's CPU 0 becomes id 64 = 64*group + cpu). Without retaining Group, the
+            // group-relative CPU numbers (0,1,2,.. repeated per group) would collide. Before the
+            // dynamic fix this header threw "The given key 'CPU' was not present in the dictionary".
+            string results = File.ReadAllText(MockFixture.GetDirectory(typeof(DiskSpdMetricsParserTests), "Examples", "DiskSpd", "DiskSpdExample-WriteOnly-v2.2.0-MultiNumaMultiGroup.txt"));
+            var parser = new DiskSpdMetricsParser(results, "diskspd.exe -c64M -b4K -r4K -t4 -o4 -w100 -d5 -Suw -W2 -D -L -Rtext C:\\dskspd\\testfile.dat");
+
+            IList<Metric> metrics = parser.Parse();
+
+            // Group 0 CPUs are keyed 0..3 (64*0 + cpu); the User/Kernel values prove the Node and Core
+            // columns were stripped without shifting the value columns.
+            MetricAssert.Exists(metrics, "cpu usage 0", 0.31, "percentage");
+            MetricAssert.Exists(metrics, "cpu usage 1", 4.08, "percentage");
+            MetricAssert.Exists(metrics, "cpu usage 2", 3.13, "percentage");
+            MetricAssert.Exists(metrics, "cpu user 1", 1.57, "percentage");
+            MetricAssert.Exists(metrics, "cpu kernel 1", 2.51, "percentage");
+
+            // Group 1 CPUs are offset to 64..67 (64*1 + cpu) so they do not collide with group 0.
+            MetricAssert.Exists(metrics, "cpu usage 64", 0, "percentage");
+            MetricAssert.Exists(metrics, "cpu usage 65", 0, "percentage");
+            MetricAssert.Exists(metrics, "cpu usage average", 0.72, "percentage");
+
+            // Total IO + Write IO + latency must still parse end-to-end.
+            MetricAssert.Exists(metrics, "total bytes total", 24952832, "bytes");
+            MetricAssert.Exists(metrics, "total throughput total", 4.75, "MiB/s");
+            MetricAssert.Exists(metrics, "write iops total", 1215.24, "iops");
+            MetricAssert.Exists(metrics, "write latency 50th", 6.402, "ms");
+            MetricAssert.Exists(metrics, "total latency max", 53.872, "ms");
+        }
     }
 }

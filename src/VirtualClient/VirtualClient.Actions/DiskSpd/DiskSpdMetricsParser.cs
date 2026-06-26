@@ -33,6 +33,15 @@ namespace VirtualClient.Actions
         /// </summary>
         private static readonly Regex DashLineRegex = new Regex(@"(-){2,}(\s)*", RegexOptions.ExplicitCapture);
 
+        /// <summary>
+        /// Matches the DiskSpd CPU-utilization table header by its invariant trailing signature
+        /// ("CPU |  Usage |  User  | Kernel |  Idle"), regardless of how many leading topology
+        /// columns (Socket/Node/Group/Core/Class) DiskSpd prepended for the system's topology.
+        /// </summary>
+        private static readonly Regex CpuTableHeaderRegex = new Regex(
+            @"\bCPU\s*\|\s*Usage\s*\|\s*User\s*\|\s*Kernel\s*\|\s*Idle",
+            RegexOptions.ExplicitCapture);
+
         private string commandLine;
         private ReadWriteMode readWriteMode;
         private List<Metric> metrics;
@@ -94,69 +103,25 @@ namespace VirtualClient.Actions
             this.PreprocessedText = TextParsingExtensions.RemoveRows(this.RawText, DiskSpdMetricsParser.DashLineRegex);
 
             /*
-             * Giving the CPU table a title
-             * 
-             * Convert:
-             * CPU |  Usage |  User  |  Kernel |  Idle
-             * 
-             * To:
-             * CPU
-             * CPU |  Usage |  User  |  Kernel |  Idle
-             * 
-             * Convert:
-             * Group | CPU |  Usage |  User  |  Kernel |  Idle
-             * 
-             * To:
-             * CPU
-             * Group | CPU |  Usage |  User  |  Kernel |  Idle
-             */
-
-            /*
-             * DiskSpd v2.2.0 added Socket, Node, Core columns to the CPU table:
+             * DiskSpd prefixes the CPU-utilization table's "CPU" column with a dynamic, hierarchical
+             * set of topology columns. Each one is emitted only when the system has more than one of
+             * that unit, in this fixed order (see DiskSpd ResultParser.cpp _PrintCpuUtilization):
              *
-             * Socket | Node | Group | Core | CPU |  Usage |  User  | Kernel |  Idle
+             *     [Socket |] [Node |] [Group |] [Core |] [Class |] CPU |  Usage |  User  | Kernel |  Idle
              *
-             * Normalize this to the existing Group | CPU format by:
-             *   1. Replacing the extended header so sectionizing produces a "CPU" section.
-             *   2. Stripping Socket, Node, Core from every data row.
+             *   - Socket : > 1 socket
+             *   - Node   : > 1 NUMA node
+             *   - Group  : > 1 processor group (i.e. > 64 vCPUs)
+             *   - Core   : SMT / hyper-threading enabled
+             *   - Class  : heterogeneous (performance/efficiency) cores
+             *
+             * Earlier fixes special-cased two exact header strings ("Socket | Node | Group | Core | CPU"
+             * and bare "Core | CPU"), so any other combination - e.g. a 64-vCPU VM with 2 NUMA nodes but
+             * 1 group emitting "Node | Core | CPU" - was mis-titled and threw KeyNotFoundException('CPU').
+             * NormalizeCpuTable handles every combination (including future columns) by keying off the
+             * invariant "CPU | Usage | ..." signature instead of hard-coded prefixes.
              */
-            if (this.PreprocessedText.Contains("Socket | Node | Group | Core | CPU"))
-            {
-                this.PreprocessedText = this.PreprocessedText.Replace(
-                    "Socket | Node | Group | Core | CPU",
-                    $"CPU{Environment.NewLine}Group | CPU");
-
-                this.PreprocessedText = Regex.Replace(
-                    this.PreprocessedText,
-                    @"^\s*(\d+)\s*\|\s*(\d+)\s*\|\s*(\d+)\s*\|\s*(\d+)\s*\|\s*(\d+)\s*\|",
-                    " $3| $5|",
-                    RegexOptions.Multiline);
-            }
-            else if (this.PreprocessedText.Contains("Core | CPU"))
-            {
-                /*
-                 * DiskSpd v2.2.0 on single-processor-group systems (<= 64 vCPUs) omits the
-                 * Socket, Node and Group columns and emits just "Core | CPU":
-                 *
-                 * Core | CPU |  Usage |  User  | Kernel |  Idle
-                 *
-                 * Give the table the "CPU" title so it sectionizes under the "CPU" key. The
-                 * redundant Core column is stripped from the section data later, in
-                 * ParseCPUResult (see RemoveCoreColumn), once the CPU table is isolated from
-                 * the IO tables whose rows also begin with two integer columns.
-                 */
-                this.PreprocessedText = this.PreprocessedText.Replace(
-                    "Core | CPU",
-                    $"CPU{Environment.NewLine}Core | CPU");
-            }
-            else if (this.PreprocessedText.Contains("Group"))
-            {
-                this.PreprocessedText = this.PreprocessedText.Replace("Group", $"CPU{Environment.NewLine}Group");
-            }
-            else
-            {
-                this.PreprocessedText = this.PreprocessedText.Replace("CPU", $"CPU{Environment.NewLine}CPU");
-            }
+            this.NormalizeCpuTable();
 
             /*
              * Replace total: to it's actual TableName "Latency"
@@ -216,6 +181,108 @@ namespace VirtualClient.Actions
             {
                 this.readWriteMode = ReadWriteMode.ReadOnly;
             }
+        }
+
+        /// <summary>
+        /// Normalizes the CPU-utilization table to the canonical "[Group |] CPU |  Usage | ..." form
+        /// and gives it a "CPU" section title, independent of which leading topology columns
+        /// (Socket/Node/Group/Core/Class) DiskSpd emitted for the current system. The Group column,
+        /// when present (> 64 vCPUs), is retained so that ParseCPUResult can map the group-relative
+        /// CPU number to a unique processor id; all other leading columns are dropped.
+        /// </summary>
+        private void NormalizeCpuTable()
+        {
+            string text = this.PreprocessedText;
+            string newLine = text.Contains("\r\n") ? "\r\n" : "\n";
+
+            string[] lines = text.Split('\n');
+            for (int i = 0; i < lines.Length; i++)
+            {
+                lines[i] = lines[i].TrimEnd('\r');
+            }
+
+            int headerIndex = Array.FindIndex(lines, line => CpuTableHeaderRegex.IsMatch(line));
+            if (headerIndex < 0)
+            {
+                // No CPU table found (unexpected for DiskSpd output); leave the text untouched.
+                return;
+            }
+
+            string[] headerColumns = lines[headerIndex].Split('|');
+            int cpuColumn = Array.FindIndex(headerColumns, column => column.Trim() == "CPU");
+            int groupColumn = Array.FindIndex(headerColumns, column => column.Trim() == "Group");
+            bool hasGroup = groupColumn >= 0;
+
+            if (cpuColumn < 0)
+            {
+                return;
+            }
+
+            List<string> output = new List<string>(lines.Length + 1);
+            bool tableComplete = false;
+            bool sawDataRow = false;
+
+            for (int i = 0; i < lines.Length; i++)
+            {
+                if (tableComplete || i < headerIndex)
+                {
+                    output.Add(lines[i]);
+                    continue;
+                }
+
+                if (i == headerIndex)
+                {
+                    // "CPU" becomes the section title (consumed by Sectionize as the section key);
+                    // the rebuilt header becomes the column-name row consumed by ConvertToDataTable.
+                    output.Add("CPU");
+                    output.Add(BuildCpuRow(headerColumns, cpuColumn, groupColumn, hasGroup));
+                    continue;
+                }
+
+                string line = lines[i];
+                if (string.IsNullOrWhiteSpace(line))
+                {
+                    // A blank line terminates the CPU table, but only once its data rows are consumed
+                    // (DiskSpd may leave a blank line between the header and the first data row).
+                    if (sawDataRow)
+                    {
+                        tableComplete = true;
+                    }
+
+                    output.Add(line);
+                    continue;
+                }
+
+                string[] columns = line.Split('|');
+                if (columns.Length == headerColumns.Length && int.TryParse(columns[cpuColumn].Trim(), out _))
+                {
+                    sawDataRow = true;
+                    output.Add(BuildCpuRow(columns, cpuColumn, groupColumn, hasGroup));
+                }
+                else
+                {
+                    // The "avg." summary row carries no topology columns; keep it verbatim.
+                    output.Add(line);
+                }
+            }
+
+            this.PreprocessedText = string.Join(newLine, output);
+        }
+
+        private static string BuildCpuRow(string[] columns, int cpuColumn, int groupColumn, bool hasGroup)
+        {
+            List<string> kept = new List<string>();
+            if (hasGroup)
+            {
+                kept.Add(columns[groupColumn].Trim());
+            }
+
+            for (int i = cpuColumn; i < columns.Length; i++)
+            {
+                kept.Add(columns[i].Trim());
+            }
+
+            return string.Join(" | ", kept);
         }
 
         private void ParseCPUResult()
