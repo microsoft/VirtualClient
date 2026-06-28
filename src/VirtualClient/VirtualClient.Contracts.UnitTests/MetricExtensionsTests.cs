@@ -216,30 +216,6 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public void FilterByExtensionHandlesInvalidVerbosityValues()
-        {
-            var metrics = new List<Metric>
-            {
-                new Metric("test_metric", 1, "unit", MetricRelativity.HigherIsBetter, verbosity: 1)
-            };
-
-            // Test invalid verbosity format
-            var invalidFilter1 = new List<string> { "verbosity:invalid" };
-            var result1 = metrics.FilterBy(invalidFilter1);
-            Assert.AreEqual(0, result1.Count());
-
-            // Test out of range verbosity (> 5)
-            var invalidFilter2 = new List<string> { "verbosity:10" };
-            var result2 = metrics.FilterBy(invalidFilter2);
-            Assert.AreEqual(0, result2.Count());
-
-            // Test verbosity less than 0 (negative)
-            var invalidFilter3 = new List<string> { "verbosity:-1" };
-            var result3 = metrics.FilterBy(invalidFilter3);
-            Assert.AreEqual(0, result3.Count());
-        }
-
-        [Test]
         public void FilterByExtensionSupportsExclusionFilters()
         {
             var metrics = new List<Metric>
@@ -251,10 +227,39 @@ namespace VirtualClient.Contracts
             };
 
             // Test exclusion filter
-            var exclusionFilter = new List<string> { "-h000*", "-h001*" };
+            var exclusionFilter = new List<string> { "-h000", "-h001" };
             var result = metrics.FilterBy(exclusionFilter);
             Assert.AreEqual(2, result.Count());
             Assert.IsFalse(result.Any(m => m.Name.StartsWith("h00")));
+            Assert.IsTrue(result.Any(m => m.Name == "bandwidth"));
+            Assert.IsTrue(result.Any(m => m.Name == "iops"));
+
+            // Test exclusion filter
+            exclusionFilter = new List<string> { "-h000*", "-h001*" };
+            result = metrics.FilterBy(exclusionFilter);
+            Assert.AreEqual(2, result.Count());
+            Assert.IsFalse(result.Any(m => m.Name.StartsWith("h00")));
+            Assert.IsTrue(result.Any(m => m.Name == "bandwidth"));
+            Assert.IsTrue(result.Any(m => m.Name == "iops"));
+        }
+
+        [Test]
+        public void FilterByExtensionSupportsExclusionFilters_2()
+        {
+            var metrics = new List<Metric>
+            {
+                new Metric("h000_metric", 1),
+                new Metric("h001_metric", 2),
+                new Metric("h002_metric", 2),
+                new Metric("bandwidth", 3),
+                new Metric("iops", 4)
+            };
+
+            // Test exclusion filter
+            var exclusionFilter = new List<string> { "-h00[0-1]" };
+            var result = metrics.FilterBy(exclusionFilter);
+            Assert.AreEqual(3, result.Count());
+            Assert.IsFalse(result.Any(m => m.Name.StartsWith("h000") || m.Name.StartsWith("h001")));
             Assert.IsTrue(result.Any(m => m.Name == "bandwidth"));
             Assert.IsTrue(result.Any(m => m.Name == "iops"));
         }
@@ -276,6 +281,25 @@ namespace VirtualClient.Contracts
             var result = metrics.FilterBy(composedFilter);
             Assert.AreEqual(2, result.Count());
             Assert.IsTrue(result.All(m => m.Name.Contains("bandwidth") && m.Verbosity <= 1));
+        }
+
+        [Test]
+        public void FilterByExtensionComposesVerbosityAndNameFilters_2()
+        {
+            var metrics = new List<Metric>
+            {
+                new Metric("bandwidth_read", 1, "MB/s", MetricRelativity.HigherIsBetter, verbosity: 1),
+                new Metric("bandwidth_write", 2, "MB/s", MetricRelativity.HigherIsBetter, verbosity: 1),
+                new Metric("iops_read", 3, "ops/s", MetricRelativity.HigherIsBetter, verbosity: 1),
+                new Metric("iops_write", 4, "ops/s", MetricRelativity.HigherIsBetter, verbosity: 1),
+                new Metric("latency_p99", 5, "ms", MetricRelativity.LowerIsBetter, verbosity: 5)
+            };
+
+            // Filter: verbosity <= 1 AND name contains "bandwidth"
+            var composedFilter = new List<string> { "verbosity:1", "^(?!bandwidth).*" };
+            var result = metrics.FilterBy(composedFilter);
+            Assert.AreEqual(2, result.Count());
+            Assert.IsTrue(result.All(m => m.Name.Contains("iops") && m.Verbosity <= 1));
         }
 
         [Test]

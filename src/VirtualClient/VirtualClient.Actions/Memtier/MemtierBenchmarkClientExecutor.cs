@@ -355,7 +355,8 @@ namespace VirtualClient.Actions
                     foreach (ProcessOutputDescription processInfo in this.processOutputDescriptions)
                     {
                         MemtierMetricsParser memtierMetricsAggregateParser = new MemtierMetricsParser(processInfo.Output);
-                        IList<Metric> metrics = memtierMetricsAggregateParser.Parse();
+                        IEnumerable<Metric> metrics = memtierMetricsAggregateParser.Parse().FilterBy(this.MetricFilters);
+
                         allMetrics.AddRange(metrics);
 
                         if (this.EmitRawMetrics)
@@ -385,7 +386,7 @@ namespace VirtualClient.Actions
                     if (this.EmitAggregateMetrics)
                     {
                         ProcessOutputDescription processReference = this.processOutputDescriptions.First();
-                        IList<Metric> aggregateMetrics = MemtierMetricsParser.Aggregate(allMetrics);
+                        IEnumerable<Metric> aggregateMetrics = MemtierMetricsParser.Aggregate(allMetrics.FilterBy(this.MetricFilters));
                         IDictionary<string, IConvertible> metadata = MemtierMetricsParser.ParseMetadata(processReference.Command);
 
                         foreach (Metric metric in aggregateMetrics)

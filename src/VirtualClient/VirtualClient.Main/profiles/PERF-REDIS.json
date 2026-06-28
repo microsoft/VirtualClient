@@ -15,7 +15,8 @@
         "IsTLSEnabled": false,
         "EmitAggregateMetrics": false,
         "EmitRawMetrics": true,
-        "Duration": "00:02:00"
+        "Duration": "00:02:00",
+        "MetricFilters": null
     },
     "Actions": [
         {
@@ -45,6 +46,7 @@
                 "RedisResourcesPackageName": "redisresources",
                 "EmitAggregateMetrics": "$.Parameters.EmitAggregateMetrics",
                 "EmitRawMetrics": "$.Parameters.EmitRawMetrics",
+                "MetricFilters": "$.Parameters.MetricFilters",
                 "Role": "Client"
             }
         },
@@ -60,6 +62,7 @@
                 "RedisResourcesPackageName": "redisresources",
                 "EmitAggregateMetrics": "$.Parameters.EmitAggregateMetrics",
                 "EmitRawMetrics": "$.Parameters.EmitRawMetrics",
+                "MetricFilters": "$.Parameters.MetricFilters",
                 "Role": "Client"
             }
         },
@@ -75,6 +78,7 @@
                 "RedisResourcesPackageName": "redisresources",
                 "EmitAggregateMetrics": "$.Parameters.EmitAggregateMetrics",
                 "EmitRawMetrics": "$.Parameters.EmitRawMetrics",
+                "MetricFilters": "$.Parameters.MetricFilters",
                 "Role": "Client"
             }
         },
@@ -90,6 +94,7 @@
                 "RedisResourcesPackageName": "redisresources",
                 "EmitAggregateMetrics": "$.Parameters.EmitAggregateMetrics",
                 "EmitRawMetrics": "$.Parameters.EmitRawMetrics",
+                "MetricFilters": "$.Parameters.MetricFilters",
                 "Role": "Client"
             }
         },
@@ -105,6 +110,7 @@
                 "RedisResourcesPackageName": "redisresources",
                 "EmitAggregateMetrics": "$.Parameters.EmitAggregateMetrics",
                 "EmitRawMetrics": "$.Parameters.EmitRawMetrics",
+                "MetricFilters": "$.Parameters.MetricFilters",
                 "Role": "Client"
             }
         },
@@ -120,6 +126,7 @@
                 "RedisResourcesPackageName": "redisresources",
                 "EmitAggregateMetrics": "$.Parameters.EmitAggregateMetrics",
                 "EmitRawMetrics": "$.Parameters.EmitRawMetrics",
+                "MetricFilters": "$.Parameters.MetricFilters",
                 "Role": "Client"
             }
         },
@@ -135,6 +142,7 @@
                 "RedisResourcesPackageName": "redisresources",
                 "EmitAggregateMetrics": "$.Parameters.EmitAggregateMetrics",
                 "EmitRawMetrics": "$.Parameters.EmitRawMetrics",
+                "MetricFilters": "$.Parameters.MetricFilters",
                 "Role": "Client"
             }
         },
@@ -150,6 +158,7 @@
                 "RedisResourcesPackageName": "redisresources",
                 "EmitAggregateMetrics": "$.Parameters.EmitAggregateMetrics",
                 "EmitRawMetrics": "$.Parameters.EmitRawMetrics",
+                "MetricFilters": "$.Parameters.MetricFilters",
                 "Role": "Client"
             }
         },
@@ -165,6 +174,7 @@
                 "RedisResourcesPackageName": "redisresources",
                 "EmitAggregateMetrics": "$.Parameters.EmitAggregateMetrics",
                 "EmitRawMetrics": "$.Parameters.EmitRawMetrics",
+                "MetricFilters": "$.Parameters.MetricFilters",
                 "Role": "Client"
             }
         },
@@ -180,6 +190,7 @@
                 "RedisResourcesPackageName": "redisresources",
                 "EmitAggregateMetrics": "$.Parameters.EmitAggregateMetrics",
                 "EmitRawMetrics": "$.Parameters.EmitRawMetrics",
+                "MetricFilters": "$.Parameters.MetricFilters",
                 "Role": "Client"
             }
         },
@@ -195,6 +206,7 @@
                 "RedisResourcesPackageName": "redisresources",
                 "EmitAggregateMetrics": "$.Parameters.EmitAggregateMetrics",
                 "EmitRawMetrics": "$.Parameters.EmitRawMetrics",
+                "MetricFilters": "$.Parameters.MetricFilters",
                 "Role": "Client"
             }
         },
@@ -210,6 +222,7 @@
                 "RedisResourcesPackageName": "redisresources",
                 "EmitAggregateMetrics": "$.Parameters.EmitAggregateMetrics",
                 "EmitRawMetrics": "$.Parameters.EmitRawMetrics",
+                "MetricFilters": "$.Parameters.MetricFilters",
                 "Role": "Client"
             }
         }

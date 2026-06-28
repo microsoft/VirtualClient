@@ -7,6 +7,7 @@ namespace VirtualClient.Api
     using System.ComponentModel;
     using System.IO;
     using System.IO.Abstractions;
+    using System.Net.Http;
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;

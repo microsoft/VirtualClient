@@ -1885,7 +1885,7 @@ namespace VirtualClient.Contracts
                 && context.Properties["metricCategorization"].ToString() == string.Empty
                 && context.Properties["metricDescription"].ToString() == "Indicates the component or toolset execution failed for the scenario defined."
                 && context.Properties["metricRelativity"].ToString() == MetricRelativity.LowerIsBetter.ToString()
-                && context.Properties["metricVerbosity"].ToString() == "0"
+                && context.Properties["metricVerbosity"].ToString() == "1"
                 && context.Properties["toolName"].ToString() == component.TypeName
                 && context.Properties["tags"].ToString() == string.Empty
                 && context.Properties["metadata_metrics"].ToString() == string.Empty);
@@ -1928,7 +1928,7 @@ namespace VirtualClient.Contracts
                     && context.Properties["metricCategorization"].ToString() == string.Empty
                     && context.Properties["metricDescription"].ToString() == "Indicates the component or toolset execution failed for the scenario defined."
                     && context.Properties["metricRelativity"].ToString() == MetricRelativity.LowerIsBetter.ToString()
-                    && context.Properties["metricVerbosity"].ToString() == "0"
+                    && context.Properties["metricVerbosity"].ToString() == "1"
                     && context.Properties["toolName"].ToString() == component.TypeName
                     && context.Properties["tags"].ToString() == string.Empty
                     && context.Properties["metadata_metrics"].ToString() == string.Empty);
@@ -1978,7 +1978,7 @@ namespace VirtualClient.Contracts
                     && context.Properties["metricCategorization"].ToString() == expectedMetricCategorization
                     && context.Properties["metricDescription"].ToString() == "Indicates the component or toolset execution failed for the scenario defined."
                     && context.Properties["metricRelativity"].ToString() == MetricRelativity.LowerIsBetter.ToString()
-                    && context.Properties["metricVerbosity"].ToString() == "0"
+                    && context.Properties["metricVerbosity"].ToString() == "1"
                     && context.Properties["toolName"].ToString() == expectedToolName
                     && context.Properties["tags"].ToString() == string.Empty
                     && context.Properties["metadata_metrics"].ToString() == string.Empty);
@@ -2021,7 +2021,7 @@ namespace VirtualClient.Contracts
                     && context.Properties["metricCategorization"].ToString() == string.Empty
                     && context.Properties["metricDescription"].ToString() == "Indicates the component or toolset execution succeeded for the scenario defined."
                     && context.Properties["metricRelativity"].ToString() == MetricRelativity.HigherIsBetter.ToString()
-                    && context.Properties["metricVerbosity"].ToString() == "2"
+                    && context.Properties["metricVerbosity"].ToString() == "1"
                     && context.Properties["toolName"].ToString() == component.TypeName
                     && context.Properties["tags"].ToString() == string.Empty
                     && context.Properties["metadata_metrics"].ToString() == string.Empty);
@@ -2064,7 +2064,7 @@ namespace VirtualClient.Contracts
                     && context.Properties["metricCategorization"].ToString() == string.Empty
                     && context.Properties["metricDescription"].ToString() == "Indicates the component or toolset execution succeeded for the scenario defined."
                     && context.Properties["metricRelativity"].ToString() == MetricRelativity.HigherIsBetter.ToString()
-                    && context.Properties["metricVerbosity"].ToString() == "2"
+                    && context.Properties["metricVerbosity"].ToString() == "1"
                     && context.Properties["toolName"].ToString() == component.TypeName
                     && context.Properties["tags"].ToString() == string.Empty
                     && context.Properties["metadata_metrics"].ToString() == string.Empty);
@@ -2115,7 +2115,7 @@ namespace VirtualClient.Contracts
                     && context.Properties["metricCategorization"].ToString() == expectedMetricCategorization
                     && context.Properties["metricDescription"].ToString() == "Indicates the component or toolset execution succeeded for the scenario defined."
                     && context.Properties["metricRelativity"].ToString() == MetricRelativity.HigherIsBetter.ToString()
-                    && context.Properties["metricVerbosity"].ToString() == "2"
+                    && context.Properties["metricVerbosity"].ToString() == "1"
                     && context.Properties["toolName"].ToString() == expectedToolName
                     && context.Properties["tags"].ToString() == string.Empty
                     && context.Properties["metadata_metrics"].ToString() == string.Empty);

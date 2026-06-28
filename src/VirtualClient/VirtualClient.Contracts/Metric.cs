@@ -28,6 +28,7 @@ namespace VirtualClient.Contracts
             this.Relativity = MetricRelativity.Undefined;
             this.Metadata = new Dictionary<string, IConvertible>();
             this.Tags = new List<string>();
+            this.Verbosity = 5;
         }
 
         /// <summary>
@@ -160,7 +161,7 @@ namespace VirtualClient.Contracts
         ///
         /// Default = 5 (Verbose). Metrics without an explicit verbosity assignment are considered verbose/diagnostic.
         /// </summary>
-        public int Verbosity { get; set; } = 5;
+        public int Verbosity { get; set; }
 
         /// <summary>
         /// Determines if two objects are equal.
