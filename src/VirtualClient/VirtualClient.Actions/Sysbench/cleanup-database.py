@@ -18,5 +18,11 @@ hostIp = args.hostIpAddress
 if databaseSystem == "MySQL":
     if benchmark == "OLTP":
         subprocess.run(f'sudo src/sysbench oltp_common --tables={tableCount} --mysql-db={dbName} --mysql-host={hostIp} cleanup',shell=True, check=True)
+    elif benchmark == "TPCC":
+        # Drop the TPCC tables so the database is restored to a clean state.
+        # Without a TPCC branch here the Cleanup action is a no-op, leaving the
+        # tables populated; a subsequent 'prepare' then fails with MySQL error
+        # 1062 (Duplicate entry) / 1061 (Duplicate key name).
+        subprocess.run(f'sudo src/sysbench tpcc --tables={tableCount} --scale=1 --mysql-db={dbName} --mysql-host={hostIp} --use_fk=0 cleanup',shell=True, check=True)
 else:
     parser.error("You are running on a database type that has not been onboarded to Virtual Client. Available options are: MySQL")
