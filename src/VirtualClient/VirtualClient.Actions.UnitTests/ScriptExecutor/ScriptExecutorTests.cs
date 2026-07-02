@@ -11,9 +11,11 @@ namespace VirtualClient.Actions
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.DependencyInjection.Extensions;
     using Moq;
     using NUnit.Framework;
+    using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
 
@@ -383,6 +385,147 @@ namespace VirtualClient.Actions
         [Test]
         [TestCase(PlatformID.Win32NT)]
         [TestCase(PlatformID.Unix)]
+        public void ScriptExecutorPreservesTheLogDirectoryStructureOnDiskWhenRequested(PlatformID platform)
+        {
+            this.SetupTest(platform);
+            this.mockFixture.Parameters[nameof(ScriptExecutor.LogPaths)] = "*.log";
+            this.mockFixture.Parameters[nameof(ScriptExecutor.PreserveDirectories)] = true;
+
+            // A log file that exists within a sub-directory of the script/executable directory.
+            string nestedLogFile = "subfolder/file.log";
+            bool logDirectoryStructurePreserved = false;
+
+            // The relative path (from the script directory) that should be retained under the central logs directory.
+            this.mockFixture.FileSystem.Setup(fe => fe.Path.GetRelativePath(It.IsAny<string>(), It.IsAny<string>()))
+                .Returns(nestedLogFile);
+
+            // Only the file-name matching path (search pattern '*.log') should return the nested log file.
+            this.mockFixture.FileSystem.Setup(fe => fe.Directory.GetFiles(It.IsAny<string>(), "*.log", SearchOption.AllDirectories))
+                .Returns(new[] { nestedLogFile });
+
+            using (TestScriptExecutor executor = new TestScriptExecutor(this.mockFixture))
+            {
+                this.mockFixture.File.Setup(fe => fe.Move(It.IsAny<string>(), It.IsAny<string>(), true))
+                    .Callback<string, string, bool>((sourcePath, destinitionPath, overwrite) =>
+                    {
+                        if (sourcePath.EndsWith("file.log"))
+                        {
+                            logDirectoryStructurePreserved = destinitionPath.Contains("subfolder");
+                        }
+                    });
+
+                this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, directory) => this.mockFixture.Process;
+
+                Assert.DoesNotThrowAsync(() => executor.ExecuteAsync(CancellationToken.None));
+                Assert.IsTrue(logDirectoryStructurePreserved);
+            }
+        }
+
+        [Test]
+        [TestCase(PlatformID.Win32NT)]
+        [TestCase(PlatformID.Unix)]
+        public void ScriptExecutorFlattensTheLogDirectoryStructureOnDiskByDefault(PlatformID platform)
+        {
+            this.SetupTest(platform);
+            this.mockFixture.Parameters[nameof(ScriptExecutor.LogPaths)] = "*.log";
+
+            // A log file that exists within a sub-directory of the script/executable directory.
+            string nestedLogFile = "subfolder/file.log";
+            bool logDirectoryStructurePreserved = true;
+
+            this.mockFixture.FileSystem.Setup(fe => fe.Path.GetRelativePath(It.IsAny<string>(), It.IsAny<string>()))
+                .Returns(nestedLogFile);
+
+            // Only the file-name matching path (search pattern '*.log') should return the nested log file.
+            this.mockFixture.FileSystem.Setup(fe => fe.Directory.GetFiles(It.IsAny<string>(), "*.log", SearchOption.AllDirectories))
+                .Returns(new[] { nestedLogFile });
+
+            using (TestScriptExecutor executor = new TestScriptExecutor(this.mockFixture))
+            {
+                this.mockFixture.File.Setup(fe => fe.Move(It.IsAny<string>(), It.IsAny<string>(), true))
+                    .Callback<string, string, bool>((sourcePath, destinitionPath, overwrite) =>
+                    {
+                        if (sourcePath.EndsWith("file.log"))
+                        {
+                            logDirectoryStructurePreserved = destinitionPath.Contains("subfolder");
+                        }
+                    });
+
+                this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, directory) => this.mockFixture.Process;
+
+                Assert.DoesNotThrowAsync(() => executor.ExecuteAsync(CancellationToken.None));
+                Assert.IsFalse(logDirectoryStructurePreserved);
+            }
+        }
+
+        [Test]
+        [TestCase(PlatformID.Win32NT)]
+        [TestCase(PlatformID.Unix)]
+        public void ScriptExecutorPreservesTheDirectoryStructureInTheUploadPathWhenRequested(PlatformID platform)
+        {
+            this.SetupTest(platform);
+            this.mockFixture.Parameters[nameof(ScriptExecutor.PreserveDirectories)] = true;
+
+            // A content store must exist for file uploads to be requested.
+            this.mockFixture.Dependencies.AddSingleton<IEnumerable<IBlobManager>>(new List<IBlobManager> { this.mockFixture.ContentBlobManager.Object });
+
+            // A log file that was moved into a subfolder within the central logs directory.
+            string logsRootDirectory = this.mockFixture.Combine(this.mockFixture.PlatformSpecifics.LogsDirectory, "generictool");
+            string movedLogFile = this.mockFixture.Combine(logsRootDirectory, "subfolder", "file.log");
+            FileUploadDescriptor capturedDescriptor = null;
+
+            // The upload request writes the descriptor as JSON. Capture it to inspect the blob path.
+            this.mockFixture.File.Setup(fe => fe.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Callback<string, string, CancellationToken>((path, contents, token) =>
+                {
+                    capturedDescriptor = contents.FromJson<FileUploadDescriptor>();
+                })
+                .Returns(Task.CompletedTask);
+
+            using (TestScriptExecutor executor = new TestScriptExecutor(this.mockFixture))
+            {
+                Assert.DoesNotThrowAsync(() => executor.RequestLogUploadsAsync(new[] { movedLogFile }, logsRootDirectory));
+                Assert.IsNotNull(capturedDescriptor);
+                Assert.IsTrue(
+                    capturedDescriptor.BlobPath.Replace('\\', '/').Contains("/subfolder/"),
+                    $"Expected the upload blob path to preserve the 'subfolder' directory but was '{capturedDescriptor.BlobPath}'.");
+            }
+        }
+
+        [Test]
+        [TestCase(PlatformID.Win32NT)]
+        [TestCase(PlatformID.Unix)]
+        public void ScriptExecutorFlattensTheDirectoryStructureInTheUploadPathByDefault(PlatformID platform)
+        {
+            this.SetupTest(platform);
+
+            // A content store must exist for file uploads to be requested.
+            this.mockFixture.Dependencies.AddSingleton<IEnumerable<IBlobManager>>(new List<IBlobManager> { this.mockFixture.ContentBlobManager.Object });
+
+            string logsRootDirectory = this.mockFixture.Combine(this.mockFixture.PlatformSpecifics.LogsDirectory, "generictool");
+            string movedLogFile = this.mockFixture.Combine(logsRootDirectory, "subfolder", "file.log");
+            FileUploadDescriptor capturedDescriptor = null;
+
+            this.mockFixture.File.Setup(fe => fe.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Callback<string, string, CancellationToken>((path, contents, token) =>
+                {
+                    capturedDescriptor = contents.FromJson<FileUploadDescriptor>();
+                })
+                .Returns(Task.CompletedTask);
+
+            using (TestScriptExecutor executor = new TestScriptExecutor(this.mockFixture))
+            {
+                Assert.DoesNotThrowAsync(() => executor.RequestLogUploadsAsync(new[] { movedLogFile }, logsRootDirectory));
+                Assert.IsNotNull(capturedDescriptor);
+                Assert.IsFalse(
+                    capturedDescriptor.BlobPath.Replace('\\', '/').Contains("/subfolder/"),
+                    $"Expected the upload blob path to be flattened but was '{capturedDescriptor.BlobPath}'.");
+            }
+        }
+
+        [Test]
+        [TestCase(PlatformID.Win32NT)]
+        [TestCase(PlatformID.Unix)]
         public async Task ScriptExecutorMovesMetricsFileAfterParsingNotDuring(PlatformID platform)
         {
             this.SetupTest(platform);
@@ -458,6 +601,11 @@ namespace VirtualClient.Actions
             public new Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
             {
                 return base.ExecuteAsync(telemetryContext, cancellationToken);
+            }
+
+            public new Task RequestLogUploadsAsync(IEnumerable<string> logPaths, string logsRootDirectory = null)
+            {
+                return base.RequestLogUploadsAsync(logPaths, logsRootDirectory);
             }
         }
     }

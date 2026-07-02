@@ -13,7 +13,8 @@
         "PackageName": "exampleWorkload",
         "WorkloadPackage": "exampleworkload.1.1.0.zip",
         "FailFast": false,
-        "RunElevated": false
+        "RunElevated": false,
+        "PreserveDirectories": false
     },
     "Actions": [
         {
@@ -27,6 +28,7 @@
                 "PackageName": "$.Parameters.PackageName",
                 "FailFast": "$.Parameters.FailFast",
                 "RunElevated": "$.Parameters.RunElevated",
+                "PreserveDirectories": "$.Parameters.PreserveDirectories",
                 "Tags": "Test,VC,Script"
             }
         }

@@ -112,6 +112,25 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// True to preserve the directory structure of the script-generated log files (relative to the
+        /// script directory) both on the file system and within the content/blob store virtual paths
+        /// when uploaded. False to flatten all matched log files into the central logs directory root.
+        /// Default = false.
+        /// </summary>
+        public bool PreserveDirectories
+        {
+            get
+            {
+                return this.Parameters.GetValue<bool>(nameof(this.PreserveDirectories), false);
+            }
+
+            set
+            {
+                this.Parameters[nameof(this.PreserveDirectories)] = value;
+            }
+        }
+
+        /// <summary>
         /// The full path to the script executable.
         /// </summary>
         protected string ExecutablePath { get; set; }
@@ -313,15 +332,20 @@ namespace VirtualClient.Actions
                         foreach (string logFilePath in this.fileSystem.Directory.GetFiles(fullLogPath, "*", SearchOption.AllDirectories))
                         {
                             var logs = await this.MoveLogsAsync(logFilePath, destinationLogsDir, cancellationToken, sourceRootDirectory: fullLogPath);
-                            await this.RequestLogUploadsAsync(logs);
+                            await this.RequestLogUploadsAsync(logs, destinationLogsDir);
                         }
                     }
 
                     // Check for Matching FileNames
                     foreach (string logFilePath in this.fileSystem.Directory.GetFiles(this.ExecutableDirectory, logPath, SearchOption.AllDirectories))
                     {
-                        var logs = await this.MoveLogsAsync(logFilePath, destinationLogsDir, cancellationToken);
-                        await this.RequestLogUploadsAsync(logs);
+                        var logs = await this.MoveLogsAsync(
+                            logFilePath,
+                            destinationLogsDir,
+                            cancellationToken,
+                            sourceRootDirectory: this.PreserveDirectories ? this.ExecutableDirectory : null);
+
+                        await this.RequestLogUploadsAsync(logs, destinationLogsDir);
                     }
                 }
             }
@@ -330,19 +354,37 @@ namespace VirtualClient.Actions
             if (this.fileSystem.File.Exists(this.MetricsFilePath))
             {
                 var logs = await this.MoveLogsAsync(this.MetricsFilePath, destinationLogsDir, cancellationToken);
-                await this.RequestLogUploadsAsync(logs);
+                await this.RequestLogUploadsAsync(logs, destinationLogsDir);
             }
         }
 
         /// <summary>
         /// Requests a file upload for each of the log file paths provided.
         /// </summary>
-        protected async Task RequestLogUploadsAsync(IEnumerable<string> logPaths)
+        /// <param name="logPaths">The set of (already moved) log file paths to upload.</param>
+        /// <param name="logsRootDirectory">
+        /// The central logs directory the files were moved into. When <see cref="PreserveDirectories"/> is true, the
+        /// relative subdirectory of each file (under this root) is preserved in the content/blob store virtual path.
+        /// </param>
+        protected async Task RequestLogUploadsAsync(IEnumerable<string> logPaths, string logsRootDirectory = null)
         {
             if (logPaths?.Any() == true && this.TryGetContentStoreManager(out IBlobManager blobManager))
             {
                 foreach (string logPath in logPaths)
                 {
+                    string subPath = null;
+
+                    if (this.PreserveDirectories && !string.IsNullOrWhiteSpace(logsRootDirectory))
+                    {
+                        // Preserve the relative subdirectory (under the central logs directory) in the
+                        // blob/content store virtual path so the uploaded logs retain the directory structure.
+                        string relativeSubdirectory = this.fileSystem.GetRelativeSubdirectory(logsRootDirectory, logPath);
+                        if (!string.IsNullOrWhiteSpace(relativeSubdirectory))
+                        {
+                            subPath = relativeSubdirectory;
+                        }
+                    }
+
                     FileUploadDescriptor descriptor = this.CreateFileUploadDescriptor(
                         new FileContext(
                             this.fileSystem.FileInfo.New(logPath),
@@ -353,7 +395,8 @@ namespace VirtualClient.Actions
                             this.ToolName,
                             this.Scenario,
                             null,
-                            this.Roles?.FirstOrDefault()));
+                            this.Roles?.FirstOrDefault()),
+                        subPath: subPath);
 
                     await this.RequestFileUploadAsync(descriptor);
                 }
