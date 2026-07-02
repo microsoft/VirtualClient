@@ -160,48 +160,45 @@ namespace VirtualClient
         /// </summary>
         public Task MonitorTimeoutAsync(ProfileExecutor profileExecutor, CancellationToken cancellationToken)
         {
+            // Subscribe to the relevant profile execution events SYNCHRONOUSLY here (before the background
+            // monitoring task below is started). The profile action loop can execute very quickly (e.g. when
+            // a minimal execution interval is defined). Deferring the event subscription into the background
+            // Task.Run can miss notifications from the very first iteration(s)/action(s) and cause an extra
+            // iteration/action to run beyond the number requested.
+            //
+            // We support 4 distinct scenarios for defining a timeout on the command line.
+            // 1) No timeout. Application runs until explicitly stopped. This is indicated by
+            //    not supplying a --timeout on the command line.
+            //
+            // 2) Explicit timeout. The application will timeout at the time defined.
+            //
+            // 3) Explicit timeout/deterministic. The application will timeout at the time defined but ONLY after
+            //    the current profile action has completed.
+            //
+            // 4) Explicit timeout/deterministic/*. The application will timeout at the time defined but ONLY after
+            //    the current round of all profile actions have completed.
+            bool trackIterations = this.ProfileIterations != null || this.LevelOfDeterminism == DeterminismScope.AllActions;
+            bool trackActions = this.LevelOfDeterminism == DeterminismScope.IndividualAction;
+
+            if (trackIterations)
+            {
+                // Timeout when the expected number of profile iterations finishes or when
+                // an explicit timeout is hit and all profile actions have completed.
+                profileExecutor.IterationEnd += this.OnIterationEnd;
+            }
+            else if (trackActions)
+            {
+                // Timeout when an explicit timeout is hit and the current action is completed.
+                profileExecutor.ActionEnd += this.OnActionEnd;
+            }
+
             return Task.Run(async () =>
             {
                 try
                 {
-                    // We support 4 distinct scenarios for defining a timeout on the command line.
-                    // 1) No timeout. Application runs until explicitly stopped. This is indicated by
-                    //    not supplying a --timeout on the command line.
-                    //
-                    // 2) Explicit timeout. The application will timeout at the time defined.
-                    //
-                    // 3) Explicit timeout/deterministic. The application will timeout at the time defined but ONLY after
-                    //    the current profile action has completed.
-                    //
-                    // 4) Explicit timeout/deterministic/*. The application will timeout at the time defined but ONLY after
-                    //    the current round of all profile actions have completed.
-
-                    if (this.ProfileIterations != null || this.LevelOfDeterminism == DeterminismScope.AllActions)
+                    if (trackIterations || trackActions)
                     {
-                        try
-                        {
-                            // Timeout when the expected number of profile iterations finishes or when
-                            // an explicit timeout is hit and all profile actions have completed.
-                            profileExecutor.IterationEnd += this.OnIterationEnd;
-                            await this.WaitForTimeoutAsync(cancellationToken).ConfigureAwait(false);
-                        }
-                        finally
-                        {
-                            profileExecutor.IterationEnd -= this.OnIterationEnd;
-                        }
-                    }
-                    else if (this.LevelOfDeterminism == DeterminismScope.IndividualAction)
-                    {
-                        try
-                        {
-                            // Timeout when an explicit timeout is hit and the current action is completed.
-                            profileExecutor.ActionEnd += this.OnActionEnd;
-                            await this.WaitForTimeoutAsync(cancellationToken).ConfigureAwait(false);
-                        }
-                        finally
-                        {
-                            profileExecutor.IterationEnd -= this.OnActionEnd;
-                        }
+                        await this.WaitForTimeoutAsync(cancellationToken).ConfigureAwait(false);
                     }
                     else if (this.Timeout != null)
                     {
@@ -218,6 +215,17 @@ namespace VirtualClient
                 catch (OperationCanceledException)
                 {
                     // Expected sometimes when the application is explicitly cancelled (e.g. Ctrl-C).
+                }
+                finally
+                {
+                    if (trackIterations)
+                    {
+                        profileExecutor.IterationEnd -= this.OnIterationEnd;
+                    }
+                    else if (trackActions)
+                    {
+                        profileExecutor.ActionEnd -= this.OnActionEnd;
+                    }
                 }
             });
         }
