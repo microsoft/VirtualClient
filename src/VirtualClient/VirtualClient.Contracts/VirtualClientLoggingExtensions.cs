@@ -1131,7 +1131,7 @@ namespace VirtualClient.Contracts
                     { "metricCategorization", metricCategorization ?? string.Empty },
                     { "metricDescription", "Indicates the component or toolset execution succeeded for the scenario defined." },
                     { "metricRelativity", MetricRelativity.HigherIsBetter },
-                    { "metricVerbosity", 2 },
+                    { "metricVerbosity", 1 },
                     { "toolName", effectiveToolName },
                     { "tags",  string.Empty },
                     { "metadata_metrics", string.Empty }
@@ -1151,7 +1151,7 @@ namespace VirtualClient.Contracts
                     { "metricCategorization", metricCategorization ?? string.Empty },
                     { "metricDescription", "Indicates the component or toolset execution failed for the scenario defined." },
                     { "metricRelativity", MetricRelativity.LowerIsBetter },
-                    { "metricVerbosity", 0 },
+                    { "metricVerbosity", 1 },
                     { "toolName", effectiveToolName },
                     { "tags",  string.Empty },
                     { "metadata_metrics", string.Empty }

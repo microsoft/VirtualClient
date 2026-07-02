@@ -3,7 +3,9 @@
 
 namespace VirtualClient
 {
+    using System;
     using System.Collections.Generic;
+    using System.IO;
     using System.IO.Abstractions;
     using System.Reflection;
     using System.Threading;
@@ -15,6 +17,8 @@ namespace VirtualClient
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
+    using Microsoft.Extensions.Logging.Abstractions;
+    using Microsoft.Extensions.Logging.Console;
     using VirtualClient.Api;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Contracts;
@@ -44,6 +48,22 @@ namespace VirtualClient
         public async Task StartApiHostAsync(IServiceCollection dependencies, int apiPort, CancellationToken cancellationToken)
         {
             WebApplicationBuilder builder = WebApplication.CreateBuilder();
+
+            builder.Logging.Services.AddSingleton<ConsoleFormatter, ConsoleUtcTextFormatter>();
+
+            // Register HTTP Logging as configured previously
+            builder.Services.AddHttpLogging(options =>
+            {
+                options.CombineLogs = true;
+                options.LoggingFields = Microsoft.AspNetCore.HttpLogging.HttpLoggingFields.RequestMethod
+                                      | Microsoft.AspNetCore.HttpLogging.HttpLoggingFields.RequestPath
+                                      | Microsoft.AspNetCore.HttpLogging.HttpLoggingFields.ResponseStatusCode;
+            });
+
+            builder.Logging.AddConsole(options =>
+            {
+                options.FormatterName = "ConsoleUtcText";
+            });
 
             // Configure the ASP.NET MVC self-hosted REST API application
             // ---------------------------------------------------------------------
@@ -83,8 +103,9 @@ namespace VirtualClient
             {
                 apiHost.UseMiddleware<ApiExceptionMiddleware>(dependencies.GetService<ILogger>());
                 apiHost.MapControllers();
+                apiHost.UseHttpLogging();
                 apiHost.Urls.Add($"http://*:{apiPort}");
-                
+
                 await apiHost.RunAsync();
             }
         }
@@ -100,6 +121,25 @@ namespace VirtualClient
                     new List<int> { apiPort })
             },
             CancellationToken.None);
+        }
+
+        private class ConsoleUtcTextFormatter : ConsoleFormatter
+        {
+            public ConsoleUtcTextFormatter()
+                : base("ConsoleUtcText")
+            {
+            }
+
+            public override void Write<TState>(in LogEntry<TState> logEntry, IExternalScopeProvider? scopeProvider, TextWriter textWriter)
+            {
+                // Force the timestamp to UTC and format it exactly as: [M/d/yyyy h:mm:ss tt]
+                string timestamp = $"[{DateTime.Now}] ";
+                textWriter.Write(timestamp);
+
+                // Write the actual log message string
+                string message = logEntry.Formatter(logEntry.State, logEntry.Exception);
+                textWriter.WriteLine(message);
+            }
         }
     }
 }

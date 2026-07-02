@@ -15,6 +15,8 @@ namespace VirtualClient.Contracts
     /// </summary>
     public static class MetricExtensions
     {
+        private static readonly Regex VerbosityExpression = new Regex(@"^verbosity:\s*(\d+)$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
         /// <summary>
         /// Extension allows metadata properties to be added to each of the metrics in a set.
         /// </summary>
@@ -43,6 +45,7 @@ namespace VirtualClient.Contracts
         /// - Name filters: Any regex pattern to match against metric names (case-insensitive)
         /// - Exclusion filters: Prefix with "-" to exclude matching metrics (e.g., "-h000*")
         /// </param>
+        /// <param name="caseSensitive">True to perform case-sensitive search. Default = false (case-insensitive).</param>
         /// <returns>
         /// A filtered set of metrics matching the criteria.
         /// </returns>
@@ -58,47 +61,49 @@ namespace VirtualClient.Contracts
         /// 
         /// Filters are composable - verbosity filtering is applied first, then exclusion filters, then inclusion (name-based) filtering.
         /// </remarks>
-        public static IEnumerable<Metric> FilterBy(this IEnumerable<Metric> metrics, IEnumerable<string> filterTerms)
+        public static IEnumerable<Metric> FilterBy(this IEnumerable<Metric> metrics, IEnumerable<string> filterTerms, bool caseSensitive = false)
         {
             metrics.ThrowIfNull(nameof(metrics));
 
             IEnumerable<Metric> filteredMetrics = metrics;
+            IEnumerable<string> effectiveFilterTerms = filterTerms.ToList();
 
-            if (filterTerms?.Any() == true)
+            if (effectiveFilterTerms?.Any() == true)
             {
+                RegexOptions regexOptions = caseSensitive ? RegexOptions.None : RegexOptions.IgnoreCase;
+
                 // Step 1: Handle verbosity filtering first
-                string verbosityFilter = filterTerms.FirstOrDefault(f => f.Contains("verbosity", StringComparison.OrdinalIgnoreCase));
-                if (!string.IsNullOrEmpty(verbosityFilter))
+                Match verbosityMatch = effectiveFilterTerms.Select(f => Regex.Match(f, @"^verbosity:\s*(\d+)$", regexOptions)).FirstOrDefault(m => m.Success);
+
+                if (verbosityMatch?.Success == true)
                 {
                     // Extract the verbosity level from the filter (e.g., "verbosity:3" -> 3)
-                    string[] parts = verbosityFilter.Split(':');
-                    if (parts.Length == 2 && int.TryParse(parts[1].Trim(), out int maxVerbosity) && maxVerbosity >= 0 && maxVerbosity <= 5)
+                    int verbosity = int.Parse(verbosityMatch.Groups[1].Value);
+                    if (verbosity >= 0 && verbosity <= 5)
                     {
                         // Filter metrics to include only those with verbosity <= maxVerbosity
-                        filteredMetrics = filteredMetrics.Where(m => m.Verbosity <= maxVerbosity);
-                    }
-                    else
-                    {
-                        // Invalid verbosity format or out of range - return empty set
-                        filteredMetrics = Enumerable.Empty<Metric>();
+                        filteredMetrics = filteredMetrics.Where(m => m.Verbosity <= verbosity);
                     }
 
                     // Remove verbosity filter from remaining filters
-                    filterTerms = filterTerms.Where(f => !f.Contains("verbosity", StringComparison.OrdinalIgnoreCase));
+                    (effectiveFilterTerms as IList<string>).Remove(verbosityMatch.Value);
                 }
 
-                // Step 2: Handle exclusion filters (prefix with "-")
-                var exclusionFilters = filterTerms.Where(f => f.StartsWith("-")).Select(f => f.Substring(1)).ToList();
-                if (exclusionFilters.Any())
+                if (effectiveFilterTerms?.Any() == true)
                 {
-                    filteredMetrics = filteredMetrics.Where(m => !exclusionFilters.Contains(m.Name, MetricFilterComparer.Instance));
-                    filterTerms = filterTerms.Where(f => !f.StartsWith("-"));
-                }
+                    // Step 2: Handle exclusion filters (prefix with "-")
+                    var exclusionFilters = effectiveFilterTerms.Where(f => f.StartsWith("-")).Select(f => f.Substring(1)).ToList();
+                    if (exclusionFilters.Any())
+                    {
+                        filteredMetrics = filteredMetrics.Where(m => !exclusionFilters.Any(f => Regex.IsMatch(m.Name, f, regexOptions)));
+                        effectiveFilterTerms = effectiveFilterTerms.Where(f => !f.StartsWith("-"));
+                    }
 
-                // Step 3: Handle inclusion/regex name filtering
-                if (filterTerms?.Any() == true)
-                {
-                    filteredMetrics = filteredMetrics.Where(m => filterTerms.Contains(m.Name, MetricFilterComparer.Instance));
+                    // Step 3: Handle inclusion/regex name filtering
+                    if (effectiveFilterTerms?.Any() == true)
+                    {
+                        filteredMetrics = filteredMetrics.Where(m => effectiveFilterTerms.Any(f => Regex.IsMatch(m.Name, f, regexOptions)));
+                    }
                 }
             }
 

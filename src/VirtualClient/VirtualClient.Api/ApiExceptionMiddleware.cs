@@ -59,6 +59,10 @@ namespace VirtualClient.Api
             {
                 await ApiExceptionMiddleware.HandleResponse(context, exc);
             }
+            finally
+            {
+                this.Logger.LogInformation($"Status Code: {context.Response.StatusCode}, {context.Request.Method} {context.Request.Path}");
+            }
         }
 
         private static Task HandleResponse(HttpContext context, Exception exception)

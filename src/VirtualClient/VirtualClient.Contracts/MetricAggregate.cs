@@ -28,6 +28,7 @@ namespace VirtualClient.Contracts
             this.Description = description;
             this.AggregateType = aggregateType;
             this.Relativity = MetricRelativity.Undefined;
+            this.Verbosity = 5;
         }
 
         /// <summary>
@@ -65,7 +66,7 @@ namespace VirtualClient.Contracts
         /// <param name="aggregateType">The type of aggregation to apply to the metric values/samples.</param>
         /// <param name="verbosity">Verbosity/Importance of metric</param>
         /// <param name="description">A description of the metric.</param>
-        public MetricAggregate(string metricName, string metricUnit, MetricRelativity relativity, MetricAggregateType aggregateType = MetricAggregateType.Average, int verbosity = 1, string description = null)
+        public MetricAggregate(string metricName, string metricUnit, MetricRelativity relativity, MetricAggregateType aggregateType = MetricAggregateType.Average, int verbosity = 5, string description = null)
             : this(metricName, aggregateType, description)
         {
             this.Unit = metricUnit;
@@ -100,8 +101,18 @@ namespace VirtualClient.Contracts
         public MetricRelativity Relativity { get; set; }
 
         /// <summary>
-        /// Metric verbosity to descript importance of metric. Default to 1, which means standard.
-        /// Verbosity 0: Critical. Verbosity 1: Standard. Verbosity 2: Informational.
+        /// Metric verbosity to describe importance/priority of the metric.
+        ///
+        /// Verbosity levels define a convention for organizing metrics by importance:
+        /// - 1 (Standard/Critical): Most important metrics for decision making - bandwidth, throughput, IOPS, key latency percentiles (p50, p99)
+        /// - 2 (Detailed): Additional detailed metrics - supplementary percentiles (p70, p90, p95, p99.9)
+        /// - 3 (Reserved): Reserved for future expansion
+        /// - 4 (Reserved): Reserved for future expansion
+        /// - 5 (Verbose): All diagnostic/internal metrics - histogram buckets, standard deviations, byte counts, I/O counts
+        ///
+        /// Currently, only levels 1, 2, and 5 are actively used. Levels 3 and 4 are reserved for future use.
+        ///
+        /// Default = 5 (Verbose). Metrics without an explicit verbosity assignment are considered verbose/diagnostic.
         /// </summary>
         public int Verbosity { get; set; }
 
@@ -157,7 +168,7 @@ namespace VirtualClient.Contracts
                         ErrorReason.WorkloadUnexpectedAnomaly);
             }
 
-            return new Metric(this.Name, value, unit: this.Unit, relativity: this.Relativity, description: this.Description);
+            return new Metric(this.Name, value, unit: this.Unit, relativity: this.Relativity, verbosity: this.Verbosity, description: this.Description);
         }
 
         /// <summary>

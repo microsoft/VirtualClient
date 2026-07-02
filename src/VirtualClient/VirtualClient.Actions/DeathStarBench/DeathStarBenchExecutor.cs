@@ -551,11 +551,8 @@ namespace VirtualClient.Actions
             await this.SystemManager.MakeFileExecutableAsync(dockerComposeFilePath, this.Platform, cancellationToken)
                 .ConfigureAwait();
 
-            string installVenvCommand = "apt install python3-venv -y";
-            await this.ExecuteCommandAsync(installVenvCommand, this.PackageDirectory, cancellationToken)
-                .ConfigureAwait();
-
-            // Create Python virtual environment to isolate dependencies
+            // Create Python virtual environment to isolate dependencies.
+            // The python3-venv package is installed by the LinuxPackageInstallation dependency in the profile.
             string venvPath = this.PlatformSpecifics.Combine(this.PackageDirectory, "venv");
             string createVenvCommand = $"python3 -m venv {venvPath}";
             await this.ExecuteCommandAsync(createVenvCommand, this.PackageDirectory, cancellationToken)
