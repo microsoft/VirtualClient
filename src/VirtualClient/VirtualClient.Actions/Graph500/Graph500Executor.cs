@@ -24,6 +24,19 @@ namespace VirtualClient.Actions
     [SupportedPlatforms("linux-arm64,linux-x64")]
     public class Graph500Executor : VirtualClientComponent
     {
+        /// <summary>
+        /// The libfabric provider selection environment variable honored by MPICH's OFI netmod.
+        /// </summary>
+        private const string FabricProviderVariable = "FI_PROVIDER";
+
+        /// <summary>
+        /// The libfabric provider forced for the Graph500 process. The default OFI 'sockets' provider
+        /// (e.g. on Ubuntu 22.04's libfabric 1.11) intermittently deadlocks in MPI_Ibarrier progress,
+        /// most often on ARM64, hanging the single-rank benchmark indefinitely. The maintained 'tcp'
+        /// provider does not exhibit the hang.
+        /// </summary>
+        private const string FabricProvider = "tcp";
+
         private IFileSystem fileSystem;
         private ISystemManagement systemManagement;
         private IPackageManager packageManager;
@@ -108,7 +121,21 @@ namespace VirtualClient.Actions
             {
                 await this.ExecuteCommandAsync("make", this.CompilerFlags, this.PackageDirectory, cancellationToken);
 
-                using (IProcessProxy process = await this.ExecuteCommandAsync(this.ExecutableFilePath, this.Scale + " " + this.EdgeFactor, this.PackageDirectory, telemetryContext, cancellationToken))
+                using (IProcessProxy process = await this.ExecuteCommandAsync(
+                    this.ExecutableFilePath,
+                    this.Scale + " " + this.EdgeFactor,
+                    this.PackageDirectory,
+                    telemetryContext,
+                    cancellationToken,
+                    beforeExecution: workloadProcess =>
+                    {
+                        // Graph500 runs as a single MPI rank and requires no network transport. On systems where
+                        // MPICH selects the OFI (libfabric) 'sockets' provider (e.g. Ubuntu 22.04 / libfabric 1.11),
+                        // that provider intermittently deadlocks in MPI_Ibarrier progress -- most often on ARM64 --
+                        // leaving the benchmark spinning indefinitely with no output. Forcing the maintained 'tcp'
+                        // provider avoids the hang without affecting results.
+                        workloadProcess.EnvironmentVariables[Graph500Executor.FabricProviderVariable] = Graph500Executor.FabricProvider;
+                    }))
                 {
                     if (!cancellationToken.IsCancellationRequested)
                     {
