@@ -19,8 +19,8 @@
         "RunPeak": false,
         "Threads": "{LogicalCoreCount}",
         "Copies": "{LogicalCoreCount}",
-        "BaseOptimizingFlags": "-g -O3 -march={calculate(\"{Architecture}\" == \"x64\" ? \"native\" : \"armv8-a\")} -frecord-gcc-switches",
-        "PeakOptimizingFlags": "-g -Ofast -march={calculate(\"{Architecture}\" == \"x64\" ? \"native\" : \"armv8-a\")} -flto -frecord-gcc-switches"
+        "BaseOptimizingFlags": "-g -O3 -march={calculate((\"{Platform}\".StartsWith(\"win\") || \"{Architecture}\" == \"x64\") ? \"native\" : \"armv8-a\")} -frecord-gcc-switches",
+        "PeakOptimizingFlags": "-g -Ofast -march={calculate((\"{Platform}\".StartsWith(\"win\") || \"{Architecture}\" == \"x64\") ? \"native\" : \"armv8-a\")} -flto -frecord-gcc-switches"
     },
     "Actions": [
         {
