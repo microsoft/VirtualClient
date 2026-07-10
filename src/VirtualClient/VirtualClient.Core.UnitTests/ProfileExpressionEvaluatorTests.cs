@@ -1715,6 +1715,28 @@ namespace VirtualClient
         }
 
         [Test]
+        // On Windows the SPECcpu toolchain is always the x86_64 Cygwin GCC (there is no Arm64 Cygwin), so
+        // '-march=armv8-a' is invalid and must resolve to 'native' even on win-arm64. Only linux-arm64 uses 'armv8-a'.
+        [TestCase(PlatformID.Win32NT, Architecture.Arm64, "-g -O3 -march=native -frecord-gcc-switches")]
+        [TestCase(PlatformID.Win32NT, Architecture.X64, "-g -O3 -march=native -frecord-gcc-switches")]
+        [TestCase(PlatformID.Unix, Architecture.X64, "-g -O3 -march=native -frecord-gcc-switches")]
+        [TestCase(PlatformID.Unix, Architecture.Arm64, "-g -O3 -march=armv8-a -frecord-gcc-switches")]
+        public async Task ProfileExpressionEvaluatorResolvesSpecCpuOptimizingFlagsForEachPlatform(PlatformID platform, Architecture architecture, string expectedValue)
+        {
+            this.SetupDefaults(platform, architecture);
+            Dictionary<string, IConvertible> parameters = new Dictionary<string, IConvertible>
+            {
+                {
+                    "BaseOptimizingFlags",
+                    "-g -O3 -march={calculate((\"{Platform}\".StartsWith(\"win\") || \"{Architecture}\" == \"x64\") ? \"native\" : \"armv8-a\")} -frecord-gcc-switches"
+                }
+            };
+
+            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters);
+            Assert.AreEqual(expectedValue, parameters["BaseOptimizingFlags"]);
+        }
+
+        [Test]
         public async Task ProfileExpressionEvaluatorSupportsPathBasedFunctionAndComparisonOperations_Scenario_1()
         {
             this.SetupDefaults(PlatformID.Win32NT);
