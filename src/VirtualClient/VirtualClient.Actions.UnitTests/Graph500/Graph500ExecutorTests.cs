@@ -98,6 +98,25 @@ namespace VirtualClient.Actions
         }
 
         [Test]
+        [TestCase(PlatformID.Unix, Architecture.X64)]
+        [TestCase(PlatformID.Unix, Architecture.Arm64)]
+        public async Task Graph500ExecutorForcesAStableFabricProviderOnTheWorkloadProcess(PlatformID platform, Architecture architecture)
+        {
+            this.SetupTest(platform, architecture);
+            mockFixture.Parameters["Scale"] = Scale;
+            mockFixture.Parameters["EdgeFactor"] = EdgeFactor;
+            using (TestGraph500Executor executor = new TestGraph500Executor(this.mockFixture))
+            {
+                await executor.ExecuteAsync(EventContext.None, CancellationToken.None)
+                    .ConfigureAwait(false);
+
+                // The single-rank benchmark hangs intermittently (most often on ARM64) when MPICH selects the
+                // libfabric 'sockets' provider, so the executor forces the maintained 'tcp' provider.
+                Assert.AreEqual("tcp", this.mockFixture.Process.EnvironmentVariables["FI_PROVIDER"]);
+            }
+        }
+
+        [Test]
         public async Task Graph500ExecutorLogsTheExpectedWorkloadMetrics()
         {
             this.SetupTest();
