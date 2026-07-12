@@ -379,6 +379,10 @@ namespace VirtualClient
                     {
                         profiles.Add(new DependencyProfileReference(ExecuteProfileCommand.ExecuteScriptProfile));
                     }
+                    else
+                    {
+                        profiles.Add(new DependencyProfileReference(ExecuteProfileCommand.ExecuteCommandProfile));
+                    }
 
                     if (this.Profiles?.Any() == true)
                     {
