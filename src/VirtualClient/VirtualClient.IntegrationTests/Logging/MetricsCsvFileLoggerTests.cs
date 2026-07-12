@@ -44,9 +44,8 @@ namespace VirtualClient
         [Test]
         public void WriteMetricsToCsvFile()
         {
-            string logDirectory = Path.Combine(MockFixture.TestAssemblyDirectory, "logs");
-            ILogger logger = DependencyFactory.CreateCsvFileLoggerProviders(logDirectory)
-                .First()
+            string logFile = Path.Combine(MockFixture.TestAssemblyDirectory, "logs", "metrics.csv");
+            ILogger logger = DependencyFactory.CreateCsvFileLoggerProvider(logFile)
                 .CreateLogger("Testing");
 
             List<Metric> metrics = new List<Metric>();

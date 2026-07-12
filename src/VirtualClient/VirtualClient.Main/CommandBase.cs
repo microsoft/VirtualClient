@@ -967,7 +967,7 @@ namespace VirtualClient
                         break;
 
                     case "csv":
-                        CommandBase.AddCsvLogging(loggingProviders, loggerParameters ?? platformSpecifics.LogsDirectory);
+                        CommandBase.AddCsvLogging(loggingProviders, loggerParameters ?? platformSpecifics.Combine(platformSpecifics.LogsDirectory, "metrics.csv"));
                         break;
 
                     case "file":
@@ -1058,13 +1058,13 @@ namespace VirtualClient
                 .HandleTraces());
         }
 
-        private static void AddCsvLogging(List<ILoggerProvider> loggingProviders, string logDirectory)
+        private static void AddCsvLogging(List<ILoggerProvider> loggingProviders, string csvFilePath)
         {
-            IEnumerable<ILoggerProvider> logProviders = DependencyFactory.CreateCsvFileLoggerProviders(logDirectory);
+            ILoggerProvider csvProvider = DependencyFactory.CreateCsvFileLoggerProvider(csvFilePath);
 
-            if (logProviders?.Any() == true)
+            if (csvProvider != null)
             {
-                loggingProviders.AddRange(logProviders);
+                loggingProviders.Add(csvProvider);
             }
         }
 

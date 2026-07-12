@@ -2,13 +2,13 @@
     "Description": "Default Monitors",
     "Metadata": {
         "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64",
-        "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows"
+        "SupportedOperatingSystems": "Azure Linux,CentOS,Debian,RedHat,Suse,Ubuntu,Windows"
     },
     "Parameters": {
         "ProfilingEnabled": false,
         "ProfilingMode": "Interval",
         "MonitorFrequency": "00:05:00",
-        "MonitorWarmupPeriod": "00:05:00"
+        "MonitorWarmupPeriod": "00:01:00"
     },
     "Monitors": [
         {
@@ -80,8 +80,8 @@
             "Type": "LinuxPerformanceCounterMonitor",
             "Parameters": {
                 "Scenario": "CaptureCounters",
-                "MonitorFrequency": "00:02:00",
-                "MonitorWarmupPeriod": "00:00:30",
+                "MonitorFrequency": "$.Parameters.MonitorFrequency",
+                "MonitorWarmupPeriod": "$.Parameters.MonitorWarmupPeriod",
                 "SupportedPlatforms": "linux-arm64,linux-x64"
             }
         },
@@ -89,8 +89,8 @@
             "Type": "LinuxEventLogMonitor",
             "Parameters": {
                 "Scenario": "CaptureSystemLog",
-                "MonitorFrequency": "00:05:00",
-                "MonitorWarmupPeriod": "00:00:30",
+                "MonitorFrequency": "$.Parameters.MonitorFrequency",
+                "MonitorWarmupPeriod": "$.Parameters.MonitorWarmupPeriod",
                 "LogLevel": "Error",
                 "SupportedPlatforms": "linux-arm64,linux-x64"
             }
@@ -139,8 +139,8 @@
             "Parameters": {
                 "Scenario": "CaptureCounters",
                 "CounterProvider": "Default",
-                "MonitorFrequency": "00:02:00",
-                "MonitorWarmupPeriod": "00:00:30",
+                "MonitorFrequency": "$.Parameters.MonitorFrequency",
+                "MonitorWarmupPeriod": "$.Parameters.MonitorWarmupPeriod",
                 "SupportedPlatforms": "win-arm64,win-x64",
                 "Counters01": "Hyper-V Hypervisor Logical Processor=\\(_Total\\)",
                 "Counters02": "Hyper-V Hypervisor Root Virtual Processor=\\(_Total\\)\\\\% (Guest|Hypervisor|Total) Run Time",
@@ -165,8 +165,8 @@
             "Parameters": {
                 "Scenario": "CaptureSystemEvents",
                 "LogNames": "Application,Security,System",
-                "MonitorFrequency": "00:05:00",
-                "MonitorWarmupPeriod": "00:00:30",
+                "MonitorFrequency": "$.Parameters.MonitorFrequency",
+                "MonitorWarmupPeriod": "$.Parameters.MonitorWarmupPeriod",
                 "LogLevel": "Error",
                 "SupportedPlatforms": "win-arm64,win-x64"
             }

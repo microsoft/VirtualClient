@@ -390,6 +390,7 @@ namespace VirtualClient.Logging
         {
             if (!this.fileSystem.Directory.Exists(this.fileDirectory))
             {
+                Console.WriteLine("Creating directory for metrics CSV file: {0}", this.fileDirectory);
                 this.fileSystem.Directory.CreateDirectory(this.fileDirectory);
             }
 

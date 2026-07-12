@@ -105,25 +105,20 @@ namespace VirtualClient
         }
 
         /// <summary>
-        /// Creates logger providers for writing telemetry to local CSV files.
+        /// Creates a logger provider for writing telemetry to a local CSV file.
         /// </summary>
-        /// <param name="logFileDirectory">The path to the directory where log files are written.</param>
-        public static IEnumerable<ILoggerProvider> CreateCsvFileLoggerProviders(string logFileDirectory)
+        /// <param name="csvFilePath">The path to the directory where log files are written.</param>
+        public static ILoggerProvider CreateCsvFileLoggerProvider(string csvFilePath)
         {
-            logFileDirectory.ThrowIfNullOrWhiteSpace(nameof(logFileDirectory));
+            csvFilePath.ThrowIfNullOrWhiteSpace(nameof(csvFilePath));
 
             // 20MB
             // General Sizing:
             // Around 34,400 metric records will fit inside of a single CSV file at 20MB.
             const long maxFileSizeBytes = 20000000;
+            ILoggerProvider metricsCsvProvider = new MetricsCsvFileLoggerProvider(csvFilePath, maxFileSizeBytes);
 
-            List<ILoggerProvider> loggerProviders = new List<ILoggerProvider>();
-
-            string metricsCsvFilePath = Path.Combine(logFileDirectory, "metrics.csv");
-            ILoggerProvider metricsCsvProvider = new MetricsCsvFileLoggerProvider(metricsCsvFilePath, maxFileSizeBytes);
-            loggerProviders.Add(metricsCsvProvider);
-
-            return loggerProviders;
+            return metricsCsvProvider;
         }
 
         /// <summary>
