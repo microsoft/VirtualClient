@@ -125,6 +125,17 @@ namespace VirtualClient.Actions.NetworkPerformance
             return this.ExecutePingServerAsync(ipAddress, telemetryContext, cancellationToken);
         }
 
+        /// <summary>
+        /// Sends a single ICMP ping to the target and returns the resulting status and round trip time.
+        /// Provided as an overridable seam so the ping loop can be unit-tested deterministically without
+        /// requiring live network access.
+        /// </summary>
+        protected virtual async Task<PingResult> SendPingAsync(Ping networkPing, IPAddress ipAddress, int timeoutMilliseconds)
+        {
+            PingReply reply = await networkPing.SendPingAsync(ipAddress, timeoutMilliseconds).ConfigureAwait(false);
+            return new PingResult(reply.Status, reply.RoundtripTime);
+        }
+
         private async Task ExecutePingServerAsync(IPAddress ipAddress, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             using (Ping networkPing = new Ping())
@@ -154,7 +165,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                     {
                         await this.PingRetryPolicy.ExecuteAsync(async () =>
                         {
-                            PingReply reply = await networkPing.SendPingAsync(ipAddress, NetworkPingExecutor.BlipDurationMilliseconds).ConfigureAwait(false);
+                            PingResult reply = await this.SendPingAsync(networkPing, ipAddress, NetworkPingExecutor.BlipDurationMilliseconds).ConfigureAwait(false);
 
                             switch (reply.Status)
                             {
@@ -178,8 +189,12 @@ namespace VirtualClient.Actions.NetworkPerformance
                                 case IPStatus.TimedOut:
                                 case IPStatus.TimeExceeded:
                                 case IPStatus.TtlExpired:
+                                    // Note: unlike a successful ping, we intentionally do NOT decrement the
+                                    // iteration counter here. Every ping attempt (successful or not) must advance
+                                    // the loop so that a target that never replies cannot spin the loop until the
+                                    // overall profile timeout (~hours). The loop is bounded by total attempts
+                                    // (PingIterations) or the configured Duration.
                                     timedOutPings++;
-                                    iterations--;
                                     break;
 
                                 default:
@@ -204,6 +219,18 @@ namespace VirtualClient.Actions.NetworkPerformance
 
                 if (!cancellationToken.IsCancellationRequested)
                 {
+                    // If at least one ping attempt was made but the target never responded successfully,
+                    // surface this as an explicit failure. Previously the run would exit successfully with
+                    // zero metrics, which was silently scored as a missing-metrics run rather than the real
+                    // failure it represents (target unreachable / ICMP replies disabled).
+                    if (iterations > 0 && !responseTimes.Any())
+                    {
+                        throw new WorkloadException(
+                            $"The target endpoint for IP address '{ipAddress}' did not respond to any of the {iterations} ICMP ping attempts " +
+                            $"({timedOutPings} timed out). The endpoint does not exist, is unreachable or does not have ICMP replies enabled.",
+                            ErrorReason.NetworkTargetDoesNotExist);
+                    }
+
                     this.MetadataContract.AddForScenario(
                         "NetworkPing",
                         null,
@@ -321,6 +348,31 @@ namespace VirtualClient.Actions.NetworkPerformance
         private static bool HasBlipOccurred(int timedOutPings, long duration)
         {
             return timedOutPings > 0 && duration > NetworkPingExecutor.BlipDurationMilliseconds;
+        }
+
+        /// <summary>
+        /// Represents the outcome of a single ICMP ping attempt.
+        /// </summary>
+        protected readonly struct PingResult
+        {
+            /// <summary>
+            /// Initializes a new instance of the <see cref="PingResult"/> struct.
+            /// </summary>
+            public PingResult(IPStatus status, long roundtripTime)
+            {
+                this.Status = status;
+                this.RoundtripTime = roundtripTime;
+            }
+
+            /// <summary>
+            /// The status of the ping reply (e.g. Success, TimedOut).
+            /// </summary>
+            public IPStatus Status { get; }
+
+            /// <summary>
+            /// The round trip time (in milliseconds) for a successful ping.
+            /// </summary>
+            public long RoundtripTime { get; }
         }
     }
 }

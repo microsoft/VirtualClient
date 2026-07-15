@@ -5,8 +5,11 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
+    using System.Net;
+    using System.Net.NetworkInformation;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.Extensions.DependencyInjection;
     using NUnit.Framework;
     using VirtualClient.Actions.NetworkPerformance;
     using VirtualClient.Contracts;
@@ -245,6 +248,88 @@ namespace VirtualClient.Actions
                 Assert.AreEqual("192.168.1.1", executor.IPAddress);
                 Assert.IsNull(executor.Duration);
                 Assert.AreEqual(300, executor.PingIterations);
+            }
+        }
+
+        [Test]
+        public void NetworkPingExecutorThrowsWhenTheTargetNeverRespondsToAnyPing()
+        {
+            // Regression test: when every ping times out, the executor must not spin the loop
+            // indefinitely. It must terminate and surface an explicit failure rather than exiting
+            // successfully with zero metrics.
+            this.mockFixture.Parameters = new Dictionary<string, IConvertible>
+            {
+                { nameof(NetworkPingExecutor.IPAddress), "192.168.1.1" },
+                { nameof(NetworkPingExecutor.PingIterations), 10 }
+            };
+
+            using (TestNetworkPingExecutor executor = new TestNetworkPingExecutor(
+                this.mockFixture.Dependencies, this.mockFixture.Parameters, IPStatus.TimedOut))
+            {
+                WorkloadException exception = Assert.ThrowsAsync<WorkloadException>(
+                    () => executor.ExecuteAsync(CancellationToken.None));
+
+                Assert.AreEqual(ErrorReason.NetworkTargetDoesNotExist, exception.Reason);
+            }
+        }
+
+        [Test]
+        public void NetworkPingExecutorTerminatesAfterPingIterationsWhenTheTargetNeverResponds()
+        {
+            // Regression test for the infinite-loop bug: a timed-out ping must still advance the
+            // iteration counter so the loop is bounded by PingIterations (previously a timed-out
+            // ping decremented the counter, so the loop only ended on a successful ping).
+            this.mockFixture.Parameters = new Dictionary<string, IConvertible>
+            {
+                { nameof(NetworkPingExecutor.IPAddress), "192.168.1.1" },
+                { nameof(NetworkPingExecutor.PingIterations), 15 }
+            };
+
+            using (TestNetworkPingExecutor executor = new TestNetworkPingExecutor(
+                this.mockFixture.Dependencies, this.mockFixture.Parameters, IPStatus.TimedOut))
+            {
+                Assert.ThrowsAsync<WorkloadException>(() => executor.ExecuteAsync(CancellationToken.None));
+
+                // Exactly PingIterations attempts are made and then the loop terminates.
+                Assert.AreEqual(15, executor.SendPingCallCount);
+            }
+        }
+
+        [Test]
+        public void NetworkPingExecutorCompletesSuccessfullyWhenTheTargetResponds()
+        {
+            this.mockFixture.Parameters = new Dictionary<string, IConvertible>
+            {
+                { nameof(NetworkPingExecutor.IPAddress), "192.168.1.1" },
+                { nameof(NetworkPingExecutor.PingIterations), 3 }
+            };
+
+            using (TestNetworkPingExecutor executor = new TestNetworkPingExecutor(
+                this.mockFixture.Dependencies, this.mockFixture.Parameters, IPStatus.Success))
+            {
+                Assert.DoesNotThrowAsync(() => executor.ExecuteAsync(CancellationToken.None));
+
+                // Each successful ping advances the loop; the loop is bounded by PingIterations.
+                Assert.AreEqual(3, executor.SendPingCallCount);
+            }
+        }
+
+        private class TestNetworkPingExecutor : NetworkPingExecutor
+        {
+            private readonly IPStatus statusToReturn;
+
+            public TestNetworkPingExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters, IPStatus statusToReturn)
+                : base(dependencies, parameters)
+            {
+                this.statusToReturn = statusToReturn;
+            }
+
+            public int SendPingCallCount { get; private set; }
+
+            protected override Task<PingResult> SendPingAsync(Ping networkPing, IPAddress ipAddress, int timeoutMilliseconds)
+            {
+                this.SendPingCallCount++;
+                return Task.FromResult(new PingResult(this.statusToReturn, 1));
             }
         }
     }
