@@ -64,6 +64,44 @@ namespace VirtualClient.Dependencies
         }
 
         [Test]
+        public async Task StripeDisksSetsFullPermissionsOnTheMountDirectoryForNonRootUser()
+        {
+            this.mockFixture.Parameters["DiskFilter"] = "OSDisk:false";
+
+            string expectedMountDir = $"/home/{Environment.UserName}/mnt_raid0";
+
+            // The striping script creates and mounts the volume with elevated privileges, leaving the
+            // mount point root-owned. Once mounted, the directory exists but is empty, which should
+            // trigger the permissions step so that a non-root user can create subdirectories under it.
+            this.mockFixture.Directory.Setup(d => d.Exists(expectedMountDir)).Returns(true);
+            this.mockFixture.Directory.Setup(d => d.EnumerateFileSystemEntries(expectedMountDir))
+                .Returns(Enumerable.Empty<string>());
+
+            bool permissionsApplied = false;
+            bool ownershipApplied = false;
+            this.mockFixture.ProcessManager.OnProcessCreated = (process) =>
+            {
+                if (process.FullCommand() == $"sudo chmod -R 777 \"{expectedMountDir}\"")
+                {
+                    permissionsApplied = true;
+                }
+
+                if (process.FullCommand() == $"sudo chown {Environment.UserName}:{Environment.UserName} \"{expectedMountDir}\"")
+                {
+                    ownershipApplied = true;
+                }
+            };
+
+            using (StripeDisks component = new StripeDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                await component.ExecuteAsync(CancellationToken.None);
+            }
+
+            Assert.IsTrue(permissionsApplied);
+            Assert.IsTrue(ownershipApplied);
+        }
+
+        [Test]
         public async Task StripeDisksLimitsDisksByDiskCount()
         {
             this.mockFixture.Parameters["DiskFilter"] = "OSDisk:false";

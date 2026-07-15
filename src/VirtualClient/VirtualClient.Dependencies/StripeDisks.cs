@@ -211,6 +211,26 @@ namespace VirtualClient.Dependencies
                     process.ThrowIfErrored<DependencyException>(errorReason: ErrorReason.DependencyInstallationFailed);
                 }
             }
+
+            // The striping script creates and mounts the volume with elevated privileges, leaving the
+            // mount point owned by root. We want the mount point and directory structure to be owned by
+            // the user executing the application. This helps to prevent permissions issues when the
+            // application (running non-elevated) later creates subdirectories under the mount point.
+            if (this.Platform == PlatformID.Unix
+                && !cancellationToken.IsCancellationRequested
+                && !string.IsNullOrEmpty(this.MountDirectory)
+                && this.fileSystem.Directory.Exists(this.MountDirectory))
+            {
+                string loggedInUser = this.PlatformSpecifics.GetLoggedInUser();
+
+                await this.systemManagement.SetFullPermissionsAsync(
+                    this.MountDirectory,
+                    this.Platform,
+                    telemetryContext,
+                    cancellationToken,
+                    loggedInUser,
+                    this.Logger);
+            }
         }
 
         /// <summary>
