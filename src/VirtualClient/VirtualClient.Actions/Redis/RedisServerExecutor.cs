@@ -8,6 +8,7 @@ namespace VirtualClient.Actions
     using System.Linq;
     using System.Net;
     using System.Net.Http;
+    using System.Net.Sockets;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
@@ -198,6 +199,7 @@ namespace VirtualClient.Actions
                         this.StartServerInstances(telemetryContext, cancellationToken);
                     }
 
+                    await this.WaitForServerPortsReadyAsync(telemetryContext, cancellationToken);
                     await this.SaveStateAsync(telemetryContext, cancellationToken);
                     this.SetServerOnline(true);
                     if (this.IsMultiRoleLayout())
@@ -266,6 +268,54 @@ namespace VirtualClient.Actions
                     $"when binding each of the servers to a logical core/vCPU. Set parameter '{nameof(this.BindToCores)}' = false to allow for additional server instances.",
                     ErrorReason.InvalidProfileDefinition);
             }
+        }
+
+        /// <summary>
+        /// Waits for each Redis server port to start accepting TCP connections.
+        /// </summary>
+        /// <param name="telemetryContext">Provides context information that will be captured with telemetry events.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+        protected virtual async Task WaitForServerPortsReadyAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            TimeSpan timeout = TimeSpan.FromMinutes(5);
+            DateTime deadline = DateTime.UtcNow.Add(timeout);
+            HashSet<int> pendingPorts = new HashSet<int>(Enumerable.Range(this.Port, this.ServerInstances));
+
+            this.Logger.LogTraceMessage($"{this.TypeName}: Waiting for Redis server ports {string.Join(',', pendingPorts)}...");
+
+            while (pendingPorts.Count > 0 && DateTime.UtcNow < deadline && !cancellationToken.IsCancellationRequested)
+            {
+                foreach (int port in pendingPorts.ToList())
+                {
+                    try
+                    {
+                        using (TcpClient client = new TcpClient())
+                        {
+                            await client.ConnectAsync(IPAddress.Loopback, port).ConfigureAwait(false);
+                            pendingPorts.Remove(port);
+                        }
+                    }
+                    catch (SocketException)
+                    {
+                    }
+                }
+
+                if (pendingPorts.Count > 0)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ConfigureAwait(false);
+                }
+            }
+
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (pendingPorts.Count > 0)
+            {
+                throw new WorkloadException(
+                    $"The Redis server did not start accepting connections on port(s) {string.Join(',', pendingPorts)} within {timeout}.",
+                    ErrorReason.WorkloadFailed);
+            }
+
+            this.Logger.LogTraceMessage($"{this.TypeName}: Redis server ports are accepting connections.");
         }
 
         private async Task CaptureRedisVersionAsync(EventContext telemetryContext, CancellationToken token)

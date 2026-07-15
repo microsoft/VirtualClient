@@ -100,6 +100,7 @@ namespace VirtualClient.Actions
 
                 this.fixture.Tracking.AssertCommandExecutedTimes("chmod", 1);
                 this.fixture.Tracking.AssertCommandExecutedTimes("numactl", 1);
+                Assert.IsTrue(executor.WaitForServerPortsReadyCalled);
             }
         }
 
@@ -189,9 +190,17 @@ namespace VirtualClient.Actions
             {
             }
 
+            public bool WaitForServerPortsReadyCalled { get; private set; }
+
             public new Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
             {
                 return base.InitializeAsync(telemetryContext, cancellationToken);
+            }
+
+            protected override Task WaitForServerPortsReadyAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+            {
+                this.WaitForServerPortsReadyCalled = true;
+                return Task.CompletedTask;
             }
         }
     }

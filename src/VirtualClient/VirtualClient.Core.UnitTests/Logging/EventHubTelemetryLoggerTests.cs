@@ -140,6 +140,19 @@ namespace VirtualClient.Logging
             Assert.AreEqual(expectedTimestamp, eventBody["timestamp"].Value<DateTime>());
         }
 
+        [Test]
+        public void EventHubTelemetryLoggerSupportsStandardLoggerMessages()
+        {
+            TestEventHubTelemetryLogger logger = new TestEventHubTelemetryLogger(this.mockChannel, LogLevel.Information);
+
+            Assert.DoesNotThrow(() => logger.LogInformation("Status Code: 200, GET /api/heartbeat"));
+
+            JObject eventBody = JObject.Parse(logger.LastEvent.EventBody.ToString());
+            Assert.AreEqual("Status Code: 200, GET /api/heartbeat", eventBody["message"].ToString());
+            Assert.AreEqual(string.Empty, eventBody["operation_Id"].ToString());
+            Assert.AreEqual(string.Empty, eventBody["operation_ParentId"].ToString());
+        }
+
         private class TestEventHubTelemetryLogger : EventHubTelemetryLogger
         {
             public TestEventHubTelemetryLogger(EventHubTelemetryChannel channel, LogLevel level)
@@ -147,9 +160,16 @@ namespace VirtualClient.Logging
             {
             }
 
+            public EventData LastEvent { get; private set; }
+
             public new EventData CreateEventObject(string eventMessage, LogLevel logLevel, DateTime eventTimestamp, EventContext eventContext, object bufferInfo = null)
             {
                 return base.CreateEventObject(eventMessage, logLevel, eventTimestamp, eventContext, bufferInfo);
+            }
+
+            protected override void AddEventDataToChannel(EventData eventData)
+            {
+                this.LastEvent = eventData;
             }
         }
     }
