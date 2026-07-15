@@ -80,7 +80,7 @@
             "Parameters": {
                 "Scenario": "DownloadPostgreSQLPackage",
                 "BlobContainer": "packages",
-                "BlobName": "postgresql.14.0.0.rev4.zip",
+                "BlobName": "postgresql.14.0.0.rev5.zip",
                 "PackageName": "postgresql",
                 "Extract": true
             }
