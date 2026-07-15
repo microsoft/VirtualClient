@@ -86,7 +86,7 @@
       "Parameters": {
         "Scenario": "InstallLibssl",
         "SupportedPlatforms": "linux-x64",
-        "Command": "dpkg -i libssl1.0.0_1.0.2n-1ubuntu5.13_amd64.deb",
+        "Command": "sudo dpkg -i libssl1.0.0_1.0.2n-1ubuntu5.13_amd64.deb",
         "WorkingDirectory": "{PackagePath:libssl}"
       }
     },
