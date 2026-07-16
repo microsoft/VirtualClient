@@ -9,7 +9,7 @@
 
 
 <link rel="search" type="application/opensearchdescription+xml" title="Virtual Client Platform" href="/VirtualClient/opensearch.xml"><link rel="stylesheet" href="/VirtualClient/assets/css/styles.fe082272.css">
-<script src="/VirtualClient/assets/js/runtime~main.fc91e66d.js" defer="defer"></script>
+<script src="/VirtualClient/assets/js/runtime~main.c99166fa.js" defer="defer"></script>
 <script src="/VirtualClient/assets/js/main.dcf7b488.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -66,7 +66,7 @@ client machine. Here is an example <a href="https://linuxize.com/post/how-to-set
 <ul>
 <li>On client, store a private-public key pair under ~/.ssh/id_rsa and ~/.ssh/id_rsa.pub</li>
 <li>On server, append the id_rsa.pub generated under ~/.ssh/authorized_keys</li>
-<li>On client, store server fingerprints in ~/.ssh/known_hosts</li>
+<li>Virtual Client records the participating systems&#x27; SSH host fingerprints in ~/.ssh/known_hosts before starting OpenMPI.</li>
 <li>Last when running the profile, supply the username whose .ssh directory contains all of the files just created/edited.</li>
 </ul>
 <h2 class="anchor anchorWithStickyNavbar_LWe7" id="resource-requirements">Resource Requirements<a class="hash-link" aria-label="Direct link to Resource Requirements" title="Direct link to Resource Requirements" href="/VirtualClient/docs/workloads/nasparallel/nasparallel-profiles/#resource-requirements">​</a></h2>
