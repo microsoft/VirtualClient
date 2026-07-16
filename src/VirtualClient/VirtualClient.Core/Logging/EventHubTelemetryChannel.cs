@@ -33,14 +33,18 @@ namespace VirtualClient.Logging
         internal const int MaxEventDataBytes = 700000;
 
         private const int DefaultMaxCapacity = 1000000;
+        private const long DefaultMaxBufferSizeBytes = 268435456;
         private const int DefaultMinCapacity = 1001;
 
         private readonly object transmissionLock = new object();
         private readonly object bufferLock = new object();
         private int maxCapacity;
+        private long maxBufferSizeBytes;
+        private long bufferSizeBytes;
         private int minCapacity;
         private AutoResetEvent autoFlushWaitHandle;
         private CancellationTokenSource cancellationTokenSource;
+        private CancellationToken transmissionCancellationToken;
         private Task transmissionAutoSendTask;
         private SendEventOptions sendEventOptions;
 
@@ -76,6 +80,7 @@ namespace VirtualClient.Logging
 
             this.minCapacity = EventHubTelemetryChannel.DefaultMinCapacity;
             this.maxCapacity = EventHubTelemetryChannel.DefaultMaxCapacity;
+            this.maxBufferSizeBytes = EventHubTelemetryChannel.DefaultMaxBufferSizeBytes;
             this.cancellationTokenSource = new CancellationTokenSource();
             this.autoFlushWaitHandle = new AutoResetEvent(false);
             this.DiagnosticsEnabled = enableDiagnostics;
@@ -112,7 +117,24 @@ namespace VirtualClient.Logging
         {
             get
             {
-                return this.Buffer.Count;
+                lock (this.bufferLock)
+                {
+                    return this.Buffer.Count;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets the size in bytes of the events in the telemetry channel buffer.
+        /// </summary>
+        public long BufferSizeBytes
+        {
+            get
+            {
+                lock (this.bufferLock)
+                {
+                    return this.bufferSizeBytes;
+                }
             }
         }
 
@@ -145,6 +167,24 @@ namespace VirtualClient.Logging
         }
 
         /// <summary>
+        /// Gets or sets the maximum number of bytes that can be buffered for transmission.
+        /// </summary>
+        public long MaxBufferSizeBytes
+        {
+            get
+            {
+                return this.maxBufferSizeBytes;
+            }
+
+            set
+            {
+                this.maxBufferSizeBytes = value > 0
+                    ? value
+                    : EventHubTelemetryChannel.DefaultMaxBufferSizeBytes;
+            }
+        }
+
+        /// <summary>
         /// The client to use for publishing events to the Event Hub.
         /// </summary>
         public EventHubProducerClient AmqpClient { get; }
@@ -154,6 +194,11 @@ namespace VirtualClient.Logging
         /// Making the interval too short will stress eventhub and create throttle.
         /// </summary>
         public TimeSpan AutoFlushInterval { get; set; } = TimeSpan.FromMilliseconds(5000);
+
+        /// <summary>
+        /// Gets or sets the maximum amount of time allowed for a single transmission.
+        /// </summary>
+        public TimeSpan TransmissionTimeout { get; set; } = TimeSpan.FromSeconds(30);
 
         /// <summary>
         /// The client to use for publishing events to the Event Hub.
@@ -169,6 +214,17 @@ namespace VirtualClient.Logging
         /// Gets the telemetry buffer in which events/items are contained.
         /// </summary>
         protected Queue<EventData> Buffer { get; private set; }
+
+        /// <summary>
+        /// Gets the cancellation token for the current transmission.
+        /// </summary>
+        protected CancellationToken TransmissionCancellationToken
+        {
+            get
+            {
+                return this.transmissionCancellationToken;
+            }
+        }
 
         /// <summary>
         /// Add a telemetry item to the buffer.
@@ -195,7 +251,7 @@ namespace VirtualClient.Logging
         {
             DateTime flushTimeout = DateTime.Now.Add(timeout ?? TimeSpan.FromSeconds(60));
 
-            while (this.Buffer.Count > 0)
+            while (this.BufferCount > 0)
             {
                 this.TransmitEvents();
                 if (DateTime.Now >= flushTimeout)
@@ -246,7 +302,9 @@ namespace VirtualClient.Logging
                         }
                     }
 
-                    if (this.Buffer.Count >= this.MaxCapacity || item.Body.Length >= EventHubTelemetryChannel.MaxEventDataBytes)
+                    if (this.Buffer.Count >= this.MaxCapacity
+                        || this.bufferSizeBytes + item.Body.Length > this.MaxBufferSizeBytes
+                        || item.Body.Length >= EventHubTelemetryChannel.MaxEventDataBytes)
                     {
                         this.Diagnostics?.EventsDropped(1);
                         this.OnEventsDropped(new List<EventData> { item });
@@ -255,6 +313,7 @@ namespace VirtualClient.Logging
                     }
 
                     this.Buffer.Enqueue(item);
+                    this.bufferSizeBytes += item.Body.Length;
                     this.Diagnostics?.EventsExpected(1);
                 }
             }
@@ -320,11 +379,7 @@ namespace VirtualClient.Logging
             {
                 if (this.AmqpClient != null)
                 {
-                    // Context on CancellationToken.None Here:
-                    // We purposefully DO NOT honor the channel CancellationToken here. We do not want the
-                    // transmission logic to exit on cancellation but to keep trying to get the telemetry through.
-                    // We prefer a delayed exit of the application to losing telemetry.
-                    await this.AmqpClient.SendAsync(eventDataBatch, this.sendEventOptions, CancellationToken.None);
+                    await this.AmqpClient.SendAsync(eventDataBatch, this.sendEventOptions, this.TransmissionCancellationToken);
                 }
                 else
                 {
@@ -337,11 +392,7 @@ namespace VirtualClient.Logging
                             {
                                 request.Content = content;
 
-                                // Context on CancellationToken.None Here:
-                                // We purposefully DO NOT honor the channel CancellationToken here. We do not want the
-                                // transmission logic to exit on cancellation but to keep trying to get the telemetry through.
-                                // We prefer a delayed exit of the application to losing telemetry.
-                                HttpResponseMessage response = await this.RestClient.SendAsync(request, CancellationToken.None);
+                                using HttpResponseMessage response = await this.RestClient.SendAsync(request, this.TransmissionCancellationToken);
                                 response.EnsureSuccessStatusCode();
                             }
                         }
@@ -355,7 +406,7 @@ namespace VirtualClient.Logging
         /// </summary>
         private void TransmitEvents()
         {
-            if (this.Buffer.Count > 0)
+            if (this.BufferCount > 0)
             {
                 lock (this.transmissionLock)
                 {
@@ -373,13 +424,13 @@ namespace VirtualClient.Logging
         /// </summary>
         private void TransmitEvents(int? maxBatchSize = null)
         {
-            if (this.Buffer.Count > 0)
+            if (this.BufferCount > 0)
             {
                 List<EventData> currentBatch = new List<EventData>();
 
                 try
                 {
-                    while (this.Buffer.Count > 0)
+                    while (this.BufferCount > 0)
                     {
                         lock (this.bufferLock)
                         {
@@ -388,7 +439,7 @@ namespace VirtualClient.Logging
                             for (int currentEventIndex = 0; currentEventIndex < batchSize; currentEventIndex++)
                             {
                                 EventData nextEventItem = this.Buffer.Dequeue();
-                                this.Diagnostics?.EventsTransmitted(1);
+                                this.bufferSizeBytes -= nextEventItem.Body.Length;
 
                                 if (nextEventItem != null)
                                 {
@@ -403,7 +454,20 @@ namespace VirtualClient.Logging
                             }
                         }
 
-                        this.TransmitBatchAsync(currentBatch).GetAwaiter().GetResult();
+                        using (CancellationTokenSource transmissionTimeoutSource = new CancellationTokenSource(this.TransmissionTimeout))
+                        {
+                            try
+                            {
+                                this.transmissionCancellationToken = transmissionTimeoutSource.Token;
+                                this.TransmitBatchAsync(currentBatch).GetAwaiter().GetResult();
+                            }
+                            finally
+                            {
+                                this.transmissionCancellationToken = CancellationToken.None;
+                            }
+                        }
+
+                        this.Diagnostics?.EventsTransmitted(currentBatch.Count);
                         this.OnEventsTransmitted(currentBatch);
                         currentBatch.Clear();
                     }
@@ -412,6 +476,7 @@ namespace VirtualClient.Logging
                 {
                     if (currentBatch.Any())
                     {
+                        List<EventData> droppedEvents = new List<EventData>();
                         lock (this.bufferLock)
                         {
                             // If we failed to transmit the events, we need to add them back to the
@@ -419,8 +484,23 @@ namespace VirtualClient.Logging
                             this.Diagnostics?.EventsTransmissionFailed(currentBatch.Count);
                             currentBatch.ForEach(eventItem =>
                             {
-                                this.Buffer.Enqueue(eventItem);
+                                if (this.Buffer.Count < this.MaxCapacity
+                                    && this.bufferSizeBytes + eventItem.Body.Length <= this.MaxBufferSizeBytes)
+                                {
+                                    this.Buffer.Enqueue(eventItem);
+                                    this.bufferSizeBytes += eventItem.Body.Length;
+                                }
+                                else
+                                {
+                                    this.Diagnostics?.EventsDropped(1);
+                                    droppedEvents.Add(eventItem);
+                                }
                             });
+                        }
+
+                        if (droppedEvents.Any())
+                        {
+                            this.OnEventsDropped(droppedEvents);
                         }
                     }
 
@@ -476,40 +556,40 @@ namespace VirtualClient.Logging
             {
                 if (count != null)
                 {
-                    Interlocked.Exchange(ref this.eventsDroppedCount, this.eventsDroppedCount + count.Value);
+                    Interlocked.Add(ref this.eventsDroppedCount, count.Value);
                 }
 
-                return this.eventsDroppedCount;
+                return Interlocked.Read(ref this.eventsDroppedCount);
             }
 
             public long EventsExpected(long? count = null)
             {
                 if (count != null)
                 {
-                    Interlocked.Exchange(ref this.eventsExpectedCount, this.eventsExpectedCount + count.Value);
+                    Interlocked.Add(ref this.eventsExpectedCount, count.Value);
                 }
 
-                return this.eventsExpectedCount;
+                return Interlocked.Read(ref this.eventsExpectedCount);
             }
 
             public long EventsTransmitted(long? count = null)
             {
                 if (count != null)
                 {
-                    Interlocked.Exchange(ref this.eventsTransmittedCount, this.eventsTransmittedCount + count.Value);
+                    Interlocked.Add(ref this.eventsTransmittedCount, count.Value);
                 }
 
-                return this.eventsTransmittedCount;
+                return Interlocked.Read(ref this.eventsTransmittedCount);
             }
 
             public long EventsTransmissionFailed(long? count = null)
             {
                 if (count != null)
                 {
-                    Interlocked.Exchange(ref this.eventsTransmissionFailureCount, this.eventsTransmissionFailureCount + count.Value);
+                    Interlocked.Add(ref this.eventsTransmissionFailureCount, count.Value);
                 }
 
-                return this.eventsTransmissionFailureCount;
+                return Interlocked.Read(ref this.eventsTransmissionFailureCount);
             }
         }
     }
