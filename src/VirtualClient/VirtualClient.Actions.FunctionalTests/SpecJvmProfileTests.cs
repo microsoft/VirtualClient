@@ -188,7 +188,7 @@ namespace VirtualClient.Actions
                 case PlatformID.Unix:
                     commands = new List<string>
                     {
-                        @"sudo java -XX:ParallelGCThreads=[0-9]+ -XX:\+UseParallelGC -XX:\+UseAES -XX:\+UseSHA -Xms[0-9]+m -Xmx[0-9]+m -jar SPECjvm2008.jar -ikv -ict compress crypto derby mpegaudio scimark serial sunflow"
+                        @"^java -XX:ParallelGCThreads=[0-9]+ -XX:\+UseParallelGC -XX:\+UseAES -XX:\+UseSHA -Xms[0-9]+m -Xmx[0-9]+m -jar SPECjvm2008.jar -ikv -ict compress crypto derby mpegaudio scimark serial sunflow$"
                     };
                     break;
             }
