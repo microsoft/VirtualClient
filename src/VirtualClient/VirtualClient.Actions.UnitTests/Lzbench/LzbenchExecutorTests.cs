@@ -164,7 +164,7 @@ namespace VirtualClient.Actions
             };
             string mockPackagePath = this.mockPackage.Path;
 
-            string expectedCommand = $"sudo bash lzbenchexecutor.sh \"testOption1 testOption2 {this.mockFixture.PlatformSpecifics.Combine(mockPackagePath, "silesia")}\"";
+            string expectedCommand = $"sudo bash \"{this.mockFixture.PlatformSpecifics.GetScriptPath("lzbench", "lzbenchexecutor.sh")}\" \"testOption1 testOption2 {this.mockFixture.PlatformSpecifics.Combine(mockPackagePath, "silesia")}\"";
 
             bool commandExecuted = false;
             this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
@@ -210,11 +210,12 @@ namespace VirtualClient.Actions
             string mockPackagePath = this.mockPackage.Path;
             List<string> expectedCommands = new List<string>
             {
+                $"sudo rm -rf \"{mockPackagePath}\"",
                 $"sudo git clone -b v1.8.1 https://github.com/inikep/lzbench.git",
                 $"sudo make",
                 $"sudo wget https://sun.aei.polsl.pl//~sdeor/corpus/silesia.zip",
                 $"sudo unzip silesia.zip -d silesia",
-                $"sudo bash lzbenchexecutor.sh \"testOption1 testOption2 {this.mockFixture.PlatformSpecifics.Combine(mockPackagePath, "silesia")}\""
+                $"sudo bash \"{this.mockFixture.PlatformSpecifics.GetScriptPath("lzbench", "lzbenchexecutor.sh")}\" \"testOption1 testOption2 {this.mockFixture.PlatformSpecifics.Combine(mockPackagePath, "silesia")}\""
             };
 
             int processCount = 0;
@@ -246,7 +247,7 @@ namespace VirtualClient.Actions
                 await LzbenchExecutor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
 
-            Assert.IsTrue(processCount == 5);
+            Assert.IsTrue(processCount == 6);
         }
 
         [Test]
@@ -256,9 +257,10 @@ namespace VirtualClient.Actions
             string mockPackagePath = this.mockPackage.Path;
             List<string> expectedCommands = new List<string>
             {
+                $"sudo rm -rf \"{mockPackagePath}\"",
                 $"sudo git clone -b v1.8.1 https://github.com/inikep/lzbench.git",
                 $"sudo make",
-                $"sudo bash lzbenchexecutor.sh \"testOption1 testOption2 Test1.zip Test2.txt\"",
+                $"sudo bash \"{this.mockFixture.PlatformSpecifics.GetScriptPath("lzbench", "lzbenchexecutor.sh")}\" \"testOption1 testOption2 Test1.zip Test2.txt\"",
         };
 
             int processCount = 0;
@@ -290,7 +292,7 @@ namespace VirtualClient.Actions
                 await LzbenchExecutor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
 
-            Assert.IsTrue(processCount == 3);
+            Assert.IsTrue(processCount == 4);
         }
 
         [Test]
@@ -300,7 +302,7 @@ namespace VirtualClient.Actions
             string mockPackagePath = this.mockPackage.Path;
             List<string> expectedCommands = new List<string>
             {
-                $"sudo bash lzbenchexecutor.sh \"testOption1 testOption2 Test1.zip Test2.txt\""
+                $"sudo bash \"{this.mockFixture.PlatformSpecifics.GetScriptPath("lzbench", "lzbenchexecutor.sh")}\" \"testOption1 testOption2 Test1.zip Test2.txt\""
             };
 
             int processCount = 0;
