@@ -81,7 +81,7 @@ OpenMPI sends messages over port 22 - as well as expects to send messages withou
 client machine. Here is an example [blog post](https://linuxize.com/post/how-to-setup-passwordless-ssh-login/) on how to do this. Although the basic steps are:
 - On client, store a private-public key pair under ~/.ssh/id_rsa and ~/.ssh/id_rsa.pub
 - On server, append the id_rsa.pub generated under ~/.ssh/authorized_keys
-- On client, store server fingerprints in ~/.ssh/known_hosts 
+- Virtual Client records the participating systems' SSH host fingerprints in ~/.ssh/known_hosts before starting OpenMPI.
 - Last when running the profile, supply the username whose .ssh directory contains all of the files just created/edited. 
 
 ## Resource Requirements
