@@ -126,6 +126,7 @@ namespace VirtualClient.Actions
                 {
                     IEnumerable<string> allInstances = this.Layout.Clients.Select(cl => cl.IPAddress.ToString()).ToList();
                     string hosts = string.Join(",", allInstances);
+                    string sshHosts = string.Join(" ", allInstances);
                     scenarioArguments = $"-np {this.Layout.Clients.Count()} --host {hosts} {benchmarkPath}";
 
                     // It turns of the fixed number of processes required by the benchmark.
@@ -133,7 +134,8 @@ namespace VirtualClient.Actions
                     // On turning off the condition the workload will run with the maximum possible processes from the given number of processes.
                     // For example "-np 6", It will run with 4 processes.
                     string npbNprocsStrict = $"export NPB_NPROCS_STRICT=off";
-                    command = $"runuser -l {this.Username} -c \'{ompNumThreads} && {npbNprocsStrict} && mpiexec {scenarioArguments}\'";
+                    string configureSsh = $"mkdir -p ~/.ssh && chmod 700 ~/.ssh && ssh-keyscan -H {sshHosts} >> ~/.ssh/known_hosts && chmod 600 ~/.ssh/known_hosts";
+                    command = $"runuser -l {this.Username} -c \'{configureSsh} && {ompNumThreads} && {npbNprocsStrict} && mpiexec {scenarioArguments}\'";
                 }
                 else
                 {
