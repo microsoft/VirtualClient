@@ -117,8 +117,9 @@ namespace VirtualClient.Actions.NASParallelBench
             this.mockFixture.ProcessManager.OnCreateProcess = (cmd, args, wd) =>
             {
                 Assert.AreEqual(cmd, "sudo");
-                Assert.AreEqual(args, $"bash -c \"runuser -l my-username -c 'export OMP_NUM_THREADS" +
-                    $"={Environment.ProcessorCount} && export NPB_NPROCS_STRICT=off && mpiexec -np 2 " +
+                Assert.AreEqual(args, $"bash -c \"runuser -l my-username -c 'mkdir -p ~/.ssh && chmod 700 ~/.ssh " +
+                    $"&& ssh-keyscan -H 1.2.3.4 1.2.3.5 >> ~/.ssh/known_hosts && chmod 600 ~/.ssh/known_hosts " +
+                    $"&& export OMP_NUM_THREADS={Environment.ProcessorCount} && export NPB_NPROCS_STRICT=off && mpiexec -np 2 " +
                     $"--host 1.2.3.4,1.2.3.5 {this.mockFixture.GetPackagePath()}/nasparallelbench/" +
                     $"linux-x64/NPB-MPI/bin/bt.S.x'\"");
                 return this.mockFixture.Process;

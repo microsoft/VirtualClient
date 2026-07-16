@@ -93,6 +93,14 @@ namespace VirtualClient.Actions
             }
         }
 
+        private string LzbenchScriptPath
+        {
+            get
+            {
+                return this.PlatformSpecifics.GetScriptPath("lzbench", "lzbenchexecutor.sh");
+            }
+        }
+
         /// <summary>
         /// Executes the Lzbench workload.
         /// </summary>
@@ -106,7 +114,7 @@ namespace VirtualClient.Actions
                 // We are attempting to add in a common method for execution of commands as we have seen throughout many executors.
                 // In the near term, we are going to add this in slowly and incrementally in order to avoid raising the likelihood
                 // of regressions.
-                using (IProcessProxy process = await this.ExecuteCommandAsync("bash", $"lzbenchexecutor.sh \"{commandLineArguments}\"", this.LzbenchDirectory, telemetryContext, cancellationToken, runElevated: true))
+                using (IProcessProxy process = await this.ExecuteCommandAsync("bash", $"\"{this.LzbenchScriptPath}\" \"{commandLineArguments}\"", this.LzbenchDirectory, telemetryContext, cancellationToken, runElevated: true))
                 {
                     if (!cancellationToken.IsCancellationRequested)
                     {
@@ -131,10 +139,15 @@ namespace VirtualClient.Actions
                 ?? new LzbenchState();
 
             if (!state.LzbenchInitialized)
-            {      
+            {
+                if (this.fileSystem.Directory.Exists(this.LzbenchDirectory))
+                {
+                    await this.ExecuteCommandAsync("rm", $"-rf \"{this.LzbenchDirectory}\"", this.PlatformSpecifics.PackagesDirectory, cancellationToken);
+                }
+
                 // Clone Lzbench code from git.
                 await this.ExecuteCommandAsync("git", $"clone -b v{this.Version} https://github.com/inikep/lzbench.git", this.PlatformSpecifics.PackagesDirectory, cancellationToken);
-                
+
                 // Build Lzbench.
                 await this.ExecuteCommandAsync("make", string.Empty, this.LzbenchDirectory, cancellationToken);
 
@@ -143,14 +156,6 @@ namespace VirtualClient.Actions
                 {
                     await this.ExecuteCommandAsync("wget", $"https://sun.aei.polsl.pl//~sdeor/corpus/silesia.zip", this.LzbenchDirectory, cancellationToken);
                     await this.ExecuteCommandAsync("unzip", "silesia.zip -d silesia", this.LzbenchDirectory, cancellationToken);
-                }
-
-                foreach (string file in this.fileSystem.Directory.GetFiles(this.PlatformSpecifics.GetScriptPath("lzbench")))
-                {
-                    this.fileSystem.File.Copy(
-                        file,
-                        this.Combine(this.LzbenchDirectory, Path.GetFileName(file)),
-                        true);
                 }
 
                 state.LzbenchInitialized = true;
