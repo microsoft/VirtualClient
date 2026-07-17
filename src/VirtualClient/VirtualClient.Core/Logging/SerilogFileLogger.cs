@@ -104,9 +104,9 @@ namespace VirtualClient.Logging
                     new LogEventProperty("timestamp", new ScalarValue(DateTime.UtcNow.ToString("o"))),
                     new LogEventProperty("level", new ScalarValue(logLevel.ToString())),
                     new LogEventProperty("message", new ScalarValue(eventMessage)),
-                    new LogEventProperty("operationId", new ScalarValue(eventContext.ActivityId)),
-                    new LogEventProperty("transactionId", new ScalarValue(eventContext.TransactionId)),
-                    new LogEventProperty("durationMs", new ScalarValue(eventContext.DurationMs))
+                    new LogEventProperty("operationId", new ScalarValue(eventContext?.ActivityId ?? Guid.Empty)),
+                    new LogEventProperty("transactionId", new ScalarValue(eventContext?.TransactionId ?? Guid.Empty)),
+                    new LogEventProperty("durationMs", new ScalarValue(eventContext?.DurationMs ?? 0))
                 };
 
                 if (eventContext != null)
