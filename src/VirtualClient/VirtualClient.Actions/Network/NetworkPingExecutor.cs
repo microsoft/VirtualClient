@@ -10,6 +10,7 @@ namespace VirtualClient.Actions.NetworkPerformance
     using System.Linq;
     using System.Net;
     using System.Net.NetworkInformation;
+    using System.Net.Sockets;
     using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
@@ -41,7 +42,7 @@ namespace VirtualClient.Actions.NetworkPerformance
         }
 
         /// <summary>
-        /// Parameter. Defines the target IP address to which to send ICMP ping requests.
+        /// Parameter. Defines the target IP address or host name to which to send ICMP ping requests.
         /// </summary>
         public string IPAddress
         {
@@ -105,24 +106,63 @@ namespace VirtualClient.Actions.NetworkPerformance
         /// <summary>
         /// Executes the network ping test.
         /// </summary>
-        protected override Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            if (this.IPAddress == "NotDefined")
+            if (string.IsNullOrWhiteSpace(this.IPAddress) || this.IPAddress == "NotDefined")
             {
                 throw new WorkloadException(
-                    $"Required instructions missing. This profile requires the IP address of the server that will be pinged to be provided on the command line. " +
-                    $"Include the IP address of the target server in the parameters (e.g. --parameters:{nameof(this.IPAddress)}=1.2.3.4).",
+                    $"Required instructions missing. This profile requires the IP address or host name of the server that will be pinged to be provided on the command line. " +
+                    $"Include the target server in the parameters (e.g. --parameters:{nameof(this.IPAddress)}=1.2.3.4 or --parameters:{nameof(this.IPAddress)}=example.com).",
                     ErrorReason.InstructionsNotProvided);
             }
 
             if (!System.Net.IPAddress.TryParse(this.IPAddress, out IPAddress ipAddress))
             {
-                throw new WorkloadException(
-                    $"Invalid IP address format. The address provided '{this.IPAddress}' is not a valid IPv4 or IPv6 address.",
-                    ErrorReason.InstructionsNotValid);
+                if (Uri.CheckHostName(this.IPAddress) != UriHostNameType.Dns
+                    || this.IPAddress.All(character => char.IsDigit(character) || character == '.'))
+                {
+                    throw new WorkloadException(
+                        $"Invalid target format. The address provided '{this.IPAddress}' is not a valid IPv4 address, IPv6 address or DNS host name.",
+                        ErrorReason.InstructionsNotValid);
+                }
+
+                try
+                {
+                    IPAddress[] resolvedAddresses = await this.ResolveHostAddressesAsync(this.IPAddress, cancellationToken).ConfigureAwait(false);
+                    ipAddress = resolvedAddresses.FirstOrDefault(address => address.AddressFamily == AddressFamily.InterNetwork)
+                        ?? resolvedAddresses.FirstOrDefault();
+                }
+                catch (SocketException exc)
+                {
+                    throw new WorkloadException(
+                        $"The target host name '{this.IPAddress}' could not be resolved to an IP address.",
+                        exc,
+                        ErrorReason.NetworkTargetDoesNotExist);
+                }
+
+                if (ipAddress == null)
+                {
+                    throw new WorkloadException(
+                        $"The target host name '{this.IPAddress}' did not resolve to an IPv4 or IPv6 address.",
+                        ErrorReason.NetworkTargetDoesNotExist);
+                }
+
+                telemetryContext.AddContext("hostName", this.IPAddress);
+                telemetryContext.AddContext("resolvedIPAddress", ipAddress.ToString());
             }
 
-            return this.ExecutePingServerAsync(ipAddress, telemetryContext, cancellationToken);
+            await this.ExecutePingServerAsync(ipAddress, telemetryContext, cancellationToken).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Resolves a DNS host name to its IP addresses.
+        /// </summary>
+        /// <param name="hostName">The DNS host name to resolve.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+        /// <returns>The IP addresses resolved for the host name.</returns>
+        protected virtual Task<IPAddress[]> ResolveHostAddressesAsync(string hostName, CancellationToken cancellationToken)
+        {
+            return Dns.GetHostAddressesAsync(hostName, cancellationToken);
         }
 
         /// <summary>

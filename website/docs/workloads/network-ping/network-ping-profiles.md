@@ -4,7 +4,7 @@ The following profiles run customer-representative or benchmarking scenarios usi
 * [Workload Details](./network-ping.md)  
 
 ## PERF-NETWORK-PING.json
-Runs a basis network ping test given an IP address target. Note that the target must have the ICMP protocol enabled in order to
+Runs a basic network ping test given an IP address or DNS host name target. Note that the target must have the ICMP protocol enabled in order to
 respond to network ping requests.
 
 * [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-NETWORK-PING.json) 
@@ -21,7 +21,7 @@ respond to network ping requests.
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
   * Internet connection.
-  * The IP address specified on the command line (see 'Parameters' below) must be related to a valid system/node/VM that is online with firewall open
+  * The IP address or host name specified on the command line (see 'Parameters' below) must resolve to a valid system/node/VM that is online with firewall open
     to receive ICMP ping requests.
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
@@ -32,7 +32,7 @@ respond to network ping requests.
 
   | Parameter      | Purpose | Default Value |
   |----------------|---------|---------------|
-  | IPAddress      | Required. The IP address of the target endpoint to which to send network pings and measure round trip response times. Loopback address can be used: 127.0.0.1.  | NotDefined |
+  | IPAddress      | Required. The IP address or DNS host name of the target endpoint to which to send network pings and measure round trip response times. DNS host names are resolved once per action, preferring IPv4 when available. Loopback address can be used: 127.0.0.1. | NotDefined |
   | Duration       | Optional. The duration for which the network ping test will run. This can be a valid timespan (e.g. 00:10:00 for 10 minutes) or a simple numeric value representing total seconds (e.g. 600). When specified, it overrides PingIterations. | null (uses PingIterations) |
   | PingIterations | Optional. The number of individual network pings that will be conducted. This is used when Duration is not specified. | 300 |
 
@@ -47,6 +47,9 @@ respond to network ping requests.
   ``` bash
   # Execute the workload profile with default behavior (300 ping iterations)
   VirtualClient.exe --profile=PERF-NETWORK-PING.json --system=Demo --timeout=1440 --parameters=IPAddress=1.2.3.4
+
+  # Execute the workload profile using a DNS host name
+  VirtualClient.exe --profile=PERF-NETWORK-PING.json --system=Demo --timeout=1440 --parameters=IPAddress=example.com
 
   # Execute the workload profile with custom duration (10 minutes)
   VirtualClient.exe --profile=PERF-NETWORK-PING.json --system=Demo --timeout=1440 --parameters=IPAddress=1.2.3.4,,,Duration=00:10:00

@@ -7,6 +7,7 @@ namespace VirtualClient.Actions
     using System.Collections.Generic;
     using System.Net;
     using System.Net.NetworkInformation;
+    using System.Net.Sockets;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
@@ -45,10 +46,9 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("")]
-        [TestCase("invalid-ip")]
         [TestCase("999.999.999.999")]
-        [TestCase("not.an.ip.address")]
+        [TestCase("https://github.com")]
+        [TestCase("not a host name")]
         public void NetworkPingExecutorThrowsIfIPAddressIsInvalid(string invalidIpAddress)
         {
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>
@@ -62,7 +62,7 @@ namespace VirtualClient.Actions
                     () => executor.ExecuteAsync(CancellationToken.None));
 
                 Assert.AreEqual(ErrorReason.InstructionsNotValid, exception.Reason);
-                Assert.IsTrue(exception.Message.Contains("Invalid IP address format"));
+                Assert.IsTrue(exception.Message.Contains("Invalid target format"));
             }
         }
 
@@ -95,6 +95,56 @@ namespace VirtualClient.Actions
             using (NetworkPingExecutor executor = new NetworkPingExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
                 Assert.AreEqual(ipAddress, executor.IPAddress);
+            }
+        }
+
+        [Test]
+        public void NetworkPingExecutorResolvesHostNamesAndPrefersIPv4Addresses()
+        {
+            this.mockFixture.Parameters = new Dictionary<string, IConvertible>
+            {
+                { nameof(NetworkPingExecutor.IPAddress), "example.com" },
+                { nameof(NetworkPingExecutor.PingIterations), 1 }
+            };
+
+            IPAddress expectedAddress = IPAddress.Parse("192.0.2.1");
+            IPAddress[] resolvedAddresses =
+            {
+                IPAddress.Parse("2001:db8::1"),
+                expectedAddress
+            };
+
+            using (TestNetworkPingExecutor executor = new TestNetworkPingExecutor(
+                this.mockFixture.Dependencies,
+                this.mockFixture.Parameters,
+                IPStatus.Success,
+                resolvedAddresses))
+            {
+                Assert.DoesNotThrowAsync(() => executor.ExecuteAsync(CancellationToken.None));
+                Assert.AreEqual(1, executor.ResolveHostCallCount);
+                Assert.AreEqual(expectedAddress, executor.LastPingIPAddress);
+            }
+        }
+
+        [Test]
+        public void NetworkPingExecutorThrowsWhenTheHostNameCannotBeResolved()
+        {
+            this.mockFixture.Parameters = new Dictionary<string, IConvertible>
+            {
+                { nameof(NetworkPingExecutor.IPAddress), "does-not-exist.example" }
+            };
+
+            using (TestNetworkPingExecutor executor = new TestNetworkPingExecutor(
+                this.mockFixture.Dependencies,
+                this.mockFixture.Parameters,
+                IPStatus.Success,
+                resolutionException: new SocketException((int)SocketError.HostNotFound)))
+            {
+                WorkloadException exception = Assert.ThrowsAsync<WorkloadException>(
+                    () => executor.ExecuteAsync(CancellationToken.None));
+
+                Assert.AreEqual(ErrorReason.NetworkTargetDoesNotExist, exception.Reason);
+                Assert.IsTrue(exception.Message.Contains("could not be resolved"));
             }
         }
 
@@ -316,20 +366,46 @@ namespace VirtualClient.Actions
 
         private class TestNetworkPingExecutor : NetworkPingExecutor
         {
+            private readonly IPAddress[] resolvedAddresses;
+            private readonly SocketException resolutionException;
             private readonly IPStatus statusToReturn;
 
-            public TestNetworkPingExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters, IPStatus statusToReturn)
+            public TestNetworkPingExecutor(
+                IServiceCollection dependencies,
+                IDictionary<string, IConvertible> parameters,
+                IPStatus statusToReturn,
+                IPAddress[] resolvedAddresses = null,
+                SocketException resolutionException = null)
                 : base(dependencies, parameters)
             {
+                this.resolvedAddresses = resolvedAddresses;
+                this.resolutionException = resolutionException;
                 this.statusToReturn = statusToReturn;
             }
+
+            public IPAddress LastPingIPAddress { get; private set; }
+
+            public int ResolveHostCallCount { get; private set; }
 
             public int SendPingCallCount { get; private set; }
 
             protected override Task<PingResult> SendPingAsync(Ping networkPing, IPAddress ipAddress, int timeoutMilliseconds)
             {
+                this.LastPingIPAddress = ipAddress;
                 this.SendPingCallCount++;
                 return Task.FromResult(new PingResult(this.statusToReturn, 1));
+            }
+
+            protected override Task<IPAddress[]> ResolveHostAddressesAsync(string hostName, CancellationToken cancellationToken)
+            {
+                this.ResolveHostCallCount++;
+
+                if (this.resolutionException != null)
+                {
+                    return Task.FromException<IPAddress[]>(this.resolutionException);
+                }
+
+                return Task.FromResult(this.resolvedAddresses ?? Array.Empty<IPAddress>());
             }
         }
     }
