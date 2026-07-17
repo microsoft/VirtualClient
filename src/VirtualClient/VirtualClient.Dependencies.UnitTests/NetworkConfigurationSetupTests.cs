@@ -313,6 +313,40 @@ namespace VirtualClient.Dependencies
         }
 
         [Test]
+        public async Task NetworkConfigurationWritesProtectedFilesUsingElevatedPermissionsOnUnixSystems()
+        {
+            this.mockFixture.Parameters[nameof(NetworkConfigurationSetup.ConfigureSystemConfig)] = false;
+            this.mockFixture.File.Setup(file => file.Exists(It.IsAny<string>())).Returns(false);
+            this.mockFixture.File.Setup(file => file.Exists("/etc/security/limits.conf")).Returns(true);
+            this.mockFixture.File.Setup(file => file.ReadAllLinesAsync("/etc/security/limits.conf", It.IsAny<CancellationToken>()))
+                .ReturnsAsync(this.exampleLimitsConfigFile);
+
+            List<string> executedCommands = new List<string>();
+            this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
+            {
+                executedCommands.Add($"{command} {arguments}");
+                return new InMemoryProcess
+                {
+                    OnStart = () => true,
+                    OnHasExited = () => true
+                };
+            };
+
+            using (TestNetworkConfigurationSetup setup = new TestNetworkConfigurationSetup(this.mockFixture))
+            {
+                await setup.ExecuteAsync(CancellationToken.None);
+            }
+
+            Assert.AreEqual(2, executedCommands.Count);
+            Assert.IsTrue(executedCommands.Exists(command => Regex.IsMatch(
+                command,
+                "^sudo cp \".+NetworkConfigurationSetup-[a-f0-9]{32}\\.tmp\" \"/etc/security/limits\\.conf\"$")));
+            Assert.IsTrue(executedCommands.Exists(command => Regex.IsMatch(
+                command,
+                "^sudo cp \".+NetworkConfigurationSetup-[a-f0-9]{32}\\.tmp\" \"/etc/rc\\.local\"$")));
+        }
+
+        [Test]
         public async Task NetworkConfigurationSetsTheExpectedSettingsInTheSystemConfigFile_UnixSystems()
         {
             this.mockFixture.Setup(PlatformID.Unix);
@@ -326,8 +360,19 @@ namespace VirtualClient.Dependencies
                 this.mockFixture.File.Setup(file => file.ReadAllTextAsync(It.Is<string>(path => path.EndsWith("system.conf")), It.IsAny<CancellationToken>()))
                     .ReturnsAsync(systemConf);
 
+                List<string> executedCommands = new List<string>();
+                this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
+                {
+                    executedCommands.Add($"{command} {arguments}");
+                    return new InMemoryProcess
+                    {
+                        OnStart = () => true,
+                        OnHasExited = () => true
+                    };
+                };
+
                 bool verified = false;
-                this.mockFixture.File.Setup(file => file.WriteAllTextAsync(It.Is<string>(path => path.EndsWith("system.conf")), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                this.mockFixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
                     .Callback<string, string, CancellationToken>((path, content, token) =>
                     {
                         Assert.IsTrue(Regex.IsMatch(content, "(?<!#)DefaultLimitNOFILE=1048575"));
@@ -336,6 +381,9 @@ namespace VirtualClient.Dependencies
 
                 await setup.ExecuteAsync(CancellationToken.None);
                 Assert.IsTrue(verified);
+                Assert.IsTrue(executedCommands.Exists(command => Regex.IsMatch(
+                    command,
+                    "^sudo cp \".+NetworkConfigurationSetup-[a-f0-9]{32}\\.tmp\" \"/etc/systemd/system\\.conf\"$")));
             }
         }
 
@@ -353,8 +401,19 @@ namespace VirtualClient.Dependencies
                 this.mockFixture.File.Setup(file => file.ReadAllTextAsync(It.Is<string>(path => path.EndsWith("user.conf")), It.IsAny<CancellationToken>()))
                     .ReturnsAsync(systemConf);
 
+                List<string> executedCommands = new List<string>();
+                this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
+                {
+                    executedCommands.Add($"{command} {arguments}");
+                    return new InMemoryProcess
+                    {
+                        OnStart = () => true,
+                        OnHasExited = () => true
+                    };
+                };
+
                 bool verified = false;
-                this.mockFixture.File.Setup(file => file.WriteAllTextAsync(It.Is<string>(path => path.EndsWith("user.conf")), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                this.mockFixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
                     .Callback<string, string, CancellationToken>((path, content, token) =>
                     {
                         Assert.IsTrue(Regex.IsMatch(content, "(?<!#)DefaultLimitNOFILE=1048575"));
@@ -363,6 +422,9 @@ namespace VirtualClient.Dependencies
 
                 await setup.ExecuteAsync(CancellationToken.None);
                 Assert.IsTrue(verified);
+                Assert.IsTrue(executedCommands.Exists(command => Regex.IsMatch(
+                    command,
+                    "^sudo cp \".+NetworkConfigurationSetup-[a-f0-9]{32}\\.tmp\" \"/etc/systemd/user\\.conf\"$")));
             }
         }
 
