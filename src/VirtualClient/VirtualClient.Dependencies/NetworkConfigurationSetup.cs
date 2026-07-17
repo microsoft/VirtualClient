@@ -232,13 +232,13 @@ namespace VirtualClient.Dependencies
 
             if (state == null)
             {
-                await this.ApplySecurityLimitsConfigurationOnUnixAsync(telemetryContext, cancellationToken)
+                await this.ApplySecurityLimitsConfigurationOnUnixAsync(cancellationToken)
                     .ConfigureAwait(false);
 
-                await this.ApplySystemdConfigurationOnUnixAsync(telemetryContext, cancellationToken)
+                await this.ApplySystemdConfigurationOnUnixAsync(cancellationToken)
                     .ConfigureAwait(false);
 
-                await this.ApplyRcLocalFileCommandsAsync(telemetryContext, cancellationToken)
+                await this.ApplyRcLocalFileCommandsAsync(cancellationToken)
                     .ConfigureAwait(false);
 
                 // The existence of the state object indicates the network setup/configuration was already performed.
@@ -272,7 +272,7 @@ namespace VirtualClient.Dependencies
             }
         }
 
-        private async Task ApplyRcLocalFileCommandsAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        private async Task ApplyRcLocalFileCommandsAsync(CancellationToken cancellationToken)
         {
             string[] rcLocalFileContent = null;
             if (!this.systemManagement.FileSystem.File.Exists(NetworkConfigurationSetup.RcLocalPath))
@@ -318,12 +318,11 @@ namespace VirtualClient.Dependencies
             await this.WriteFileWithElevatedPermissionsAsync(
                 NetworkConfigurationSetup.RcLocalPath,
                 tempFile => this.systemManagement.FileSystem.File.WriteAllLinesAsync(tempFile, rcLocalContents, cancellationToken),
-                telemetryContext,
                 cancellationToken)
                 .ConfigureAwait(false);
         }
 
-        private async Task ApplySecurityLimitsConfigurationOnUnixAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        private async Task ApplySecurityLimitsConfigurationOnUnixAsync(CancellationToken cancellationToken)
         {
             if (this.systemManagement.FileSystem.File.Exists(NetworkConfigurationSetup.LimitsConfigPath))
             {
@@ -344,13 +343,12 @@ namespace VirtualClient.Dependencies
                 await this.WriteFileWithElevatedPermissionsAsync(
                     NetworkConfigurationSetup.LimitsConfigPath,
                     tempFile => this.systemManagement.FileSystem.File.WriteAllLinesAsync(tempFile, limitConfigContents, cancellationToken),
-                    telemetryContext,
                     cancellationToken)
                     .ConfigureAwait(false);
             }
         }
 
-        private async Task ApplySystemdConfigurationOnUnixAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        private async Task ApplySystemdConfigurationOnUnixAsync(CancellationToken cancellationToken)
         {
             if (this.ConfigureSystemConfig)
             {
@@ -388,7 +386,6 @@ namespace VirtualClient.Dependencies
                         await this.WriteFileWithElevatedPermissionsAsync(
                             configFile,
                             tempFile => this.systemManagement.FileSystem.File.WriteAllTextAsync(tempFile, configFileContent, cancellationToken),
-                            telemetryContext,
                             cancellationToken)
                             .ConfigureAwait(false);
                     }
@@ -399,7 +396,6 @@ namespace VirtualClient.Dependencies
         private async Task WriteFileWithElevatedPermissionsAsync(
             string destinationPath,
             Func<string, Task> writeTempFileAsync,
-            EventContext telemetryContext,
             CancellationToken cancellationToken)
         {
             string tempFilePath = this.PlatformSpecifics.Combine(
@@ -419,9 +415,6 @@ namespace VirtualClient.Dependencies
 
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        await this.LogProcessDetailsAsync(process, telemetryContext, "NetworkConfiguration")
-                            .ConfigureAwait(false);
-
                         process.ThrowIfErrored<DependencyException>(errorReason: ErrorReason.DependencyInstallationFailed);
                     }
                 }
