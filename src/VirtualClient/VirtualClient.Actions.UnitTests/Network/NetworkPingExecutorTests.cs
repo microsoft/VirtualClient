@@ -28,11 +28,13 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public void NetworkPingExecutorThrowsIfIPAddressIsNotDefined()
+        [TestCase(null)]
+        [TestCase("NotDefined")]
+        public void NetworkPingExecutorThrowsIfIPAddressIsNotProvided(string ipAddress)
         {
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>
             {
-                { nameof(NetworkPingExecutor.IPAddress), "NotDefined" }
+                { nameof(NetworkPingExecutor.IPAddress), ipAddress }
             };
 
             using (NetworkPingExecutor executor = new NetworkPingExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
