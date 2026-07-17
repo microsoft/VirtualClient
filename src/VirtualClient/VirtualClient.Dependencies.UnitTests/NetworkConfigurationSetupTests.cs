@@ -327,7 +327,7 @@ namespace VirtualClient.Dependencies
                     .ReturnsAsync(systemConf);
 
                 bool verified = false;
-                this.mockFixture.File.Setup(file => file.WriteAllTextAsync(It.Is<string>(path => path.EndsWith("system.conf")), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                this.mockFixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
                     .Callback<string, string, CancellationToken>((path, content, token) =>
                     {
                         Assert.IsTrue(Regex.IsMatch(content, "(?<!#)DefaultLimitNOFILE=1048575"));
@@ -354,7 +354,7 @@ namespace VirtualClient.Dependencies
                     .ReturnsAsync(systemConf);
 
                 bool verified = false;
-                this.mockFixture.File.Setup(file => file.WriteAllTextAsync(It.Is<string>(path => path.EndsWith("user.conf")), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                this.mockFixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
                     .Callback<string, string, CancellationToken>((path, content, token) =>
                     {
                         Assert.IsTrue(Regex.IsMatch(content, "(?<!#)DefaultLimitNOFILE=1048575"));

@@ -315,7 +315,10 @@ namespace VirtualClient.Dependencies
 
             rcLocalContents.Add(NetworkConfigurationSetup.SettingsEndComment);
 
-            await this.systemManagement.FileSystem.File.WriteAllLinesAsync(NetworkConfigurationSetup.RcLocalPath, rcLocalContents)
+            await this.WriteFileWithElevatedPermissionsAsync(
+                NetworkConfigurationSetup.RcLocalPath,
+                tempFile => this.systemManagement.FileSystem.File.WriteAllLinesAsync(tempFile, rcLocalContents, cancellationToken),
+                cancellationToken)
                 .ConfigureAwait(false);
         }
 
@@ -337,7 +340,10 @@ namespace VirtualClient.Dependencies
                 limitConfigContents.Add($"*   hard    nofile  {NetworkConfigurationSetup.NoFileLimit}");
                 limitConfigContents.Add(NetworkConfigurationSetup.SettingsEndComment);
 
-                await this.systemManagement.FileSystem.File.WriteAllLinesAsync(NetworkConfigurationSetup.LimitsConfigPath, limitConfigContents)
+                await this.WriteFileWithElevatedPermissionsAsync(
+                    NetworkConfigurationSetup.LimitsConfigPath,
+                    tempFile => this.systemManagement.FileSystem.File.WriteAllLinesAsync(tempFile, limitConfigContents, cancellationToken),
+                    cancellationToken)
                     .ConfigureAwait(false);
             }
         }
@@ -377,9 +383,47 @@ namespace VirtualClient.Dependencies
                             configFileContent += setting;
                         }
 
-                        await this.systemManagement.FileSystem.File.WriteAllTextAsync(configFile, configFileContent)
+                        await this.WriteFileWithElevatedPermissionsAsync(
+                            configFile,
+                            tempFile => this.systemManagement.FileSystem.File.WriteAllTextAsync(tempFile, configFileContent, cancellationToken),
+                            cancellationToken)
                             .ConfigureAwait(false);
                     }
+                }
+            }
+        }
+
+        private async Task WriteFileWithElevatedPermissionsAsync(
+            string destinationPath,
+            Func<string, Task> writeTempFileAsync,
+            CancellationToken cancellationToken)
+        {
+            string tempFilePath = this.PlatformSpecifics.Combine(
+                this.PlatformSpecifics.TempDirectory,
+                $"{nameof(NetworkConfigurationSetup)}-{Guid.NewGuid():N}.tmp");
+
+            try
+            {
+                await writeTempFileAsync(tempFilePath).ConfigureAwait(false);
+
+                using (IProcessProxy process = this.systemManagement.ProcessManager.CreateElevatedProcess(
+                    this.Platform,
+                    "cp",
+                    $"\"{tempFilePath}\" \"{destinationPath}\""))
+                {
+                    await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
+
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        process.ThrowIfErrored<DependencyException>(errorReason: ErrorReason.DependencyInstallationFailed);
+                    }
+                }
+            }
+            finally
+            {
+                if (this.systemManagement.FileSystem.File.Exists(tempFilePath))
+                {
+                    this.systemManagement.FileSystem.File.Delete(tempFilePath);
                 }
             }
         }
