@@ -6,6 +6,7 @@ namespace VirtualClient.Actions
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
     using NUnit.Framework;
@@ -80,15 +81,19 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("PERF-CPU-LAPACK.json")]
-        public async Task LAPACKWorkloadProfileExecutesTheExpectedWorkloadsOnWindowsPlatform(string profile)
+        [TestCase("PERF-CPU-LAPACK.json", Architecture.X64, "win-x64")]
+        [TestCase("PERF-CPU-LAPACK.json", Architecture.Arm64, "win-arm64")]
+        public async Task LAPACKWorkloadProfileExecutesTheExpectedWorkloadsOnWindowsPlatform(
+            string profile,
+            Architecture architecture,
+            string platformSpecificDirectory)
         {
             IEnumerable<string> expectedCommands = this.GetProfileExpectedCommands(PlatformID.Win32NT);
             string[] expectedFiles = new string[]
                 {
-                    @"win-x64/cmakescript.sh",
-                    @"win-x64/LapackTestScript.sh", @"win-x64/lapack_testing.py",
-                    @"win-x64/TESTING/testing_results.txt"
+                    $"{platformSpecificDirectory}/cmakescript.sh",
+                    $"{platformSpecificDirectory}/LapackTestScript.sh", $"{platformSpecificDirectory}/lapack_testing.py",
+                    $"{platformSpecificDirectory}/TESTING/testing_results.txt"
                 };
             string cygwinPath = this.mockFixture.PlatformSpecifics.Combine("C:", "tools", "cygwin");
 
@@ -96,7 +101,7 @@ namespace VirtualClient.Actions
             // - Workload package is installed and exists.
             // - Workload binaries/executables exist on the file system.
             // - The workload generates valid results.
-            this.mockFixture.Setup(PlatformID.Win32NT);
+            this.mockFixture.Setup(PlatformID.Win32NT, architecture);
             this.mockFixture.SetupFile(cygwinPath);
             this.mockFixture.SetupPackage("lapack", expectedFiles: expectedFiles);
             this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
@@ -105,7 +110,9 @@ namespace VirtualClient.Actions
                 if (arguments.Contains("LapackTestScript.sh", StringComparison.OrdinalIgnoreCase))
                 {
                     process.StandardOutput.Append(TestDependencies.GetResourceFileContents("Results_LAPACK.txt"));
-                    this.mockFixture.SetupPackage("lapack", expectedFiles: @"win-x64\TESTING\testing_results.txt");
+                    this.mockFixture.SetupPackage(
+                        "lapack",
+                        expectedFiles: $@"{platformSpecificDirectory}\TESTING\testing_results.txt");
                 }
 
                 return process;

@@ -80,24 +80,63 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
+            try
             {
-                if (this.Platform == PlatformID.Unix)
+                using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
-                    // Run make to generate all object files for fortran subroutines.
-                    await this.ExecuteCommandAsync("make", null, this.packageDirectory, cancellationToken)
-                            .ConfigureAwait(false);
-
-                    // Delete results file that gets generated.
-                    if (this.fileSystem.File.Exists(this.ResultsFilePath))
+                    if (this.Platform == PlatformID.Unix)
                     {
-                        await this.fileSystem.File.DeleteAsync(this.ResultsFilePath);
-                    }
+                        // Run make to generate all object files for fortran subroutines.
+                        await this.ExecuteCommandAsync("make", null, this.packageDirectory, cancellationToken)
+                                .ConfigureAwait(false);
 
-                    using (IProcessProxy process = await this.ExecuteCommandAsync("bash", this.ScriptFilePath, this.packageDirectory, telemetryContext, cancellationToken, runElevated: true))
-                    {
-                        if (!cancellationToken.IsCancellationRequested)
+                        // Delete results file that gets generated.
+                        if (this.fileSystem.File.Exists(this.ResultsFilePath))
                         {
+                            await this.fileSystem.File.DeleteAsync(this.ResultsFilePath);
+                        }
+
+                        using (IProcessProxy process = await this.ExecuteCommandAsync("bash", this.ScriptFilePath, this.packageDirectory, telemetryContext, cancellationToken, runElevated: true))
+                        {
+                            cancellationToken.ThrowIfCancellationRequested();
+
+                            if (process.IsErrored())
+                            {
+                                await this.LogProcessDetailsAsync(process, telemetryContext, "LAPACK", logToFile: true);
+                                process.ThrowIfWorkloadFailed();
+                            }
+
+                            await this.CaptureMetricsAsync(process, this.ResultsFilePath, telemetryContext, cancellationToken);
+                        }
+                    }
+                    else if (this.Platform == PlatformID.Win32NT)
+                    {
+                        using (IProcessProxy process = await this.ExecuteCygwinBashAsync(
+                            "./cmakescript.sh",
+                            this.packageDirectory,
+                            this.cygwinPackageDirectory,
+                            telemetryContext,
+                            cancellationToken))
+                        {
+                            cancellationToken.ThrowIfCancellationRequested();
+
+                            if (process.IsErrored())
+                            {
+                                await this.LogProcessDetailsAsync(process, telemetryContext, "LAPACK", logToFile: true);
+                                process.ThrowIfWorkloadFailed();
+                            }
+                        }
+
+                        // Delete results file that gets generated.
+                        if (this.fileSystem.File.Exists(this.ResultsFilePath))
+                        {
+                            await this.fileSystem.File.DeleteAsync(this.ResultsFilePath);
+                        }
+
+                        using (IProcessProxy process = await this.ExecuteCygwinBashAsync("./LapackTestScript.sh", this.packageDirectory, this.cygwinPackageDirectory, telemetryContext, cancellationToken))
+                        {
+                            cancellationToken.ThrowIfCancellationRequested();
+
                             if (process.IsErrored())
                             {
                                 await this.LogProcessDetailsAsync(process, telemetryContext, "LAPACK", logToFile: true);
@@ -108,99 +147,82 @@ namespace VirtualClient.Actions
                         }
                     }
                 }
-                else if (this.Platform == PlatformID.Win32NT)
-                {
-                    await this.ExecuteCygwinBashAsync("./cmakescript.sh", this.packageDirectory, this.cygwinPackageDirectory, telemetryContext, cancellationToken)
-                        .ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                EventContext cancelContext = telemetryContext.Clone()
+                    .AddContext("executionCancelled", true);
 
-                    // Delete results file that gets generated.
-                    if (this.fileSystem.File.Exists(this.ResultsFilePath))
-                    {
-                        await this.fileSystem.File.DeleteAsync(this.ResultsFilePath);
-                    }
+                this.Logger.LogMessage($"{this.TypeName}.ExecutionCancelled", LogLevel.Information, cancelContext);
 
-                    using (IProcessProxy process = await this.ExecuteCygwinBashAsync("./LapackTestScript.sh", this.packageDirectory, this.cygwinPackageDirectory, telemetryContext, cancellationToken))
-                    {
-                        if (!cancellationToken.IsCancellationRequested)
-                        {
-                            if (process.IsErrored())
-                            {
-                                await this.LogProcessDetailsAsync(process, telemetryContext, "LAPACK", logToFile: true);
-                                process.ThrowIfWorkloadFailed();
-                            }
-
-                            await this.CaptureMetricsAsync(process, this.ResultsFilePath, telemetryContext, cancellationToken);
-                        }
-                    }
-                }
+                throw new WorkloadException(
+                    "The LAPACK workload did not complete before execution was cancelled.",
+                    ErrorReason.WorkloadFailed);
             }
         }
 
-        private async Task ExecuteCommandAsync(string pathToExe, string commandLineArguments, string workingDirectory, CancellationToken cancellationToken)
+        private Task ExecuteCommandAsync(string pathToExe, string commandLineArguments, string workingDirectory, CancellationToken cancellationToken)
         {
-            if (!cancellationToken.IsCancellationRequested)
+            cancellationToken.ThrowIfCancellationRequested();
+
+            this.Logger.LogTraceMessage($"Executing process '{pathToExe}' '{commandLineArguments}' at directory '{workingDirectory}'.");
+
+            EventContext telemetryContext = EventContext.Persisted()
+                .AddContext("command", pathToExe)
+                .AddContext("commandArguments", commandLineArguments);
+
+            return this.Logger.LogMessageAsync($"{nameof(LAPACKExecutor)}.ExecuteProcess", telemetryContext, async () =>
             {
-                this.Logger.LogTraceMessage($"Executing process '{pathToExe}' '{commandLineArguments}' at directory '{workingDirectory}'.");
-
-                EventContext telemetryContext = EventContext.Persisted()
-                    .AddContext("command", pathToExe)
-                    .AddContext("commandArguments", commandLineArguments);
-
-                await this.Logger.LogMessageAsync($"{nameof(LAPACKExecutor)}.ExecuteProcess", telemetryContext, async () =>
+                using (IProcessProxy process = this.systemManagement.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, commandLineArguments, workingDirectory))
                 {
-                    using (IProcessProxy process = this.systemManagement.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, commandLineArguments, workingDirectory))
-                    {
-                        this.CleanupTasks.Add(() => process.SafeKill(this.Logger));
-                        await process.StartAndWaitAsync(cancellationToken).ConfigureAwait();
+                    this.CleanupTasks.Add(() => process.SafeKill(this.Logger));
+                    await process.StartAndWaitAsync(cancellationToken).ConfigureAwait();
 
-                        if (!cancellationToken.IsCancellationRequested)
-                        {
-                            this.LogProcessDetailsAsync(process, telemetryContext)
-                                .ConfigureAwait();
+                    cancellationToken.ThrowIfCancellationRequested();
 
-                            process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
-                        }
-                    }
-                }).ConfigureAwait();
-            }
+                    await this.LogProcessDetailsAsync(process, telemetryContext)
+                        .ConfigureAwait();
+
+                    process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                }
+            });
         }
 
         private async Task CaptureMetricsAsync(IProcessProxy process, string resultsFilePath, EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            if (!cancellationToken.IsCancellationRequested)
+            cancellationToken.ThrowIfCancellationRequested();
+
+            this.MetadataContract.AddForScenario(
+               "LAPACK",
+               null,
+               toolVersion: null,
+               this.PackageName);
+
+            this.MetadataContract.Apply(telemetryContext);
+
+            if (!this.fileSystem.File.Exists(resultsFilePath))
             {
-                this.MetadataContract.AddForScenario(
-                   "LAPACK",
-                   null,
-                   toolVersion: null,
-                   this.PackageName);
-
-                this.MetadataContract.Apply(telemetryContext);
-
-                if (!this.fileSystem.File.Exists(resultsFilePath))
-                {
-                    throw new WorkloadException(
-                        $"The LAPACK results file was not found at path '{resultsFilePath}'.",
-                        ErrorReason.WorkloadFailed);
-                }
-
-                KeyValuePair<string, string> results = await this.LoadResultsAsync(resultsFilePath, cancellationToken);
-                await this.LogProcessDetailsAsync(process, telemetryContext, "LAPACK", logToFile: true, results: results);
-
-                LAPACKMetricsParser lapackParser = new LAPACKMetricsParser(results.Value);
-                IList<Metric> metrics = lapackParser.Parse();
-
-                this.Logger.LogMetrics(
-                    "LAPACK",
-                    "Linear Algorithms",
-                    process.StartTime,
-                    process.ExitTime,
-                    metrics,
-                    null,
-                    null,
-                    this.Tags,
-                    telemetryContext);
+                throw new WorkloadException(
+                    $"The LAPACK results file was not found at path '{resultsFilePath}'.",
+                    ErrorReason.WorkloadFailed);
             }
+
+            KeyValuePair<string, string> results = await this.LoadResultsAsync(resultsFilePath, cancellationToken);
+            await this.LogProcessDetailsAsync(process, telemetryContext, "LAPACK", logToFile: true, results: results);
+
+            LAPACKMetricsParser lapackParser = new LAPACKMetricsParser(results.Value);
+            IList<Metric> metrics = lapackParser.Parse();
+
+            this.Logger.LogMetrics(
+                "LAPACK",
+                "Linear Algorithms",
+                process.StartTime,
+                process.ExitTime,
+                metrics,
+                null,
+                null,
+                this.Tags,
+                telemetryContext);
         }
     }
 }

@@ -6,6 +6,7 @@ namespace VirtualClient.Actions
     using System;
     using System.Collections.Generic;
     using System.IO;
+    using System.Linq;
     using System.Runtime.InteropServices;
     using System.Text.RegularExpressions;
     using System.Threading;
@@ -234,6 +235,40 @@ namespace VirtualClient.Actions
                     () => executor.ExecuteAsync(EventContext.None, CancellationToken.None));
 
                 Assert.AreEqual(ErrorReason.WorkloadFailed, exception.Reason);
+            }
+        }
+
+        [Test]
+        public async Task LAPACKExecutorReportsCancellationAsFailed_WindowsArm64()
+        {
+            this.SetupTest(PlatformID.Win32NT, Architecture.Arm64);
+            using (CancellationTokenSource cancellationSource = new CancellationTokenSource())
+            using (TestLAPACKExecutor executor = new TestLAPACKExecutor(this.mockFixture))
+            {
+                this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
+                {
+                    InMemoryProcess process = new InMemoryProcess();
+                    if (arguments.Contains("LapackTestScript.sh", StringComparison.OrdinalIgnoreCase))
+                    {
+                        process.OnStart = () =>
+                        {
+                            cancellationSource.Cancel();
+                            return true;
+                        };
+                    }
+
+                    return process;
+                };
+
+                await ((VirtualClientComponent)executor).ExecuteAsync(cancellationSource.Token);
+
+                var outcomeMessages = this.mockFixture.Logger.MessagesLogged($"{executor.TypeName}.SucceededOrFailed");
+                Assert.AreEqual(1, outcomeMessages.Count());
+
+                EventContext outcomeContext = outcomeMessages.First().Item3 as EventContext;
+                Assert.IsNotNull(outcomeContext);
+                Assert.AreEqual("Failed", outcomeContext.Properties["metricName"]);
+                Assert.AreEqual(1, this.mockFixture.Logger.MessagesLogged($"{executor.TypeName}.ExecutionCancelled").Count());
             }
         }
 
