@@ -5,9 +5,7 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
-    using System.IO;
     using System.IO.Abstractions;
-    using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
@@ -101,6 +99,22 @@ namespace VirtualClient.Actions
             }
         }
 
+        private string ResultsDirectory
+        {
+            get
+            {
+                return this.PlatformSpecifics.GetTempPath("lzbench");
+            }
+        }
+
+        private string ResultsFilePath
+        {
+            get
+            {
+                return this.Combine(this.ResultsDirectory, "results-summary.csv");
+            }
+        }
+
         /// <summary>
         /// Executes the Lzbench workload.
         /// </summary>
@@ -108,16 +122,29 @@ namespace VirtualClient.Actions
         {
             using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
             {
+                if (!this.fileSystem.Directory.Exists(this.ResultsDirectory))
+                {
+                    this.fileSystem.Directory.CreateDirectory(this.ResultsDirectory);
+                }
+
                 string commandLineArguments = this.GetCommandLineArguments();
 
                 // Note:
                 // We are attempting to add in a common method for execution of commands as we have seen throughout many executors.
                 // In the near term, we are going to add this in slowly and incrementally in order to avoid raising the likelihood
                 // of regressions.
-                using (IProcessProxy process = await this.ExecuteCommandAsync("bash", $"\"{this.LzbenchScriptPath}\" \"{commandLineArguments}\"", this.LzbenchDirectory, telemetryContext, cancellationToken, runElevated: true))
+                try
                 {
-                    if (!cancellationToken.IsCancellationRequested)
+                    using (IProcessProxy process = await this.ExecuteCommandAsync(
+                        "bash",
+                        $"\"{this.LzbenchScriptPath}\" \"{commandLineArguments}\" \"{this.ResultsFilePath}\"",
+                        this.LzbenchDirectory,
+                        telemetryContext,
+                        cancellationToken,
+                        runElevated: false))
                     {
+                        cancellationToken.ThrowIfCancellationRequested();
+
                         if (process.IsErrored())
                         {
                             await this.LogProcessDetailsAsync(process, telemetryContext, "LZbench");
@@ -125,7 +152,17 @@ namespace VirtualClient.Actions
                         }
 
                         await this.CaptureMetricsAsync(process, commandLineArguments, telemetryContext, cancellationToken);
+                        cancellationToken.ThrowIfCancellationRequested();
                     }
+                }
+                catch (OperationCanceledException exc) when (cancellationToken.IsCancellationRequested)
+                {
+                    // A normal cancellation is success-shaped in component status telemetry. Lzbench must
+                    // instead report failure when it is cancelled before producing complete results.
+                    throw new WorkloadException(
+                        "The Lzbench workload was cancelled before it completed and produced results.",
+                        exc,
+                        ErrorReason.WorkloadFailed);
                 }
             }
         }
@@ -166,39 +203,33 @@ namespace VirtualClient.Actions
 
         private async Task CaptureMetricsAsync(IProcessProxy process, string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            if (!cancellationToken.IsCancellationRequested)
-            {
-                this.MetadataContract.AddForScenario(
-                    "Lzbench",
-                    process.FullCommand(),
-                    toolVersion: null);
+            cancellationToken.ThrowIfCancellationRequested();
 
-                this.MetadataContract.Apply(telemetryContext);
+            this.MetadataContract.AddForScenario(
+                "Lzbench",
+                process.FullCommand(),
+                toolVersion: null);
 
-                string[] resultsFiles = this.fileSystem.Directory.GetFiles(this.LzbenchDirectory, "results-summary.csv", SearchOption.AllDirectories);
+            this.MetadataContract.Apply(telemetryContext);
 
-                foreach (string file in resultsFiles)
-                {
-                    KeyValuePair<string, string> results = await this.LoadResultsAsync(file, cancellationToken);
-                    await this.LogProcessDetailsAsync(process, telemetryContext, "LZbench", logToFile: true, results: results);
+            KeyValuePair<string, string> results = await this.LoadResultsAsync(this.ResultsFilePath, cancellationToken);
+            await this.LogProcessDetailsAsync(process, telemetryContext, "LZbench", logToFile: true, results: results);
 
-                    LzbenchMetricsParser parser = new LzbenchMetricsParser(results.Value);
-                    IList<Metric> metrics = parser.Parse();
+            LzbenchMetricsParser parser = new LzbenchMetricsParser(results.Value);
+            IList<Metric> metrics = parser.Parse();
 
-                    this.Logger.LogMetrics(
-                        "Lzbench",
-                        "Lzbench",
-                        process.StartTime,
-                        process.ExitTime,
-                        metrics,
-                        null,
-                        commandArguments,
-                        this.Tags,
-                        telemetryContext);
+            this.Logger.LogMetrics(
+                "Lzbench",
+                "Lzbench",
+                process.StartTime,
+                process.ExitTime,
+                metrics,
+                null,
+                commandArguments,
+                this.Tags,
+                telemetryContext);
 
-                    await this.fileSystem.File.DeleteAsync(file);
-                }
-            }
+            await this.fileSystem.File.DeleteAsync(this.ResultsFilePath);
         }
 
         private async Task ExecuteCommandAsync(string pathToExe, string commandLineArguments, string workingDirectory, CancellationToken cancellationToken)
