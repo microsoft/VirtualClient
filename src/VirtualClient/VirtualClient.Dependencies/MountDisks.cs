@@ -134,12 +134,12 @@ namespace VirtualClient.Dependencies
             // Don't mount any partition in OS drive.
             foreach (Disk disk in disks.Where(d => !d.IsOperatingSystem()))
             {
-                IEnumerable<DiskVolume> diskVolumes = disk.Volumes.Where(v => v.AccessPaths?.Any() != true);
+                IEnumerable<DiskVolume> diskVolumes = disk.Volumes.Where(v => v.AccessPaths?.Any() != true && this.IsMountable(v));
 
                 if (diskVolumes?.Any() == true)
                 {
                     // mount every volume that doesn't have an accessPath.
-                    foreach (DiskVolume volume in disk.Volumes.Where(v => v.AccessPaths?.Any() != true))
+                    foreach (DiskVolume volume in diskVolumes)
                     {
                         string newMountPoint = null;
                         string mountPointName = volume.GetDefaultMountPointName(prefix: mountPrefix);
@@ -214,6 +214,27 @@ namespace VirtualClient.Dependencies
             }
 
             return mountPointsCreated;
+        }
+
+        private bool IsMountable(DiskVolume volume)
+        {
+            // A mount point can only be assigned to a volume that has the identity its platform's
+            // mount operation requires. Reserved/metadata partitions (e.g. the Windows Microsoft
+            // Reserved Partition) have none of these and cannot be mounted, so they must be skipped.
+            switch (this.Platform)
+            {
+                case PlatformID.Win32NT:
+                    // Windows mounts a volume by its volume index or drive letter.
+                    return volume.Index != null
+                        || volume.Properties?.ContainsKey(Disk.WindowsDiskProperties.Letter) == true;
+
+                case PlatformID.Unix:
+                    // Unix mounts a volume by its device path (e.g. /dev/sdc1).
+                    return !string.IsNullOrWhiteSpace(volume.DevicePath);
+
+                default:
+                    return true;
+            }
         }
 
         private IEnumerable<Disk> GetTargetDisks(IEnumerable<Disk> disks, string diskFilter)
