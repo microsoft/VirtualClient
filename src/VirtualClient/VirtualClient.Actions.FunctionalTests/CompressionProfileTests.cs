@@ -185,7 +185,7 @@ namespace VirtualClient.Actions
                 $"sudo make",
                 $"wget https://sun.aei.polsl.pl//~sdeor/corpus/silesia.zip",
                 $"sudo unzip silesia.zip -d silesia",
-                $"sudo bash \"/home/user/tools/VirtualClient/scripts/lzbench/lzbenchexecutor.sh\" \"-t16,16 -eall -o4 -r /home/user/tools/VirtualClient/packages/lzbench/silesia\""
+                $"bash \"/home/user/tools/VirtualClient/scripts/lzbench/lzbenchexecutor.sh\" \"-t16,16 -eall -o4 -r /home/user/tools/VirtualClient/packages/lzbench/silesia\" \"/home/user/tools/VirtualClient/temp/lzbench/results-summary.csv\""
             };
         }
     }
