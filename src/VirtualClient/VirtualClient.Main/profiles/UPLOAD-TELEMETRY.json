@@ -3,7 +3,10 @@
     "Parameters": {
         "Format": null,
         "Intrinsic": false,
+        "MatchExpression": null,
+        "Recursive": false,
         "Schema": null,
+        "TargetDirectory": null,
         "TargetFiles": null
     },
     "Dependencies": [
@@ -13,7 +16,10 @@
                 "Scenario": "UploadTelemetry",
                 "Format": "$.Parameters.Format",
                 "Intrinsic": "$.Parameters.Intrinsic",
+                "MatchExpression": "$.Parameters.MatchExpression",
+                "Recursive": "$.Parameters.Recursive",
                 "Schema": "$.Parameters.Schema",
+                "TargetDirectory": "$.Parameters.TargetDirectory",
                 "TargetFiles": "$.Parameters.TargetFiles"
             }
         }

@@ -68,17 +68,27 @@ namespace VirtualClient
         /// </summary>
         public IEnumerable<string> TargetFiles { get; set; }
 
-        /// <summary>
-        /// Executes the telemetry upload operations.
-        /// </summary>
-        /// <param name="args">The arguments provided to the application on the command line.</param>
-        /// <param name="dependencies">Dependencies/services created for the application.</param>
-        /// <param name="cancellationTokenSource">Provides a token that can be used to cancel the command operations.</param>
-        /// <returns>The exit code for the command operations.</returns>
-        protected override async Task<int> ExecuteAsync(string[] args, IServiceCollection dependencies, CancellationTokenSource cancellationTokenSource)
+        /// <inheritdoc/>
+        protected override IEnumerable<string> GetLoggerDefinitions()
+        {
+            List<string> effectiveLoggerProviders = new List<string>();
+            IEnumerable<string> loggerDefinitions = base.GetLoggerDefinitions();
+
+            // To avoid file search conflicts, we remove out any of the default file loggers.
+            foreach (string definition in loggerDefinitions)
+            {
+                if (!string.Equals("file", definition))
+                {
+                    effectiveLoggerProviders.Add(definition);
+                }
+            }
+
+            return effectiveLoggerProviders;
+        }
+
+        protected override void Initialize(string[] args, PlatformSpecifics platformSpecifics)
         {
             this.Validate();
-            int exitCode = 0;
 
             this.Timeout = ProfileTiming.OneIteration();
             this.Profiles = new List<DependencyProfileReference>
@@ -117,28 +127,6 @@ namespace VirtualClient
             {
                 this.Parameters["TargetDirectory"] = this.TargetDirectory;
             }
-
-            exitCode = await base.ExecuteAsync(args, cancellationTokenSource);
-
-            return exitCode;
-        }
-
-        /// <inheritdoc/>
-        protected override IEnumerable<string> GetLoggerDefinitions()
-        {
-            List<string> effectiveLoggerProviders = new List<string>();
-            IEnumerable<string> loggerDefinitions = base.GetLoggerDefinitions();
-
-            // To avoid file search conflicts, we remove out any of the default file loggers.
-            foreach (string definition in loggerDefinitions)
-            {
-                if (!string.Equals("file", definition))
-                {
-                    effectiveLoggerProviders.Add(definition);
-                }
-            }
-
-            return effectiveLoggerProviders;
         }
 
         private void Validate()

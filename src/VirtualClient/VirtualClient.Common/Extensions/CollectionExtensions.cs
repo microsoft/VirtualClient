@@ -229,7 +229,7 @@ namespace VirtualClient.Common.Extensions
 
             if (dictionary.TryGetValue(key, out IConvertible delimitedValue))
             {
-                string[] delimitedValues = delimitedValue.ToString().Split(
+                string[] delimitedValues = delimitedValue?.ToString().Split(
                     delimiters,
                     StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
