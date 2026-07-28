@@ -59,26 +59,10 @@ namespace VirtualClient.Dependencies
                     LinuxDistributionInfo distroInfo = await this.systemManager.GetLinuxDistributionAsync(cancellationToken)
                         .ConfigureAwait(false);
 
-                    telemetryContext.AddContext("linuxDistribution", distroInfo.LinuxDistribution);
+                    telemetryContext.AddContext("linuxDistribution", distroInfo.Distribution);
+                    PlatformSpecifics.ThrowIfNotSupported(distroInfo);
 
-                    switch (distroInfo.LinuxDistribution)
-                    {
-                        case LinuxDistribution.Ubuntu:
-                        case LinuxDistribution.Debian:
-                        case LinuxDistribution.CentOS8:
-                        case LinuxDistribution.CentOS7:
-                        case LinuxDistribution.RHEL7:
-                        case LinuxDistribution.SUSE:
-                            break;
-
-                        default:
-                            // different distro installation to be addded.
-                            throw new WorkloadException(
-                                $"Nvidia Container Toolkit Installation is not supported by Virtual Client on the current Linux distro '{distroInfo.LinuxDistribution}'",
-                                ErrorReason.LinuxDistributionNotSupported);
-                    }
-
-                    await this.NvidiaContainerToolkitInstallationAsync(distroInfo.LinuxDistribution, telemetryContext, cancellationToken)
+                    await this.NvidiaContainerToolkitInstallationAsync(distroInfo.Distribution, telemetryContext, cancellationToken)
                         .ConfigureAwait(false);
 
                     await this.stateManager.SaveStateAsync(nameof(NvidiaContainerToolkitInstallation), new State(), cancellationToken)
@@ -128,19 +112,7 @@ namespace VirtualClient.Dependencies
                     
                     break;
 
-                case LinuxDistribution.CentOS7:
-
-                    setupCommand = "curl -s -L https://nvidia.github.io/libnvidia-container/stable/rpm/nvidia-container-toolkit.repo | \\" +
-                        "  sudo tee /etc/yum.repos.d/nvidia-container-toolkit.repo";
-
-                    commands.Add($"bash -c \"{setupCommand}\"");
-                    commands.Add("yum clean expire-cache");
-                    commands.Add("yum install -y nvidia-container-toolkit");
-                    commands.Add("systemctl restart docker");
-
-                    break;
-
-                case LinuxDistribution.CentOS8:
+                case LinuxDistribution.CentOS:
 
                     setupCommand = "curl -s -L https://nvidia.github.io/libnvidia-container/stable/rpm/nvidia-container-toolkit.repo | \\" +
                        "  sudo tee /etc/yum.repos.d/nvidia-container-toolkit.repo";
@@ -152,7 +124,7 @@ namespace VirtualClient.Dependencies
 
                     break;
 
-                case LinuxDistribution.RHEL7:
+                case LinuxDistribution.RedHat:
 
                     setupCommand = "curl -s -L https://nvidia.github.io/libnvidia-container/stable/rpm/nvidia-container-toolkit.repo | \\" +
                        "  sudo tee /etc/yum.repos.d/nvidia-container-toolkit.repo";
@@ -164,7 +136,7 @@ namespace VirtualClient.Dependencies
 
                     break;
 
-                case LinuxDistribution.SUSE:
+                case LinuxDistribution.OpenSuse:
 
                     setupCommand = "zypper ar https://nvidia.github.io/libnvidia-container/stable/rpm/nvidia-container-toolkit.repo";
 

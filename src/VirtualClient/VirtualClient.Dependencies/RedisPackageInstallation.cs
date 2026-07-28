@@ -87,14 +87,14 @@ namespace VirtualClient.Dependencies
             {
                 LinuxDistributionInfo distroInfo = await this.systemManager.GetLinuxDistributionAsync(cancellationToken);
 
-                switch (distroInfo.LinuxDistribution)
+                switch (distroInfo.Distribution)
                 {
                     case LinuxDistribution.Ubuntu:
                         break;
 
                     default:
                         throw new WorkloadException(
-                            $"Redis installation is not supported by Virtual Client on the current Unix/Linux distro '{distroInfo.LinuxDistribution}'.",
+                            $"Redis installation is not supported by Virtual Client on the current Unix/Linux distro '{distroInfo.Distribution}'.",
                             ErrorReason.LinuxDistributionNotSupported);
                 }
             }
@@ -113,7 +113,7 @@ namespace VirtualClient.Dependencies
             {
                 LinuxDistributionInfo distroInfo = await this.systemManager.GetLinuxDistributionAsync(cancellationToken);
 
-                switch (distroInfo.LinuxDistribution)
+                switch (distroInfo.Distribution)
                 {
                     case LinuxDistribution.Ubuntu:
                     case LinuxDistribution.Debian:

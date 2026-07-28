@@ -221,12 +221,12 @@ namespace VirtualClient.Dependencies
             gccVersion = (string.IsNullOrEmpty(gccVersion)) ? string.Empty : gccVersion;
             string installedVersion = await this.GetInstalledCompilerDumpVersionAsync("gcc", telemetryContext, cancellationToken);
 
-            switch (distro.LinuxDistribution)
+            switch (distro.UpstreamDistribution)
             {
-                case LinuxDistribution.Ubuntu:
-                case LinuxDistribution.Debian:
+                case LinuxUpstreamDistribution.Debian:
                     await this.ExecuteCommandAsync("add-apt-repository", $"ppa:ubuntu-toolchain-r/test -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
                     await this.ExecuteCommandAsync("apt", $"update", Environment.CurrentDirectory, telemetryContext, cancellationToken);
+                    
                     if (string.IsNullOrEmpty(gccVersion) && string.IsNullOrEmpty(installedVersion))
                     {
                         await this.ExecuteCommandAsync("apt", "purge gcc -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
@@ -235,50 +235,49 @@ namespace VirtualClient.Dependencies
                     else if (!string.IsNullOrEmpty(gccVersion))
                     {
                         await this.RemoveAlternativesAsync(telemetryContext, cancellationToken);
-
                         await this.ExecuteCommandAsync("apt", @$"install build-essential gcc-{gccVersion} g++-{gccVersion} gfortran-{gccVersion} -y --quiet", Environment.CurrentDirectory, telemetryContext, cancellationToken);
                         await this.SetGccPriorityAsync(gccVersion, telemetryContext, cancellationToken);
                     }
 
                     break;
 
-                case LinuxDistribution.CentOS8:
-                case LinuxDistribution.RHEL8:
-                    if (string.IsNullOrEmpty(gccVersion) && string.IsNullOrEmpty(installedVersion))
+                case LinuxUpstreamDistribution.Fedora:
+                    if (distro.Distribution == LinuxDistribution.AmazonLinux)
                     {
+                        if (!string.IsNullOrEmpty(gccVersion))
+                        {
+                            throw new Exception($"gcc version must not be supplied for {distro.Distribution}");
+                        }
+
                         await this.ExecuteCommandAsync("dnf", "install kernel-headers kernel-devel -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
                         await this.ExecuteCommandAsync("dnf", "install binutils -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
                         await this.ExecuteCommandAsync("dnf", "install glibc-headers glibc-devel -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
                         await this.ExecuteCommandAsync("dnf", "install git -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
-                        await this.ExecuteCommandAsync("dnf", "install libnsl -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
-                        await this.ExecuteCommandAsync("dnf", "install make gcc -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
+                        await this.ExecuteCommandAsync("dnf", "install gcc gfortran -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
                     }
-                    else if (!string.IsNullOrEmpty(gccVersion) && string.IsNullOrEmpty(installedVersion))
+                    else
                     {
-                        await this.RemoveAlternativesAsync(telemetryContext, cancellationToken);
-                        await this.ExecuteCommandAsync("dnf", @$"install make gcc-toolset-{gccVersion} gcc-toolset-{gccVersion}-gcc-gfortran -y --quiet", Environment.CurrentDirectory, telemetryContext, cancellationToken);
-                        await this.SetGccPriorityAsync(gccVersion, telemetryContext, cancellationToken);
+                        if (string.IsNullOrEmpty(gccVersion) && string.IsNullOrEmpty(installedVersion))
+                        {
+                            await this.ExecuteCommandAsync("dnf", "install kernel-headers kernel-devel -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
+                            await this.ExecuteCommandAsync("dnf", "install binutils -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
+                            await this.ExecuteCommandAsync("dnf", "install glibc-headers glibc-devel -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
+                            await this.ExecuteCommandAsync("dnf", "install git -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
+                            await this.ExecuteCommandAsync("dnf", "install libnsl -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
+                            await this.ExecuteCommandAsync("dnf", "install make gcc -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
+                        }
+                        else if (!string.IsNullOrEmpty(gccVersion) && string.IsNullOrEmpty(installedVersion))
+                        {
+                            await this.RemoveAlternativesAsync(telemetryContext, cancellationToken);
+                            await this.ExecuteCommandAsync("dnf", @$"install make gcc-toolset-{gccVersion} gcc-toolset-{gccVersion}-gcc-gfortran -y --quiet", Environment.CurrentDirectory, telemetryContext, cancellationToken);
+                            await this.SetGccPriorityAsync(gccVersion, telemetryContext, cancellationToken);
+                        }
                     }
-
-                    break;
-
-                case LinuxDistribution.AzLinux:
-                case LinuxDistribution.AwsLinux:
-                    if (!string.IsNullOrEmpty(gccVersion))
-                    {
-                        throw new Exception($"gcc version must not be supplied for {distro.LinuxDistribution}");
-                    }
-
-                    await this.ExecuteCommandAsync("dnf", "install kernel-headers kernel-devel -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
-                    await this.ExecuteCommandAsync("dnf", "install binutils -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
-                    await this.ExecuteCommandAsync("dnf", "install glibc-headers glibc-devel -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
-                    await this.ExecuteCommandAsync("dnf", "install git -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
-                    await this.ExecuteCommandAsync("dnf", "install gcc gfortran -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
 
                     break;
 
                 default:
-                    throw new PlatformNotSupportedException($"This Linux distribution '{distro}' is not supported for this profile.");
+                    throw new PlatformNotSupportedException($"The Linux distribution '{distro}' is not supported for compiler installation.");
             }
         }
 

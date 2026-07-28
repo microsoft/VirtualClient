@@ -106,9 +106,6 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            await this.CheckDistroSupportAsync(telemetryContext, cancellationToken)
-                .ConfigureAwait(false);
-
             Pbzip2State state = await this.stateManager.GetStateAsync<Pbzip2State>($"{nameof(Pbzip2State)}", cancellationToken)
                 ?? new Pbzip2State();
 
@@ -198,33 +195,6 @@ namespace VirtualClient.Actions
                 : this.InputFiles;
 
             return @$"{this.Options} {inputFiles}";
-        }
-
-        private async Task CheckDistroSupportAsync(EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            if (this.Platform == PlatformID.Unix)
-            {
-                var linuxDistributionInfo = await this.systemManager.GetLinuxDistributionAsync(cancellationToken)
-                .ConfigureAwait(false);
-
-                switch (linuxDistributionInfo.LinuxDistribution)
-                {
-                    case LinuxDistribution.Ubuntu:
-                    case LinuxDistribution.Debian:
-                    case LinuxDistribution.CentOS8:
-                    case LinuxDistribution.RHEL8:
-                    case LinuxDistribution.AzLinux:
-                    case LinuxDistribution.CentOS7:
-                    case LinuxDistribution.RHEL7:
-                    case LinuxDistribution.AwsLinux:
-                        break;
-                    default:
-                        throw new WorkloadException(
-                            $"The PBZip2 benchmark workload is not supported on the current Linux distro - " +
-                            $"{linuxDistributionInfo.LinuxDistribution.ToString()} through Virtual Client.",
-                            ErrorReason.LinuxDistributionNotSupported);
-                }
-            }
         }
 
         internal class Pbzip2State : State

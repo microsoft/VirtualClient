@@ -1,0 +1,17 @@
+NAME="Azure Linux"
+VERSION="4.0 (Cloud Variant Beta)"
+RELEASE_TYPE=development
+ID=azurelinux
+ID_LIKE=fedora
+VERSION_ID=4.0
+VERSION_CODENAME=""
+PRETTY_NAME="Azure Linux 4.0 (Cloud Variant Beta)"
+ANSI_COLOR="0;38;2;60;110;180"
+LOGO=azurelinux-logo-icon
+CPE_NAME="cpe:/o:azurelinuxproject:azurelinux:4.0"
+HOME_URL="https://aka.ms/azurelinux"
+DOCUMENTATION_URL="https://aka.ms/azurelinux"
+SUPPORT_URL="https://aka.ms/azurelinux"
+BUG_REPORT_URL="https://aka.ms/azurelinux"
+VARIANT="Cloud Variant"
+VARIANT_ID=cloud

@@ -53,26 +53,26 @@ namespace VirtualClient.Dependencies
             this.ThrowIfPlatformArchitectureIsNotSupported();
             var linuxDistributionInfo = await this.systemManager.GetLinuxDistributionAsync(cancellationToken)
                                                 .ConfigureAwait(false);
-            switch (linuxDistributionInfo.LinuxDistribution)
+            switch (linuxDistributionInfo.Distribution)
             {
                 case LinuxDistribution.Ubuntu:
                 case LinuxDistribution.Debian:
                     await this.InstallDCGMIUbuntuOrDebianAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
                     break;
-                case LinuxDistribution.RHEL8:
-                case LinuxDistribution.CentOS8:
+                case LinuxDistribution.RedHat:
+                case LinuxDistribution.CentOS:
                     await this.InstallDCGMIRHELOrCentOSAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
                     break;
-                case LinuxDistribution.SUSE:
+                case LinuxDistribution.OpenSuse:
                     await this.InstallDCGMISUSEAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
                     break;
                 default:
                     throw new WorkloadException(
                                 $"The DCGMI monitor is not supported on the current Linux distro - " +
-                                $"{linuxDistributionInfo.LinuxDistribution.ToString()}.  Supported distros include:" +
+                                $"{linuxDistributionInfo.Distribution.ToString()}.  Supported distros include:" +
                                 $"{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.Ubuntu)},{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.Debian)}" +
-                                $"{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.CentOS8)},{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.RHEL8)}" +
-                                $"{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.SUSE)}",
+                                $"{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.CentOS)},{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.RedHat)}" +
+                                $"{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.OpenSuse)}",
                                 ErrorReason.LinuxDistributionNotSupported);
             }
         }

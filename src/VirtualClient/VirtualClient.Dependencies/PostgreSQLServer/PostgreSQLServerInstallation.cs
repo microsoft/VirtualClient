@@ -84,7 +84,7 @@ namespace VirtualClient.Dependencies
             {
                 LinuxDistributionInfo distroInfo = await this.SystemManager.GetLinuxDistributionAsync(cancellationToken);
 
-                switch (distroInfo.LinuxDistribution)
+                switch (distroInfo.Distribution)
                 {
                     case LinuxDistribution.Ubuntu:
                     case LinuxDistribution.Debian:
@@ -92,7 +92,7 @@ namespace VirtualClient.Dependencies
 
                     default:
                         throw new WorkloadException(
-                            $"PostgreSQL installation is not supported by Virtual Client on the current Unix/Linux distro '{distroInfo.LinuxDistribution}'.",
+                            $"PostgreSQL installation is not supported by Virtual Client on the current Unix/Linux distro '{distroInfo.Distribution}'.",
                             ErrorReason.LinuxDistributionNotSupported);
                 }
             }

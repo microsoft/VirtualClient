@@ -139,19 +139,21 @@ namespace VirtualClient
 
             try
             {
-                string osReleaseFile = await this.FileSystem.File.ReadAllTextAsync("/etc/os-release", cancellationToken).ConfigureAwait(false);
-                OsReleaseFileParser parser = new OsReleaseFileParser(osReleaseFile);
-                result = parser.Parse();
+                string osReleaseFile = await this.FileSystem.File.ReadAllTextAsync("/etc/os-release", cancellationToken);
+                result = LinuxDistributionInfo.Create(osReleaseFile);
             }
             catch
             {
                 using (IProcessProxy process = this.ProcessManager.CreateElevatedProcess(PlatformID.Unix, "hostnamectl", string.Empty, Environment.CurrentDirectory))
                 {
                     await process.StartAndWaitAsync(cancellationToken);
-                    process.ThrowIfErrored<ProcessException>(ProcessProxy.DefaultSuccessCodes, "hostnamectl failed.", errorReason: ErrorReason.LinuxDistributionNotSupported);
-                    HostnamectlParser parser = new HostnamectlParser(process.StandardOutput.ToString());
 
-                    result = parser.Parse();
+                    process.ThrowIfErrored<ProcessException>(
+                        ProcessProxy.DefaultSuccessCodes, 
+                        "Unable to determine Linux distribution.", 
+                        errorReason: ErrorReason.LinuxDistributionNotSupported);
+
+                    result = LinuxDistributionInfo.Create(process.StandardOutput.ToString());
                 }
             }
 

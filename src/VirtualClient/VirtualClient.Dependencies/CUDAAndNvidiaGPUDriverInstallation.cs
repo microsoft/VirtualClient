@@ -180,29 +180,12 @@ namespace VirtualClient.Dependencies
             {
                 if (this.Platform == PlatformID.Unix)
                 {
-                    LinuxDistributionInfo linuxDistributionInfo = await this.systemManager.GetLinuxDistributionAsync(cancellationToken)
-                        .ConfigureAwait(false);
+                    LinuxDistributionInfo linuxDistributionInfo = await this.systemManager.GetLinuxDistributionAsync(cancellationToken);
 
-                    telemetryContext.AddContext("LinuxDistribution", linuxDistributionInfo.LinuxDistribution);
+                    telemetryContext.AddContext("LinuxDistribution", linuxDistributionInfo.Distribution);
+                    PlatformSpecifics.ThrowIfNotSupported(linuxDistributionInfo);
 
-                    switch (linuxDistributionInfo.LinuxDistribution)
-                    {
-                        case LinuxDistribution.Ubuntu:
-                        case LinuxDistribution.Debian:
-                        case LinuxDistribution.CentOS7:
-                        case LinuxDistribution.RHEL7:
-                        case LinuxDistribution.RHEL8:
-                        case LinuxDistribution.SUSE:
-                            break;
-
-                        default:
-                            // different distro installation to be addded.
-                            throw new WorkloadException(
-                                $"CUDA and Nvidia GPU driver installation is not supported by Virtual Client on the current Linux distro '{linuxDistributionInfo.LinuxDistribution}'.",
-                                ErrorReason.LinuxDistributionNotSupported);
-                    }
-
-                    await this.InstallCudaAndDriversAsync(linuxDistributionInfo.LinuxDistribution, telemetryContext, cancellationToken)
+                    await this.InstallCudaAndDriversAsync(linuxDistributionInfo.Distribution, telemetryContext, cancellationToken)
                         .ConfigureAwait(false);
 
                     await this.stateManager.SaveStateAsync(nameof(CudaAndNvidiaGPUDriverInstallation), new State(), cancellationToken)
@@ -311,16 +294,7 @@ namespace VirtualClient.Dependencies
 
                     break;
 
-                case LinuxDistribution.RHEL7:
-                case LinuxDistribution.CentOS7:
-
-                    commands.Add($"bash -c \"yum remove \"cuda*\" \"*cublas*\" \"*cufft*\" \"*cufile*\" \"*curand*\"" +
-                        $" \"*cusolver*\" \"*cusparse*\" \"*gds-tools*\" \"*npp*\" \"*nvjpeg*\" \"nsight*\" 2>/dev/null || true\"");
-                    commands.Add("bash -c \"yum remove \"*nvidia*\" 2>/dev/null || true\"");
-
-                    break;
-
-                case LinuxDistribution.RHEL8:
+                case LinuxDistribution.RedHat:
 
                     commands.Add($"bash -c \"dnf remove \"cuda*\" \"*cublas*\" \"*cufft*\" \"*cufile*\" \"*curand*\" " +
                         $"\"*cusolver*\" \"*cusparse*\" \"*gds-tools*\" \"*npp*\" \"*nvjpeg*\" \"nsight*\" 2>/dev/null || true\"");
@@ -329,7 +303,7 @@ namespace VirtualClient.Dependencies
 
                     break;
 
-                case LinuxDistribution.SUSE:
+                case LinuxDistribution.OpenSuse:
 
                     commands.Add($"bash -c \"zypper remove \"cuda*\" \"*cublas*\" \"*cufft*\" \"*cufile*\" \"*curand*\"" +
                         $" \"*cusolver*\" \"*cusparse*\" \"*gds-tools*\" \"*npp*\" \"*nvjpeg*\" \"nsight*\" 2>/dev/null || true\"");
@@ -354,14 +328,12 @@ namespace VirtualClient.Dependencies
                     commands.Add("apt install build-essential -yq");
                     break;
 
-                case LinuxDistribution.CentOS7:
-                case LinuxDistribution.CentOS8:
-                case LinuxDistribution.RHEL7:
-                    commands.Add("yum check-update");
+                case LinuxDistribution.CentOS:
+                case LinuxDistribution.RedHat:
                     commands.Add("dnf install make automake gcc gcc-c++ kernel-devel");
                     break;
 
-                case LinuxDistribution.SUSE:
+                case LinuxDistribution.OpenSuse:
                     commands.Add("zypper refresh");
                     commands.Add("zypper info -t pattern devel_basis");
                     commands.Add("sudo zypper install -t pattern devel_basis");
@@ -400,13 +372,12 @@ namespace VirtualClient.Dependencies
 
                     break;
 
-                case LinuxDistribution.CentOS7:
-                case LinuxDistribution.CentOS8:
-                case LinuxDistribution.RHEL7:
+                case LinuxDistribution.CentOS:
+                case LinuxDistribution.RedHat:
                     commands.Add($"dnf module install nvidia-driver:{this.LinuxDriverVersion}/fm");
                     break;
 
-                case LinuxDistribution.SUSE:
+                case LinuxDistribution.OpenSuse:
                     commands.Add($"zypper install cuda-drivers-fabricmanager-{this.LinuxDriverVersion}");
                     break;
             }

@@ -49,27 +49,6 @@ namespace VirtualClient.Actions
             this.fixture.FileSystem.Setup(fe => fe.Directory.Exists(It.IsAny<string>())).Returns(true);
         }
 
-        [Test]
-        public void MemcachedMemtierExecutorThrowsOnUnsupportedDistroAsync()
-        {
-            this.SetupDefaultMockBehavior(PlatformID.Unix);
-
-            LinuxDistributionInfo mockInfo = new LinuxDistributionInfo()
-            {
-                OperationSystemFullName = "TestUbuntu",
-                LinuxDistribution = LinuxDistribution.SUSE
-            };
-            this.fixture.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>())).ReturnsAsync(mockInfo);
-
-            using (var memcachedMemtierExecutor = new TestMemcachedMemtierExecutor(this.fixture.Dependencies, this.fixture.Parameters))
-            {
-                WorkloadException exception = Assert.ThrowsAsync<WorkloadException>(
-                    () => memcachedMemtierExecutor.ExecuteAsync(CancellationToken.None));
-
-                Assert.AreEqual(ErrorReason.LinuxDistributionNotSupported, exception.Reason);
-            }
-        }
-
         private void SetupDefaultMockBehavior(PlatformID platformID)
         {
             this.fixture.Setup(platformID);

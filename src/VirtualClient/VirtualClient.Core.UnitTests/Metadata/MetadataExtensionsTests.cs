@@ -175,8 +175,8 @@ namespace VirtualClient.Metadata
             this.mockFixture.SystemManagement.Setup(mgmt => mgmt.GetLinuxDistributionAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new LinuxDistributionInfo
                 {
-                    LinuxDistribution = LinuxDistribution.Ubuntu,
-                    OperationSystemFullName = "Ubuntu 20.01 build 1234"
+                    Distribution = LinuxDistribution.Ubuntu,
+                    Name = "Ubuntu 20.01 build 1234"
                 });
 
             IDictionary<string, object> metadata = await mockFixture.SystemManagement.Object.GetHostMetadataAsync();

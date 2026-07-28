@@ -69,7 +69,7 @@ namespace VirtualClient.Dependencies
                 LinuxDistributionInfo distroInfo = await this.systemManager.GetLinuxDistributionAsync(cancellationToken)
                     .ConfigureAwait(false);
 
-                switch (distroInfo.LinuxDistribution)
+                switch (distroInfo.Distribution)
                 {
                     case LinuxDistribution.Ubuntu:
                         if (this.Version != string.Empty)
@@ -90,7 +90,7 @@ namespace VirtualClient.Dependencies
                     default:
                         // different distro installation to be addded.
                         throw new WorkloadException(
-                            $"Docker Installtion is not supported on the current Linux distro - {distroInfo.LinuxDistribution.ToString()}.  through VC " +
+                            $"Docker Installtion is not supported on the current Linux distro - {distroInfo.Distribution.ToString()}.  through VC " +
                             $" Supported distros include:" +
                             $" Ubuntu ",
                             ErrorReason.LinuxDistributionNotSupported);
@@ -119,7 +119,7 @@ namespace VirtualClient.Dependencies
             LinuxDistributionInfo distroInfo = await this.systemManager.GetLinuxDistributionAsync(cancellationToken)
                 .ConfigureAwait(false);
 
-            switch (distroInfo.LinuxDistribution)
+            switch (distroInfo.Distribution)
             {
                 case LinuxDistribution.Ubuntu:
                     await this.DockerInstallInUbuntuAsync(telemetryContext, cancellationToken)

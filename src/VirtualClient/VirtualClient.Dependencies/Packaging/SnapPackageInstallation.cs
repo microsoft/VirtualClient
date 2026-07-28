@@ -144,13 +144,13 @@ namespace VirtualClient.Dependencies
 
             // for ubuntu, debian, centos8, rhel8, etc. no socket enabling needed
 
-            switch (linuxDistributionInfo.LinuxDistribution)
+            switch (linuxDistributionInfo.Distribution)
             {
-                case LinuxDistribution.CentOS7:
-                case LinuxDistribution.RHEL7:
+                case LinuxDistribution.CentOS:
+                case LinuxDistribution.RedHat:
                     await this.ExecuteCommandAsync(SnapPackageInstallation.SystemCtlCommand, $"enable --now snapd.socket", Environment.CurrentDirectory, telemetryContext, cancellationToken).ConfigureAwait(false);
                     break;
-                case LinuxDistribution.SUSE:
+                case LinuxDistribution.OpenSuse:
                     await this.ExecuteCommandAsync(SnapPackageInstallation.SystemCtlCommand, $"enable --now snapd", Environment.CurrentDirectory, telemetryContext, cancellationToken).ConfigureAwait(false);
                     await this.ExecuteCommandAsync(SnapPackageInstallation.SystemCtlCommand, $"enable --now snapd.apparmor", Environment.CurrentDirectory, telemetryContext, cancellationToken).ConfigureAwait(false);
                     break;

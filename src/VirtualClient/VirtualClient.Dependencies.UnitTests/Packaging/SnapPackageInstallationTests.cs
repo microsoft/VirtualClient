@@ -239,11 +239,11 @@ namespace VirtualClient.Dependencies
         {
             LinuxDistributionInfo mockInfo = new LinuxDistributionInfo()
             {
-                OperationSystemFullName = "TestCentOS7",
-                LinuxDistribution = LinuxDistribution.CentOS7
+                Name = "TestCentOS7",
+                Distribution = LinuxDistribution.CentOS
             };
-            this.mockFixture.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>())).ReturnsAsync(mockInfo);
 
+            this.mockFixture.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>())).ReturnsAsync(mockInfo);
             this.mockFixture.FileSystem.SetupGet(fs => fs.File).Returns(this.mockFixture.File.Object);
 
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
@@ -296,8 +296,8 @@ namespace VirtualClient.Dependencies
         {
             LinuxDistributionInfo mockInfo = new LinuxDistributionInfo()
             {
-                OperationSystemFullName = "TestSUSE",
-                LinuxDistribution = LinuxDistribution.SUSE
+                Name = "TestSUSE",
+                Distribution = LinuxDistribution.OpenSuse
             };
             this.mockFixture.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>())).ReturnsAsync(mockInfo);
 

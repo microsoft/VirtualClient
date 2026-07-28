@@ -53,24 +53,6 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public void NASParallelBenchExecutorThrowsOnUnsupportedLinuxDistro()
-        {
-            this.SetupTest(PlatformID.Unix);
-
-            using (TestNASParallelBenchExecutor NASParallelBenchExecutor = new TestNASParallelBenchExecutor(this.fixture.Dependencies, this.fixture.Parameters))
-            {
-                LinuxDistributionInfo mockInfo = new LinuxDistributionInfo()
-                {
-                    OperationSystemFullName = "TestOS",
-                    LinuxDistribution = LinuxDistribution.CentOS7
-                };
-                this.fixture.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>())).ReturnsAsync(mockInfo);
-                var workloadException = Assert.ThrowsAsync<WorkloadException>(() => NASParallelBenchExecutor.ExecuteAsync(CancellationToken.None));
-                Assert.IsTrue(workloadException.Reason == ErrorReason.LinuxDistributionNotSupported);
-            }
-        }
-
-        [Test]
         public async Task NASParallelBenchExecutorRunsExpectedCommandForBuild()
         {
             this.SetupTest(PlatformID.Unix);

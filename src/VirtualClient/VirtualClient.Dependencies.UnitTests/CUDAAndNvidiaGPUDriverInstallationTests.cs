@@ -60,22 +60,6 @@ namespace VirtualClient.Dependencies
         }
 
         [Test]
-        public void CUDAAndNvidiaGPUDriverInstallationDependencyThrowsForUnsupportedDistros()
-        {
-            LinuxDistributionInfo mockInfo = new LinuxDistributionInfo()
-            {
-                OperationSystemFullName = "TestCentOS7",
-                LinuxDistribution = LinuxDistribution.Flatcar
-            };
-
-            this.SetupDefaultMockBehavior(PlatformID.Unix);
-            this.fixture.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>())).ReturnsAsync(mockInfo);          
-
-            WorkloadException exc = Assert.ThrowsAsync<WorkloadException>(() => this.component.ExecuteAsync(CancellationToken.None));
-            Assert.AreEqual(ErrorReason.LinuxDistributionNotSupported, exc.Reason);
-        }
-
-        [Test]
         public async Task CUDAAndNvidiaGPUDriverInstallationDependencyStartsCorrectProcessesOnExecuteWithOpenSourceDriver()
         {
             this.SetupDefaultMockBehavior(PlatformID.Unix, openSourceDriver: true);

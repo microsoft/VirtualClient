@@ -57,7 +57,7 @@ namespace VirtualClient.Dependencies
             LinuxDistributionInfo linuxDistroInfo = await this.SystemManager.GetLinuxDistributionAsync(cancellationToken)
                 .ConfigureAwait(false);
 
-            if (linuxDistroInfo.LinuxDistribution == LinuxDistribution.Ubuntu)
+            if (linuxDistroInfo.Distribution == LinuxDistribution.Ubuntu)
             {
                 List<string> installationCommands = new List<string>();
 
@@ -83,7 +83,7 @@ namespace VirtualClient.Dependencies
             else
             {
                 throw new DependencyException(
-                    $"Linux distrubution {linuxDistroInfo.LinuxDistribution.ToString()} is not supported with OpenFOAM.",
+                    $"Linux distrubution {linuxDistroInfo.Distribution.ToString()} is not supported with OpenFOAM.",
                     ErrorReason.LinuxDistributionNotSupported);
             }
         }

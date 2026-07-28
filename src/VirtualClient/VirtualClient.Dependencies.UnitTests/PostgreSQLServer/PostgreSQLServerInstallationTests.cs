@@ -58,8 +58,8 @@ namespace VirtualClient.Dependencies
 
             LinuxDistributionInfo mockInfo = new LinuxDistributionInfo()
             {
-                OperationSystemFullName = "TestUbuntu",
-                LinuxDistribution = LinuxDistribution.SUSE
+                Name = "TestUbuntu",
+                Distribution = LinuxDistribution.OpenSuse
             };
 
             this.mockFixture.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>()))

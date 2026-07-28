@@ -587,14 +587,14 @@ namespace VirtualClient.Actions
                 LinuxDistributionInfo distroInfo = await this.SystemManager.GetLinuxDistributionAsync(cancellationToken)
                     .ConfigureAwait();
 
-                switch (distroInfo.LinuxDistribution)
+                switch (distroInfo.Distribution)
                 {
                     case LinuxDistribution.Ubuntu:
                         break;
                     default:
                         throw new WorkloadException(
                             $"The DeathStarBench benchmark workload is not supported by Virtual Client on the current Linux distro " +
-                            $"'{distroInfo.LinuxDistribution}'.",
+                            $"'{distroInfo.Distribution}'.",
                             ErrorReason.LinuxDistributionNotSupported);
                 }
             }

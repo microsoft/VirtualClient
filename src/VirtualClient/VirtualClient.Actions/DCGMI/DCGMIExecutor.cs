@@ -144,20 +144,20 @@ namespace VirtualClient.Actions
         {
             var linuxDistributionInfo = await this.systemManagement.GetLinuxDistributionAsync(cancellationToken);
 
-            telemetryContext.AddContext("LinuxDistribution", linuxDistributionInfo.LinuxDistribution);
+            telemetryContext.AddContext("LinuxDistribution", linuxDistributionInfo.Distribution);
 
-            switch (linuxDistributionInfo.LinuxDistribution)
+            switch (linuxDistributionInfo.Distribution)
             {
                 case LinuxDistribution.Ubuntu:
                 case LinuxDistribution.Debian:
-                case LinuxDistribution.CentOS8:
-                case LinuxDistribution.RHEL8:
-                case LinuxDistribution.SUSE:
+                case LinuxDistribution.CentOS:
+                case LinuxDistribution.RedHat:
+                case LinuxDistribution.OpenSuse:
                     break;
 
                 default:
                     throw new WorkloadException(
-                        $"{nameof(DCGMIExecutor)} is not supported on the current Linux distro - {linuxDistributionInfo.LinuxDistribution.ToString()}.  through VC " +
+                        $"{nameof(DCGMIExecutor)} is not supported on the current Linux distro - {linuxDistributionInfo.Distribution.ToString()}.  through VC " +
                         $" Supported distros include:" +
                         $" Ubuntu, Debian, CentOS8, RHEL8, SUSE",
                         ErrorReason.LinuxDistributionNotSupported);
