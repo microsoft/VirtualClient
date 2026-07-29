@@ -13,10 +13,12 @@ namespace VirtualClient.Contracts
     [Category("Unit")]
     internal class LscpuParserTests
     {
+        private static readonly string ExamplesDirectory = MockFixture.GetDirectory(typeof(LscpuParserTests), "TestResources", "Unix", "lscpu");
+
         [Test]
         public void LscpuParserParsesTheExpectedResultsFromIntelSystems_Scenario1()
         {
-            string results = File.ReadAllText(MockFixture.GetDirectory(typeof(LscpuParserTests), "Examples", "lscpu", "lscpu_results_intel_1.txt"));
+            string results = File.ReadAllText(Path.Combine(ExamplesDirectory, "lscpu_results_intel_1.txt"));
             LscpuParser parser = new LscpuParser(results);
             CpuInfo info = parser.Parse();
 
@@ -56,7 +58,7 @@ namespace VirtualClient.Contracts
         [Test]
         public void LscpuParserParsesTheExpectedResultsFromIntelSystems_Scenario2()
         {
-            string results = File.ReadAllText(MockFixture.GetDirectory(typeof(LscpuParserTests), "Examples", "lscpu", "lscpu_results_intel_2.txt"));
+            string results = File.ReadAllText(Path.Combine(ExamplesDirectory, "lscpu_results_intel_2.txt"));
             LscpuParser parser = new LscpuParser(results);
             CpuInfo info = parser.Parse();
 
@@ -96,7 +98,7 @@ namespace VirtualClient.Contracts
         [Test]
         public void LscpuParserParsesTheExpectedResultsFromAmpereSystems_Scenario1()
         {
-            string results = File.ReadAllText(MockFixture.GetDirectory(typeof(LscpuParserTests), "Examples", "lscpu", "lscpu_results_ampere_1.txt"));
+            string results = File.ReadAllText(Path.Combine(ExamplesDirectory, "lscpu_results_ampere_1.txt"));
             LscpuParser parser = new LscpuParser(results);
             CpuInfo info = parser.Parse();
 
@@ -135,7 +137,7 @@ namespace VirtualClient.Contracts
         [Test]
         public void LscpuParserParsesTheExpectedResultsFromAmpereSystems_Scenario2()
         {
-            string results = File.ReadAllText(MockFixture.GetDirectory(typeof(LscpuParserTests), "Examples", "lscpu", "lscpu_results_ampere_2.txt"));
+            string results = File.ReadAllText(Path.Combine(ExamplesDirectory, "lscpu_results_ampere_2.txt"));
             LscpuParser parser = new LscpuParser(results);
             CpuInfo info = parser.Parse();
 
@@ -174,7 +176,7 @@ namespace VirtualClient.Contracts
         [Test]
         public void LscpuParserParsesTheExpectedResultsFromAWSSystems_Scenario3()
         {
-            string results = File.ReadAllText(MockFixture.GetDirectory(typeof(LscpuParserTests), "Examples", "lscpu", "lscpu_results_intel_3.txt"));
+            string results = File.ReadAllText(Path.Combine(ExamplesDirectory, "lscpu_results_intel_3.txt"));
             LscpuParser parser = new LscpuParser(results);
             CpuInfo info = parser.Parse();
 
@@ -213,7 +215,7 @@ namespace VirtualClient.Contracts
         [Test]
         public void LscpuParserParsesTheExpectedResultsIntelLabSystems_Scenario4()
         {
-            string results = File.ReadAllText(MockFixture.GetDirectory(typeof(LscpuParserTests), "Examples", "lscpu", "lscpu_results_intel_4.txt"));
+            string results = File.ReadAllText(Path.Combine(ExamplesDirectory, "lscpu_results_intel_4.txt"));
             LscpuParser parser = new LscpuParser(results);
             CpuInfo info = parser.Parse();
 

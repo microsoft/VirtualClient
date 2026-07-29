@@ -397,7 +397,7 @@ namespace VirtualClient.Actions
 
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        switch (linuxDistributionInfo.LinuxDistribution)
+                        switch (linuxDistributionInfo.Distribution)
                         {
                             case LinuxDistribution.Ubuntu:
                             case LinuxDistribution.Debian:
@@ -405,7 +405,7 @@ namespace VirtualClient.Actions
                             default:
                                 throw new WorkloadException(
                                 $"The HammerDB workload generator is not supported on the current Linux distro - " +
-                                $"{linuxDistributionInfo.LinuxDistribution}. Supported distros include:" +
+                                $"{linuxDistributionInfo.Distribution}. Supported distros include:" +
                                 $"{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.Ubuntu)}," +
                                 $"{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.Debian)}",
                                 ErrorReason.LinuxDistributionNotSupported);

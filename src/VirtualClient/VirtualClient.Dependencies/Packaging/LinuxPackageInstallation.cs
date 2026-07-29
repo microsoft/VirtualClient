@@ -51,8 +51,8 @@ namespace VirtualClient.Dependencies
         {
             get
             {
-                // example: Repositories-Ubuntu, Repository-RHEL8
-                return this.Parameters.GetValue<string>($"Repositories-{this.linuxDistroInfo.LinuxDistribution.ToString()}", string.Empty);
+                // example: Repositories-Ubuntu, Repository-RedHat
+                return this.Parameters.GetValue<string>($"Repositories-{this.linuxDistroInfo.Distribution.ToString()}", string.Empty);
             }
         }
 
@@ -64,7 +64,7 @@ namespace VirtualClient.Dependencies
             get
             {
                 // example: Packages-Ubuntu
-                return this.Parameters.GetValue<string>($"Packages-{this.linuxDistroInfo.LinuxDistribution.ToString()}", string.Empty);
+                return this.Parameters.GetValue<string>($"Packages-{this.linuxDistroInfo.Distribution.ToString()}", string.Empty);
             }
         }
 
@@ -183,54 +183,50 @@ namespace VirtualClient.Dependencies
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            if (this.Platform == PlatformID.Unix)
+            this.linuxDistroInfo = await this.systemManagement.GetLinuxDistributionAsync(cancellationToken);
+            telemetryContext.AddContext("linuxDistribution", this.linuxDistroInfo);
+
+            VirtualClientComponent installer;
+            switch (this.linuxDistroInfo.UpstreamDistribution)
             {
-                this.linuxDistroInfo = await this.systemManagement.GetLinuxDistributionAsync(cancellationToken).ConfigureAwait(false);
-                
-                telemetryContext.AddContext("LinuxDistribution", this.linuxDistroInfo.LinuxDistribution.ToString());
+                case LinuxUpstreamDistribution.Gentoo:
+                    this.Logger.LogMessage(
+                        $"Linux distribution '{this.linuxDistroInfo.Name}' does not have a package manager. Skipping package installation.",
+                        telemetryContext);
+                    return;
 
-                VirtualClientComponent installer;
-                switch (this.linuxDistroInfo.LinuxDistribution)
-                {
-                    case LinuxDistribution.Ubuntu:
-                    case LinuxDistribution.Debian:
-                        installer = this.InstantiateAptInstaller();
-                        break;
+                case LinuxUpstreamDistribution.Debian:
+                    installer = this.InstantiateAptInstaller();
+                    break;
 
-                    case LinuxDistribution.CentOS8:
-                    case LinuxDistribution.RHEL8:
-                    case LinuxDistribution.AzLinux:
-                    case LinuxDistribution.AwsLinux:
-                        installer = this.InstantiateDnfInstaller();
-                        break;
+                case LinuxUpstreamDistribution.Fedora:
+                    installer = this.InstantiateDnfInstaller();
+                    break;
 
-                    case LinuxDistribution.CentOS7:
-                    case LinuxDistribution.RHEL7:
-                        installer = this.InstantiateYumInstaller();
-                        break;
+                case LinuxUpstreamDistribution.OpenSuse:
+                    installer = this.InstantiateZypperInstaller();
+                    break;
 
-                    case LinuxDistribution.SUSE:
-                        installer = this.InstantiateZypperInstaller();
-                        break;
-
-                    case LinuxDistribution.Flatcar:
-                        throw new DependencyException(
-                            $"You are on Linux distrubution {this.linuxDistroInfo.LinuxDistribution.ToString()}, which does not have a package manager.",
-                            ErrorReason.LinuxDistributionNotSupported);
-
-                    default:
-                        throw new DependencyException(
-                            $"You are on Linux distrubution {this.linuxDistroInfo.LinuxDistribution.ToString()}, which has not been onboarded to VirtualClient.",
-                            ErrorReason.LinuxDistributionNotSupported);
-                }
-
-                if (!string.IsNullOrWhiteSpace(installer.Parameters.GetValue<string>("Packages", string.Empty))
-                    || !string.IsNullOrWhiteSpace(installer.Parameters.GetValue<string>("Repositories", string.Empty)))
-                {
-                    await this.InstallPackageAsync(installer, cancellationToken).ConfigureAwait(false);
-                }
-                
+                default:
+                    throw new DependencyException(
+                        $"You are on Linux distribution '{this.linuxDistroInfo.Distribution.ToString()}', which has not been onboarded to VirtualClient.",
+                        ErrorReason.LinuxDistributionNotSupported);
             }
+
+            if (!string.IsNullOrWhiteSpace(installer.Parameters.GetValue<string>("Packages", string.Empty))
+                || !string.IsNullOrWhiteSpace(installer.Parameters.GetValue<string>("Repositories", string.Empty)))
+            {
+                await this.InstallPackageAsync(installer, cancellationToken);
+            }
+        }
+
+        /// <summary>
+        /// Initializes the component before execution.
+        /// </summary>
+        protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            this.linuxDistroInfo = await this.systemManagement.GetLinuxDistributionAsync(cancellationToken);
+            telemetryContext.AddContext("linuxDistribution", this.linuxDistroInfo);
         }
 
         /// <summary>

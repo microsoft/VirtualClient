@@ -105,7 +105,7 @@ namespace VirtualClient.Dependencies.MySqlServer
 
                 LinuxDistributionInfo distributionInfo = await this.SystemManager.GetLinuxDistributionAsync(cancellationToken)
                     .ConfigureAwait(false);
-                string distribution = distributionInfo.LinuxDistribution.ToString();
+                string distribution = distributionInfo.Distribution.ToString();
 
                 string arguments = $"{packageDirectory}/install.py --distro {distribution}";
 

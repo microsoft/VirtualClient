@@ -591,11 +591,13 @@ namespace VirtualClient
 
             LinuxDistributionInfo mockInfo = new LinuxDistributionInfo()
             {
-                OperationSystemFullName = "TestUbuntu",
-                LinuxDistribution = LinuxDistribution.Ubuntu
+                Name = "TestUbuntu",
+                Distribution = LinuxDistribution.Ubuntu,
+                UpstreamDistribution = LinuxUpstreamDistribution.Debian
             };
 
-            this.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>())).ReturnsAsync(mockInfo);
+            this.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(mockInfo);
 
             this.SystemManagement.Setup(sm => sm.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new CpuInfo(

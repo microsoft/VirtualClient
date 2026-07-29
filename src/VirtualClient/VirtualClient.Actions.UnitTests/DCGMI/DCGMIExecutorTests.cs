@@ -54,8 +54,8 @@ namespace VirtualClient.Actions
             this.Parameters.Add("Subsystem", subsystem);
             LinuxDistributionInfo mockInfo = new LinuxDistributionInfo()
             {
-                OperationSystemFullName = "TestUbuntu",
-                LinuxDistribution = LinuxDistribution.Ubuntu
+                Name = "TestUbuntu",
+                Distribution = LinuxDistribution.Ubuntu
             };
             this.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>())).ReturnsAsync(mockInfo);
 

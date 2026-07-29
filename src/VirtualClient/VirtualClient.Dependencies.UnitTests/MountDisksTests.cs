@@ -266,6 +266,110 @@ namespace VirtualClient.Dependencies
             }
         }
 
+        [Test]
+        public async Task MountDisksSkipsReservedPartitionsThatCannotBeMountedOnWindows()
+        {
+            this.mockFixture.Setup(PlatformID.Win32NT);
+
+            // A real, mountable data volume (has a volume index + drive letter) with no access path yet.
+            DiskVolume dataVolume = this.mockFixture.CreateDiskVolume(1, @"D:\", PlatformID.Win32NT, os: false, lun: 0);
+            dataVolume.AccessPaths = new List<string>();
+
+            // A reserved/hidden partition with no mountable identity.
+            DiskVolume reservedVolume = new DiskVolume(
+                index: null,
+                devicePath: string.Empty,
+                accessPaths: new List<string>(),
+                properties: new Dictionary<string, IConvertible>
+                {
+                    { "Type", "e3c9e316-0b5c-4db8-817d-f92df00215ae" },
+                    { "PartitionIndex", "1" },
+                    { "Hidden", "Yes" },
+                    { "Required", "No" }
+                });
+
+            Disk dataDisk = new Disk(
+                1,
+                @"\\.\PHYSICALDISK1",
+                new List<DiskVolume> { reservedVolume, dataVolume },
+                properties: new Dictionary<string, IConvertible> { { "Index", 1 } });
+
+            Disk osDisk = this.mockFixture.CreateDisk(0, PlatformID.Win32NT, os: true, @"\\.\PHYSICALDISK0", @"C:\");
+
+            this.mockFixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new List<Disk> { osDisk, dataDisk });
+            this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>())).Returns(true);
+            this.mockFixture.Directory.Setup(d => d.Exists(It.IsAny<string>())).Returns(true);
+
+            using (MountDisks diskMounter = new MountDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                await diskMounter.ExecuteAsync(CancellationToken.None);
+
+                // The reserved partition must never be handed to the disk manager for mounting.
+                this.mockFixture.DiskManager.Verify(
+                    mgr => mgr.CreateMountPointAsync(reservedVolume, It.IsAny<string>(), It.IsAny<CancellationToken>()),
+                    Times.Never);
+
+                // The real data volume must still be mounted exactly once.
+                string expectedMountPoint = this.mockFixture.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                    dataVolume.GetDefaultMountPointName());
+
+                this.mockFixture.DiskManager.Verify(
+                    mgr => mgr.CreateMountPointAsync(dataVolume, expectedMountPoint, It.IsAny<CancellationToken>()),
+                    Times.Once);
+            }
+        }
+
+        [Test]
+        public async Task MountDisksSkipsPartitionsWithoutADevicePathOnUnix()
+        {
+            // On Unix, a mount requires a device path (e.g. /dev/sdc1). A partition without one
+            // has no mountable identity and must be skipped rather than passed to the disk manager.
+            this.mockFixture.Setup(PlatformID.Unix);
+
+            // A real, mountable data volume (has a device path) with no access path yet.
+            DiskVolume dataVolume = this.mockFixture.CreateDiskVolume(1, "/dev/sdc1", PlatformID.Unix, os: false, lun: 0);
+            dataVolume.AccessPaths = new List<string>();
+
+            // A partition with no device path (nothing to mount).
+            DiskVolume reservedVolume = new DiskVolume(
+                index: null,
+                devicePath: string.Empty,
+                accessPaths: new List<string>(),
+                properties: new Dictionary<string, IConvertible> { { "name", "reserved" } });
+
+            Disk dataDisk = new Disk(
+                1,
+                "/dev/sdc",
+                new List<DiskVolume> { reservedVolume, dataVolume },
+                properties: new Dictionary<string, IConvertible> { { "logicalname", "/dev/sdc" } });
+
+            Disk osDisk = this.mockFixture.CreateDisk(0, PlatformID.Unix, os: true, "/dev/sda", "/dev/sda1");
+
+            this.mockFixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new List<Disk> { osDisk, dataDisk });
+            this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>())).Returns(true);
+            this.mockFixture.Directory.Setup(d => d.Exists(It.IsAny<string>())).Returns(true);
+
+            using (MountDisks diskMounter = new MountDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                await diskMounter.ExecuteAsync(CancellationToken.None);
+
+                // The partition without a device path must never be handed to the disk manager.
+                this.mockFixture.DiskManager.Verify(
+                    mgr => mgr.CreateMountPointAsync(reservedVolume, It.IsAny<string>(), It.IsAny<CancellationToken>()),
+                    Times.Never);
+
+                // The real data volume must still be mounted exactly once.
+                string expectedMountPoint = $"/home/{Environment.UserName}/{dataVolume.GetDefaultMountPointName()}";
+
+                this.mockFixture.DiskManager.Verify(
+                    mgr => mgr.CreateMountPointAsync(dataVolume, expectedMountPoint, It.IsAny<CancellationToken>()),
+                    Times.Once);
+            }
+        }
+
         private void SetupTest(PlatformID platformID, bool withMultipleVolumes = false)
         {
             this.diskVolumes = new List<DiskVolume>();

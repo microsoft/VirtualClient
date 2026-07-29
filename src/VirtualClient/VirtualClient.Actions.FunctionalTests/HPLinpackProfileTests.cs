@@ -137,8 +137,8 @@ namespace VirtualClient.Actions
             this.mockFixture.Setup(PlatformID.Unix, Architecture.Arm64);
             LinuxDistributionInfo mockInfo = new LinuxDistributionInfo()
             {
-                OperationSystemFullName = "TestOS",
-                LinuxDistribution = LinuxDistribution.Ubuntu
+                Name = "TestOS",
+                Distribution = LinuxDistribution.Ubuntu
             };
 
             this.mockFixture.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>())).ReturnsAsync(mockInfo);

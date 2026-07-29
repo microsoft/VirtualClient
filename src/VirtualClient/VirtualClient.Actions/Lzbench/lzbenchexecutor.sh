@@ -1,5 +1,4 @@
 #!/bin/bash
 
-echo $1
-./lzbench $1 > results-summary.csv
-
+echo "$1"
+./lzbench $1 > "$2"

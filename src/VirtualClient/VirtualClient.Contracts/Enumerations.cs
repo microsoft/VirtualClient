@@ -519,29 +519,29 @@ namespace VirtualClient
     }
 
     /// <summary>
-    /// Defines different Linux distribution
+    /// Defines different Linux distributions
     /// </summary>
     public enum LinuxDistribution
     {
         /// <summary>
-        /// Unkwown distribution.
+        /// Unkwown
         /// </summary>
         Unknown,
 
         /// <summary>
-        /// Ubuntu
+        /// AwsLinux
         /// </summary>
-        Ubuntu,
+        AmazonLinux,
 
         /// <summary>
-        /// RHEL7
+        /// MSFT internal Fedora-based Azure Linux distro
         /// </summary>
-        RHEL7,
+        AzureLinux,
 
         /// <summary>
-        /// RHEL8
+        /// CentOS
         /// </summary>
-        RHEL8,
+        CentOS,
 
         /// <summary>
         /// Debian
@@ -549,19 +549,9 @@ namespace VirtualClient
         Debian,
 
         /// <summary>
-        /// CentOS7
+        /// Fedora
         /// </summary>
-        CentOS7,
-
-        /// <summary>
-        /// CentOS8
-        /// </summary>
-        CentOS8,
-
-        /// <summary>
-        /// SUSE
-        /// </summary>
-        SUSE,
+        Fedora,
 
         /// <summary>
         /// Flatcar
@@ -570,19 +560,55 @@ namespace VirtualClient
         Flatcar,
 
         /// <summary>
+        /// Gentoo
+        /// </summary>
+        Gentoo,
+
+        /// <summary>
+        /// OpenSUSE
+        /// </summary>
+        OpenSuse,
+
+        /// <summary>
+        /// RedHat
+        /// </summary>
+        RedHat,
+
+        /// <summary>
+        /// Ubuntu
+        /// </summary>
+        Ubuntu
+    }
+
+    /// <summary>
+    /// Defines different upstream Linux distributions
+    /// </summary>
+    public enum LinuxUpstreamDistribution
+    {
+        /// <summary>
+        /// Unknown
+        /// </summary>
+        Unknown,
+
+        /// <summary>
+        /// Debian
+        /// </summary>
+        Debian,
+
+        /// <summary>
         /// Fedora
         /// </summary>
         Fedora,
 
         /// <summary>
-        /// MSFT internal CentOS based distro AzLinux (Previously Mariner)
+        /// Gentoo
         /// </summary>
-        AzLinux,
+        Gentoo,
 
         /// <summary>
-        /// AwsLinux
+        /// OpenSUSE
         /// </summary>
-        AwsLinux
+        OpenSuse
     }
 
     /// <summary>

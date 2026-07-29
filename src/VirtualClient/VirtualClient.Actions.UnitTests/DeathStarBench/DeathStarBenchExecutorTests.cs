@@ -62,8 +62,8 @@ namespace VirtualClient.Actions
             {
                 LinuxDistributionInfo mockInfo = new LinuxDistributionInfo()
                 {
-                    OperationSystemFullName = "TestOS",
-                    LinuxDistribution = LinuxDistribution.Debian
+                    Name = "TestOS",
+                    Distribution = LinuxDistribution.Debian
                 };
 
                 this.mockFixture.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>())).ReturnsAsync(mockInfo);

@@ -129,7 +129,9 @@ namespace VirtualClient.Actions
                 {
                     using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                     {
-                        using (IProcessProxy process = this.systemManagement.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, commandLineArguments, workingDirectory))
+                        // SPECjvm writes result files into the package directory. Run as the Virtual Client user
+                        // so the executor can read and delete those files after the process completes.
+                        using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(pathToExe, commandLineArguments, workingDirectory))
                         {
                             this.CleanupTasks.Add(() => process.SafeKill(this.Logger));
                             this.LogProcessTrace(process);

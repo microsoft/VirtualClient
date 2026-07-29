@@ -229,7 +229,7 @@ namespace VirtualClient.Metadata
                     else if (systemManagement.Platform == PlatformID.Unix)
                     {
                         LinuxDistributionInfo distro = await systemManagement.GetLinuxDistributionAsync(CancellationToken.None);
-                        metadata.Add("osName", distro.OperationSystemFullName);
+                        metadata.Add("osName", distro.Name);
                     }
 
                     // Operating System Metadata

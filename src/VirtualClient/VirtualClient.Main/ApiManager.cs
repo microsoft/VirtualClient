@@ -22,6 +22,7 @@ namespace VirtualClient
     using VirtualClient.Api;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Contracts;
+    using VirtualClient.Logging;
 
     /// <summary>
     /// Provides methods for managing the Virtual Client API service and hosting
@@ -49,7 +50,7 @@ namespace VirtualClient
         {
             WebApplicationBuilder builder = WebApplication.CreateBuilder();
 
-            builder.Logging.Services.AddSingleton<ConsoleFormatter, ConsoleUtcTextFormatter>();
+            builder.Logging.Services.AddSingleton<ConsoleFormatter, CustomConsoleTextFormatter>();
 
             // Register HTTP Logging as configured previously
             builder.Services.AddHttpLogging(options =>
@@ -62,7 +63,7 @@ namespace VirtualClient
 
             builder.Logging.AddConsole(options =>
             {
-                options.FormatterName = "ConsoleUtcText";
+                options.FormatterName = "CustomConsoleText";
             });
 
             // Configure the ASP.NET MVC self-hosted REST API application
@@ -123,22 +124,29 @@ namespace VirtualClient
             CancellationToken.None);
         }
 
-        private class ConsoleUtcTextFormatter : ConsoleFormatter
+        private class CustomConsoleTextFormatter : ConsoleFormatter
         {
-            public ConsoleUtcTextFormatter()
-                : base("ConsoleUtcText")
+            public CustomConsoleTextFormatter()
+                : base("CustomConsoleText")
             {
             }
 
             public override void Write<TState>(in LogEntry<TState> logEntry, IExternalScopeProvider? scopeProvider, TextWriter textWriter)
             {
-                // Force the timestamp to UTC and format it exactly as: [M/d/yyyy h:mm:ss tt]
-                string timestamp = $"[{DateTime.Now}] ";
-                textWriter.Write(timestamp);
+                try
+                {
+                    // Force the timestamp format it exactly as: [M/d/yyyy h:mm:ss tt]
+                    string timestamp = $"[{DateTime.Now}] ";
+                    textWriter.Write(timestamp);
 
-                // Write the actual log message string
-                string message = logEntry.Formatter(logEntry.State, logEntry.Exception);
-                textWriter.WriteLine(message);
+                    // Write the actual log message string
+                    string message = logEntry.Formatter(logEntry.State, logEntry.Exception);
+                    textWriter.WriteLine(message);
+                }
+                catch (Exception exc)
+                {
+                    ConsoleLogger.Default.LogWarning($"{exc.Message} {exc.StackTrace}");
+                }
             }
         }
     }

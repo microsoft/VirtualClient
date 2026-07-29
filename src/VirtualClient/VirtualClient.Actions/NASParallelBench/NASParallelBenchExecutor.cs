@@ -178,7 +178,7 @@ namespace VirtualClient.Actions
                 var linuxDistributionInfo = await this.SystemManager.GetLinuxDistributionAsync(cancellationToken)
                 .ConfigureAwait(false);
 
-                switch (linuxDistributionInfo.LinuxDistribution)
+                switch (linuxDistributionInfo.Distribution)
                 {
                     case LinuxDistribution.Ubuntu:
                     case LinuxDistribution.Debian:
@@ -186,7 +186,7 @@ namespace VirtualClient.Actions
                     default:
                         throw new WorkloadException(
                             $"The NAS parallel benchmark workload is not supported on the current Linux distro - " +
-                            $"{linuxDistributionInfo.LinuxDistribution.ToString()}.  Supported distros include:" +
+                            $"{linuxDistributionInfo.Distribution.ToString()}.  Supported distros include:" +
                             $" Ubuntu, Debian. ",
                             ErrorReason.LinuxDistributionNotSupported);
                 }

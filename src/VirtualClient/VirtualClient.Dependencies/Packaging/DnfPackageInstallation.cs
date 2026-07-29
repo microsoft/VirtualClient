@@ -121,7 +121,7 @@ namespace VirtualClient.Dependencies
 
             var linuxDistributionInfo = systemManagement.GetLinuxDistributionAsync(CancellationToken.None).GetAwaiter().GetResult();
 
-            bool isAwsLinux = linuxDistributionInfo.LinuxDistribution == LinuxDistribution.AwsLinux;
+            bool isAwsLinux = linuxDistributionInfo.Distribution == LinuxDistribution.AmazonLinux;
 
             // Determine which packages should be installed, and which can be skipped.
             List<string> toInstall = new List<string>();

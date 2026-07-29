@@ -20,7 +20,7 @@ namespace VirtualClient.Contracts
             get
             {
                 string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-                return Path.Combine(workingDirectory, "Examples", "lshw");
+                return Path.Combine(workingDirectory, "TestResources", "Unix", "lshw");
             }
         }
 

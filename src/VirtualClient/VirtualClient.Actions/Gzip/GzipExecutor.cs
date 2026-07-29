@@ -100,9 +100,6 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            await this.CheckDistroSupportAsync(telemetryContext, cancellationToken)
-                .ConfigureAwait(false);
-
             this.GzipDirectory = this.GetPackagePath(this.PackageName);
 
             GzipState state = await this.stateManager.GetStateAsync<GzipState>($"{nameof(GzipState)}", cancellationToken)
@@ -194,32 +191,6 @@ namespace VirtualClient.Actions
                 : this.InputFilesOrDirs;
 
             return @$"{this.Options} {inputFiles}";
-        }
-
-        private async Task CheckDistroSupportAsync(EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            if (this.Platform == PlatformID.Unix)
-            {
-                var linuxDistributionInfo = await this.systemManager.GetLinuxDistributionAsync(cancellationToken)
-                .ConfigureAwait(false);
-
-                switch (linuxDistributionInfo.LinuxDistribution)
-                {
-                    case LinuxDistribution.Ubuntu:
-                    case LinuxDistribution.Debian:
-                    case LinuxDistribution.CentOS8:
-                    case LinuxDistribution.RHEL8:
-                    case LinuxDistribution.AzLinux:
-                    case LinuxDistribution.CentOS7:
-                    case LinuxDistribution.RHEL7:
-                    case LinuxDistribution.AwsLinux:
-                        break;
-                    default:
-                        throw new WorkloadException(
-                            $"The Gzip benchmark workload is not supported on the current Linux distro.",
-                            ErrorReason.LinuxDistributionNotSupported);
-                }
-            }
         }
 
         internal class GzipState : State

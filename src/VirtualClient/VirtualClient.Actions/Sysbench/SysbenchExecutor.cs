@@ -359,7 +359,7 @@ namespace VirtualClient.Actions
             {
                 LinuxDistributionInfo distributionInfo = await this.SystemManager.GetLinuxDistributionAsync(cancellationToken)
                     .ConfigureAwait(false);
-                string distribution = distributionInfo.LinuxDistribution.ToString();
+                string distribution = distributionInfo.Distribution.ToString();
 
                 string arguments = $"{this.SysbenchPackagePath}/configure-workload-generator.py --distro {distribution} --databaseSystem {this.DatabaseSystem} --packagePath {this.SysbenchPackagePath}";
 
@@ -423,7 +423,7 @@ namespace VirtualClient.Actions
 
                 if (!cancellationToken.IsCancellationRequested)
                 {
-                    switch (linuxDistributionInfo.LinuxDistribution)
+                    switch (linuxDistributionInfo.Distribution)
                     {
                         case LinuxDistribution.Ubuntu:
                         case LinuxDistribution.Debian:
@@ -431,7 +431,7 @@ namespace VirtualClient.Actions
                         default:
                             throw new WorkloadException(
                                 $"The Sysbench workload is not supported on the current Linux distro - " +
-                                $"{linuxDistributionInfo.LinuxDistribution}.  Supported distros include:" +
+                                $"{linuxDistributionInfo.Distribution}.  Supported distros include:" +
                                 $"{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.Ubuntu)},{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.Debian)}",
                                 ErrorReason.LinuxDistributionNotSupported);
                     }

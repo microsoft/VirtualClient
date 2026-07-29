@@ -6,7 +6,7 @@
         "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows"
     },
     "Parameters": {
-        "IPAddress": "NotDefined",
+        "IPAddress": null,
         "Duration": null,
         "PingIterations": 300
     },

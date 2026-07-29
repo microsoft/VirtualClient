@@ -350,6 +350,40 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
+        /// Throws an exception if the Linux distribution provided is not supported.
+        /// </summary>
+        /// <param name="distro">The Linux distribution to validate as supported.</param>
+        /// <param name="explicitlyNotSupported">An array of Linux distributions that are explicitly not supported for the usage scenario.</param>
+        /// <exception cref="NotSupportedException">The Linux distribution is not supported.</exception>
+        public static void ThrowIfNotSupported(LinuxDistributionInfo distro, params LinuxDistribution[] explicitlyNotSupported)
+        {
+            bool isSupported = false;
+            if (explicitlyNotSupported?.Any() != true || !explicitlyNotSupported.Contains(distro.Distribution))
+            {
+                switch (distro.Distribution)
+                {
+                    case LinuxDistribution.AmazonLinux:
+                    case LinuxDistribution.AzureLinux:
+                    case LinuxDistribution.CentOS:
+                    case LinuxDistribution.Debian:
+                    case LinuxDistribution.Fedora:
+                    case LinuxDistribution.Flatcar:
+                    case LinuxDistribution.Gentoo:
+                    case LinuxDistribution.OpenSuse:
+                    case LinuxDistribution.RedHat:
+                    case LinuxDistribution.Ubuntu:
+                        isSupported = true;
+                        break;
+                }
+            }
+
+            if (!isSupported)
+            {
+                throw new NotSupportedException($"The Linux distribution '{distro.Name}' is not supported.");
+            }
+        }
+
+        /// <summary>
         /// Throws an exception if the platform provided is not supported.
         /// </summary>
         /// <param name="platform">The OS/system platform to validate as supported.</param>

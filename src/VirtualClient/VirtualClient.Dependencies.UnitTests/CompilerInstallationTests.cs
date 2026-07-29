@@ -35,7 +35,8 @@ namespace VirtualClient.Dependencies
             this.mockFixture.Directory.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
 
-            this.mockFixture.FileSystem.SetupGet(fs => fs.File).Returns(this.mockFixture.File.Object);
+            this.mockFixture.FileSystem.SetupGet(fs => fs.File)
+                .Returns(this.mockFixture.File.Object);
         }
 
         [Test]

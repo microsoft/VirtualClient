@@ -95,7 +95,7 @@ namespace VirtualClient.Actions
         {
             this.SetupDefaultBehaviors(PlatformID.Unix);
 
-            string expectedCommand = $@"sudo java -XX:ParallelGCThreads=[0-9]+ -XX:\+UseParallelGC -XX:\+UseAES -XX:\+UseSHA -Xms[0-9]+m -Xmx[0-9]+m -jar SPECjvm2008.jar -ikv -ict test1 test2";
+            string expectedCommand = $@"^java -XX:ParallelGCThreads=[0-9]+ -XX:\+UseParallelGC -XX:\+UseAES -XX:\+UseSHA -Xms[0-9]+m -Xmx[0-9]+m -jar SPECjvm2008.jar -ikv -ict test1 test2$";
 
             bool commandExecuted = false;
             this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>

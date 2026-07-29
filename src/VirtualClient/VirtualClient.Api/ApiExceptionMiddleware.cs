@@ -13,6 +13,7 @@ namespace VirtualClient.Api
     using Microsoft.Extensions.Logging.Abstractions;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
+    using VirtualClient.Logging;
 
     /// <summary>
     /// Provides generic exception response handling functionality for VC API
@@ -61,7 +62,14 @@ namespace VirtualClient.Api
             }
             finally
             {
-                this.Logger.LogInformation($"Status Code: {context.Response.StatusCode}, {context.Request.Method} {context.Request.Path}");
+                try
+                {
+                    this.Logger.LogInformation($"Status Code: {context?.Response?.StatusCode}, {context?.Request?.Method} {context?.Request?.Path}");
+                }
+                catch (Exception exc)
+                {
+                    this.Logger.LogWarning($"{exc.Message} {exc.StackTrace}");
+                }
             }
         }
 

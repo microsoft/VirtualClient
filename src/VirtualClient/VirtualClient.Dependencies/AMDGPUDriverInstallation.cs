@@ -150,9 +150,9 @@ namespace VirtualClient.Dependencies
                     }
                     else if (this.Platform == PlatformID.Unix)
                     {
-                        telemetryContext.AddContext("LinuxDistribution", this.linuxDistributionInfo.LinuxDistribution);
+                        telemetryContext.AddContext("LinuxDistribution", this.linuxDistributionInfo.Distribution);
 
-                        switch (this.linuxDistributionInfo.LinuxDistribution)
+                        switch (this.linuxDistributionInfo.Distribution)
                         {
                             case LinuxDistribution.Ubuntu:
                                 break;
@@ -160,7 +160,7 @@ namespace VirtualClient.Dependencies
                             default:
                                 // different distro installation to be addded.
                                 this.Logger.LogMessage(
-                                    $"AMD GPU driver installation is not supported by Virtual Client on the current Linux distro '{this.linuxDistributionInfo.LinuxDistribution}'.",
+                                    $"AMD GPU driver installation is not supported by Virtual Client on the current Linux distro '{this.linuxDistributionInfo.Distribution}'.",
                                     telemetryContext);
 
                                 break;
@@ -271,7 +271,7 @@ namespace VirtualClient.Dependencies
         {
             List<string> commands = new List<string>();
 
-            switch (this.linuxDistributionInfo.LinuxDistribution)
+            switch (this.linuxDistributionInfo.Distribution)
             {
                 case LinuxDistribution.Ubuntu:
                     // Clean up any broken package state from previous failed installation attempts.
@@ -301,7 +301,7 @@ namespace VirtualClient.Dependencies
             {
             };
 
-            switch (this.linuxDistributionInfo.LinuxDistribution)
+            switch (this.linuxDistributionInfo.Distribution)
             {
                 case LinuxDistribution.Ubuntu:
                     commands.Add($"wget {this.LinuxInstallationFile}");
@@ -334,7 +334,7 @@ namespace VirtualClient.Dependencies
         {
             List<string> commands = new List<string>();
 
-            switch (this.linuxDistributionInfo.LinuxDistribution)
+            switch (this.linuxDistributionInfo.Distribution)
             {
                 case LinuxDistribution.Ubuntu:
                     // first command is to enable the AMD GPU drivers after reboot is completed.

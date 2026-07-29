@@ -61,8 +61,8 @@ namespace VirtualClient.Actions
         {
             LinuxDistributionInfo mockInfo = new LinuxDistributionInfo()
             {
-                OperationSystemFullName = "TestUbuntu",
-                LinuxDistribution = LinuxDistribution.SUSE
+                Name = "TestUbuntu",
+                Distribution = LinuxDistribution.OpenSuse
             };
             this.fixture.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>())).ReturnsAsync(mockInfo);
 

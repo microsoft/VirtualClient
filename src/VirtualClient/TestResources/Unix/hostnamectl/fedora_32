@@ -1,0 +1,9 @@
+   Static hostname: virtualclient
+         Icon name: computer-vm
+           Chassis: vm
+        Machine ID: 0123456789abcdef0123456789abcdef
+           Boot ID: fedcba9876543210fedcba9876543210
+    Virtualization: microsoft
+  Operating System: Fedora 32 (Container Image)
+            Kernel: Linux 6.8.0
+      Architecture: x86-64
