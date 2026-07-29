@@ -142,12 +142,15 @@ namespace VirtualClient.Logging
         protected virtual EventData CreateEventObject(string eventMessage, LogLevel logLevel, DateTime eventTimestamp, EventContext eventContext, object bufferInfo = null)
         {
             // Allow for specific property overrides.
-            eventContext.Properties.TryGetValue(MetadataContract.AppHost, out object appHost);
-            eventContext.Properties.TryGetValue(MetadataContract.AppName, out object appName);
-            eventContext.Properties.TryGetValue(MetadataContract.AppVersion, out object appVersion);
+            object appHost = null;
+            object appName = null;
+            object appVersion = null;
+            eventContext?.Properties.TryGetValue(MetadataContract.AppHost, out appHost);
+            eventContext?.Properties.TryGetValue(MetadataContract.AppName, out appName);
+            eventContext?.Properties.TryGetValue(MetadataContract.AppVersion, out appVersion);
 
             DateTime timestamp = eventTimestamp;
-            if (eventContext.Properties.TryGetValue(MetadataContract.Timestamp, out object datetime))
+            if (eventContext?.Properties.TryGetValue(MetadataContract.Timestamp, out object datetime) == true)
             {
                 DateTime.TryParse(datetime?.ToString(), out timestamp);
             }

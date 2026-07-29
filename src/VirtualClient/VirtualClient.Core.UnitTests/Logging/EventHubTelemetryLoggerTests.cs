@@ -140,6 +140,19 @@ namespace VirtualClient.Logging
             Assert.AreEqual(expectedTimestamp, eventBody["timestamp"].Value<DateTime>());
         }
 
+        [Test]
+        public void EventHubTelemetryLoggerSupportsNamedEventsWithoutAnEventContext()
+        {
+            TestEventHubTelemetryLogger logger = new TestEventHubTelemetryLogger(this.mockChannel, LogLevel.Information);
+
+            logger.Log(LogLevel.Information, new EventId(1, "TestMessage"), "state", null, null);
+
+            Assert.AreEqual(1, logger.Events.Count);
+            JObject eventBody = JObject.Parse(logger.Events[0].EventBody.ToString());
+            Assert.AreEqual("TestMessage", eventBody["message"].ToString());
+            Assert.IsFalse(eventBody.ContainsKey("customDimensions"));
+        }
+
         private class TestEventHubTelemetryLogger : EventHubTelemetryLogger
         {
             public TestEventHubTelemetryLogger(EventHubTelemetryChannel channel, LogLevel level)
@@ -147,9 +160,16 @@ namespace VirtualClient.Logging
             {
             }
 
+            public IList<EventData> Events { get; } = new List<EventData>();
+
             public new EventData CreateEventObject(string eventMessage, LogLevel logLevel, DateTime eventTimestamp, EventContext eventContext, object bufferInfo = null)
             {
                 return base.CreateEventObject(eventMessage, logLevel, eventTimestamp, eventContext, bufferInfo);
+            }
+
+            protected override void AddEventDataToChannel(EventData eventData)
+            {
+                this.Events.Add(eventData);
             }
         }
     }
