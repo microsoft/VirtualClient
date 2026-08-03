@@ -28,9 +28,6 @@ namespace VirtualClient.Dependencies
         /// </summary>
         public static readonly IEnumerable<int> DnfSuccessfulCodes = new int[] { 0, 100 };
 
-        private const string DnfCommand = "dnf";
-        private ISystemManagement systemManagement;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="DnfPackageInstallation"/> class.
         /// </summary>
@@ -41,7 +38,6 @@ namespace VirtualClient.Dependencies
         public DnfPackageInstallation(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters = null)
             : base(dependencies, parameters)
         {
-            this.systemManagement = this.Dependencies.GetService<ISystemManagement>();
         }
 
         /// <summary>
@@ -99,10 +95,8 @@ namespace VirtualClient.Dependencies
             telemetryContext.AddContext("allowUpgrades", this.AllowUpgrades);
 
             List<string> packages = this.Packages.Split(',', ';', StringSplitOptions.RemoveEmptyEntries).ToList();
-            ISystemManagement systemManagement = this.Dependencies.GetService<ISystemManagement>();
 
-            // Dnf installtion only applies to Linux.
-            if (this.Platform != PlatformID.Unix || packages == null || !packages.Any())
+            if (packages?.Any() != true)
             {
                 return;
             }
@@ -110,115 +104,41 @@ namespace VirtualClient.Dependencies
             if (!string.IsNullOrEmpty(this.Repositories))
             {
                 List<string> repos = this.Packages.Split(',', ';').ToList();
-                // Repo could only be add one by one
+
                 foreach (string repo in repos)
                 {
                     // https://dnf-plugins-core.readthedocs.io/en/latest/config_manager.html
-                    await this.ExecuteCommandAsync(DnfPackageInstallation.DnfCommand, $"config-manager --add-repo {repo} -y", Environment.CurrentDirectory, telemetryContext, cancellationToken)
-                        .ConfigureAwait(false);
+                    await this.ExecuteCommandAsync(
+                        "dnf", 
+                        $"config-manager --add-repo {repo} -y", 
+                        Environment.CurrentDirectory, 
+                        telemetryContext, 
+                        cancellationToken,
+                        runElevated: true);
                 }
             }
-
-            var linuxDistributionInfo = systemManagement.GetLinuxDistributionAsync(CancellationToken.None).GetAwaiter().GetResult();
-
-            bool isAwsLinux = linuxDistributionInfo.Distribution == LinuxDistribution.AmazonLinux;
-
-            // Determine which packages should be installed, and which can be skipped.
-            List<string> toInstall = new List<string>();
-            foreach (string package in packages)
-            {
-                if (!isAwsLinux && !this.AllowUpgrades && await this.IsPackageInstalledAsync(package, cancellationToken))
-                {
-                    this.Logger.LogTraceMessage($"Package '{package}' is already installed, skipping.", EventContext.Persisted());
-                }
-                else
-                {
-                    toInstall.Add(package);
-                }
-            }
-
-            // Nothing to install.
-            if (toInstall.Count == 0)
-            {
-                return;
-            }
-
-            string formattedArguments = $"install {string.Join(' ', toInstall)} -y --quiet{(this.AllowUpgrades ? string.Empty : " --no-upgrade")}";
 
             await this.InstallRetryPolicy.ExecuteAsync(async () =>
             {
                 // Runs Dnf update first.
-                await this.ExecuteCommandAsync(DnfPackageInstallation.DnfCommand, $"check-update -y", Environment.CurrentDirectory, telemetryContext, cancellationToken)
-                    .ConfigureAwait(false);
+                await this.ExecuteCommandAsync(
+                    "dnf", 
+                    "check-update -y", 
+                    Environment.CurrentDirectory, 
+                    telemetryContext, 
+                    cancellationToken);
 
                 // Runs the installation command with retries and throws if the command fails after all
                 // retries are expended.
-                await this.ExecuteCommandAsync(DnfPackageInstallation.DnfCommand, formattedArguments, Environment.CurrentDirectory, telemetryContext, cancellationToken)
-                .ConfigureAwait(false);
-
-            }).ConfigureAwait(false);
-
-            this.Logger.LogTraceMessage($"VirtualClient installed Dnf package(s): '[{string.Join(' ', toInstall)}]'.", EventContext.Persisted());
-
-            // Then, confirms that the packages were installed.
-            if (!isAwsLinux)
-            {
-                List<string> failedPackages = toInstall.Where(package => !(this.IsPackageInstalledAsync(package, cancellationToken).GetAwaiter().GetResult())).ToList();
-
-                if (failedPackages?.Count > 0)
-                {
-                    throw new ProcessException(
-                        $"Packages were supposedly successfully installed, but cannot be found! Packages: '{string.Join(", ", failedPackages)}'",
-                        ErrorReason.DependencyInstallationFailed);
-                }
-            }
-        }
-
-        private async Task<bool> IsPackageInstalledAsync(string packageName, CancellationToken cancellationToken)
-        {
-            ISystemManagement systemManagement = this.Dependencies.GetService<ISystemManagement>();
-
-            using (IProcessProxy process = systemManagement.ProcessManager.CreateElevatedProcess(this.Platform, DnfPackageInstallation.DnfCommand, $"list {packageName}"))
-            {
-                this.CleanupTasks.Add(() => process.SafeKill(this.Logger));
-
-                await process.StartAndWaitAsync(cancellationToken)
-                       .ConfigureAwait(false);
-
-                if (!cancellationToken.IsCancellationRequested)
-                {
-                    await this.LogProcessDetailsAsync(process, EventContext.Persisted(), "Dnf")
-                        .ConfigureAwait(false);
-
-                    process.ThrowIfErrored<DependencyException>(errorReason: ErrorReason.DependencyInstallationFailed);
-                }
-
-                return process.ExitCode == 0;
-            }
-        }
-
-        private Task ExecuteCommandAsync(string pathToExe, string commandLineArguments, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            EventContext relatedContext = telemetryContext.Clone();
-            return this.InstallRetryPolicy.ExecuteAsync(async () =>
-            {
-                string output = string.Empty;
-                using (IProcessProxy process = this.systemManagement.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, commandLineArguments, workingDirectory))
-                {
-                    this.CleanupTasks.Add(() => process.SafeKill(this.Logger));
-                    this.Logger.LogTraceMessage($"Executing process '{pathToExe}' '{commandLineArguments}' at directory '{workingDirectory}'.", EventContext.Persisted());
-
-                    await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
-
-                    if (!cancellationToken.IsCancellationRequested)
-                    {
-                        await this.LogProcessDetailsAsync(process, telemetryContext, "Dnf")
-                            .ConfigureAwait(false);
-
-                        process.ThrowIfErrored<DependencyException>(DnfPackageInstallation.DnfSuccessfulCodes, errorReason: ErrorReason.DependencyInstallationFailed);
-                    }
-                }
+                await this.ExecuteCommandAsync(
+                    "dnf",
+                    $"install {string.Join(' ', packages)} -y --quiet{(this.AllowUpgrades ? string.Empty : " --no-upgrade")}", 
+                    Environment.CurrentDirectory, 
+                    telemetryContext, 
+                    cancellationToken);
             });
+
+            this.Logger.LogTraceMessage($"DNF packages installed: '[{string.Join(' ', packages)}]'.", EventContext.Persisted());
         }
     }
 }

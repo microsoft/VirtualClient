@@ -2,7 +2,7 @@
     "Description": "Default Monitors",
     "Metadata": {
         "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64",
-        "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows"
+        "SupportedOperatingSystems": "Azure Linux,CentOS,Debian,RedHat,Suse,Ubuntu,Windows"
     },
     "Parameters": {
         "MonitorFrequency": "00:05:00",
@@ -13,9 +13,8 @@
             "Type": "LinuxPackageInstallation",
             "Parameters": {
                 "Scenario": "InstallEpelPackage",
-                "Packages-RHEL8": "https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm",
-                "Packages-RHEL7": "https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm",
-                "Packages-CentOS7": "epel-release"
+                "Packages-RedHat": "https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm",
+                "Packages-CentOS": "epel-release"
             }
         },
         {

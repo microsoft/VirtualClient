@@ -3,7 +3,7 @@
     "Metadata": {
         "RecommendedMinimumExecutionTime": "00:60:00",
         "SupportedPlatforms": "linux-x64",
-        "SupportedOperatingSystems": "Ubuntu, Debian, CentOS8, RHEL8, SUSE"
+        "SupportedOperatingSystems": "Ubuntu, Debian, CentOS, RedHat, SUSE"
     },
     "Parameters": {
         "Level": "4",

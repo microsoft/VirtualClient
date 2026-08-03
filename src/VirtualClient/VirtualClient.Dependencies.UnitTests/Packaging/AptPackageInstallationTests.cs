@@ -52,8 +52,7 @@ namespace VirtualClient.Dependencies
             {
                 "sudo add-apt-repository \"some repo1\" -y",
                 "sudo apt update",
-                "sudo apt install pack1 --yes --quiet",
-                "sudo apt list pack1"
+                "sudo apt install pack1 --yes --quiet"
             };
 
             int commandExecuted = 0;
@@ -83,7 +82,7 @@ namespace VirtualClient.Dependencies
                 await aptPackageInstallation.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
 
-            Assert.AreEqual(4, commandExecuted);
+            Assert.AreEqual(3, commandExecuted);
         }
 
         [Test]
@@ -104,10 +103,7 @@ namespace VirtualClient.Dependencies
                 "sudo add-apt-repository \"some repo2\" -y",
                 "sudo add-apt-repository \"some repo3\" -y",
                 "sudo apt update",
-                "sudo apt install pack1 pack2 pack3 --yes --quiet",
-                "sudo apt list pack1",
-                "sudo apt list pack2",
-                "sudo apt list pack3"
+                "sudo apt install pack1 pack2 pack3 --yes --quiet"
             };
 
             int commandExecuted = 0;
@@ -137,7 +133,7 @@ namespace VirtualClient.Dependencies
                 await aptPackageInstallation.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
 
-            Assert.AreEqual(8, commandExecuted);
+            Assert.AreEqual(5, commandExecuted);
         }
 
         private class TestAptPackageInstallation : AptPackageInstallation
