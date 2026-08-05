@@ -133,6 +133,43 @@ namespace VirtualClient.Logging
         }
 
         [Test]
+        public async Task EventHubTelemetryChannelDropsFailedTransmissionsWhenTheBufferIsFull()
+        {
+            using (TestAmqpEventHubTelemetryChannel channel = new TestAmqpEventHubTelemetryChannel())
+            {
+                int transmissionAttempts = 0;
+                TaskCompletionSource transmissionStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+                TaskCompletionSource releaseTransmission = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+                channel.AutoFlushInterval = TimeSpan.FromHours(1);
+                channel.MaxBufferSizeBytes = 20;
+                channel.TransmissionBehavior = async events =>
+                {
+                    if (Interlocked.Increment(ref transmissionAttempts) == 1)
+                    {
+                        transmissionStarted.SetResult();
+                        await releaseTransmission.Task;
+                        throw new InvalidOperationException("Expected test failure.");
+                    }
+                };
+
+                channel.Add(new EventData(new byte[10]));
+                Task flushTask = Task.Run(() => channel.Flush(TimeSpan.FromSeconds(1)));
+
+                await transmissionStarted.Task.WaitAsync(TimeSpan.FromSeconds(1));
+                channel.Add(new EventData(new byte[10]));
+                channel.Add(new EventData(new byte[10]));
+                releaseTransmission.SetResult();
+                await flushTask;
+
+                Assert.AreEqual(0, channel.BufferCount);
+                Assert.AreEqual(0, channel.BufferSizeBytes);
+                Assert.AreEqual(1, channel.Diagnostics.EventsTransmissionFailed());
+                Assert.AreEqual(1, channel.Diagnostics.EventsDropped());
+                Assert.AreEqual(2, channel.Diagnostics.EventsTransmitted());
+            }
+        }
+
+        [Test]
         public void EventHubTelemetryChannelSendsRestEventsIndividually()
         {
             using (TestRestEventHubTelemetryChannel channel = new TestRestEventHubTelemetryChannel())
