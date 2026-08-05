@@ -238,6 +238,7 @@ namespace VirtualClient.Logging
                 bufferInfo = new
                 {
                     bufferedEvents = this.underlyingTelemetryChannel.BufferCount,
+                    bufferedBytes = this.underlyingTelemetryChannel.BufferSizeBytes,
                     eventsExpected = diagnostics?.EventsExpected(),
                     eventsTransmitted = diagnostics?.EventsTransmitted(),
                     eventTransmissionFailures = diagnostics?.EventsTransmissionFailed(),
