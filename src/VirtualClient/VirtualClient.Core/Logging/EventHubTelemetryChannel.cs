@@ -44,7 +44,6 @@ namespace VirtualClient.Logging
         private int minCapacity;
         private AutoResetEvent autoFlushWaitHandle;
         private CancellationTokenSource cancellationTokenSource;
-        private CancellationToken transmissionCancellationToken;
         private Task transmissionAutoSendTask;
         private SendEventOptions sendEventOptions;
 
@@ -196,11 +195,6 @@ namespace VirtualClient.Logging
         public TimeSpan AutoFlushInterval { get; set; } = TimeSpan.FromMilliseconds(5000);
 
         /// <summary>
-        /// Gets or sets the maximum amount of time allowed for a single transmission.
-        /// </summary>
-        public TimeSpan TransmissionTimeout { get; set; } = TimeSpan.FromSeconds(30);
-
-        /// <summary>
         /// The client to use for publishing events to the Event Hub.
         /// </summary>
         public HttpClient RestClient { get; }
@@ -214,17 +208,6 @@ namespace VirtualClient.Logging
         /// Gets the telemetry buffer in which events/items are contained.
         /// </summary>
         protected Queue<EventData> Buffer { get; private set; }
-
-        /// <summary>
-        /// Gets the cancellation token for the current transmission.
-        /// </summary>
-        protected CancellationToken TransmissionCancellationToken
-        {
-            get
-            {
-                return this.transmissionCancellationToken;
-            }
-        }
 
         /// <summary>
         /// Add a telemetry item to the buffer.
@@ -379,7 +362,11 @@ namespace VirtualClient.Logging
             {
                 if (this.AmqpClient != null)
                 {
-                    await this.AmqpClient.SendAsync(eventDataBatch, this.sendEventOptions, this.TransmissionCancellationToken);
+                    // Context on CancellationToken.None Here:
+                    // We purposefully DO NOT honor the channel CancellationToken here. We do not want the
+                    // transmission logic to exit on cancellation but to keep trying to get the telemetry through.
+                    // We prefer a delayed exit of the application to losing telemetry.
+                    await this.AmqpClient.SendAsync(eventDataBatch, this.sendEventOptions, CancellationToken.None);
                 }
                 else
                 {
@@ -392,7 +379,11 @@ namespace VirtualClient.Logging
                             {
                                 request.Content = content;
 
-                                using HttpResponseMessage response = await this.RestClient.SendAsync(request, this.TransmissionCancellationToken);
+                                // Context on CancellationToken.None Here:
+                                // We purposefully DO NOT honor the channel CancellationToken here. We do not want the
+                                // transmission logic to exit on cancellation but to keep trying to get the telemetry through.
+                                // We prefer a delayed exit of the application to losing telemetry.
+                                using HttpResponseMessage response = await this.RestClient.SendAsync(request, CancellationToken.None);
                                 response.EnsureSuccessStatusCode();
                             }
                         }
@@ -439,40 +430,25 @@ namespace VirtualClient.Logging
                             for (int currentEventIndex = 0; currentEventIndex < batchSize; currentEventIndex++)
                             {
                                 EventData nextEventItem = this.Buffer.Peek();
-                                if (nextEventItem != null)
+                                if (currentBatch.Count > 0
+                                    && currentBatchSize + nextEventItem.Body.Length > EventHubTelemetryChannel.MaxEventDataBytes)
                                 {
-                                    if (currentBatch.Any()
-                                        && currentBatchSize + nextEventItem.Body.Length > EventHubTelemetryChannel.MaxEventDataBytes)
-                                    {
-                                        break;
-                                    }
+                                    break;
+                                }
 
-                                    this.Buffer.Dequeue();
-                                    this.bufferSizeBytes -= nextEventItem.Body.Length;
-                                    currentBatch.Add(nextEventItem);
-                                    currentBatchSize += nextEventItem.Body.Length;
+                                this.Buffer.Dequeue();
+                                this.bufferSizeBytes -= nextEventItem.Body.Length;
+                                currentBatch.Add(nextEventItem);
+                                currentBatchSize += nextEventItem.Body.Length;
 
-                                    if (maxBatchSize == 1)
-                                    {
-                                        break;
-                                    }
+                                if (maxBatchSize == 1)
+                                {
+                                    break;
                                 }
                             }
                         }
 
-                        using (CancellationTokenSource transmissionTimeoutSource = new CancellationTokenSource(this.TransmissionTimeout))
-                        {
-                            try
-                            {
-                                this.transmissionCancellationToken = transmissionTimeoutSource.Token;
-                                this.TransmitBatchAsync(currentBatch).GetAwaiter().GetResult();
-                            }
-                            finally
-                            {
-                                this.transmissionCancellationToken = CancellationToken.None;
-                            }
-                        }
-
+                        this.TransmitBatchAsync(currentBatch).GetAwaiter().GetResult();
                         this.Diagnostics?.EventsTransmitted(currentBatch.Count);
                         this.OnEventsTransmitted(currentBatch);
                         currentBatch.Clear();

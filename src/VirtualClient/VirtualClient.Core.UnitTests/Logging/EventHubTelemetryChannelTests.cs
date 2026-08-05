@@ -10,6 +10,7 @@ namespace VirtualClient.Logging
     using System.Threading;
     using System.Threading.Tasks;
     using Azure.Messaging.EventHubs;
+    using Azure.Messaging.EventHubs.Producer;
     using NUnit.Framework;
 
     [TestFixture]
@@ -19,7 +20,7 @@ namespace VirtualClient.Logging
         [Test]
         public void EventHubTelemetryChannelLimitsTheBufferByBytes()
         {
-            using (TestEventHubTelemetryChannel channel = new TestEventHubTelemetryChannel())
+            using (TestAmqpEventHubTelemetryChannel channel = new TestAmqpEventHubTelemetryChannel())
             {
                 channel.AutoFlushInterval = TimeSpan.FromHours(1);
                 channel.MaxBufferSizeBytes = 10;
@@ -34,29 +35,36 @@ namespace VirtualClient.Logging
         }
 
         [Test]
-        public void EventHubTelemetryChannelTimesOutAndRequeuesFailedTransmissions()
+        public void EventHubTelemetryChannelRequeuesFailedTransmissions()
         {
-            using (TestEventHubTelemetryChannel channel = new TestEventHubTelemetryChannel())
+            using (TestAmqpEventHubTelemetryChannel channel = new TestAmqpEventHubTelemetryChannel())
             {
+                int transmissionAttempts = 0;
                 channel.AutoFlushInterval = TimeSpan.FromHours(1);
-                channel.TransmissionTimeout = TimeSpan.FromMilliseconds(25);
-                channel.TransmissionBehavior = (events, cancellationToken) =>
-                    Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
+                channel.TransmissionBehavior = events =>
+                {
+                    if (Interlocked.Increment(ref transmissionAttempts) == 1)
+                    {
+                        throw new InvalidOperationException("Expected test failure.");
+                    }
+
+                    return Task.CompletedTask;
+                };
 
                 channel.Add(new EventData(new byte[10]));
-                channel.Flush(TimeSpan.FromMilliseconds(50));
+                channel.Flush(TimeSpan.FromSeconds(1));
 
-                Assert.AreEqual(1, channel.BufferCount);
-                Assert.AreEqual(10, channel.BufferSizeBytes);
-                Assert.GreaterOrEqual(channel.Diagnostics.EventsTransmissionFailed(), 1);
-                Assert.AreEqual(0, channel.Diagnostics.EventsTransmitted());
+                Assert.AreEqual(0, channel.BufferCount);
+                Assert.AreEqual(0, channel.BufferSizeBytes);
+                Assert.AreEqual(1, channel.Diagnostics.EventsTransmissionFailed());
+                Assert.AreEqual(1, channel.Diagnostics.EventsTransmitted());
             }
         }
 
         [Test]
         public void EventHubTelemetryChannelCountsEventsAsTransmittedAfterTheSendCompletes()
         {
-            using (TestEventHubTelemetryChannel channel = new TestEventHubTelemetryChannel())
+            using (TestAmqpEventHubTelemetryChannel channel = new TestAmqpEventHubTelemetryChannel())
             {
                 channel.AutoFlushInterval = TimeSpan.FromHours(1);
 
@@ -72,11 +80,11 @@ namespace VirtualClient.Logging
         [Test]
         public void EventHubTelemetryChannelDoesNotAddAnEventThatExceedsTheBatchByteLimit()
         {
-            using (TestEventHubTelemetryChannel channel = new TestEventHubTelemetryChannel())
+            using (TestAmqpEventHubTelemetryChannel channel = new TestAmqpEventHubTelemetryChannel())
             {
                 List<int> transmittedBatchSizes = new List<int>();
                 channel.AutoFlushInterval = TimeSpan.FromHours(1);
-                channel.TransmissionBehavior = (events, cancellationToken) =>
+                channel.TransmissionBehavior = events =>
                 {
                     transmittedBatchSizes.Add(events.Sum(eventData => eventData.Body.Length));
                     return Task.CompletedTask;
@@ -93,39 +101,80 @@ namespace VirtualClient.Logging
         }
 
         [Test]
-        public async Task EventHubTelemetryChannelMaintainsTheByteLimitWhileATransmissionIsBlocked()
+        public async Task EventHubTelemetryChannelMaintainsTheByteLimitWhileATransmissionIsInProgress()
         {
-            using (TestEventHubTelemetryChannel channel = new TestEventHubTelemetryChannel())
+            using (TestAmqpEventHubTelemetryChannel channel = new TestAmqpEventHubTelemetryChannel())
             {
                 TaskCompletionSource transmissionStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+                TaskCompletionSource releaseTransmission = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
                 channel.AutoFlushInterval = TimeSpan.FromHours(1);
                 channel.MaxBufferSizeBytes = 20;
-                channel.TransmissionTimeout = TimeSpan.FromMilliseconds(100);
-                channel.TransmissionBehavior = (events, cancellationToken) =>
+                channel.TransmissionBehavior = async events =>
                 {
                     transmissionStarted.TrySetResult();
-                    return Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
+                    await releaseTransmission.Task;
                 };
 
                 channel.Add(new EventData(new byte[10]));
-                Task flushTask = Task.Run(() => channel.Flush(TimeSpan.FromMilliseconds(150)));
+                Task flushTask = Task.Run(() => channel.Flush(TimeSpan.FromSeconds(1)));
 
                 await transmissionStarted.Task.WaitAsync(TimeSpan.FromSeconds(1));
                 channel.Add(new EventData(new byte[10]));
                 channel.Add(new EventData(new byte[10]));
+                channel.Add(new EventData(new byte[10]));
+                releaseTransmission.SetResult();
                 await flushTask;
 
-                Assert.AreEqual(2, channel.BufferCount);
-                Assert.AreEqual(20, channel.BufferSizeBytes);
-                Assert.GreaterOrEqual(channel.Diagnostics.EventsTransmissionFailed(), 1);
-                Assert.GreaterOrEqual(channel.Diagnostics.EventsDropped(), 1);
-                Assert.AreEqual(0, channel.Diagnostics.EventsTransmitted());
+                Assert.AreEqual(0, channel.BufferCount);
+                Assert.AreEqual(0, channel.BufferSizeBytes);
+                Assert.AreEqual(1, channel.Diagnostics.EventsDropped());
+                Assert.AreEqual(3, channel.Diagnostics.EventsTransmitted());
             }
         }
 
-        private class TestEventHubTelemetryChannel : EventHubTelemetryChannel
+        [Test]
+        public void EventHubTelemetryChannelSendsRestEventsIndividually()
         {
-            public TestEventHubTelemetryChannel()
+            using (TestRestEventHubTelemetryChannel channel = new TestRestEventHubTelemetryChannel())
+            {
+                List<int> transmittedBatchCounts = new List<int>();
+                channel.AutoFlushInterval = TimeSpan.FromHours(1);
+                channel.TransmissionBehavior = events =>
+                {
+                    transmittedBatchCounts.Add(events.Count());
+                    return Task.CompletedTask;
+                };
+
+                channel.Add(new EventData(new byte[10]));
+                channel.Add(new EventData(new byte[10]));
+                channel.Flush(TimeSpan.FromSeconds(1));
+
+                CollectionAssert.AreEqual(new[] { 1, 1 }, transmittedBatchCounts);
+            }
+        }
+
+        private class TestAmqpEventHubTelemetryChannel : EventHubTelemetryChannel
+        {
+            public TestAmqpEventHubTelemetryChannel()
+                : base(new EventHubProducerClient(
+                    "Endpoint=sb://anynamespace.servicebus.windows.net/;SharedAccessKeyName=AnyAccessPolicy;SharedAccessKey=AnYacCEssKey=",
+                    "any-hub"),
+                    enableDiagnostics: true)
+            {
+            }
+
+            public Func<IEnumerable<EventData>, Task> TransmissionBehavior { get; set; } =
+                events => Task.CompletedTask;
+
+            protected override Task TransmitBatchAsync(IEnumerable<EventData> eventDataBatch)
+            {
+                return this.TransmissionBehavior.Invoke(eventDataBatch);
+            }
+        }
+
+        private class TestRestEventHubTelemetryChannel : EventHubTelemetryChannel
+        {
+            public TestRestEventHubTelemetryChannel()
                 : base(new HttpClient
                 {
                     BaseAddress = new Uri("https://localhost")
@@ -133,12 +182,12 @@ namespace VirtualClient.Logging
             {
             }
 
-            public Func<IEnumerable<EventData>, CancellationToken, Task> TransmissionBehavior { get; set; } =
-                (events, cancellationToken) => Task.CompletedTask;
+            public Func<IEnumerable<EventData>, Task> TransmissionBehavior { get; set; } =
+                events => Task.CompletedTask;
 
             protected override Task TransmitBatchAsync(IEnumerable<EventData> eventDataBatch)
             {
-                return this.TransmissionBehavior.Invoke(eventDataBatch, this.TransmissionCancellationToken);
+                return this.TransmissionBehavior.Invoke(eventDataBatch);
             }
         }
     }
