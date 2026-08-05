@@ -438,15 +438,21 @@ namespace VirtualClient.Logging
                             int batchSize = maxBatchSize ?? this.Buffer.Count;
                             for (int currentEventIndex = 0; currentEventIndex < batchSize; currentEventIndex++)
                             {
-                                EventData nextEventItem = this.Buffer.Dequeue();
-                                this.bufferSizeBytes -= nextEventItem.Body.Length;
-
+                                EventData nextEventItem = this.Buffer.Peek();
                                 if (nextEventItem != null)
                                 {
+                                    if (currentBatch.Any()
+                                        && currentBatchSize + nextEventItem.Body.Length > EventHubTelemetryChannel.MaxEventDataBytes)
+                                    {
+                                        break;
+                                    }
+
+                                    this.Buffer.Dequeue();
+                                    this.bufferSizeBytes -= nextEventItem.Body.Length;
                                     currentBatch.Add(nextEventItem);
                                     currentBatchSize += nextEventItem.Body.Length;
 
-                                    if (currentBatchSize > EventHubTelemetryChannel.MaxEventDataBytes || maxBatchSize == 1)
+                                    if (maxBatchSize == 1)
                                     {
                                         break;
                                     }

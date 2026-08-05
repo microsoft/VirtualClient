@@ -5,6 +5,7 @@ namespace VirtualClient.Logging
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Net.Http;
     using System.Threading;
     using System.Threading.Tasks;
@@ -65,6 +66,29 @@ namespace VirtualClient.Logging
                 Assert.AreEqual(0, channel.BufferCount);
                 Assert.AreEqual(0, channel.BufferSizeBytes);
                 Assert.AreEqual(1, channel.Diagnostics.EventsTransmitted());
+            }
+        }
+
+        [Test]
+        public void EventHubTelemetryChannelDoesNotAddAnEventThatExceedsTheBatchByteLimit()
+        {
+            using (TestEventHubTelemetryChannel channel = new TestEventHubTelemetryChannel())
+            {
+                List<int> transmittedBatchSizes = new List<int>();
+                channel.AutoFlushInterval = TimeSpan.FromHours(1);
+                channel.TransmissionBehavior = (events, cancellationToken) =>
+                {
+                    transmittedBatchSizes.Add(events.Sum(eventData => eventData.Body.Length));
+                    return Task.CompletedTask;
+                };
+
+                channel.Add(new EventData(new byte[400000]));
+                channel.Add(new EventData(new byte[400000]));
+                channel.Flush(TimeSpan.FromSeconds(1));
+
+                CollectionAssert.AreEqual(new[] { 400000, 400000 }, transmittedBatchSizes);
+                Assert.AreEqual(2, channel.Diagnostics.EventsTransmitted());
+                Assert.AreEqual(0, channel.Diagnostics.EventsTransmissionFailed());
             }
         }
 
