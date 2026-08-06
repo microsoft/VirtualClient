@@ -724,6 +724,121 @@ namespace VirtualClient.Contracts
             Assert.IsFalse(VirtualClientComponent.IsSupported(component));
         }
 
+        [Test]
+        public void VirtualClientComponentSupportedLinuxDistributionsIsEmptyWhenTheParameterIsNotDefined()
+        {
+            TestVirtualClientComponent component = new TestVirtualClientComponent(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+
+            Assert.IsNotNull(component.SupportedLinuxDistributions);
+            Assert.IsEmpty(component.SupportedLinuxDistributions);
+        }
+
+        [Test]
+        public void VirtualClientComponentSupportedLinuxDistributionsParsesDelimitedValues()
+        {
+            this.mockFixture.Parameters[nameof(VirtualClientComponent.SupportedLinuxDistributions)] = "Debian,Ubuntu";
+            TestVirtualClientComponent component = new TestVirtualClientComponent(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+
+            CollectionAssert.AreEqual(new List<string> { "Debian", "Ubuntu" }, component.SupportedLinuxDistributions);
+        }
+
+        [Test]
+        public void VirtualClientComponentIsSupportedWhenTheSupportedLinuxDistributionsParameterIsNotDefined()
+        {
+            // A component that does not define the parameter is not filtered on the Linux distribution
+            // at all and thus executes on any distribution.
+            this.mockFixture.Setup(PlatformID.Unix);
+            this.SetupLinuxDistribution(LinuxDistribution.AzureLinux, LinuxUpstreamDistribution.Fedora);
+
+            TestVirtualClientComponent component = new TestVirtualClientComponent(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+
+            Assert.IsTrue(component.IsSupported());
+        }
+
+        [Test]
+        [TestCase("AzureLinux")]
+        [TestCase("Debian,Ubuntu,AzureLinux")]
+        [TestCase("azurelinux")]
+        [TestCase("AZURELINUX")]
+        [TestCase(" AzureLinux , Ubuntu ")]
+        public void VirtualClientComponentIsSupportedWhenTheLinuxDistributionMatchesTheSupportedLinuxDistributions(string supportedDistributions)
+        {
+            this.mockFixture.Setup(PlatformID.Unix);
+            this.SetupLinuxDistribution(LinuxDistribution.AzureLinux, LinuxUpstreamDistribution.Fedora);
+            this.mockFixture.Parameters[nameof(VirtualClientComponent.SupportedLinuxDistributions)] = supportedDistributions;
+
+            TestVirtualClientComponent component = new TestVirtualClientComponent(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+
+            Assert.IsTrue(component.IsSupported());
+        }
+
+        [Test]
+        [TestCase("Debian,Ubuntu")]
+        [TestCase("Ubuntu")]
+        [TestCase("Fedora")]
+        public void VirtualClientComponentIsNotSupportedWhenTheLinuxDistributionDoesNotMatchTheSupportedLinuxDistributions(string supportedDistributions)
+        {
+            this.mockFixture.Setup(PlatformID.Unix);
+            this.SetupLinuxDistribution(LinuxDistribution.AzureLinux, LinuxUpstreamDistribution.Fedora);
+            this.mockFixture.Parameters[nameof(VirtualClientComponent.SupportedLinuxDistributions)] = supportedDistributions;
+
+            TestVirtualClientComponent component = new TestVirtualClientComponent(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+
+            Assert.IsFalse(component.IsSupported());
+        }
+
+        [Test]
+        public void VirtualClientComponentIsSupportedWhenTheLinuxDistributionMatchesADownstreamDistribution()
+        {
+            // Ubuntu is a downstream distribution of Debian. The match is made on the distribution
+            // itself and not on the upstream distribution.
+            this.mockFixture.Setup(PlatformID.Unix);
+            this.SetupLinuxDistribution(LinuxDistribution.Ubuntu, LinuxUpstreamDistribution.Debian);
+            this.mockFixture.Parameters[nameof(VirtualClientComponent.SupportedLinuxDistributions)] = "Debian,Ubuntu";
+
+            TestVirtualClientComponent component = new TestVirtualClientComponent(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+
+            Assert.IsTrue(component.IsSupported());
+        }
+
+        [Test]
+        public void VirtualClientComponentIsNotSupportedOnNonLinuxSystemsWhenTheSupportedLinuxDistributionsParameterIsDefined()
+        {
+            // A component defining the parameter is describing Linux-specific behavior and thus
+            // is never supported on non-Linux systems.
+            this.mockFixture.Setup(PlatformID.Win32NT);
+            this.mockFixture.Parameters[nameof(VirtualClientComponent.SupportedLinuxDistributions)] = "Ubuntu";
+
+            TestVirtualClientComponent component = new TestVirtualClientComponent(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+
+            Assert.IsFalse(component.IsSupported());
+        }
+
+        [Test]
+        public void VirtualClientComponentIsNotSupportedWhenTheSupportedPlatformsDoNotMatchEvenIfTheLinuxDistributionMatches()
+        {
+            this.mockFixture.Setup(PlatformID.Unix, System.Runtime.InteropServices.Architecture.X64);
+            this.SetupLinuxDistribution(LinuxDistribution.AzureLinux, LinuxUpstreamDistribution.Fedora);
+            this.mockFixture.Parameters[nameof(VirtualClientComponent.SupportedPlatforms)] = "linux-arm64";
+            this.mockFixture.Parameters[nameof(VirtualClientComponent.SupportedLinuxDistributions)] = "AzureLinux";
+
+            TestVirtualClientComponent component = new TestVirtualClientComponent(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+
+            Assert.IsFalse(component.IsSupported());
+        }
+
+        private void SetupLinuxDistribution(LinuxDistribution distribution, LinuxUpstreamDistribution upstreamDistribution)
+        {
+            this.mockFixture.SystemManagement
+                .Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new LinuxDistributionInfo
+                {
+                    Name = distribution.ToString(),
+                    Distribution = distribution,
+                    UpstreamDistribution = upstreamDistribution
+                });
+        }
+
         private class TestVirtualClientComponent : VirtualClientComponent
         {
             public TestVirtualClientComponent(VirtualClientComponent component)
@@ -741,6 +856,11 @@ namespace VirtualClient.Contracts
             public new bool IsInRole(string role)
             {
                 return base.IsInRole(role);
+            }
+
+            public new bool IsSupported()
+            {
+                return base.IsSupported();
             }
 
             protected override Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)

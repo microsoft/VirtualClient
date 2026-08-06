@@ -343,6 +343,77 @@ namespace VirtualClient.Actions.UnitTests.MongoDB
         }
 
         [Test]
+        public async Task MongoDBServerExecutor_ConfigureDisk_ResolvesTheMongoDBServiceUserForThePlatform()
+        {
+            // SETUP: A DiskFilter triggers the disk configuration workflow.
+            this.mockFixture.Parameters["DiskFilter"] = "BiggestSize";
+            this.mockFixture.Parameters["DiskDevicePath"] = "/dev/nvme0n1";
+
+            var volumes = new List<DiskVolume>();
+            var disk = new Disk(index: 0, devicePath: "/dev/nvme0n1", volumes: volumes, properties: null);
+            this.mockFixture.DiskManager.Setup(dm => dm.GetDisksAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new List<Disk> { disk });
+
+            List<string> commandsExecuted = new List<string>();
+            this.mockFixture.ProcessManager.OnCreateProcess = (exe, args, workingDir) =>
+            {
+                commandsExecuted.Add($"{exe} {args}");
+                this.mockFixture.Process.StandardOutput.Clear();
+                this.mockFixture.Process.StandardOutput.Append("{ \"ok\" : 1 }");
+                this.mockFixture.Process.ExitCode = 0;
+                return this.mockFixture.Process;
+            };
+
+            var executor = new TestableMongoDBServerExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+
+            // ACT
+            await executor.InitializeAsync(EventContext.Persisted(), CancellationToken.None);
+
+            // ASSERT: The MongoDB service account is named 'mongodb' by Debian/Ubuntu packages but
+            // 'mongod' by RPM packages (Azure Linux, RHEL, Fedora). Hardcoding either one leaves the
+            // data directory owned by root on the other, and mongod then fails to create its journal.
+            string chownCommand = commandsExecuted.FirstOrDefault(cmd => cmd.Contains("chown", StringComparison.OrdinalIgnoreCase));
+
+            Assert.IsNotNull(chownCommand, "The data directory ownership command should have been executed.");
+
+            Assert.IsFalse(
+                chownCommand.Contains("chown -R mongodb:mongodb", StringComparison.OrdinalIgnoreCase),
+                "The ownership command must not hardcode the Debian-only 'mongodb' account.");
+
+            Assert.IsTrue(
+                chownCommand.Contains("id -u mongod", StringComparison.OrdinalIgnoreCase),
+                "The ownership command should probe for the RPM 'mongod' account.");
+
+            Assert.IsTrue(
+                chownCommand.Contains("echo mongodb", StringComparison.OrdinalIgnoreCase),
+                "The ownership command should fall back to the Debian 'mongodb' account.");
+        }
+
+        [Test]
+        public async Task MongoDBServerExecutor_InitializeAsync_OpensTheMongoDBPortOnTheLocalFirewall()
+        {
+            // SETUP: Capture the firewall entries the executor asks to be opened.
+            List<FirewallEntry> firewallEntries = new List<FirewallEntry>();
+            this.mockFixture.FirewallManager
+                .Setup(mgr => mgr.EnableInboundConnectionsAsync(It.IsAny<IEnumerable<FirewallEntry>>(), It.IsAny<CancellationToken>()))
+                .Callback<IEnumerable<FirewallEntry>, CancellationToken>((entries, token) => firewallEntries.AddRange(entries))
+                .Returns(Task.CompletedTask);
+
+            this.mockFixture.Parameters["Port"] = 27017;
+
+            var executor = new TestableMongoDBServerExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+
+            // ACT
+            await executor.InitializeAsync(EventContext.Persisted(), CancellationToken.None);
+
+            // ASSERT: Distros such as Azure Linux apply a default-deny inbound policy. Without opening
+            // the port, the YCSB client times out connecting to the server and loads zero records.
+            Assert.AreEqual(1, firewallEntries.Count, "The MongoDB port should have been opened on the local firewall.");
+            Assert.AreEqual("tcp", firewallEntries[0].Protocol);
+            CollectionAssert.AreEqual(new List<int> { 27017 }, firewallEntries[0].Ports.ToList());
+        }
+
+        [Test]
         public async Task MongoDBServerExecutor_InitializeAsync_CallsConfigureBindAddressAndStartServer()
         {
             // SETUP: Create executor without DiskFilter to focus on server startup workflow

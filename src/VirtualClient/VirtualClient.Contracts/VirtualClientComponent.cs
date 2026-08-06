@@ -634,6 +634,19 @@ namespace VirtualClient.Contracts
         public DateTime StartTime { get; private set; }
 
         /// <summary>
+        /// Parameter describes the Linux distributions (e.g. AzureLinux, Ubuntu) for which the component
+        /// is supported. A component defining this parameter is never executed on non-Linux systems.
+        /// </summary>
+        public IEnumerable<string> SupportedLinuxDistributions
+        {
+            get
+            {
+                this.Parameters.TryGetCollection<string>(nameof(this.SupportedLinuxDistributions), out IEnumerable<string> distributions);
+                return distributions ?? Array.Empty<string>();
+            }
+        }
+
+        /// <summary>
         /// Parameter describes the platform/architectures for which the component is supported.
         /// </summary>
         public IEnumerable<string> SupportedPlatforms
@@ -943,6 +956,10 @@ namespace VirtualClient.Contracts
             {
                 isSupported = false;
             }
+            else if (this.SupportedLinuxDistributions?.Any() == true && !this.IsSupportedLinuxDistribution())
+            {
+                isSupported = false;
+            }
             else if (this.Layout?.Clients?.Count() >= 2 && this.Roles?.Any() == true)
             {
                 // Execution Criteria
@@ -1017,6 +1034,22 @@ namespace VirtualClient.Contracts
             }
 
             return isMatch;
+        }
+
+        private bool IsSupportedLinuxDistribution()
+        {
+            bool isSupported = false;
+            if (this.Platform == PlatformID.Unix)
+            {
+                LinuxDistributionInfo distribution = this.systemInfo.GetLinuxDistributionAsync(CancellationToken.None)
+                    .GetAwaiter().GetResult();
+
+                isSupported = this.SupportedLinuxDistributions.Contains(
+                    distribution.Distribution.ToString(),
+                    StringComparer.OrdinalIgnoreCase);
+            }
+
+            return isSupported;
         }
     }
 }
