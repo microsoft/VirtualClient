@@ -182,10 +182,37 @@
         {
             "Type": "ExecuteCommand",
             "Parameters": {
+                "Scenario": "MongoGPGKey",
+                "SupportedPlatforms": "linux-x64,linux-arm64",
+                "UseShell": true,
+                "Command": "set -e; if command -v apt-get >/dev/null 2>&1; then curl -fsSL https://www.mongodb.org/static/pgp/server-8.0.asc -o /tmp/mongodb-server-8.0.asc; elif command -v dnf >/dev/null 2>&1 || command -v tdnf >/dev/null 2>&1; then sudo rpm --import https://pgp.mongodb.com/server-8.0.asc; else echo 'Unsupported package manager. MongoDB repository setup requires apt-get or dnf.' 1>&2; exit 1; fi"
+            }
+        },
+        {
+            "Type": "ExecuteCommand",
+            "Parameters": {
+                "Scenario": "MongoGPGDearmor",
+                "SupportedPlatforms": "linux-x64,linux-arm64",
+                "UseShell": true,
+                "Command": "set -e; if command -v apt-get >/dev/null 2>&1; then sudo gpg --batch --yes --dearmor -o /usr/share/keyrings/mongodb-server-8.0.gpg /tmp/mongodb-server-8.0.asc; elif command -v dnf >/dev/null 2>&1 || command -v tdnf >/dev/null 2>&1; then echo 'Not applicable. RPM-based distributions import the key directly via rpm --import.'; else echo 'Unsupported package manager. MongoDB repository setup requires apt-get or dnf.' 1>&2; exit 1; fi"
+            }
+        },
+        {
+            "Type": "ExecuteCommand",
+            "Parameters": {
                 "Scenario": "MongoAddRepository",
                 "SupportedPlatforms": "linux-x64,linux-arm64",
                 "UseShell": true,
-                "Command": "set -e; if command -v apt-get >/dev/null 2>&1; then curl -fsSL https://www.mongodb.org/static/pgp/server-8.0.asc -o /tmp/mongodb-server-8.0.asc; sudo gpg --batch --yes --dearmor -o /usr/share/keyrings/mongodb-server-8.0.gpg /tmp/mongodb-server-8.0.asc; echo 'deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-8.0.gpg ] https://repo.mongodb.org/apt/ubuntu noble/mongodb-org/8.0 multiverse' | sudo tee /etc/apt/sources.list.d/mongodb-org-8.0.list; sudo apt-get update; elif command -v dnf >/dev/null 2>&1 || command -v tdnf >/dev/null 2>&1; then sudo rpm --import https://pgp.mongodb.com/server-8.0.asc; { echo '[mongodb-org-8.0]'; echo 'name=MongoDB Repository'; echo 'baseurl=https://repo.mongodb.org/yum/redhat/9/mongodb-org/8.0/$basearch/'; echo 'gpgcheck=1'; echo 'enabled=1'; echo 'gpgkey=https://pgp.mongodb.com/server-8.0.asc'; } | sudo tee /etc/yum.repos.d/mongodb-org-8.0.repo; sudo dnf makecache --refresh; else echo 'Unsupported package manager. MongoDB repository setup requires apt-get or dnf.' 1>&2; exit 1; fi"
+                "Command": "set -e; if command -v apt-get >/dev/null 2>&1; then echo 'deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-8.0.gpg ] https://repo.mongodb.org/apt/ubuntu noble/mongodb-org/8.0 multiverse' | sudo tee /etc/apt/sources.list.d/mongodb-org-8.0.list; elif command -v dnf >/dev/null 2>&1 || command -v tdnf >/dev/null 2>&1; then { echo '[mongodb-org-8.0]'; echo 'name=MongoDB Repository'; echo 'baseurl=https://repo.mongodb.org/yum/redhat/9/mongodb-org/8.0/$basearch/'; echo 'gpgcheck=1'; echo 'enabled=1'; echo 'gpgkey=https://pgp.mongodb.com/server-8.0.asc'; } | sudo tee /etc/yum.repos.d/mongodb-org-8.0.repo; else echo 'Unsupported package manager. MongoDB repository setup requires apt-get or dnf.' 1>&2; exit 1; fi"
+            }
+        },
+        {
+            "Type": "ExecuteCommand",
+            "Parameters": {
+                "Scenario": "MongoUpdatePackageList",
+                "SupportedPlatforms": "linux-x64,linux-arm64",
+                "UseShell": true,
+                "Command": "set -e; if command -v apt-get >/dev/null 2>&1; then sudo apt-get update; elif command -v dnf >/dev/null 2>&1 || command -v tdnf >/dev/null 2>&1; then sudo dnf makecache --refresh; else echo 'Unsupported package manager. MongoDB repository setup requires apt-get or dnf.' 1>&2; exit 1; fi"
             }
         },
         {
@@ -194,7 +221,7 @@
                 "Scenario": "MongoInstallServer",
                 "SupportedPlatforms": "linux-x64,linux-arm64",
                 "UseShell": true,
-                "Command": "set -e; if command -v apt-get >/dev/null 2>&1; then sudo apt-get install -y mongodb-org; else sudo dnf install -y mongodb-org; fi",
+                "Command": "set -e; if command -v apt-get >/dev/null 2>&1; then sudo apt-get install -y mongodb-org; elif command -v dnf >/dev/null 2>&1 || command -v tdnf >/dev/null 2>&1; then sudo dnf install -y mongodb-org; else echo 'Unsupported package manager. MongoDB installation requires apt-get or dnf.' 1>&2; exit 1; fi",
                 "Role": "Server"
             }
         },
@@ -204,7 +231,7 @@
                 "Scenario": "MongoInstallClient",
                 "SupportedPlatforms": "linux-x64,linux-arm64",
                 "UseShell": true,
-                "Command": "set -e; if command -v apt-get >/dev/null 2>&1; then sudo apt-get install -y mongodb-mongosh; else sudo dnf install -y mongodb-mongosh; fi",
+                "Command": "set -e; if command -v apt-get >/dev/null 2>&1; then sudo apt-get install -y mongodb-mongosh; elif command -v dnf >/dev/null 2>&1 || command -v tdnf >/dev/null 2>&1; then sudo dnf install -y mongodb-mongosh; else echo 'Unsupported package manager. MongoDB installation requires apt-get or dnf.' 1>&2; exit 1; fi",
                 "Role": "Client"
             }
         },
