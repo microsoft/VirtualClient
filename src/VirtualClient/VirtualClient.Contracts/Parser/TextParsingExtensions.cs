@@ -352,22 +352,19 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
-        /// Same as <see cref="TranslateByteUnit"/> but hands back the byte count instead of a string.
-        /// Example: 1KB->1024 and 3.7TB->4068193022771.2.
+        /// Translate the unit of number in a text to a byte count. Example: 1KB->1024 and 3.7TB->4068193022771.2.
         /// </summary>
         /// <param name="text">Original text.</param>
-        /// <returns>The number of bytes the text represents.</returns>
         public static decimal TranslateByteUnitToBytes(string text)
         {
             return decimal.Parse(TextParsingExtensions.TranslateByteUnit(text), NumberStyles.Float, CultureInfo.InvariantCulture);
         }
 
         /// <summary>
-        /// Same as <see cref="TranslateByteUnitToBytes"/> but returns false on bad input instead of throwing.
+        /// Translate the unit of number in a text to a byte count. Returns false if the text is not a valid size.
         /// </summary>
         /// <param name="text">Original text.</param>
         /// <param name="bytes">The number of bytes the text represents.</param>
-        /// <returns>True if the text is a valid size.</returns>
         public static bool TryTranslateByteUnit(string text, out decimal bytes)
         {
             bytes = 0;
