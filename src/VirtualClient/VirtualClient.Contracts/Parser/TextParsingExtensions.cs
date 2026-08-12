@@ -6,6 +6,7 @@ namespace VirtualClient.Contracts
     using System;
     using System.Collections.Generic;
     using System.Data;
+    using System.Globalization;
     using System.Linq;
     using System.Text.RegularExpressions;
     using YamlDotNet.Core.Tokens;
@@ -300,6 +301,10 @@ namespace VirtualClient.Contracts
         /// <summary>
         /// Translate the unit of number in a text. Example: 1K->1024 and 1M->1,048,576.
         /// </summary>
+        /// <remarks>
+        /// Uses decimal rather than double so that fractional sizes (e.g. 3.7TB) work and byte counts stay
+        /// exact across the whole Int64 range. Double starts losing whole numbers above 2^53 (~8PB).
+        /// </remarks>
         /// <param name="text">Original text.</param>
         public static string TranslateByteUnit(string text)
         {
@@ -308,7 +313,7 @@ namespace VirtualClient.Contracts
             Match thousandMatch = Regex.Match(text, thousandRegex.ToString(), thousandRegex.Options);
             if (thousandMatch.Success)
             {
-                text = Convert.ToString(Convert.ToDouble(thousandMatch.Groups[1].Value) * 1024);
+                text = TextParsingExtensions.ToByteUnitString(TextParsingExtensions.ParseByteUnitValue(thousandMatch.Groups[1].Value) * 1024m);
             }
 
             // Unit million: M, m, MB, mb, MiB
@@ -316,7 +321,7 @@ namespace VirtualClient.Contracts
             Match millionMatch = Regex.Match(text, millionRegex.ToString(), millionRegex.Options);
             if (millionMatch.Success)
             {
-                text = Convert.ToString(Convert.ToDouble(millionMatch.Groups[1].Value) * 1024 * 1024);
+                text = TextParsingExtensions.ToByteUnitString(TextParsingExtensions.ParseByteUnitValue(millionMatch.Groups[1].Value) * 1024m * 1024m);
             }
 
             // Unit giga: G, g, GB, gb, GiB
@@ -324,7 +329,7 @@ namespace VirtualClient.Contracts
             Match gigaMatch = Regex.Match(text, gigaRegex.ToString(), gigaRegex.Options);
             if (gigaMatch.Success)
             {
-                text = Convert.ToString(Convert.ToDouble(gigaMatch.Groups[1].Value) * 1024 * 1024 * 1024);
+                text = TextParsingExtensions.ToByteUnitString(TextParsingExtensions.ParseByteUnitValue(gigaMatch.Groups[1].Value) * 1024m * 1024m * 1024m);
             }
 
             // Unit tera: T, t, TB, tb, TiB
@@ -332,7 +337,7 @@ namespace VirtualClient.Contracts
             Match teraMatch = Regex.Match(text, teraRegex.ToString(), teraRegex.Options);
             if (teraMatch.Success)
             {
-                text = Convert.ToString(Convert.ToDouble(teraMatch.Groups[1].Value) * 1024 * 1024 * 1024 * 1024);
+                text = TextParsingExtensions.ToByteUnitString(TextParsingExtensions.ParseByteUnitValue(teraMatch.Groups[1].Value) * 1024m * 1024m * 1024m * 1024m);
             }
 
             // Unit peta: P, p, PB, pb, PiB
@@ -340,10 +345,48 @@ namespace VirtualClient.Contracts
             Match petaMatch = Regex.Match(text, petaRegex.ToString(), petaRegex.Options);
             if (petaMatch.Success)
             {
-                text = Convert.ToString(Convert.ToDouble(petaMatch.Groups[1].Value) * 1024 * 1024 * 1024 * 1024 * 1024);
+                text = TextParsingExtensions.ToByteUnitString(TextParsingExtensions.ParseByteUnitValue(petaMatch.Groups[1].Value) * 1024m * 1024m * 1024m * 1024m * 1024m);
             }
 
             return text;
+        }
+
+        /// <summary>
+        /// Translate the unit of number in a text to a byte count. Example: 1KB->1024 and 3.7TB->4068193022771.2.
+        /// </summary>
+        /// <param name="text">Original text.</param>
+        public static decimal TranslateByteUnitToBytes(string text)
+        {
+            return decimal.Parse(TextParsingExtensions.TranslateByteUnit(text), NumberStyles.Float, CultureInfo.InvariantCulture);
+        }
+
+        /// <summary>
+        /// Translate the unit of number in a text to a byte count. Returns false if the text is not a valid size.
+        /// </summary>
+        /// <param name="text">Original text.</param>
+        /// <param name="bytes">The number of bytes the text represents.</param>
+        public static bool TryTranslateByteUnit(string text, out decimal bytes)
+        {
+            bytes = 0;
+
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                return false;
+            }
+
+            try
+            {
+                bytes = TextParsingExtensions.TranslateByteUnitToBytes(text);
+                return true;
+            }
+            catch (FormatException)
+            {
+                return false;
+            }
+            catch (OverflowException)
+            {
+                return false;
+            }
         }
 
         /// <summary>
@@ -353,7 +396,7 @@ namespace VirtualClient.Contracts
         /// <param name="metricUnit">storage unit for eg bytes,kilobytes,megabytes,etc.</param>
         public static string TranslateStorageByUnit(string text, string metricUnit)
         {
-            double byteUnitStorage = Convert.ToDouble(TranslateByteUnit(text));
+            double byteUnitStorage = Convert.ToDouble(TranslateByteUnit(text), CultureInfo.InvariantCulture);
             string result = null;
 
             switch (metricUnit)
@@ -460,6 +503,18 @@ namespace VirtualClient.Contracts
             }
 
             return result;
+        }
+
+        private static decimal ParseByteUnitValue(string value)
+        {
+            return decimal.Parse(value, NumberStyles.Float, CultureInfo.InvariantCulture);
+        }
+
+        private static string ToByteUnitString(decimal value)
+        {
+            // No trailing zeros and no scientific notation, so whole byte counts still come out as plain
+            // integers for the callers that run long.TryParse over the result.
+            return value.ToString("0.############################", CultureInfo.InvariantCulture);
         }
     }
 }

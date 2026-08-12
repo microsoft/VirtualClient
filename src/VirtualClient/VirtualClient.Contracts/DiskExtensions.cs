@@ -133,7 +133,7 @@ namespace VirtualClient.Contracts
                 volume.Properties.TryGetValue(Disk.WindowsDiskProperties.Size, out IConvertible windowsSize);
                 // Default to 0.
                 windowsSize = (windowsSize == null) ? "0" : windowsSize;
-                result = Convert.ToInt64(TextParsingExtensions.TranslateByteUnit(windowsSize.ToString()));
+                result = (long)Math.Round(TextParsingExtensions.TranslateByteUnitToBytes(windowsSize.ToString()), MidpointRounding.AwayFromZero);
             }
             else if (platform == PlatformID.Unix)
             {
@@ -159,7 +159,7 @@ namespace VirtualClient.Contracts
             {
                 if (disk.Properties.TryGetValue(Disk.WindowsDiskProperties.Size, out IConvertible windowsSize))
                 {
-                    result = Convert.ToInt64(TextParsingExtensions.TranslateByteUnit(windowsSize.ToString()));
+                    result = (long)Math.Round(TextParsingExtensions.TranslateByteUnitToBytes(windowsSize.ToString()), MidpointRounding.AwayFromZero);
                 }
                 else if (disk.Volumes.Any())
                 {

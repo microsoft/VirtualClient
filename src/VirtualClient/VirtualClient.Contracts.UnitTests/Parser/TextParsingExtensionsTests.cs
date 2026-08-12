@@ -6,6 +6,8 @@ namespace VirtualClient.Contracts.Parser
     using NUnit.Framework;
     using System;
     using System.Collections.Generic;
+    using System.Globalization;
+    using System.Threading;
     using VirtualClient.Common;
     using VirtualClient.TestExtensions;
 
@@ -22,6 +24,87 @@ namespace VirtualClient.Contracts.Parser
         public void TextParsingExtensionsTranslateByteUnitAsExpected(string originalText, string expectedOutput)
         {
             Assert.IsTrue(string.Equals(TextParsingExtensions.TranslateByteUnit(originalText), expectedOutput));
+        }
+
+        [Test]
+        [TestCase("1.5kb", "1536")]
+        [TestCase("1.5mb", "1572864")]
+        [TestCase("1.5gb", "1610612736")]
+        [TestCase("0.5tb", "549755813888")]
+        [TestCase("2.5pb", "2814749767106560")]
+        [TestCase("100.75gb", "108179488768")]
+        [TestCase("2.5 gb", "2684354560")]
+        public void TextParsingExtensionsTranslateByteUnitSupportsDecimalValues(string originalText, string expectedOutput)
+        {
+            Assert.AreEqual(expectedOutput, TextParsingExtensions.TranslateByteUnit(originalText));
+        }
+
+        [Test]
+        [TestCase("3.7tb", "4068193022771.2")]
+        [TestCase("3.7gb", "3972844748.8")]
+        [TestCase("1.1kb", "1126.4")]
+        public void TextParsingExtensionsTranslateByteUnitSupportsFractionalByteCounts(string originalText, string expectedOutput)
+        {
+            // The units are powers of 1024, so something like 3.7GB does not land on a whole byte. Keep the
+            // fraction instead of rounding or throwing.
+            Assert.AreEqual(expectedOutput, TextParsingExtensions.TranslateByteUnit(originalText));
+        }
+
+        [Test]
+        [TestCase("8pb", 9007199254740992)]
+        [TestCase("64pb", 72057594037927936)]
+        [TestCase("8191pb", 9222246136947933184)]
+        public void TextParsingExtensionsTranslateByteUnitRemainsExactAcrossTheInt64Range(string originalText, long expectedBytes)
+        {
+            // double only holds whole numbers exactly up to 2^53 (~8PB). decimal covers the full Int64 range.
+            Assert.AreEqual(expectedBytes, TextParsingExtensions.TranslateByteUnitToBytes(originalText));
+            Assert.AreEqual(expectedBytes.ToString(CultureInfo.InvariantCulture), TextParsingExtensions.TranslateByteUnit(originalText));
+        }
+
+        [Test]
+        [TestCase("en-US")]
+        [TestCase("de-DE")]
+        [TestCase("fr-FR")]
+        public void TextParsingExtensionsTranslateByteUnitIsNotAffectedByTheCurrentCulture(string culture)
+        {
+            CultureInfo originalCulture = Thread.CurrentThread.CurrentCulture;
+
+            try
+            {
+                Thread.CurrentThread.CurrentCulture = new CultureInfo(culture);
+
+                // Where ',' is the decimal separator, culture-sensitive parsing would read '1.5' as 15 or just fail.
+                Assert.AreEqual("1610612736", TextParsingExtensions.TranslateByteUnit("1.5gb"));
+                Assert.AreEqual("4068193022771.2", TextParsingExtensions.TranslateByteUnit("3.7tb"));
+            }
+            finally
+            {
+                Thread.CurrentThread.CurrentCulture = originalCulture;
+            }
+        }
+
+        [Test]
+        [TestCase("1024", "1024")]
+        [TestCase("1.5", "1.5")]
+        [TestCase("100kb", "102400")]
+        [TestCase("3.7tb", "4068193022771.2")]
+        public void TextParsingExtensionsTryTranslateByteUnitAsExpected(string originalText, string expectedBytes)
+        {
+            Assert.IsTrue(TextParsingExtensions.TryTranslateByteUnit(originalText, out decimal bytes));
+            Assert.AreEqual(decimal.Parse(expectedBytes, CultureInfo.InvariantCulture), bytes);
+        }
+
+        [Test]
+        [TestCase(null)]
+        [TestCase("")]
+        [TestCase("   ")]
+        [TestCase("abc")]
+        [TestCase("gb")]
+        [TestCase("not-a-size")]
+        public void TextParsingExtensionsTryTranslateByteUnitHandlesInvalidValues(string originalText)
+        {
+            Assert.IsFalse(TextParsingExtensions.TryTranslateByteUnit(originalText, out decimal bytes));
+            Assert.AreEqual(0m, bytes);
         }
 
         [Test]
