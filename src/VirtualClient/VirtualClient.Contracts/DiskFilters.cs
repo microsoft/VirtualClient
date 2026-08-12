@@ -145,15 +145,15 @@ namespace VirtualClient.Contracts
                         break;
 
                     case Filters.SizeGreaterThan:
-                        disks = DiskFilters.SizeGreaterThanFilter(disks, platform, Convert.ToInt64(TextParsingExtensions.TranslateByteUnit(filterValue)));
+                        disks = DiskFilters.SizeGreaterThanFilter(disks, platform, DiskFilters.ParseDiskSize(filterName, filterValue));
                         break;
 
                     case Filters.SizeLessThan:
-                        disks = DiskFilters.SizeLessThanFilter(disks, platform, Convert.ToInt64(TextParsingExtensions.TranslateByteUnit(filterValue)));
+                        disks = DiskFilters.SizeLessThanFilter(disks, platform, DiskFilters.ParseDiskSize(filterName, filterValue));
                         break;
 
                     case Filters.SizeEqualTo:
-                        disks = DiskFilters.SizeEqualToFilter(disks, platform, Convert.ToInt64(TextParsingExtensions.TranslateByteUnit(filterValue)));
+                        disks = DiskFilters.SizeEqualToFilter(disks, platform, DiskFilters.ParseDiskSize(filterName, filterValue));
                         break;
 
                     case Filters.OsDisk:
@@ -189,6 +189,20 @@ namespace VirtualClient.Contracts
             return disks;
         }
 
+        private static decimal ParseDiskSize(string filterName, string filterValue)
+        {
+            // Sizes are kept as decimal because values like 3.7TB do not land on a whole number of bytes.
+            if (!TextParsingExtensions.TryTranslateByteUnit(filterValue, out decimal sizeInBytes) || sizeInBytes < 0)
+            {
+                throw new EnvironmentSetupException(
+                    $"Invalid disk filter. The value '{filterValue}' supplied for the '{filterName}' disk filter is not a valid disk size. " +
+                    $"Supply a size in bytes or a size with a unit (e.g. 1024, 100KB, 1.5GB, 3.7TB).",
+                    ErrorReason.DiskInformationNotAvailable);
+            }
+
+            return sizeInBytes;
+        }
+
         private static IEnumerable<Disk> BiggestSizeFilter(IEnumerable<Disk> disks, PlatformID platform)
         {
             long biggestSize = disks.Max(d => d.SizeInBytes(platform));
@@ -204,21 +218,21 @@ namespace VirtualClient.Contracts
             return disks;
         }
 
-        private static IEnumerable<Disk> SizeGreaterThanFilter(IEnumerable<Disk> disks, PlatformID platform, long size)
+        private static IEnumerable<Disk> SizeGreaterThanFilter(IEnumerable<Disk> disks, PlatformID platform, decimal size)
         {
             disks = disks.Where(d => d.SizeInBytes(platform) >= size);
             return disks;
         }
 
-        private static IEnumerable<Disk> SizeEqualToFilter(IEnumerable<Disk> disks, PlatformID platform, long size)
+        private static IEnumerable<Disk> SizeEqualToFilter(IEnumerable<Disk> disks, PlatformID platform, decimal size)
         {
             // Due to disks are not always sized exactly as defined, due to reserved partitions and disk headers, etc.
             // We are leaving a 1% buffer.
-            disks = disks.Where(d => d.SizeInBytes(platform) >= size * 0.99 && d.SizeInBytes(platform) <= size * 1.01);
+            disks = disks.Where(d => d.SizeInBytes(platform) >= size * 0.99m && d.SizeInBytes(platform) <= size * 1.01m);
             return disks;
         }
 
-        private static IEnumerable<Disk> SizeLessThanFilter(IEnumerable<Disk> disks, PlatformID platform, long size)
+        private static IEnumerable<Disk> SizeLessThanFilter(IEnumerable<Disk> disks, PlatformID platform, decimal size)
         {
             disks = disks.Where(d => d.SizeInBytes(platform) <= size);
             return disks;

@@ -342,6 +342,89 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
+        [TestCase("SizeGreaterThan:3.7gb")]
+        [TestCase("SizeGreaterThan:3788.8mb")]
+        [TestCase("SizeGreaterThan:3879731.2kb")]
+        public void DiskFiltersCanFilterOnSizeBiggerThanUsingDecimalValues(string filterString)
+        {
+            // 3.7GB is 3972844748.8 bytes. The fraction should not get it rejected.
+            this.disks = this.mockFixture.CreateDisks(PlatformID.Unix, true);
+            this.disks.ElementAt(0).Properties["size"] = (long)5 * 1024 * 1024 * 1024;
+            this.disks.ElementAt(1).Properties["size"] = (long)3 * 1024 * 1024 * 1024;
+            this.disks.ElementAt(2).Properties["size"] = (long)2 * 1024 * 1024 * 1024;
+            this.disks.ElementAt(3).Properties["size"] = (long)7 * 1024 * 1024 * 1024;
+
+            IEnumerable<Disk> result = DiskFilters.FilterDisks(this.disks, filterString, PlatformID.Unix);
+            Assert.AreEqual(2, result.Count());
+            Assert.IsTrue(object.ReferenceEquals(this.disks.ElementAt(0), result.ElementAt(0)));
+            Assert.IsTrue(object.ReferenceEquals(this.disks.ElementAt(3), result.ElementAt(1)));
+        }
+
+        [Test]
+        public void DiskFiltersCanFilterOnSizeLessThanUsingDecimalValues()
+        {
+            this.disks = this.mockFixture.CreateDisks(PlatformID.Unix, true);
+            this.disks.ElementAt(0).Properties["size"] = (long)5 * 1024 * 1024 * 1024;
+            this.disks.ElementAt(1).Properties["size"] = (long)3 * 1024 * 1024 * 1024;
+            this.disks.ElementAt(2).Properties["size"] = (long)2 * 1024 * 1024 * 1024;
+            this.disks.ElementAt(3).Properties["size"] = (long)7 * 1024 * 1024 * 1024;
+
+            string filterString = "SizeLessThan:3.7gb";
+            IEnumerable<Disk> result = DiskFilters.FilterDisks(this.disks, filterString, PlatformID.Unix);
+            Assert.AreEqual(2, result.Count());
+            Assert.IsTrue(object.ReferenceEquals(this.disks.ElementAt(1), result.ElementAt(0)));
+            Assert.IsTrue(object.ReferenceEquals(this.disks.ElementAt(2), result.ElementAt(1)));
+        }
+
+        [Test]
+        public void DiskFiltersCanFilterOnSizeEqualToUsingDecimalValues()
+        {
+            this.disks = this.mockFixture.CreateDisks(PlatformID.Unix, true);
+            this.disks.ElementAt(0).Properties["size"] = (long)5 * 1024 * 1024 * 1024;
+            this.disks.ElementAt(1).Properties["size"] = (long)3 * 1024 * 1024 * 1024;
+            this.disks.ElementAt(2).Properties["size"] = (long)2 * 1024 * 1024 * 1024;
+            this.disks.ElementAt(3).Properties["size"] = (long)7 * 1024 * 1024 * 1024;
+
+            // 3.001GB is 3222299213.824 bytes; only the 3GB disk falls inside the 1% buffer.
+            string filterString = "SizeEqualTo:3.001gb";
+            IEnumerable<Disk> result = DiskFilters.FilterDisks(this.disks, filterString, PlatformID.Unix);
+            Assert.AreEqual(1, result.Count());
+            Assert.IsTrue(object.ReferenceEquals(this.disks.ElementAt(1), result.ElementAt(0)));
+        }
+
+        [Test]
+        public void DiskFiltersCanFilterOnSizeGivenAsABareNumberOfBytes()
+        {
+            this.disks = this.mockFixture.CreateDisks(PlatformID.Unix, true);
+            this.disks.ElementAt(0).Properties["size"] = (long)5 * 1024 * 1024 * 1024;
+            this.disks.ElementAt(1).Properties["size"] = (long)3 * 1024 * 1024 * 1024;
+            this.disks.ElementAt(2).Properties["size"] = (long)2 * 1024 * 1024 * 1024;
+            this.disks.ElementAt(3).Properties["size"] = (long)7 * 1024 * 1024 * 1024;
+
+            string filterString = "SizeGreaterThan:3972844748.8";
+            IEnumerable<Disk> result = DiskFilters.FilterDisks(this.disks, filterString, PlatformID.Unix);
+            Assert.AreEqual(2, result.Count());
+            Assert.IsTrue(object.ReferenceEquals(this.disks.ElementAt(0), result.ElementAt(0)));
+            Assert.IsTrue(object.ReferenceEquals(this.disks.ElementAt(3), result.ElementAt(1)));
+        }
+
+        [Test]
+        [TestCase("SizeGreaterThan:abc")]
+        [TestCase("SizeLessThan:not-a-size")]
+        [TestCase("SizeEqualTo:gb")]
+        [TestCase("SizeGreaterThan:")]
+        public void DiskFiltersThrowOnAnInvalidSizeValue(string filterString)
+        {
+            this.disks = this.mockFixture.CreateDisks(PlatformID.Unix, true);
+
+            EnvironmentSetupException error = Assert.Throws<EnvironmentSetupException>(
+                () => DiskFilters.FilterDisks(this.disks, filterString, PlatformID.Unix).ToList());
+
+            Assert.AreEqual(ErrorReason.DiskInformationNotAvailable, error.Reason);
+            Assert.IsTrue(error.Message.Contains("disk filter", StringComparison.OrdinalIgnoreCase));
+        }
+
+        [Test]
         [Ignore("We can support this in the future if we add a 'Size' property to the Disk object for Windows (e.g. DiskPart -> list disks) and consider that in the filtering.")]
         public void DiskFiltersCanFilterOnSizeBiggerThanOnWindows()
         {
