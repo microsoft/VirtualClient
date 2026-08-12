@@ -50,6 +50,7 @@ This profile loads a dataset into MongoDB and then runs various read, write, sca
   * linux-arm64
 
 * **Supported Operating Systems**  
+  * AzureLinux
   * Ubuntu
 
 * **Supports Disconnected Scenarios**  
