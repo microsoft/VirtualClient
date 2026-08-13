@@ -24,6 +24,16 @@ namespace VirtualClient.Actions
     [SupportedPlatforms("linux-arm64,linux-x64")]
     public class MongoDBServerExecutor : MongoDBExecutor
     {
+        /// <summary>
+        /// The MongoDB service account created by RPM-based packages (Azure Linux, RHEL, Fedora).
+        /// </summary>
+        private const string RpmServiceUser = "mongod";
+
+        /// <summary>
+        /// The MongoDB service account created by Debian-based packages (Ubuntu, Debian).
+        /// </summary>
+        private const string DebianServiceUser = "mongodb";
+
         private IFileSystem fileSystem;
         private ISystemManagement systemManagement;
         private bool disposed;
@@ -67,6 +77,9 @@ namespace VirtualClient.Actions
             await base.InitializeAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
 
             this.InitializeApiClients();
+
+            await MongoDBServerExecutor.OpenFirewallPortsAsync(this.Port, this.systemManagement.FirewallManager, cancellationToken)
+                .ConfigureAwait(false);
 
             // Initialize disk if DiskFilter is specified
             if (!string.IsNullOrWhiteSpace(this.DiskFilter))
@@ -120,6 +133,25 @@ namespace VirtualClient.Actions
             {
                 this.disposed = true;
             }
+        }
+
+        /// <summary>
+        /// Opens the MongoDB port on the local firewall so that the client instance is able to
+        /// connect to the MongoDB server. Distros such as Azure Linux apply a default-deny policy
+        /// to inbound traffic, so the port must be opened explicitly.
+        /// </summary>
+        private static Task OpenFirewallPortsAsync(int port, IFirewallManager firewallManager, CancellationToken cancellationToken)
+        {
+            return firewallManager.EnableInboundConnectionsAsync(
+                new List<FirewallEntry>
+                {
+                    new FirewallEntry(
+                        "MongoDB: Allow Multiple Machines communications",
+                        "Allows individual machine instances to communicate with other machine in client-server scenario",
+                        "tcp",
+                        new List<int> { port })
+                },
+                cancellationToken);
         }
 
         /// <summary>
@@ -266,10 +298,16 @@ namespace VirtualClient.Actions
                     telemetryContext,
                     cancellationToken).ConfigureAwait(false);
 
-                // Set permissions
+                // Set permissions. The MongoDB service account name differs by package format:
+                // Debian/Ubuntu packages create 'mongodb' whereas RPM-based distributions
+                // (Azure Linux, RHEL, Fedora) create 'mongod'. Resolve it at runtime so the
+                // data directory is owned by the account mongod actually runs as.
+                string resolveServiceUser = $"MONGO_USER=$(id -u {MongoDBServerExecutor.RpmServiceUser} >/dev/null 2>&1 && echo {MongoDBServerExecutor.RpmServiceUser} || echo {MongoDBServerExecutor.DebianServiceUser}); " +
+                    $"sudo chown -R $MONGO_USER:$MONGO_USER {mongoDataPath}";
+
                 await this.ExecuteMongoDBCommandAsync(
                     "bash",
-                    $"-c \"sudo chown -R mongodb:mongodb {mongoDataPath}\"",
+                    $"-c \"{resolveServiceUser}\"",
                     "SetPermissions",
                     telemetryContext,
                     cancellationToken).ConfigureAwait(false);

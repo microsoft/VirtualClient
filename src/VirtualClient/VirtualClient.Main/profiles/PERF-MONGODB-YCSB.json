@@ -3,7 +3,7 @@
     "Metadata": {
         "RecommendedMinimumExecutionTime": "00:15:00",
         "SupportedPlatforms": "linux-x64,linux-arm64",
-        "SupportedOperatingSystems": "Ubuntu",
+        "SupportedOperatingSystems": "AzureLinux,Ubuntu",
         "Notes": "Database sizes vary based on RecordCount: Small (500000 records) ~8-10 GB, Medium (2500000 records) ~40-50 GB, Large (20000000 records) ~320-400 GB, XLarge (55000000 records) ~900 GB-1 TB. Default configuration uses Medium size (~40-50 GB) with 2500000 records."
     },
     "Parameters": {
@@ -107,7 +107,7 @@
                 "MetricScenario": "Read_Latest_95_Read_5_Insert_{RecordCount}_Records",
                 "Database": "$.Parameters.Database",
                 "Port": "$.Parameters.Port",
-                "RunCommand": "run {Database} -s -p maxexecutiontime={Duration.TotalSeconds} -p operationcount={OperationCount} -p recordcount={RecordCount} -threads {ThreadCount} -p fieldcount={FieldCount} -p fieldlength={FieldLength} -p mongodb.url=mongodb://{ServerIP}:{Port}/ycsb -P {PackagePath:ycsb}/ycsb-0.17.0/workloads/workloadd",
+                "RunCommand": "run {Database} -s -p maxexecutiontime={Duration.TotalSeconds} -p operationcount={OperationCount} -p recordcount={RecordCount} -threads {ThreadCount} -p fieldcount={FieldCount} -p fieldlength={FieldLength} -p mongodb.url=mongodb://{ServerIP}:{Port}/ycsb -p mongodb.upsert=true -P {PackagePath:ycsb}/ycsb-0.17.0/workloads/workloadd",
                 "Duration": "$.Parameters.Duration",
                 "ThreadCount": "$.Parameters.ThreadCount",
                 "OperationCount": "5000000",
@@ -126,7 +126,7 @@
                 "MetricScenario": "Short_Range_Scan_95_Scan_5_Insert_{RecordCount}_Records",
                 "Database": "$.Parameters.Database",
                 "Port": "$.Parameters.Port",
-                "RunCommand": "run {Database} -s -p maxexecutiontime={Duration.TotalSeconds} -p operationcount={OperationCount} -p recordcount={RecordCount} -threads {ThreadCount} -p fieldcount={FieldCount} -p fieldlength={FieldLength} -p mongodb.url=mongodb://{ServerIP}:{Port}/ycsb -P {PackagePath:ycsb}/ycsb-0.17.0/workloads/workloade",
+                "RunCommand": "run {Database} -s -p maxexecutiontime={Duration.TotalSeconds} -p operationcount={OperationCount} -p recordcount={RecordCount} -threads {ThreadCount} -p fieldcount={FieldCount} -p fieldlength={FieldLength} -p mongodb.url=mongodb://{ServerIP}:{Port}/ycsb -p mongodb.upsert=true -P {PackagePath:ycsb}/ycsb-0.17.0/workloads/workloade",
                 "Duration": "$.Parameters.Duration",
                 "ThreadCount": "$.Parameters.ThreadCount",
                 "OperationCount": "5000000",
@@ -173,10 +173,10 @@
             "Type": "LinuxPackageInstallation",
             "Parameters": {
                 "Scenario": "InstallMongoPrereqs",
-                "Packages-Apt": "gnupg,curl",
-                "Packages-Dnf": "gnupg,curl",
-                "Packages-Yum": "gnupg,curl",
-                "Packages-Zypper": "gpg2,curl"
+                "Packages-Apt": "gnupg,curl,lshw",
+                "Packages-Dnf": "gnupg2,curl,lshw",
+                "Packages-Yum": "gnupg2,curl,lshw",
+                "Packages-Zypper": "gpg2,curl,lshw"
             }
         },
         {
@@ -184,6 +184,7 @@
             "Parameters": {
                 "Scenario": "MongoGPGKey",
                 "SupportedPlatforms": "linux-x64,linux-arm64",
+                "SupportedLinuxDistributions": "Debian,Ubuntu",
                 "Command": "curl -fsSL https://www.mongodb.org/static/pgp/server-8.0.asc -o server-8.0.asc"
             }
         },
@@ -192,6 +193,7 @@
             "Parameters": {
                 "Scenario": "MongoGPGDearmor",
                 "SupportedPlatforms": "linux-x64,linux-arm64",
+                "SupportedLinuxDistributions": "Debian,Ubuntu",
                 "Command": "sudo gpg --batch --yes --dearmor -o /usr/share/keyrings/mongodb-server-8.0.gpg server-8.0.asc"
             }
         },
@@ -200,6 +202,7 @@
             "Parameters": {
                 "Scenario": "MongoAddRepository",
                 "SupportedPlatforms": "linux-x64,linux-arm64",
+                "SupportedLinuxDistributions": "Debian,Ubuntu",
                 "Command": "sudo sh -c \"echo 'deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-8.0.gpg ] https://repo.mongodb.org/apt/ubuntu noble/mongodb-org/8.0 multiverse' > /etc/apt/sources.list.d/mongodb-org-8.0.list\""
             }
         },
@@ -208,7 +211,35 @@
             "Parameters": {
                 "Scenario": "MongoUpdatePackageList",
                 "SupportedPlatforms": "linux-x64,linux-arm64",
+                "SupportedLinuxDistributions": "Debian,Ubuntu",
                 "Command": "sudo apt-get update"
+            }
+        },
+        {
+            "Type": "ExecuteCommand",
+            "Parameters": {
+                "Scenario": "MongoImportGPGKey",
+                "SupportedPlatforms": "linux-x64,linux-arm64",
+                "SupportedLinuxDistributions": "AzureLinux",
+                "Command": "sudo rpm --import https://pgp.mongodb.com/server-8.0.asc"
+            }
+        },
+        {
+            "Type": "ExecuteCommand",
+            "Parameters": {
+                "Scenario": "MongoCreateDnfRepository",
+                "SupportedPlatforms": "linux-x64,linux-arm64",
+                "SupportedLinuxDistributions": "AzureLinux",
+                "Command": "sudo sh -c \"echo '[mongodb-org-8.0]\nname=MongoDB Repository\nbaseurl=https://repo.mongodb.org/yum/redhat/9/mongodb-org/8.0/$basearch/\ngpgcheck=1\nenabled=1\ngpgkey=https://pgp.mongodb.com/server-8.0.asc' > /etc/yum.repos.d/mongodb-org-8.0.repo\""
+            }
+        },
+        {
+            "Type": "ExecuteCommand",
+            "Parameters": {
+                "Scenario": "MongoRefreshPackageMetadata",
+                "SupportedPlatforms": "linux-x64,linux-arm64",
+                "SupportedLinuxDistributions": "AzureLinux",
+                "Command": "sudo dnf makecache --refresh"
             }
         },
         {
@@ -216,6 +247,7 @@
             "Parameters": {
                 "Scenario": "MongoInstallServer",
                 "SupportedPlatforms": "linux-x64,linux-arm64",
+                "SupportedLinuxDistributions": "Debian,Ubuntu",
                 "Command": "sudo apt-get install -y mongodb-org",
                 "Role": "Server"
             }
@@ -225,7 +257,28 @@
             "Parameters": {
                 "Scenario": "MongoInstallClient",
                 "SupportedPlatforms": "linux-x64,linux-arm64",
+                "SupportedLinuxDistributions": "Debian,Ubuntu",
                 "Command": "sudo apt-get install -y mongodb-mongosh",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "ExecuteCommand",
+            "Parameters": {
+                "Scenario": "MongoInstallServer",
+                "SupportedPlatforms": "linux-x64,linux-arm64",
+                "SupportedLinuxDistributions": "AzureLinux",
+                "Command": "sudo dnf install -y mongodb-org",
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "ExecuteCommand",
+            "Parameters": {
+                "Scenario": "MongoInstallClient",
+                "SupportedPlatforms": "linux-x64,linux-arm64",
+                "SupportedLinuxDistributions": "AzureLinux",
+                "Command": "sudo dnf install -y mongodb-mongosh",
                 "Role": "Client"
             }
         },
