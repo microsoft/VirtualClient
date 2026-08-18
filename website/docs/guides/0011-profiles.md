@@ -25,41 +25,27 @@ properties that one might find in a profile.
 |---------------------------------|-------------|---------------|
 | SupportsIterations              | Optional. True/False. This metadata property DOES affect the operations of the Virtual Client. When set to false, it indicates that the profile does not support profile iterations (i.e. --iterations on the command line). | |
 | RecommendedMinimumExecutionTime | Optional. Provides a recommendation for the minimum length of time for running the profile. This time is typically based on the amount of time expected to execute all actions in the profile 1 full round. Actions are generally executed in sequential order. Note that this is an estimate based on empirical evidence, but it is always a good idea to leave a little extra time buffer. | |
-| SupportedPlatforms              | Required (base metadata). Defines a set of OS platforms and CPU architectures on which the profile (and all components within) is confirmed to run correctly (e.g. win-x64 -> Windows OS, X64 architecture). | |
-| SupportedOperatingSystems       | Required (base metadata). Defines a set of operating systems on which the profile is confirmed to run correctly (e.g. Ubuntu, CentOS, Windows). This list does not indicate that the Virtual Client will run on every version of these operating systems. Focus on latest versions of the operating systems for support. | |
+| SupportedPlatforms              | Required. Defines a set of OS platforms and CPU architectures on which the profile (and all components within) is confirmed to run correctly. | |
+| SupportedOperatingSystems       | Required. Defines a set of operating systems on which the profile can run (e.g. Ubuntu, Windows). | |
 
 ### Base Metadata
-Every profile in the Virtual Client repo is required to define the following two properties. This "base metadata" gives users and
-automation a consistent way to answer 2 questions about any profile without having to read the rest of it: where can it run, and on
-which operating systems. The set is defined in code by `ProfileMetadata.BaseProperties` and is enforced by unit tests that run against
-every profile in the repo.
+Every profile in the Virtual Client repo must define `SupportedPlatforms` and `SupportedOperatingSystems`. The set is defined in code by
+`ProfileMetadata.BaseProperties` and is enforced by unit tests that run against every profile on each pull request.
 
 | Property                        | Format | Allowed Values |
 |---------------------------------|--------|----------------|
-| SupportedPlatforms              | Comma-delimited | `linux-x64`, `linux-arm64`, `win-x64`, `win-arm64`. |
-| SupportedOperatingSystems       | Comma-delimited | The names defined by the `LinuxDistribution` enumeration (e.g. `AmazonLinux`, `AzureLinux`, `CentOS`, `Debian`, `Fedora`, `Flatcar`, `Gentoo`, `OpenSuse`, `RedHat`, `Ubuntu`) plus `Windows`. |
+| SupportedPlatforms              | Comma-delimited | `linux-x64`, `linux-arm64`, `win-x64`, `win-arm64` |
+| SupportedOperatingSystems       | Comma-delimited | The `LinuxDistribution` enumeration names (`AmazonLinux`, `AzureLinux`, `CentOS`, `Debian`, `Fedora`, `Flatcar`, `Gentoo`, `OpenSuse`, `RedHat`, `Ubuntu`) plus `Windows` |
 
-Note that `AzureLinux` is the canonical name for the distro previously written as `CBL-Mariner`, and `AmazonLinux` is canonical for
-`AwsLinux`. Version numbers are not included in `SupportedOperatingSystems`; a profile that only supports a specific version should
-note that in a profile-specific metadata property.
+Note that `AzureLinux` is the canonical name for the distro previously written as `CBL-Mariner`, and `AmazonLinux` for `AwsLinux`. Version
+numbers are not included; note version-specific support in a profile-specific property instead.
 
-`RecommendedMinimumExecutionTime` is **optional** and is not part of the required base metadata. It is only meaningful for profiles
-that define their own workload. It does not apply to profiles whose runtime is determined by something outside the profile, such as:
-
-* Monitor profiles (`MONITORS-*.json`), which run for as long as the workload profile they are paired with.
-* Bootstrap, setup and upload profiles, whose duration depends on package sizes and network throughput.
-* `EXECUTE-COMMAND.json` and `EXECUTE-SCRIPT.json`, where the work itself is supplied by the user.
-
-Where the property is defined, it should be derived from the actions in the profile (which execute sequentially) rather than estimated.
-Two formats are supported:
-
-* A single timespan (e.g. `01:00:00`) for profiles whose runtime does not vary meaningfully with the size of the system.
-* A set of timespans scaled by core count, for workloads whose runtime depends on the number of cores/vCPUs available
-  (e.g. `(4-cores)=02:00:00,(16-cores)=04:00:00,(64-cores)=10:00:00`). This form is used by SPECcpu, SPECjbb, LAPACK and LMbench.
+`RecommendedMinimumExecutionTime` is optional and is not part of the base metadata. It does not apply where the runtime is determined
+outside the profile. Monitor profiles run for as long as the workload profile they are paired with, and the bootstrap, setup and upload
+profiles depend on package sizes and network throughput. Two formats are supported: a single timespan, or timespans scaled by core count for workloads whose
+runtime depends on the cores available (e.g. `(4-cores)=02:00:00,(16-cores)=04:00:00`).
 
 ``` json
-// The base metadata as it appears at the top of a workload profile, alongside the
-// optional RecommendedMinimumExecutionTime.
 {
     "Description": "OpenSSL CPU Performance Workload",
     "Metadata": {
@@ -70,9 +56,6 @@ Two formats are supported:
     ...
 }
 ```
-
-Any number of additional profile-specific metadata properties (e.g. `Notes`, `DocumentationUri`, `PreliminaryRequirements`) may also
-be defined.
 
 ## Parameters
 The section 'Parameters' within the profile defines a set of 1 or more parameters (typically with default values) that can be used to override the default values in the components that

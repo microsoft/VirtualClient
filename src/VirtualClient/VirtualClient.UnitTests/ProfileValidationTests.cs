@@ -107,7 +107,6 @@ namespace VirtualClient.UnitTests
             ExecutionProfile profileObject = JsonConvert.DeserializeObject<ExecutionProfile>(profileString);
 
             // The property is optional. It does not apply to profiles whose runtime is
-            // determined externally (e.g. monitor profiles).
             if (!profileObject.Metadata.TryGetValue(ProfileMetadata.RecommendedMinimumExecutionTime, out IConvertible executionTime))
             {
                 return;
@@ -115,9 +114,7 @@ namespace VirtualClient.UnitTests
 
             string value = executionTime?.ToString();
 
-            // Two forms are supported: a single timespan (e.g. 01:00:00), or a set of
-            // timespans scaled by core count for workloads whose runtime depends on it
-            // (e.g. "(4-cores)=02:00:00,(16-cores)=04:00:00").
+            // Either a single timespan, or timespans scaled by core count (e.g. "(4-cores)=02:00:00").
             IEnumerable<string> timespans = Regex.IsMatch(value ?? string.Empty, @"^\(\d+-cores\)=")
                 ? Regex.Matches(value, @"\(\d+-cores\)=([^,]+)").Select(match => match.Groups[1].Value)
                 : new List<string> { value };
