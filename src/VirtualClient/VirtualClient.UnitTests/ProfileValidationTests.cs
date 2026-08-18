@@ -71,7 +71,8 @@ namespace VirtualClient.UnitTests
 
             IEnumerable<string> missing = ProfileMetadata.BaseProperties
                 .Where(property => !profileObject.Metadata.TryGetValue(property, out IConvertible value)
-                    || string.IsNullOrWhiteSpace(value?.ToString()));
+                    || string.IsNullOrWhiteSpace(value?.ToString()))
+                .ToList();
 
             Assert.IsEmpty(
                 missing,
@@ -86,12 +87,20 @@ namespace VirtualClient.UnitTests
             string profileString = File.ReadAllText(profileName);
             ExecutionProfile profileObject = JsonConvert.DeserializeObject<ExecutionProfile>(profileString);
 
-            profileObject.Metadata.TryGetValue(ProfileMetadata.SupportedOperatingSystems, out IConvertible operatingSystems);
+            // Presence of the property is enforced by AllWorkloadProfilesDefineTheRequiredBaseMetadata.
+            // Bail out here so a missing value surfaces as that assertion rather than a NullReferenceException.
+            if (profileObject.Metadata?.TryGetValue(ProfileMetadata.SupportedOperatingSystems, out IConvertible operatingSystems) != true
+                || string.IsNullOrWhiteSpace(operatingSystems?.ToString()))
+            {
+                return;
+            }
 
             IEnumerable<string> invalid = operatingSystems.ToString()
                 .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
                 .Where(name => !string.Equals(name, "Windows", StringComparison.Ordinal)
-                    && !Enum.TryParse(name, ignoreCase: false, out LinuxDistribution _));
+                    && !(Enum.TryParse(name, ignoreCase: false, out LinuxDistribution distribution)
+                        && distribution != LinuxDistribution.Unknown
+                        && !int.TryParse(name, out int _)));
 
             Assert.IsEmpty(
                 invalid,
@@ -106,8 +115,8 @@ namespace VirtualClient.UnitTests
             string profileString = File.ReadAllText(profileName);
             ExecutionProfile profileObject = JsonConvert.DeserializeObject<ExecutionProfile>(profileString);
 
-            // The property is optional. It does not apply to profiles whose runtime is
-            if (!profileObject.Metadata.TryGetValue(ProfileMetadata.RecommendedMinimumExecutionTime, out IConvertible executionTime))
+            // The property is optional. It does not apply to profiles whose runtime is determined externally.
+            if (profileObject.Metadata?.TryGetValue(ProfileMetadata.RecommendedMinimumExecutionTime, out IConvertible executionTime) != true)
             {
                 return;
             }
