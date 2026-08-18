@@ -1,10 +1,10 @@
 {
     "Description": "Stream Performance Workload",
     "Metadata": {
-        "DocumentationLink": "https://msazure.visualstudio.com/One/_git/CRC-AIR-Workloads?version=GBmaster&path=/docs/workloads",
         "RecommendedMinimumExecutionTime": "00:10:00",
         "SupportedPlatforms": "linux-x64",
         "SupportedOperatingSystems": "Ubuntu",
+        "DocumentationUri": "https://msazure.visualstudio.com/One/_git/CRC-AIR-Workloads?version=GBmaster&path=/docs/workloads",
         "SupportedValuesOfToolset": "STREAM,STREAMTriad,STREAMMsft"
     },
     "Parameters": {

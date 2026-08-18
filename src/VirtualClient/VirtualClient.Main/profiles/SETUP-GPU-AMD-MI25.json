@@ -2,8 +2,8 @@
     "Description": "AMD GPU Driver Installation Dependency",
     "Metadata": {
         "RecommendedMinimumExecutionTime": "00:10:00",
-        "SupportedPlatforms": "win-x64,linux-x64",
-        "SupportedOperatingSystems": "Windows,Ubuntu"
+        "SupportedPlatforms": "linux-x64,win-x64",
+        "SupportedOperatingSystems": "Ubuntu,Windows"
     },
     "Parameters": {
         "Username": null

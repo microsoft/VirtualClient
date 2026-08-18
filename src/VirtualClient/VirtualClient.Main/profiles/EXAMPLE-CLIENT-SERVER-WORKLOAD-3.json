@@ -1,6 +1,10 @@
 {
     "Description": "Test Profile Executor",
     "MinimumExecutionInterval": "00:00:05",
+    "Metadata": {
+        "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64",
+        "SupportedOperatingSystems": "AmazonLinux,AzureLinux,CentOS,Debian,OpenSuse,RedHat,Ubuntu,Windows"
+    },
     "Parameters": {
     },
     "Actions": [

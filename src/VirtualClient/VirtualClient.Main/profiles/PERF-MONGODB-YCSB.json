@@ -1,9 +1,9 @@
 {
     "Description": "MongoDB YCSB client-server workload (2-VM)",
     "Metadata": {
-        "RecommendedMinimumExecutionTime": "00:15:00",
+        "RecommendedMinimumExecutionTime": "01:00:00",
         "SupportedPlatforms": "linux-x64,linux-arm64",
-        "SupportedOperatingSystems": "AzureLinux,Ubuntu",
+        "SupportedOperatingSystems": "AzureLinux,Debian,Ubuntu",
         "Notes": "Database sizes vary based on RecordCount: Small (500000 records) ~8-10 GB, Medium (2500000 records) ~40-50 GB, Large (20000000 records) ~320-400 GB, XLarge (55000000 records) ~900 GB-1 TB. Default configuration uses Medium size (~40-50 GB) with 2500000 records."
     },
     "Parameters": {

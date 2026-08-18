@@ -3,6 +3,7 @@
     "MinimumExecutionInterval": "00:00:05",
     "Metadata": {
         "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64",
+        "SupportedOperatingSystems": "AmazonLinux,AzureLinux,CentOS,Debian,OpenSuse,RedHat,Ubuntu,Windows",
         "ScriptPathParameterUsage": "The Script Path can be an absolute Path, or be relative to the Virtual Client Executable or be relative to platform-specific package if the script is downloaded using DependencyPackageInstallation."
     },
     "Parameters": {

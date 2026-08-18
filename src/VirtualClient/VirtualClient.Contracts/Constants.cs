@@ -3,6 +3,7 @@
 
 namespace VirtualClient.Contracts
 {
+    using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
 
     /// <summary>
@@ -303,6 +304,32 @@ namespace VirtualClient.Contracts
         /// Metadata = SupportsIterations
         /// </summary>
         public const string SupportsIterations = nameof(SupportsIterations);
+
+        /// <summary>
+        /// Metadata = RecommendedMinimumExecutionTime. Optional. Does not apply to
+        /// profiles whose runtime is determined externally (e.g. monitor profiles run
+        /// for as long as the workload profile they are paired with).
+        /// </summary>
+        public const string RecommendedMinimumExecutionTime = nameof(RecommendedMinimumExecutionTime);
+
+        /// <summary>
+        /// Metadata = SupportedPlatforms
+        /// </summary>
+        public const string SupportedPlatforms = nameof(SupportedPlatforms);
+
+        /// <summary>
+        /// Metadata = SupportedOperatingSystems
+        /// </summary>
+        public const string SupportedOperatingSystems = nameof(SupportedOperatingSystems);
+
+        /// <summary>
+        /// The metadata properties every profile is required to define.
+        /// </summary>
+        public static readonly IReadOnlyList<string> BaseProperties = new List<string>
+        {
+            ProfileMetadata.SupportedPlatforms,
+            ProfileMetadata.SupportedOperatingSystems
+        };
     }
 
     /// <summary>

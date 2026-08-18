@@ -1,5 +1,9 @@
 {
     "Description": "Get access token for the user that can be used to authenticate.",
+    "Metadata": {
+        "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64",
+        "SupportedOperatingSystems": "AmazonLinux,AzureLinux,CentOS,Debian,OpenSuse,RedHat,Ubuntu,Windows"
+    },
     "Parameters": {
         "TenantId": null,
         "FilePath": null

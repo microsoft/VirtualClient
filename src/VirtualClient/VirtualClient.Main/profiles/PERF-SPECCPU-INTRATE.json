@@ -9,7 +9,7 @@
     "Metadata": {
         "RecommendedMinimumExecutionTime": "(8-cores)=04:00:00,(16-cores)=08:00:00,(64-cores)=10:00:00",
         "SupportedPlatforms": "linux-x64,linux-arm64,win-x64",
-        "SupportedOperatingSystems": "Azure Linux,CentOS,Debian,RedHat,Suse,Ubuntu,Windows",
+        "SupportedOperatingSystems": "AzureLinux,CentOS,Debian,OpenSuse,RedHat,Ubuntu,Windows",
         "Notes": "Using a private package 'speccpu.2017.1.1.9-danielbowers.zip' to enable support for speccpu on Ubuntu 24. SPEC CPU 2017 was not initially designed for win-arm64.",
         "Limitations": "The following benchmarks don't work on Windows: 500, 502, 520, 523, 531"
     },

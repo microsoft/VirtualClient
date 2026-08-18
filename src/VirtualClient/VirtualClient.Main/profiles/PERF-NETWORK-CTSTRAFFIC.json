@@ -2,7 +2,7 @@
     "Description": "CtsTraffic Network Performance Workload",
     "Metadata": {
         "RecommendedMinimumExecutionTime": "00:30:00",
-        "SupportedPlatforms": "win-x64, win-arm64",
+        "SupportedPlatforms": "win-x64,win-arm64",
         "SupportedOperatingSystems": "Windows"
     },
     "Parameters": {

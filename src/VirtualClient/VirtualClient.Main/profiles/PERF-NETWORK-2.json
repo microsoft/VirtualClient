@@ -3,7 +3,7 @@
     "Metadata": {
         "RecommendedMinimumExecutionTime": "00:30:00",
         "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64",
-        "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows,AwsLinux",
+        "SupportedOperatingSystems": "AmazonLinux,AzureLinux,CentOS,Debian,OpenSuse,RedHat,Ubuntu,Windows",
         "Notes": "latte.exe workload UDP protocol support is removed due to constant hangs regardless of the use of iterations (-i) or timeout (-t)."
     },
     "Parameters": {
