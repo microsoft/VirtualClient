@@ -131,6 +131,14 @@ namespace VirtualClient.Actions
                             await this.LogProcessDetailsAsync(process, telemetryContext, "Sysbench", logToFile: true);
                             process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
 
+                            if (process.StandardOutput.ToString().Contains("FATAL:", StringComparison.OrdinalIgnoreCase)
+                                || process.StandardError.ToString().Contains("FATAL:", StringComparison.OrdinalIgnoreCase))
+                            {
+                                throw new WorkloadException(
+                                    "Sysbench reported a fatal error while populating the database.",
+                                    ErrorReason.WorkloadUnexpectedAnomaly);
+                            }
+
                             this.AddPopulationDurationMetric(sysbenchLoggingArguments, process, telemetryContext, cancellationToken);
 
                             state.DatabasePopulated = true;

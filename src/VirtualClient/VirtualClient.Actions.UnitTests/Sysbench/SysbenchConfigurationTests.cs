@@ -21,6 +21,7 @@ namespace VirtualClient.Actions
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
+    using VirtualClient.Common;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
@@ -160,6 +161,40 @@ namespace VirtualClient.Actions
             using (TestSysbenchConfiguration SysbenchExecutor = new TestSysbenchConfiguration(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await SysbenchExecutor.ExecuteAsync(CancellationToken.None);
+            }
+        }
+
+        [Test]
+        public void SysbenchConfigurationThrowsWhenPopulationReportsFatalError()
+        {
+            this.fixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new SysbenchExecutor.SysbenchState()
+            {
+                SysbenchInitialized = true
+            }));
+
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            {
+                return new InMemoryProcess
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = exe,
+                        Arguments = arguments
+                    },
+                    ExitCode = 0,
+                    OnStart = () => true,
+                    OnHasExited = () => true,
+                    StandardOutput = new ConcurrentBuffer(new StringBuilder(
+                        "FATAL: error 1130: Host '10.0.1.0' is not allowed to connect to this MySQL server"))
+                };
+            };
+
+            using (TestSysbenchConfiguration sysbenchConfiguration = new TestSysbenchConfiguration(this.fixture.Dependencies, this.fixture.Parameters))
+            {
+                WorkloadException error = Assert.ThrowsAsync<WorkloadException>(
+                    () => sysbenchConfiguration.ExecuteAsync(CancellationToken.None));
+
+                Assert.AreEqual(ErrorReason.WorkloadUnexpectedAnomaly, error.Reason);
             }
         }
 
