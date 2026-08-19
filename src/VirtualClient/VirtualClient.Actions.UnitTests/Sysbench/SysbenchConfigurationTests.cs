@@ -119,6 +119,50 @@ namespace VirtualClient.Actions
         }
 
         [Test]
+        public async Task SysbenchConfigurationWaitsForServerDependenciesBeforeRemotePopulation()
+        {
+            this.fixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new SysbenchExecutor.SysbenchState()
+            {
+                SysbenchInitialized = true
+            }));
+
+            bool serverHeartbeatConfirmed = false;
+            this.fixture.ApiClient.OnGetHeartbeat().ReturnsAsync(() =>
+            {
+                serverHeartbeatConfirmed = true;
+                return this.fixture.CreateHttpResponse(HttpStatusCode.OK);
+            });
+
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            {
+                Assert.IsTrue(serverHeartbeatConfirmed);
+
+                return new InMemoryProcess
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = exe,
+                        Arguments = arguments
+                    },
+                    ExitCode = 0,
+                    OnStart = () => true,
+                    OnHasExited = () => true
+                };
+            };
+
+            using (TestSysbenchConfiguration sysbenchConfiguration = new TestSysbenchConfiguration(this.fixture.Dependencies, this.fixture.Parameters))
+            {
+                await sysbenchConfiguration.ExecuteAsync(CancellationToken.None);
+            }
+
+            this.fixture.ApiClient.Verify(
+                client => client.GetHeartbeatAsync(
+                    It.IsAny<CancellationToken>(),
+                    It.IsAny<IAsyncPolicy<HttpResponseMessage>>()),
+                Times.Once);
+        }
+
+        [Test]
         public async Task SysbenchConfigurationPreparesDatabase()
         {
             string[] expectedCommands =
