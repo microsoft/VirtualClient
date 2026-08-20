@@ -26,16 +26,16 @@ jobs:
         # Learn more about CodeQL language support at https://aka.ms/codeql-docs/language-support
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Setup .NET
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 9.0.x
 
     - name: Initialize CodeQL
       if: false # this is causing PR to fail on Windows with single slashes on Windows, temporarily disabling since we have it in Linux PR
-      uses: github/codeql-action/init@v2
+      uses: github/codeql-action/init@v3
       with:
         languages: ${{ matrix.language }}
         # If you wish to specify custom queries, you can do so here or in a config file.
@@ -53,6 +53,6 @@ jobs:
 
     - name: Perform CodeQL Analysis
       if: false # this is causing PR to fail on Windows with single slashes on Windows, temporarily disabling since we have it in Linux PR
-      uses: github/codeql-action/analyze@v2
+      uses: github/codeql-action/analyze@v3
       with:
         category: "/language:${{matrix.language}}"
