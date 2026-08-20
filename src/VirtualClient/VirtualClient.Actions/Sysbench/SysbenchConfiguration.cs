@@ -31,6 +31,7 @@ namespace VirtualClient.Actions
             : base(dependencies, parameters)
         {
             this.stateManager = this.Dependencies.GetService<IStateManager>();
+            this.PollingTimeout = TimeSpan.FromMinutes(10);
         }
 
         /// <summary>
@@ -44,6 +45,11 @@ namespace VirtualClient.Actions
                 return action?.ToString();
             }
         }
+
+        /// <summary>
+        /// The amount of time to wait for the server dependencies to complete.
+        /// </summary>
+        protected TimeSpan PollingTimeout { get; set; }
 
         /// <summary>
         /// Executes the workload.
@@ -110,6 +116,14 @@ namespace VirtualClient.Actions
 
             if (!state.DatabasePopulated)
             {
+                if (this.IsMultiRoleLayout() && this.IsInRole(ClientRole.Client))
+                {
+                    this.Logger.LogTraceMessage("Synchronization: Poll server API for heartbeat before database population...");
+
+                    await this.ServerApiClient.PollForHeartbeatAsync(this.PollingTimeout, cancellationToken)
+                        .ConfigureAwait(false);
+                }
+
                 await this.Logger.LogMessageAsync($"{this.TypeName}.PopulateDatabase", telemetryContext.Clone(), async () =>
                 {
                     string serverIp = (this.IsMultiRoleLayout() && this.IsInRole(ClientRole.Client)) ? this.ServerIpAddress : "localhost";
@@ -130,6 +144,14 @@ namespace VirtualClient.Actions
                         {
                             await this.LogProcessDetailsAsync(process, telemetryContext, "Sysbench", logToFile: true);
                             process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
+
+                            if (process.StandardOutput.ToString().Contains("FATAL:", StringComparison.OrdinalIgnoreCase)
+                                || process.StandardError.ToString().Contains("FATAL:", StringComparison.OrdinalIgnoreCase))
+                            {
+                                throw new WorkloadException(
+                                    "Sysbench reported a fatal error while populating the database.",
+                                    ErrorReason.WorkloadUnexpectedAnomaly);
+                            }
 
                             this.AddPopulationDurationMetric(sysbenchLoggingArguments, process, telemetryContext, cancellationToken);
 
