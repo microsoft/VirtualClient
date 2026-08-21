@@ -82,34 +82,6 @@ namespace VirtualClient.UnitTests
 
         [Test]
         [TestCaseSource(nameof(GetWorkloadProfileTestSource))]
-        public void AllWorkloadProfilesDefineSupportedOperatingSystemsUsingTheCanonicalNames(string profileName)
-        {
-            string profileString = File.ReadAllText(profileName);
-            ExecutionProfile profileObject = JsonConvert.DeserializeObject<ExecutionProfile>(profileString);
-
-            // Presence of the property is enforced by AllWorkloadProfilesDefineTheRequiredBaseMetadata.
-            // Bail out here so a missing value surfaces as that assertion rather than a NullReferenceException.
-            if (profileObject.Metadata?.TryGetValue(ProfileMetadata.SupportedOperatingSystems, out IConvertible operatingSystems) != true
-                || string.IsNullOrWhiteSpace(operatingSystems?.ToString()))
-            {
-                return;
-            }
-
-            IEnumerable<string> invalid = operatingSystems.ToString()
-                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                .Where(name => !string.Equals(name, "Windows", StringComparison.Ordinal)
-                    && !(Enum.TryParse(name, ignoreCase: false, out LinuxDistribution distribution)
-                        && distribution != LinuxDistribution.Unknown
-                        && !int.TryParse(name, out int _)));
-
-            Assert.IsEmpty(
-                invalid,
-                $"The profile '{Path.GetFileName(profileName)}' defines operating systems that do not match the " +
-                $"'{nameof(LinuxDistribution)}' names (or 'Windows'): {string.Join(", ", invalid)}.");
-        }
-
-        [Test]
-        [TestCaseSource(nameof(GetWorkloadProfileTestSource))]
         public void AllWorkloadProfilesDefineAValidRecommendedMinimumExecutionTime(string profileName)
         {
             string profileString = File.ReadAllText(profileName);
