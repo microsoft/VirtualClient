@@ -303,21 +303,6 @@ namespace VirtualClient.Contracts
         /// Metadata = SupportsIterations
         /// </summary>
         public const string SupportsIterations = nameof(SupportsIterations);
-
-        /// <summary>
-        /// Metadata = RecommendedMinimumExecutionTime
-        /// </summary>
-        public const string RecommendedMinimumExecutionTime = nameof(RecommendedMinimumExecutionTime);
-
-        /// <summary>
-        /// Metadata = SupportedPlatforms
-        /// </summary>
-        public const string SupportedPlatforms = nameof(SupportedPlatforms);
-
-        /// <summary>
-        /// Metadata = SupportedOperatingSystems
-        /// </summary>
-        public const string SupportedOperatingSystems = nameof(SupportedOperatingSystems);
     }
 
     /// <summary>
