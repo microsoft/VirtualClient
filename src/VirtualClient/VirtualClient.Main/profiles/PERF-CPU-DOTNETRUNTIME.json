@@ -1,7 +1,6 @@
 {
     "Description": "DotNetRuntime CPU Performance workload",
     "Metadata": {
-        "RecommendedMinimumExecutionTime": "01:30:00",
         "SupportedPlatforms": "win-x64",
         "SupportedOperatingSystems": "Windows"
     },
