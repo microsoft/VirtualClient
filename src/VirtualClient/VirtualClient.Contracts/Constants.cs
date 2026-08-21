@@ -305,9 +305,7 @@ namespace VirtualClient.Contracts
         public const string SupportsIterations = nameof(SupportsIterations);
 
         /// <summary>
-        /// Metadata = RecommendedMinimumExecutionTime. Optional. Does not apply to
-        /// profiles whose runtime is determined externally (e.g. monitor profiles run
-        /// for as long as the workload profile they are paired with).
+        /// Metadata = RecommendedMinimumExecutionTime
         /// </summary>
         public const string RecommendedMinimumExecutionTime = nameof(RecommendedMinimumExecutionTime);
 

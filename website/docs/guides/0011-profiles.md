@@ -29,21 +29,17 @@ properties that one might find in a profile.
 | SupportedOperatingSystems       | Optional. Defines a set of operating systems on which the profile is confirmed to run correctly (e.g. Ubuntu, CentOS, Windows). This list does not indicate that the Virtual Client will run on every version of these operating systems. Focus on latest versions of the operating systems for support. | |
 
 ### Standard Metadata Values
-Profiles in the Virtual Client repo use a consistent set of values for `SupportedPlatforms` and `SupportedOperatingSystems` so that the
-information reads the same way across every profile. These are documentation conventions followed by the profiles in this repo. They are
-not enforced by the runtime or by build validation.
+The metadata properties above are all optional. Where a profile does define them, the profiles in this repo write the values in a consistent
+format so that the information reads the same way across every profile. The following describes the conventions used.
 
 | Property                        | Format | Values Used |
 |---------------------------------|--------|-------------|
 | SupportedPlatforms              | Comma-delimited | `linux-x64`, `linux-arm64`, `win-x64`, `win-arm64` |
 | SupportedOperatingSystems       | Comma-delimited | The `LinuxDistribution` enumeration names (`AmazonLinux`, `AzureLinux`, `CentOS`, `Debian`, `Fedora`, `Flatcar`, `Gentoo`, `OpenSuse`, `RedHat`, `Ubuntu`) plus `Windows` |
+| RecommendedMinimumExecutionTime | Timespan, or timespans scaled by core count | `01:00:00`, or `(4-cores)=02:00:00,(16-cores)=04:00:00` |
 
 Note that `AzureLinux` is the canonical name for the distro previously written as `CBL-Mariner`, and `AmazonLinux` for `AwsLinux`. Version
 numbers are not included; note version-specific support in a profile-specific property instead (e.g. `SupportedLinuxDistros`).
-
-`RecommendedMinimumExecutionTime` is written either as a single timespan, or as timespans scaled by core count for workloads whose runtime
-depends on the cores available (e.g. `(4-cores)=02:00:00,(16-cores)=04:00:00`). It is omitted where the runtime is determined outside the
-profile, such as monitor profiles that run for as long as the workload profile they are paired with.
 
 ``` json
 {
