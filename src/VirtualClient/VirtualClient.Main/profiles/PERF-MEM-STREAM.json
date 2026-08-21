@@ -1,10 +1,10 @@
 {
     "Description": "STREAM Performance Workload - Sustainable Memory Bandwidth in High Performance Computers Benchmark",
     "Metadata": {
-        "DocumentationLink": "https://msazure.visualstudio.com/One/_git/CRC-AIR-Workloads?version=GBmaster&path=/docs/workloads",
         "RecommendedMinimumExecutionTime": "00:10:00",
         "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64",
-        "SupportedOperatingSystems": "Windows,Ubuntu",
+        "SupportedOperatingSystems": "Ubuntu,Windows",
+        "DocumentationLink": "https://msazure.visualstudio.com/One/_git/CRC-AIR-Workloads?version=GBmaster&path=/docs/workloads",
         "SupportedValuesOfToolset": "STREAM,STREAMTriad,STREAMMsft"
     },
     "Parameters": {

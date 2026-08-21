@@ -28,6 +28,31 @@ properties that one might find in a profile.
 | SupportedPlatforms              | Optional. Defines a set of OS platforms and CPU architectures on which the profile (and all components within) is confirmed to run correctly (e.g. win-x64 -> Windows OS, X64 architecture). | |
 | SupportedOperatingSystems       | Optional. Defines a set of operating systems on which the profile is confirmed to run correctly (e.g. Ubuntu, CentOS, Windows). This list does not indicate that the Virtual Client will run on every version of these operating systems. Focus on latest versions of the operating systems for support. | |
 
+### Standard Metadata Values
+The metadata properties above are all optional. Where a profile does define them, the profiles in this repo write the values in a consistent
+format so that the information reads the same way across every profile. The following describes the conventions used.
+
+| Property                        | Format | Values Used |
+|---------------------------------|--------|-------------|
+| SupportedPlatforms              | Comma-delimited | `linux-x64`, `linux-arm64`, `win-x64`, `win-arm64` |
+| SupportedOperatingSystems       | Comma-delimited | The `LinuxDistribution` enumeration names (`AmazonLinux`, `AzureLinux`, `CentOS`, `Debian`, `Fedora`, `Flatcar`, `Gentoo`, `OpenSuse`, `RedHat`, `Ubuntu`) plus `Windows` |
+| RecommendedMinimumExecutionTime | Timespan, or timespans scaled by core count | `01:00:00`, or `(4-cores)=02:00:00,(16-cores)=04:00:00` |
+
+Note that `AzureLinux` is the canonical name for the distro previously written as `CBL-Mariner`, and `AmazonLinux` for `AwsLinux`. Version
+numbers are not included; note version-specific support in a profile-specific property instead (e.g. `SupportedLinuxDistros`).
+
+``` json
+{
+    "Description": "OpenSSL CPU Performance Workload",
+    "Metadata": {
+        "RecommendedMinimumExecutionTime": "01:00:00",
+        "SupportedPlatforms": "linux-x64,linux-arm64,win-x64",
+        "SupportedOperatingSystems": "AzureLinux,CentOS,Debian,OpenSuse,RedHat,Ubuntu,Windows"
+    },
+    ...
+}
+```
+
 ## Parameters
 The section 'Parameters' within the profile defines a set of 1 or more parameters (typically with default values) that can be used to override the default values in the components that
 are part of the 'Actions', 'Monitors' or 'Dependencies' sections. In general, Virtual Client profiles are not meant to be overly general purpose. They represent tested and vetted recipes

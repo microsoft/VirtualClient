@@ -3,7 +3,7 @@
     "Metadata": {
         "RecommendedMinimumExecutionTime": "01:00:00",
         "SupportedPlatforms": "linux-x64",
-        "SupportedOperatingSystems": "Ubuntu 22",
+        "SupportedOperatingSystems": "Ubuntu",
         "Note": "Reverse Proxy config requires three nodes for the roles Client, Reverse Proxy, and Server."
     },
     "Parameters": {
