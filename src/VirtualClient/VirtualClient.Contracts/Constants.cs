@@ -3,7 +3,6 @@
 
 namespace VirtualClient.Contracts
 {
-    using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
 
     /// <summary>
@@ -321,15 +320,6 @@ namespace VirtualClient.Contracts
         /// Metadata = SupportedOperatingSystems
         /// </summary>
         public const string SupportedOperatingSystems = nameof(SupportedOperatingSystems);
-
-        /// <summary>
-        /// The metadata properties every profile is required to define.
-        /// </summary>
-        public static readonly IReadOnlyList<string> BaseProperties = new List<string>
-        {
-            ProfileMetadata.SupportedPlatforms,
-            ProfileMetadata.SupportedOperatingSystems
-        };
     }
 
     /// <summary>

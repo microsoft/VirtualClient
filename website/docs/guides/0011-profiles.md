@@ -25,25 +25,25 @@ properties that one might find in a profile.
 |---------------------------------|-------------|---------------|
 | SupportsIterations              | Optional. True/False. This metadata property DOES affect the operations of the Virtual Client. When set to false, it indicates that the profile does not support profile iterations (i.e. --iterations on the command line). | |
 | RecommendedMinimumExecutionTime | Optional. Provides a recommendation for the minimum length of time for running the profile. This time is typically based on the amount of time expected to execute all actions in the profile 1 full round. Actions are generally executed in sequential order. Note that this is an estimate based on empirical evidence, but it is always a good idea to leave a little extra time buffer. | |
-| SupportedPlatforms              | Required. Defines a set of OS platforms and CPU architectures on which the profile (and all components within) is confirmed to run correctly. | |
-| SupportedOperatingSystems       | Required. Defines a set of operating systems on which the profile can run (e.g. Ubuntu, Windows). | |
+| SupportedPlatforms              | Optional. Defines a set of OS platforms and CPU architectures on which the profile (and all components within) is confirmed to run correctly (e.g. win-x64 -> Windows OS, X64 architecture). | |
+| SupportedOperatingSystems       | Optional. Defines a set of operating systems on which the profile is confirmed to run correctly (e.g. Ubuntu, CentOS, Windows). This list does not indicate that the Virtual Client will run on every version of these operating systems. Focus on latest versions of the operating systems for support. | |
 
-### Base Metadata
-Every profile in the Virtual Client repo must define `SupportedPlatforms` and `SupportedOperatingSystems`. The set is defined in code by
-`ProfileMetadata.BaseProperties` and is enforced by unit tests that run against every profile on each pull request.
+### Standard Metadata Values
+Profiles in the Virtual Client repo use a consistent set of values for `SupportedPlatforms` and `SupportedOperatingSystems` so that the
+information reads the same way across every profile. These are documentation conventions followed by the profiles in this repo. They are
+not enforced by the runtime or by build validation.
 
-| Property                        | Format | Allowed Values |
-|---------------------------------|--------|----------------|
+| Property                        | Format | Values Used |
+|---------------------------------|--------|-------------|
 | SupportedPlatforms              | Comma-delimited | `linux-x64`, `linux-arm64`, `win-x64`, `win-arm64` |
 | SupportedOperatingSystems       | Comma-delimited | The `LinuxDistribution` enumeration names (`AmazonLinux`, `AzureLinux`, `CentOS`, `Debian`, `Fedora`, `Flatcar`, `Gentoo`, `OpenSuse`, `RedHat`, `Ubuntu`) plus `Windows` |
 
 Note that `AzureLinux` is the canonical name for the distro previously written as `CBL-Mariner`, and `AmazonLinux` for `AwsLinux`. Version
-numbers are not included; note version-specific support in a profile-specific property instead.
+numbers are not included; note version-specific support in a profile-specific property instead (e.g. `SupportedLinuxDistros`).
 
-`RecommendedMinimumExecutionTime` is optional and is not part of the base metadata. It does not apply where the runtime is determined
-outside the profile. Monitor profiles run for as long as the workload profile they are paired with, and the bootstrap, setup and upload
-profiles depend on package sizes and network throughput. Two formats are supported: a single timespan, or timespans scaled by core count for workloads whose
-runtime depends on the cores available (e.g. `(4-cores)=02:00:00,(16-cores)=04:00:00`).
+`RecommendedMinimumExecutionTime` is written either as a single timespan, or as timespans scaled by core count for workloads whose runtime
+depends on the cores available (e.g. `(4-cores)=02:00:00,(16-cores)=04:00:00`). It is omitted where the runtime is determined outside the
+profile, such as monitor profiles that run for as long as the workload profile they are paired with.
 
 ``` json
 {
