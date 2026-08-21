@@ -5,7 +5,7 @@
         "SupportedPlatforms": "linux-x64,linux-arm64,win-x64",
         "SupportedOperatingSystems": "AzureLinux,CentOS,Debian,OpenSuse,RedHat,Ubuntu,Windows",
         "Notes": "This profile uses FIO job files (e.g. *.jobfile) via the command line.",
-        "DocumentationUri": "FIO documentation: https://fio.readthedocs.io/en/latest/fio_doc.html FIO Job File documentation: https://fio.readthedocs.io/en/latest/fio_doc.html#job-file-format"
+        "Documentation": "FIO documentation: https://fio.readthedocs.io/en/latest/fio_doc.html FIO Job File documentation: https://fio.readthedocs.io/en/latest/fio_doc.html#job-file-format"
     },
     "Parameters": {
         "Engine": "{calculate(\"{Platform}\".StartsWith(\"linux\") ? \"libaio\" : \"windowsaio\")}",

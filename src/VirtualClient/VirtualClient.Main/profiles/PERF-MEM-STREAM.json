@@ -4,7 +4,7 @@
         "RecommendedMinimumExecutionTime": "00:10:00",
         "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64",
         "SupportedOperatingSystems": "Ubuntu,Windows",
-        "DocumentationUri": "https://msazure.visualstudio.com/One/_git/CRC-AIR-Workloads?version=GBmaster&path=/docs/workloads",
+        "DocumentationLink": "https://msazure.visualstudio.com/One/_git/CRC-AIR-Workloads?version=GBmaster&path=/docs/workloads",
         "SupportedValuesOfToolset": "STREAM,STREAMTriad,STREAMMsft"
     },
     "Parameters": {

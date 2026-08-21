@@ -4,7 +4,7 @@
         "RecommendedMinimumExecutionTime": "01:00:00",
         "SupportedPlatforms": "linux-x64",
         "SupportedOperatingSystems": "Ubuntu",
-        "Notes": "Reverse Proxy config requires three nodes for the roles Client, Reverse Proxy, and Server."
+        "Note": "Reverse Proxy config requires three nodes for the roles Client, Reverse Proxy, and Server."
     },
     "Parameters": {
         "TestDuration": "00:02:30",
