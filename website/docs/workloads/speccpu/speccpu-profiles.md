@@ -36,8 +36,9 @@ for evaluating the performance of the CPU for processing calculations.
 
   | Parameter                 | Purpose                                                                         | Default value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
-  | CompilerName              | Optional. The name of the compiler to use for compiling CoreMark on the system. | gcc |
   | CompilerVersion           | Optional. The version of the compiler to use.  | The default version for the OS/distro.<br/><br/><ul><li>See [Linux Defaults](https://documentation.ubuntu.com/ubuntu-for-developers/reference/availability/gcc/).</li><li>See [Windows Defaults](https://cygwin.com/packages/summary/gcc-core.html)</li></ul> |
+  | Iterations                | Optional. The number of iterations for speccpu to run the benchmark/suite.  | 2 |
+  | Benchmarks                | Optional. The benchmark suite or list of benchmarks to run.  | fprate |
   | RunPeak                   | Optional. True to run the workload 'Peak' scenario, False to run the workload 'Base' scenario. | false (Base) |
   | Threads                   | Optional. Determines the number of threads to use for running the benchmark. | # logical processors |
   | Copies                    | Optional. Determines the number of copies of the benchmark to run concurrently. | # logical processors |
@@ -93,13 +94,14 @@ for evaluating the performance of the CPU for processing calculations.
 
   | Parameter                 | Purpose                                                                         | Default value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
-  | CompilerName              | Optional. The name of the compiler to use for compiling CoreMark on the system. | gcc |
   | CompilerVersion           | Optional. The version of the compiler to use.  | The default version for the OS/distro.<br/><br/><ul><li>See [Linux Defaults](https://documentation.ubuntu.com/ubuntu-for-developers/reference/availability/gcc/).</li><li>See [Windows Defaults](https://cygwin.com/packages/summary/gcc-core.html)</li></ul> |
+  | Iterations                | Optional. The number of iterations for speccpu to run the benchmark/suite.  | 2 |
+  | Benchmarks                | Optional. The benchmark suite or list of benchmarks to run.  | fpspeed |
   | RunPeak                   | Optional. True to run the workload 'Peak' scenario, False to run the workload 'Base' scenario. | false (Base) |
   | Threads                   | Optional. Determines the number of threads to use for running the benchmark. | # logical processors |
   | Copies                    | Optional. Determines the number of copies of the benchmark to run concurrently. | # logical processors |
-  | BaseOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Base' scenario | -g -O3 -march=native |
-  | PeakOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Peak' scenario | -g -Ofast -march=native -flto |
+  | BaseOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Base' scenario | -g -O3 -march=native -frecord-gcc-switches|
+  | PeakOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Peak' scenario | -g -Ofast -march=native -flto -frecord-gcc-switches |
 
 
 * **Profile Runtimes**  
@@ -144,13 +146,14 @@ for evaluating the performance of the CPU for processing calculations.
 
   | Parameter                 | Purpose                                                                         | Default value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
-  | CompilerName              | Optional. The name of the compiler to use for compiling CoreMark on the system. | gcc |
   | CompilerVersion           | Optional. The version of the compiler to use.  | The default version for the OS/distro.<br/><br/><ul><li>See [Linux Defaults](https://documentation.ubuntu.com/ubuntu-for-developers/reference/availability/gcc/).</li><li>See [Windows Defaults](https://cygwin.com/packages/summary/gcc-core.html)</li></ul> |
+  | Iterations                | Optional. The number of iterations for speccpu to run the benchmark/suite.  | 2 |
+  | Benchmarks                | Optional. The benchmark suite or list of benchmarks to run.  | intrate |
   | RunPeak                   | Optional. True to run the workload 'Peak' scenario, False to run the workload 'Base' scenario. | false (Base) |
   | Threads                   | Optional. Determines the number of threads to use for running the benchmark. | # logical processors |
   | Copies                    | Optional. Determines the number of copies of the benchmark to run concurrently. | # logical processors |
-  | BaseOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Base' scenario | -g -O3 -march=native |
-  | PeakOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Peak' scenario | -g -Ofast -march=native -flto |
+  | BaseOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Base' scenario | -g -O3 -march=native -frecord-gcc-switches|
+  | PeakOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Peak' scenario | -g -Ofast -march=native -flto -frecord-gcc-switches |
 
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
@@ -194,13 +197,14 @@ for evaluating the performance of the CPU for processing calculations.
 
   | Parameter                 | Purpose                                                                         | Default value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
-  | CompilerName              | Optional. The name of the compiler to use for compiling CoreMark on the system. | gcc |
   | CompilerVersion           | Optional. The version of the compiler to use.  | The default version for the OS/distro.<br/><br/><ul><li>See [Linux Defaults](https://documentation.ubuntu.com/ubuntu-for-developers/reference/availability/gcc/).</li><li>See [Windows Defaults](https://cygwin.com/packages/summary/gcc-core.html)</li></ul> |
+  | Iterations                | Optional. The number of iterations for speccpu to run the benchmark/suite.  | 2 |
+  | Benchmarks                | Optional. The benchmark suite or list of benchmarks to run.  | intspeed |
   | RunPeak                   | Optional. True to run the workload 'Peak' scenario, False to run the workload 'Base' scenario. | false (Base) |
   | Threads                   | Optional. Determines the number of threads to use for running the benchmark. | # logical processors |
   | Copies                    | Optional. Determines the number of copies of the benchmark to run concurrently. | # logical processors |
-  | BaseOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Base' scenario | -g -O3 -march=native |
-  | PeakOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Peak' scenario | -g -Ofast -march=native -flto | 
+  | BaseOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Base' scenario | -g -O3 -march=native -frecord-gcc-switches|
+  | PeakOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Peak' scenario | -g -Ofast -march=native -flto -frecord-gcc-switches |
 
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
