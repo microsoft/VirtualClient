@@ -34,7 +34,7 @@ namespace VirtualClient
         {
             connectionInfo.ThrowIfNull(nameof(connectionInfo));
             this.SessionClient = new SshClient(connectionInfo);
-            this.SessionScpClient = new ScpClient(connectionInfo);
+            this.SessionScpClient = new ScpClient(connectionInfo, RemotePathTransformation.ShellQuote);
         }
 
         /// <summary>
