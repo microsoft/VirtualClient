@@ -85,7 +85,8 @@ namespace VirtualClient
         /// SAN policy is a Windows-only concept. This operation is a no-op on Linux/Unix.
         /// </summary>
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
-        public override Task SetSanPolicyAsync(CancellationToken cancellationToken)
+        /// <param name="timeout">A timeout to apply to the operation.</param>
+        public override Task SetSanPolicyAsync(CancellationToken cancellationToken, TimeSpan? timeout = null)
         {
             return Task.CompletedTask;
         }

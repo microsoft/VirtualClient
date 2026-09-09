@@ -156,6 +156,16 @@ namespace VirtualClient.Contracts
         public const string PATH = nameof(PATH);
 
         /// <summary>
+        /// Name = SDK_EXPERIMENT_ID
+        /// </summary>
+        public const string SDK_EXPERIMENT_ID = nameof(SDK_EXPERIMENT_ID);
+
+        /// <summary>
+        /// Name = SDK_METADATA
+        /// </summary>
+        public const string SDK_METADATA = nameof(SDK_METADATA);
+
+        /// <summary>
         /// Name = SUDO_USER
         /// </summary>
         public const string SUDO_USER = nameof(SUDO_USER);

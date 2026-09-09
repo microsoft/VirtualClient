@@ -74,25 +74,24 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            await base.InitializeAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
+            await base.InitializeAsync(telemetryContext, cancellationToken);
 
             this.InitializeApiClients();
 
-            await MongoDBServerExecutor.OpenFirewallPortsAsync(this.Port, this.systemManagement.FirewallManager, cancellationToken)
-                .ConfigureAwait(false);
+            await MongoDBServerExecutor.OpenFirewallPortsAsync(this.Port, this.systemManagement.FirewallManager, cancellationToken);
 
             // Initialize disk if DiskFilter is specified
             if (!string.IsNullOrWhiteSpace(this.DiskFilter))
             {
-                await this.InitializeDiskPathAsync(cancellationToken).ConfigureAwait(false);
-                await this.ConfigureDiskForMongoDBAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
+                await this.InitializeDiskPathAsync(cancellationToken);
+                await this.ConfigureDiskForMongoDBAsync(telemetryContext, cancellationToken);
             }
 
             // Ensure MongoDB is configured to listen on all interfaces
-            await this.ConfigureMongoDBBindAddressAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
+            await this.ConfigureMongoDBBindAddressAsync(telemetryContext, cancellationToken);
 
             // Start MongoDB server
-            await this.StartMongoDBServerAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
+            await this.StartMongoDBServerAsync(telemetryContext, cancellationToken);
         }
 
         /// <summary>
@@ -106,14 +105,13 @@ namespace VirtualClient.Actions
                 {
                     this.SetServerOnline(false);
 
-                    await this.ServerApiClient.PollForHeartbeatAsync(TimeSpan.FromMinutes(5), cancellationToken)
-                        .ConfigureAwait(false);
+                    await this.ServerApiClient.PollForHeartbeatAsync(TimeSpan.FromMinutes(5), cancellationToken);
 
                     // Server is now online and ready to accept connections
                     this.SetServerOnline(true);
 
                     // Keep the server running until cancelled
-                    await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken).ConfigureAwait(false);
+                    await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
                 }
                 catch (OperationCanceledException)
                 {
@@ -174,7 +172,7 @@ namespace VirtualClient.Actions
                     $"-c \"{setBindIpCmd}\"",
                     "ConfigureBindAddress",
                     telemetryContext,
-                    cancellationToken).ConfigureAwait(false);
+                    cancellationToken);
 
                 this.Logger.LogMessage(
                     $"{nameof(MongoDBServerExecutor)}.BindAddressConfigured",
@@ -201,13 +199,13 @@ namespace VirtualClient.Actions
             try
             {
                 // Restart MongoDB to apply all configurations
-                await this.ExecuteMongoDBServiceCommandAsync("restart", telemetryContext, cancellationToken).ConfigureAwait(false);
+                await this.ExecuteMongoDBServiceCommandAsync("restart", telemetryContext, cancellationToken);
 
                 // Wait a bit for MongoDB to fully start
-                await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken).ConfigureAwait(false);
+                await this.WaitAsync(TimeSpan.FromSeconds(5), cancellationToken);
 
                 // Verify MongoDB is running
-                await this.VerifyMongoDBIsRunningAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
+                await this.VerifyMongoDBIsRunningAsync(telemetryContext, cancellationToken);
 
                 this.Logger.LogMessage(
                     $"{nameof(MongoDBServerExecutor)}.MongoDBServerStarted",
@@ -230,7 +228,7 @@ namespace VirtualClient.Actions
             using (IProcessProxy process = this.systemManagement.ProcessManager.CreateElevatedProcess(
                 this.Platform, "mongosh", "--eval \"db.runCommand({ping: 1})\""))
             {
-                await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
+                await process.StartAndWaitAsync(cancellationToken);
                 
                 if (process.ExitCode != 0)
                 {
@@ -272,7 +270,7 @@ namespace VirtualClient.Actions
                 string mongoDataPath = "/mnt/mongodb-data";
 
                 // Stop MongoDB service before mounting
-                await this.ExecuteMongoDBServiceCommandAsync("stop", telemetryContext, cancellationToken).ConfigureAwait(false);
+                await this.ExecuteMongoDBServiceCommandAsync("stop", telemetryContext, cancellationToken);
 
                 // Create filesystem on disk
                 await this.ExecuteMongoDBCommandAsync(
@@ -280,7 +278,7 @@ namespace VirtualClient.Actions
                     $"-c \"sudo mkfs.ext4 -F {diskDevicePath}\"",
                     "CreateFilesystem",
                     telemetryContext,
-                    cancellationToken).ConfigureAwait(false);
+                    cancellationToken);
 
                 // Create mount point
                 await this.ExecuteMongoDBCommandAsync(
@@ -288,7 +286,7 @@ namespace VirtualClient.Actions
                     $"-c \"sudo mkdir -p {mongoDataPath}\"",
                     "CreateMountPoint",
                     telemetryContext,
-                    cancellationToken).ConfigureAwait(false);
+                    cancellationToken);
 
                 // Mount the disk
                 await this.ExecuteMongoDBCommandAsync(
@@ -296,7 +294,7 @@ namespace VirtualClient.Actions
                     $"-c \"sudo mount -t ext4 {diskDevicePath} {mongoDataPath}\"",
                     "MountDisk",
                     telemetryContext,
-                    cancellationToken).ConfigureAwait(false);
+                    cancellationToken);
 
                 // Set permissions. The MongoDB service account name differs by package format:
                 // Debian/Ubuntu packages create 'mongodb' whereas RPM-based distributions
@@ -310,7 +308,7 @@ namespace VirtualClient.Actions
                     $"-c \"{resolveServiceUser}\"",
                     "SetPermissions",
                     telemetryContext,
-                    cancellationToken).ConfigureAwait(false);
+                    cancellationToken);
 
                 // Update mongod.conf to use the new dbPath
                 string configFile = "/etc/mongod.conf";
@@ -320,7 +318,7 @@ namespace VirtualClient.Actions
                     $"-c \"{setDbPathCmd}\"",
                     "UpdateMongoConf",
                     telemetryContext,
-                    cancellationToken).ConfigureAwait(false);
+                    cancellationToken);
 
                 this.Logger.LogMessage(
                     $"{nameof(MongoDBServerExecutor)}.DiskConfigurationComplete",
@@ -353,12 +351,11 @@ namespace VirtualClient.Actions
                     this.CleanupTasks.Add(() => process.SafeKill());
                     this.LogProcessTrace(process);
 
-                    await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
+                    await process.StartAndWaitAsync(cancellationToken);
 
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        await this.LogProcessDetailsAsync(process, telemetryContext, $"MongoDBServer-{scenario}", logToFile: true)
-                            .ConfigureAwait(false);
+                        await this.LogProcessDetailsAsync(process, telemetryContext, $"MongoDBServer-{scenario}", logToFile: true);
 
                         if (process.ExitCode != 0)
                         {
@@ -395,12 +392,11 @@ namespace VirtualClient.Actions
                     this.CleanupTasks.Add(() => process.SafeKill());
                     this.LogProcessTrace(process);
 
-                    await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
+                    await process.StartAndWaitAsync(cancellationToken);
 
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        await this.LogProcessDetailsAsync(process, telemetryContext, $"MongoDBServer-Service-{action}", logToFile: true)
-                            .ConfigureAwait(false);
+                        await this.LogProcessDetailsAsync(process, telemetryContext, $"MongoDBServer-Service-{action}", logToFile: true);
 
                         if (process.ExitCode != 0)
                         {
@@ -433,8 +429,7 @@ namespace VirtualClient.Actions
                 return;
             }
 
-            IEnumerable<Disk> disks = await this.systemManagement.DiskManager.GetDisksAsync(cancellationToken)
-                .ConfigureAwait(false);
+            IEnumerable<Disk> disks = await this.systemManagement.DiskManager.GetDisksAsync(cancellationToken);
 
             if (disks == null || !disks.Any())
             {
