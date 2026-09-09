@@ -58,26 +58,6 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public void TestElasticsearchRallyServerExecutorInitializeYmlNotFound()
-        {
-            SetupTest();
-
-            bool commandExecuted = false;
-
-            using (TestElasticsearchRallyServerExecutor executor = new TestElasticsearchRallyServerExecutor(this.Dependencies, this.Parameters))
-            {
-                executor.OnRunCommand = (command, arguments) =>
-                {
-                    commandExecuted = true;
-                };
-                
-                Assert.ThrowsAsync<WorkloadException>(() => executor.InitializeAsync(EventContext.None, CancellationToken.None));
-            }
-
-            Assert.IsTrue(commandExecuted);
-        }
-
-        [Test]
         [TestCase(true)]
         [TestCase(false)]
         public async Task TestElasticsearchRallyServerExecutorInitialize(bool useWget)

@@ -121,7 +121,7 @@ namespace VirtualClient.Actions
             }
         }
 
-        private void StartElasticsearchLinux(EventContext telemetryContext, CancellationToken cancellationToken, string mountPoint)
+        private async Task StartElasticsearchLinux(EventContext telemetryContext, CancellationToken cancellationToken, string mountPoint)
         {
             string scriptsDirectory = this.PlatformSpecifics.GetScriptPath(this.PackageName.ToLower());
             int port = this.Port;
@@ -176,7 +176,8 @@ namespace VirtualClient.Actions
             this.RunCommandAsRoot(telemetryContext, cancellationToken, "ElasticsearchDaemonReexec", "systemctl daemon-reexec");
             this.RunCommandAsRoot(telemetryContext, cancellationToken, "ElasticsearchEnable", "systemctl enable elasticsearch");
             bool ok = this.RunCommandAsRoot(telemetryContext, cancellationToken, "ElasticsearchStart", "systemctl start elasticsearch.service");
-            Thread.Sleep(30000); // wait for elasticsearch to start
+
+            await this.WaitAsync(TimeSpan.FromSeconds(30), cancellationToken); // wait for elasticsearch to start
 
             if (!ok)
             {
