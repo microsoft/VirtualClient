@@ -1,3 +1,7 @@
+---
+slug: /workloads/diskspd-profiles
+---
+
 # DiskSpd Workload Profiles
 The following profiles run customer-representative or benchmarking scenarios using the DiskSpd workload.  
 

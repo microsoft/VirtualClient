@@ -1,3 +1,7 @@
+---
+slug: /developing/develop-extensions
+---
+
 # Developing Extensions
 The following sections cover the fundamentals to consider when developing extensions to the Virtual Client. Extensions refers to profiles or component
 binaries/.dlls containing actions, monitors, dependency handlers etc... that are developed in a separate repo/location than the Virtual Client platform/core

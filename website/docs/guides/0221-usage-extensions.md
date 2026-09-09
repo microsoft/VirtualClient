@@ -2,7 +2,7 @@
 The Virtual Client platform supports a few different "extensions" models enabling developers to create feature sets and for users to integrate those into the platform
 runtime. This document covers how to use and integrate extensions into the platform. Additional documentation exists that focuses on the development process itself.
 
-* [Developing Extensions](../developing/0020-develop-extensions.md)
+* [Developing Extensions](/docs/developing/develop-extensions)
 
 ## What are Extensions
 Extensions in a simple sense are extra feature sets for actions, monitors or dependency handlers that can be developed independently of the core Virtual Client platform

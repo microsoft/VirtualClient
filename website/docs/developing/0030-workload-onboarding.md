@@ -1,3 +1,7 @@
+---
+slug: /developing/workload-onboarding
+---
+
 # Workload Onboarding Process
 The following documentation provides guidance on the steps that the Virtual Client requires to onboard workloads to platform. The steps
 defined are not exactly the same every time; however, this gives a developer the general idea of what to expect.
@@ -18,7 +22,7 @@ It is recommended that any workload software that can be packaged in a Virtual C
 to packaging workloads and dependencies in easy-to-consume Virtual Client packages.
 
 * [VC Packages](./0040-vc-packages.md)
-* [Storage Account Support](../guides/0600-integration-blob-storage.md)
+* [Storage Account Support](/docs/guides/integration-blob-storage)
 
 ## Step 3: Create Parsers and Unit Tests
 * Create a parser class file with name \<Workload_name>ResultsParser.cs(e.g. WebFundamentalsResultsParser.cs) in project VirtualClient.Parser.

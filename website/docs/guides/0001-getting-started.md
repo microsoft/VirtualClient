@@ -225,6 +225,6 @@ links provide details for natural next steps.
 * [Command Line Options](./0010-command-line.md)
 * [Usage Examples](./0200-usage-examples.md)
 * [Telemetry/Data](./0040-telemetry.md)
-* [Azure Event Hubs Telemetry Integration](./0600-integration-blob-storage.md)
-* [Azure Storage Account Integration](./0610-integration-event-hub.md)
+* [Azure Event Hubs Telemetry Integration](/docs/guides/integration-blob-storage)
+* [Azure Storage Account Integration](/docs/guides/integration-event-hub)
 

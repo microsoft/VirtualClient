@@ -1,5 +1,6 @@
 ---
 id: overview
+slug: /overview
 sidebar_position: 1
 ---
 
@@ -10,8 +11,8 @@ The platform additionally provides the ability to capture important performance 
 Azure environments including guest/VM systems, host/blade systems and data center/DC lab systems. The platform additionally supports both x64 and ARM64 compute architectures.
 
 * [Getting Started/Downloads](../guides/0001-getting-started.md)
-* [Platform Features](./0010-features.md)
-* [Platform Design](./0020-design.md)
+* [Platform Features](/docs/overview/features)
+* [Platform Design](/docs/overview/design)
 * [Usage](../guides/0010-command-line.md)
 * [Usage Examples](../guides/0200-usage-examples.md)
 * [Developer Guide](../developing/0010-develop-guide.md)

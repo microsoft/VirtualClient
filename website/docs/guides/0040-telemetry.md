@@ -1,3 +1,7 @@
+---
+slug: /guides/telemetry
+---
+
 # Data/Telemetry Support
 The Virtual Client emits a range of different types of data/telemetry as part of the execution of workload and monitoring
 profiles. This data/telemetry might for example include measurements/metrics emitted by a particular workload, performance counters
@@ -1132,7 +1136,7 @@ of the Virtual Client. Event Hubs can support both the scale and the need to agg
 allows users to request data/telemetry be sent to a set of Event Hubs by supplying the connection string to the Event Hub Namespace on the command line.
 
 See the following documentation for more information:
-* [Event Hubs Integration](./0610-integration-event-hub.md)
+* [Event Hubs Integration](/docs/guides/integration-event-hub)
 
 ### Azure Storage Account Support
 An Azure Storage Account is a large-scale file/blob storage platform available in the Azure cloud. The platform is one of the most fundamental resources available
@@ -1140,4 +1144,4 @@ in the Azure cloud and it integrates with many other resources such as Azure Dat
 be uploaded to a Storage Account by passing in a connection string or a SAS URI to the Storage Account on the command line.
 
 See the following documentation for more information:
-* [Storage Account Integration](./0600-integration-blob-storage.md)
+* [Storage Account Integration](/docs/guides/integration-blob-storage)

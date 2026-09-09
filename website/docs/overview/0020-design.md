@@ -1,5 +1,6 @@
 ---
 id: design
+slug: /overview/design
 ---
 
 # Platform Design
@@ -231,7 +232,7 @@ To enable correlation between data from an execution system and the Virtual Clie
 when creating reports based on the data. This metadata will be included with every telemetry event/message that is emitted by the Virtual Client. The following shows an example of the schema 
 and how metadata is supplied on the command line as well as what the contents of a single telemetry event emitted would look like.
 
-* [Data/Telemetry Support](../guides/0040-telemetry.md)
+* [Data/Telemetry Support](/docs/guides/telemetry)
 
 ``` bash
 VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --timeout=1440 --experiment-id=2451d02e-b22b-4e8a-9a1f-5436512dbc01 --client-id=virtualmachine01 --metadata:"anyCorrelationId=identifier,,,property2=123,,,property3=true"

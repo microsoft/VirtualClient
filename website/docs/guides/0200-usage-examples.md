@@ -111,7 +111,7 @@ The Virtual Client supports the ability to upload metrics, counters, logs etc...
 Event Hubs are a highly-scalable messaging platform in the Azure Cloud that can be integrated out-of-the-box with other big-data platforms such as Azure Data Explorer (ADX/Kusto).
 Note that the Virtual Client does have a set of explicit expectations for how the Event Hubs are setup. See the following documentation for additional details.
 
-* [Event Hub Support](./0610-integration-event-hub.md) 
+* [Event Hub Support](/docs/guides/integration-event-hub) 
 
 ``` bash
 # To send data to an Event Hub, supply a connection string to the Event Hub namespace on the command line.
@@ -122,7 +122,7 @@ VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --timeout=180 --logger="eventh
 Whereas the open source instance of Virtual Client provides a package store for workload package downloads, users can use their own storage accounts for package
 downloads. This is useful when developing extensions to the Virtual Client platform. See the following documentation for additional details.
 
-* [Storage Account Support](./0600-integration-blob-storage.md)
+* [Storage Account Support](/docs/guides/integration-blob-storage)
 
 ``` bash
 # Pass a connection string in to use a different storage account for package downloads.
@@ -137,7 +137,7 @@ Most components in the Virtual Client allow the user to upload information or fi
 a cloud Blob store. In order to enable this, the connection string or SAS URI to the Blob store should be supplied on the command line. See the following documentation for 
 additional details.
 
-* [Storage Account Support](./0600-integration-blob-storage.md)
+* [Storage Account Support](/docs/guides/integration-blob-storage)
 
 ``` bash
 # Pass a connection string in to use a different storage account for log/content file uploads.

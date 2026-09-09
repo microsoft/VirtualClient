@@ -12,7 +12,7 @@ these first.
 
 If you are developing extensions to the Virtual Client platform in another repo, the following documentation can get you started.
 
-* [Developing Virtual Client Extensions](./0020-develop-extensions.md)
+* [Developing Virtual Client Extensions](/docs/developing/develop-extensions)
 
 
 After going through this developer guide, there are links code examples at the bottom of this document to get you hands-on experience.
@@ -743,7 +743,7 @@ logging is routed correctly. There are 3 different categories of telemetry in th
   hardware and workload/monitor scenarios. In fact certain information about the host, operating system, hardware and profile workload/monitor is included in
   the output of the Virtual Client by default.
 
-  * [Metadata Contract Details and Examples](../guides/0040-telemetry.md)  
+  * [Metadata Contract Details and Examples](/docs/guides/telemetry)  
     Familiarize yourself with the different categories of metadata available (e.g. default, dependencies, host, runtime, scenario).
 
   * Persisted/Global Metadata  

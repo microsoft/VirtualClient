@@ -3,8 +3,6 @@ The use of scripting languages (e.g. Python, PowerShell) is a popular choice for
 on bare metal hardware systems. The Virtual Client platform provides runtime support for running scripts directly from the command line and additionally 
 supports a controller/agent workflow for remote execution through SSH sessions on both Linux and Windows systems.
 
-[Controller/Agent Overview](../guides/0021-controller-agent.md)
-
 The following document provides a set of general guidelines to consider when developing script-based automation extensions so that they can be readily integrated
 into the Virtual Client platform. 
 

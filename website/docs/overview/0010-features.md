@@ -1,5 +1,6 @@
 ---
 id: features
+slug: /overview/features
 ---
 
 # Platform Features
@@ -96,7 +97,7 @@ A second fundamental aspect of the Virtual Client platform is the ability to cap
 timing for capturing system monitoring information with the running of a workload produces high fidelity, highly correlated results around the performance of the system. The correlation
 of workload measurements with system/OS measurements can provide deep insights into the performance and reliability of the system from a customer perspective.
 
-* [Monitors Available](../monitors/0200-monitor-profiles.md)  
+* [Monitors Available](/docs/monitors/monitor-profiles)  
 
 Examples of monitoring requirements supported by the platform include:
 
@@ -124,9 +125,9 @@ Another core ability of the Virtual Client platform is that it provides a consol
 monitors. This is an important aspect of the platform end-to-end solution in that it makes it possible to integrate many different types of workloads while ensuring a
 common methodology for reading the results to determine outcomes.
 
-* [Example Workload Metrics](../workloads/diskspd/diskspd.md)  
-* [Example Monitoring Metrics](../monitors/0100-perf-counter-metrics.md)  
-* [Azure Event Hub + Azure Data Explorer/Kusto Integration](../guides/0610-integration-event-hub.md)
+* [Example Workload Metrics](/docs/workloads/diskspd)  
+* [Example Monitoring Metrics](/docs/monitors/performance-counters)  
+* [Azure Event Hub + Azure Data Explorer/Kusto Integration](/docs/guides/integration-event-hub)
 
 Examples of data capture requirements supported by the platform include:
 

@@ -23,5 +23,4 @@ Different metrics are captured from the system depending upon which monitor prof
 defined, the default MONITORS-DEFAULT.json profile is used. See the following documentation to determine monitor profiles
 that are available.
 
-* [Monitor Profiles](https://github.com/microsoft/VirtualClient/blob/main/website/docs/monitors/monitor-profiles.md)
-* [Monitor Profiles (internal only)](../../monitors/monitor-profiles.md)
+* [Monitor Profiles](/docs/monitors/monitor-profiles)
