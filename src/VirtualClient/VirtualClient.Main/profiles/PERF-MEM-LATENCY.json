@@ -1,0 +1,81 @@
+{
+    "Description": "Memory Latency Checker Workload",
+    "Metadata": {
+        "RecommendedMinimumExecutionTime": "00:10:00",
+        "SupportedPlatforms": "win-x64,win-arm64,linux-x64",
+        "SupportedOperatingSystems": "Windows,Ubuntu"
+    },
+    "Parameters": {
+        "PackageBlobName": "mlc-3.12.zip"
+    },
+    "Actions": [
+        {
+            "Type": "MemoryLatencyCheckerExecutor",
+            "Parameters": {
+                "Scenario": "LatencyMatrix",
+                "Benchmark": "latency_matrix",
+                "PackageName": "mlc"
+            }
+        },
+        {
+            "Type": "MemoryLatencyCheckerExecutor",
+            "Parameters": {
+                "Scenario": "BandwidthMatrix",
+                "Benchmark": "bandwidth_matrix",
+                "PackageName": "mlc"
+            }
+        },
+        {
+            "Type": "MemoryLatencyCheckerExecutor",
+            "Parameters": {
+                "Scenario": "PeakInjectionBandwidth",
+                "Benchmark": "peak_injection_bandwidth",
+                "PackageName": "mlc"
+            }
+        },
+        {
+            "Type": "MemoryLatencyCheckerExecutor",
+            "Parameters": {
+                "Scenario": "MaxBandwidth",
+                "Benchmark": "max_bandwidth",
+                "PackageName": "mlc"
+            }
+        },
+        {
+            "Type": "MemoryLatencyCheckerExecutor",
+            "Parameters": {
+                "Scenario": "LoadedLatency",
+                "Benchmark": "loaded_latency",
+                "PackageName": "mlc"
+            }
+        },
+        {
+            "Type": "MemoryLatencyCheckerExecutor",
+            "Parameters": {
+                "Scenario": "IdleLatency",
+                "Benchmark": "idle_latency",
+                "PackageName": "mlc"
+            }
+        },
+        {
+            "Type": "MemoryLatencyCheckerExecutor",
+            "Parameters": {
+                "Scenario": "C2CLatency",
+                "Benchmark": "c2c_latency",
+                "PackageName": "mlc"
+            }
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+              "Scenario": "InstallMLCPackage",
+              "BlobContainer": "packages",
+              "BlobName": "$.Parameters.PackageBlobName",
+              "PackageName": "mlc",
+              "Extract": true
+            }
+        }
+    ]
+}

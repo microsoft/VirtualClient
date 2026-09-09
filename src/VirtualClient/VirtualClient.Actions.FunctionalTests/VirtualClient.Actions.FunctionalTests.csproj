@@ -40,10 +40,10 @@
     -->
     <Target Name="CopyTestResourcesToOutputDirectory" AfterTargets="Build">
         <ItemGroup>
-            <TestResourceFiles Include="..\TestResources\*.*" />
+            <TestResourceFiles Include="..\TestResources\**\*.*" />
         </ItemGroup>
 
-        <Copy SourceFiles="@(TestResourceFiles)" DestinationFiles="@(TestResourceFiles->'$(OutputPath)Resources\%(RecursiveDir)%(Filename)%(Extension)')" />
+        <Copy SourceFiles="@(TestResourceFiles)" DestinationFiles="@(TestResourceFiles->'$(OutputPath)resources\%(RecursiveDir)%(Filename)%(Extension)')" />
     </Target>
 
     <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Module.props))\Module.props" />

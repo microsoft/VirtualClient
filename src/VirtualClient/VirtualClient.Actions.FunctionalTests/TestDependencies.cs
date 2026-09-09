@@ -18,8 +18,8 @@ namespace VirtualClient.Actions
         static TestDependencies()
         {
             TestDependencies.TestDirectory = Path.GetDirectoryName(Assembly.GetAssembly(typeof(TestDependencies)).Location);
-            TestDependencies.ProfileDirectory = Path.Combine(TestDependencies.TestDirectory, "Profiles");
-            TestDependencies.ResourcesDirectory = Path.Combine(TestDependencies.TestDirectory, "Resources");
+            TestDependencies.ProfileDirectory = Path.Combine(TestDependencies.TestDirectory, "profiles");
+            TestDependencies.ResourcesDirectory = Path.Combine(TestDependencies.TestDirectory, "resources");
         }
 
         /// <summary>
@@ -93,9 +93,13 @@ namespace VirtualClient.Actions
             return profileExecutor;
         }
 
-        public static string GetResourceFileContents(string fileName)
+        public static string GetResourceFileContents(params string[] filePath)
         {
-            return File.ReadAllText(Path.Combine(TestDependencies.ResourcesDirectory, fileName));
+            List<string> fileSegments = new List<string>();
+            fileSegments.Add(TestDependencies.ResourcesDirectory);
+            fileSegments.AddRange(filePath);
+
+            return File.ReadAllText(Path.Combine(fileSegments.ToArray()));
         }
     }
 }

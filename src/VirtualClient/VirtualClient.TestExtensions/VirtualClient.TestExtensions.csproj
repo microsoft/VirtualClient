@@ -22,10 +22,10 @@
     </ItemGroup>
 
     <ItemGroup>
-        <None Update="Resources\test-certificate.private">
+        <None Update="resources\test-certificate.private">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
-        <None Update="Resources\test-certificate.public">
+        <None Update="resources\test-certificate.public">
           <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
     </ItemGroup>

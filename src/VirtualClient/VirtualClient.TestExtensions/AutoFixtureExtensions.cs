@@ -49,7 +49,7 @@ namespace VirtualClient.TestExtensions
         public static X509Certificate2 CreateCertificate(this Fixture fixture, bool withPrivateKey = false)
         {
             X509Certificate2 certificate = null;
-            string resourcesDirectory = Path.Combine(Path.GetDirectoryName(AutoFixtureExtensions.thisAssembly.Location), "Resources");
+            string resourcesDirectory = Path.Combine(Path.GetDirectoryName(AutoFixtureExtensions.thisAssembly.Location), "resources");
 
 #if NET9_0_OR_GREATER
             if (withPrivateKey)
