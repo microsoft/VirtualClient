@@ -5,6 +5,7 @@ namespace VirtualClient
 {
     using System;
     using System.Collections.Generic;
+    using System.Collections.Specialized;
     using System.Diagnostics;
     using System.Diagnostics.CodeAnalysis;
     using System.IO;
@@ -395,6 +396,7 @@ namespace VirtualClient
             int effectiveProcessId = processId ?? MockSetupExtensions.randomGen.Next(100, 10000000);
 
             mockProcess.SetupGet(p => p.ExitCode).Returns(exitCode ?? 0);
+            mockProcess.SetupGet(p => p.EnvironmentVariables).Returns(new StringDictionary());
             mockProcess.SetupGet(p => p.HasExited).Returns(hasExited);
             mockProcess.SetupGet(p => p.Id).Returns(effectiveProcessId);
             mockProcess.SetupGet(p => p.StartInfo).Returns(mockStartInfo);

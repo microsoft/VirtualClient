@@ -39,14 +39,17 @@ namespace VirtualClient
         {
             component.ThrowIfNull(nameof(component));
 
-            // SDK_EXPERIMENT_ID
-            process.EnvironmentVariables[EnvironmentVariable.SDK_EXPERIMENT_ID] = component.ExperimentId;
-
-            // SDK_METADATA
-            if (component.Metadata?.Any() == true)
+            if (process.EnvironmentVariables != null)
             {
-                string metadata = string.Join(';', component.Metadata.Select(entry => $"{entry.Key}={entry.Value}"));
-                process.EnvironmentVariables[EnvironmentVariable.SDK_METADATA] = metadata;
+                // SDK_EXPERIMENT_ID
+                process.EnvironmentVariables[EnvironmentVariable.SDK_EXPERIMENT_ID] = component.ExperimentId;
+
+                // SDK_METADATA
+                if (component.Metadata?.Any() == true)
+                {
+                    string metadata = string.Join(';', component.Metadata.Select(entry => $"{entry.Key}={entry.Value}"));
+                    process.EnvironmentVariables[EnvironmentVariable.SDK_METADATA] = metadata;
+                }
             }
         }
 
