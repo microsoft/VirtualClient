@@ -25,7 +25,7 @@ namespace VirtualClient.Actions
         public void Setup()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "LAPACK", "LAPACKResultsExample.txt");
+            string outputPath = Path.Combine(workingDirectory, "test_examples", "LAPACK", "LAPACKResultsExample.txt");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new LAPACKMetricsParser(this.rawText);
         }
@@ -62,14 +62,14 @@ namespace VirtualClient.Actions
         public void LAPACKParserThrowIfInvalidOutput()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "LAPACK", "LAPACKIncorrectFormatExample.txt");
+            string outputPath = Path.Combine(workingDirectory, "test_examples", "LAPACK", "LAPACKIncorrectFormatExample.txt");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new LAPACKMetricsParser(this.rawText);
 
             WorkloadResultsException exception = Assert.Throws<WorkloadResultsException>(() => this.testParser.Parse());
 
             workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            outputPath = Path.Combine(workingDirectory, "Examples", "LAPACK", "LAPACKIncorrectResultsExample.txt");
+            outputPath = Path.Combine(workingDirectory, "test_examples", "LAPACK", "LAPACKIncorrectResultsExample.txt");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new LAPACKMetricsParser(this.rawText);
 

@@ -65,7 +65,7 @@ namespace VirtualClient.Actions
                     ".*",
                     File.ReadAllText(Path.Combine(
                         Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location),
-                        "Examples", "Bombardier", "BombardierExample.txt")));
+                        "test_examples", "Bombardier", "BombardierExample.txt")));
 
             using (var executor = new TestAspNetServerExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
@@ -94,7 +94,7 @@ namespace VirtualClient.Actions
                     ".*",
                     File.ReadAllText(Path.Combine(
                         Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location),
-                        "Examples", "Bombardier", "BombardierExample.txt")));
+                        "test_examples", "Bombardier", "BombardierExample.txt")));
 
             using (var executor = new TestAspNetServerExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
@@ -172,7 +172,7 @@ namespace VirtualClient.Actions
                     ".*",
                     File.ReadAllText(Path.Combine(
                         Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location),
-                        "Examples", "Bombardier", "BombardierExample.txt")));
+                        "test_examples", "Bombardier", "BombardierExample.txt")));
 
             using (var executor = new TestAspNetServerExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {

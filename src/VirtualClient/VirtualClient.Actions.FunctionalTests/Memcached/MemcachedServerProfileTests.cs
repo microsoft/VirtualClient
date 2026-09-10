@@ -10,12 +10,11 @@ namespace VirtualClient.Actions
     using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
-    using Moq;
     using NUnit.Framework;
     using VirtualClient.Actions.Memtier;
     using VirtualClient.Common;
     using VirtualClient.Contracts;
-    using static VirtualClient.Actions.MemcachedExecutor;
+    using VirtualClient.TestExtensions;
 
     [TestFixture]
     [Category("Functional")]
@@ -33,7 +32,7 @@ namespace VirtualClient.Actions
                     new ClientInstance("Client01", "1.2.3.4", "Client"),
                     new ClientInstance("Server01", "1.2.3.5", "Server"));
 
-            ComponentTypeCache.Instance.LoadComponentTypes(TestDependencies.TestDirectory);
+            ComponentTypeCache.Instance.LoadComponentTypes(MockFixture.TestAssemblyDirectory);
 
             this.mockFixture.SetupPackage("wget", expectedFiles: "linux-x64/wget2");
             this.mockFixture.SetupFile("memcached", "memcached-1.6.17/memcached", new byte[0]);
@@ -43,7 +42,7 @@ namespace VirtualClient.Actions
         [TestCase("PERF-MEMCACHED.json")]
         public async Task MemcachedMemtierWorkloadProfileInstallsTheExpectedDependenciesOfServerOnUnixPlatform(string profile)
         {
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
             {
                 this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
                 {
@@ -95,7 +94,7 @@ namespace VirtualClient.Actions
                 return process;
             };
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
             {
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
                 WorkloadAssert.CommandsExecuted(this.mockFixture, expectedCommands.ToArray());

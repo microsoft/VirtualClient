@@ -17,7 +17,7 @@ namespace VirtualClient.Monitors
     [Category("Unit")]
     public class WindowsEventLogMonitorTests : MockFixture
     {
-        private static readonly string ExamplesFolder =  MockFixture.GetDirectory(typeof(WindowsEventLogMonitorTests), "Examples", "EventLog");
+        private static readonly string ExamplesFolder =  MockFixture.GetDirectory(typeof(WindowsEventLogMonitorTests), "test_examples", "EventLog");
 
         [SetUp]
         public void SetupTest()

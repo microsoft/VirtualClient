@@ -10,6 +10,7 @@ namespace VirtualClient.Actions
     using global::VirtualClient;
     using global::VirtualClient.Contracts;
     using NUnit.Framework;
+    using VirtualClient.TestExtensions;
 
     [TestFixture]
     [Category("Functional")]
@@ -21,7 +22,7 @@ namespace VirtualClient.Actions
         public void SetupTests()
         {
             this.mockFixture = new DependencyFixture();
-            ComponentTypeCache.Instance.LoadComponentTypes(TestDependencies.TestDirectory);
+            ComponentTypeCache.Instance.LoadComponentTypes(MockFixture.TestAssemblyDirectory);
         }
 
         [Test]
@@ -32,7 +33,7 @@ namespace VirtualClient.Actions
         public void SpecCpuWorkloadProfileParametersAreInlinedCorrectly(string profile)
         {
             this.mockFixture.Setup(PlatformID.Unix);
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
             {
                 WorkloadAssert.ParameterReferencesInlined(executor.Profile);
             }
@@ -53,7 +54,7 @@ namespace VirtualClient.Actions
                 { "cc", "10" }
             });
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies, dependenciesOnly: true))
+            using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(profile, this.mockFixture.Dependencies, dependenciesOnly: true))
             {
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
 

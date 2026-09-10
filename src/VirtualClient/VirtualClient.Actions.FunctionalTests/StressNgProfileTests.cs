@@ -12,6 +12,7 @@ namespace VirtualClient.Actions
     using NUnit.Framework;
     using VirtualClient.Common;
     using VirtualClient.Contracts;
+    using VirtualClient.TestExtensions;
 
     [TestFixture]
     [Category("Functional")]
@@ -23,7 +24,7 @@ namespace VirtualClient.Actions
         public void SetupFixture()
         {
             this.mockFixture = new DependencyFixture();
-            ComponentTypeCache.Instance.LoadComponentTypes(TestDependencies.TestDirectory);
+            ComponentTypeCache.Instance.LoadComponentTypes(MockFixture.TestAssemblyDirectory);
         }
 
         [Test]
@@ -31,7 +32,7 @@ namespace VirtualClient.Actions
         public void StressNgWorkloadProfileParametersAreInlinedCorrectly(string profile)
         {
             this.mockFixture.Setup(PlatformID.Unix);
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
             {
                 WorkloadAssert.ParameterReferencesInlined(executor.Profile);
             }
@@ -53,13 +54,13 @@ namespace VirtualClient.Actions
                 IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
                 if (arguments.StartsWith("stress-ng", StringComparison.OrdinalIgnoreCase))
                 {
-                    process.StandardOutput.Append(TestDependencies.GetResourceFileContents("Results_StressNg.txt"));
+                    process.StandardOutput.Append(MockFixture.ReadTestResourcesFile("Results_StressNg.txt"));
                 }
 
                 return process;
             };
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
             {
                 executor.ExecutionMinimumInterval = TimeSpan.Zero;
                 await executor.ExecuteAsync(ProfileTiming.Iterations(2), CancellationToken.None).ConfigureAwait(false);
@@ -84,7 +85,7 @@ namespace VirtualClient.Actions
             this.mockFixture.SetupDisks(withRemoteDisks: false);
             this.mockFixture.SetupFile(
                 $"{this.mockFixture.GetPackagePath("stressNg")}/vcStressNg.yaml",
-                System.Text.Encoding.UTF8.GetBytes(TestDependencies.GetResourceFileContents("Results_StressNg.txt")));
+                System.Text.Encoding.UTF8.GetBytes(MockFixture.ReadTestResourcesFile("Results_StressNg.txt")));
 
             ////this.mockFixture.SystemManagement.Setup(mgr => mgr.FileSystem.Directory.Exists(It.IsAny<string>())).Returns(true);
             ////this.mockFixture.SystemManagement.Setup(mgr => mgr.FileSystem.File.Exists(It.Is<string>(file => file.EndsWith("yaml")))).Returns(true);

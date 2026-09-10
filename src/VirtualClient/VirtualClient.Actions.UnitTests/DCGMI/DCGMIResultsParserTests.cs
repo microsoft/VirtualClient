@@ -21,7 +21,7 @@ namespace VirtualClient.Actions
         public void DCGMIResultsParseParsesDiagnosticsMetricsCorrectly_Scenario_r1()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "DCGMI", "DCGMIDiag_r1_results.json");
+            string outputPath = Path.Combine(workingDirectory, "test_examples", "DCGMI", "DCGMIDiag_r1_results.json");
             string rawText = File.ReadAllText(outputPath);
 
             DCGMIResultsParser testParser = new DCGMIResultsParser(rawText, "Diagnostics");
@@ -43,7 +43,7 @@ namespace VirtualClient.Actions
         public void DCGMIResultsParseParsesDaignosticsMetricsCorrectly_Scenario_r2()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "DCGMI", "DCGMIDiag_r2_results.json");
+            string outputPath = Path.Combine(workingDirectory, "test_examples", "DCGMI", "DCGMIDiag_r2_results.json");
             string rawText = File.ReadAllText(outputPath);
 
             DCGMIResultsParser testParser = new DCGMIResultsParser(rawText, "Diagnostics");
@@ -70,7 +70,7 @@ namespace VirtualClient.Actions
         public void DCGMIResultsParseParsesDiagnosticsMetricsCorrectly_Scenario_r3()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "DCGMI", "DCGMIDiag_r3_results.json");
+            string outputPath = Path.Combine(workingDirectory, "test_examples", "DCGMI", "DCGMIDiag_r3_results.json");
             string rawText = File.ReadAllText(outputPath);
 
             DCGMIResultsParser testParser = new DCGMIResultsParser(rawText, "Diagnostics");
@@ -100,7 +100,7 @@ namespace VirtualClient.Actions
         public void DCGMIResultsParseThrowsExceptionForIncorrectDiagnosticsMetrics()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string IncorrectoutputPath = Path.Combine(workingDirectory, "Examples", "DCGMI", "DCGMIIncorrectresults.json");
+            string IncorrectoutputPath = Path.Combine(workingDirectory, "test_examples", "DCGMI", "DCGMIIncorrectresults.json");
             string rawText = File.ReadAllText(IncorrectoutputPath);
             DCGMIResultsParser testParser = new DCGMIResultsParser(rawText, "Diagnostics");
             SchemaException exception = Assert.Throws<SchemaException>(() => testParser.Parse());
@@ -112,7 +112,7 @@ namespace VirtualClient.Actions
         public void DCGMIResultsParserParsesDiscoveryMetricsCorrectly()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "DCGMI", "DCGMIDiscoveryResults.txt");
+            string outputPath = Path.Combine(workingDirectory, "test_examples", "DCGMI", "DCGMIDiscoveryResults.txt");
             string rawText = File.ReadAllText(outputPath);
 
             DCGMIResultsParser testParser = new DCGMIResultsParser(rawText, "Discovery");
@@ -127,7 +127,7 @@ namespace VirtualClient.Actions
         public void DCGMIREsultsParseThrowsExceptionForIncorrectDiscoveryMetrics()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string IncorrectoutputPath = Path.Combine(workingDirectory, "Examples", "DCGMI", "DCGMIIncorrectresults.json");
+            string IncorrectoutputPath = Path.Combine(workingDirectory, "test_examples", "DCGMI", "DCGMIIncorrectresults.json");
             string rawText = File.ReadAllText(IncorrectoutputPath);
             DCGMIResultsParser testParser = new DCGMIResultsParser(rawText, "Discovery");
             SchemaException exception = Assert.Throws<SchemaException>(() => testParser.Parse());
@@ -138,7 +138,7 @@ namespace VirtualClient.Actions
         public void DCGMIResultsParserParsesFieldGroupMetricsCorrectly()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "DCGMI", "DCGMIFieldGroupsResults.txt");
+            string outputPath = Path.Combine(workingDirectory, "test_examples", "DCGMI", "DCGMIFieldGroupsResults.txt");
             string rawText = File.ReadAllText(outputPath);
 
             DCGMIResultsParser testParser = new DCGMIResultsParser(rawText, "FieldGroup");
@@ -152,7 +152,7 @@ namespace VirtualClient.Actions
         public void DCGMIResultsParseThrowsExceptionForIncorrectFieldGroupMetrics()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string IncorrectoutputPath = Path.Combine(workingDirectory, "Examples", "DCGMI", "DCGMIIncorrectresults.json");
+            string IncorrectoutputPath = Path.Combine(workingDirectory, "test_examples", "DCGMI", "DCGMIIncorrectresults.json");
             string rawText = File.ReadAllText(IncorrectoutputPath);
             DCGMIResultsParser testParser = new DCGMIResultsParser(rawText,"FieldGroup");
             SchemaException exception = Assert.Throws<SchemaException>(() => testParser.Parse());
@@ -163,7 +163,7 @@ namespace VirtualClient.Actions
         public void DCGMIResultsParserParsesGroupMetricsCorrectly()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "DCGMI", "DCGMIGroupResults.txt");
+            string outputPath = Path.Combine(workingDirectory, "test_examples", "DCGMI", "DCGMIGroupResults.txt");
             string rawText = File.ReadAllText(outputPath);
 
             DCGMIResultsParser testParser = new DCGMIResultsParser(rawText, "Group");
@@ -177,7 +177,7 @@ namespace VirtualClient.Actions
         public void DCGMIResultsParseThrowsExceptionForIncorrectGroupMetrics()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string IncorrectoutputPath = Path.Combine(workingDirectory, "Examples", "DCGMI", "DCGMIIncorrectresults.json");
+            string IncorrectoutputPath = Path.Combine(workingDirectory, "test_examples", "DCGMI", "DCGMIIncorrectresults.json");
             string rawText = File.ReadAllText(IncorrectoutputPath);
             DCGMIResultsParser testParser = new DCGMIResultsParser(rawText, "Group");
             SchemaException exception = Assert.Throws<SchemaException>(() => testParser.Parse());
@@ -188,7 +188,7 @@ namespace VirtualClient.Actions
         public void DCGMIResultsParserParsesHealthMetricsCorrectly()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "DCGMI", "DCGMIHealthCheckResults.json");
+            string outputPath = Path.Combine(workingDirectory, "test_examples", "DCGMI", "DCGMIHealthCheckResults.json");
             string rawText = File.ReadAllText(outputPath);
 
             DCGMIResultsParser testParser = new DCGMIResultsParser(rawText, "Health");
@@ -202,7 +202,7 @@ namespace VirtualClient.Actions
         public void DCGMIResultsParseThrowsExceptionForIncorrectHealthMetrics()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string IncorrectoutputPath = Path.Combine(workingDirectory, "Examples", "DCGMI", "DCGMIIncorrectresults.json");
+            string IncorrectoutputPath = Path.Combine(workingDirectory, "test_examples", "DCGMI", "DCGMIIncorrectresults.json");
             string rawText = File.ReadAllText(IncorrectoutputPath);
             DCGMIResultsParser testParser = new DCGMIResultsParser(rawText, "Health");
             SchemaException exception = Assert.Throws<SchemaException>(() => testParser.Parse());
@@ -213,7 +213,7 @@ namespace VirtualClient.Actions
         public void DCGMIResultsParserParsesModulesMetricsCorrectly()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "DCGMI", "DCGMIModulesResults.txt");
+            string outputPath = Path.Combine(workingDirectory, "test_examples", "DCGMI", "DCGMIModulesResults.txt");
             string rawText = File.ReadAllText(outputPath);
 
             DCGMIResultsParser testParser = new DCGMIResultsParser(rawText, "Modules");
@@ -236,7 +236,7 @@ namespace VirtualClient.Actions
         public void DCGMIResultsParseThrowsExceptionForIncorrectModuleMetrics()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string IncorrectoutputPath = Path.Combine(workingDirectory, "Examples", "DCGMI", "DCGMIIncorrectresults.json");
+            string IncorrectoutputPath = Path.Combine(workingDirectory, "test_examples", "DCGMI", "DCGMIIncorrectresults.json");
             string rawText = File.ReadAllText(IncorrectoutputPath);
             DCGMIResultsParser testParser = new DCGMIResultsParser(rawText, "Modules");
             SchemaException exception = Assert.Throws<SchemaException>(() => testParser.Parse());
@@ -247,7 +247,7 @@ namespace VirtualClient.Actions
         public void DCGMIResultsParserParsesProftesterMetricsCorrectly()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "DCGMI", "DCGMIProftesterResults.txt");
+            string outputPath = Path.Combine(workingDirectory, "test_examples", "DCGMI", "DCGMIProftesterResults.txt");
             string rawText = File.ReadAllText(outputPath);
 
             DCGMIResultsParser testParser = new DCGMIResultsParser(rawText, "CUDATestGenerator");
@@ -260,7 +260,7 @@ namespace VirtualClient.Actions
         public void DCGMIResultsParseThrowsExceptionForIncorrectProftesterMetrics()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string IncorrectoutputPath = Path.Combine(workingDirectory, "Examples", "DCGMI", "DCGMIIncorrectresults.json");
+            string IncorrectoutputPath = Path.Combine(workingDirectory, "test_examples", "DCGMI", "DCGMIIncorrectresults.json");
             string rawText = File.ReadAllText(IncorrectoutputPath);
             DCGMIResultsParser testParser = new DCGMIResultsParser(rawText, "CUDATestGenerator");
             SchemaException exception = Assert.Throws<SchemaException>(() => testParser.Parse());
@@ -271,7 +271,7 @@ namespace VirtualClient.Actions
         public void DCGMIResultsParserParsesProftesterDmonMetricsCorrectly()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "DCGMI", "DCGMIDmonResults.txt");
+            string outputPath = Path.Combine(workingDirectory, "test_examples", "DCGMI", "DCGMIDmonResults.txt");
             string rawText = File.ReadAllText(outputPath);
 
             DCGMIResultsParser testParser = new DCGMIResultsParser(rawText, "CUDATestGeneratorDmon");
@@ -284,7 +284,7 @@ namespace VirtualClient.Actions
         public void DCGMIRsultsParseThrowsExceptionForIncorrectDmonMetrics()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string IncorrectoutputPath = Path.Combine(workingDirectory, "Examples", "DCGMI", "DCGMIIncorrectresults.json");
+            string IncorrectoutputPath = Path.Combine(workingDirectory, "test_examples", "DCGMI", "DCGMIIncorrectresults.json");
             string rawText = File.ReadAllText(IncorrectoutputPath);
             DCGMIResultsParser testParser = new DCGMIResultsParser(rawText, "CUDATestGeneratorDmon");
             SchemaException exception = Assert.Throws<SchemaException>(() => testParser.Parse());

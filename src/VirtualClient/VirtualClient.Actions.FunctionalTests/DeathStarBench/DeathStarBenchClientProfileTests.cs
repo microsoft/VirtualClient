@@ -13,6 +13,7 @@ namespace VirtualClient.Actions
     using NUnit.Framework;
     using VirtualClient.Common;
     using VirtualClient.Contracts;
+    using VirtualClient.TestExtensions;
 
     [TestFixture]
     [Category("Functional")]
@@ -29,7 +30,7 @@ namespace VirtualClient.Actions
             this.clientAgentId = $"{Environment.MachineName}-Client";
             this.serverAgentId = $"{Environment.MachineName}-Server";
 
-            ComponentTypeCache.Instance.LoadComponentTypes(TestDependencies.TestDirectory);
+            ComponentTypeCache.Instance.LoadComponentTypes(MockFixture.TestAssemblyDirectory);
 
             this.mockFixture.Setup(PlatformID.Unix, Architecture.X64, this.clientAgentId).SetupLayout(
                 new ClientInstance(this.clientAgentId, "1.2.3.4", "Client"),
@@ -48,7 +49,7 @@ namespace VirtualClient.Actions
         {
             this.mockFixture.SystemManagement.SetupGet(sm => sm.AgentId).Returns(this.serverAgentId);
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
             {
                 executor.ExecuteActions = false;
 
@@ -94,7 +95,7 @@ namespace VirtualClient.Actions
             };
 
             this.mockFixture.SetupPackage("deathstarbench", expectedFiles: expectedFiles);
-            this.mockFixture.SetupFile("deathstarbench/linux-x64/socialnetwork/wrk2", "results.txt", TestDependencies.GetResourceFileContents("Results_DeathStarBench.txt"));
+            this.mockFixture.SetupFile("deathstarbench/linux-x64/socialnetwork/wrk2", "results.txt", MockFixture.ReadTestResourcesFile("Results_DeathStarBench.txt"));
             this.mockFixture.SetupFile(@"/usr/local/bin/docker-compose");
 
             this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
@@ -108,7 +109,7 @@ namespace VirtualClient.Actions
 
                 if (arguments.Contains("./wrk -D exp -t 20 -c 1000 -d 300s -L -s", StringComparison.OrdinalIgnoreCase))
                 {
-                    process.StandardOutput.Append(TestDependencies.GetResourceFileContents("Results_DeathStarBench.txt"));
+                    process.StandardOutput.Append(MockFixture.ReadTestResourcesFile("Results_DeathStarBench.txt"));
                 }
 
                 if (arguments == "bash -c \"docker ps | wc -l\"")
@@ -119,7 +120,7 @@ namespace VirtualClient.Actions
                 return process;
             };
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
             {
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None)
                     .ConfigureAwait(false);
@@ -133,7 +134,7 @@ namespace VirtualClient.Actions
         public void DeathStarBenchWorkloadProfileActionsWillNotBeExecutedIfTheClientWorkloadPackageDoesNotExist(string profile)
         {
             this.mockFixture.PackageManager.Clear();
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
             {
                 executor.ExecuteDependencies = false;
                 DependencyException error = Assert.ThrowsAsync<DependencyException>(() => executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None));

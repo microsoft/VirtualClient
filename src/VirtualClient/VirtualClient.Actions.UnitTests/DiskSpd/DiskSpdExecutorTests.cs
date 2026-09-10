@@ -48,7 +48,7 @@ namespace VirtualClient.Actions.DiskPerformance
                 { nameof(DiskSpdExecutor.MetricScenario), "diskspd_randwrite_4GB_direct" }
             };
 
-            this.output = MockFixture.ReadFile(MockFixture.ExamplesDirectory, "DiskSpd", "DiskSpdExample-ReadWrite.txt");
+            this.output = MockFixture.ReadFile(MockFixture.TestExamplesDirectory, "DiskSpd", "DiskSpdExample-ReadWrite.txt");
 
             this.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {

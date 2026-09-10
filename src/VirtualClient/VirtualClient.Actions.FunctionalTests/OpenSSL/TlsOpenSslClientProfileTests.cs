@@ -12,6 +12,7 @@ namespace VirtualClient.Actions
     using NUnit.Framework;
     using VirtualClient.Common;
     using VirtualClient.Contracts;
+    using VirtualClient.TestExtensions;
 
     [TestFixture]
     [Category("Functional")]
@@ -29,7 +30,7 @@ namespace VirtualClient.Actions
                     new ClientInstance("Client01", "1.2.3.4", "Client"),
                     new ClientInstance("Server01", "1.2.3.5", "Server"));
 
-            ComponentTypeCache.Instance.LoadComponentTypes(TestDependencies.TestDirectory);
+            ComponentTypeCache.Instance.LoadComponentTypes(MockFixture.TestAssemblyDirectory);
         }
 
         [Test]
@@ -60,7 +61,7 @@ namespace VirtualClient.Actions
                 return process;
             };
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies, dependenciesOnly: true))
+            using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(profile, this.mockFixture.Dependencies, dependenciesOnly: true))
             {
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None);
                 WorkloadAssert.WorkloadPackageInstalled(this.mockFixture, "openssl");

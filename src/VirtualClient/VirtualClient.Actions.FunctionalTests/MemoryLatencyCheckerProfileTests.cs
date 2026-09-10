@@ -12,6 +12,7 @@ namespace VirtualClient.Actions
     using global::VirtualClient.Common;
     using global::VirtualClient.Contracts;
     using NUnit.Framework;
+    using VirtualClient.TestExtensions;
 
     [TestFixture]
     [Category("Functional")]
@@ -23,7 +24,7 @@ namespace VirtualClient.Actions
         public void SetupFixture()
         {
             this.mockFixture = new DependencyFixture();
-            ComponentTypeCache.Instance.LoadComponentTypes(TestDependencies.TestDirectory);
+            ComponentTypeCache.Instance.LoadComponentTypes(MockFixture.TestAssemblyDirectory);
         }
 
         [Test]
@@ -32,7 +33,7 @@ namespace VirtualClient.Actions
         public void MemoryLatencyCheckerWorkloadProfileParametersAreInlinedCorrectly(string profile, PlatformID platform)
         {
             this.mockFixture.Setup(platform);
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
             {
                 WorkloadAssert.ParameterReferencesInlined(executor.Profile);
             }
@@ -55,12 +56,12 @@ namespace VirtualClient.Actions
             this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
                 IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
-                process.StandardOutput.Append(TestDependencies.GetResourceFileContents("MemoryLatencyChecker", "memory_latency_checker_results_1.txt"));
+                process.StandardOutput.Append(MockFixture.ReadTestResourcesFile("MemoryLatencyChecker", "memory_latency_checker_results_1.txt"));
 
                 return process;
             };
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
             {
                 executor.ExecuteDependencies = false;
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None)

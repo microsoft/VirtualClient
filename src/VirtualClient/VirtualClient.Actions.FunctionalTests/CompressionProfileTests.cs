@@ -23,7 +23,7 @@ namespace VirtualClient.Actions
         public void SetupFixture()
         {
             this.mockFixture = new DependencyFixture();
-            ComponentTypeCache.Instance.LoadComponentTypes(TestDependencies.TestDirectory);
+            ComponentTypeCache.Instance.LoadComponentTypes(MockFixture.TestAssemblyDirectory);
         }
 
         [Test]
@@ -34,7 +34,7 @@ namespace VirtualClient.Actions
         public void CompressionWorkloadProfileParametersAreInlinedCorrectly(string profile, PlatformID platformID, Architecture architecture)
         {
             this.mockFixture.Setup(platformID, architecture);
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
             {
                 WorkloadAssert.ParameterReferencesInlined(executor.Profile);
             }
@@ -63,21 +63,21 @@ namespace VirtualClient.Actions
 
                 if (arguments.Contains("7z", StringComparison.OrdinalIgnoreCase))
                 {
-                    process.StandardOutput.Append(TestDependencies.GetResourceFileContents("Compressor7zipResults.txt"));
+                    process.StandardOutput.Append(MockFixture.ReadTestResourcesFile("Compressor7zipResults.txt"));
                 }
                 else if (arguments.Contains("gzip", StringComparison.OrdinalIgnoreCase))
                 {
-                    process.StandardError.Append(TestDependencies.GetResourceFileContents("GzipResults.txt"));
+                    process.StandardError.Append(MockFixture.ReadTestResourcesFile("GzipResults.txt"));
                 }
                 else if (arguments.Contains("pbzip2", StringComparison.OrdinalIgnoreCase))
                 {
-                    process.StandardError.Append(TestDependencies.GetResourceFileContents("Pbzip2Results.txt"));
+                    process.StandardError.Append(MockFixture.ReadTestResourcesFile("Pbzip2Results.txt"));
                 }
 
                 return process;
             };
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
             {
                 executor.ExecuteDependencies = false;
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
@@ -92,7 +92,7 @@ namespace VirtualClient.Actions
         public void CompressionWorkloadProfileParametersAreInlinedCorrectly_LZbench(string profile, PlatformID platformID, Architecture architecture)
         {
             this.mockFixture.Setup(platformID, architecture);
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
             {
                 WorkloadAssert.ParameterReferencesInlined(executor.Profile);
             }
@@ -117,13 +117,13 @@ namespace VirtualClient.Actions
 
                 if (arguments.Contains("lzbenchexecutor.sh", StringComparison.OrdinalIgnoreCase))
                 {
-                    process.StandardOutput.Append(TestDependencies.GetResourceFileContents("LzbenchResults.csv"));
+                    process.StandardOutput.Append(MockFixture.ReadTestResourcesFile("LzbenchResults.csv"));
                 }
 
                 return process;
             };
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
             {
                 executor.ExecuteDependencies = false;
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);

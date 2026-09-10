@@ -5,6 +5,7 @@ namespace VirtualClient
 {
     using System;
     using System.Collections.Generic;
+    using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
     using System.Net;
@@ -16,7 +17,6 @@ namespace VirtualClient
     using System.Threading;
     using System.Threading.Tasks;
     using AutoFixture;
-    using Azure.Core;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
@@ -49,13 +49,13 @@ namespace VirtualClient
         /// The path to the directory where test example files can be found. Note that this requires the
         /// test project to copy the files to a directory called 'Examples'.
         /// </summary>
-        public static readonly string ExamplesDirectory = System.IO.Path.Combine(TestAssemblyDirectory, "Examples");
+        public static readonly string TestExamplesDirectory = System.IO.Path.Combine(TestAssemblyDirectory, "test_examples");
 
         /// <summary>
         /// The path to the directory where test test resource/example files can be found. Note that this requires the
-        /// test project to copy the files to a directory called 'TestResources'.
+        /// test project to copy the files to a directory called 'MockFixture'.
         /// </summary>
-        public static readonly string TestResourcesDirectory = System.IO.Path.Combine(TestAssemblyDirectory, "TestResources");
+        public static readonly string TestResourcesDirectory = System.IO.Path.Combine(TestAssemblyDirectory, "test_resources");
 
         private static readonly char[] PathDividers = new char[] { '\\', '/' };
         private static readonly Regex UnixTopLevelFolderExpression = new Regex(@"^(\/[^\/]+)$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -278,6 +278,36 @@ namespace VirtualClient
         public static string ReadFile(params string[] pathSegments)
         {
             return System.IO.File.ReadAllText(MockFixture.CurrentPlatform.Combine(pathSegments));
+        }
+
+        /// <summary>
+        /// Returns the contents of the file at the specified path in the 'examples' directory. Note that this 
+        /// directory is expected to be copied to the build output directory for the test project.
+        /// </summary>
+        /// <param name="filePath">One or more path segments to use for compiling the full path to the example.</param>
+        /// <returns>The contents of the example file.</returns>
+        public static string ReadTestExamplesFile(params string[] filePath)
+        {
+            List<string> fileSegments = new List<string>();
+            fileSegments.Add(MockFixture.TestExamplesDirectory);
+            fileSegments.AddRange(filePath);
+
+            return System.IO.File.ReadAllText(Path.Combine(fileSegments.ToArray()));
+        }
+
+        /// <summary>
+        /// Returns the contents of the file at the specified path in the 'resources' directory. Note that this 
+        /// directory is expected to be copied to the build output directory for the test project.
+        /// </summary>
+        /// <param name="filePath">One or more path segments to use for compiling the full path to the resource.</param>
+        /// <returns>The contents of the resource file.</returns>
+        public static string ReadTestResourcesFile(params string[] filePath)
+        {
+            List<string> fileSegments = new List<string>();
+            fileSegments.Add(MockFixture.TestResourcesDirectory);
+            fileSegments.AddRange(filePath);
+
+            return System.IO.File.ReadAllText(Path.Combine(fileSegments.ToArray()));
         }
 
         /// <summary>

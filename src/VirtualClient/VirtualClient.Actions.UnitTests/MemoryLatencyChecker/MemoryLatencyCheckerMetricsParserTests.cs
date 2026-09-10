@@ -26,7 +26,7 @@ namespace VirtualClient.Actions
         [Test]
         public void MemoryLatencyCheckerParserVerifyMetricsForLatencyMatrixMultipleNumaNode()
         {
-            string outputPath = Path.Combine(this.workingDirectory, "Examples", "MemoryLatencyChecker", "mlc-latency-matrix-multiple.txt");
+            string outputPath = Path.Combine(this.workingDirectory, "test_examples", "MemoryLatencyChecker", "mlc-latency-matrix-multiple.txt");
             string rawText = File.ReadAllText(outputPath);
             this.testParser = new MemoryLatencyCheckerMetricsParser(rawText, MemoryLatencyCheckerMetricsParser.MemoryLatencyCheckerBenchmark.LatencyMatrix);
             IList<Metric> metrics = this.testParser.Parse();
@@ -40,7 +40,7 @@ namespace VirtualClient.Actions
         [Test]
         public void MemoryLatencyCheckerParserVerifyMetricsForLatencyMatrixSingleNumaNode()
         {
-            string outputPath = Path.Combine(this.workingDirectory, "Examples", "MemoryLatencyChecker", "mlc-latency-matrix-single.txt");
+            string outputPath = Path.Combine(this.workingDirectory, "test_examples", "MemoryLatencyChecker", "mlc-latency-matrix-single.txt");
             string rawText = File.ReadAllText(outputPath);
             this.testParser = new MemoryLatencyCheckerMetricsParser(rawText, MemoryLatencyCheckerMetricsParser.MemoryLatencyCheckerBenchmark.LatencyMatrix);
             IList<Metric> metrics = this.testParser.Parse();
@@ -52,7 +52,7 @@ namespace VirtualClient.Actions
         [Test]
         public void MemoryLatencyCheckerParserVerifyMetricsForLoadedLatency()
         {
-            string outputPath = Path.Combine(this.workingDirectory, "Examples", "MemoryLatencyChecker", "mlc-loaded-latency.txt");
+            string outputPath = Path.Combine(this.workingDirectory, "test_examples", "MemoryLatencyChecker", "mlc-loaded-latency.txt");
             string rawText = File.ReadAllText(outputPath);
             this.testParser = new MemoryLatencyCheckerMetricsParser(rawText, MemoryLatencyCheckerMetricsParser.MemoryLatencyCheckerBenchmark.LoadedLatency);
             IList<Metric> metrics = this.testParser.Parse();
@@ -69,7 +69,7 @@ namespace VirtualClient.Actions
         [Test]
         public void MemoryLatencyCheckerParserVerifyMetricsForIdleLatency()
         {
-            string outputPath = Path.Combine(this.workingDirectory, "Examples", "MemoryLatencyChecker", "mlc-idle-latency.txt");
+            string outputPath = Path.Combine(this.workingDirectory, "test_examples", "MemoryLatencyChecker", "mlc-idle-latency.txt");
             string rawText = File.ReadAllText(outputPath);
             this.testParser = new MemoryLatencyCheckerMetricsParser(rawText, MemoryLatencyCheckerMetricsParser.MemoryLatencyCheckerBenchmark.IdleLatency);
             IList<Metric> metrics = this.testParser.Parse();
@@ -82,7 +82,7 @@ namespace VirtualClient.Actions
         [Test]
         public void MemoryLatencyCheckerParserVerifyMetricsForPeakInjectionMemoryBandwidth()
         {
-            string outputPath = Path.Combine(this.workingDirectory, "Examples", "MemoryLatencyChecker", "mlc-peak-injection-bandwidth.txt");
+            string outputPath = Path.Combine(this.workingDirectory, "test_examples", "MemoryLatencyChecker", "mlc-peak-injection-bandwidth.txt");
             string rawText = File.ReadAllText(outputPath);
             this.testParser = new MemoryLatencyCheckerMetricsParser(rawText, MemoryLatencyCheckerMetricsParser.MemoryLatencyCheckerBenchmark.PeakInjectionBandwidth);
             IList<Metric> metrics = this.testParser.Parse();
@@ -98,7 +98,7 @@ namespace VirtualClient.Actions
         [Test]
         public void MemoryLatencyCheckerParserVerifyMetricsForBandwidthMatrixSingleNumaNode()
         {
-            string outputPath = Path.Combine(this.workingDirectory, "Examples", "MemoryLatencyChecker", "mlc-bandwidth-matrix-single.txt");
+            string outputPath = Path.Combine(this.workingDirectory, "test_examples", "MemoryLatencyChecker", "mlc-bandwidth-matrix-single.txt");
             string rawText = File.ReadAllText(outputPath);
             this.testParser = new MemoryLatencyCheckerMetricsParser(rawText, MemoryLatencyCheckerMetricsParser.MemoryLatencyCheckerBenchmark.BandwidthMatrix);
             IList<Metric> metrics = this.testParser.Parse();
@@ -110,7 +110,7 @@ namespace VirtualClient.Actions
         [Test]
         public void MemoryLatencyCheckerParserVerifyMetricsForBandwidthMatrixMultipleNumaNode()
         {
-            string outputPath = Path.Combine(this.workingDirectory, "Examples", "MemoryLatencyChecker", "mlc-bandwidth-matrix-multiple.txt");
+            string outputPath = Path.Combine(this.workingDirectory, "test_examples", "MemoryLatencyChecker", "mlc-bandwidth-matrix-multiple.txt");
             string rawText = File.ReadAllText(outputPath);
             this.testParser = new MemoryLatencyCheckerMetricsParser(rawText, MemoryLatencyCheckerMetricsParser.MemoryLatencyCheckerBenchmark.BandwidthMatrix);
             IList<Metric> metrics = this.testParser.Parse();
@@ -124,7 +124,7 @@ namespace VirtualClient.Actions
         [Test]
         public void MemoryLatencyCheckerParserThrowsIfInvalidResultsProvided()
         {
-            string InvalidOutputPath = Path.Combine(workingDirectory, "Examples", "MemoryLatencyChecker", "mlc-invalid.txt");
+            string InvalidOutputPath = Path.Combine(workingDirectory, "test_examples", "MemoryLatencyChecker", "mlc-invalid.txt");
             string rawText = File.ReadAllText(InvalidOutputPath);
             this.testParser = new MemoryLatencyCheckerMetricsParser(rawText, string.Empty);
             WorkloadResultsException exception = Assert.Throws<WorkloadResultsException>(() => this.testParser.Parse());
@@ -134,7 +134,7 @@ namespace VirtualClient.Actions
         [Test]
         public void MemoryLatencyCheckerParserVerifyMetricsForC2CLatency()
         {
-            string outputPath = Path.Combine(this.workingDirectory, "Examples", "MemoryLatencyChecker", "mlc-c2c-latency.txt");
+            string outputPath = Path.Combine(this.workingDirectory, "test_examples", "MemoryLatencyChecker", "mlc-c2c-latency.txt");
             string rawText = File.ReadAllText(outputPath);
             this.testParser = new MemoryLatencyCheckerMetricsParser(rawText, MemoryLatencyCheckerMetricsParser.MemoryLatencyCheckerBenchmark.C2CLatency);
             IList<Metric> metrics = this.testParser.Parse();

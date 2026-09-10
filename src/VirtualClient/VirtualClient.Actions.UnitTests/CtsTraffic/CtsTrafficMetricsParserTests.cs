@@ -20,7 +20,7 @@ namespace VirtualClient.Actions
         public void Setup()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "CtsTraffic", "CtsTrafficResultsExample.csv");
+            string outputPath = Path.Combine(workingDirectory, "test_examples", "CtsTraffic", "CtsTrafficResultsExample.csv");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new CtsTrafficMetricsParser(this.rawText);
         }

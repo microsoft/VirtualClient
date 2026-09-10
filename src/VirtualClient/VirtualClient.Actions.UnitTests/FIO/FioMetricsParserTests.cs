@@ -16,10 +16,10 @@ namespace VirtualClient.Actions
     [Category("Unit")]
     public class FioMetricsParserTests
     {
-        private static readonly string ExamplesPath = Path.Combine(
+        private static readonly string ResourcesPath = Path.Combine(
             Path.GetDirectoryName(Assembly.GetAssembly(typeof(FioMetricsParserTests)).Location),
-            "Examples",
-            "FIO");
+            "test_resources",
+            "fio");
 
         private static readonly IDictionary<string, double> ExpectedReadMetrics = new Dictionary<string, double>
         {
@@ -160,7 +160,7 @@ namespace VirtualClient.Actions
         [Test]
         public void FioResultsParserHandlesResultsThatHasMissingMeasurements_ReadMeasurementsMissing()
         {
-            JObject results = JObject.Parse(File.ReadAllText(Path.Combine(FioMetricsParserTests.ExamplesPath, "Results_FIO.json")));
+            JObject results = JObject.Parse(File.ReadAllText(Path.Combine(FioMetricsParserTests.ResourcesPath, "Results_FIO.json")));
             results.SelectToken($"jobs[0].read").First.Remove();
 
             FioMetricsParser parser = new FioMetricsParser(results.ToString(), parseReadMetrics: true, parseWriteMetrics: false);
@@ -175,7 +175,7 @@ namespace VirtualClient.Actions
         [Test]
         public void FioResultsParserHandlesResultsThatHasMissingMeasurements_WriteMeasurementsMissing()
         {
-            JObject results = JObject.Parse(File.ReadAllText(Path.Combine(FioMetricsParserTests.ExamplesPath, "Results_FIO.json")));
+            JObject results = JObject.Parse(File.ReadAllText(Path.Combine(FioMetricsParserTests.ResourcesPath, "Results_FIO.json")));
             results.SelectToken($"jobs[0].write").First.Remove();
 
             FioMetricsParser parser = new FioMetricsParser(results.ToString(), parseReadMetrics: false, parseWriteMetrics: true);
@@ -190,7 +190,7 @@ namespace VirtualClient.Actions
         [Test]
         public void FioResultsParserReadsTheExpectedMeasurementsFromTheResults_Read_Scenario()
         {
-            string results = File.ReadAllText(Path.Combine(FioMetricsParserTests.ExamplesPath, "Results_FIO.json"));
+            string results = File.ReadAllText(Path.Combine(FioMetricsParserTests.ResourcesPath, "Results_FIO.json"));
 
             FioMetricsParser parser = new FioMetricsParser(results, parseReadMetrics: true, parseWriteMetrics: false);
             IEnumerable<Metric> metrics = parser.Parse();
@@ -205,7 +205,7 @@ namespace VirtualClient.Actions
         [Test]
         public void FioResultsParserReadsTheExpectedMeasurementsFromTheResults_Write_Scenario()
         {
-            string results = File.ReadAllText(Path.Combine(FioMetricsParserTests.ExamplesPath, "Results_FIO.json"));
+            string results = File.ReadAllText(Path.Combine(FioMetricsParserTests.ResourcesPath, "Results_FIO.json"));
 
             FioMetricsParser parser = new FioMetricsParser(results, parseReadMetrics: false, parseWriteMetrics: true);
             IEnumerable<Metric> metrics = parser.Parse();
@@ -220,7 +220,7 @@ namespace VirtualClient.Actions
         [Test]
         public void FioResultsParserReadsTheExpectedMeasurementsFromTheResults_ReadWrite_Scenario()
         {
-            string results = File.ReadAllText(Path.Combine(FioMetricsParserTests.ExamplesPath, "Results_FIO.json"));
+            string results = File.ReadAllText(Path.Combine(FioMetricsParserTests.ResourcesPath, "Results_FIO.json"));
 
             FioMetricsParser parser = new FioMetricsParser(results, parseReadMetrics: true, parseWriteMetrics: true);
             IEnumerable<Metric> metrics = parser.Parse();
@@ -237,7 +237,7 @@ namespace VirtualClient.Actions
         [Test]
         public void FioResultsParserReadsTheExpectedMeasurementValuesFromTheResults_Read_Scenario()
         {
-            string results = File.ReadAllText(Path.Combine(FioMetricsParserTests.ExamplesPath, "Results_FIO.json"));
+            string results = File.ReadAllText(Path.Combine(FioMetricsParserTests.ResourcesPath, "Results_FIO.json"));
 
             FioMetricsParser parser = new FioMetricsParser(results, parseReadMetrics: true, parseWriteMetrics: false, conversionUnits: MetricUnit.Nanoseconds);
             IEnumerable<Metric> metrics = parser.Parse();
@@ -254,7 +254,7 @@ namespace VirtualClient.Actions
         [Test]
         public void FioResultsParserReadsTheExpectedMeasurementValuesFromTheResults_Write_Scenario()
         {
-            string results = File.ReadAllText(Path.Combine(FioMetricsParserTests.ExamplesPath, "Results_FIO.json"));
+            string results = File.ReadAllText(Path.Combine(FioMetricsParserTests.ResourcesPath, "Results_FIO.json"));
 
             FioMetricsParser parser = new FioMetricsParser(results, parseReadMetrics: false, parseWriteMetrics: true, conversionUnits: MetricUnit.Nanoseconds);
             IEnumerable<Metric> metrics = parser.Parse();
@@ -271,7 +271,7 @@ namespace VirtualClient.Actions
         [Test]
         public void FioResultsParserAppliesTheExpectedDefaultConversionFactorToMeasurementValues_Read_Scenario()
         {
-            string results = File.ReadAllText(Path.Combine(FioMetricsParserTests.ExamplesPath, "Results_FIO.json"));
+            string results = File.ReadAllText(Path.Combine(FioMetricsParserTests.ResourcesPath, "Results_FIO.json"));
 
             // The default conversion factor is from nanoseconds to milliseconds
             FioMetricsParser parser = new FioMetricsParser(results, parseReadMetrics: true, parseWriteMetrics: false);
@@ -295,7 +295,7 @@ namespace VirtualClient.Actions
         [Test]
         public void FioResultsParserAppliesTheExpectedDefaultConversionFactorToMeasurementValues_Write_Scenario()
         {
-            string results = File.ReadAllText(Path.Combine(FioMetricsParserTests.ExamplesPath, "Results_FIO.json"));
+            string results = File.ReadAllText(Path.Combine(FioMetricsParserTests.ResourcesPath, "Results_FIO.json"));
 
             // The default conversion factor is from nanoseconds to milliseconds
             FioMetricsParser parser = new FioMetricsParser(results, parseReadMetrics: false, parseWriteMetrics: true);
@@ -321,7 +321,7 @@ namespace VirtualClient.Actions
         [TestCase("Results_FIO_Verification_Error_2.txt", 128)]
         public void FioResultsParserReadsDataIntegrityVerifcationErrorsFromTheResults(string exampleFileName, int expectedDataIntegrityErrors)
         {
-            string results = File.ReadAllText(Path.Combine(FioMetricsParserTests.ExamplesPath, exampleFileName));
+            string results = File.ReadAllText(Path.Combine(FioMetricsParserTests.ResourcesPath, exampleFileName));
 
             FioMetricsParser parser = new FioMetricsParser(results, parseDataIntegrityErrors: true);
             IEnumerable<Metric> metrics = parser.Parse();

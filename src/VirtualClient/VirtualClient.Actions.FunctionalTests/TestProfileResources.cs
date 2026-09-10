@@ -6,37 +6,14 @@ namespace VirtualClient.Actions
     using System;
     using System.Collections.Generic;
     using System.IO;
-    using System.Reflection;
     using Microsoft.Extensions.DependencyInjection;
     using VirtualClient.Contracts;
 
     /// <summary>
     /// Provides dependencies used in the various functional tests in this project.
     /// </summary>
-    public static class TestDependencies
+    public static class TestProfileResources
     {
-        static TestDependencies()
-        {
-            TestDependencies.TestDirectory = Path.GetDirectoryName(Assembly.GetAssembly(typeof(TestDependencies)).Location);
-            TestDependencies.ProfileDirectory = Path.Combine(TestDependencies.TestDirectory, "profiles");
-            TestDependencies.ResourcesDirectory = Path.Combine(TestDependencies.TestDirectory, "resources");
-        }
-
-        /// <summary>
-        /// The directory where the workload profiles exist.
-        /// </summary>
-        public static string ProfileDirectory { get; }
-
-        /// <summary>
-        /// The directory where the workload resources exist.
-        /// </summary>
-        public static string ResourcesDirectory { get; }
-
-        /// <summary>
-        /// The directory where the test binaries exist (e.g. the build output directory).
-        /// </summary>
-        public static string TestDirectory { get; }
-
         /// <summary>
         /// Creates a <see cref="ProfileExecutor"/> for the workload profile provided (e.g. PERF-IO-FIO-STRESS.json).
         /// </summary>
@@ -54,7 +31,7 @@ namespace VirtualClient.Actions
             bool dependenciesOnly = false,
             IDictionary<string, IConvertible> parameterOverrides = null)
         {
-            ExecutionProfile workloadProfile = ExecutionProfile.ReadProfileAsync(Path.Combine(TestDependencies.ProfileDirectory, profile))
+            ExecutionProfile workloadProfile = ExecutionProfile.ReadProfileAsync(Path.Combine(MockFixture.TestResourcesDirectory, "profiles", profile))
                 .GetAwaiter().GetResult();
 
             workloadProfile.Inline();
@@ -91,15 +68,6 @@ namespace VirtualClient.Actions
             };
 
             return profileExecutor;
-        }
-
-        public static string GetResourceFileContents(params string[] filePath)
-        {
-            List<string> fileSegments = new List<string>();
-            fileSegments.Add(TestDependencies.ResourcesDirectory);
-            fileSegments.AddRange(filePath);
-
-            return File.ReadAllText(Path.Combine(fileSegments.ToArray()));
         }
     }
 }

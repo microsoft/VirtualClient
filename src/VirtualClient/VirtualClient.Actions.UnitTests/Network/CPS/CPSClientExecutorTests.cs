@@ -49,7 +49,7 @@ namespace VirtualClient.Actions
             this.mockFixture.Parameters["ConfidenceLevel"] = "99";
 
             string currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string resultsPath = Path.Combine(currentDirectory, "Examples", "CPS", "CPS_Example_Results_Server.txt");
+            string resultsPath = Path.Combine(currentDirectory, "test_examples", "CPS", "CPS_Example_Results_Server.txt");
             string results = File.ReadAllText(resultsPath);
 
             this.mockFixture.Process.StandardOutput.Append(results);

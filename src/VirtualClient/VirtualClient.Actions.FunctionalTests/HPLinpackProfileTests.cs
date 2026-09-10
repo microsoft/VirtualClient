@@ -15,6 +15,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.TestExtensions;
 
     [TestFixture]
     [Category("Functional")]
@@ -26,7 +27,7 @@ namespace VirtualClient.Actions
         public void SetupFixture()
         {
             this.mockFixture = new DependencyFixture();
-            ComponentTypeCache.Instance.LoadComponentTypes(TestDependencies.TestDirectory);
+            ComponentTypeCache.Instance.LoadComponentTypes(MockFixture.TestAssemblyDirectory);
         }
 
         [Test]
@@ -34,7 +35,7 @@ namespace VirtualClient.Actions
         public void HPLinpackWorkloadProfileParametersAreInlinedCorrectly(string profile)
         {
             this.mockFixture.Setup(PlatformID.Unix);
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
             {
                 WorkloadAssert.ParameterReferencesInlined(executor.Profile);
             }
@@ -54,7 +55,7 @@ namespace VirtualClient.Actions
                 return process;
             };
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies, dependenciesOnly: true))
+            using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(profile, this.mockFixture.Dependencies, dependenciesOnly: true))
             {
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
 
@@ -94,7 +95,7 @@ namespace VirtualClient.Actions
                 IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
                 if (arguments.Contains("mpirun", StringComparison.OrdinalIgnoreCase))
                 {
-                    process.StandardOutput.Append(TestDependencies.GetResourceFileContents("Results_HPL.txt"));
+                    process.StandardOutput.Append(MockFixture.ReadTestResourcesFile("Results_HPL.txt"));
                 }
 
                 if (arguments == "--version")
@@ -117,7 +118,7 @@ namespace VirtualClient.Actions
                 return process;
             };
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
             {
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
 
@@ -161,7 +162,7 @@ namespace VirtualClient.Actions
                 IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
                 if (arguments.Contains("mpirun", StringComparison.OrdinalIgnoreCase))
                 {
-                    process.StandardOutput.Append(TestDependencies.GetResourceFileContents("Results_HPL.txt"));
+                    process.StandardOutput.Append(MockFixture.ReadTestResourcesFile("Results_HPL.txt"));
                 }
 
                 if (arguments == "--version")
@@ -184,7 +185,7 @@ namespace VirtualClient.Actions
                 return process;
             };
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
             {
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
 

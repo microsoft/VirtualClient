@@ -5,17 +5,15 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
     using System.Net;
     using System.Runtime.InteropServices;
-    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using Moq;
     using NUnit.Framework;
     using VirtualClient.Actions.Memtier;
-    using VirtualClient.Common;
     using VirtualClient.Contracts;
+    using VirtualClient.TestExtensions;
 
     [TestFixture]
     [Category("Functional")]
@@ -33,7 +31,7 @@ namespace VirtualClient.Actions
                     new ClientInstance("Client01", "1.2.3.4", "Client"),
                     new ClientInstance("Server01", "1.2.3.5", "Server"));
 
-            ComponentTypeCache.Instance.LoadComponentTypes(TestDependencies.TestDirectory);
+            ComponentTypeCache.Instance.LoadComponentTypes(MockFixture.TestAssemblyDirectory);
 
             this.mockFixture.SetupPackage("wget", null, "linux-x64/wget2");
             this.mockFixture.SetupFile("redis", "redis-6.2.1/src/redis-server", new byte[0]);
@@ -51,7 +49,7 @@ namespace VirtualClient.Actions
                     "redis-server.*--version",
                     "Redis server v=7.0.15 sha=00000000 malloc=jemalloc-5.1.0 bits=64 build=abc123");
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
             {
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None)
                     .ConfigureAwait(false);
@@ -91,7 +89,7 @@ namespace VirtualClient.Actions
 
             await apiClient.CreateStateAsync(nameof(ServerState), state, CancellationToken.None);
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
             {
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None);
 

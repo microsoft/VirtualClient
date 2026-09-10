@@ -10,12 +10,11 @@ namespace VirtualClient.Actions.CpuPerformance
     using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
-    using VirtualClient.Common;
     using Moq;
     using NUnit.Framework;
-    using VirtualClient.Actions.Properties;
-    using VirtualClient.Contracts;
+    using VirtualClient.Common;
     using VirtualClient.Common.Telemetry;
+    using VirtualClient.Contracts;
 
     [TestFixture]
     [Category("Unit")]
@@ -345,7 +344,7 @@ namespace VirtualClient.Actions.CpuPerformance
                 // result.
                 if (process.IsMatch("openssl(.exe)* speed"))
                 {
-                    process.StandardOutput.Append(TestResources.Results_OpenSSL_speed);
+                    process.StandardOutput.Append(MockFixture.ReadTestResourcesFile("openssl", "Results_OpenSSL_speed.txt"));
                 }
             };
             

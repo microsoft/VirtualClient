@@ -11,6 +11,7 @@ namespace VirtualClient.Actions
     using System.Threading.Tasks;
     using NUnit.Framework;
     using VirtualClient.Contracts;
+    using VirtualClient.TestExtensions;
 
     [TestFixture]
     [Ignore("There are some intermittent issue preventing the FunctionTests to return on GitHub Actions.")]
@@ -33,7 +34,7 @@ namespace VirtualClient.Actions
 
             this.mockFixture.SetupDisks(withRemoteDisks: false);           
 
-            ComponentTypeCache.Instance.LoadComponentTypes(TestDependencies.TestDirectory);
+            ComponentTypeCache.Instance.LoadComponentTypes(MockFixture.TestAssemblyDirectory);
 
             this.mockFixture.SetupPackage("visualstudiocruntime");
 
@@ -53,7 +54,7 @@ namespace VirtualClient.Actions
         {
             this.SetupFixtureBasedOnPlatformAndArchitecture(platformID, architecture);
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
             {
                 WorkloadAssert.ParameterReferencesInlined(executor.Profile);
             }
@@ -70,7 +71,7 @@ namespace VirtualClient.Actions
             this.SetupFixtureBasedOnPlatformAndArchitecture(platformID, architecture);
             this.mockFixture.PackageManager.Clear();
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
             {
                 executor.ExecuteDependencies = false;
 
@@ -91,7 +92,7 @@ namespace VirtualClient.Actions
 
             this.SetupFixtureBasedOnPlatformAndArchitecture(platformID, architecture);       
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
             {
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
 

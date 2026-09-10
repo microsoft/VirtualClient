@@ -14,6 +14,7 @@ namespace VirtualClient.Actions
     using Microsoft.Extensions.DependencyInjection.Extensions;
     using Moq;
     using NUnit.Framework;
+    using VirtualClient.TestExtensions;
 
     [TestFixture]
     [Category("Functional")]
@@ -25,7 +26,7 @@ namespace VirtualClient.Actions
         public void SetupFixture()
         {
             this.mockFixture = new DependencyFixture();
-            ComponentTypeCache.Instance.LoadComponentTypes(TestDependencies.TestDirectory);
+            ComponentTypeCache.Instance.LoadComponentTypes(MockFixture.TestAssemblyDirectory);
         }
 
         [Test]
@@ -33,7 +34,7 @@ namespace VirtualClient.Actions
         public void SpecJbbWorkloadProfileParametersAreInlinedCorrectly(string profile)
         {
             this.mockFixture.Setup(PlatformID.Unix);
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
             {
                 WorkloadAssert.ParameterReferencesInlined(executor.Profile);
             }
@@ -50,7 +51,7 @@ namespace VirtualClient.Actions
             string expectedJavaExecutablePath = this.mockFixture.GetPackagePath("microsoft-jdk-17.0.3/linux-x64/bin/java");
             this.mockFixture.SetupFile(expectedJavaExecutablePath);
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies, dependenciesOnly: true))
+            using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(profile, this.mockFixture.Dependencies, dependenciesOnly: true))
             {
                 executor.ExecuteDependencies = false;
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
@@ -76,7 +77,7 @@ namespace VirtualClient.Actions
             string expectedJavaExecutablePath = this.mockFixture.GetPackagePath(@"microsoft-jdk-17.0.3\win-x64\bin\java.exe");
             this.mockFixture.SetupFile(expectedJavaExecutablePath);
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies, dependenciesOnly: true))
+            using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(profile, this.mockFixture.Dependencies, dependenciesOnly: true))
             {
                 executor.ExecuteDependencies = false;
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
@@ -107,13 +108,13 @@ namespace VirtualClient.Actions
                 IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
                 if (arguments.Contains("-jar", StringComparison.OrdinalIgnoreCase))
                 {
-                    process.StandardOutput.Append(TestDependencies.GetResourceFileContents("Results_SPECJbb.txt"));
+                    process.StandardOutput.Append(MockFixture.ReadTestResourcesFile("Results_SPECJbb.txt"));
                 }
 
                 return process;
             };
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
             {
                 executor.ExecuteDependencies = false;
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
@@ -138,13 +139,13 @@ namespace VirtualClient.Actions
                 IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
                 if (arguments.Contains("-jar", StringComparison.OrdinalIgnoreCase))
                 {
-                    process.StandardOutput.Append(TestDependencies.GetResourceFileContents("Results_SPECJbb.txt"));
+                    process.StandardOutput.Append(MockFixture.ReadTestResourcesFile("Results_SPECJbb.txt"));
                 }
 
                 return process;
             };
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
             {
                 executor.ExecuteDependencies = false;
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);

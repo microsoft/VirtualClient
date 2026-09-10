@@ -20,7 +20,7 @@ namespace VirtualClient.Actions
     [Category("Unit")]
     public class PythonExecutorTests
     {
-        private static readonly string ExamplesDirectory = MockFixture.GetDirectory(typeof(PythonExecutorTests), "Examples", "ScriptExecutor");
+        private static readonly string ExamplesDirectory = MockFixture.GetDirectory(typeof(PythonExecutorTests), "test_examples", "ScriptExecutor");
 
         private MockFixture mockFixture;
         private DependencyPath mockPackage;

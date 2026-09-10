@@ -16,7 +16,7 @@ namespace VirtualClient.Actions
     [Category("Unit")]
     public class LMbenchMetricsParserTests
     {
-        private static string Examples = MockFixture.GetDirectory(typeof(LMbenchExecutorTests), "Examples", "LMbench");
+        private static string Examples = MockFixture.GetDirectory(typeof(LMbenchExecutorTests), "test_examples", "LMbench");
         private MockFixture mockFixture;
 
         [SetUp]

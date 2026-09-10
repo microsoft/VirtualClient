@@ -32,7 +32,7 @@ namespace VirtualClient.Actions
                     if (file.EndsWith("run1.log") || file.EndsWith("run2.log"))
                     {
                         results = MockFixture.ReadFile(
-                            MockFixture.ExamplesDirectory,
+                            MockFixture.TestExamplesDirectory,
                             "CoreMark",
                             "CoreMarkExampleSingleThread.txt");
                     }

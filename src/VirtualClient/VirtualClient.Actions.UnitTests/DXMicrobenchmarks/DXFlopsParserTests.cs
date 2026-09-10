@@ -17,7 +17,7 @@ namespace VirtualClient.Actions
         public void DXFlopsParserTestsCorrectly_ScenarioFLOPS()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "DXMicrobenchmarks", "result.txt");
+            string outputPath = Path.Combine(workingDirectory, "test_examples", "DXMicrobenchmarks", "result.txt");
             string rawText = File.ReadAllText(outputPath);
 
             DXFLOPSParser testParser = new DXFLOPSParser(rawText);

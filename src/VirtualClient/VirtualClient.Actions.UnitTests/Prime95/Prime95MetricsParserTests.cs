@@ -28,7 +28,7 @@ namespace VirtualClient.Actions
         [Test]
         public void Prime95ParserVerifyMetricsForPassResults()
         {
-            string resultsPath = Path.Combine(this.workingDirectory, "Examples", "Prime95", "prime95_results_example_pass.txt");
+            string resultsPath = Path.Combine(this.workingDirectory, "test_examples", "Prime95", "prime95_results_example_pass.txt");
             string rawText = File.ReadAllText(resultsPath);
             this.testParser = new Prime95MetricsParser(rawText);
             IList<Metric> metrics = this.testParser.Parse();
@@ -41,7 +41,7 @@ namespace VirtualClient.Actions
         [Test]
         public void Prime95ParserVerifyMetricsForFailedResults()
         {
-            string resultsPath = Path.Combine(this.workingDirectory, "Examples", "Prime95", "prime95_results_example_fail.txt");
+            string resultsPath = Path.Combine(this.workingDirectory, "test_examples", "Prime95", "prime95_results_example_fail.txt");
             string rawText = File.ReadAllText(resultsPath);
             this.testParser = new Prime95MetricsParser(rawText);
             IList<Metric> metrics = this.testParser.Parse();

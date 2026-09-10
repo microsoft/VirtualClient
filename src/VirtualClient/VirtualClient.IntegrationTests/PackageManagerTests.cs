@@ -37,7 +37,7 @@ namespace VirtualClient
             this.fileSystem = new FileSystem();
             PlatformSpecifics platformSpecifics = new PlatformSpecifics(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture);
 
-            this.resourcesDirectory = platformSpecifics.Combine(DependencyFixture.TestAssemblyDirectory, "Resources");
+            this.resourcesDirectory = platformSpecifics.Combine(DependencyFixture.TestAssemblyDirectory, "test_resources");
             this.packagesDirectory = platformSpecifics.PackagesDirectory;
             this.packageManager = new PackageManager(platformSpecifics, fileSystem);
 

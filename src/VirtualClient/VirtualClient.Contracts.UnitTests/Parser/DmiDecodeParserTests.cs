@@ -12,7 +12,7 @@ namespace VirtualClient.Contracts.Parser
     [Category("Unit")]
     internal class DmiDecodeParserTests
     {
-        private static readonly string DmiDecodeExamples = Path.Combine(MockFixture.TestResourcesDirectory, "Unix", "dmidecode");
+        private static readonly string DmiDecodeExamples = Path.Combine(MockFixture.TestResourcesDirectory, "unix", "dmidecode");
 
         [Test]
         public void DmiDecodeMemoryParserParsesTheExpectedResultsFromBareMetalSystems_Scenario_1()

@@ -5,20 +5,15 @@ namespace VirtualClient
 {
     using System;
     using System.Collections.Generic;
-    using System.IO;
     using System.Linq;
-    using System.Text;
-    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
-    using System.Xml;
-    using System.Xml.Linq;
-    using VirtualClient.Common;
     using Moq;
     using NUnit.Framework;
     using Polly;
+    using VirtualClient.Common;
     using VirtualClient.Contracts;
-    using VirtualClient.Properties;
+    using VirtualClient.TestExtensions;
 
     [TestFixture]
     [Category("Unit")]
@@ -60,7 +55,7 @@ namespace VirtualClient
             // results in the standard output.
             this.testProcess.OnHasExited = () => true;
             this.testProcess.OnStart = () => true;
-            this.testProcess.StandardOutput.Append(Resources.lshw_disk_storage_results);
+            this.testProcess.StandardOutput.Append(MockFixture.ReadTestResourcesFile("unix", "lshw", "lshw_disk_storage_results.xml"));
 
             // The instance of lshw that is installed by default on the Linux system.
             string expectedCommand = "lshw";
@@ -78,7 +73,7 @@ namespace VirtualClient
             // results in the standard output.
             this.testProcess.OnHasExited = () => true;
             this.testProcess.OnStart = () => true;
-            this.testProcess.StandardOutput.Append(Resources.lshw_disk_storage_results);
+            this.testProcess.StandardOutput.Append(MockFixture.ReadTestResourcesFile("unix", "lshw", "lshw_disk_storage_results.xml"));
 
             // Use a custom instance of lshw vs. the default installation on the system.
             string expectedCommand = "/any/path/to/custom/built/lshw";
@@ -102,7 +97,7 @@ namespace VirtualClient
             this.testProcess.OnStart = () =>
             {
                 this.testProcess.StandardOutput.Clear();
-                this.testProcess.StandardOutput.Append(Resources.lshw_disk_storage_results);
+                this.testProcess.StandardOutput.Append(MockFixture.ReadTestResourcesFile("unix", "lshw", "lshw_disk_storage_results.xml"));
                 commandsExecuted.Add($"{this.testProcess.StartInfo.FileName} {this.testProcess.StartInfo.Arguments}");
 
                 return true;

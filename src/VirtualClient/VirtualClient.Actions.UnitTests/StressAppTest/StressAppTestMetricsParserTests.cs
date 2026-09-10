@@ -28,7 +28,7 @@ namespace VirtualClient.Actions
         [Test]
         public void StressAppTestParserVerifyMetricsForPassResults()
         {
-            string resultsPath = Path.Combine(this.workingDirectory, "Examples", "StressAppTest", "stressAppTestLog_pass.txt");
+            string resultsPath = Path.Combine(this.workingDirectory, "test_examples", "StressAppTest", "stressAppTestLog_pass.txt");
             string rawText = File.ReadAllText(resultsPath);
             this.testParser = new StressAppTestMetricsParser(rawText);
             IList<Metric> metrics = this.testParser.Parse();
@@ -40,7 +40,7 @@ namespace VirtualClient.Actions
         [Test]
         public void StressAppTestParserVerifyMetricsForFailedResults()
         {
-            string resultsPath = Path.Combine(this.workingDirectory, "Examples", "StressAppTest", "StressAppTestLog_forcedErrors.txt");
+            string resultsPath = Path.Combine(this.workingDirectory, "test_examples", "StressAppTest", "StressAppTestLog_forcedErrors.txt");
             string rawText = File.ReadAllText(resultsPath);
             this.testParser = new StressAppTestMetricsParser(rawText);
             IList<Metric> metrics = this.testParser.Parse();

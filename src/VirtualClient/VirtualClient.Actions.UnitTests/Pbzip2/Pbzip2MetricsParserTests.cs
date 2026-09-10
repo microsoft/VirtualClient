@@ -26,7 +26,7 @@ namespace VirtualClient.Actions
         public void Setup()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "Pbzip2", "Pbzip2ResultsExample.txt");
+            string outputPath = Path.Combine(workingDirectory, "test_examples", "Pbzip2", "Pbzip2ResultsExample.txt");
             this.rawText = File.ReadAllText(outputPath);
         }
 
@@ -66,7 +66,7 @@ namespace VirtualClient.Actions
         public void Pbzip2ResultsParserThrowsWhenInvalidResultsAreProvided(bool compression)
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string incorrectPbzip2outputPath = Path.Combine(workingDirectory, "Examples", "Pbzip2", "Pbzip2ResultsInvalidExample.txt");
+            string incorrectPbzip2outputPath = Path.Combine(workingDirectory, "test_examples", "Pbzip2", "Pbzip2ResultsInvalidExample.txt");
             this.rawText = File.ReadAllText(incorrectPbzip2outputPath);
             this.testParser = new Pbzip2MetricsParser(this.rawText, compression);
             SchemaException exception = Assert.Throws<SchemaException>(() => this.testParser.Parse());

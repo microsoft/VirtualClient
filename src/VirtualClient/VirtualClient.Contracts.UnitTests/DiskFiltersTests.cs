@@ -667,8 +667,8 @@ namespace VirtualClient.Contracts
             // identified properly.
             string rawText = File.ReadAllText(MockFixture.GetDirectory(
                 typeof(DiskFiltersTests), 
-                "TestResources",
-                "Unix",
+                "test_resources",
+                "unix",
                 "lshw", 
                 "lshw_disk_storage_results_anomaly.xml"));
             LshwDiskParser parser = new LshwDiskParser(rawText);

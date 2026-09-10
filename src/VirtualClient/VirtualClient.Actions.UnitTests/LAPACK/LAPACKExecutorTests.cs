@@ -20,7 +20,7 @@ namespace VirtualClient.Actions
     [Category("Unit")]
     public class LAPACKExecutorTests
     {
-        private static readonly string ExamplesDirectory = MockFixture.GetDirectory(typeof(LAPACKExecutorTests), "Examples", "LAPACK");
+        private static readonly string ExamplesDirectory = MockFixture.GetDirectory(typeof(LAPACKExecutorTests), "test_examples", "LAPACK");
 
         private MockFixture mockFixture;
         private DependencyPath mockPackage;
