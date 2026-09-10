@@ -13,7 +13,7 @@ namespace VirtualClient.Actions
     [Category("Unit")]
     public class WrkMetricsParserTest
     {
-        private static string examplesDirectory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Examples", "Wrk");
+        private static string examplesDirectory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "test_examples", "Wrk");
 
         [Test]
         [TestCase(true)]

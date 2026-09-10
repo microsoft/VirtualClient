@@ -23,7 +23,7 @@ namespace VirtualClient.Actions
     [Category("Unit")]
     public class ScriptExecutorTests
     {
-        private static readonly string ExamplesDirectory = MockFixture.GetDirectory(typeof(ScriptExecutorTests), "Examples", "ScriptExecutor");
+        private static readonly string ExamplesDirectory = MockFixture.GetDirectory(typeof(ScriptExecutorTests), "test_examples", "ScriptExecutor");
 
         private MockFixture mockFixture;
         private DependencyPath mockPackage;

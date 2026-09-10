@@ -81,7 +81,7 @@ namespace VirtualClient.Actions
                 .ReturnsAsync(this.mockPackage);
 
             this.mockFixture.FileSystem.Setup(fe => fe.File.Exists(It.IsAny<string>())).Returns(true);
-            this.results = File.ReadAllText(MockFixture.GetDirectory(typeof(MemtierBenchmarkClientExecutorTests), "Examples", "Memtier", "Memtier_Memcached_Results_1.txt"));
+            this.results = File.ReadAllText(MockFixture.GetDirectory(typeof(MemtierBenchmarkClientExecutorTests), "test_examples", "Memtier", "Memtier_Memcached_Results_1.txt"));
 
             this.mockFixture.File.Setup(f => f.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(this.results);

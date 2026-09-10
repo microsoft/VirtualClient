@@ -17,6 +17,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Contracts;
+    using VirtualClient.TestExtensions;
     using static VirtualClient.Actions.CPSExecutor2;
     using static VirtualClient.Actions.LatteExecutor2;
     using static VirtualClient.Actions.NTttcpExecutor2;
@@ -39,7 +40,7 @@ namespace VirtualClient.Actions
             this.clientAgentId = $"{Environment.MachineName}-Client";
             this.serverAgentId = $"{Environment.MachineName}-Server";
 
-            ComponentTypeCache.Instance.LoadComponentTypes(TestDependencies.TestDirectory);
+            ComponentTypeCache.Instance.LoadComponentTypes(MockFixture.TestAssemblyDirectory);
         }
 
         [Test]
@@ -106,7 +107,7 @@ namespace VirtualClient.Actions
                 }
             };
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
             {
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
 
@@ -121,22 +122,22 @@ namespace VirtualClient.Actions
                 IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
                 if (command.Contains("NTttcp.exe", StringComparison.OrdinalIgnoreCase) || command.Contains("NTttcp", StringComparison.OrdinalIgnoreCase))
                 {
-                    process.StandardOutput.Append(TestDependencies.GetResourceFileContents("ntttcp-results.xml"));
+                    process.StandardOutput.Append(MockFixture.ReadTestResourcesFile("ntttcp-results.xml"));
                 }
 
                 if (command.Contains("cps.exe", StringComparison.OrdinalIgnoreCase) || command.Contains("cps", StringComparison.OrdinalIgnoreCase))
                 {
-                    process.StandardOutput.Append(TestDependencies.GetResourceFileContents("cps-results.txt"));
+                    process.StandardOutput.Append(MockFixture.ReadTestResourcesFile("cps-results.txt"));
                 }
 
                 if (command.Contains("latte.exe", StringComparison.OrdinalIgnoreCase) || command.Contains("latte", StringComparison.OrdinalIgnoreCase))
                 {
-                    process.StandardOutput.Append(TestDependencies.GetResourceFileContents("latte-results.txt"));
+                    process.StandardOutput.Append(MockFixture.ReadTestResourcesFile("latte-results.txt"));
                 }
 
                 if (command.Contains("sockperf.exe", StringComparison.OrdinalIgnoreCase) || command.Contains("sockperf", StringComparison.OrdinalIgnoreCase))
                 {
-                    process.StandardOutput.Append(TestDependencies.GetResourceFileContents("sockperf-results.txt"));
+                    process.StandardOutput.Append(MockFixture.ReadTestResourcesFile("sockperf-results.txt"));
                 }
 
                 return process;
@@ -166,10 +167,10 @@ namespace VirtualClient.Actions
         private void SetupResultsFiles(string platformArch)
         {
             string packagePath = this.mockFixture.PlatformSpecifics.Combine(this.mockFixture.PackagesDirectory, "networking");
-            byte[] ntttcpContent = Encoding.ASCII.GetBytes(TestDependencies.GetResourceFileContents("ntttcp-results.xml"));
-            byte[] cpsContent = Encoding.ASCII.GetBytes(TestDependencies.GetResourceFileContents("cps-results.txt"));
-            byte[] latteContent = Encoding.ASCII.GetBytes(TestDependencies.GetResourceFileContents("latte-results.txt"));
-            byte[] sockPerfContent = Encoding.ASCII.GetBytes(TestDependencies.GetResourceFileContents("sockperf-results.txt"));
+            byte[] ntttcpContent = Encoding.ASCII.GetBytes(MockFixture.ReadTestResourcesFile("ntttcp-results.xml"));
+            byte[] cpsContent = Encoding.ASCII.GetBytes(MockFixture.ReadTestResourcesFile("cps-results.txt"));
+            byte[] latteContent = Encoding.ASCII.GetBytes(MockFixture.ReadTestResourcesFile("latte-results.txt"));
+            byte[] sockPerfContent = Encoding.ASCII.GetBytes(MockFixture.ReadTestResourcesFile("sockperf-results.txt"));
 
             this.mockFixture.SetupFile(this.mockFixture.PlatformSpecifics.Combine(packagePath, $"{platformArch}/NTttcp_TCP_4K_Buffer_T1/ntttcp-results.xml"), ntttcpContent);
             this.mockFixture.SetupFile(this.mockFixture.PlatformSpecifics.Combine(packagePath, $"{platformArch}/NTttcp_TCP_64K_Buffer_T1/ntttcp-results.xml"), ntttcpContent);

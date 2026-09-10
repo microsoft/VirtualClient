@@ -12,7 +12,7 @@ namespace VirtualClient.Actions
     [Category("Unit")]
     public class HammerDBMetricsParserTests
     {
-        private static string examplesDirectory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Examples", "HammerDB");
+        private static string examplesDirectory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "test_examples", "HammerDB");
 
         [Test]
         public void PostgreSQLParserThrowIfInvalidOutputFormat()

@@ -51,7 +51,7 @@ namespace VirtualClient.Actions
             this.Directory.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
 
-            this.mockResults = MockFixture.ReadFile(MockFixture.ExamplesDirectory, @"CtsTraffic", "CtsTrafficResultsExample.csv");
+            this.mockResults = MockFixture.ReadFile(MockFixture.TestExamplesDirectory, @"CtsTraffic", "CtsTrafficResultsExample.csv");
 
             this.File.Setup(f => f.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(this.mockResults);

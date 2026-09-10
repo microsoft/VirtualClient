@@ -52,7 +52,7 @@ namespace VirtualClient.Actions
             this.Parameters["PackageName"] = "sockperf";
             this.Parameters["Protocol"] = "TCP";
 
-            string exampleResults = MockFixture.ReadFile(MockFixture.ExamplesDirectory, "SockPerf", "SockPerfClientExample1.txt");
+            string exampleResults = MockFixture.ReadFile(MockFixture.TestExamplesDirectory, "SockPerf", "SockPerfClientExample1.txt");
 
             this.FileSystem.Setup(rt => rt.File.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(exampleResults);

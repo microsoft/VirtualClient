@@ -26,7 +26,7 @@ namespace VirtualClient.Actions
         public void SetUpFixture()
         {
             this.fixture = new DependencyFixture();
-            this.results = File.ReadAllText(Path.Combine("Examples", "MemoryLatencyChecker", "mlc-latency-matrix-single.txt"));
+            this.results = File.ReadAllText(Path.Combine("test_examples", "MemoryLatencyChecker", "mlc-latency-matrix-single.txt"));
         }
 
         [Test]

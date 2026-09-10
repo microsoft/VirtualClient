@@ -24,7 +24,7 @@ namespace VirtualClient.Actions
     [Category("Unit")]
     public class NTttcpExecutorTests
     {
-        private static readonly string ExamplesDirectory = MockFixture.GetDirectory(typeof(NTttcpExecutorTests), "Examples", "NTttcp");
+        private static readonly string ExamplesDirectory = MockFixture.GetDirectory(typeof(NTttcpExecutorTests), "test_examples", "NTttcp");
 
         private MockFixture mockFixture;
         private DependencyPath mockPackage;
@@ -114,7 +114,7 @@ namespace VirtualClient.Actions
                 if (file.Contains("sysctl"))
                 {
                     string currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-                    standardOutput = File.ReadAllText(Path.Combine(currentDirectory, "Examples", "NTttcp", "sysctlExampleOutput.txt"));
+                    standardOutput = File.ReadAllText(Path.Combine(currentDirectory, "test_examples", "NTttcp", "sysctlExampleOutput.txt"));
                     process.StandardOutput.Append(standardOutput);
                 }
 
@@ -224,7 +224,7 @@ namespace VirtualClient.Actions
                 if (file.Contains("sysctl"))
                 {
                     string currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-                    standardOutput = File.ReadAllText(Path.Combine(currentDirectory, "Examples", "NTttcp", "sysctlExampleOutput.txt"));
+                    standardOutput = File.ReadAllText(Path.Combine(currentDirectory, "test_examples", "NTttcp", "sysctlExampleOutput.txt"));
                     process.StandardOutput.Append(standardOutput);
                 }
 
@@ -250,7 +250,7 @@ namespace VirtualClient.Actions
             this.mockFixture.SystemManagement.SetupGet(obj => obj.AgentId).Returns(agentId);
 
             string currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string resultsPath = Path.Combine(currentDirectory, "Examples", "NTttcp", "ServerOutput.xml");
+            string resultsPath = Path.Combine(currentDirectory, "test_examples", "NTttcp", "ServerOutput.xml");
             string results = File.ReadAllText(resultsPath);
 
             this.mockFixture.FileSystem.Setup(rt => rt.File.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
@@ -281,7 +281,7 @@ namespace VirtualClient.Actions
                 if (file.Contains("sysctl"))
                 {
                     string currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-                    standardOutput = File.ReadAllText(Path.Combine(currentDirectory, "Examples", "NTttcp", "sysctlExampleOutput.txt"));
+                    standardOutput = File.ReadAllText(Path.Combine(currentDirectory, "test_examples", "NTttcp", "sysctlExampleOutput.txt"));
                     process.StandardOutput.Append(standardOutput);
                 }
 
@@ -323,7 +323,7 @@ namespace VirtualClient.Actions
                 if (file.Contains("sysctl"))
                 {
                     string currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-                    standardOutput = File.ReadAllText(Path.Combine(currentDirectory, "Examples", "NTttcp", "sysctlExampleOutput.txt"));
+                    standardOutput = File.ReadAllText(Path.Combine(currentDirectory, "test_examples", "NTttcp", "sysctlExampleOutput.txt"));
                     process.StandardOutput.Append(standardOutput);
                 }
 

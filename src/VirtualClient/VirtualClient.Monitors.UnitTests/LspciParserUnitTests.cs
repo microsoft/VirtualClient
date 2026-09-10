@@ -22,7 +22,7 @@ namespace VirtualClient.Monitors
         public void LspciParserParsesPciDevicesCorrectly_Scenario1()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "lspci", "linux-1.txt");
+            string outputPath = Path.Combine(workingDirectory, "test_examples", "lspci", "linux-1.txt");
             string rawText = File.ReadAllText(outputPath);
 
             LspciParser testParser = new LspciParser(rawText);
@@ -46,7 +46,7 @@ namespace VirtualClient.Monitors
         public void LspciParserParsesPciDevicesCorrectly_Scenario2()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "lspci", "linux-2.txt");
+            string outputPath = Path.Combine(workingDirectory, "test_examples", "lspci", "linux-2.txt");
             string rawText = File.ReadAllText(outputPath);
 
             LspciParser testParser = new LspciParser(rawText);
@@ -59,7 +59,7 @@ namespace VirtualClient.Monitors
         public void LspciParserParsesPciDevicesCorrectly_Scenario3()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "lspci", "windows-1.txt");
+            string outputPath = Path.Combine(workingDirectory, "test_examples", "lspci", "windows-1.txt");
             string rawText = File.ReadAllText(outputPath);
 
             LspciParser testParser = new LspciParser(rawText);

@@ -22,7 +22,7 @@ namespace VirtualClient.Actions
             get
             {
                 string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-                return Path.Combine(workingDirectory, "Examples", "SuperBenchmark", "Example1");
+                return Path.Combine(workingDirectory, "test_examples", "SuperBenchmark", "Example1");
             }
         }
 

@@ -165,7 +165,7 @@ namespace VirtualClient.Actions
                 else
                 {
                     Assert.AreEqual(arguments, $"bash {executor.Combine(directory, "runwrk.sh")} {results}");
-                    string examplesDirectory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Examples", "Wrk");
+                    string examplesDirectory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "test_examples", "Wrk");
                     string outputPath = Path.Combine(examplesDirectory, @"wrkStandardExample1.txt");
                     this.memoryProcess.StandardOutput = new ConcurrentBuffer(new StringBuilder(File.ReadAllText(outputPath)));
                 }
@@ -222,7 +222,7 @@ namespace VirtualClient.Actions
                 }
                 else
                 {
-                    string examplesDirectory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Examples", "Wrk");
+                    string examplesDirectory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "test_examples", "Wrk");
                     string outputPath = Path.Combine(examplesDirectory, @"wrkStandardExample1.txt");
                     this.memoryProcess.StandardOutput = new ConcurrentBuffer(new StringBuilder(File.ReadAllText(outputPath)));
                 }
@@ -554,7 +554,7 @@ namespace VirtualClient.Actions
                 else
                 {
                     Assert.IsTrue(arguments.StartsWith($"bash {dummyExecutor.PlatformSpecifics.Combine(wrkPackagePath, "runwrk.sh")}"));
-                    string examplesDirectory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Examples", "Wrk");
+                    string examplesDirectory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "test_examples", "Wrk");
                     string outputPath = Path.Combine(examplesDirectory, @"wrkStandardExample1.txt");
                     this.memoryProcess.StandardOutput = new ConcurrentBuffer(new StringBuilder(File.ReadAllText(outputPath)));
                 }
@@ -640,7 +640,7 @@ namespace VirtualClient.Actions
                 .Setup(x => x.File.Exists(It.IsAny<string>()))
                 .Returns(true);
 
-            string examplesDirectory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Examples", "Wrk");
+            string examplesDirectory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "test_examples", "Wrk");
             string wrkOutput = File.ReadAllText(Path.Combine(examplesDirectory, @"wrkStandardExample1.txt"));
 
             this.mockFixture
@@ -661,7 +661,7 @@ namespace VirtualClient.Actions
 
         public void SetUpWorkloadOutput()
         {
-            string examplesDirectory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Examples", "Wrk");
+            string examplesDirectory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "test_examples", "Wrk");
             string outputPath = Path.Combine(examplesDirectory, @"wrkStandardExample1.txt");
             this.memoryProcess.StandardOutput = new ConcurrentBuffer(new StringBuilder(""));
         }

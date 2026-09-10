@@ -112,7 +112,7 @@ namespace VirtualClient.Actions
                     OnHasExited = () => true
                 };
 
-                string resultsPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Examples", "Sysbench", "SysbenchExample.txt");
+                string resultsPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "test_examples", "Sysbench", "SysbenchExample.txt");
                 process.StandardOutput.Append(File.ReadAllText(resultsPath));
 
                 return process;
@@ -158,7 +158,7 @@ namespace VirtualClient.Actions
                     OnHasExited = () => true
                 };
 
-                string resultsPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Examples", "Sysbench", "SysbenchExample.txt");
+                string resultsPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "test_examples", "Sysbench", "SysbenchExample.txt");
                 process.StandardOutput.Append(File.ReadAllText(resultsPath));
 
                 return process;
@@ -201,7 +201,7 @@ namespace VirtualClient.Actions
                     OnHasExited = () => true
                 };
 
-                string resultsPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Examples", "Sysbench", "SysbenchExample.txt");
+                string resultsPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "test_examples", "Sysbench", "SysbenchExample.txt");
                 process.StandardOutput.Append(File.ReadAllText(resultsPath));
 
                 return process;
@@ -244,7 +244,7 @@ namespace VirtualClient.Actions
                     OnHasExited = () => true
                 };
 
-                string resultsPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Examples", "Sysbench", "SysbenchExample.txt");
+                string resultsPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "test_examples", "Sysbench", "SysbenchExample.txt");
                 process.StandardOutput.Append(File.ReadAllText(resultsPath));
 
                 return process;
@@ -288,7 +288,7 @@ namespace VirtualClient.Actions
                     OnHasExited = () => true
                 };
 
-                string resultsPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Examples", "Sysbench", "SysbenchExample.txt");
+                string resultsPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "test_examples", "Sysbench", "SysbenchExample.txt");
                 process.StandardOutput.Append(File.ReadAllText(resultsPath));
 
                 return process;
@@ -333,7 +333,7 @@ namespace VirtualClient.Actions
                     OnHasExited = () => true
                 };
 
-                string resultsPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Examples", "Sysbench", "SysbenchExample.txt");
+                string resultsPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "test_examples", "Sysbench", "SysbenchExample.txt");
                 process.StandardOutput.Append(File.ReadAllText(resultsPath));
 
                 return process;
@@ -378,7 +378,7 @@ namespace VirtualClient.Actions
                     OnHasExited = () => true
                 };
 
-                string resultsPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Examples", "Sysbench", "SysbenchExample.txt");
+                string resultsPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "test_examples", "Sysbench", "SysbenchExample.txt");
                 process.StandardOutput.Append(File.ReadAllText(resultsPath));
 
                 return process;

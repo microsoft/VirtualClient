@@ -32,7 +32,7 @@ namespace VirtualClient.Actions.DiskPerformance
         [OneTimeSetUp]
         public void SetupFixture()
         {
-            this.mockResults = MockFixture.ReadFile(MockFixture.ExamplesDirectory, "FIO", "Results_FIO.json");
+            this.mockResults = MockFixture.ReadTestResourcesFile("fio", "Results_FIO.json");
         }
 
         [SetUp]

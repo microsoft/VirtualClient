@@ -60,7 +60,7 @@ namespace VirtualClient.Actions
             this.expectedExecutableDir = this.ToPlatformSpecificPath(this.mockPackage, this.Platform, this.CpuArchitecture).Path;
             this.expectedExecutablePath = this.PlatformSpecifics.Combine(expectedExecutableDir, "benchmark-launcher-cli.exe");
 
-            this.results = MockFixture.ReadFile(MockFixture.ExamplesDirectory, "BlenderBenchmark", "MonsterCPU.json");
+            this.results = MockFixture.ReadFile(MockFixture.TestExamplesDirectory, "BlenderBenchmark", "MonsterCPU.json");
             this.Process.StandardOutput = new Common.ConcurrentBuffer(new StringBuilder(this.results));
 
             // Set up the process's standard output to be the mock blender metrics result as the parser reads the results from the std out.

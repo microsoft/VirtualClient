@@ -172,7 +172,7 @@ namespace VirtualClient.Actions
             {                
                 executor.ReportCsvExists = true;
                 string currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-                executor.ReportLines = System.IO.File.ReadAllLines(Path.Combine(currentDirectory, "Examples", "ElasticsearchRally", "ElasticsearchRallyExample.txt"));
+                executor.ReportLines = System.IO.File.ReadAllLines(Path.Combine(currentDirectory, "test_examples", "ElasticsearchRally", "ElasticsearchRallyExample.txt"));
 
                 Assert.ThrowsAsync<WorkloadException>(() => executor.ExecuteAsync(EventContext.None, CancellationToken.None));
 
@@ -202,7 +202,7 @@ namespace VirtualClient.Actions
 
                 executor.ReportCsvExists = true;
                 string currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-                executor.ReportLines = System.IO.File.ReadAllLines(Path.Combine(currentDirectory, "Examples", "ElasticsearchRally", "ElasticsearchRallyExample.txt"));
+                executor.ReportLines = System.IO.File.ReadAllLines(Path.Combine(currentDirectory, "test_examples", "ElasticsearchRally", "ElasticsearchRallyExample.txt"));
 
                 await executor.ExecuteAsync(EventContext.None, CancellationToken.None);
             }
@@ -260,7 +260,7 @@ namespace VirtualClient.Actions
 
                 executor.ReportCsvExists = true;
                 string currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-                executor.ReportLines = System.IO.File.ReadAllLines(Path.Combine(currentDirectory, "Examples", "ElasticsearchRally", "ElasticsearchRallyExample.txt"));
+                executor.ReportLines = System.IO.File.ReadAllLines(Path.Combine(currentDirectory, "test_examples", "ElasticsearchRally", "ElasticsearchRallyExample.txt"));
 
                 await executor.ExecuteAsync(EventContext.None, CancellationToken.None);
             }
@@ -307,7 +307,7 @@ namespace VirtualClient.Actions
 
                 executor.ReportCsvExists = true;
                 string currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-                executor.ReportLines = System.IO.File.ReadAllLines(Path.Combine(currentDirectory, "Examples", "ElasticsearchRally", "ElasticsearchRallyExample.txt"));
+                executor.ReportLines = System.IO.File.ReadAllLines(Path.Combine(currentDirectory, "test_examples", "ElasticsearchRally", "ElasticsearchRallyExample.txt"));
 
                 await executor.ExecuteAsync(EventContext.None, CancellationToken.None);
             }
@@ -368,7 +368,7 @@ namespace VirtualClient.Actions
 
                 executor.ReportCsvExists = true;
                 string currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-                executor.ReportLines = System.IO.File.ReadAllLines(Path.Combine(currentDirectory, "Examples", "ElasticsearchRally", "ElasticsearchRallyExample.txt"));
+                executor.ReportLines = System.IO.File.ReadAllLines(Path.Combine(currentDirectory, "test_examples", "ElasticsearchRally", "ElasticsearchRallyExample.txt"));
 
                 await executor.ExecuteAsync(EventContext.None, CancellationToken.None);
             }

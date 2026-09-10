@@ -19,7 +19,7 @@ namespace VirtualClient.Actions
     [Category("Unit")]
     public class Graph500ExecutorTests
     {
-        private static readonly string ExamplesDirectory = MockFixture.GetDirectory(typeof(Graph500ExecutorTests), "Examples", "Graph500");
+        private static readonly string ExamplesDirectory = MockFixture.GetDirectory(typeof(Graph500ExecutorTests), "test_examples", "Graph500");
 
         private const string Scale = "10";
         private const string EdgeFactor = "4";

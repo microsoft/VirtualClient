@@ -4,14 +4,12 @@
 namespace VirtualClient.Actions
 {
     using System;
-    using System.Collections.Generic;
     using System.Linq;
     using System.Runtime.InteropServices;
-    using System.Text;
     using System.Threading;
-    using System.Threading.Tasks;
     using NUnit.Framework;
     using VirtualClient.Contracts;
+    using VirtualClient.TestExtensions;
 
     [TestFixture]
     [Category("Functional")]
@@ -30,14 +28,14 @@ namespace VirtualClient.Actions
 
             this.mockFixture.SetupDisks(withRemoteDisks: false);
 
-            ComponentTypeCache.Instance.LoadComponentTypes(TestDependencies.TestDirectory);
+            ComponentTypeCache.Instance.LoadComponentTypes(MockFixture.TestAssemblyDirectory);
         }
 
         [Test]
         [TestCase("PERF-NETWORK-DEATHSTARBENCH.json")]
         public void DeathStarBenchWorkloadProfileParametersAreInlinedCorrectly(string profile)
         {
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
             {
                 WorkloadAssert.ParameterReferencesInlined(executor.Profile);
             }
@@ -50,7 +48,7 @@ namespace VirtualClient.Actions
             // We ensure the workload package does not exist.
             this.mockFixture.PackageManager.Clear();
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
             {
                 executor.ExecuteDependencies = false;
                 DependencyException error = Assert.ThrowsAsync<DependencyException>(() => executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None));

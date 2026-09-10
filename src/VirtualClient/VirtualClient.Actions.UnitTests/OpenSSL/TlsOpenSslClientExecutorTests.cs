@@ -7,14 +7,11 @@ namespace VirtualClient.Actions
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
-    using System.Net;
     using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
-    using VirtualClient.Common;
     using Moq;
     using NUnit.Framework;
-    using VirtualClient.Actions.Properties;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
 
@@ -73,7 +70,7 @@ namespace VirtualClient.Actions
             Assert.IsNotNull(executor);
             var process = this.fixture.CreateProcess("openssl", "s_time ...", "/tmp");
             process.ExitCode = 0;
-            process.StandardOutput.Append(TestResources.Results_OpenSSL_stime);
+            process.StandardOutput.Append(MockFixture.ReadTestResourcesFile("openssl", "Results_OpenSSL_stime.txt"));
 
             var method = typeof(TlsOpenSslClientExecutor).GetMethod("CaptureMetrics", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
@@ -122,7 +119,7 @@ namespace VirtualClient.Actions
                 // result.
                 if (process.IsMatch("openssl s_time"))
                 {
-                    process.StandardOutput.Append(TestResources.Results_OpenSSL_stime);
+                    process.StandardOutput.Append(MockFixture.ReadTestResourcesFile("openssl", "Results_OpenSSL_stime.txt"));
                 }
             };
         }

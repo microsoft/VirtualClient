@@ -21,12 +21,14 @@
         <ProjectReference Include="..\VirtualClient.TestFramework\VirtualClient.TestFramework.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
+     <ItemGroup>
         <None Update="resources\test-certificate.private">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <Link>test_resources\test-certificate.private</Link>
         </None>
         <None Update="resources\test-certificate.public">
           <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+          <Link>test_resources\test-certificate.public</Link>
         </None>
     </ItemGroup>
 

@@ -46,7 +46,7 @@ namespace VirtualClient.Actions
             this.mockFixture.Parameters["ConfidenceLevel"] = "99";
 
             string currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string resultsPath = Path.Combine(currentDirectory, "Examples", "SockPerf", "SockPerfClientExample1.txt");
+            string resultsPath = Path.Combine(currentDirectory, "test_examples", "SockPerf", "SockPerfClientExample1.txt");
             string results = File.ReadAllText(resultsPath);
 
             this.mockFixture.FileSystem.Setup(rt => rt.File.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))

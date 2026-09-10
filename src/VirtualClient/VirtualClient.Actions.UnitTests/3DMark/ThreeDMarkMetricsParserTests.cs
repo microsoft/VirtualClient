@@ -22,7 +22,7 @@ namespace VirtualClient.Actions
         public void ThreeDMarkMetricsParserTestsCorrectly_ScenarioTSGT1()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "3DMark", "result_tsgt1.xml");
+            string outputPath = Path.Combine(workingDirectory, "test_examples", "3DMark", "result_tsgt1.xml");
             string rawText = File.ReadAllText(outputPath);
 
             ThreeDMarkMetricsParser testParser = new ThreeDMarkMetricsParser(rawText, "custom_TSGT1.3dmdef");
@@ -36,7 +36,7 @@ namespace VirtualClient.Actions
         public void ThreeDMarkMetricsParserTestsCorrectly_ScenarioTSGT2()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "3DMark", "result_tsgt2.xml");
+            string outputPath = Path.Combine(workingDirectory, "test_examples", "3DMark", "result_tsgt2.xml");
             string rawText = File.ReadAllText(outputPath);
 
             ThreeDMarkMetricsParser testParser = new ThreeDMarkMetricsParser(rawText, "custom_TSGT2.3dmdef");
@@ -50,7 +50,7 @@ namespace VirtualClient.Actions
         public void ThreeDMarkMetricsParserTestsCorrectly_ScenarioTSCT()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "3DMark", "result_tsct.xml");
+            string outputPath = Path.Combine(workingDirectory, "test_examples", "3DMark", "result_tsct.xml");
             string rawText = File.ReadAllText(outputPath);
 
             ThreeDMarkMetricsParser testParser = new ThreeDMarkMetricsParser(rawText, "custom_TSCT.3dmdef");

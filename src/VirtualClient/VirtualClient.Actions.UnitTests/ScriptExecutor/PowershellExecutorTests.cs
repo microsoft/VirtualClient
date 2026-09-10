@@ -20,7 +20,7 @@ namespace VirtualClient.Actions
     [Category("Unit")]
     public class PowerShellExecutorTests
     {
-        private static readonly string ExamplesDirectory = MockFixture.GetDirectory(typeof(PowerShellExecutorTests), "Examples", "ScriptExecutor");
+        private static readonly string ExamplesDirectory = MockFixture.GetDirectory(typeof(PowerShellExecutorTests), "test_examples", "ScriptExecutor");
 
         private MockFixture fixture;
         private DependencyPath mockPackage;

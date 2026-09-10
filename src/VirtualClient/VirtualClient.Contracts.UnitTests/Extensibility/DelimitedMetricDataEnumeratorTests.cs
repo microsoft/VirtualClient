@@ -16,7 +16,7 @@ namespace VirtualClient.Contracts.Extensibility
     [Category("Unit")]
     public class DelimitedMetricDataEnumeratorTests : MockFixture
     {
-        private static readonly string Examples = MockFixture.GetDirectory(typeof(DelimitedMetricDataEnumeratorTests), "Examples", "Extensibility");
+        private static readonly string Examples = MockFixture.GetDirectory(typeof(DelimitedMetricDataEnumeratorTests), "test_examples", "Extensibility");
 
         public void SetupTest(PlatformID platform, Architecture architecture = Architecture.X64)
         {

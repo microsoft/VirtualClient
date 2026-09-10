@@ -22,7 +22,7 @@ namespace VirtualClient.Actions
             get
             {
                 string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-                return Path.Combine(workingDirectory, "Examples", "SPECjbb", "specjbb2015-C-20220301-00002", "report-00001", "logs");
+                return Path.Combine(workingDirectory, "test_examples", "SPECjbb", "specjbb2015-C-20220301-00002", "report-00001", "logs");
             }
         }
 
@@ -46,7 +46,7 @@ namespace VirtualClient.Actions
         public void SpecJbbParserVerifyMissingMetrics()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "SPECjbb", "specjbbNanOutput1.txt");
+            string outputPath = Path.Combine(workingDirectory, "test_examples", "SPECjbb", "specjbbNanOutput1.txt");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new SpecJbbMetricsParser(this.rawText);
             IList<Metric> metrics = this.testParser.Parse();

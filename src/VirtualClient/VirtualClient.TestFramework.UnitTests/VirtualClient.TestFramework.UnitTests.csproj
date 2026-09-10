@@ -22,11 +22,33 @@
         <ProjectReference Include="..\VirtualClient.TestFramework\VirtualClient.TestFramework.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <None Update="Examples\**\*.*">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </None>
-    </ItemGroup>
+	<ItemGroup>
+		<None Include="..\TestResources\**\*">
+			<Link>TestResources\%(RecursiveDir)%(Filename)%(Extension)</Link>
+		</None>
+	</ItemGroup>
+
+	<!--
+    Copies example resources into the target output directory.
+    -->
+	<Target Name="CopyExamplesToOutputDirectory" AfterTargets="Build">
+		<ItemGroup>
+			<TestExampleFiles Include="Examples\**\*.*" />
+		</ItemGroup>
+
+		<Copy SourceFiles="@(TestExampleFiles)" DestinationFiles="@(TestExampleFiles->'$(OutputPath)test_examples\%(RecursiveDir)%(Filename)%(Extension)')" />
+	</Target>
+
+	<!--
+    Copies test resources into the target output directory.
+    -->
+	<Target Name="CopyTestResourcesToOutputDirectory" AfterTargets="Build">
+		<ItemGroup>
+			<TestResourceFiles Include="..\TestResources\**\*.*" />
+		</ItemGroup>
+
+		<Copy SourceFiles="@(TestResourceFiles)" DestinationFiles="@(TestResourceFiles->'$(OutputPath)test_resources\%(RecursiveDir)%(Filename)%(Extension)')" />
+	</Target>
 
     <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Module.props))\Module.props" />
 

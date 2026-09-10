@@ -202,7 +202,7 @@ namespace VirtualClient.Actions
         private void CopySimulationFilesFromDownloadedPackage()
         {
             // Move 0, constant and system folders from package to its respective simulation folder
-            string simulationBaseDirectory = this.PlatformSpecifics.Combine("/usr", "share", "doc", "openfoam-examples", "examples");
+            string simulationBaseDirectory = this.PlatformSpecifics.Combine("/usr", "share", "doc", "openfoam-examples", "test_examples");
 
             Dictionary<string, string> simulationPaths = new Dictionary<string, string>()
             {

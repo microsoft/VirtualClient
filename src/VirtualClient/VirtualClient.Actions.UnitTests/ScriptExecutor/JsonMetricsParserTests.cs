@@ -22,7 +22,7 @@ namespace VirtualClient.Actions
         [Test]
         public void JsonMetricsParserVerifyMetricsForPassResults_Format1()
         {
-            string resultsPath = MockFixture.GetDirectory(typeof(JsonMetricsParserTests), "Examples", "ScriptExecutor", "validJsonExample.json");
+            string resultsPath = MockFixture.GetDirectory(typeof(JsonMetricsParserTests), "test_examples", "ScriptExecutor", "validJsonExample.json");
             string rawText = File.ReadAllText(resultsPath);
             this.testParser = new JsonMetricsParser(rawText, new InMemoryLogger(), EventContext.None);
             IList<Metric> metrics = this.testParser.Parse();
@@ -36,7 +36,7 @@ namespace VirtualClient.Actions
         [Test]
         public void JsonMetricsParserVerifyMetricsForPassResults_ArrayFormat()
         {
-            string resultsPath = MockFixture.GetDirectory(typeof(JsonMetricsParserTests), "Examples", "ScriptExecutor", "validJsonExample_array.json");
+            string resultsPath = MockFixture.GetDirectory(typeof(JsonMetricsParserTests), "test_examples", "ScriptExecutor", "validJsonExample_array.json");
             string rawText = File.ReadAllText(resultsPath);
             this.testParser = new JsonMetricsParser(rawText, new InMemoryLogger(), EventContext.None);
             IList<Metric> metrics = this.testParser.Parse();
@@ -71,7 +71,7 @@ namespace VirtualClient.Actions
         [Test]
         public void JsonMetricsParserThrowsIfTheJsonResultsHaveInvalidMetrics()
         {
-            string resultsPath = MockFixture.GetDirectory(typeof(JsonMetricsParserTests), "Examples", "ScriptExecutor", "invalidJsonExample.json");
+            string resultsPath = MockFixture.GetDirectory(typeof(JsonMetricsParserTests), "test_examples", "ScriptExecutor", "invalidJsonExample.json");
             string rawText = File.ReadAllText(resultsPath);
             this.testParser = new JsonMetricsParser(rawText, new InMemoryLogger(), EventContext.None);
 

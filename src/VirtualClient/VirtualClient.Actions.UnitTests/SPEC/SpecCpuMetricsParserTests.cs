@@ -23,7 +23,7 @@ namespace VirtualClient.Actions
         public void SpecCpuMetricsParserParsesExpectedMetricsFromFpRateResults()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "SpecCpu", "SpecCpuFpRateExample.txt");
+            string outputPath = Path.Combine(workingDirectory, "test_examples", "SpecCpu", "SpecCpuFpRateExample.txt");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new SpecCpuMetricsParser(this.rawText);
 
@@ -64,7 +64,7 @@ namespace VirtualClient.Actions
         public void SpecCpuMetricsParserParsesExpectedMetricsFromFpRateCsvResults()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "SpecCpu", "SpecCpuFpRateExample.csv");
+            string outputPath = Path.Combine(workingDirectory, "test_examples", "SpecCpu", "SpecCpuFpRateExample.csv");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new SpecCpuMetricsParser(this.rawText, csv: true);
             
@@ -105,7 +105,7 @@ namespace VirtualClient.Actions
         public void SpecCpuMetricsParserParsesExpectedMetricsFromFpRateBaseOnlyResults()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "SpecCpu", "SpecCpuFpRateBaseOnlyExample.txt");
+            string outputPath = Path.Combine(workingDirectory, "test_examples", "SpecCpu", "SpecCpuFpRateBaseOnlyExample.txt");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new SpecCpuMetricsParser(this.rawText);
             IList<Metric> metrics = this.testParser.Parse();
@@ -131,7 +131,7 @@ namespace VirtualClient.Actions
         public void SpecCpuMetricsParserParsesExpectedMetricsFromFpRateBaseOnlyCsvResults()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "SpecCpu", "SpecCpuFpRateBaseExample.csv");
+            string outputPath = Path.Combine(workingDirectory, "test_examples", "SpecCpu", "SpecCpuFpRateBaseExample.csv");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new SpecCpuMetricsParser(this.rawText, csv: true);
             IList<Metric> metrics = this.testParser.Parse();
@@ -157,7 +157,7 @@ namespace VirtualClient.Actions
         public void SpecCpuMetricsParserParsesExpectedBenchmarkMetadataFromFpRateResults()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "SpecCpu", "SpecCpuFpRateExample.txt");
+            string outputPath = Path.Combine(workingDirectory, "test_examples", "SpecCpu", "SpecCpuFpRateExample.txt");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new SpecCpuMetricsParser(this.rawText);
 
@@ -180,7 +180,7 @@ namespace VirtualClient.Actions
         public void SpecCpuMetricsParserParsesExpectedBenchmarkMetadataFromFpRateCsvResults()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "SpecCpu", "SpecCpuFpRateExample.csv");
+            string outputPath = Path.Combine(workingDirectory, "test_examples", "SpecCpu", "SpecCpuFpRateExample.csv");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new SpecCpuMetricsParser(this.rawText, csv: true);
 
@@ -203,7 +203,7 @@ namespace VirtualClient.Actions
         public void SpecCpuMetricsParserParsesExpectedMetricsFromIntRateBaseOnlyResults()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "SpecCpu", "SpecCpuIntRateBaseOnlyExample.txt");
+            string outputPath = Path.Combine(workingDirectory, "test_examples", "SpecCpu", "SpecCpuIntRateBaseOnlyExample.txt");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new SpecCpuMetricsParser(this.rawText);
             IList<Metric> metrics = this.testParser.Parse();
@@ -226,7 +226,7 @@ namespace VirtualClient.Actions
         public void SpecCpuMetricsParserParsesExpectedMetricsFromFpSpeedResults()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "SpecCpu", "SpecCpuFpSpeedExample.txt");
+            string outputPath = Path.Combine(workingDirectory, "test_examples", "SpecCpu", "SpecCpuFpSpeedExample.txt");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new SpecCpuMetricsParser(this.rawText);
             IList<Metric> metrics = this.testParser.Parse();
@@ -260,7 +260,7 @@ namespace VirtualClient.Actions
         public void SpecCpuMetricsParserParsesExpectedMetricsFromFpSpeedCsvResults()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "SpecCpu", "SpecCpuFpSpeedExample.csv");
+            string outputPath = Path.Combine(workingDirectory, "test_examples", "SpecCpu", "SpecCpuFpSpeedExample.csv");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new SpecCpuMetricsParser(this.rawText, csv: true);
             IList<Metric> metrics = this.testParser.Parse();
@@ -294,7 +294,7 @@ namespace VirtualClient.Actions
         public void SpecCpuMetricsParserParsesExpectedBenchmarkMetadataFromFpSpeedResults()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "SpecCpu", "SpecCpuFpSpeedExample.txt");
+            string outputPath = Path.Combine(workingDirectory, "test_examples", "SpecCpu", "SpecCpuFpSpeedExample.txt");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new SpecCpuMetricsParser(this.rawText);
 
@@ -317,7 +317,7 @@ namespace VirtualClient.Actions
         public void SpecCpuMetricsParserParsesExpectedBenchmarkMetadataFromFpSpeedCsvResults()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "SpecCpu", "SpecCpuFpSpeedExample.csv");
+            string outputPath = Path.Combine(workingDirectory, "test_examples", "SpecCpu", "SpecCpuFpSpeedExample.csv");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new SpecCpuMetricsParser(this.rawText, csv: true);
 
@@ -340,7 +340,7 @@ namespace VirtualClient.Actions
         public void SpecCpuMetricsParserParsesExpectedMetricsFromIntRateResults()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "SpecCpu", "SpecCpuIntRateExample.txt");
+            string outputPath = Path.Combine(workingDirectory, "test_examples", "SpecCpu", "SpecCpuIntRateExample.txt");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new SpecCpuMetricsParser(this.rawText);
             IList<Metric> metrics = this.testParser.Parse();
@@ -374,7 +374,7 @@ namespace VirtualClient.Actions
         public void SpecCpuMetricsParserParsesExpectedMetricsFromIntRateCsvResults()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "SpecCpu", "SpecCpuIntRateExample.csv");
+            string outputPath = Path.Combine(workingDirectory, "test_examples", "SpecCpu", "SpecCpuIntRateExample.csv");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new SpecCpuMetricsParser(this.rawText, csv: true);
             IList<Metric> metrics = this.testParser.Parse();
@@ -408,7 +408,7 @@ namespace VirtualClient.Actions
         public void SpecCpuMetricsParserParsesExpectedBenchmarkMetadataFromIntRateResults()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "SpecCpu", "SpecCpuIntRateExample.txt");
+            string outputPath = Path.Combine(workingDirectory, "test_examples", "SpecCpu", "SpecCpuIntRateExample.txt");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new SpecCpuMetricsParser(this.rawText);
 
@@ -431,7 +431,7 @@ namespace VirtualClient.Actions
         public void SpecCpuMetricsParserParsesExpectedBenchmarkMetadataFromIntRateCsvResults()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "SpecCpu", "SpecCpuIntRateExample.csv");
+            string outputPath = Path.Combine(workingDirectory, "test_examples", "SpecCpu", "SpecCpuIntRateExample.csv");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new SpecCpuMetricsParser(this.rawText, csv: true);
 
@@ -454,7 +454,7 @@ namespace VirtualClient.Actions
         public void SpecCpuMetricsParserParsesExpectedMetricsFromIntSpeedResults()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "SpecCpu", "SpecCpuIntSpeedExample.txt");
+            string outputPath = Path.Combine(workingDirectory, "test_examples", "SpecCpu", "SpecCpuIntSpeedExample.txt");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new SpecCpuMetricsParser(this.rawText);
             IList<Metric> metrics = this.testParser.Parse();
@@ -488,7 +488,7 @@ namespace VirtualClient.Actions
         public void SpecCpuMetricsParserParsesExpectedMetricsFromIntSpeedCsvResults()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "SpecCpu", "SpecCpuIntSpeedExample.csv");
+            string outputPath = Path.Combine(workingDirectory, "test_examples", "SpecCpu", "SpecCpuIntSpeedExample.csv");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new SpecCpuMetricsParser(this.rawText, csv: true);
             IList<Metric> metrics = this.testParser.Parse();
@@ -522,7 +522,7 @@ namespace VirtualClient.Actions
         public void SpecCpuMetricsParserParsesExpectedBenchmarkMetadataFromIntSpeedResults()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "SpecCpu", "SpecCpuIntSpeedExample.txt");
+            string outputPath = Path.Combine(workingDirectory, "test_examples", "SpecCpu", "SpecCpuIntSpeedExample.txt");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new SpecCpuMetricsParser(this.rawText);
 
@@ -545,7 +545,7 @@ namespace VirtualClient.Actions
         public void SpecCpuMetricsParserParsesExpectedBenchmarkMetadataFromIntSpeedCsvResults()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "SpecCpu", "SpecCpuIntSpeedExample.csv");
+            string outputPath = Path.Combine(workingDirectory, "test_examples", "SpecCpu", "SpecCpuIntSpeedExample.csv");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new SpecCpuMetricsParser(this.rawText, csv: true);
 
@@ -568,7 +568,7 @@ namespace VirtualClient.Actions
         public void SpecCpuParserVerifyMetricsIntRateBaseWinArm64Incomplete()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "SpecCpu", "intrate-base-win-arm64-1.txt");
+            string outputPath = Path.Combine(workingDirectory, "test_examples", "SpecCpu", "intrate-base-win-arm64-1.txt");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new SpecCpuMetricsParser(this.rawText);
             IList<Metric> metrics = this.testParser.Parse();

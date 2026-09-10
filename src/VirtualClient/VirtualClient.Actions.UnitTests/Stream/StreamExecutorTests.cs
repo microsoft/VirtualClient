@@ -21,7 +21,7 @@ namespace VirtualClient.Actions
     [Category("Unit")]
     public class StreamExecutorTests
     {
-        private static readonly string ExamplesDirectory = MockFixture.GetDirectory(typeof(StreamExecutorTests), "Examples", "Stream");
+        private static readonly string ExamplesDirectory = MockFixture.GetDirectory(typeof(StreamExecutorTests), "test_examples", "Stream");
 
         private MockFixture mockFixture;
         private DependencyPath mockPackage;

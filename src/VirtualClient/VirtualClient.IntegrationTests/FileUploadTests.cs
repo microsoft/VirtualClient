@@ -66,7 +66,7 @@ namespace VirtualClient
             // expected to simply overwrite the existing files.
 
             Random randomGen = new Random();
-            IEnumerable<string> resultsFiles = Directory.GetFiles(Path.Combine(MockFixture.TestAssemblyDirectory, "Resources"), "results*.*");
+            IEnumerable<string> resultsFiles = Directory.GetFiles(Path.Combine(MockFixture.TestAssemblyDirectory, "test_resources"), "results*.*");
             
             using (TestExecutor component = new TestExecutor(this.mockFixture))
             {
@@ -123,7 +123,7 @@ namespace VirtualClient
             // Scenario:
             // Upload random files for a given experiment.
 
-            IEnumerable<string> resultsFiles = Directory.GetFiles(Path.Combine(MockFixture.TestAssemblyDirectory, "Resources"), "results*.*");
+            IEnumerable<string> resultsFiles = Directory.GetFiles(Path.Combine(MockFixture.TestAssemblyDirectory, "test_resources"), "results*.*");
             await this.ProcessRandomFileUploadsAsync(Guid.NewGuid(), "Agent01", totalMinutesToRun, resultsFiles);
         }
 
@@ -139,7 +139,7 @@ namespace VirtualClient
             // Upload random files for a given experiment where client and server roles are used.
 
             Guid experimentId = Guid.NewGuid();
-            IEnumerable<string> resultsFiles = Directory.GetFiles(Path.Combine(MockFixture.TestAssemblyDirectory, "Resources"), "results*.*");
+            IEnumerable<string> resultsFiles = Directory.GetFiles(Path.Combine(MockFixture.TestAssemblyDirectory, "test_resources"), "results*.*");
 
             await this.ProcessRandomFileUploadsAsync(experimentId, "Agent01", totalMinutesToRun, resultsFiles, "Client");
             await this.ProcessRandomFileUploadsAsync(experimentId, "Agent02", totalMinutesToRun, resultsFiles, "Server");
@@ -153,7 +153,7 @@ namespace VirtualClient
             // Make sure to define the connection string above for the BlobManager relevant to the target storage account where the test
             // data should be uploaded.
 
-            IEnumerable<string> resultsFiles = Directory.GetFiles(Path.Combine(MockFixture.TestAssemblyDirectory, "Resources"), "results*.*");
+            IEnumerable<string> resultsFiles = Directory.GetFiles(Path.Combine(MockFixture.TestAssemblyDirectory, "test_resources"), "results*.*");
 
             string requestDirectory = Path.Combine(MockFixture.TestAssemblyDirectory, "contentuploads");
             if (this.fileSystem.Directory.Exists(requestDirectory))

@@ -183,7 +183,7 @@ namespace VirtualClient.Actions.NetworkPerformance
 
         private static string GetFileContents(string fileName)
         {
-            string outputPath = Path.Combine(MockFixture.TestAssemblyDirectory, "Examples", "NCPS", fileName);
+            string outputPath = Path.Combine(MockFixture.TestAssemblyDirectory, "test_examples", "NCPS", fileName);
             return File.ReadAllText(outputPath);
         }
     }

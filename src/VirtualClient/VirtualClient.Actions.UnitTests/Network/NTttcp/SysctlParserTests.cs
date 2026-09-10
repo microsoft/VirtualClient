@@ -13,7 +13,7 @@ namespace VirtualClient.Actions
     {
         private static readonly string ExamplesDirectory = Path.Combine(
             Path.GetDirectoryName(Assembly.GetAssembly(typeof(SysctlParserTests)).Location),
-            "Examples",
+            "test_examples",
             "NTttcp");
 
         [Test]
