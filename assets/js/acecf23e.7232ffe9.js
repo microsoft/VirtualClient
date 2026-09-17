@@ -1,0 +1,1 @@
+"use strict";(globalThis.webpackChunkvirtualclient=globalThis.webpackChunkvirtualclient||[]).push([[4284],{1912(l){l.exports=JSON.parse('{"blogBasePath":"/VirtualClient/blog","blogTitle":"Blog","authorsListPath":"/VirtualClient/blog/authors"}')}}]);

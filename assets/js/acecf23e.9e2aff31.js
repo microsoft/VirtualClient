@@ -1,1 +1,0 @@
-"use strict";(self.webpackChunkvirtualclient=self.webpackChunkvirtualclient||[]).push([[4284],{1912:l=>{l.exports=JSON.parse('{"blogBasePath":"/VirtualClient/blog","blogTitle":"Blog"}')}}]);
