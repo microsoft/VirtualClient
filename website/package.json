@@ -1,6 +1,6 @@
 {
   "name": "virtualclient",
-  "version": "1.12.0",
+  "version": "1.13.0",
   "private": true,
   "scripts": {
     "docusaurus": "docusaurus",
@@ -15,17 +15,21 @@
     "write-heading-ids": "docusaurus write-heading-ids"
   },
   "dependencies": {
-    "@docusaurus/core": "^3.4.0",
-    "@docusaurus/preset-classic": "^3.4.0",
-    "@docusaurus/theme-mermaid": "^3.4.0",
-    "@mdx-js/react": "^3.0.1",
-    "clsx": "^2.1.1",
-    "prism-react-renderer": "^2.3.1",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "@docusaurus/core": "^3.10.2",
+    "@docusaurus/preset-classic": "^3.10.2",
+    "@docusaurus/theme-mermaid": "^3.10.2",
+    "@mdx-js/react": "latest",
+    "clsx": "latest",
+    "prism-react-renderer": "latest",
+    "react": "latest",
+    "react-dom": "latest"
   },
   "devDependencies": {
-    "@docusaurus/module-type-aliases": "^3.4.0"
+    "@docusaurus/module-type-aliases": "^3.10.2",
+    "raw-loader": "^4.0.2"
+  },
+  "overrides": {
+    "react-loadable-ssr-addon-v5-slorber": "1.0.1"
   },
   "browserslist": {
     "production": [
@@ -40,6 +44,6 @@
     ]
   },
   "engines": {
-    "node": ">=18.19"
+    "node": ">=24"
   }
 }
