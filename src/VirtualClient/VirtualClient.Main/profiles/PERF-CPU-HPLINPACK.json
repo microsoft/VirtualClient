@@ -33,7 +33,7 @@
             "Parameters": {
                 "Scenario": "InstallLinuxPackages",
                 "Repositories-Apt": "universe,ppa:ubuntu-toolchain-r/test",
-                "Packages-Apt": "build-essential,libmpich-dev,libopenmpi-dev,libatlas-base-dev",
+                "Packages-Apt": "build-essential,libmpich-dev,libopenmpi-dev,libopenblas-dev",
                 "Packages-Yum": "mpich-devel,openmpi-devel,atlas-devel",
                 "Packages-Dnf": "mpich-devel,openmpi-devel,atlas-devel"
             }
