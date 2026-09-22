@@ -88,9 +88,9 @@ namespace VirtualClient.Dependencies
                     ErrorReason.WorkloadUnexpectedAnomaly);
             }
 
-            IEnumerable<Disk> filteredDisks = this.GetTargetDisks(disks, this.DiskFilter);
+            IEnumerable<Disk> targetDisks = this.GetTargetDisks(disks, this.DiskFilter);
 
-            if (filteredDisks?.Any() != true)
+            if (targetDisks?.Any() != true)
             {
                 throw new WorkloadException(
                     "Expected disks based on filter not found. Given the parameters defined for the profile action/step or those passed " +
@@ -99,23 +99,23 @@ namespace VirtualClient.Dependencies
                     ErrorReason.DependencyNotFound);
             }
 
-            if (await this.CreateMountPointsAsync(disks, telemetryContext, this.MountPointPrefix, this.MountLocation, cancellationToken))
+            if (await this.CreateMountPointsAsync(targetDisks, telemetryContext, this.MountPointPrefix, this.MountLocation, cancellationToken))
             {
                 // Refresh the disks to pickup the mount point changes.
-                await Task.Delay(1000);
+                await this.WaitAsync(TimeSpan.FromSeconds(2), cancellationToken);
 
                 IEnumerable<Disk> updatedDisks = await this.diskManager.GetDisksAsync(cancellationToken);
-                filteredDisks = this.GetTargetDisks(updatedDisks, this.DiskFilter);
+                targetDisks = this.GetTargetDisks(updatedDisks, this.DiskFilter);
             }
 
             try
             {
-                filteredDisks.ToList().ForEach(disk => disk.Volumes.ToList().ForEach(
-                    volume => this.Logger.LogTraceMessage($"Disk Target to Mount: '{disk.DevicePath ?? string.Empty},{volume.DevicePath ?? string.Empty},{volume.AccessPaths?.First()}'")));
+                targetDisks.ToList().ForEach(disk => disk.Volumes.ToList().ForEach(
+                    volume => this.Logger.LogTraceMessage($"Create Mount for Disk: '{disk.DevicePath}'")));
             }
             catch (Exception)
             {
-                // Trying best to log
+                // Logging is best effort.
             }
         }
 
