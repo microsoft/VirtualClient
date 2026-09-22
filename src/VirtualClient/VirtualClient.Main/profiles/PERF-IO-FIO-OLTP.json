@@ -12,7 +12,8 @@
         "DiskFillSize": "200G",
         "Duration": "00:03:00",
         "FileSize": "124G",
-        "DiskFilter": "BiggestSize"
+        "DiskFilter": "BiggestSize",
+        "RawDisk": false
     },
     "Actions": [
         {
@@ -27,6 +28,7 @@
                 "DiskFill": true,
                 "DiskFillSize": "$.Parameters.DiskFillSize",
                 "ProcessModel": "SingleProcessPerDisk",
+                "RawDisk": "$.Parameters.RawDisk",
                 "DeleteTestFilesOnFinish": false
             }
         },
@@ -42,6 +44,7 @@
                 "FileSize": "$.Parameters.FileSize",
                 "DiskFilter": "$.Parameters.DiskFilter",
                 "ProcessModel": "SingleProcess",
+                "RawDisk": "$.Parameters.RawDisk",
                 "DeleteTestFilesOnFinish": false,
                 "Tags": "IO,FIO,OLTP"
             }
@@ -58,6 +61,7 @@
                 "FileSize": "$.Parameters.FileSize",
                 "DiskFilter": "$.Parameters.DiskFilter",
                 "ProcessModel": "SingleProcess",
+                "RawDisk": "$.Parameters.RawDisk",
                 "DeleteTestFilesOnFinish": false,
                 "Tags": "IO,FIO,OLTP"
             }
@@ -74,6 +78,7 @@
                 "FileSize": "$.Parameters.FileSize",
                 "DiskFilter": "$.Parameters.DiskFilter",
                 "ProcessModel": "SingleProcess",
+                "RawDisk": "$.Parameters.RawDisk",
                 "DeleteTestFilesOnFinish": false,
                 "Tags": "IO,FIO,OLTP"
             }
@@ -90,6 +95,7 @@
                 "FileSize": "$.Parameters.FileSize",
                 "DiskFilter": "$.Parameters.DiskFilter",
                 "ProcessModel": "SingleProcess",
+                "RawDisk": "$.Parameters.RawDisk",
                 "DeleteTestFilesOnFinish": false,
                 "Tags": "IO,FIO,OLTP"
             }
@@ -106,6 +112,7 @@
                 "FileSize": "$.Parameters.FileSize",
                 "DiskFilter": "$.Parameters.DiskFilter",
                 "ProcessModel": "SingleProcess",
+                "RawDisk": "$.Parameters.RawDisk",
                 "DeleteTestFilesOnFinish": false,
                 "Tags": "IO,FIO,OLTP"
             }

@@ -14,7 +14,6 @@ namespace VirtualClient.Actions.DiskPerformance
     using Microsoft.Extensions.DependencyInjection;
     using Moq;
     using NUnit.Framework;
-    using Serilog.Sinks.File;
     using VirtualClient.Common;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
@@ -202,6 +201,29 @@ namespace VirtualClient.Actions.DiskPerformance
         }
 
         [Test]
+        public void FioExecutorCreatesTheExpectedWorkloadProcesses_SingleProcess_Targeting_Raw_Disk()
+        {
+            this.profileParameters[nameof(FioExecutor.RawDisk)] = true;
+            using (TestFioExecutor fioExecutor = new TestFioExecutor(this.Dependencies, this.profileParameters))
+            {
+                string expectedCommand = "/home/any/fio";
+                string expectedArguments = "--name=fio_randwrite_test --size=128G --numjobs=16 --rw=randwrite --bs=4k --iodepth=32 --ioengine=libaio --direct=1 --ramp_time=30 --runtime=120 --time_based --overwrite=1 --thread --group_reporting --output-format=json";
+                string processModel = WorkloadProcessModel.SingleProcess;
+
+                IEnumerable<Disk> disksToTest = this.disks.Where(disk => !disk.IsOperatingSystem());
+                IEnumerable<DiskWorkloadProcess> workloadProcesses = fioExecutor.CreateWorkloadProcesses(expectedCommand, expectedArguments, disksToTest, processModel, EventContext.None);
+
+                Assert.IsTrue(workloadProcesses.Count() == 1);
+                DiskWorkloadProcess workloadProcess = workloadProcesses.First();
+
+                string expectedCommandLine = $"sudo {expectedCommand} {expectedArguments} {string.Join(" ", disksToTest.Select(disk => $"--filename={disk.DevicePath}"))}";
+                string actualCommandLine = workloadProcess.Process.FullCommand();
+
+                Assert.AreEqual(expectedCommandLine, actualCommandLine);
+            }
+        }
+
+        [Test]
         public void FioExecutorCreatesTheExpectedWorkloadProcesses_SingleProcessAggregated()
         {
             using (TestFioExecutor fioExecutor = new TestFioExecutor(this.Dependencies, this.profileParameters))
@@ -237,32 +259,91 @@ namespace VirtualClient.Actions.DiskPerformance
         [Test]
         public void FioExecutorCreatesTheExpectedJobFileContentForSingleProcessAggregatedScenarios()
         {
-            IEnumerable<Disk> disksToTest = this.disks.Where(disk => !disk.IsOperatingSystem());
-
-            StringBuilder jobFileContent = new StringBuilder();
-            jobFileContent.AppendLine("# Dynamically created job file.");
-            jobFileContent.AppendLine("#");
-            jobFileContent.AppendLine("# Description:");
-            jobFileContent.AppendLine("# Distributes the command line definition across each of the target disks");
-            jobFileContent.AppendLine("# running 1 job per disk. This is intended to produce results that are aggregated");
-            jobFileContent.AppendLine("# across all disks.");
-
-            int jobNumber = 0;
-            foreach (Disk disk in disksToTest)
+            using (TestFioExecutor fioExecutor = new TestFioExecutor(this.Dependencies, this.profileParameters))
             {
-                jobNumber++;
-                string jobName = $"job_{jobNumber}";
-                jobFileContent.AppendLine();
-                jobFileContent.AppendLine($"[{jobName}]");
+                IEnumerable<Disk> disksToTest = this.disks.Where(disk => !disk.IsOperatingSystem());
 
-                string fileName = this.Combine(disk.GetPreferredAccessPath(this.Platform), "fio-test.dat");
-                jobFileContent.AppendLine($"filename={fileName}");
+                StringBuilder jobFileContent = new StringBuilder();
+                jobFileContent.AppendLine("# Dynamically created job file.");
+                jobFileContent.AppendLine("#");
+                jobFileContent.AppendLine("# Description:");
+                jobFileContent.AppendLine("# Distributes the command line definition across each of the target disks");
+                jobFileContent.AppendLine("# running 1 job per disk. This is intended to produce results that are aggregated");
+                jobFileContent.AppendLine("# across all disks.");
+
+                int jobNumber = 0;
+                foreach (Disk disk in disksToTest)
+                {
+                    jobNumber++;
+                    string jobName = $"job_{jobNumber}";
+                    jobFileContent.AppendLine();
+                    jobFileContent.AppendLine($"[{jobName}]");
+
+                    string fileName = this.Combine(disk.GetPreferredAccessPath(this.Platform), "fio-test.dat");
+                    jobFileContent.AppendLine($"filename={fileName}");
+                }
+
+                string expectedJobFileContent = jobFileContent.ToString();
+                string actualJobFileContent = fioExecutor.CreateJobFileContent(this.PlatformSpecifics, disksToTest, "job", "fio-test.dat");
+
+                Assert.AreEqual(expectedJobFileContent, actualJobFileContent);
             }
+        }
 
-            string expectedJobFileContent = jobFileContent.ToString();
-            string actualJobFileContent = TestFioExecutor.CreateJobFileContent(this.PlatformSpecifics, disksToTest, "job", "fio-test.dat");
+        [Test]
+        public void FioExecutorCreatesTheExpectedJobFileContentForSingleProcessAggregatedScenarios_Targeting_Raw_Disk()
+        {
+            this.profileParameters[nameof(FioExecutor.RawDisk)] = true;
+            using (TestFioExecutor fioExecutor = new TestFioExecutor(this.Dependencies, this.profileParameters))
+            {
+                IEnumerable<Disk> disksToTest = this.disks.Where(disk => !disk.IsOperatingSystem());
 
-            Assert.AreEqual(expectedJobFileContent, actualJobFileContent);
+                StringBuilder jobFileContent = new StringBuilder();
+                jobFileContent.AppendLine("# Dynamically created job file.");
+                jobFileContent.AppendLine("#");
+                jobFileContent.AppendLine("# Description:");
+                jobFileContent.AppendLine("# Distributes the command line definition across each of the target disks");
+                jobFileContent.AppendLine("# running 1 job per disk. This is intended to produce results that are aggregated");
+                jobFileContent.AppendLine("# across all disks.");
+
+                int jobNumber = 0;
+                foreach (Disk disk in disksToTest)
+                {
+                    jobNumber++;
+                    string jobName = $"job_{jobNumber}";
+                    jobFileContent.AppendLine();
+                    jobFileContent.AppendLine($"[{jobName}]");
+
+                    string fileName = disk.DevicePath;
+                    jobFileContent.AppendLine($"filename={fileName}");
+                }
+
+                string expectedJobFileContent = jobFileContent.ToString();
+                string actualJobFileContent = fioExecutor.CreateJobFileContent(this.PlatformSpecifics, disksToTest, "job", "fio-test.dat");
+
+                Assert.AreEqual(expectedJobFileContent, actualJobFileContent);
+            }
+        }
+
+
+        [Test]
+        public void FioExecutorProtectsAgainstTargetingRawDiskOperationsOnTheOperatingSystemDisk()
+        {
+            // Operating system disks are not supported. Running disk I/O operations against the raw disk
+            // on which the OS is installed would destabilize the system and likely cause it to crash + be 
+            // beyond repair.
+            this.profileParameters[nameof(FioExecutor.DiskFilter)] = "OSDisk:true";
+            this.profileParameters[nameof(FioExecutor.RawDisk)] = true;
+
+            using (TestFioExecutor fioExecutor = new TestFioExecutor(this.Dependencies, this.profileParameters))
+            {
+                WorkloadException error = Assert.ThrowsAsync<WorkloadException>(() => fioExecutor.ExecuteAsync(CancellationToken.None));
+
+                Assert.AreEqual(ErrorReason.NotSupported, error.Reason);
+                Assert.IsTrue(Regex.IsMatch(
+                    error.Message,
+                    $"Raw disk I/O operations on the operating system disk '/dev/sd[a-z]' are not supported. This would almost certainly destabilize the system."));
+            }
         }
 
         private class TestFioExecutor : FioExecutor
@@ -276,9 +357,9 @@ namespace VirtualClient.Actions.DiskPerformance
 
             public Func<string, string, string, string[], DiskWorkloadProcess> OnCreateProcess { get; set; }
 
-            public new static string CreateJobFileContent(PlatformSpecifics platformSpecifics, IEnumerable<Disk> targetDisks, string jobNamePrefix, string testFileName)
+            public new string CreateJobFileContent(PlatformSpecifics platformSpecifics, IEnumerable<Disk> targetDisks, string jobNamePrefix, string testFileName)
             {
-                return FioExecutor.CreateJobFileContent(platformSpecifics, targetDisks, jobNamePrefix, testFileName);
+                return base.CreateJobFileContent(platformSpecifics, targetDisks, jobNamePrefix, testFileName);
             }
 
             public new IEnumerable<DiskWorkloadProcess> CreateWorkloadProcesses(string executable, string commandArguments, IEnumerable<Disk> disks, string processModel, EventContext telemetryContext)

@@ -6,7 +6,6 @@ namespace VirtualClient.Actions
     using System;
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
-    using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
     using System.Text;
@@ -210,6 +209,23 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// True/false whether the disk I/O operations should be performed against the raw disk (e.g. /dev/sda) 
+        /// versus utilizing the file system to access the disk (e.g. /mnt_dev_sda1/fio-test.dat). Default = false (use file system).
+        /// </summary>
+        public bool RawDisk
+        {
+            get
+            {
+                return this.Parameters.GetValue<bool>(nameof(this.RawDisk), false);
+            }
+
+            set
+            {
+                this.Parameters[nameof(this.RawDisk)] = value;
+            }
+        }
+
+        /// <summary>
         /// The specific focus of the test if applicable (e.g. DataIntegrity).
         /// </summary>
         public string TestFocus
@@ -265,9 +281,9 @@ namespace VirtualClient.Actions
         /// <param name="platformSpecifics">Provides platform-specific functionality for cross-platform/architecture operation.</param>
         /// <param name="targetDisks">The target disks on which to run the FIO workload (1 job per disk).</param>
         /// <param name="jobNamePrefix">A prefix to use for the name of each job in the job file.</param>
-        /// <param name="testFileName">The name of the test file to use to conduct I/O operations on each disk.</param>
+        /// <param name="testFileName">The name of the test file to use to conduct I/O operations on each disk. Raw disk I/O operations will not use a test file (file system access).</param>
         /// <returns>Content that can be written to an FIO job file.</returns>
-        protected static string CreateJobFileContent(PlatformSpecifics platformSpecifics, IEnumerable<Disk> targetDisks, string jobNamePrefix, string testFileName)
+        protected string CreateJobFileContent(PlatformSpecifics platformSpecifics, IEnumerable<Disk> targetDisks, string jobNamePrefix, string testFileName)
         {
             StringBuilder jobFileContent = new StringBuilder();
             jobFileContent.AppendLine("# Dynamically created job file.");
@@ -285,7 +301,16 @@ namespace VirtualClient.Actions
                 jobFileContent.AppendLine();
                 jobFileContent.AppendLine($"[{jobName}]");
 
-                string fileName = platformSpecifics.Combine(disk.GetPreferredAccessPath(platformSpecifics.Platform), testFileName);
+                string fileName = null;
+                if (this.RawDisk)
+                {
+                    fileName = disk.DevicePath;
+                }
+                else
+                {
+                    fileName = this.PlatformSpecifics.Combine(disk.GetPreferredAccessPath(platformSpecifics.Platform), testFileName);
+                }
+
                 jobFileContent.AppendLine($"filename={fileName}");
             }
 
@@ -329,6 +354,15 @@ namespace VirtualClient.Actions
                             "in on the command line, the requisite disks do not exist on the system or could not be identified based on the properties " +
                             "of the existing disks.",
                             ErrorReason.DependencyNotFound);
+                    }
+
+                    // Prevent executing raw disk I/O operations against the operating system disk. This would almost certainly destabilize the system
+                    // and likely cause it to crash beyond repair without reimaging.
+                    if (disksToTest.Any(disk => disk.IsOperatingSystem()) && this.RawDisk)
+                    {
+                        throw new WorkloadException(
+                            $"Raw disk I/O operations on the operating system disk '{disksToTest.FirstOrDefault(disk => disk.IsOperatingSystem()).DevicePath}' are not supported. This would almost certainly destabilize the system.",
+                            ErrorReason.NotSupported);
                     }
 
                     telemetryContext.AddContext(nameof(this.DiskFilter), this.DiskFilter);
@@ -488,16 +522,20 @@ namespace VirtualClient.Actions
         /// tests (e.g. *-verify.state files).
         /// </summary>
         /// <param name="retryPolicy">A retry policy to apply to file deletions to handle transient issues.</param>
-        protected Task DeleteTestVerificationFilesAsync(IAsyncPolicy retryPolicy = null)
+        protected async Task DeleteTestVerificationFilesAsync(IAsyncPolicy retryPolicy = null)
         {
-            List<string> filesToDelete = new List<string>();
-            string[] verificationStateFiles = this.FileSystem.Directory.GetFiles(this.FileSystem.Directory.GetCurrentDirectory(), "*verify.state");
-            if (verificationStateFiles?.Any() == true)
+            // Test files will not exist when targeting the raw disk I/O scenarios.
+            if (!this.RawDisk)
             {
-                filesToDelete.AddRange(verificationStateFiles);
-            }
+                List<string> filesToDelete = new List<string>();
+                string[] verificationStateFiles = this.FileSystem.Directory.GetFiles(this.FileSystem.Directory.GetCurrentDirectory(), "*verify.state");
+                if (verificationStateFiles?.Any() == true)
+                {
+                    filesToDelete.AddRange(verificationStateFiles);
+                }
 
-            return this.DeleteTestFilesAsync(filesToDelete, retryPolicy);
+                await this.DeleteTestFilesAsync(filesToDelete, retryPolicy);
+            }
         }
 
         /// <summary>
@@ -614,7 +652,8 @@ namespace VirtualClient.Actions
         /// </summary>
         protected virtual async Task DeleteTestFilesAsync(IEnumerable<string> testFiles, IAsyncPolicy retryPolicy = null)
         {
-            if (this.DeleteTestFilesOnFinish)
+            // Test files will not exist when targeting the raw disk I/O scenarios.
+            if (this.DeleteTestFilesOnFinish && !this.RawDisk)
             {
                 EventContext telemetryContext = EventContext.Persisted()
                     .AddContext("files", testFiles);
@@ -703,7 +742,18 @@ namespace VirtualClient.Actions
         /// </summary>
         protected virtual string GetTestDevicePath(Disk disk)
         {
-            string devicePath = this.Combine(disk.GetPreferredAccessPath(this.Platform), this.FileName);
+            string devicePath = null;
+            if (this.RawDisk)
+            {
+                // e.g. /dev/sda, /dev/sdb, /dev/sdc, etc...
+                devicePath = disk.DevicePath;
+            }
+            else
+            {
+                // e.g. /dev/sda1/fio-test.dat, /dev/sdb1/fio-test.dat, /dev/sdc1/fio-test.dat, etc...
+                devicePath = this.Combine(disk.GetPreferredAccessPath(this.Platform), this.FileName);
+            }
+
             return this.SanitizeFilePath(devicePath);
         }
 
@@ -752,8 +802,7 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Log Metrics to Kusto Cluster.
         /// </summary>
-        protected virtual void CaptureMetrics(
-            IProcessProxy workloadProcess, string testScenario, string metricCategorization, string commandArguments, EventContext telemetryContext, Dictionary<string, IConvertible> metricMetadata = null)
+        protected virtual void CaptureMetrics(IProcessProxy workloadProcess, string testScenario, string metricCategorization, string commandArguments, EventContext telemetryContext, Dictionary<string, IConvertible> metricMetadata = null)
         {
             FioMetricsParser parser = null;
             if (this.TestFocus == FioExecutor.TestFocusDataIntegrity)
@@ -918,7 +967,7 @@ namespace VirtualClient.Actions
                 jobNamePrefix = jobNameMatch.Groups[1].Value.Trim();
             }
 
-            string jobFileContent = FioExecutor.CreateJobFileContent(this.PlatformSpecifics, disks, jobNamePrefix, this.FileName);
+            string jobFileContent = this.CreateJobFileContent(this.PlatformSpecifics, disks, jobNamePrefix, this.FileName);
             string tempDirectory = this.PlatformSpecifics.GetTempPath();
 
             if (!this.FileSystem.Directory.Exists(tempDirectory))

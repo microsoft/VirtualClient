@@ -90,6 +90,7 @@ namespace VirtualClient.Dependencies
         }
 
         [Test]
+        [Platform("Win")]
         public async Task MountDisksMountsTheExpectedPathOnWindowsMatchingTheDiskFilterWhenSupplied_DiskPath()
         {
             this.SetupTest(PlatformID.Win32NT);
