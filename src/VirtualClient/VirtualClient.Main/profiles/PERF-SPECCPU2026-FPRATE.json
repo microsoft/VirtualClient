@@ -1,0 +1,88 @@
+{
+    "Description": "SPEC CPU 2026 Floating Point (SPECrate) Benchmark Workload",
+    "MinimumExecutionInterval": "00:05:00",
+    "MinimumRequiredExecutionTime": "12:00:00",
+    "Documentation": {
+        "General": "https://microsoft.github.io/VirtualClient/docs/workloads/speccpu/speccpu-profiles/",
+        "CompilerMachineArchitectures": "GCC '-march' option definitions: https://gcc.gnu.org/onlinedocs/gcc/x86-Options.html, https://gcc.gnu.org/onlinedocs/gcc/AArch64-Options.html"
+    },
+    "Metadata": {
+        "RecommendedMinimumExecutionTime": "12:00:00",
+        "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64",
+        "SupportedOperatingSystems": "AzureLinux,CentOS,Debian,OpenSuse,RedHat,Ubuntu,Windows",
+        "Notes": "Uses the SPEC CPU 2026 1.0.1 package. Windows uses the x64 Cygwin GCC/G++/GFortran toolchain. On Windows ARM64, the compiler and benchmark binaries run through x64 compatibility.",
+        "Limitations": "SPEC CPU 2026 recommends approximately 2 GB of memory and 5 GB of disk per SPECrate copy."
+    },
+    "Parameters": {
+        "CompilerVersion": "",
+        "Iterations": 2,
+        "Benchmarks": "fprate",
+        "RunPeak": false,
+        "Threads": "{LogicalCoreCount}",
+        "Copies": "{LogicalCoreCount}",
+        "BaseOptimizingFlags": "-g -O3 -march={calculate((\"{Platform}\".StartsWith(\"win\") || \"{Architecture}\" == \"x64\") ? \"native\" : \"armv8-a\")} -frecord-gcc-switches",
+        "PeakOptimizingFlags": "-g -Ofast -march={calculate((\"{Platform}\".StartsWith(\"win\") || \"{Architecture}\" == \"x64\") ? \"native\" : \"armv8-a\")} -flto -frecord-gcc-switches"
+    },
+    "Actions": [
+        {
+            "Type": "SpecCpuExecutor",
+            "Parameters": {
+                "Scenario": "ExecuteSPECBenchmark",
+                "Iterations": "$.Parameters.Iterations",
+                "SpecProfile": "fprate",
+                "Benchmarks": "$.Parameters.Benchmarks",
+                "PackageName": "speccpu2026",
+                "RunPeak": "$.Parameters.RunPeak",
+                "Threads": "$.Parameters.Threads",
+                "Copies": "$.Parameters.Copies",
+                "BaseOptimizingFlags": "$.Parameters.BaseOptimizingFlags",
+                "PeakOptimizingFlags": "$.Parameters.PeakOptimizingFlags"
+            }
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "ExecuteCommand",
+            "Parameters": {
+                "Scenario": "MaskAptDailyTimers",
+                "SupportedPlatforms": "linux-x64,linux-arm64",
+                "Command": "bash -c \"systemctl mask apt-daily.timer apt-daily-upgrade.timer apt-daily.service apt-daily-upgrade.service; systemctl stop apt-daily.timer apt-daily-upgrade.timer apt-daily.service apt-daily-upgrade.service; exit 0\""
+            }
+        },
+        {
+            "Type": "ChocolateyInstallation",
+            "Parameters": {
+                "Scenario": "InstallChocolatey",
+                "PackageName": "chocolatey",
+                "SupportedPlatforms": "win-x64,win-arm64"
+            }
+        },
+        {
+            "Type": "ChocolateyPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallCompiler",
+                "PackageName": "chocolatey",
+                "Packages": "cygwin",
+                "SupportedPlatforms": "win-x64,win-arm64"
+            }
+        },
+        {
+            "Type": "CompilerInstallation",
+            "Parameters": {
+                "Scenario": "InstallCompiler",
+                "CompilerVersion": "$.Parameters.CompilerVersion",
+                "CygwinPackages": "gcc-g++,gcc-fortran,gcc-core,libiconv-devel"
+            }
+        },
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallSPECcpuPackage",
+                "BlobContainer": "packages",
+                "BlobName": "speccpu.2026.1.0.1.zip",
+                "PackageName": "speccpu2026",
+                "Extract": true
+            }
+        }
+    ]
+}

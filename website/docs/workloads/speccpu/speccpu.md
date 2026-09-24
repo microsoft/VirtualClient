@@ -8,6 +8,30 @@ memory subsystem and compiler.
 * [SPEC CPU Download](https://pro.spec.org/private/osg/cpu/cpu2017/src/)  
 * [SPEC CPU Benchmarks](https://www.spec.org/cpu2017/Docs/overview.html#Q13)
 
+## SPEC CPU 2026 profiles
+
+The `PERF-SPECCPU2026-*` profiles require and recommend a 12-hour execution time. Their compiler version and base/peak optimization defaults remain consistent with the SPEC CPU 2017 profiles and can be overridden using the `CompilerVersion`, `BaseOptimizingFlags`, and `PeakOptimizingFlags` parameters.
+
+Windows runs use the established x64 Cygwin GCC/G++/GFortran recipes. Windows ARM64 runs those x64 compiler and benchmark binaries through the Windows compatibility layer. The SPEC CPU 2026 package includes the required Cygwin compatibility headers under `virtualclient/cygwin/include`; the Windows launcher stages them into the Cygwin include path before invoking `runcpu`.
+
+The package root must use the following layout. The compatibility headers are package assets rather than VirtualClient runtime files because they address the source-build requirements of this specific SPEC CPU release.
+
+```text
+speccpu2026.vcpkg
+cpu2026-1.0.1.iso
+virtualclient/
+└── cygwin/
+    └── include/
+        ├── execinfo.h
+        ├── link.h
+        ├── speccpu-cygwin-femflow.h
+        ├── speccpu-cygwin-flac.h
+        ├── speccpu-cygwin-gcc.h
+        └── speccpu-cygwin-omnetpp.h
+```
+
+The launcher requires all six headers for a Windows CPU2026 configuration and copies them to `/usr/local/include/speccpu2026`. CPU2017 configurations neither stage nor reference this directory.
+
 
 ## System Requirements
 The following section provides special considerations required for the system on which the SPEC CPU workload will be run.

@@ -82,6 +82,23 @@ rem    call "c:\Program Files (x86)\PGI\win32\16.5\pgi_env.bat"
 rem
 rem  Option B.  Examples of setting the path directly:
 set PATH=%PATH%;"C:\tools\cygwin\bin"
+set "SPECCPU_CYGWIN_INCLUDE=%~dp0virtualclient\cygwin\include"
+echo %* | findstr /I /C:"-2026.cfg" >nul
+if not errorlevel 1 (
+    if not exist "%SPECCPU_CYGWIN_INCLUDE%" (
+        echo Required SPEC CPU 2026 Cygwin headers were not found at "%SPECCPU_CYGWIN_INCLUDE%".
+        exit /B 1
+    )
+    for %%H in (execinfo.h link.h speccpu-cygwin-femflow.h speccpu-cygwin-flac.h speccpu-cygwin-gcc.h speccpu-cygwin-omnetpp.h) do (
+        if not exist "%SPECCPU_CYGWIN_INCLUDE%\%%H" (
+            echo Required SPEC CPU 2026 Cygwin header was not found: "%%H".
+            exit /B 1
+        )
+    )
+    if not exist "C:\tools\cygwin\usr\local\include\speccpu2026" mkdir "C:\tools\cygwin\usr\local\include\speccpu2026"
+    copy /Y "%SPECCPU_CYGWIN_INCLUDE%\*.h" "C:\tools\cygwin\usr\local\include\speccpu2026\" >nul
+    if errorlevel 1 exit /B 1
+)
 rem    set PATH=%PATH%;"c:\program files\microsoft visual studio\df98\bin"
 rem  Note that you may also need to set other variables, such as LIB and
 rem  INCLUDE.  Check your compiler documentation.
