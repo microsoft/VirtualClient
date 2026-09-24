@@ -1,0 +1,6 @@
+"Selected Results Table"
+
+Benchmark,"Base # Threads","Est. Base Run Time","Est. Base Ratio","Base Selected","Base Status","Peak # Threads","Est. Peak Run Time","Est. Peak Ratio","Peak Selected","Peak Status",Description
+800.pot3d_s,16,205.75,12.625,1,S,16,190.25,13.875,1,S,"SelectedIteration (base #1; peak #1)"
+SPECspeed2026_fp_base,12.625,,12.625
+SPECspeed2026_fp_peak,13.875,,,,,,,13.875

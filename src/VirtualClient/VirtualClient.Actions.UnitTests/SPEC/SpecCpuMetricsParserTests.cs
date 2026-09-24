@@ -19,6 +19,140 @@ namespace VirtualClient.Actions
         private string rawText;
         private SpecCpuMetricsParser testParser;
 
+        [TestCase(
+            "SpecCpu2026RateBaseExample.csv",
+            2,
+            "SPECcpu-base-706.stockfish_r",
+            49.325,
+            "SPECrate(R)2026_int_base",
+            49.325,
+            "integer_base_rate")]
+        [TestCase(
+            "SpecCpu2026RatePeakExample.csv",
+            4,
+            "SPECcpu-peak-706.stockfish_r",
+            51.75,
+            "SPECrate(R)2026_int_peak",
+            51.75,
+            "integer_peak_rate")]
+        [TestCase(
+            "SpecCpu2026SpeedBaseExample.csv",
+            2,
+            "SPECcpu-base-800.pot3d_s",
+            12.625,
+            "SPECspeed(R)2026_fp_base",
+            12.625,
+            "floating_point_base_speed")]
+        [TestCase(
+            "SpecCpu2026SpeedPeakExample.csv",
+            4,
+            "SPECcpu-peak-800.pot3d_s",
+            13.875,
+            "SPECspeed(R)2026_fp_peak",
+            13.875,
+            "floating_point_peak_speed")]
+        public void SpecCpuMetricsParserParsesExpectedMetricsFromCpu2026CsvFixtures(
+            string fixture,
+            int expectedMetricCount,
+            string expectedBenchmarkMetric,
+            double expectedBenchmarkScore,
+            string expectedSummaryMetric,
+            double expectedSummaryScore,
+            string expectedWorkload)
+        {
+            string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            string outputPath = Path.Combine(workingDirectory, "test_examples", "SpecCpu", fixture);
+            this.rawText = File.ReadAllText(outputPath);
+            this.testParser = new SpecCpuMetricsParser(this.rawText, csv: true);
+
+            IList<Metric> metrics = this.testParser.Parse();
+
+            Assert.AreEqual(expectedMetricCount, metrics.Count);
+            MetricAssert.Exists(metrics, expectedBenchmarkMetric, expectedBenchmarkScore, "score");
+            MetricAssert.Exists(metrics, expectedSummaryMetric, expectedSummaryScore, "score");
+            Assert.AreEqual(expectedWorkload, metrics.Single(metric => metric.Name == expectedSummaryMetric).Metadata["workload"]);
+        }
+
+        [Test]
+        public void SpecCpuMetricsParserParsesExpectedMetricsFromCpu2026CsvResults()
+        {
+            string results = string.Join(
+                Environment.NewLine,
+                "\"Selected Results Table\"",
+                string.Empty,
+                "Benchmark,\"Base # Copies\",\"Est. Base Run Time\",\"Est. Base Rate\",\"Base Selected\",\"Base Status\",\"Peak # Copies\",\"Est. Peak Run Time\",\"Est. Peak Rate\",\"Peak Selected\",\"Peak Status\",Description",
+                "706.stockfish_r,1,409.651059,3.075788,1,S,,,,,NR,\"SelectedIteration (base #1; peak NR)\"",
+                "SPECrate2026_int_base,3.075788,,3.075788",
+                "SPECrate2026_int_peak,\"Not Run\",,,,,,,,\"Not Run\"");
+
+            this.testParser = new SpecCpuMetricsParser(results, csv: true);
+
+            IList<Metric> metrics = this.testParser.Parse();
+
+            Assert.AreEqual(2, metrics.Count);
+            MetricAssert.Exists(metrics, "SPECcpu-base-706.stockfish_r", 3.075788, "score");
+            MetricAssert.Exists(metrics, "SPECrate(R)2026_int_base", 3.075788, "score");
+            Assert.IsTrue(metrics.All(metric => metric.Metadata["workload"].ToString() == "integer_base_rate"));
+        }
+
+        [Test]
+        public void SpecCpuMetricsParserParsesExpectedMetricsFromCpu2026TextResults()
+        {
+            string results = string.Join(
+                Environment.NewLine,
+                "SPEC CPU 2026 Results",
+                "==================================================================================",
+                "706.stockfish_r        1        410       3.08  *",
+                " Est. SPECrate(R)2026_int_base            3.08",
+                " Est. SPECrate(R)2026_int_peak                                          Not Run",
+                string.Empty,
+                "Additional result details");
+
+            this.testParser = new SpecCpuMetricsParser(results);
+
+            IList<Metric> metrics = this.testParser.Parse();
+
+            Assert.AreEqual(2, metrics.Count);
+            MetricAssert.Exists(metrics, "SPECcpu-base-706.stockfish_r", 3.08, "score");
+            MetricAssert.Exists(metrics, "SPECrate(R)2026_int_base", 3.08, "score");
+            Assert.IsTrue(metrics.All(metric => metric.Metadata["workload"].ToString() == "integer_base_rate"));
+        }
+
+        [TestCase("rate", "fp", "base", "SPECrate(R)2026_fp_base", "floating_point_base_rate")]
+        [TestCase("rate", "fp", "peak", "SPECrate(R)2026_fp_peak", "floating_point_peak_rate")]
+        [TestCase("rate", "int", "base", "SPECrate(R)2026_int_base", "integer_base_rate")]
+        [TestCase("rate", "int", "peak", "SPECrate(R)2026_int_peak", "integer_peak_rate")]
+        [TestCase("speed", "fp", "base", "SPECspeed(R)2026_fp_base", "floating_point_base_speed")]
+        [TestCase("speed", "fp", "peak", "SPECspeed(R)2026_fp_peak", "floating_point_peak_speed")]
+        [TestCase("speed", "int", "base", "SPECspeed(R)2026_int_base", "integer_base_speed")]
+        [TestCase("speed", "int", "peak", "SPECspeed(R)2026_int_peak", "integer_peak_speed")]
+        public void SpecCpuMetricsParserMapsCpu2026SummaryMetrics(
+            string suite,
+            string workloadType,
+            string tuning,
+            string expectedMetricName,
+            string expectedWorkload)
+        {
+            string summaryPrefix = suite == "rate" ? "SPECrate2026" : "SPECspeed2026";
+            string baseValue = tuning == "base" ? "123.45" : "\"Not Run\"";
+            string peakValue = tuning == "peak" ? "123.45" : "\"Not Run\"";
+            string results = string.Join(
+                Environment.NewLine,
+                "\"Selected Results Table\"",
+                string.Empty,
+                "Benchmark,\"Base # Copies\",\"Est. Base Run Time\",\"Est. Base Rate\",\"Base Selected\",\"Base Status\",\"Peak # Copies\",\"Est. Peak Run Time\",\"Est. Peak Rate\",\"Peak Selected\",\"Peak Status\",Description",
+                $"{summaryPrefix}_{workloadType}_base,{baseValue},,{baseValue}",
+                $"{summaryPrefix}_{workloadType}_peak,{peakValue},,,,,,,{peakValue}");
+
+            this.testParser = new SpecCpuMetricsParser(results, csv: true);
+
+            IList<Metric> metrics = this.testParser.Parse();
+
+            Assert.AreEqual(1, metrics.Count);
+            MetricAssert.Exists(metrics, expectedMetricName, 123.45, "score");
+            Assert.AreEqual(expectedWorkload, metrics[0].Metadata["workload"]);
+        }
+
         [Test]
         public void SpecCpuMetricsParserParsesExpectedMetricsFromFpRateResults()
         {
