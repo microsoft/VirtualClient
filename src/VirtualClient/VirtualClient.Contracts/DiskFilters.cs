@@ -110,13 +110,15 @@ namespace VirtualClient.Contracts
             // Allow callers to opt into keeping offline disks (e.g. bare/unformatted disks for raw disk I/O).
             bool includeOffline = filters.Any(f => f.Trim().Equals(Filters.IncludeOffline, StringComparison.OrdinalIgnoreCase));
 
-            disks = DiskFilters.FilterStoragePathByPrefix(disks, platform);
+            IEnumerable<Disk> filteredDisks = disks;
+            filteredDisks = DiskFilters.FilterByStoragePathPrefix(filteredDisks, platform);
+
             if (!includeOffline)
             {
-                disks = DiskFilters.FilterOfflineDisksOnWindows(disks, platform);
+                filteredDisks = DiskFilters.FilterOutOfflineDisks(filteredDisks, platform);
             }
 
-            disks = DiskFilters.FilterReadOnlyDisksOnWindows(disks, platform);
+            filteredDisks = DiskFilters.FilterOutReadOnlyDisks(filteredDisks, platform);
 
             foreach (string filter in filters)
             {
@@ -137,36 +139,36 @@ namespace VirtualClient.Contracts
                         break;
 
                     case Filters.BiggestSize:
-                        disks = DiskFilters.BiggestSizeFilter(disks, platform);
+                        filteredDisks = DiskFilters.FilterByBiggestSize(filteredDisks, platform);
                         break;
 
                     case Filters.SmallestSize:
-                        disks = DiskFilters.SmallestSizeFilter(disks, platform);
+                        filteredDisks = DiskFilters.FilterBySmallestSize(filteredDisks, platform);
                         break;
 
                     case Filters.SizeGreaterThan:
-                        disks = DiskFilters.SizeGreaterThanFilter(disks, platform, DiskFilters.ParseDiskSize(filterName, filterValue));
+                        filteredDisks = DiskFilters.FilterBySizeGreaterThan(filteredDisks, platform, DiskFilters.ParseDiskSize(filterName, filterValue));
                         break;
 
                     case Filters.SizeLessThan:
-                        disks = DiskFilters.SizeLessThanFilter(disks, platform, DiskFilters.ParseDiskSize(filterName, filterValue));
+                        filteredDisks = DiskFilters.FilterBySizeLessThan(filteredDisks, platform, DiskFilters.ParseDiskSize(filterName, filterValue));
                         break;
 
                     case Filters.SizeEqualTo:
-                        disks = DiskFilters.SizeEqualToFilter(disks, platform, DiskFilters.ParseDiskSize(filterName, filterValue));
+                        filteredDisks = DiskFilters.FilterBySizeEqualTo(filteredDisks, platform, DiskFilters.ParseDiskSize(filterName, filterValue));
                         break;
 
                     case Filters.OsDisk:
                         // If OsDisk is specified, default to true.
                         bool includeOs = string.IsNullOrWhiteSpace(filterValue) ? true : Convert.ToBoolean(filterValue);
-                        disks = DiskFilters.OsDiskFilter(disks, includeOs);
+                        filteredDisks = DiskFilters.FilterByOperatingSystemDisk(filteredDisks, includeOs);
                         break;
 
                     case Filters.DiskPath:
                         // Disk Path can be multiple delimited by comma
                         // C:,D:,
                         // /dev/sda, /dev/sdb
-                        disks = DiskFilters.DiskPathFilter(disks, filterValue);
+                        filteredDisks = DiskFilters.FilterByDiskPath(filteredDisks, filterValue);
                         break;
 
                     case Filters.IncludeOffline:
@@ -174,11 +176,11 @@ namespace VirtualClient.Contracts
                         break;
 
                     case Filters.AccessPath:
-                        disks = DiskFilters.AccessPathFilter(disks, filterValue);
+                        filteredDisks = DiskFilters.FilterByAccessPath(filteredDisks, filterValue);
                         break;
 
                     case Filters.Logical:
-                        disks = DiskFilters.LogicalDiskFilter(disks);
+                        filteredDisks = DiskFilters.FilterByLogicalDisk(filteredDisks);
                         break;
 
                     default:
@@ -186,7 +188,7 @@ namespace VirtualClient.Contracts
                 }
             }
 
-            return disks;
+            return filteredDisks;
         }
 
         private static decimal ParseDiskSize(string filterName, string filterValue)
@@ -203,131 +205,101 @@ namespace VirtualClient.Contracts
             return sizeInBytes;
         }
 
-        private static IEnumerable<Disk> BiggestSizeFilter(IEnumerable<Disk> disks, PlatformID platform)
+        private static IEnumerable<Disk> FilterByBiggestSize(IEnumerable<Disk> disks, PlatformID platform)
         {
             long biggestSize = disks.Max(d => d.SizeInBytes(platform));
-            disks = disks.Where(d => d.SizeInBytes(platform) == biggestSize);
-            return disks;
+            return disks.Where(d => d.SizeInBytes(platform) == biggestSize);
         }
 
-        private static IEnumerable<Disk> SmallestSizeFilter(IEnumerable<Disk> disks, PlatformID platform)
+        private static IEnumerable<Disk> FilterBySmallestSize(IEnumerable<Disk> disks, PlatformID platform)
         {
             // 0 could mean not partitioned and is not considered a valid size.
             long smallestSize = disks.Where(d => d.SizeInBytes(platform) != 0).Min(d => d.SizeInBytes(platform));
-            disks = disks.Where(d => d.SizeInBytes(platform) == smallestSize);
-            return disks;
+            return disks.Where(d => d.SizeInBytes(platform) == smallestSize);
         }
 
-        private static IEnumerable<Disk> SizeGreaterThanFilter(IEnumerable<Disk> disks, PlatformID platform, decimal size)
+        private static IEnumerable<Disk> FilterBySizeGreaterThan(IEnumerable<Disk> disks, PlatformID platform, decimal size)
         {
-            disks = disks.Where(d => d.SizeInBytes(platform) >= size);
-            return disks;
+            return disks.Where(d => d.SizeInBytes(platform) >= size);
         }
 
-        private static IEnumerable<Disk> SizeEqualToFilter(IEnumerable<Disk> disks, PlatformID platform, decimal size)
+        private static IEnumerable<Disk> FilterBySizeEqualTo(IEnumerable<Disk> disks, PlatformID platform, decimal size)
         {
             // Due to disks are not always sized exactly as defined, due to reserved partitions and disk headers, etc.
             // We are leaving a 1% buffer.
-            disks = disks.Where(d => d.SizeInBytes(platform) >= size * 0.99m && d.SizeInBytes(platform) <= size * 1.01m);
-            return disks;
+            return disks.Where(d => d.SizeInBytes(platform) >= size * 0.99m && d.SizeInBytes(platform) <= size * 1.01m);
         }
 
-        private static IEnumerable<Disk> SizeLessThanFilter(IEnumerable<Disk> disks, PlatformID platform, decimal size)
+        private static IEnumerable<Disk> FilterBySizeLessThan(IEnumerable<Disk> disks, PlatformID platform, decimal size)
         {
-            disks = disks.Where(d => d.SizeInBytes(platform) <= size);
-            return disks;
+            return disks.Where(d => d.SizeInBytes(platform) <= size);
         }
 
-        private static IEnumerable<Disk> OsDiskFilter(IEnumerable<Disk> disks, bool includeOs)
+        private static IEnumerable<Disk> FilterByOperatingSystemDisk(IEnumerable<Disk> disks, bool includeOs)
         {
-            disks = disks.Where(d => d.IsOperatingSystem() == includeOs);
-            return disks;
+            return disks.Where(d => d.IsOperatingSystem() == includeOs);
         }
 
-        private static IEnumerable<Disk> DiskPathFilter(IEnumerable<Disk> disks, string diskPaths)
+        private static IEnumerable<Disk> FilterByDiskPath(IEnumerable<Disk> disks, string diskPaths)
         {
             List<string> pathList = diskPaths.Split(",", StringSplitOptions.RemoveEmptyEntries).ToList();
 
             // Find Disks where either devicepath or accessPath is exact match of one of the path provided in diskPaths.
-            disks = disks.Where(d => pathList.Any(p => d.PathEquals(p)));
-            return disks;
+            return disks.Where(d => pathList.Any(p => d.PathEquals(p)));
         }
 
-        private static IEnumerable<Disk> AccessPathFilter(IEnumerable<Disk> disks, string accessPathPattern)
+        private static IEnumerable<Disk> FilterByAccessPath(IEnumerable<Disk> disks, string accessPathPattern)
         {
             // Find disks where any volume has an access path containing the given pattern.
-            disks = disks.Where(d => d.Volumes.Any(v => v.AccessPaths.Any(
-                p => p.Contains(accessPathPattern, StringComparison.OrdinalIgnoreCase))));
-            return disks;
+            return disks.Where(d => d.Volumes.Any(v => v.AccessPaths.Any(p => p.Contains(accessPathPattern, StringComparison.OrdinalIgnoreCase))));
         }
 
-        private static IEnumerable<Disk> LogicalDiskFilter(IEnumerable<Disk> disks)
+        private static IEnumerable<Disk> FilterByLogicalDisk(IEnumerable<Disk> disks)
         {
             // LVM device mapper paths: /dev/dm-N or /dev/mapper/*
-            disks = disks.Where(d =>
+            return disks.Where(d =>
                 d.DevicePath?.StartsWith("/dev/dm", StringComparison.OrdinalIgnoreCase) == true
                 || d.DevicePath?.StartsWith("/dev/mapper", StringComparison.OrdinalIgnoreCase) == true);
-            return disks;
         }
 
-        private static IEnumerable<Disk> FilterStoragePathByPrefix(IEnumerable<Disk> disks, PlatformID platform)
+        private static IEnumerable<Disk> FilterByStoragePathPrefix(IEnumerable<Disk> disks, PlatformID platform)
         {
+            var filteredDisks = disks;
             if (platform == PlatformID.Unix)
             {
                 // There are NVMe disks that show up in lshw output, that are not really storage devices. This filter filters by common prefixes.
                 List<string> validPrefixes = new List<string> { "/dev/hd", "/dev/sd", "/dev/nvme", "/dev/xvd", "/dev/dm", "/dev/mapper" };
 
                 // Match for either accessPath or devicePath.
-                disks = disks.Where(d => validPrefixes.Any(vp => d.DevicePath?.Trim().StartsWith(vp, StringComparison.OrdinalIgnoreCase) == true));
+                filteredDisks = disks.Where(d => validPrefixes.Any(vp => d.DevicePath?.Trim().StartsWith(vp, StringComparison.OrdinalIgnoreCase) == true));
             }
 
-            return disks;
+            return filteredDisks;
         }
 
-        private static IEnumerable<Disk> FilterOfflineDisksOnWindows(IEnumerable<Disk> disks, PlatformID platform)
+        private static IEnumerable<Disk> FilterOutOfflineDisks(IEnumerable<Disk> disks, PlatformID platform)
         {
+            var filteredDisks = disks;
             if (platform == PlatformID.Win32NT)
             {
                 // Remove offline disks.
-                disks = disks.Where(d => d.Properties.ContainsKey("Status") ? !d.Properties.GetValue<string>("Status").Contains("offline", StringComparison.OrdinalIgnoreCase) : true);
+                filteredDisks = disks.Where(d => d.Properties.ContainsKey("Status") ? !d.Properties.GetValue<string>("Status").Contains("offline", StringComparison.OrdinalIgnoreCase) : true);
             }
 
-            return disks;
+            return filteredDisks;
         }
 
-        private static IEnumerable<Disk> FilterReadOnlyDisksOnWindows(IEnumerable<Disk> disks, PlatformID platform)
+        private static IEnumerable<Disk> FilterOutReadOnlyDisks(IEnumerable<Disk> disks, PlatformID platform)
         {
+            var filteredDisks = disks;
             if (platform == PlatformID.Win32NT)
             {
                 // Remove read only disks.
-                disks = disks.Where(d => d.Properties.ContainsKey("Read-only") ? !d.Properties.GetValue<string>("Read-only").Contains("Yes", StringComparison.OrdinalIgnoreCase) : true);
-                disks = disks.Where(d => d.Properties.ContainsKey("Current Read-only State") ? !d.Properties.GetValue<string>("Current Read-only State").Contains("Yes", StringComparison.OrdinalIgnoreCase) : true);
+                filteredDisks = disks.Where(d => d.Properties.ContainsKey("Read-only") ? !d.Properties.GetValue<string>("Read-only").Contains("Yes", StringComparison.OrdinalIgnoreCase) : true);
+                filteredDisks = filteredDisks?.Where(d => d.Properties.ContainsKey("Current Read-only State") ? !d.Properties.GetValue<string>("Current Read-only State").Contains("Yes", StringComparison.OrdinalIgnoreCase) : true);
             }
 
-            return disks;
-        }
-
-        private static IEnumerable<Disk> RemoveCdromFilter(IEnumerable<Disk> disks, PlatformID platform)
-        {
-            if (platform == PlatformID.Unix)
-            {
-                // This is an implicit filter that VC removes CD ROM disks that show up in lshw outputs.
-                // This method is not used because there is FilterStoragePathByPrefix that supersedes this. This method might still be applicable if the 
-                // FilterStoragePathByPrefix methods is changed to accept broader prefixes.
-
-                List<string> cdromPaths = new List<string>
-                {
-                    "/dev/cdrom",
-                    "/dev/dvd",
-                    "/dev/sr0",
-                    "/dev/cdrw",
-                    "/dev/dvdrw"
-                };
-
-                disks = disks.Where(d => !cdromPaths.Any(cd => cd.Equals(d.DevicePath, StringComparison.OrdinalIgnoreCase)));
-            }
-
-            return disks;
+            return filteredDisks;
         }
 
         /// <summary>
