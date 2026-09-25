@@ -14,12 +14,11 @@
         "LatteDuration": "00:01:00",
         "NTttcpPort": 5500,
         "NTttcpDuration": "00:01:00",
+        "NTttcpDuplexMode": "Half",
         "SockPerfPort": 8201,
         "SockPerfDuration": "00:01:00",
         "ProfilingEnabled": false,
-        "ProfilingMode": "None",
-        "TestDuration": "00:01:00",
-        "NTttcpDuplexMode": "Half"
+        "ProfilingMode": "None"
     },
     "Actions": [
         {
@@ -324,7 +323,7 @@
             "Parameters": {
                 "Scenario": "InstallSystemConfigScriptPackage",
                 "BlobContainer": "packages",
-                "BlobName": "system_config.1.0.0.zip",
+                "BlobName": "system_config.2.0.0.zip",
                 "PackageName": "system_config",
                 "Extract": true
             }
@@ -334,26 +333,18 @@
             "Parameters": {
                 "Scenario": "InstallNetworkToolsetPackage",
                 "BlobContainer": "packages",
-                "BlobName": "networking.4.0.0.zip",
+                "BlobName": "networking.4.1.0.zip",
                 "PackageName": "networking",
                 "Extract": true
-            }
-        },
-        {
-            "Type": "LinuxPackageInstallation",
-            "Parameters": {
-                "Scenario": "InstallLinuxPackages",
-                "Packages-Dnf": "iptables",
-                "SupportedPlatforms": "linux-x64,linux-arm64"
             }
         },
         {
             "Type": "WgetPackageInstallation",
             "Parameters": {
                 "Scenario": "Install_Visual_Cpp_Redistributable_arm64",
-                "SupportedPlatforms": "win-arm64",
                 "PackageName": "visual_cpp_redistributable",
-                "PackageUri": "https://aka.ms/vs/17/release/vc_redist.arm64.exe"
+                "PackageUri": "https://aka.ms/vs/17/release/vc_redist.arm64.exe",
+                "SupportedPlatforms": "win-arm64"
             }
         },
         {

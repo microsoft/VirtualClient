@@ -1,0 +1,125 @@
+{
+    "Description": "Runs Sockperf Network Latency Workload",
+    "Metadata": {
+        "RecommendedMinimumExecutionTime": "00:30:00",
+        "SupportedPlatforms": "linux-x64,linux-arm64",
+        "SupportedOperatingSystems": "AmazonLinux,AzureLinux,CentOS,Debian,OpenSuse,RedHat,Ubuntu"
+    },
+    "Parameters": {
+        "EnableBusyPoll": true,
+        "SockPerfPort": 8201,
+        "SockPerfDuration": "00:01:00",
+        "ProfilingEnabled": false,
+        "ProfilingMode": "None"
+    },
+    "Actions": [
+        {
+            "Type": "NetworkingWorkloadExecutor",
+            "Parameters": {
+                "Scenario": "SockPerf_TCP_Ping_Pong",
+                "ToolName": "SockPerf",
+                "PackageName": "networking",
+                "Protocol": "TCP",
+                "TestMode": "ping-pong",
+                "MessageSize": 64,
+                "TestDuration": "$.Parameters.SockPerfDuration",
+                "Port": "$.Parameters.SockPerfPort",
+                "MessagesPerSecond": "max",
+                "ProfilingScenario": "SockPerf_TCP_Ping_Pong",
+                "ProfilingEnabled": "$.Parameters.ProfilingEnabled",
+                "ProfilingMode": "$.Parameters.ProfilingMode"
+            }
+        },
+        {
+            "Type": "NetworkingWorkloadExecutor",
+            "Parameters": {
+                "Scenario": "SockPerf_UDP_Ping_Pong",
+                "ToolName": "SockPerf",
+                "PackageName": "networking",
+                "Protocol": "UDP",
+                "TestMode": "ping-pong",
+                "MessageSize": 64,
+                "TestDuration": "$.Parameters.SockPerfDuration",
+                "Port": "$.Parameters.SockPerfPort",
+                "MessagesPerSecond": "max",
+                "ProfilingScenario": "SockPerf_UDP_Ping_Pong",
+                "ProfilingEnabled": "$.Parameters.ProfilingEnabled",
+                "ProfilingMode": "$.Parameters.ProfilingMode"
+            }
+        },
+        {
+            "Type": "NetworkingWorkloadExecutor",
+            "Parameters": {
+                "Scenario": "SockPerf_TCP_Under_Load",
+                "ToolName": "SockPerf",
+                "PackageName": "networking",
+                "Protocol": "TCP",
+                "TestMode": "under-load",
+                "MessageSize": 64,
+                "TestDuration": "$.Parameters.SockPerfDuration",
+                "Port": "$.Parameters.SockPerfPort",
+                "MessagesPerSecond": "max",
+                "ProfilingScenario": "SockPerf_TCP_Under_Load",
+                "ProfilingEnabled": "$.Parameters.ProfilingEnabled",
+                "ProfilingMode": "$.Parameters.ProfilingMode"
+            }
+        },
+        {
+            "Type": "NetworkingWorkloadExecutor",
+            "Parameters": {
+                "Scenario": "SockPerf_UDP_Under_Load",
+                "ToolName": "SockPerf",
+                "PackageName": "networking",
+                "Protocol": "UDP",
+                "TestMode": "under-load",
+                "MessageSize": 64,
+                "TestDuration": "$.Parameters.SockPerfDuration",
+                "Port": "$.Parameters.SockPerfPort",
+                "MessagesPerSecond": "max",
+                "ProfilingScenario": "SockPerf_UDP_Under_Load",
+                "ProfilingEnabled": "$.Parameters.ProfilingEnabled",
+                "ProfilingMode": "$.Parameters.ProfilingMode"
+            }
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallSystemConfigScriptPackage",
+                "BlobContainer": "packages",
+                "BlobName": "system_config.2.0.0.zip",
+                "PackageName": "system_config",
+                "Extract": true
+            }
+        },
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallNetworkToolsetPackage",
+                "BlobContainer": "packages",
+                "BlobName": "networking.4.1.0.zip",
+                "PackageName": "networking",
+                "Extract": true
+            }
+        },
+        {
+            "Type": "ExecuteCommand",
+            "Parameters": {
+                "Scenario": "ConfigureNetwork",
+                "Command": "sudo chmod -R 2777 \"{ScriptPackage}\"&&sudo bash -c \"{ScriptPackage}/config_network.sh --disable-firewall=true --enable-busy-poll={EnableBusyPoll}\"",
+                "EnableBusyPoll": "$.Parameters.EnableBusyPoll",
+                "LogFolderName": "configure_network",
+                "ScriptPackage": "{PackageDir/Platform:system_config}",
+                "SupportedPlatforms": "linux-x64,linux-arm64"
+            }
+        },
+        {
+            "Type": "ApiServer",
+            "Parameters": {
+                "Scenario": "StartAPIServer",
+                "Roles": "Server"
+            }
+        }
+    ]
+}

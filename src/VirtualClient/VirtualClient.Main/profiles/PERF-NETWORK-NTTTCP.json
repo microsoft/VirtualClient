@@ -1,5 +1,5 @@
 {
-    "Description": "Network NTttcp Workload Scenarios",
+    "Description": "Runs NTttcp Network Throughput and Bandwidth Workload",
     "Metadata": {
         "RecommendedMinimumExecutionTime": "00:30:00",
         "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64",
@@ -9,10 +9,9 @@
         "EnableBusyPoll": true,
         "NTttcpPort": 5500,
         "NTttcpDuration": "00:01:00",
+        "NTttcpDuplexMode": "Half",
         "ProfilingEnabled": false,
-        "ProfilingMode": "None",
-        "TestDuration": "00:01:00",
-        "NTttcpDuplexMode": "Half"
+        "ProfilingMode": "None"
     },
     "Actions": [
         {
@@ -220,7 +219,7 @@
             "Parameters": {
                 "Scenario": "InstallSystemConfigScriptPackage",
                 "BlobContainer": "packages",
-                "BlobName": "system_config.1.0.0.zip",
+                "BlobName": "system_config.2.0.0.zip",
                 "PackageName": "system_config",
                 "Extract": true
             }
@@ -230,16 +229,9 @@
             "Parameters": {
                 "Scenario": "InstallNetworkToolsetPackage",
                 "BlobContainer": "packages",
-                "BlobName": "networking.3.1.0.zip",
+                "BlobName": "networking.4.1.0.zip",
                 "PackageName": "networking",
                 "Extract": true
-            }
-        },
-        {
-            "Type": "LinuxPackageInstallation",
-            "Parameters": {
-                "Scenario": "InstallLinuxPackages",
-                "Packages-Dnf": "iptables"
             }
         },
         {
