@@ -20,8 +20,6 @@ namespace VirtualClient
     [SupportedPlatforms("linux-arm64,linux-x64,win-arm64,win-x64")]
     public class ParallelLoopExecution : VirtualClientComponentCollection
     {
-        private Task timeoutTask;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="ParallelLoopExecution"/> class.
         /// </summary>
@@ -35,7 +33,7 @@ namespace VirtualClient
         }
 
         /// <summary>
-        /// The maximum duration to allow each child component to run.
+        /// The maximum duration to loop each child component. Minimum iterations are allowed to exceed this duration.
         /// </summary>
         public TimeSpan Duration
         {
@@ -64,7 +62,7 @@ namespace VirtualClient
         protected override Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             List<Task> componentTasks = new List<Task>();
-            this.timeoutTask = Task.Delay(this.Duration, cancellationToken);
+            System.Diagnostics.Stopwatch durationTimer = System.Diagnostics.Stopwatch.StartNew();
 
             foreach (VirtualClientComponent component in this)
             {
@@ -80,7 +78,7 @@ namespace VirtualClient
 
                 // Wrap each component execution in a loop, and ensure we respect the timeout.
                 component.OutputComponentStart();
-                componentTasks.Add(this.ExecuteComponentLoopAsync(component, telemetryContext, cancellationToken));
+                componentTasks.Add(this.ExecuteComponentLoopAsync(component, durationTimer, telemetryContext, cancellationToken));
             }
 
             // Await all tasks to run in parallel.
@@ -90,40 +88,65 @@ namespace VirtualClient
         /// <summary>
         /// Executes a component in an independent loop, restarting after completion while respecting the timeout.
         /// </summary>
-        private async Task ExecuteComponentLoopAsync(VirtualClientComponent component, EventContext telemetryContext, CancellationToken cancellationToken)
+        private async Task ExecuteComponentLoopAsync(
+            VirtualClientComponent component,
+            System.Diagnostics.Stopwatch durationTimer,
+            EventContext telemetryContext,
+            CancellationToken cancellationToken)
         {
-            int currentIteration = 0;
+            int completedIterations = 0;
+            TimeSpan longestIterationDuration = TimeSpan.Zero;
+
             while (!cancellationToken.IsCancellationRequested)
             {
-                try
-                {
-                    currentIteration++;
-                    telemetryContext.AddContext("currentIteration", currentIteration);
+                TimeSpan remainingDuration = this.Duration == Timeout.InfiniteTimeSpan
+                    ? Timeout.InfiniteTimeSpan
+                    : this.Duration - durationTimer.Elapsed;
 
-                    if (this.timeoutTask.IsCompleted && currentIteration > this.MinimumIterations)
+                if (completedIterations >= this.MinimumIterations
+                    && (remainingDuration <= TimeSpan.Zero
+                        || (longestIterationDuration > TimeSpan.Zero && remainingDuration < longestIterationDuration)))
+                {
+                    this.Logger.LogMessage(
+                        $"Parallel execution completed (duration = {this.Duration}, iterations = {completedIterations}).",
+                        LogLevel.Trace,
+                        telemetryContext);
+
+                    break;
+                }
+
+                EventContext iterationContext = telemetryContext.Clone()
+                    .AddContext("currentIteration", completedIterations + 1);
+
+                using (CancellationTokenSource iterationCancellationSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
+                {
+                    if (completedIterations >= this.MinimumIterations && remainingDuration != Timeout.InfiniteTimeSpan)
+                    {
+                        iterationCancellationSource.CancelAfter(remainingDuration);
+                    }
+
+                    System.Diagnostics.Stopwatch iterationTimer = System.Diagnostics.Stopwatch.StartNew();
+                    try
+                    {
+                        await component.ExecuteAsync(iterationCancellationSource.Token);
+                        iterationTimer.Stop();
+
+                        completedIterations++;
+                        if (iterationTimer.Elapsed > longestIterationDuration)
+                        {
+                            longestIterationDuration = iterationTimer.Elapsed;
+                        }
+                    }
+                    catch (OperationCanceledException)
+                        when (!cancellationToken.IsCancellationRequested && iterationCancellationSource.IsCancellationRequested)
                     {
                         this.Logger.LogMessage(
                             $"Parallel execution timed out (timeout = {this.Duration}).",
                             LogLevel.Trace,
-                            telemetryContext);
+                            iterationContext);
 
                         break;
                     }
-
-                    // Execute the component task with timeout handling.
-                    Task componentExecutionTask = component.ExecuteAsync(cancellationToken);
-                    Task completedTask = await Task.WhenAny(componentExecutionTask, this.timeoutTask);
-
-                    if (completedTask == this.timeoutTask && currentIteration >= this.MinimumIterations)
-                    {
-                        break;
-                    }
-
-                    await componentExecutionTask;
-                }
-                finally
-                {
-                    currentIteration++;
                 }
             }
         }
