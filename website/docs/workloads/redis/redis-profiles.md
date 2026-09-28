@@ -1,4 +1,4 @@
-# Redis Workload Profiles
+# Redis Profiles
 The following profiles run customer-representative or benchmarking scenarios using the Memtier or Redis workloads against
 a Redis server.
 

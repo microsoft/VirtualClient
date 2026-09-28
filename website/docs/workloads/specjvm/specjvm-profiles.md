@@ -1,4 +1,4 @@
-# SPECjvm Workload Profiles
+# SPECjvm Profiles
 The following profiles run customer-representative or benchmarking scenarios using the SPECjvm workload.
 
 * [Workload Details](./specjvm.md)  

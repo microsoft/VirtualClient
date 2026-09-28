@@ -1,4 +1,4 @@
-# Memcached Workload Profiles
+# Memcached Profiles
 The following profiles run customer-representative or benchmarking scenarios using the Memtier workload against a
 Memcached server.
 

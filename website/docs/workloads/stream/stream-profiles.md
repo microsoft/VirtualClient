@@ -1,4 +1,4 @@
-# STREAM Workload Profiles
+# STREAM Profiles
 The following profiles run customer-representative or benchmarking scenarios using the STREAM workload.
 
 * [Workload Details](./stream.md)  

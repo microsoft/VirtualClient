@@ -1,4 +1,4 @@
-# Flexible I/O Tester (FIO) Workload Profiles
+# Flexible I/O Tester (FIO) Profiles
 The following profiles run customer-representative or benchmarking scenarios using the Flexible I/O Tester (FIO) workload.  
 
 * [Workload Details](./fio.md)  

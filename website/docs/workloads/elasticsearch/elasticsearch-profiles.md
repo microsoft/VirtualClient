@@ -1,4 +1,4 @@
-# ElasticSearch Workload Profiles
+# ElasticSearch Profiles
 
 The following profiles run customer-representative or benchmarking scenarios using the Rally workload.
 

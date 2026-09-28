@@ -1,4 +1,4 @@
-# 3DMark Workload Profiles
+# 3DMark Profiles
 The following profile runs the 3DMark TimeSpy Workloads.
 
 * [Workload Details](./3dmark.md)  

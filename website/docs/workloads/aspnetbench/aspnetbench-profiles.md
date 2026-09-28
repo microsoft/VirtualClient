@@ -1,4 +1,4 @@
-# ASP.NET Benchmarks Workload Profiles
+# ASP.NET Benchmarks Profiles
 The following profiles run customer-representative or benchmarking scenarios using ASP.NET server workloads.
 
 * [Workload Details](./aspnetbench.md)

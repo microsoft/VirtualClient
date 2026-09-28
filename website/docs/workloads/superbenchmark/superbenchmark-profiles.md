@@ -1,4 +1,4 @@
-# SuperBenchmark Workload Profiles
+# SuperBenchmark Profiles
 The following profiles run customer-representative or benchmarking scenarios using the SuperBenchmark workload.
 
 * [Workload Details](./superbenchmark.md)  

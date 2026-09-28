@@ -1,4 +1,4 @@
-# MongoDB Workload Profiles
+# MongoDB Profiles
 The following profile runs customer-representative or benchmarking scenarios using the YCSB (Yahoo! Cloud Serving Benchmark) workload against
 a MongoDB server.
 

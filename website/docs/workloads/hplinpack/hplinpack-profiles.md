@@ -1,4 +1,4 @@
-# HPLinpack Workload Profiles
+# HPLinpack Profiles
 The following profiles run customer-representative or benchmarking scenarios using the HPLinpack workload.  
 
 * [Workload Details](./hplinpack.md)  

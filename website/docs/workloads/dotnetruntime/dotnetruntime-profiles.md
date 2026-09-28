@@ -1,4 +1,4 @@
-﻿# DotNetRuntime Workload Profiles
+﻿# DotNetRuntime Profiles
 The following profiles run customer-representative or benchmarking scenarios using the .NET Runtime workload.  
 
 * [Getting Started](https://microsoft.github.io/VirtualClient/)

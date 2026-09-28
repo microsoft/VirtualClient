@@ -1,4 +1,4 @@
-# GeekBench Workload Profiles
+# GeekBench Profiles
 The following profiles run customer-representative or benchmarking scenarios using the GeekBench5 and GeekBench6 workloads.
 
 * [Workload Details](./geekbench.md)  

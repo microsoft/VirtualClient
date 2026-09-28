@@ -1,4 +1,4 @@
-# SPECviewperf Workload Profiles
+# SPECviewperf Profiles
 The following profile runs the SPECviewperf Workloads.
 
 * [Workload Details](./specview.md)  

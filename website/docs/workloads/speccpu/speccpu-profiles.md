@@ -1,4 +1,4 @@
-# SPEC CPU Workload Profiles
+# SPEC CPU Profiles
 The following profiles run customer-representative or benchmarking scenarios using the SPEC CPU workload. Ensure that you
 have read the information on getting and integrating SPEC CPU into Virtual Client in the workload details documentation linked
 below.
@@ -67,7 +67,7 @@ for evaluating the performance of the CPU for processing calculations.
   ./VirtualClient --profile=PERF-SPECCPU-FPRATE.json --logger=csv
   ```
 
-## PERF-SPECCPU2017-FPSPEED.json
+## PERF-SPECCPU-FPSPEED.json
 Runs the SPEC CPU 2017 Floating Point Speed (fpspeed) benchmark workload on the system focusing on baseline + peak measurements. This workload is an industry standard 
 for evaluating the performance of the CPU for processing calculations.
 
@@ -119,7 +119,7 @@ for evaluating the performance of the CPU for processing calculations.
   ./VirtualClient --profile=PERF-SPECCPU-FPSPEED.json --logger=csv
   ```
 
-## PERF-SPECCPU2017-INTRATE.json
+## PERF-SPECCPU-INTRATE.json
 Runs the SPEC CPU 2017 Integer Rate (intrate) benchmark workload on the system focusing on baseline + peak measurements. This workload is an industry standard 
 for evaluating the performance of the CPU for processing calculations.
 
@@ -171,7 +171,7 @@ for evaluating the performance of the CPU for processing calculations.
   ./VirtualClient --profile=PERF-SPECCPU-INTRATE.json --logger=csv
   ```
 
-## PERF-SPECCPU2017-INTSPEED.json
+## PERF-SPECCPU-INTSPEED.json
 Runs the SPEC CPU 2017 Integer Speed (intspeed) benchmark workload on the system focusing on baseline + peak measurements. This workload is an industry standard 
 for evaluating the performance of the CPU for processing calculations.
 

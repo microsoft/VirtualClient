@@ -1,4 +1,4 @@
-# DotNetRuntime Workload Supplemental
+# DotNetRuntime Supplemental
 The following information is additional/supplemental to the documentation available for the DotNetRuntime workload. This information is intended for
 use by teams internal to Microsoft and their affiliates.
 

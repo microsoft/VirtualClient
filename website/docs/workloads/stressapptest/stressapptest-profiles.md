@@ -1,4 +1,4 @@
-# StressAppTest Workload Profiles
+# StressAppTest Profiles
 The following profiles run customer-representative or benchmarking scenarios using the StressAppTest workload.
 
 * [Workload Details](./stressapptest.md)
