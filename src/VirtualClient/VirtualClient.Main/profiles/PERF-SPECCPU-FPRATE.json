@@ -14,14 +14,14 @@
         "Limitations": "The following benchmarks don't work on Windows: 507, 511, 521, 526, 527, 538"
     },
     "Parameters": {
-        "CompilerVersion": "",
+        "CompilerVersion": 13,
         "Iterations": 2,
         "Benchmarks": "{calculate(\"{Platform}\".StartsWith(\"linux\") ? \"fprate\" : \"503 508 510 519 544 549 554\")}",
         "RunPeak": false,
         "Threads": "{LogicalCoreCount}",
         "Copies": "{LogicalCoreCount}",
-        "BaseOptimizingFlags": "-g -O3 -march={calculate((\"{Platform}\".StartsWith(\"win\") || \"{Architecture}\" == \"x64\") ? \"native\" : \"armv8-a\")} -frecord-gcc-switches",
-        "PeakOptimizingFlags": "-g -Ofast -march={calculate((\"{Platform}\".StartsWith(\"win\") || \"{Architecture}\" == \"x64\") ? \"native\" : \"armv8-a\")} -flto -frecord-gcc-switches"
+        "BaseOptimizingFlags": "-O2 -march={calculate((\"{Architecture}\" == \"x64\") ? \"x86-64-v3\" : \"armv8.2-a\")} -flto -frecord-gcc-switches",
+        "PeakOptimizingFlags": "-O3 -march={calculate((\"{Architecture}\" == \"x64\") ? \"x86-64-v3\" : \"armv8.2-a\")} -flto -frecord-gcc-switches"
     },
     "Actions": [
         {
