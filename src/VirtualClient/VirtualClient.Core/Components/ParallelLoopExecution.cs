@@ -45,13 +45,13 @@ namespace VirtualClient
         }
 
         /// <summary>
-        /// The number of iterations each child component must complete, even if the duration elapses. Default = 0.
+        /// The number of iterations each child component must complete, even if the duration elapses. Default = 1.
         /// </summary>
         public int MinimumIterations
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.MinimumIterations), 0);
+                return this.Parameters.GetValue<int>(nameof(this.MinimumIterations), 1);
             }
         }
 

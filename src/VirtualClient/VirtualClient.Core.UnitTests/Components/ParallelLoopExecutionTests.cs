@@ -31,6 +31,7 @@ namespace VirtualClient
         [Test]
         public async Task ParallelLoopExecution_CancelsAndAwaitsTheInFlightIterationWhenTheDurationElapses()
         {
+            this.fixture.Parameters["MinimumIterations"] = 0;
             bool cancellationObserved = false;
             var component = new TestComponent(this.fixture.Dependencies, this.fixture.Parameters, async token =>
             {
@@ -60,9 +61,8 @@ namespace VirtualClient
         }
 
         [Test]
-        public async Task ParallelLoopExecution_CompletesTheMinimumIterationEvenWhenItExceedsTheDuration()
+        public async Task ParallelLoopExecution_CompletesTheFirstIterationByDefaultEvenWhenItExceedsTheDuration()
         {
-            this.fixture.Parameters["MinimumIterations"] = 1;
             var component = new TestComponent(this.fixture.Dependencies, this.fixture.Parameters, async token =>
             {
                 await Task.Delay(1500, token);
