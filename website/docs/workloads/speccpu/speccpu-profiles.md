@@ -10,7 +10,7 @@ SPEC CPU workloads are long-running workloads. When running in Peak performance 
 to expect.
 :::
 
-## PERF-SPECCPU2017-FPRATE.json
+## PERF-SPECCPU-FPRATE.json
 Runs the SPEC CPU 2017 Floating Point Rate (fprate) benchmark workload on the system focusing on baseline + peak measurements. This workload is an industry standard 
 for evaluating the performance of the CPU for processing calculations.
 
@@ -21,9 +21,7 @@ for evaluating the performance of the CPU for processing calculations.
   * linux-arm64
   * win-x64
   * win-arm64
-
-  **Note**: On Windows platform, the **gcc** compiler version is required to be 10 or higher.  
-
+ 
 * **Supports Disconnected Scenarios**  
   * No. Internet connection required.
 
@@ -66,7 +64,7 @@ for evaluating the performance of the CPU for processing calculations.
 
   ``` bash
   # Execute the workload profile
-  ./VirtualClient --profile=PERF-SPECCPU2017-FPRATE.json --logger=csv
+  ./VirtualClient --profile=PERF-SPECCPU-FPRATE.json --logger=csv
   ```
 
 ## PERF-SPECCPU2017-FPSPEED.json
@@ -80,8 +78,6 @@ for evaluating the performance of the CPU for processing calculations.
   * linux-arm64
   * win-x64
   * win-arm64
-
-  **Note**: Not supported currently on Ubuntu 24.
 
 * **Supports Disconnected Scenarios**  
   * No. Internet connection required.
@@ -107,7 +103,6 @@ for evaluating the performance of the CPU for processing calculations.
   | BaseOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Base' scenario | -g -O3 -march=native -frecord-gcc-switches|
   | PeakOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Peak' scenario | -g -Ofast -march=native -flto -frecord-gcc-switches |
 
-
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
   actions. These timings can be used to determine minimum required runtimes for the Virtual Client in order to get results. These are often estimates based on the
@@ -121,7 +116,7 @@ for evaluating the performance of the CPU for processing calculations.
 
   ``` bash
   # Execute the workload profile
-  ./VirtualClient --profile=PERF-SPECCPU2017-FPSPEED.json --logger=csv
+  ./VirtualClient --profile=PERF-SPECCPU-FPSPEED.json --logger=csv
   ```
 
 ## PERF-SPECCPU2017-INTRATE.json
@@ -173,7 +168,7 @@ for evaluating the performance of the CPU for processing calculations.
 
   ``` bash
   # Execute the workload profile
-  ./VirtualClient --profile=PERF-SPECCPU2017-INTRATE.json --logger=csv
+  ./VirtualClient --profile=PERF-SPECCPU-INTRATE.json --logger=csv
   ```
 
 ## PERF-SPECCPU2017-INTSPEED.json
@@ -225,7 +220,7 @@ for evaluating the performance of the CPU for processing calculations.
 
   ``` bash
   # Execute the workload profile
-  ./VirtualClient --profile=PERF-SPECCPU2017-INTSPEED.json --logger=csv
+  ./VirtualClient --profile=PERF-SPECCPU-INTSPEED.json --logger=csv
   ```
 
 ## PERF-SPECCPU2026-FPRATE.json
