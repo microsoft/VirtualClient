@@ -24,18 +24,27 @@ namespace VirtualClient
             this.fixture = new MockFixture();
             this.fixture.Parameters = new Dictionary<string, IConvertible>
             {
-                { "Duration", "00:00:01" }, // Default duration of 1 second
-                { "MinimumIterations", 1 } // Default minimum iterations
+                { "Duration", "00:00:01" }
             };
         }
 
         [Test]
-        public async Task ParallelLoopExecution_RespectsDurationParameter()
+        public async Task ParallelLoopExecution_CancelsAndAwaitsTheInFlightIterationWhenTheDurationElapses()
         {
-            this.fixture.Parameters["Duration"] = "00:00:01"; // 1 second
+            this.fixture.Parameters["MinimumIterations"] = 0;
+            bool cancellationObserved = false;
             var component = new TestComponent(this.fixture.Dependencies, this.fixture.Parameters, async token =>
             {
-                await Task.Delay(5000, token); // Simulate long-running task
+                try
+                {
+                    await Task.Delay(5000, token);
+                }
+                catch (OperationCanceledException)
+                {
+                    await Task.Delay(100);
+                    cancellationObserved = true;
+                    throw;
+                }
             });
 
             var collection = new TestParallelLoopExecution(this.fixture);
@@ -45,8 +54,75 @@ namespace VirtualClient
             await collection.ExecuteAsync(EventContext.None, CancellationToken.None);
             sw.Stop();
 
-            // Assert: Should not run for more than ~2 seconds (buffer for scheduling)
             Assert.LessOrEqual(sw.Elapsed.TotalSeconds, 2.5, "Execution did not respect the Duration parameter.");
+            Assert.IsTrue(cancellationObserved, "The in-flight iteration was abandoned instead of cancelled and awaited.");
+            Assert.AreEqual(1, component.ExecutionCount);
+            Assert.AreEqual(0, component.CompletedExecutionCount);
+        }
+
+        [Test]
+        public async Task ParallelLoopExecution_CompletesTheFirstIterationByDefaultEvenWhenItExceedsTheDuration()
+        {
+            var component = new TestComponent(this.fixture.Dependencies, this.fixture.Parameters, async token =>
+            {
+                await Task.Delay(1500, token);
+            });
+
+            var collection = new TestParallelLoopExecution(this.fixture);
+            collection.Add(component);
+
+            await collection.ExecuteAsync(EventContext.None, CancellationToken.None);
+
+            Assert.AreEqual(1, component.ExecutionCount);
+            Assert.AreEqual(1, component.CompletedExecutionCount);
+        }
+
+        [Test]
+        public async Task ParallelLoopExecution_CancelsAndAwaitsAnIterationBeyondTheMinimumWhenTheDurationElapses()
+        {
+            this.fixture.Parameters["MinimumIterations"] = 1;
+            bool cancellationObserved = false;
+            var component = new TestComponent(this.fixture.Dependencies, this.fixture.Parameters, async token =>
+            {
+                try
+                {
+                    await Task.Delay(600, token);
+                }
+                catch (OperationCanceledException)
+                {
+                    cancellationObserved = true;
+                    throw;
+                }
+            });
+
+            var collection = new TestParallelLoopExecution(this.fixture);
+            collection.Add(component);
+
+            await collection.ExecuteAsync(EventContext.None, CancellationToken.None);
+
+            Assert.AreEqual(2, component.ExecutionCount);
+            Assert.AreEqual(1, component.CompletedExecutionCount);
+            Assert.IsTrue(cancellationObserved);
+        }
+
+        [Test]
+        public async Task ParallelLoopExecution_LoopsUntilCancelledWhenNoDurationIsDefined()
+        {
+            this.fixture.Parameters.Remove("Duration");
+            var component = new TestComponent(this.fixture.Dependencies, this.fixture.Parameters, async token =>
+            {
+                await Task.Delay(50, token);
+            });
+
+            var collection = new TestParallelLoopExecution(this.fixture);
+            collection.Add(component);
+
+            using (var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(500)))
+            {
+                await collection.ExecuteAsync(EventContext.None, cts.Token);
+            }
+
+            Assert.Greater(component.CompletedExecutionCount, 3);
         }
 
         [Test]
@@ -63,44 +139,30 @@ namespace VirtualClient
             var collection = new TestParallelLoopExecution(this.fixture);
             collection.Add(component);
 
-            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(2)))
-            {
-                try
-                {
-                    await collection.ExecuteAsync(EventContext.None, cts.Token);
-                }
-                catch { /* ignore */ }
-            }
+            await collection.ExecuteAsync(EventContext.None, CancellationToken.None);
 
-            // Assert: Should run exactly 2 times, as each iteration takes 600ms,
-            // Timeout is 1 second and Cancellation Token comes at 2 seconds
-            Assert.AreEqual(component.ExecutionCount, 2, "Did not execute the minimum number of iterations.");
+            Assert.AreEqual(2, component.ExecutionCount);
+            Assert.AreEqual(2, component.CompletedExecutionCount);
         }
 
         [Test]
         public async Task ParallelLoopExecution_RespectsMinimumIterationsParameter()
         {
             this.fixture.Parameters["MinimumIterations"] = 7;
+            this.fixture.Parameters["Duration"] = "00:00:00.100";
 
-            var component = new TestComponent(this.fixture.Dependencies, this.fixture.Parameters, token =>
+            var component = new TestComponent(this.fixture.Dependencies, this.fixture.Parameters, async token =>
             {
-                return Task.CompletedTask;
+                await Task.Delay(50, token);
             });
 
             var collection = new TestParallelLoopExecution(this.fixture);
             collection.Add(component);
 
-            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(2)))
-            {
-                try
-                {
-                    await collection.ExecuteAsync(EventContext.None, cts.Token);
-                }
-                catch { /* ignore */ }
-            }
+            await collection.ExecuteAsync(EventContext.None, CancellationToken.None);
 
-            // Assert: Should run at least MinimumIterations times
-            Assert.GreaterOrEqual(component.ExecutionCount, 7, "Did not execute the minimum number of iterations.");
+            Assert.AreEqual(7, component.ExecutionCount);
+            Assert.AreEqual(7, component.CompletedExecutionCount);
         }
 
         [Test]
@@ -125,6 +187,8 @@ namespace VirtualClient
 
             public int ExecutionCount { get; private set; }
 
+            public int CompletedExecutionCount { get; private set; }
+
             public TestComponent(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters, Func<CancellationToken, Task> onExecuteAsync = null)
                 : base(dependencies, parameters)
             {
@@ -135,6 +199,7 @@ namespace VirtualClient
             {
                 this.ExecutionCount++;
                 await this.onExecuteAsync(cancellationToken);
+                this.CompletedExecutionCount++;
             }
         }
 
