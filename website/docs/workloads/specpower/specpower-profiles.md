@@ -1,4 +1,4 @@
-# SPECpower Workload Profiles
+# SPECpower Profiles
 The following profiles run customer-representative or benchmarking scenarios using the SPEC Power workload.
 
 * [Workload Details](./specpower.md)  

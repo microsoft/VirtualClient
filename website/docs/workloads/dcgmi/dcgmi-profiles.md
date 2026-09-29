@@ -1,4 +1,4 @@
-# DCGMI Workload Profiles
+# DCGMI Profiles
 The following profiles run DCGMI for qualifying GPUs.  
 
 * [Workload Details](./dcgmi.md)  

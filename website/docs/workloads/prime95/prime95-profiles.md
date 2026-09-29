@@ -1,4 +1,4 @@
-# Prime95 Workload Profiles
+# Prime95 Profiles
 The following profiles run customer-representative or benchmarking scenarios using the
  Prime95 workload.
 

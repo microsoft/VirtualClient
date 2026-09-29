@@ -2,7 +2,7 @@
 slug: /workloads/mlc
 ---
 
-# Memory Latency Checker (MLC)
+# Memory Latency Checker
 Intel Memory Latency Checker (MLC) is a tool used to measure memory latencies and bandwidth and how these memory aspects change with increasing load.
 
 * [Intel Documentation](https://www.intel.com/content/www/us/en/developer/articles/tool/intelr-memory-latency-checker.html)
@@ -31,7 +31,7 @@ When Intel MLC is launched without any additional parameters, it automatically i
 
 Intel MLC also provides command line arguments for fine-grained control over the latencies and bandwidth measurements. The details of parameters are mentioned in the profile documentation.
 
-* [Workload Profile Documentation](./mlc-profiles.md)
+* [Workload Profile Documentation](./memorylatencychecker-profiles.md)
 
 ## Workload Metrics
 The following metrics are examples of those captured by the Virtual Client when running the MLC workload. The number of Numa Nodes that were on the system was 

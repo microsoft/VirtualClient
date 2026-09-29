@@ -1,4 +1,4 @@
-# Graph500 Workload Profiles
+# Graph500 Profiles
 The following profiles run customer-representative or benchmarking scenarios using the Graph500 workload.  
 
 * [Workload Details](./graph500.md)  

@@ -1,4 +1,4 @@
-# STREAM Workload Supplemental
+# STREAM Supplemental
 The following information is additional/supplemental to the documentation available for the STREAM workload. This information is intended for
 use by teams internal to Microsoft and their affiliates.
 

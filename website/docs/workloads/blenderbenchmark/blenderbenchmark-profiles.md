@@ -1,4 +1,4 @@
-# Blender Workload Profiles
+# Blender Profiles
 The following profile runs the Blender benchmark Workloads.
 
 * [Workload Details](./blenderbenchmark.md)  

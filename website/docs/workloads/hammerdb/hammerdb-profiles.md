@@ -1,4 +1,4 @@
-# PostgreSQL Workload Profiles
+# PostgreSQL Profiles
 The following profiles run customer-representative or benchmarking scenarios using the postgresql workload.
 
 * [Workload Details](./hammerdb.md) 

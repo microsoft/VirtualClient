@@ -1,4 +1,4 @@
-# Sysbench Workload Profiles
+# Sysbench Profiles
 The following profiles run customer-representative or benchmarking scenarios using the Sysbench OLTP workload.
 
 * [Workload Details](./sysbench.md)  

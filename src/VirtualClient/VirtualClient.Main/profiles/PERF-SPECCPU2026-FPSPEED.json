@@ -14,14 +14,14 @@
         "Limitations": "SPEC CPU 2026 recommends at least 64 GB of memory for SPECspeed workloads."
     },
     "Parameters": {
-        "CompilerVersion": "",
+        "CompilerVersion": 13,
         "Iterations": 2,
         "Benchmarks": "fpspeed",
         "RunPeak": false,
         "Threads": "{LogicalCoreCount}",
         "Copies": "{LogicalCoreCount}",
-        "BaseOptimizingFlags": "-g -O3 -march={calculate((\"{Platform}\".StartsWith(\"win\") || \"{Architecture}\" == \"x64\") ? \"native\" : \"armv8-a\")} -frecord-gcc-switches",
-        "PeakOptimizingFlags": "-g -Ofast -march={calculate((\"{Platform}\".StartsWith(\"win\") || \"{Architecture}\" == \"x64\") ? \"native\" : \"armv8-a\")} -flto -frecord-gcc-switches"
+        "BaseOptimizingFlags": "-O2 -march={calculate((\"{Architecture}\" == \"x64\") ? \"x86-64-v3\" : \"armv8.2-a\")} -flto -frecord-gcc-switches",
+        "PeakOptimizingFlags": "-O3 -march={calculate((\"{Architecture}\" == \"x64\") ? \"x86-64-v3\" : \"armv8.2-a\")} -flto -frecord-gcc-switches"
     },
     "Actions": [
         {

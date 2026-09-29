@@ -2,7 +2,7 @@
 slug: /workloads/diskspd-profiles
 ---
 
-# DiskSpd Workload Profiles
+# DiskSpd Profiles
 The following profiles run customer-representative or benchmarking scenarios using the DiskSpd workload.  
 
 * [Workload Details](./diskspd.md)  

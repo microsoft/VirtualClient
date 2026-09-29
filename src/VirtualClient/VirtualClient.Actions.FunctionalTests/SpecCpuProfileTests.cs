@@ -67,31 +67,31 @@ namespace VirtualClient.Actions
         [TestCase(
             PlatformID.Unix,
             Architecture.X64,
-            "",
-            "-g -O3 -march=native -frecord-gcc-switches",
-            "-g -Ofast -march=native -flto -frecord-gcc-switches")]
+            13,
+            "-O2 -march=x86-64-v3 -flto -frecord-gcc-switches",
+            "-O3 -march=x86-64-v3 -flto -frecord-gcc-switches")]
         [TestCase(
             PlatformID.Unix,
             Architecture.Arm64,
-            "",
-            "-g -O3 -march=armv8-a -frecord-gcc-switches",
-            "-g -Ofast -march=armv8-a -flto -frecord-gcc-switches")]
+            13,
+            "-O2 -march=armv8.2-a -flto -frecord-gcc-switches",
+            "-O3 -march=armv8.2-a -flto -frecord-gcc-switches")]
         [TestCase(
             PlatformID.Win32NT,
             Architecture.X64,
-            "",
-            "-g -O3 -march=native -frecord-gcc-switches",
-            "-g -Ofast -march=native -flto -frecord-gcc-switches")]
+            13,
+            "-O2 -march=x86-64-v3 -flto -frecord-gcc-switches",
+            "-O3 -march=x86-64-v3 -flto -frecord-gcc-switches")]
         [TestCase(
             PlatformID.Win32NT,
             Architecture.Arm64,
-            "",
-            "-g -O3 -march=native -frecord-gcc-switches",
-            "-g -Ofast -march=native -flto -frecord-gcc-switches")]
+            13,
+            "-O2 -march=armv8.2-a -flto -frecord-gcc-switches",
+            "-O3 -march=armv8.2-a -flto -frecord-gcc-switches")]
         public async Task SpecCpu2026WorkloadProfilesUseExpectedDefaultRecipes(
             PlatformID platform,
             Architecture architecture,
-            string expectedCompilerVersion,
+            object expectedCompilerVersion,
             string expectedBaseFlags,
             string expectedPeakFlags)
         {

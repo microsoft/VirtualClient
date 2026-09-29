@@ -1,4 +1,4 @@
-# SPECjbb Workload Profiles
+# SPECjbb Profiles
 The following profiles run customer-representative or benchmarking scenarios using the SPECjbb workload.
 
 * [Workload Details](./specjbb.md)  
