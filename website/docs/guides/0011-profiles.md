@@ -778,16 +778,16 @@ completes. The The `SequentialExecution` component will complete when all compon
 ```
 
 ### ParallelLoopExecution
-Executes all child components **in parallel**, and **repeats** this execution for a specified duration or minimum number of 
-iterations. Each component runs in its own loop, independently, until the overall duration or the minimum iteration count is 
-reached.
+Executes all child components **in parallel**, and **repeats** this execution for a specified duration. Each component runs in its 
+own loop, independently. Each component first completes `MinimumIterations` iterations, even if that takes longer than `Duration`. 
+After that, iterations repeat until `Duration` elapses, at which point any in-flight iteration is cancelled.
 
 #### Supported Parameters
 
 | Parameter          | Purpose                                                     | Default Value |
 |--------------------|-------------------------------------------------------------|---------------|
 | Duration           | Maximum time to run the parallel loop (hh:mm:ss format).    | -1 (no limit) |
-| MinimumIterations  | Minimum number of times each child component should run. Set this value to 1 to ensure each component executes to completion at least once. | 0 |
+| MinimumIterations  | Number of iterations each child component must complete, even if `Duration` elapses. Set this value to 0 to allow `Duration` to cancel the first iteration. | 1 |
 
 ```json
 { 

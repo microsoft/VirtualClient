@@ -20,8 +20,6 @@ namespace VirtualClient
     [SupportedPlatforms("linux-arm64,linux-x64,win-arm64,win-x64")]
     public class ParallelLoopExecution : VirtualClientComponentCollection
     {
-        private Task timeoutTask;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="ParallelLoopExecution"/> class.
         /// </summary>
@@ -35,7 +33,8 @@ namespace VirtualClient
         }
 
         /// <summary>
-        /// The maximum duration to allow each child component to run.
+        /// The maximum time to loop the child components. Once the minimum iterations are completed, an in-flight
+        /// iteration is cancelled when this time elapses.
         /// </summary>
         public TimeSpan Duration
         {
@@ -46,7 +45,7 @@ namespace VirtualClient
         }
 
         /// <summary>
-        /// The minimum number of times each child component should run. Default set to 1.
+        /// The number of iterations each child component must complete, even if the duration elapses. Default = 1.
         /// </summary>
         public int MinimumIterations
         {
@@ -61,70 +60,95 @@ namespace VirtualClient
         /// </summary>
         /// <param name="telemetryContext">Provides context information that will be captured with telemetry events.</param>
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
-        protected override Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             List<Task> componentTasks = new List<Task>();
-            this.timeoutTask = Task.Delay(this.Duration, cancellationToken);
+            CancellationTokenSource durationSource = new CancellationTokenSource();
 
-            foreach (VirtualClientComponent component in this)
+            try
             {
-                if (!VirtualClientComponent.IsSupported(component))
+                if (this.Duration != Timeout.InfiniteTimeSpan)
                 {
-                    this.Logger.LogMessage(
-                        $"{nameof(ParallelLoopExecution)} {component.TypeName} not supported on current platform: {this.PlatformArchitectureName}", 
-                        LogLevel.Information, 
-                        telemetryContext);
-
-                    continue;
+                    durationSource.CancelAfter(this.Duration);
                 }
 
-                // Wrap each component execution in a loop, and ensure we respect the timeout.
-                component.OutputComponentStart();
-                componentTasks.Add(this.ExecuteComponentLoopAsync(component, telemetryContext, cancellationToken));
-            }
+                foreach (VirtualClientComponent component in this)
+                {
+                    if (!VirtualClientComponent.IsSupported(component))
+                    {
+                        this.Logger.LogMessage(
+                            $"{nameof(ParallelLoopExecution)} {component.TypeName} not supported on current platform: {this.PlatformArchitectureName}", 
+                            LogLevel.Information, 
+                            telemetryContext);
 
-            // Await all tasks to run in parallel.
-            return Task.WhenAll(componentTasks);
+                        continue;
+                    }
+
+                    // Wrap each component execution in a loop, and ensure we respect the timeout.
+                    component.OutputComponentStart();
+                    componentTasks.Add(this.ExecuteComponentLoopAsync(component, durationSource.Token, telemetryContext, cancellationToken));
+                }
+
+                // Await all tasks to run in parallel.
+                await Task.WhenAll(componentTasks);
+            }
+            finally
+            {
+                durationSource.Dispose();
+            }
         }
 
         /// <summary>
         /// Executes a component in an independent loop, restarting after completion while respecting the timeout.
         /// </summary>
-        private async Task ExecuteComponentLoopAsync(VirtualClientComponent component, EventContext telemetryContext, CancellationToken cancellationToken)
+        private async Task ExecuteComponentLoopAsync(
+            VirtualClientComponent component,
+            CancellationToken durationToken,
+            EventContext telemetryContext,
+            CancellationToken cancellationToken)
         {
-            int currentIteration = 0;
+            int completedIterations = 0;
+
             while (!cancellationToken.IsCancellationRequested)
             {
-                try
-                {
-                    currentIteration++;
-                    telemetryContext.AddContext("currentIteration", currentIteration);
+                bool minimumSatisfied = completedIterations >= this.MinimumIterations;
 
-                    if (this.timeoutTask.IsCompleted && currentIteration > this.MinimumIterations)
+                if (minimumSatisfied && durationToken.IsCancellationRequested)
+                {
+                    this.Logger.LogMessage(
+                        $"Parallel execution timed out (timeout = {this.Duration}).",
+                        LogLevel.Trace,
+                        telemetryContext);
+
+                    break;
+                }
+
+                EventContext iterationContext = telemetryContext.Clone()
+                    .AddContext("currentIteration", completedIterations + 1);
+
+                // Iterations required to satisfy MinimumIterations are allowed to run past the duration.
+                using (CancellationTokenSource iterationSource = minimumSatisfied
+                    ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, durationToken)
+                    : CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
+                {
+                    await component.ExecuteAsync(iterationSource.Token);
+
+                    // Components swallow cancellation, so a timed-out iteration returns normally rather than throwing.
+                    if (iterationSource.IsCancellationRequested)
                     {
-                        this.Logger.LogMessage(
-                            $"Parallel execution timed out (timeout = {this.Duration}).",
-                            LogLevel.Trace,
-                            telemetryContext);
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            this.Logger.LogMessage(
+                                $"Parallel execution timed out (timeout = {this.Duration}).",
+                                LogLevel.Trace,
+                                iterationContext);
+                        }
 
                         break;
                     }
-
-                    // Execute the component task with timeout handling.
-                    Task componentExecutionTask = component.ExecuteAsync(cancellationToken);
-                    Task completedTask = await Task.WhenAny(componentExecutionTask, this.timeoutTask);
-
-                    if (completedTask == this.timeoutTask && currentIteration >= this.MinimumIterations)
-                    {
-                        break;
-                    }
-
-                    await componentExecutionTask;
                 }
-                finally
-                {
-                    currentIteration++;
-                }
+
+                completedIterations++;
             }
         }
     }
