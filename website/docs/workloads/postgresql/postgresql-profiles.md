@@ -1,7 +1,11 @@
+---
+slug: /workloads/postgresql-profiles
+---
+
 # PostgreSQL Profiles
 The following profiles run customer-representative or benchmarking scenarios using the postgresql workload.
 
-* [Workload Details](./hammerdb.md) 
+* [Workload Details](/docs/workloads/postgresql) 
 * [Client/Server Workloads](../../guides/0020-client-server.md)
 
 ## Client/Server Topology Support

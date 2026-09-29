@@ -1,3 +1,7 @@
+---
+slug: /monitors/nvidia-smi
+---
+
 # Nvidia SMI
 The NVIDIA System Management Interface (nvidia-smi) is a command line utility, based on top of the NVIDIA Management Library (NVML), intended to aid in the management and monitoring of NVIDIA GPU devices. 
 

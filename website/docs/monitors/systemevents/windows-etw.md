@@ -1,3 +1,7 @@
+---
+slug: /monitors/windows-etw
+---
+
 # Windows Event Log
 The Windows Event Log is a kernel layer facility based on Windows Event Tracing (ETW). This facility allows applications a central store
 on the operating system to log important events and can be a valuable resource for debugging.

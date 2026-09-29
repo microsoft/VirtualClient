@@ -3,7 +3,8 @@
     "Metadata": {
         "RecommendedMinimumExecutionTime": "02:00:00",
         "SupportedPlatforms": "linux-x64,linux-arm64,win-x64",
-        "SupportedOperatingSystems": "AzureLinux,CentOS,Debian,OpenSuse,RedHat,Ubuntu,Windows"
+        "SupportedOperatingSystems": "AzureLinux,CentOS,Debian,OpenSuse,RedHat,Ubuntu,Windows",
+        "Documentation": "https://microsoft.github.io/VirtualClient/docs/workloads/fio/"
     },
     "Parameters": {
         "DiskFillSize": "500G",

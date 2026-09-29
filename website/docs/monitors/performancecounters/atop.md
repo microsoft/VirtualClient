@@ -1,3 +1,7 @@
+---
+slug: /monitors/atop
+---
+
 # Atop
 Atop is a toolset that enables support for capturing performance information on Unix/Linux systems. This information is used in the Virtual Client to
 to formulate a performance counter base. The Atop toolset is integrated into the Virtual Client platform as a background monitor called the PerfCounterMonitor and is part of the default monitors for the
@@ -7,7 +11,7 @@ however, there are a few counters that track the min, max and median of the samp
 adjusted to change the precision of the counter samples window.
 
 * [Atop Documentation](https://manpages.debian.org/testing/atop/atop.1.en.html)
-* [Counters Captured](./0100-perf-counter-metrics.md)
+* [Counters Captured](/docs/monitors/performance-counters)
 
 ## Supported Platforms
 * linux-x64

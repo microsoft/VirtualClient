@@ -1,3 +1,7 @@
+---
+slug: /monitors/linux-system-log
+---
+
 # Linux System Log
 The Linux System Log is a kernel layer facility that can be accessed on Linux using the journalctl command. This facility allows applications a central store
 on the operating system to log important events and can be a valuable resource for debugging.

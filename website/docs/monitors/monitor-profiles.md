@@ -19,22 +19,19 @@ toolsets. This monitor profile will be used when no other monitor profiles are s
   * win-x64
   * win-arm64
 
-* **Supported Operating Systems**
-  * Ubuntu 18
-  * Ubuntu 20
-  * Ubuntu 22
-  * Windows 10
-  * Windows 11
-  * Windows Server 2016
-  * Windows Server 2019
-
 * **Dependencies**  
   * Linux systems must have an internet connection in order to install the Atop application if not already installed on the system.
 
 * **Scenarios**  
-  * [Performance Counters](./0100-perf-counter-metrics.md)
-  * Captures performance counters on Linux systems using the [Atop](./0001-atop.md) application.
-  * Captures performance counters on Windows systems using the .NET SDK.
+  * [Performance Counters](/docs/monitors/performance-counters)
+  * Captures the following information on Linux systems: 
+    * Performance counters using the [Atop](/docs/monitors/atop) application.
+    * Standard output of various toolsets including: hostnamectl, lscpu, lshw, lspci.
+    * System logs at 'Error' severity (journalctl).
+  * Captures the following information on Windows systems:
+    * Performance counters using the .NET SDK.
+    * Event logs at 'Error' severity in the following system logs: Application, Security, System
+    * Standard output of various toolsets including: ipconfig, systeminfo, pnputil
 
 * **Profile Parameters**  
   The following parameters can be optionally supplied on the command line to change this default behavior.
@@ -44,7 +41,6 @@ toolsets. This monitor profile will be used when no other monitor profiles are s
   | Scenario                  | Optional. A description of the purpose of the monitor within the overall profile workflow. |    |
   | MonitorFrequency          | Optional. Defines the frequency (timespan) at which performance counters will be captured/emitted (e.g. 00:01:00). | 00:05:00 |
   | MonitorWarmupPeriod       | Optional. Defines a period of time (timespan) to wait before starting to track/capture performance counters (e.g. 00:03:00). This allows the system to get to a more typical operational state and generally results better representation for the counters captured. | 00:05:00 |
-  | MetricFilter              | Optional. A comma-delimited list of performance counter names to capture. The default behavior is to capture/emit all performance counters (e.g. \Processor Information(_Total)\% System Time,\Processor Information(_Total)\% User Time). This allows the profile author to focus on a smaller/specific subset of the counters. This is typically used when a lower monitor frequency is required for higher sample precision to keep the size of the data sets emitted by the Virtual Client to a minimum. | |
 
 * **Profile Runtimes**  
   1 iteration of the profile = ~5 mins. The profile will begin capturing and emitting information within 5 minutes.
@@ -55,14 +51,13 @@ toolsets. This monitor profile will be used when no other monitor profiles are s
 
   ``` bash
   # Run the monitoring facilities only.
-  VirtualClient.exe --profile=MONITORS-DEFAULT.json
+  VirtualClient.exe --profile=MONITORS-DEFAULT.json --logger=csv --log-to-file
 
   # Runs the default monitor profile.
-  VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --system=Demo --timeout=1440
+  VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --system=Demo --timeout=1440 --logger=csv --log-to-file
 
   # Monitor profile explicitly defined.
-  VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --profile=MONITORS-DEFAULT.json --system=Demo --timeout=1440
-
+  VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --profile=MONITORS-DEFAULT.json --system=Demo --timeout=1440 --logger=csv --log-to-file
   ```
 
 ## MONITORS-GPU-AMD.json
@@ -77,16 +72,11 @@ any of the dependencies required by the driver. If the driver is not already ins
   * linux-x64
   * linux-arm64
 
-* **Supported Operating Systems**
-  * Ubuntu 18
-  * Ubuntu 20
-  * Ubuntu 22
-
 * **Dependencies**  
   * The system must have AMD GPU driver installed.
 
 * **Scenarios**  
-  * Captures performance counters on Linux systems using the AMD-SMI toolset.
+  * Captures AMD GPU performance counters on Linux systems using the AMD-SMI toolset.
 
 * **Profile Parameters**  
   The following parameters can be optionally supplied on the command line to change this default behavior.
@@ -107,11 +97,8 @@ any of the dependencies required by the driver. If the driver is not already ins
 
   ``` bash
   # Run the monitoring facilities only.
-  ./VirtualClient --profile=MONITORS-GPU-AMD.json
-
-  # Monitor profile explicitly defined.
-  ./VirtualClient --profile=PERF-GPU-SUPERBENCH.json --profile=MONITORS-GPU-AMD.json --system=Demo --timeout=1440
-
+  ./VirtualClient --profile=MONITORS-GPU-AMD.json --logger=csv --log-to-file
+  ```
 
 ## MONITORS-GPU-NVIDIA.json
 The monitor profile designed for Nvidia GPU systems. The profile captures counters on Linux systems of Nvidia GPUs with nvidia-smi, and lspci utilities.
@@ -125,17 +112,11 @@ any of the dependencies required by the driver. If the driver is not already ins
   * linux-x64
   * linux-arm64
 
-* **Supported Operating Systems**
-  * Ubuntu 18
-  * Ubuntu 20
-  * Ubuntu 22
-
 * **Dependencies**  
   * The system must have Nvidia GPU driver with CUDA installed.
 
 * **Scenarios**  
-  * Captures performance counters on Linux systems using [nvidia-smi](./0300-nvidia-smi.md)
-  * Captures PCI device info on Linux systems using [lspci](./0400-lspci.md)
+  * Captures Nvidia GPU performance counters on Linux systems using [nvidia-smi](/docs/monitors/nvidia-smi)
 
 * **Profile Parameters**  
   The following parameters can be optionally supplied on the command line to change this default behavior.
@@ -156,9 +137,5 @@ any of the dependencies required by the driver. If the driver is not already ins
 
   ``` bash
   # Run the monitoring facilities only.
-  ./VirtualClient --profile=MONITORS-GPU-NVIDIA.json
-
-  # Monitor profile explicitly defined.
-  ./VirtualClient --profile=PERF-GPU-SUPERBENCH.json --profile=MONITORS-GPU-NVIDIA.json --system=Demo --timeout=1440
-
+  ./VirtualClient --profile=MONITORS-GPU-NVIDIA.json --logger=csv --log-to-file
   ```

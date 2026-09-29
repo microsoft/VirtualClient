@@ -4,8 +4,8 @@
         "RecommendedMinimumExecutionTime": "00:30:00",
         "SupportedPlatforms": "linux-x64,linux-arm64,win-x64",
         "SupportedOperatingSystems": "AzureLinux,CentOS,Debian,OpenSuse,RedHat,Ubuntu,Windows",
-        "Notes": "This profile uses FIO job files (e.g. *.jobfile) via the command line.",
-        "Documentation": "FIO documentation: https://fio.readthedocs.io/en/latest/fio_doc.html FIO Job File documentation: https://fio.readthedocs.io/en/latest/fio_doc.html#job-file-format"
+        "Notes": "This profile uses FIO job files (e.g. *.jobfile) via the command line. https://fio.readthedocs.io/en/latest/fio_doc.html#job-file-format",
+        "Documentation": "https://microsoft.github.io/VirtualClient/docs/workloads/fio/"
     },
     "Parameters": {
         "Engine": "{calculate(\"{Platform}\".StartsWith(\"linux\") ? \"libaio\" : \"windowsaio\")}",
