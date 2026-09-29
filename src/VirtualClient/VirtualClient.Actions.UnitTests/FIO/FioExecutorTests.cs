@@ -224,6 +224,51 @@ namespace VirtualClient.Actions.DiskPerformance
         }
 
         [Test]
+        [TestCase(WorkloadProcessModel.SingleProcess)]
+        [TestCase(WorkloadProcessModel.SingleProcessPerDisk)]
+        public void FioExecutorUsesTheExpectedRawDiskPathOnWindows(string processModel)
+        {
+            this.Setup(PlatformID.Win32NT);
+            this.SetupMocks();
+            this.profileParameters[nameof(FioExecutor.RawDisk)] = true;
+
+            Disk disk = this.CreateDisks(PlatformID.Win32NT, true).First(d => !d.IsOperatingSystem());
+
+            using (TestFioExecutor fioExecutor = new TestFioExecutor(this.Dependencies, this.profileParameters))
+            {
+                DiskWorkloadProcess workloadProcess = fioExecutor.CreateWorkloadProcesses(
+                    "fio.exe",
+                    "--name=fio_test --ioengine=windowsaio",
+                    new[] { disk },
+                    processModel,
+                    EventContext.None).Single();
+
+                StringAssert.Contains($@"--filename=\\.\PhysicalDrive{disk.Index}", workloadProcess.CommandArguments);
+            }
+        }
+
+        [Test]
+        public void FioExecutorUsesTheExpectedRawDiskPathInAggregatedJobFileOnWindows()
+        {
+            this.Setup(PlatformID.Win32NT);
+            this.SetupMocks();
+            this.profileParameters[nameof(FioExecutor.RawDisk)] = true;
+
+            Disk disk = this.CreateDisks(PlatformID.Win32NT, true).First(d => !d.IsOperatingSystem());
+
+            using (TestFioExecutor fioExecutor = new TestFioExecutor(this.Dependencies, this.profileParameters))
+            {
+                string jobFileContent = fioExecutor.CreateJobFileContent(
+                    this.PlatformSpecifics,
+                    new[] { disk },
+                    "job",
+                    "fio-test.dat");
+
+                StringAssert.Contains($@"filename=\\.\PhysicalDrive{disk.Index}", jobFileContent);
+            }
+        }
+
+        [Test]
         public void FioExecutorCreatesTheExpectedWorkloadProcesses_SingleProcessAggregated()
         {
             using (TestFioExecutor fioExecutor = new TestFioExecutor(this.Dependencies, this.profileParameters))
@@ -375,6 +420,11 @@ namespace VirtualClient.Actions.DiskPerformance
             public new IEnumerable<Disk> GetDisksToTest(IEnumerable<Disk> disks)
             {
                 return base.GetDisksToTest(disks);
+            }
+
+            public new string GetTestDevicePath(Disk disk)
+            {
+                return base.GetTestDevicePath(disk);
             }
 
             public new void Validate()
