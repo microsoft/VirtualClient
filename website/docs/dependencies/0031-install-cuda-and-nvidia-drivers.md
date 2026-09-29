@@ -1,3 +1,7 @@
+---
+slug: /dependencies/install-cuda-and-nvidia-drivers
+---
+
 # Install CUDA and NVIDIA GPU Drivers
 Virtual Client has a dependency component that can be added to a workload or monitor profile to install CUDA and NVIDIA drivers in Linux and Windows systems. The following section illustrates the
 details for integrating this into the profile.

@@ -5,8 +5,8 @@ slug: /workloads/mlc-profiles
 # Memory Latency Checker Profiles
 The following profiles run customer-representative and benchmarking scenarios using the Intel Memory Latency Checker(MLC) workload.
 
-* [Getting Started](https://microsoft.github.io/VirtualClient/)
-* [Workload Details](./memorylatencychecker.md)  
+* [Getting Started](/)
+* [Workload Details](/docs/workloads/mlc)  
 
 ## PERF-MEM-LATENCY.json
 Runs the Memory Latency Checker workload to measure memory latency and bandwidths against increasing load.
@@ -29,7 +29,7 @@ Runs the Memory Latency Checker workload to measure memory latency and bandwidth
   * Internet connection.
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
-  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+  * [Installing Dependencies](/docs/category/dependencies/)
 
 * **Profile Parameters**
   The following parameters can be optionally supplied on the command line to modify the behaviors of the workload.

@@ -1,3 +1,7 @@
+---
+slug: /workloads/geekbench
+---
+
 # GeekBench
 GeekBench5 and GeekBench6 are third party tools that runs its own, pre-defined set of workloads to measure CPU performance. GeekBench is often used to compare
 performance of systems for different cloud service provider (e.g. Gartner Reporting).

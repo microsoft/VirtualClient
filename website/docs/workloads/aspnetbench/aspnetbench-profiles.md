@@ -1,8 +1,12 @@
+---
+slug: /workloads/aspnetbench-profiles
+---
+
 # ASP.NET Benchmarks Profiles
 The following profiles run customer-representative or benchmarking scenarios using ASP.NET server workloads.
 
-* [Workload Details](./aspnetbench.md)
-* [Client/Server Workloads](../../guides/0020-client-server.md)
+* [Workload Details](/docs/workloads/aspnetbench)
+* [Client/Server Workloads](/docs/guides/client-server)
 
 ## Client/Server Topology Support
 ASP.NET benchmark workload profiles support running the workload on both a single system as well as in a client/server topology. This means that the workload supports
@@ -13,7 +17,7 @@ The Virtual Client instances running on the client and server systems will synch
 an environment layout file MUST be supplied to each instance of the Virtual Client on the command line to describe the IP address/location of other Virtual Client instances. An
 environment layout file is not required for the single system topology.
 
-* [Environment Layouts](../../guides/0020-client-server.md)
+* [Environment Layouts](/docs/guides/client-server)
 
 In the environment layout file provided to the Virtual Client, define the role of the client system/VM as "Client" and the role of the server system(s)/VM(s) as "Server".
 The spelling of the roles must be exact. The IP addresses of the systems/VMs must be correct as well. The following example illustrates the
@@ -68,7 +72,7 @@ Supports .NET 9 and .NET 10 via the `ParametersOn` conditional parameter system.
     or must match the name of the system as defined by the operating system itself.
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
-  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+  * [Installing Dependencies](/docs/category/dependencies/)
 
 * **Profile Parameters**  
 
@@ -117,7 +121,7 @@ Includes a warm-up pass before the benchmark measurement. Supports .NET 9 and .N
     or must match the name of the system as defined by the operating system itself.
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
-  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+  * [Installing Dependencies](/docs/category/dependencies/)
 
 * **Profile Parameters**  
 
@@ -170,7 +174,7 @@ with 256 concurrent connections. Uses .NET 8 SDK.
     or must match the name of the system as defined by the operating system itself.
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
-  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+  * [Installing Dependencies](/docs/category/dependencies/)
 
 * **Profile Parameters**  
 
@@ -215,7 +219,7 @@ and Wrk benchmarks the `/about` endpoint. Includes a warm-up pass before the ben
     or must match the name of the system as defined by the operating system itself.
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
-  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+  * [Installing Dependencies](/docs/category/dependencies/)
 
 * **Profile Parameters**  
 

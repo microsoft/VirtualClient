@@ -1,3 +1,7 @@
+---
+slug: /workloads/speccpu
+---
+
 # SPECcpu
 SPEC CPU is a workload created and licensed by the Standard Performance Evalution Corporation. The SPEC CPU® 2017 benchmark package contains SPEC's 
 next-generation, industry-standardized, CPU intensive suites for measuring and comparing compute intensive performance, stressing a system's processor, 

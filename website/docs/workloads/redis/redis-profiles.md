@@ -1,9 +1,13 @@
+---
+slug: /workloads/redis-profiles
+---
+
 # Redis Profiles
 The following profiles run customer-representative or benchmarking scenarios using the Memtier or Redis workloads against
 a Redis server.
 
-* [Workload Details](./redis.md)  
-* [Client/Server Workloads](../../guides/0020-client-server.md)
+* [Workload Details](/docs/workloads/redis)  
+* [Client/Server Workloads](/docs/guides/client-server)
 
 ## Client/Server Topology Support
 Redis workload profiles support running the workload on both a single system as well as in a client/server topology. This means that the workload supports
@@ -13,7 +17,7 @@ The Virtual Client instances running on the client and server systems will synch
 an environment layout file MUST be supplied to each instance of the Virtual Client on the command line to describe the IP address/location of other Virtual Client instances. An
 environment layout file is not required for the single system topology.
 
-* [Environment Layouts](../../guides/0020-client-server.md)
+* [Environment Layouts](/docs/guides/client-server)
 
 In the environment layout file provided to the Virtual Client, define the role of the client system/VM as "Client" and the role of the server system(s)/VM(s) as "Server".
 The spelling of the roles must be exact. The IP addresses of the systems/VMs must be correct as well. The following example illustrates the
@@ -71,7 +75,7 @@ We have two profiles for Redis.One supports redis with TLS and one without TLS.
     or must match the name of the system as defined by the operating system itself.
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
-  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+  * [Installing Dependencies](/docs/category/dependencies/)
 
 * **Profile Parameters**  
   The following parameters can be optionally supplied on the command line to modify the behaviors of the workload.

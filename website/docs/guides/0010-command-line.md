@@ -1,3 +1,7 @@
+---
+slug: /guides/command-line
+---
+
 # Command Line Options
 The following sections describe the command line options available on the Virtual Client application.
 
@@ -36,8 +40,8 @@ on the system.
 | --exit-wait=\<mins_or_timespan>                             | No          | timespan or integer          | Specifies a timespan or the length of time (in minutes) that the Virtual Client should wait for workload and monitor processes to complete and for telemetry to be fully flushed before exiting (e.g. 60, 01:00:00). This is useful for scenarios where Event Hub resources are used to ensure that all telemetry is uploaded successfully before exit. Default = 30 mins. |
 | -f, --fail-fast                                             | No          |                              | Flag indicates that the application should exit immediately on first/any errors regardless of their severity. This applies to 'Actions' in the profile only. 'Dependencies' are ALWAYS implemented to fail fast. 'Monitors' are generally implemented to handle transient issues and to keep running/trying in the background.  |
 | --iterations=\<count\>                                      | No          | integer                      | Defines the number of iterations/rounds of all actions in the profile to execute before exiting.<br/><br/> Note that this option cannot be used with the `--timeout` option.<br/><br/>If neither the `--timeout` nor `--iterations` option are supplied, the Virtual Client will run one iteration.  |
-| --key-vault=\<connection\>                                  | No          | uri string/connection string | A full connection description for an [Azure Key Vault](./0620-integration-key-vault.md) to use for referencing secrets and certificates from azure keyvault.<br/><br/>The following are supported identifiers for this option:<br/><ul><li>Microsoft Entra ID/Apps using a certificate</li><li>Microsoft Azure managed identities</li></ul>See [Azure Key Vault Integration](./0620-integration-key-vault.md) for additional details on supported identifiers.<br/><br/><mark>Always surround connection descriptions with quotation marks.</mark> |
-| --layout, --layout-path=\<definition_or_path\>                 | No          | string/path                  | An environment layout definition or path to a file that provides additional metadata about the system/hardware on which the Virtual Client will run and information required to support client/server advanced topologies. See [Client/Server Support](./0020-client-server.md).<br/><br/>Inline definitions should follow the format:<br/>\{client_name\},\{ip_address\},\{role\};\{client_name\},\{ip_address\},\{role\}.<br/><br/>e.g.<br/>client01,10.1.0.1,Client;client02,10.1.0.3,Server |
+| --key-vault=\<connection\>                                  | No          | uri string/connection string | A full connection description for an [Azure Key Vault](/docs/guides/integration-key-vault) to use for referencing secrets and certificates from azure keyvault.<br/><br/>The following are supported identifiers for this option:<br/><ul><li>Microsoft Entra ID/Apps using a certificate</li><li>Microsoft Azure managed identities</li></ul>See [Azure Key Vault Integration](/docs/guides/integration-key-vault) for additional details on supported identifiers.<br/><br/><mark>Always surround connection descriptions with quotation marks.</mark> |
+| --layout, --layout-path=\<definition_or_path\>                 | No          | string/path                  | An environment layout definition or path to a file that provides additional metadata about the system/hardware on which the Virtual Client will run and information required to support client/server advanced topologies. See [Client/Server Support](/docs/guides/client-server).<br/><br/>Inline definitions should follow the format:<br/>\{client_name\},\{ip_address\},\{role\};\{client_name\},\{ip_address\},\{role\}.<br/><br/>e.g.<br/>client01,10.1.0.1,Client;client02,10.1.0.3,Server |
 | --logger=\<reference\>                                      | No          | string/path                  | One or more logger definitions. Multiple loggers/options can be used on the command line (e.g. --logger=logger1 --logger=logger2). See the `Supported Loggers` section at the bottom. |
 | --log-dir=\<path\>                                          | No          | string/path                  | Defines an alternate directory to which log files should be written. See 'Supported Path Placeholders' below. |
 | --log-level=\<level\>                                       | No          | integer/string               | Defines the logging severity level for traces output. Values map to the [Microsoft.Extensions.Logging.LogLevel](https://learn.microsoft.com/en-us/dotnet/api/microsoft.extensions.logging.loglevel?view=dotnet-plat-ext-8.0) enumeration. Valid values include: Trace (0), Debug (1), Information (2), Warning (3), Error (4), Critical (5). Note that this option affects ONLY trace logs and is designed to allow the user to control the amount of operational telemetry emitted by VC. It does not affect metrics or event logging nor any non-telemetry logging. Default = Information (2). |
@@ -57,7 +61,7 @@ on the system.
 | -?, -h, --help                                              | No          |                              | Show help information. |
 | --version                                                   | No          |                              | Show application version information. |
 
-See the [Usage Examples](./0200-usage-examples.md) documentation for additional examples.
+See the [Usage Examples](/docs/guides/usage-examples) documentation for additional examples.
 
 ```bash
 # Basic command line example
@@ -578,7 +582,7 @@ codes and their meaning in the source code here: [ErrorReason](https://github.co
 
 ## Environment Variable Support
 The Virtual Client application supports a small set of environment variables that allow users to provide information to the application. The full list of environment variables
-supported are defined in the [Usage Examples](https://microsoft.github.io/VirtualClient/docs/guides/0200-usage-examples/) documentation.
+supported are defined in the [Usage Examples](/docs/guides/usage-examples/) documentation.
 
 ## Response File Support
 The Virtual Client application supports response files out of the box. A response file is a file that contains the command line arguments within. This is useful for certain scenarios where
@@ -610,5 +614,3 @@ VirtualClient.exe @C:\VirtualClient\win-x64\CommandLineOptions.rsp
 --event-hub="sb://anynamespace.servicebus.windows.net?cid=606ecc0e-ed9e...&tid=95a8ded1-8bec...&crtt=a2b8daef124..."
 --metadata="region=East US 2,,,vmName=testvm-01" 
 ```
-
-

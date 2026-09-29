@@ -1,7 +1,11 @@
+---
+slug: /workloads/3dmark-profiles
+---
+
 # 3DMark Profiles
 The following profile runs the 3DMark TimeSpy Workloads.
 
-* [Workload Details](./3dmark.md)  
+* [Workload Details](/docs/workloads/3dmark)  
 
 ## PERF-GPU-3DMARK.json
 Runs the stock 3DMark TimeSpy Workloads.
@@ -24,7 +28,7 @@ any of the dependencies required by the driver. If the driver is not already ins
   * The system must have the GPU driver (e.g. AMD, Nvidia) and related toolsets (e.g. CUDA) installed.ed.
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
-  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+  * [Installing Dependencies](/docs/category/dependencies/)
 
 * **Profile Parameters**  
   The following parameters can be optionally supplied on the command line to modify the behaviors of the workload.

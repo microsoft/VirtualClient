@@ -1,7 +1,11 @@
+---
+slug: /workloads/openssl-profiles
+---
+
 # OpenSSL Profiles
 The following profiles run customer-representative or benchmarking scenarios using the OpenSSL speed workload.  
 
-* [Workload Details](./openssl.md)  
+* [Workload Details](/docs/workloads/openssl)  
 
 ## PERF-CPU-OPENSSL.json
 Runs a CPU-intensive workload using the OpenSSL speed toolset to test the performance of the CPU in processing cryptography/encryption algorithms.
@@ -25,14 +29,14 @@ system. It will use a single core/vCPU to run each test. On Linux, VC starts Spe
 
 * **Supports Disconnected Scenarios**  
   * Yes. When the OpenSSL package is included in 'packages' directory of the Virtual Client.
-    * [Installing VC Packages](../../dependencies/0001-install-vc-packages.md).
+    * [Installing VC Packages](/docs/dependencies/install-vc-packages).
 
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
   * Internet connection.
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
-  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+  * [Installing Dependencies](/docs/category/dependencies/)
 
 * **Scenarios**  
   The following algorithms are covered by this workload profile.

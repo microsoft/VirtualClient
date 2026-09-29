@@ -1,7 +1,11 @@
+---
+slug: /workloads/stressapptest-profiles
+---
+
 # StressAppTest Profiles
 The following profiles run customer-representative or benchmarking scenarios using the StressAppTest workload.
 
-* [Workload Details](./stressapptest.md)
+* [Workload Details](/docs/workloads/stressapptest)
 
 ## PERF-MEM-STRESSAPPTEST.json
 Runs the StressAppTest workload for a specific period of time on the system. This profile is designed to allow the user to run the workload for
@@ -14,14 +18,14 @@ to the system if desired.
 
 * **Supports Disconnected Scenarios**
   * Yes. When the StressAppTest package is included in 'packages' directory of the Virtual Client.
-    * [Installing VC Packages](../../dependencies/0001-install-vc-packages.md).
+    * [Installing VC Packages](/docs/dependencies/install-vc-packages).
 
 * **Dependencies**
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
   * Internet connection.
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
-  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+  * [Installing Dependencies](/docs/category/dependencies/)
 
 * **Profile Parameters**
   The following parameters can be optionally supplied on the command line to modify the behaviors of the workload.

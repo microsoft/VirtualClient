@@ -1,3 +1,7 @@
+---
+slug: /guides/profiles
+---
+
 # Profiles
 The Virtual Client defines the work/operations that will happen on a system in structured JSON documents called "profiles". Profiles can be thought
 of as recipes for how to utilize resources and to work the system. Profiles are divided into different sections within a profile including Metadata, Parameters,

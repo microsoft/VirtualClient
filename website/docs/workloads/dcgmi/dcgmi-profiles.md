@@ -1,7 +1,11 @@
+---
+slug: /workloads/dcgmi-profiles
+---
+
 # DCGMI Profiles
 The following profiles run DCGMI for qualifying GPUs.  
 
-* [Workload Details](./dcgmi.md)  
+* [Workload Details](/docs/workloads/dcgmi)  
 
 ## QUAL-GPU-DCGMI.json
 DCGM is part of the Nvidia GPU Deployment Kit and is designed to work with Nvidia's Tesla GPU accelerators, which are commonly used in data centers for high-performance computing and other GPU-accelerated workloads.
@@ -19,7 +23,7 @@ This profile is designed to identify general/broad regressions when compared aga
   * This monitor has dependency on Nvidia Driver Installation and nvidia-dcgm installation [[DCGMI installation](https://docs.nvidia.com/datacenter/dcgm/latest/user-guide/getting-started.html) - Version 3.1].
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
-  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+  * [Installing Dependencies](/docs/category/dependencies/)
 
 * **Profile Parameters**
 

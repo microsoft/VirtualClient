@@ -1,4 +1,8 @@
-﻿# DotNetRuntime
+﻿---
+slug: /workloads/dotnetruntime
+---
+
+# DotNetRuntime
 The DotNetRuntime workload is a .NET program which mimics a 3-tier system with emphasis on the middle tier.The first tier is a set
 of random input selections. This workload is a compute intensive workload and drives up the CPU utilization of the system that it is 
 running on. It is representative of a middle tier system and is simplified for easy benchmarking.

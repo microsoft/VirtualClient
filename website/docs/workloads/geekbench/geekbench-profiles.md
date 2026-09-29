@@ -1,7 +1,11 @@
+---
+slug: /workloads/geekbench-profiles
+---
+
 # GeekBench Profiles
 The following profiles run customer-representative or benchmarking scenarios using the GeekBench5 and GeekBench6 workloads.
 
-* [Workload Details](./geekbench.md)  
+* [Workload Details](/docs/workloads/geekbench)  
 
 ## PERF-CPU-GEEKBENCH5.json
 Runs a CPU-intensive workload using the GeekBench5 toolset to test the performance of the CPU across various types of common application algorithms 
@@ -20,14 +24,14 @@ against a baseline. GeekBench is an industry standard benchmarking toolset.
 
 * **Supports Disconnected Scenarios**  
   * Yes. When the GeekBench5 package is included in 'packages' directory of the Virtual Client.
-    * [Installing VC Packages](../../dependencies/0001-install-vc-packages.md). 
+    * [Installing VC Packages](/docs/dependencies/install-vc-packages). 
 
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
   * Internet connection.
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
-  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+  * [Installing Dependencies](/docs/category/dependencies/)
 
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
@@ -58,14 +62,14 @@ against a baseline. GeekBench is an industry standard benchmarking toolset.
 
 * **Supports Disconnected Scenarios**  
   * Yes. When the GeekBench6 package is included in 'packages' directory of the Virtual Client.
-    * [Installing VC Packages](../../dependencies/0001-install-vc-packages.md). 
+    * [Installing VC Packages](/docs/dependencies/install-vc-packages). 
 
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
   * Internet connection.
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
-  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+  * [Installing Dependencies](/docs/category/dependencies/)
 
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 

@@ -1,3 +1,7 @@
+---
+slug: /dependencies/install-msmpi
+---
+
 # MsMPI Installation
 Microsoft MPI (MS-MPI) is a Microsoft implementation of the Message Passing Interface standard for developing and running parallel applications on the Windows platform.
 

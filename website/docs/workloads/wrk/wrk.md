@@ -1,3 +1,7 @@
+---
+slug: /workloads/wrk
+---
+
 # Wrk/Wrk2 HTTP Benchmarking
 Wrk is a modern HTTP benchmarking tool capable of generating significant load when run on a single multi-core CPU. It combines a multithreaded
 design with scalable event notification systems such as epoll and kqueue to produce high request throughput with low resource consumption.

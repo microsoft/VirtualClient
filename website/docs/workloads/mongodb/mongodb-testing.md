@@ -1,3 +1,7 @@
+---
+slug: /workloads/mongodb-testing
+---
+
 # Testing Installation Scripts
 These scripts are used for testing. Made for quickly installing mongo or YCSB onto a VM.
 

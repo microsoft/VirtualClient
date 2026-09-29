@@ -1,3 +1,7 @@
+---
+slug: /dependencies/stripe-disks
+---
+
 # Stripe Disks
 Virtual Client has a dependency component that can be added to a workload or monitor profile to stripe (RAID 0) multiple disks into a single volume before execution. 
 The following section illustrates the details for integrating this into the profile.

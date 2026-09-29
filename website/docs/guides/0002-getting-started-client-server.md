@@ -1,8 +1,12 @@
+---
+slug: /guides/getting-started-client-server
+---
+
 # Getting Started (Client/Server)
 The sections below provide an example for how to run a client/server workload. For this example, the Memtier + Redis workload will be used. It supports 2 roles (Client and Server), 
 and the roles are executed on separate systems. The following links provide more information on support for client/server workloads.
 
-* [Client/Server Support](./0020-client-server.md)
+* [Client/Server Support](/docs/guides/client-server)
 
 :::info
 Redis is a Linux-only workload and will not run on Windows systems.
@@ -10,7 +14,7 @@ Redis is a Linux-only workload and will not run on Windows systems.
 
 ## Preliminary Setup
 - You will need two systems that are in the same subnet/internet and able to communicate over the network via basic HTTP protocol (default port = 4500). 
-- Create an [environment layout](./0020-client-server.md) file on both systems. This file is typically saved in the directory alongside the Virtual Client 
+- Create an [environment layout](/docs/guides/client-server) file on both systems. This file is typically saved in the directory alongside the Virtual Client 
    executable for ease of reference. The example below illustrates what the contents of the environment layout file might look like.
 
    ``` json
@@ -101,7 +105,7 @@ example with the Memtier + Redis workload, the network "throughput" or "bandwidt
     while the workload is running.
 
 - The Virtual Client captures quite a few metrics for the Memtier + Redis workload. Two most critical metrics for Redis are "throughput" and "P99 latency". The full
-  list of metrics captured are documented here: [Redis Workload Metrics](../workloads/redis/redis.md)
+  list of metrics captured are documented here: [Redis Workload Metrics](/docs/workloads/redis)
 
   - Example Throughput Metric Result  
     ```json {16-19}
@@ -173,6 +177,6 @@ running different workloads. The example profile used for this walkthrough is a 
 The full profile (noted below) will take a few hours to complete.
 
 - [Example Profile from Above](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/GET-STARTED-REDIS.json)
-- [Redis Workload](../workloads/redis/redis.md)
-- [Redis Workload Profiles](../workloads/redis/redis-profiles.md)
-- [Redis Workload Metrics](../workloads/redis/redis.md)
+- [Redis Workload](/docs/workloads/redis)
+- [Redis Workload Profiles](/docs/workloads/redis-profiles)
+- [Redis Workload Metrics](/docs/workloads/redis)

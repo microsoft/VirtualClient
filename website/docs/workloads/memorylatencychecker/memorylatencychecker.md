@@ -31,7 +31,7 @@ When Intel MLC is launched without any additional parameters, it automatically i
 
 Intel MLC also provides command line arguments for fine-grained control over the latencies and bandwidth measurements. The details of parameters are mentioned in the profile documentation.
 
-* [Workload Profile Documentation](./memorylatencychecker-profiles.md)
+* [Workload Profile Documentation](/docs/workloads/mlc-profiles)
 
 ## Workload Metrics
 The following metrics are examples of those captured by the Virtual Client when running the MLC workload. The number of Numa Nodes that were on the system was 

@@ -5,8 +5,8 @@ slug: /workloads/diskspd-profiles
 # DiskSpd Profiles
 The following profiles run customer-representative or benchmarking scenarios using the DiskSpd workload.  
 
-* [Workload Details](./diskspd.md)  
-* [Testing Disks](../../guides/0220-usage-testing-disks.md)
+* [Workload Details](/docs/workloads/diskspd)  
+* [Testing Disks](/docs/guides/usage-testing-disks)
 
 ## PERF-IO-DISKSPD.json
 Runs a high stress IO-intensive workload using the DiskSpd toolset to test performance of disks on the system. This profile is a Windows-only profile. 
@@ -50,7 +50,7 @@ aspects of the workload execution.
 
 * **Supports Disconnected Scenarios**  
   * Yes. When the DiskSpd package is included in 'packages' directory of the Virtual Client.
-    * [Installing VC Packages](../../dependencies/0001-install-vc-packages.md).
+    * [Installing VC Packages](/docs/dependencies/install-vc-packages).
 
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
@@ -58,7 +58,7 @@ aspects of the workload execution.
   * Any 'DiskFilter' parameter value used should match the set of disks desired. See the link for 'Testing Disks' above.
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
-  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+  * [Installing Dependencies](/docs/category/dependencies/)
 
 * **Scenarios**  
   The following scenarios are covered by this workload profile. 

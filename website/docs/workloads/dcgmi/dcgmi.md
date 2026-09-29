@@ -1,3 +1,7 @@
+---
+slug: /workloads/dcgmi
+---
+
 # DCGMI
 The NVIDIA Data Center GPU Manager (DCGM) has DCGMI (Data Center GPU Management Interface) as a command line utility, which is a software tool for managing and monitoring GPU resources in a data center environment. DCGMi provides administrators with access to a wide range of information about the state of GPUs in their data center, including utilization, temperature, power consumption, and more.
 

@@ -1,3 +1,7 @@
+---
+slug: /developing/develop-script-extensions
+---
+
 # Developing Script Extensions
 The use of scripting languages (e.g. Python, PowerShell) is a popular choice for software and system engineers responsible for automating test coverage
 on bare metal hardware systems. The Virtual Client platform provides runtime support for running scripts directly from the command line and additionally 
@@ -286,7 +290,6 @@ script-based extensions development process. The following illustrates an exampl
           - install-debug-toolsets.sh
           - debug-toolsets.deb
   ```
-
 
 
 

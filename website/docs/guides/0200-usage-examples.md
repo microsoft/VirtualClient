@@ -1,3 +1,7 @@
+---
+slug: /guides/usage-examples
+---
+
 # Usage: Command Line Examples
 The following documentation covers a range of usage scenarios that apply to the Virtual Client. The sections that follow are meant
 to illustrate how to use Virtual Client within these various scenarios as well as what to expect.
@@ -28,7 +32,7 @@ layout describes the topology...where the other Virtual Client instances are and
 with defining an environment layouts, see the documentation below. Note that each of the workload profiles has documentation that
 provides examples of a valid environment layout for that particular workload profile/workload.
 
-* [Environment Layouts](./0020-client-server.md)
+* [Environment Layouts](/docs/guides/client-server)
 
 ``` bash
 # Run the workload using the default port for hosting the REST API

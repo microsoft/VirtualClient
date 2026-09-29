@@ -1,7 +1,11 @@
+---
+slug: /workloads/stress-ng-profiles
+---
+
 # Stress-ng Profiles
 The following profiles run customer-representative or benchmarking scenarios using the StressNg workload.
 
-* [Workload Details](./stress-ng.md)  
+* [Workload Details](/docs/workloads/stress-ng)  
 
 :::danger
 * Use Stress-ng with caution as some of the tests can make a system run hot on poorly designed hardware and also can cause excessive system thrashing which may be difficult to stop.*
@@ -24,7 +28,7 @@ Runs the Stress-ng workload in short but constant bursts to assess the performan
   * Internet connection.
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
-  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+  * [Installing Dependencies](/docs/category/dependencies/)
 
 * **Profile Parameters**
   The following parameters can be optionally supplied on the command line to modify the behaviors of the workload.

@@ -1,6 +1,10 @@
+---
+slug: /workloads/openssl-tls12-vs-tls13
+---
+
 # Tls 1_2 vs TLS 1_3
 Transport Layer Security 1.3 (TLS)
-The Internet Engineering Task Force (IETF) Request for Comments (RFC) 8446, released August 2018, “specifies version 1.3 of the Transport Layer Security (TLS) protocol. TLS allows client/server applications to communicate over the Internet in a way that is designed to prevent eavesdropping, tampering, and message forgery.”
+The Internet Engineering Task Force (IETF) Request for Comments (RFC) 8446, released August 2018, ï¿½specifies version 1.3 of the Transport Layer Security (TLS) protocol. TLS allows client/server applications to communicate over the Internet in a way that is designed to prevent eavesdropping, tampering, and message forgery.ï¿½
 
 In addition to improvement on privacy and performance, the following are some of the major differences between TLS 1.2 and 1.3:
 
@@ -30,7 +34,7 @@ Security Losses from Obsolete and Truncated Transcript Hashes (SLOTH) (CVE-20157
 
 In the key exchange phase, the client sends the ClientHello message, which contains a random nonce (ClientHello.random); its offered protocol versions; a list of symmetric cipher/HKDF hash pairs; either a set of Diffie-Hellman key shares; a set of preshared key labels, or both and, potentially, additional extensions. Additional fields and/or messages may also be present for middlebox compatibility.
 
-The server processes the ClientHello and determines the appropriate cryptographic parameters for the connection. It then responds with its own ServerHello, which indicates the negotiated connection parameters. The combination of the ClientHello and the ServerHello determines the shared keys. If (EC)DHE key establishment is in use, then the ServerHello contains a key-share extension with the server’s ephemeral Diffie-Hellman share; the server’s share must be in the same group as one of the client’s shares. If PSK key establishment is in use, then the ServerHello contains a preshared key extension indicating which of the client’s offered PSKs was selected. Note that implementations can use (EC)DHE and PSK together, in which case both extensions will be supplied.
+The server processes the ClientHello and determines the appropriate cryptographic parameters for the connection. It then responds with its own ServerHello, which indicates the negotiated connection parameters. The combination of the ClientHello and the ServerHello determines the shared keys. If (EC)DHE key establishment is in use, then the ServerHello contains a key-share extension with the serverï¿½s ephemeral Diffie-Hellman share; the serverï¿½s share must be in the same group as one of the clientï¿½s shares. If PSK key establishment is in use, then the ServerHello contains a preshared key extension indicating which of the clientï¿½s offered PSKs was selected. Note that implementations can use (EC)DHE and PSK together, in which case both extensions will be supplied.
 
 Reference:
 * [TLS 1.3](https://www.rfc-editor.org/rfc/rfc8446.txt)

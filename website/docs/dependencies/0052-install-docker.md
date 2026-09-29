@@ -1,3 +1,7 @@
+---
+slug: /dependencies/install-docker
+---
+
 # Docker Installation
 Docker is a platform to help develop and ship applications. Should a workload require the download of a containerized application, this dependency can assist in docker installation and setup in preparation.
 

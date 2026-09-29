@@ -1,3 +1,7 @@
+---
+slug: /dependencies/mount-disks
+---
+
 # Mount Disks
 Virtual Client has a dependency component that can be added to a workload or monitor profile to mount disks before execution. The following section illustrates the details for integrating this into the profile.
 

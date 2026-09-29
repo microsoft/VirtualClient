@@ -21,10 +21,10 @@ that are useful in comparing the performance of the system. Each of the workload
 Azure organization as well as from empirical evidence derived from running them in large-scale experiments. The Virtual Client has ran on more than
 a million VM systems (Windows and Linux) in the Azure cloud.
 
-* [Workloads and Profiles Supported](./overview.md)  
+* [Workloads and Profiles Supported](/docs/overview)  
 * [Example Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-CPU-OPENSSL.json&version=GBmaster)
 * [Profiles Supported](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles)
-* [Usage Examples](../guides/0200-usage-examples.md)
+* [Usage Examples](/docs/guides/usage-examples)
 
 Using the example below as a reference, there are a 3 different fundamental sections inside a workload profile:
 
@@ -109,7 +109,7 @@ is the need to capture performance counters from the system. Monitoring profiles
 and reliability information while workloads are executing in-parallel. The Virtual Client runs a default monitoring profile (MONITORS-DEFAULT.json) when a specific monitoring
 profile is not provided. However, a different monitoring profile can be supplied on the command line if desired (extensibility).
 
-* [Monitors and Profiles Supported](./overview.md)  
+* [Monitors and Profiles Supported](/docs/overview)  
 * [Example Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/MONITORS-DEFAULT.json&version=GBmaster)
 * [Profiles Supported](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles)
 
@@ -189,7 +189,7 @@ with each other to be able to synchronize client-side executions with server-sid
 for this purpose. This REST API enables simple HTTP communications between 2 or more different instances of the Virtual Client. The REST API provides the following
 support:
 
-* [Client/Server Support](../guides/0020-client-server.md)
+* [Client/Server Support](/docs/guides/client-server)
 
 * **State Management**  
   The API enables both the client and the server instances of the application to preserve state on the local system. Additionally, state objects/requests can be
@@ -267,7 +267,7 @@ blob store. This is a need often enough with certain types of background monitor
 telemetry pipelines. Any component in the Virtual Client can be developed to upload files/content to a target blob store. Then the user of the application simply
 passes in a connection string or SAS URI to the target "content" store on the command line.
 
-* [Blob Store Support](../guides/0600-integration-blob-storage.md)
+* [Blob Store Support](/docs/guides/integration-blob-storage)
 
 ``` bash
 VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --timeout=1440 --content-store={ConnectionString or SASTokenUri}

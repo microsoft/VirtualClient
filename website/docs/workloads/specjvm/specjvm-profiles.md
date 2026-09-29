@@ -1,7 +1,11 @@
+---
+slug: /workloads/specjvm-profiles
+---
+
 # SPECjvm Profiles
 The following profiles run customer-representative or benchmarking scenarios using the SPECjvm workload.
 
-* [Workload Details](./specjvm.md)  
+* [Workload Details](/docs/workloads/specjvm)  
 
 ## PERF-SPECJVM.json
 Runs the SPECjvm benchmark workload to evaluate the performance of the core Java Runtime.
@@ -19,7 +23,7 @@ Runs the SPECjvm benchmark workload to evaluate the performance of the core Java
   * Internet connection.
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
-  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+  * [Installing Dependencies](/docs/category/dependencies/)
 
 * **Scenarios**  
   The following scenarios are covered by this workload profile.

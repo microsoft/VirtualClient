@@ -1,3 +1,7 @@
+---
+slug: /guides/commercial-workloads
+---
+
 # Run Commercial Workloads: Bring Your Own Package
 Virtual Client supports running commercial workloads. However, we can not distribute the binary and licenses for the commercial workloads. In those cases, users need to "bring their own binary and license".
 
@@ -10,10 +14,10 @@ process out.*
 ## Supported commercial workloads
 The following workloads are commercial (requiring purchase and/or license) software supported by the Virtual Client.
 
-* **[Geekbench](../workloads/geekbench/geekbench.md)**
-* **[SPECcpu](../workloads/speccpu/speccpu.md)**
-* **[SPECjbb](../workloads/specjbb/specjbb.md)**
-* **[SPECpower](../workloads/specpower/specpower.md)**  
+* **[Geekbench](/docs/workloads/geekbench)**
+* **[SPECcpu](/docs/workloads/speccpu)**
+* **[SPECjbb](/docs/workloads/specjbb)**
+* **[SPECpower](/docs/workloads/specpower)**  
 
 ## Supporting Commercial Workloads
 The following sections describe how the process of integrating commercial workloads into the Virtual Client works. With commercial workloads, the user must

@@ -1,3 +1,7 @@
+---
+slug: /dependencies/install-git-repo
+---
+
 # Install/Clone a Git Repo
 Virtual Client git clones a public repository into VC `packages` directory.
 
@@ -5,8 +9,8 @@ Virtual Client git clones a public repository into VC `packages` directory.
 Some Windows versions do not have `Git` installed by default. You will need to install `Git` first via the `Chocolatey` package manager.
 :::
 
-* [Install Chocolatey](./0020-install-chocolatey.md)
-* [Install Chocolatey Packages](./0030-install-chocolatey-packages.md)
+* [Install Chocolatey](/docs/dependencies/install-chocolatey)
+* [Install Chocolatey Packages](/docs/dependencies/install-chocolatey-packages)
 
 ## Supported Platform/Architectures
 * linux-x64

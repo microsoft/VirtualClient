@@ -1,3 +1,7 @@
+---
+slug: /workloads/specview
+---
+
 # SPECviewperf
 The SPECviewperf® 2020 v3.1 benchmark, released on August 4, 2022, is the worldwide standard for measuring graphics performance based on professional applications. The benchmark measures the 3D graphics performance of systems running under the OpenGL and DirectX application programming interfaces. The benchmark workloads are called viewsets, and represent graphics content and behavior from actual workstation-class applications, without the need to install the applications themselves. 
 

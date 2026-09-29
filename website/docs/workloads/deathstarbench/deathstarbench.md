@@ -1,3 +1,7 @@
+---
+slug: /workloads/deathstarbench
+---
+
 # DeathStarBench
 DeathStarBench is an open-source benchmark suite for cloud microservices.
 DeathStarBench includes six end-to-end services, four for cloud systems, and one for cloud-edge systems running on drone swarms.

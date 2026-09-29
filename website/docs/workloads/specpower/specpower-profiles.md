@@ -1,7 +1,11 @@
+---
+slug: /workloads/specpower-profiles
+---
+
 # SPECpower Profiles
 The following profiles run customer-representative or benchmarking scenarios using the SPEC Power workload.
 
-* [Workload Details](./specpower.md)  
+* [Workload Details](/docs/workloads/specpower)  
 
 ## POWER-SPEC30.json
 Runs the SPEC Power benchmark workload on the system targeting 30% system resource usage. This workload is an industry standard toolset for evaluating the power
@@ -26,7 +30,7 @@ system in a steady-state usage pattern.
     is used on the Azure host to capture the temperature and power metrics (using the IPMIUtil toolset).
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
-  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+  * [Installing Dependencies](/docs/category/dependencies/)
 
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
@@ -64,7 +68,7 @@ system in a steady-state usage pattern.
     is used on the Azure host to capture the temperature and power metrics (using the IPMIUtil toolset).
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
-  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+  * [Installing Dependencies](/docs/category/dependencies/)
 
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
@@ -102,7 +106,7 @@ system in a steady-state usage pattern.
     is used on the Azure host to capture the temperature and power metrics (using the IPMIUtil toolset).
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
-  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+  * [Installing Dependencies](/docs/category/dependencies/)
 
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
@@ -140,7 +144,7 @@ system in a steady-state usage pattern.
     is used on the Azure host to capture the temperature and power metrics (using the IPMIUtil toolset).
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
-  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+  * [Installing Dependencies](/docs/category/dependencies/)
 
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 

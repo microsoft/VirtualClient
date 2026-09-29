@@ -1,0 +1,8 @@
+{
+  "label": "GPU",
+  "position": 1,
+  "link": {
+    "type": "generated-index",
+    "description": "GPU monitors supported by the Virtual Client."
+  }
+}

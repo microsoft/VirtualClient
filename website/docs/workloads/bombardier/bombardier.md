@@ -1,3 +1,7 @@
+---
+slug: /workloads/bombardier
+---
+
 # Bombardier HTTP Benchmarking
 Bombardier is a fast, cross-platform HTTP(S) benchmarking tool written in Go. It uses the fasthttp library for high-performance
 HTTP client operations and supports configurable concurrency, request duration, timeouts, and output in JSON format for automated

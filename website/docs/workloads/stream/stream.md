@@ -1,3 +1,7 @@
+---
+slug: /workloads/stream
+---
+
 # STREAM
 STREAM is a synthetic benchmark designed to measure sustainable memory bandwidth and the corresponding computation rate for simple vector kernels. 
 It is intended to provide a measure of memory performance independent of any particular computing platform's cache hierarchy, and has become a 

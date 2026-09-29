@@ -1,3 +1,7 @@
+---
+slug: /dependencies/install-vc-packages
+---
+
 # Install VC Packages
 Virtual Client has a dependency component that can be added to a workload or monitor profile to install dependency packages from a package store. The following section illustrates the
 details for integrating this into the profile.
@@ -5,7 +9,7 @@ details for integrating this into the profile.
 ## Preliminaries
 Reference the following documentation on Virtual Client dependency packages for additional information on dependency packages.
 
-* [VC Packages](../developing/0040-vc-packages.md)
+* [VC Packages](/docs/developing/vc-packages)
 
 ## Supported Platform/Architectures
 * linux-x64

@@ -1,3 +1,7 @@
+---
+slug: /dependencies/install-dotnet-sdk
+---
+
 # Install .NET SDK
 The .NET SDK is a set of libraries and tools that allow developers to create .NET applications and libraries. The dependency implementation in the
 Virtual Client allows the user to define the version of the .NET SDK. In practice this is typically a .NET 8.0+ version of the SDK by default.

@@ -1,7 +1,11 @@
+---
+slug: /workloads/blenderbenchmark-profiles
+---
+
 # Blender Profiles
 The following profile runs the Blender benchmark Workloads.
 
-* [Workload Details](./blenderbenchmark.md)  
+* [Workload Details](/docs/workloads/blenderbenchmark)  
 
 ## PERF-BLENDER-AMD.json
 Runs the Blender Workloads.
@@ -22,7 +26,7 @@ Runs the Blender Workloads.
     * Model = mi25
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
-  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+  * [Installing Dependencies](/docs/category/dependencies/)
 
 * **Profile Parameters**  
   | Parameter                 | Purpose                                                                                           | Default Value |

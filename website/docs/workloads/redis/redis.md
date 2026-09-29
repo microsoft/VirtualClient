@@ -1,3 +1,7 @@
+---
+slug: /workloads/redis
+---
+
 # Redis
 Redis is an open source (BSD licensed), in-memory, high-performance, distributed memory object caching system used as a database, 
 cache, message broker and streaming engine.

@@ -1,3 +1,7 @@
+---
+slug: /developing/build-docker-container
+---
+
 # Building Docker Containers
 The following sections cover how to build a Docker image that will contain the Virtual Client.
 

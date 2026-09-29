@@ -1,3 +1,7 @@
+---
+slug: /dependencies/compiler-installation
+---
+
 # Compiler Installation
 This dependency provides support for installing either the GCC compiler, along with any appropriate packages.
 

@@ -1,7 +1,11 @@
+---
+slug: /workloads/lapack-profiles
+---
+
 # LAPACK Profiles
 The following profiles run customer-representative or benchmarking scenarios using the LAPACK workload.  
 
-* [Workload Details](./lapack.md)  
+* [Workload Details](/docs/workloads/lapack)  
 
 ## PERF-CPU-LAPACK.json
 Runs a CPU-intensive workload using the LAPACK toolset to test the performance of the CPU in processing different tests for Fortran subroutines.
@@ -24,7 +28,7 @@ solutions for the most common problems of numerical linear algebra.
   * Internet connection.
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
-  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+  * [Installing Dependencies](/docs/category/dependencies/)
 
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 

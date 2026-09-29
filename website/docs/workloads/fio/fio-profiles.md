@@ -1,8 +1,12 @@
+---
+slug: /workloads/fio-profiles
+---
+
 # Flexible I/O Tester (FIO) Profiles
 The following profiles run customer-representative or benchmarking scenarios using the Flexible I/O Tester (FIO) workload.  
 
-* [Workload Details](./fio.md)  
-* [Testing Disks](../../guides/0220-usage-testing-disks.md)
+* [Workload Details](/docs/workloads/fio)  
+* [Testing Disks](/docs/guides/usage-testing-disks)
 
 ## PERF-IO-FIO.json
 Runs an IO-intensive workload using the Flexible IO Tester (FIO) toolset to test performance of disks on the system. Although this profile
@@ -50,7 +54,7 @@ aspects of the workload execution.
   * Any 'DiskFilter' parameter value used should match the set of disks desired. See the link for 'Testing Disks' above.
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
-  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+  * [Installing Dependencies](/docs/category/dependencies/)
 
 * **Scenarios**  
   The following scenarios are covered by this workload profile. 
@@ -182,7 +186,7 @@ weight/percentage.
   * Any 'DiskFilter' parameter value used should match the set of disks desired. See the link for 'Testing Disks' above.
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
-  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+  * [Installing Dependencies](/docs/category/dependencies/)
 
 * **Profile Parameters**  
   The following parameters can be optionally supplied on the command line to modify the behaviors of the workload.

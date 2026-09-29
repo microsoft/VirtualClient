@@ -1,3 +1,7 @@
+---
+slug: /guides/usage-extensions
+---
+
 # Using/Integrating Extensions
 The Virtual Client platform supports a few different "extensions" models enabling developers to create feature sets and for users to integrate those into the platform
 runtime. This document covers how to use and integrate extensions into the platform. Additional documentation exists that focuses on the development process itself.
@@ -467,8 +471,8 @@ and requirements.
     objective measurements typically related to performance and reliability that can be used to analyze systems in side-by-side comparisons. The following resources provide context and examples
     for the concept of metrics.
 
-    * [DiskSpd Workload Metrics](https://microsoft.github.io/VirtualClient/docs/workloads/diskspd/)
-    * [Geekbench Workload Metrics](https://microsoft.github.io/VirtualClient/docs/workloads/geekbench/)
+    * [DiskSpd Workload Metrics](/docs/workloads/diskspd/)
+    * [Geekbench Workload Metrics](/docs/workloads/geekbench/)
     
     Virtual Client provides a facility for script-based automation to emit metrics for capture as well. To enable metrics capture, scripts emit the metrics to a single/central file on the file
     system. The file should be named ```test-metrics.json``` and should exist in the same directory as the script that generated it. There are two acceptable formats for test-metrics.json. 

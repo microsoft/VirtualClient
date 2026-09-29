@@ -1,4 +1,8 @@
-﻿# YCSB
+﻿---
+slug: /workloads/mongodb-ycsb
+---
+
+# YCSB
 An extensible workload generator
 
 Yahoo Cloud Serving Benchmark (YCSB) project is to develop a framework and common set of workloads for evaluating the performance of different "key-value" and "cloud" serving stores.

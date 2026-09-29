@@ -1,7 +1,11 @@
+---
+slug: /workloads/network-ping-profiles
+---
+
 # Network Ping/ICMP Profiles
 The following profiles run customer-representative or benchmarking scenarios using basic network pings/ICMP protocol.  
 
-* [Workload Details](./network-ping.md)  
+* [Workload Details](/docs/workloads/network-ping)  
 
 ## PERF-NETWORK-PING.json
 Runs a basic network ping test given an IP address or DNS host name target. Note that the target must have the ICMP protocol enabled in order to
@@ -25,7 +29,7 @@ respond to network ping requests.
     to receive ICMP ping requests.
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
-  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+  * [Installing Dependencies](/docs/category/dependencies/)
 
 * **Profile Parameters**  
   The following parameters can be optionally supplied on the command line to modify the behaviors of the workload.

@@ -1,9 +1,13 @@
+---
+slug: /workloads/network-suite-ntttcp-fullduplex
+---
+
 # NTTTCP Full-Duplex Mode
 The existing `PERF-NETWORK-NTTTCP.json` profile supports an optional `DuplexMode` parameter that enables bidirectional network throughput testing.
 In full-duplex mode, both nodes simultaneously send and receive traffic, producing separate TX and RX throughput metrics per direction.
 
-* [Network Suite Workload Details](./network-suite.md)
-* [Client/Server Workloads](../../guides/0020-client-server.md)
+* [Network Suite Workload Details](/docs/workloads/network-suite)
+* [Client/Server Workloads](/docs/guides/client-server)
 
 ## How Full-Duplex Differs from Half-Duplex
 In the standard (half-duplex) mode, one node sends while the other receives. In full-duplex mode, each node runs **two NTttcp processes 

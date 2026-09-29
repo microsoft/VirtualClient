@@ -1,3 +1,7 @@
+---
+slug: /dependencies/set-environment-variables
+---
+
 # Set Environment Variables
 Set one or multiple environment variables on the system.
 

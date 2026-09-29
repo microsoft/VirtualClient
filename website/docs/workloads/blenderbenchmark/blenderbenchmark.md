@@ -1,3 +1,7 @@
+---
+slug: /workloads/blenderbenchmark
+---
+
 # Blender Benchmark
 Blender Benchmark, a new platform to collect and display the results of hardware and software performance tests. This benchmark aims at an optimal comparison between system hardware and installations, and to assist developers to track performance during Blender development.
 

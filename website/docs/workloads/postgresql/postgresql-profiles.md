@@ -6,7 +6,7 @@ slug: /workloads/postgresql-profiles
 The following profiles run customer-representative or benchmarking scenarios using the postgresql workload.
 
 * [Workload Details](/docs/workloads/postgresql) 
-* [Client/Server Workloads](../../guides/0020-client-server.md)
+* [Client/Server Workloads](/docs/guides/client-server)
 
 ## Client/Server Topology Support
 PostgreSQL workload profiles support running the workload on both a single system as well as in a client/server topology. This means that the workload supports operation on a single system or on 2 distinct systems. The client/server topology is typically used when it is desirable to include a network component in the
@@ -14,7 +14,7 @@ overall performance evaluation. In a client/server topology, one system operates
 The Virtual Client instances running on the client and server systems will synchronize with each other before running the workload. In order to support a client/server topology,
 an environment layout file MUST be supplied to each instance of the Virtual Client on the command line to describe the IP address/location of other Virtual Client instances. An environment layout file is not required for the single system topology.
 
-* [Environment Layouts](../../guides/0020-client-server.md)
+* [Environment Layouts](/docs/guides/client-server)
 
 In the environment layout file provided to the Virtual Client, define the role of the client system/VM as "Client" and the role of the server system(s)/VM(s) as "Server".
 The spelling of the roles must be exact. The IP addresses of the systems/VMs must be correct as well. The following example illustrates the
@@ -146,7 +146,7 @@ Runs the PostgreSQL workload against the HammerDB tool which generates analytica
     or must match the name of the system as defined by the operating system itself.
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
-  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+  * [Installing Dependencies](/docs/category/dependencies/)
 
 * **Profile Parameters**  
   The following parameters can be optionally supplied on the command line to modify the behaviors of the workload. The System Memory (in Megabytes) is represented by the variable "mem" in the formulaic defaults listed below.

@@ -1,3 +1,7 @@
+---
+slug: /workloads/nginx-profiles
+---
+
 # NGINX Profiles
 The following profiles run customer-representative or benchmarking scenarios using the NGINX web server workload with Wrk or Wrk2 HTTP workload generator toolsets.
 

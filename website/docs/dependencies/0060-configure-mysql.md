@@ -1,10 +1,14 @@
+---
+slug: /dependencies/configure-mysql
+---
+
 # Configure MySQL Database
 Virtual Client has dependency components that can be added to a workload or monitor profile to create and configure a MySQL database on the system. The following section illustrates the details for integrating this into the profile.
 
 ## Preliminaries
 Reference the following documentation before proceeding.
 
-* [Install MySQL](https://microsoft.github.io/VirtualClient/docs/dependencies/install-mysql)
+* [Install MySQL](/docs/dependencies/install-mysql)
 
 ## Supported Platform/Architectures
 * linux-x64

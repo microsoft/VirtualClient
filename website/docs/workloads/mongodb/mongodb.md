@@ -1,3 +1,7 @@
+---
+slug: /workloads/mongodb
+---
+
 # MongoDB
 MongoDB is a document-oriented NoSQL database used for high volume data storage. Instead of using tables and rows as in traditional relational databases, MongoDB makes use of collections and documents. Documents consist of key-value pairs which are the basic unit of data in MongoDB.
 
@@ -210,8 +214,8 @@ Different database sizes require different amounts of disk space:
 
 ## Additional Resources
 For more detailed information on MongoDB workload profiles and testing scenarios, see:
-* [MongoDB Workload Profiles](./mongodb-profiles.md)
-* [YCSB Details and Usage](./YCSB.md)
-* [MongoDB Testing Scripts](./testing_scripts.md)
+* [MongoDB Workload Profiles](/docs/workloads/mongodb-profiles)
+* [YCSB Details and Usage](/docs/workloads/mongodb-ycsb)
+* [MongoDB Testing Scripts](/docs/workloads/mongodb-testing)
 * [YCSB Core Workloads Documentation](https://github.com/brianfrankcooper/YCSB/wiki/Core-Workloads)
 * [YCSB Core Properties](https://github.com/brianfrankcooper/YCSB/wiki/Core-Properties)

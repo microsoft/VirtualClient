@@ -1,7 +1,11 @@
+---
+slug: /workloads/specjbb-profiles
+---
+
 # SPECjbb Profiles
 The following profiles run customer-representative or benchmarking scenarios using the SPECjbb workload.
 
-* [Workload Details](./specjbb.md)  
+* [Workload Details](/docs/workloads/specjbb)  
 
 ## PERF-SPECJBB.json
 Runs the SPECjbb benchmark workload to assess the performance of a Java Server.
@@ -22,7 +26,7 @@ Runs the SPECjbb benchmark workload to assess the performance of a Java Server.
   * Internet connection.
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
-  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+  * [Installing Dependencies](/docs/category/dependencies/)
 
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 

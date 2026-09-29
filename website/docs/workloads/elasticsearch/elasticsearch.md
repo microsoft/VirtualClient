@@ -1,3 +1,7 @@
+---
+slug: /workloads/elasticsearch
+---
+
 # ElasticSearch Rally
 
 Rally is an open-source tool that benchmarks Elasticsearch. It can also:

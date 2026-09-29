@@ -1,3 +1,7 @@
+---
+slug: /dependencies/wget-installation
+---
+
 # Wget Installation
 A dependency to assist installing packages from a remote location using the 'wget' toolset.
 

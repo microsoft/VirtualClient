@@ -1,9 +1,13 @@
+---
+slug: /workloads/network-suite-profiles
+---
+
 # Network Suite Profiles
 The following profiles run customer-representative or benchmarking scenarios using the suite of network workloads (CPS, NCPS, NTttcp, Latte and SockPerf).
 
-* [Workload Details](./network-suite.md)  
-* [Client/Server Workloads](../../guides/0020-client-server.md)
-* [Profiling Monitors](../../developing/0050-develop-profiling-monitor.md)
+* [Workload Details](/docs/workloads/network-suite)  
+* [Client/Server Workloads](/docs/guides/client-server)
+* [Profiling Monitors](/docs/developing/develop-profiling-monitor)
 
 ## Client/Server Topology Support
 The Networking workload profiles ALL require a client/server topology in order to operate. This means that there must be 2 distinct systems in order
@@ -12,7 +16,7 @@ the client and server systems will synchronize with each other before running ea
 to each instance of the Virtual Client on the command line to describe the IP address/location of other Virtual Client instances. See the section below 
 on 'Client/Server Topologies'.
 
-[Environment Layouts](../../guides/0020-client-server.md)
+[Environment Layouts](/docs/guides/client-server)
 
 In the environment layout file provided to the Virtual Client, define the role of the client system/VM as "Client" and the role of the server system/VM as "Server".
 The spelling of the roles must be exact. The IP addresses of the systems/VMs must be correct as well. The following example illustrates the
@@ -94,7 +98,7 @@ sysctl -w net.core.busy_read=50
     systems in which they are running or different ports must be used.
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
-  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+  * [Installing Dependencies](/docs/category/dependencies/)
 
 * **Scenarios**  
   The following scenarios are covered by this workload profile.

@@ -1,3 +1,7 @@
+---
+slug: /workloads/prime95
+---
+
 # Prime95
 Prime95 has been a popular choice for stress/torture testing a CPU since its introduction, especially with overclockers 
 and system builders. The software feeds the processor a barrage of integer and floating-point calculations that can be

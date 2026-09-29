@@ -1,3 +1,7 @@
+---
+slug: /workloads/openfoam
+---
+
 # OpenFOAM
 OpenFOAM is a free, open source computational fluid dynamics (CFD) software package released free and open-source under the GNU General Public License 
 through www.openfoam.com. It has a large user base across most areas of engineering and science, from both commercial and 

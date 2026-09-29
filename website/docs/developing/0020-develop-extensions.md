@@ -8,8 +8,8 @@ binaries/.dlls containing actions, monitors, dependency handlers etc... that are
 repo. Extensions allow development teams to add features to the Virtual Client runtime platform that are specialized towards their team's needs and charter.
 Before getting started, it is helpful to familiarize yourself with the Virtual Client platform design and concepts.
 
-* [General Developer Guide](./0010-develop-guide.md)
-* [Integrating Extensions at Runtime](../guides/0221-usage-extensions.md)
+* [General Developer Guide](/docs/developing/develop-guide)
+* [Integrating Extensions at Runtime](/docs/guides/usage-extensions)
 
 The following example extensions repo can be used for reference to the details described within this guide.
 
@@ -229,7 +229,7 @@ locations (normal operation) as well as within these alternate locations.
 
 #### Supported Environment Variables
 The following environment variables can be used to define alternate locations for dependencies. See the 
-[Usage Examples](https://microsoft.github.io/VirtualClient/docs/guides/0200-usage-examples/) documentation for the full set of supported environment variables.
+[Usage Examples](/docs/guides/usage-examples/) documentation for the full set of supported environment variables.
 
 * **VC_LIBRARY_PATH**   
   Defines 1 or more path locations where extensions assemblies/.dlls exist and that should be loaded at runtime. Multiple directory paths can be defined separated
@@ -329,7 +329,7 @@ The developer can choose to use a custom profile for bootstrapping/installing ex
 This next section is going to cover the topic of debugging Virtual Client extensions. It is very helpful at times when doing development work to have
 the ability to run the Virtual Client runtime executable while enabling the ability to step through the code line by line. For this section, we will be
 looking at how to do this using the Visual Studio IDE and facilities that it has to make debugging easier. Make sure to review the section "Debugging Virtual Client Code"
-at the bottom of the [General Developer Guide](./0010-develop-guide.md) for more information on debugging.
+at the bottom of the [General Developer Guide](/docs/developing/develop-guide) for more information on debugging.
 
 * **Debug Using Unit/Functional Tests**  
   This option is documented in the general developer guide. The technique is the same for debugging extensions as it is for any other component.

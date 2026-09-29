@@ -1,3 +1,7 @@
+---
+slug: /dependencies/install-mysql
+---
+
 # Install MySQL
 Virtual Client has a dependency component that can be added to a workload or monitor profile to install MySQL on the system. The following section illustrates the
 details for integrating this into the profile.

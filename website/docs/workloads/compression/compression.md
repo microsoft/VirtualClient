@@ -1,3 +1,7 @@
+---
+slug: /workloads/compression
+---
+
 # Compression
 This represents a suite of workloads that focus on compression and decompression, algorithms often used in media and streaming
 applications. The following list of compression/decompression software toolsets are incorporated:
@@ -14,7 +18,7 @@ applications. The following list of compression/decompression software toolsets 
   Gzip is a single-file/stream lossless data compression utility, where the resulting compressed file generally has the suffix .gz.
   Gzip also refers to the associated compressed data format used by the utility.
 
-* [Pbzip2](./pbzip2.md)  
+* [Pbzip2](https://linux.die.net/man/1/pbzip2)  
   PBZIP2 is a parallel implementation of the bzip2 block-sorting file compressor that uses pthreads and achieves near-linear speedup on SMP machines. The output of this
   version is fully compatible with bzip2 v1.0.2 or newer (ie: anything compressed with pbzip2 can be decompressed with bzip2). PBZIP2 should work on any system 
   that has a pthreads compatible C++ compiler (such as gcc).

@@ -1,3 +1,7 @@
+---
+slug: /dependencies/execute-command
+---
+
 # Execute Command
 A dependency to execute a command on the system, in a specified working directory.
 

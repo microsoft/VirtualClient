@@ -1,7 +1,11 @@
+---
+slug: /workloads/coremark-profiles
+---
+
 # CoreMark Profiles
 The following profiles run customer-representative or benchmarking scenarios using the CoreMark workload.  
 
-* [Workload Details](./coremark.md)  
+* [Workload Details](/docs/workloads/coremark)  
 
 ## Preliminaries
 CoreMark workload profiles have no dependencies on a package store and so this information is not required on the command line for the profiles 
@@ -32,7 +36,7 @@ compared against a baseline. CoreMark is an industry standard benchmarking tools
   * Internet connection.
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
-  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+  * [Installing Dependencies](/docs/category/dependencies/)
 
 * **Profile Parameters**  
   The following parameters can be optionally supplied on the command line to modify the behaviors of the workload.
@@ -83,7 +87,7 @@ Runs a CPU-intensive workload using the CoreMark toolset to test the performance
   * Internet connection.
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
-  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+  * [Installing Dependencies](/docs/category/dependencies/)
 
 * **Profile Parameters**  
   The following parameters can be optionally supplied on the command line to modify the behaviors of the workload.

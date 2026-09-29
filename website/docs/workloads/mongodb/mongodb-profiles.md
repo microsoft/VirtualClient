@@ -1,14 +1,18 @@
+---
+slug: /workloads/mongodb-profiles
+---
+
 # MongoDB Profiles
 The following profile runs customer-representative or benchmarking scenarios using the YCSB (Yahoo! Cloud Serving Benchmark) workload against
 a MongoDB server.
 
-* [Workload Details](./mongodb.md)  
-* [Client/Server Workloads](../../guides/0020-client-server.md)
+* [Workload Details](/docs/workloads/mongodb)  
+* [Client/Server Workloads](/docs/guides/client-server)
 
 ## Client/Server Topology Support
 MongoDB workload profiles support running the workload in a client/server topology. This means that the workload is designed to run on 2 distinct systems. The client/server topology is used to include a network component in the overall performance evaluation. In a client/server topology, one system operates in the 'Client' role making calls to the system operating in the 'Server' role. The Virtual Client instances running on the client and server systems will synchronize with each other before running the workload. In order to support a client/server topology, an environment layout file MUST be supplied to each instance of the Virtual Client on the command line to describe the IP address/location of other Virtual Client instances.
 
-* [Environment Layouts](../../guides/0020-client-server.md)
+* [Environment Layouts](/docs/guides/client-server)
 
 In the environment layout file provided to the Virtual Client, define the role of the client system/VM as "Client" and the role of the server system(s)/VM(s) as "Server".
 The spelling of the roles must be exact. The IP addresses of the systems/VMs must be correct as well. The following example illustrates the
@@ -64,7 +68,7 @@ This profile loads a dataset into MongoDB and then runs various read, write, sca
     or must match the name of the system as defined by the operating system itself.
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
-  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+  * [Installing Dependencies](/docs/category/dependencies/)
 
 * **Profile Parameters**  
   The following parameters can be optionally supplied on the command line to modify the behaviors of the workload.

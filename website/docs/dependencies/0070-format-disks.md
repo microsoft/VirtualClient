@@ -1,3 +1,7 @@
+---
+slug: /dependencies/format-disks
+---
+
 # Format Disks
 Virtual Client has a dependency component that can be added to a workload or monitor profile to format disks before execution. The following section illustrates the
 details for integrating this into the profile.

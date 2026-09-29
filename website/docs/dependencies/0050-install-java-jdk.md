@@ -1,8 +1,12 @@
+---
+slug: /dependencies/install-java-jdk
+---
+
 # Install Java JDK
 The Java JDK Virtual Client uses is [Microsoft Build of OpenJDK](https://docs.microsoft.com/en-us/java/openjdk/download).
 
 :::info
-This dependency derived from DependencyPackageInstallation [`dependency package installation`](./0001-install-vc-packages.md) for downloading and installing JDK via blob container.Check example below.
+This dependency derived from DependencyPackageInstallation [`dependency package installation`](/docs/dependencies/install-vc-packages) for downloading and installing JDK via blob container.Check example below.
 :::
 
 - [MSFT OpenJDK Installation Guide](https://docs.microsoft.com/en-us/java/openjdk/install)
