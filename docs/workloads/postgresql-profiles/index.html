@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">PostgreSQL Profiles | Virtual Client Platform</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://microsoft.github.io/VirtualClient/docs/workloads/postgresql-profiles/"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="keywords" content="performance, benchmarking, automation, framework, microsoft"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="PostgreSQL Profiles | Virtual Client Platform"><meta data-rh="true" name="description" content="The following profiles run customer-representative or benchmarking scenarios using the postgresql workload."><meta data-rh="true" property="og:description" content="The following profiles run customer-representative or benchmarking scenarios using the postgresql workload."><link data-rh="true" rel="icon" href="/VirtualClient/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://microsoft.github.io/VirtualClient/docs/workloads/postgresql-profiles/"><link data-rh="true" rel="alternate" href="https://microsoft.github.io/VirtualClient/docs/workloads/postgresql-profiles/" hreflang="en"><link data-rh="true" rel="alternate" href="https://microsoft.github.io/VirtualClient/docs/workloads/postgresql-profiles/" hreflang="x-default"><link data-rh="true" rel="preconnect" href="https://0I7D8A07MA-dsn.algolia.net" crossorigin="anonymous"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Workloads","item":"https://microsoft.github.io/VirtualClient/docs/category/workloads"},{"@type":"ListItem","position":2,"name":"PostgreSQL","item":"https://microsoft.github.io/VirtualClient/docs/workloads/postgresql"},{"@type":"ListItem","position":3,"name":"PostgreSQL Profiles","item":"https://microsoft.github.io/VirtualClient/docs/workloads/postgresql-profiles"}]}</script><link rel="search" type="application/opensearchdescription+xml" title="Virtual Client Platform" href="/VirtualClient/opensearch.xml"><link rel="stylesheet" href="/VirtualClient/assets/css/styles.7f776683.css">
-<script src="/VirtualClient/assets/js/runtime~main.82c0c0df.js" defer="defer"></script>
-<script src="/VirtualClient/assets/js/main.bf1722bf.js" defer="defer"></script>
+<script src="/VirtualClient/assets/js/runtime~main.bd550dc0.js" defer="defer"></script>
+<script src="/VirtualClient/assets/js/main.7202de4d.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -15,7 +15,7 @@
 <p>The following profiles run customer-representative or benchmarking scenarios using the postgresql workload.</p>
 <ul>
 <li class=""><a class="" href="/VirtualClient/docs/workloads/postgresql/">Workload Details</a></li>
-<li class=""><a class="" href="/VirtualClient/docs/guides/0020-client-server/">Client/Server Workloads</a></li>
+<li class=""><a class="" href="/VirtualClient/docs/guides/client-server/">Client/Server Workloads</a></li>
 </ul>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="clientserver-topology-support">Client/Server Topology Support<a href="#clientserver-topology-support" class="hash-link" aria-label="Direct link to Client/Server Topology Support" title="Direct link to Client/Server Topology Support" translate="no">​</a></h2>
 <p>PostgreSQL workload profiles support running the workload on both a single system as well as in a client/server topology. This means that the workload supports operation on a single system or on 2 distinct systems. The client/server topology is typically used when it is desirable to include a network component in the
@@ -23,7 +23,7 @@ overall performance evaluation. In a client/server topology, one system operates
 The Virtual Client instances running on the client and server systems will synchronize with each other before running the workload. In order to support a client/server topology,
 an environment layout file MUST be supplied to each instance of the Virtual Client on the command line to describe the IP address/location of other Virtual Client instances. An environment layout file is not required for the single system topology.</p>
 <ul>
-<li class=""><a class="" href="/VirtualClient/docs/guides/0020-client-server/">Environment Layouts</a></li>
+<li class=""><a class="" href="/VirtualClient/docs/guides/client-server/">Environment Layouts</a></li>
 </ul>
 <p>In the environment layout file provided to the Virtual Client, define the role of the client system/VM as &quot;Client&quot; and the role of the server system(s)/VM(s) as &quot;Server&quot;.
 The spelling of the roles must be exact. The IP addresses of the systems/VMs must be correct as well. The following example illustrates the
@@ -99,7 +99,7 @@ or must match the name of the system as defined by the operating system itself.<
 </ul>
 <p>Additional information on components that exist within the &#x27;Dependencies&#x27; section of the profile can be found in the following locations:</p>
 <ul>
-<li class=""><a href="https://microsoft.github.io/VirtualClient/docs/category/dependencies/" target="_blank" rel="noopener noreferrer" class="">Installing Dependencies</a></li>
+<li class=""><a class="" href="/VirtualClient/docs/category/dependencies/">Installing Dependencies</a></li>
 </ul>
 </li>
 <li class="">
