@@ -301,15 +301,9 @@ namespace VirtualClient.Actions
                 jobFileContent.AppendLine();
                 jobFileContent.AppendLine($"[{jobName}]");
 
-                string fileName = null;
-                if (this.RawDisk)
-                {
-                    fileName = disk.DevicePath;
-                }
-                else
-                {
-                    fileName = this.PlatformSpecifics.Combine(disk.GetPreferredAccessPath(platformSpecifics.Platform), testFileName);
-                }
+                string fileName = this.RawDisk
+                    ? this.GetTestDevicePath(disk)
+                    : this.PlatformSpecifics.Combine(disk.GetPreferredAccessPath(platformSpecifics.Platform), testFileName);
 
                 jobFileContent.AppendLine($"filename={fileName}");
             }
@@ -745,8 +739,11 @@ namespace VirtualClient.Actions
             string devicePath = null;
             if (this.RawDisk)
             {
-                // e.g. /dev/sda, /dev/sdb, /dev/sdc, etc...
-                devicePath = disk.DevicePath;
+                // FIO uses the PhysicalDrive device namespace on Windows. Virtual Client's
+                // Windows disk model uses PHYSICALDISK paths internally.
+                devicePath = this.Platform == PlatformID.Win32NT
+                    ? $@"\\.\PhysicalDrive{disk.Index}"
+                    : disk.DevicePath;
             }
             else
             {
