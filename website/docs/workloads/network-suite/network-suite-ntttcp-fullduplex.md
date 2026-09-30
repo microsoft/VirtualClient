@@ -34,14 +34,11 @@ Override with `--parameters=DuplexMode=Full` to enable full-duplex.
 
 * [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-NETWORK-NTTTCP.json)
 
-* **Supported Platform/Architectures**
+* **Supported Platform-Architectures**
   * linux-x64
   * linux-arm64
   * win-x64
   * win-arm64
-
-* **Supports Disconnected Scenarios**  
-  * No. Internet connection required.
 
 * **Dependencies**  
   Same as the standard PERF-NETWORK-NTTTCP.json profile:

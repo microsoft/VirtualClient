@@ -12,7 +12,7 @@ Runs the SPECjvm benchmark workload to evaluate the performance of the core Java
 
 * [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-SPECJVM.json) 
 
-* **Supported Platform/Architectures**
+* **Supported Platform-Architectures**
   * linux-x64
   * linux-arm64
   * win-x64

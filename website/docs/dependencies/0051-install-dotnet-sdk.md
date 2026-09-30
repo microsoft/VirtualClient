@@ -8,7 +8,7 @@ Virtual Client allows the user to define the version of the .NET SDK. In practic
 
 - [SDK Documentation](https://learn.microsoft.com/en-us/dotnet/core/sdk)
 
-## Supported Platform/Architectures
+## Supported Platform-Architectures
 * linux-x64
 * linux-arm64
 * win-x64

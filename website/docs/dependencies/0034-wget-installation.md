@@ -7,7 +7,7 @@ A dependency to assist installing packages from a remote location using the 'wge
 
 - [Wget Documentation](https://www.gnu.org/software/wget/manual/wget.html)
 
-## Supported Platform/Architectures
+## Supported Platform-Architectures
 * linux-x64
 * linux-arm64
 * win-x64

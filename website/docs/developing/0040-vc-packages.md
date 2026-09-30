@@ -85,7 +85,7 @@ is simply easier to go with a pattern that works on both by lower-casing your pa
 examples below.
 
 ## Packages with Binaries/Scripts that Run Anywhere
-Virtual Client supports certain types of workloads/dependencies that can essentially run on 'any' platform/architecture that the Virtual Client itself
+Virtual Client supports certain types of workloads/dependencies that can essentially run on 'any' platform-architecture that the Virtual Client itself
 runs on. For example, certain workloads use the Java runtime to operate. The binaries and scripts should be placed in the parent directory alongside
 the .vcpkg file. The following examples illustrate the expected folder structure.
 
@@ -147,8 +147,8 @@ the .vcpkg file. The following examples illustrate the expected folder structure
   </div>
 
 ## Packages with Support for Different Platform/Architectures
-Virtual Client also supports binaries/scripts that are compiled specific to a set of platform/architectures. For these type of packages, the
-folder structure should match the platform/architectures that are supported. The following examples illustrate the expected folder structure.
+Virtual Client also supports binaries/scripts that are compiled specific to a set of platform-architectures. For these type of packages, the
+folder structure should match the platform-architectures that are supported. The following examples illustrate the expected folder structure.
 
 * /packageroot
   * packagename.vcpkg

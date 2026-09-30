@@ -11,7 +11,7 @@ details for integrating this into the profile.
 - [Windows Drivers] (https://learn.microsoft.com/en-us/azure/virtual-machines/windows/n-series-amd-driver-setup)
 - [Linux Drivers] (https://repo.radeon.com/amdgpu-install)
 
-## Supported Platform/Architectures
+## Supported Platform-Architectures
 * linux-x64 (Ubuntu)
 * win-x64
 

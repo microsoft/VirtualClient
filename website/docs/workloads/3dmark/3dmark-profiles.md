@@ -17,11 +17,8 @@ any of the dependencies required by the driver. If the driver is not already ins
 
 * [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-GPU-3DMARK.json) 
 
-* **Supported Platform/Architectures**
+* **Supported Platform-Architectures**
   * win-x64
-
-* **Supports Disconnected Scenarios**  
-  * Yes. Internet connection only required for lisence key validation.
 
 * **Dependencies**  
   * Internet connection.

@@ -49,16 +49,9 @@ This profile loads a dataset into MongoDB and then runs various read, write, sca
 
 * [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-MONGODB-YCSB.json) 
 
-* **Supported Platform/Architectures**
+* **Supported Platform-Architectures**
   * linux-x64
   * linux-arm64
-
-* **Supported Operating Systems**  
-  * AzureLinux
-  * Ubuntu
-
-* **Supports Disconnected Scenarios**  
-  * No. Internet connection required.
 
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.

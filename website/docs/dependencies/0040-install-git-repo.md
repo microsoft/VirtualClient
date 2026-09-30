@@ -12,7 +12,7 @@ Some Windows versions do not have `Git` installed by default. You will need to i
 * [Install Chocolatey](/docs/dependencies/install-chocolatey)
 * [Install Chocolatey Packages](/docs/dependencies/install-chocolatey-packages)
 
-## Supported Platform/Architectures
+## Supported Platform-Architectures
 * linux-x64
 * linux-arm64
 * win-x64

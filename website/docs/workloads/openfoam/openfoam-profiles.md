@@ -12,7 +12,7 @@ Runs the OpenFOAM workload which measures performance in terms of iterations per
 
 * [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-OPENFOAM.json) 
 
-* **Supported Platform/Architectures**
+* **Supported Platform-Architectures**
   * linux-x64
   * linux-arm64
 

@@ -39,13 +39,10 @@ aspects of the workload execution.
   total # jobs/threads = 64/2 (above) -> 512/32 = 16
   ```
 
-* **Supported Platform/Architectures**  
+* **Supported Platform-Architectures**  
   * linux-x64
   * linux-arm64
   * win-x64
-
-* **Supports Disconnected Scenarios**  
-  * No. Internet connection required.
 
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
@@ -174,7 +171,7 @@ weight/percentage.
   * Sequential Read Weight = 0%   
   * Sequential Write Weight = 3.29%  
 
-* **Supported Platform/Architectures**
+* **Supported Platform-Architectures**
   * linux-x64
   * linux-arm64
   * win-x64  

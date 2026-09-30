@@ -11,7 +11,7 @@ Reference the following documentation on Virtual Client dependency packages for 
 
 * [VC Packages](/docs/developing/vc-packages)
 
-## Supported Platform/Architectures
+## Supported Platform-Architectures
 * linux-x64
 * linux-arm64
 * win-x64

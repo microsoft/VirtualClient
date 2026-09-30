@@ -14,17 +14,13 @@ against a baseline. GeekBench is an industry standard benchmarking toolset.
 
 * [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-CPU-GEEKBENCH5.json) 
 
-* **Supported Platform/Architectures**
+* **Supported Platform-Architectures**
   Note that GeekBench5 runs on linux-arm64 systems; however, to do so requires that the date be uploaded to Primate Labs' (the producer of GeekBench)
   data systems. We do not sanction or support uploading customer data to unexpected systems and thus do not support the use of GeekBench5 on
   linux-arm64 systems.
   * linux-x64 
   * win-x64
   * win-arm64
-
-* **Supports Disconnected Scenarios**  
-  * Yes. When the GeekBench5 package is included in 'packages' directory of the Virtual Client.
-    * [Installing VC Packages](/docs/dependencies/install-vc-packages). 
 
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
@@ -54,15 +50,11 @@ against a baseline. GeekBench is an industry standard benchmarking toolset.
 
 * [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-CPU-GEEKBENCH.json) 
 
-* **Supported Platform/Architectures**
+* **Supported Platform-Architectures**
   * linux-x64 
   * linux-arm64 
   * win-x64
   * win-arm64
-
-* **Supports Disconnected Scenarios**  
-  * Yes. When the GeekBench6 package is included in 'packages' directory of the Virtual Client.
-    * [Installing VC Packages](/docs/dependencies/install-vc-packages). 
 
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.

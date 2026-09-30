@@ -12,7 +12,7 @@ order to capture performance and reliability information from the system while w
 The default monitor profile for the Virtual Client. This profile captures performance counters on the system using one or more different specialized
 toolsets. This monitor profile will be used when no other monitor profiles are specified on the command line.
 
-* **Supported Platform/Architectures**  
+* **Supported Platform-Architectures**  
   Counters captured on Linux systems using Atop application. Counters captured on Windows systems using the .NET SDK.
 
   * linux-x64
@@ -69,7 +69,7 @@ Note that this profile requires the AMD GPU driver to be already installed on th
 any of the dependencies required by the driver. If the driver is not already installed, then this profile will fail to capture monitoring information.
 </mark>
 
-* **Supported Platform/Architectures**  
+* **Supported Platform-Architectures**  
   * linux-x64
   * linux-arm64
 
@@ -109,7 +109,7 @@ Note that this profile requires the Nvidia GPU driver and CUDA toolsets to be al
 any of the dependencies required by the driver. If the driver is not already installed, then this profile will fail to capture monitoring information.
 </mark>
 
-* **Supported Platform/Architectures**  
+* **Supported Platform-Architectures**  
   * linux-x64
   * linux-arm64
 

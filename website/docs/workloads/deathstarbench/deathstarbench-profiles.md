@@ -51,19 +51,12 @@ idea. The name of the client must match the name of the system or the value of t
 ```
 
 ## PERF-NETWORK-DEATHSTARBENCH.json
-Runs a Network intensive workload using the DeathStarBench toolset to test the Network performance in processing HTTP load to 
-the server between applications in a Docker swarm environment.
+Runs a Network intensive workload using the DeathStarBench toolset to test the Network performance in processing HTTP load to the server between applications in a Docker swarm environment.
 
 * [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-NETWORK-DEATHSTARBENCH.json) 
 
-* **Supported Platform/Architectures**
+* **Supported Platform-Architectures**
   * linux-x64
-
-* **Supported Operating Systems**
-   * Ubuntu
-
-* **Supports Disconnected Scenarios**  
-  * No. Internet connection required.
 
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.

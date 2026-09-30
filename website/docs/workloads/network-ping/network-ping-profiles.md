@@ -13,14 +13,11 @@ respond to network ping requests.
 
 * [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-NETWORK-PING.json) 
 
-* **Supported Platform/Architectures**
+* **Supported Platform-Architectures**
   * linux-x64
   * linux-arm64
   * win-x64
   * win-arm64
-
-* **Supports Disconnected Scenarios**  
-  * Yes. If the system local/loopback address (127.0.0.1) is used as the target IP address.
 
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.

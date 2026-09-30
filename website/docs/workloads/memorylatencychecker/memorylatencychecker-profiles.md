@@ -13,16 +13,9 @@ Runs the Memory Latency Checker workload to measure memory latency and bandwidth
 
 * [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-MEM-LATENCY.json)  
 
-* **Supported Platform/Architectures**
+* **Supported Platform-Architectures**
   * linux-x64
   * win-x64
-
-* **Supported Operating Systems**
-  * Azure Linux 3, 4
-  * Ubuntu 20.04, 22.04, 24.04
-  * RedHat 8, 9
-  * Windows 10, 11
-  * Windows Server 2019, 2022, 2025
 
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.

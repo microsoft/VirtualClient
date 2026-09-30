@@ -20,15 +20,12 @@ for evaluating the performance of the CPU for processing calculations.
 
 * [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-SPECCPU-FPRATE.json)
 
-* **Supported Platform/Architectures**
+* **Supported Platform-Architectures**
   * linux-x64
   * linux-arm64
   * win-x64
   * win-arm64
  
-* **Supports Disconnected Scenarios**  
-  * No. Internet connection required.
-
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
   * Internet connection.
@@ -83,9 +80,6 @@ for evaluating the performance of the CPU for processing calculations.
   * win-x64
   * win-arm64
 
-* **Supports Disconnected Scenarios**  
-  * No. Internet connection required.
-
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
   * Internet connection.
@@ -134,9 +128,6 @@ for evaluating the performance of the CPU for processing calculations.
   * linux-arm64
   * win-x64
   * win-arm64
-
-* **Supports Disconnected Scenarios**  
-  * No. Internet connection required.
 
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
@@ -187,9 +178,6 @@ for evaluating the performance of the CPU for processing calculations.
   * win-x64
   * win-arm64
 
-* **Supports Disconnected Scenarios**  
-  * No. Internet connection required.
-
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
   * Internet connection.
@@ -233,14 +221,11 @@ for evaluating the performance of the CPU for processing calculations.
 
 * [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-SPECCPU-FPRATE.json)
 
-* **Supported Platform/Architectures**
+* **Supported Platform-Architectures**
   * linux-x64
   * linux-arm64
 
   **Note**: On Windows platform, the **gcc** compiler version is required to be 10 or higher.  
-
-* **Supports Disconnected Scenarios**  
-  * No. Internet connection required.
 
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
@@ -291,9 +276,6 @@ for evaluating the performance of the CPU for processing calculations.
   * linux-x64
   * linux-arm64
 
-* **Supports Disconnected Scenarios**  
-  * No. Internet connection required.
-
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
   * Internet connection.
@@ -338,9 +320,6 @@ for evaluating the performance of the CPU for processing calculations.
   * linux-x64
   * linux-arm64
 
-* **Supports Disconnected Scenarios**  
-  * No. Internet connection required.
-
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
   * Internet connection.
@@ -384,9 +363,6 @@ for evaluating the performance of the CPU for processing calculations.
 * **OS/Architecture Platforms**
   * linux-x64
   * linux-arm64
-
-* **Supports Disconnected Scenarios**  
-  * No. Internet connection required.
 
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.

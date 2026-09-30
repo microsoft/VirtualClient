@@ -127,7 +127,7 @@ important thing is to keep things as simple as possible.
   folder. Good documentation is an important part of the quality bar that the team holds ensuring that users/customers can always learn more
   about the Virtual Client. There are patterns in place within the documentation to guide developers through the process.
 
-* **Components should be implemented to support ALL possible platform/architectures**  
+* **Components should be implemented to support ALL possible platform-architectures**  
   The Virtual Client is generally designed to run in as many scenarios as possible. To do so, a developer has to consider whether the component
   they are onboarding can run on Windows or Linux, x64 (Intel, AMD) or ARM64 architecture. Many times the .NET framework itself provides for the
   ability to run cross-OS platform/cross-CPU architecture. However, there are times when the logic must implement support in a slightly different
@@ -597,7 +597,7 @@ method is required to be implemented. The other methods are optional and may be 
 * **IsSupported**  
   Method is executed to determin whether or not the component should be executed on the system. Reasons why a component might not be valid/supported
   for a given system include:
-  * The component or its dependencies cannot run on the current platform/architecture (e.g. win-arm64, linux-arm64).
+  * The component or its dependencies cannot run on the current platform-architecture (e.g. win-arm64, linux-arm64).
   * The component or its dependencies cannot run on the current distro of the operating system (e.g. Ubuntu, Redhat).
 
 * **InitializeAsync**  

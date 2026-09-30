@@ -15,7 +15,7 @@ RAID 0 array creation and may cause the operation to fail.
 This component requires the **system_config** package (version **1.1.0** or later) which contains the platform-specific striping scripts. Add a 
 `DependencyPackageInstallation` step for `system_config` (>= 1.1.0) in the profile **before** the `StripeDisks` step.
 
-## Supported Platform/Architectures
+## Supported Platform-Architectures
 * linux-x64
 * linux-arm64
 * win-x64

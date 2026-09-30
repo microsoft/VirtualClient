@@ -13,14 +13,11 @@ using four simple vector kernels (Copy, Scale, Add, and Triad) designed to stres
 
 * [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-MEM-STREAM.json)
 
-* **Supported Platform/Architectures**
+* **Supported Platform-Architectures**
   * linux-x64
   * linux-arm64
   * win-x64
   * win-arm64
-
-* **Supports Disconnected Scenarios**  
-  * No. Internet connection required.
 
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
@@ -69,11 +66,8 @@ the most representative of real-world memory access patterns.
 
 * [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-MEM-STREAMTRIAD.json)
 
-* **Supported Platform/Architectures**
+* **Supported Platform-Architectures**
   * linux-x64
-
-* **Supports Disconnected Scenarios**  
-  * No. Internet connection required.
 
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
@@ -116,11 +110,8 @@ includes additional memory operations (Read and Write) beyond the standard STREA
 
 * [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-MEM-STREAMMSFT.json)
 
-* **Supported Platform/Architectures**
+* **Supported Platform-Architectures**
   * linux-arm64
-
-* **Supports Disconnected Scenarios**  
-  * No. Internet connection required.
 
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.

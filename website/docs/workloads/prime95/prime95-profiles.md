@@ -14,13 +14,9 @@ the performance of the CPU over various periods of time while also allowing the 
 
 * [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-CPU-PRIME95.json)
 
-* **Supported Platform/Architectures**
+* **Supported Platform-Architectures**
   * linux-x64
   * win-x64
-
-* **Supports Disconnected Scenarios**  
-  * Yes. When the Prime95 package is included in 'packages' directory of the Virtual Client.
-    * [Installing VC Packages](/docs/dependencies/install-vc-packages).
 
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.

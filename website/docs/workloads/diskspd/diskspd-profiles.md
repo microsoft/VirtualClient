@@ -38,19 +38,9 @@ aspects of the workload execution.
 
 * [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-IO-DISKSPD.json) 
 
-* **Supported Platform/Architectures**
+* **Supported Platform-Architectures**
   * win-x64
   * win-arm64
-
-* **Supported Operating Systems**
-  * Windows 10
-  * Windows 11
-  * Windows Server 2016
-  * Windows Server 2019
-
-* **Supports Disconnected Scenarios**  
-  * Yes. When the DiskSpd package is included in 'packages' directory of the Virtual Client.
-    * [Installing VC Packages](/docs/dependencies/install-vc-packages).
 
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.

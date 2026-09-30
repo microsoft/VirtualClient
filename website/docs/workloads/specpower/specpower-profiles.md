@@ -12,14 +12,11 @@ Runs the SPEC Power benchmark workload on the system targeting 30% system resour
 consumption/draw on a system. Each of the different profiles is designed to use a specific percentage of the resources on the 
 system in a steady-state usage pattern.
 
-* **Supported Platform/Architectures**
+* **Supported Platform-Architectures**
   * linux-x64
   * linux-arm64
   * win-x64
   * win-arm64
-
-* **Supports Disconnected Scenarios**  
-  * No. Internet connection required.
 
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
@@ -56,9 +53,6 @@ system in a steady-state usage pattern.
   * win-x64
   * win-arm64
 
-* **Supports Disconnected Scenarios**  
-  * No. Internet connection required.
-
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
   * Internet connection.
@@ -94,9 +88,6 @@ system in a steady-state usage pattern.
   * win-x64
   * win-arm64
 
-* **Supports Disconnected Scenarios**  
-  * No. Internet connection required.
-
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
   * Internet connection.
@@ -131,9 +122,6 @@ system in a steady-state usage pattern.
   * linux-arm64
   * win-x64
   * win-arm64
-
-* **Supports Disconnected Scenarios**  
-  * No. Internet connection required.
 
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.

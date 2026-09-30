@@ -15,7 +15,7 @@ This dependency derived from DependencyPackageInstallation [`dependency package 
   configure the environment variable "JAVA_HOME" to the copied path. 
 - The configured environment variable is used within the code/logic to execute Java binaries from the installed JDK.
 
-## Supported Platform/Architectures
+## Supported Platform-Architectures
 * linux-x64
 * linux-arm64
 * win-x64

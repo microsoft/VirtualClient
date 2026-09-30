@@ -7,7 +7,7 @@ Docker is a platform to help develop and ship applications. Should a workload re
 
 - [Docker Documentation](https://docs.docker.com/)
 
-## Supported Platform/Architectures
+## Supported Platform-Architectures
 * linux-x64
 * linux-arm64
 

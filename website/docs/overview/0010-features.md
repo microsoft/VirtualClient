@@ -50,15 +50,15 @@ Goals of the platform include:
   * Well-vetted and simplified design patterns.
   * Inner "open source" ready code repository.
 
-* **Cover core operating systems used by the majority of cloud system customers.**
+* **Covers common operating systems used by the majority of cloud provider customers.**
+  * Azure Linux
+  * CentOS
+  * Debian
+  * Fedora
+  * Ubuntu
+  * Redhat Enterprise
   * Windows
   * Windows Server
-  * Ubuntu
-  * RHEL
-  * CENTOS
-  * SUSE
-  * Mariner
-  * more
 
 * **Cover core processor architectures in hardware systems used by cloud system customers.**
   * Intel 64-bit(x64) architecture.

@@ -12,7 +12,7 @@ Install packages available in Chocolatey Package in Windows.
 This step depends on the [installation of Chocolatey](/docs/dependencies/install-chocolatey).
 :::
 
-## Supported Platform/Architectures
+## Supported Platform-Architectures
 * win-x64
 * win-arm64
 

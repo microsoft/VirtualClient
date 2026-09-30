@@ -11,11 +11,8 @@ The following profiles run DCGMI for qualifying GPUs.
 DCGM is part of the Nvidia GPU Deployment Kit and is designed to work with Nvidia's Tesla GPU accelerators, which are commonly used in data centers for high-performance computing and other GPU-accelerated workloads.
 This profile is designed to identify general/broad regressions when compared against a baseline by validating few tests as part of Active health checks.
 
-* **Supported Platform/Architectures**
+* **Supported Platform-Architectures**
   * linux-x64
-
-* **Supports Disconnected Scenarios**  
-  * No. Internet connection required.
 
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.

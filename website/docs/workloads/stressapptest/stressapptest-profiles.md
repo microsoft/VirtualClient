@@ -12,13 +12,9 @@ Runs the StressAppTest workload for a specific period of time on the system. Thi
 the purpose of evaluating the performance of the Memory over various periods of time while allowing the user to apply a longer-term stress
 to the system if desired.
 
-* **Supported Platform/Architectures**
+* **Supported Platform-Architectures**
   * linux-x64
   * linux-arm64
-
-* **Supports Disconnected Scenarios**
-  * Yes. When the StressAppTest package is included in 'packages' directory of the Virtual Client.
-    * [Installing VC Packages](/docs/dependencies/install-vc-packages).
 
 * **Dependencies**
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.

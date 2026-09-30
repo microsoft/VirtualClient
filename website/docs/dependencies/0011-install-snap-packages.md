@@ -11,7 +11,7 @@ Install packages available using the Snap Package Manager.
 Installing snap packages depends on the successful installation of the snapd service. Follow the example below to make sure the snapd service is installed correctly using the [LinuxPackageInstallation dependency](/docs/dependencies/install-linux-packages) before adding this one.
 :::
 
-## Supported Platform/Architectures
+## Supported Platform-Architectures
 * linux-x64
 * linux-arm64
 

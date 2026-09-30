@@ -9,7 +9,7 @@ details for integrating this into the profile.
 - [NVIDIA Official Drivers Page](https://www.nvidia.com/Download/index.aspx)
 - [CUDA Toolkit Downloads](https://developer.nvidia.com/cuda-downloads)
 
-## Supported Platform/Architectures
+## Supported Platform-Architectures
 * linux-x64 (Ubuntu, Debian, CentOS7, RHEL7, RHEL8, SUSE)
 * win-x64
 

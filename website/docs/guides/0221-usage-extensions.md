@@ -83,18 +83,18 @@ is covered more in-depth in the `Developing Extensions` documentation noted at t
   ~/virtualclient.1.15.0/linux-x64/packages/any.virtualclient.extensions.1.0.0
   ~/virtualclient.1.15.0/linux-x64/packages/any.virtualclient.extensions.1.0.0/any.virtualclient.extensions.1.0.0.vcpkg
 
-  # Each extensions package may contain 1 or more platform/architecture folders.
+  # Each extensions package may contain 1 or more platform-architecture folders.
   ~/virtualclient.1.15.0/linux-x64/packages/any.virtualclient.extensions.1.0.0/linux-arm64
   ~/virtualclient.1.15.0/linux-x64/packages/any.virtualclient.extensions.1.0.0/linux-x64
   ~/virtualclient.1.15.0/linux-x64/packages/any.virtualclient.extensions.1.0.0/win-arm64
   ~/virtualclient.1.15.0/linux-x64/packages/any.virtualclient.extensions.1.0.0/win-x64
 
-  # Binary extensions within each supported platform/architecture folder.
+  # Binary extensions within each supported platform-architecture folder.
   ~/virtualclient.1.15.0/linux-x64/packages/any.virtualclient.extensions.1.0.0/linux-x64/Any.VirtualClient.Extensions.Actions.dll
   ~/virtualclient.1.15.0/linux-x64/packages/any.virtualclient.extensions.1.0.0/linux-x64/Any.VirtualClient.Extensions.Dependencies.dll
   ~/virtualclient.1.15.0/linux-x64/packages/any.virtualclient.extensions.1.0.0/linux-x64/Any.VirtualClient.Extensions.Monitors.dll
 
-   # Profile extensions within each supported platform/architecture folder
+   # Profile extensions within each supported platform-architecture folder
    # in a 'profiles' sub-folder.
   ~/virtualclient.1.15.0/linux-x64/packages/any.virtualclient.extensions.1.0.0/linux-x64/profiles
   ~/virtualclient.1.15.0/linux-x64/packages/any.virtualclient.extensions.1.0.0/linux-x64/profiles/MONITORS-CUSTOM-1.json
@@ -126,18 +126,18 @@ is covered more in-depth in the `Developing Extensions` documentation noted at t
   /home/user/extensions_packages/any.virtualclient.extensions.1.0.0
   /home/user/extensions_packages/any.virtualclient.extensions.1.0.0/any.virtualclient.extensions.1.0.0.vcpkg
 
-  # Each extensions package may contain 1 or more platform/architecture folders.
+  # Each extensions package may contain 1 or more platform-architecture folders.
   /home/user/extensions_packages/any.virtualclient.extensions.1.0.0/linux-arm64
   /home/user/extensions_packages/any.virtualclient.extensions.1.0.0/linux-x64
   /home/user/extensions_packages/any.virtualclient.extensions.1.0.0/win-arm64
   /home/user/extensions_packages/any.virtualclient.extensions.1.0.0/win-x64
 
-  # Binary extensions within each supported platform/architecture folder.
+  # Binary extensions within each supported platform-architecture folder.
   /home/user/extensions_packages/any.virtualclient.extensions.1.0.0/linux-x64/Any.VirtualClient.Extensions.Actions.dll
   /home/user/extensions_packages/any.virtualclient.extensions.1.0.0/linux-x64/Any.VirtualClient.Extensions.Dependencies.dll
   /home/user/extensions_packages/any.virtualclient.extensions.1.0.0/linux-x64/Any.VirtualClient.Extensions.Monitors.dll
 
-   # Profile extensions within each supported platform/architecture folder
+   # Profile extensions within each supported platform-architecture folder
    # in a 'profiles' sub-folder.
   /home/user/extensions_packages/any.virtualclient.extensions.1.0.0/linux-x64/profiles
   /home/user/extensions_packages/any.virtualclient.extensions.1.0.0/linux-x64/profiles/MONITORS-CUSTOM-1.json
@@ -204,7 +204,7 @@ how to incorporate script-based extensions:
   ~/virtualclient.1.15.0/linux-x64/packages/any.script.extensions.1.0.0/linux-x64/execute.py
   ~/virtualclient.1.15.0/linux-x64/packages/any.script.extensions.1.0.0/linux-x64/some_executable
 
-  # There may be different scripts (and supporting binaries) per platform/architecture. This facility is typically 
+  # There may be different scripts (and supporting binaries) per platform-architecture. This facility is typically 
   # employed to support applications compiled to run on different OS platforms such as Windows and Linux as well 
   # as on different CPU architectures such as x64 and ARM64. However, there are times when this separation is needed 
   # to support cross-platform/cross-architecture for scripts also.
@@ -214,7 +214,7 @@ how to incorporate script-based extensions:
   C:\virtualclient.1.15.0\win-x64\packages\any.script.extensions.1.0.0/win-x64/execute.py
   C:\virtualclient.1.15.0\win-x64\packages\any.script.extensions.1.0.0/win-x64/some_executable.exe
 
-   # Profile extensions within each supported platform/architecture folder
+   # Profile extensions within each supported platform-architecture folder
    # in a 'profiles' sub-folder.
   ~/virtualclient.1.15.0/linux-x64/packages/any.script.extensions.1.0.0/linux-x64/profiles
   ~/virtualclient.1.15.0/linux-x64/packages/any.script.extensions.1.0.0/linux-x64/profiles/SCRIPT-WORKLOAD-1.json
@@ -320,14 +320,14 @@ how to incorporate script-based extensions:
   /home/user/script_extensions_packages/any.script.extensions.1.0.0/linux-x64/execute.py
   /home/user/script_extensions_packages/any.script.extensions.1.0.0/linux-x64/some_executable
 
-  # There may be different scripts (and supporting binaries) per platform/architecture. This facility is typically 
+  # There may be different scripts (and supporting binaries) per platform-architecture. This facility is typically 
   # employed to support applications compiled to run on different OS platforms such as Windows and Linux as well 
   # as on different CPU architectures such as x64 and ARM64. However, there are times when this separation is needed 
   # to support cross-platform/cross-architecture for scripts also.
   /home/user/script_extensions_packages/any.script.extensions.1.0.0/linux-x64/execute.py
   /home/user/script_extensions_packages/any.script.extensions.1.0.0/linux-x64/some_executable
 
-   # Profile extensions within each supported platform/architecture folder
+   # Profile extensions within each supported platform-architecture folder
    # in a 'profiles' sub-folder.
   /home/user/script_extensions_packages/any.script.extensions.1.0.0/linux-x64/profiles
   /home/user/script_extensions_packages/any.script.extensions.1.0.0/linux-x64/profiles/SCRIPT-WORKLOAD-1.json

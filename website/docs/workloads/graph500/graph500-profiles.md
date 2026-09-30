@@ -12,12 +12,9 @@ Runs a data-intensive workload using the Graph500 toolset to test the performanc
 This profile is designed to identify general/broad regressions when compared against a baseline by validating the time taken to create a graph, perform 
 BFS(Breadth First Search) and SSSP(Single Source Shortest Path).
 
-* **Supported Platform/Architectures**
+* **Supported Platform-Architectures**
   * linux-x64
   * linux-arm64
-
-* **Supports Disconnected Scenarios**  
-  * No. Internet connection required.
 
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.

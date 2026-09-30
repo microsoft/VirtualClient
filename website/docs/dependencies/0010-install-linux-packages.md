@@ -17,7 +17,7 @@ use in profiles.
 - [A Good Third-Party Intro](https://www.linode.com/docs/guides/linux-package-management-overview/)  
 - [Search for Packages](https://pkgs.org/)  
 
-## Supported Platform/Architectures
+## Supported Platform-Architectures
 * linux-x64
 * linux-arm64
 

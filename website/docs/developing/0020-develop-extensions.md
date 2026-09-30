@@ -91,7 +91,7 @@ binaries, scripts etc... This is an important concept both for producing repeata
 
 
 For extensions packages, the following illustrates the expected folder structure and contents. Note that you do not have to compile your libraries
-specifically for the platform/architectures noted below. Compilation against 'AnyCPU' is sufficient to keep things simple. An extensions package
+specifically for the platform-architectures noted below. Compilation against 'AnyCPU' is sufficient to keep things simple. An extensions package
 will have the following content.
 
 * **Package Definition File**  
@@ -114,11 +114,11 @@ will have the following content.
   ```
 
 * **Profile Extensions**  
-  Profile extensions are not required. If they exist, the files should be placed inside of the appropriate folder for each platform/architecture supported 
+  Profile extensions are not required. If they exist, the files should be placed inside of the appropriate folder for each platform-architecture supported 
   (e.g. win-x64, linux-x64) in a folder named **profiles**.
 
 * **Binary/.dll Extensions**  
-   Binary extensions are not required. If they exist, the binary/.dll extensions should be placed inside of the appropriate folder for each platform/architecture supported 
+   Binary extensions are not required. If they exist, the binary/.dll extensions should be placed inside of the appropriate folder for each platform-architecture supported 
   (e.g. win-x64, linux-x64).
 
   The following illustrates the folder structure expected for an extensions package called 'crc.vc.extensions'.

@@ -11,20 +11,9 @@ workload that requires two separate systems/VMs (a Client and a Server) connecte
 
 * [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-WEB-NGINX-WRK.json)
 
-* **Supported Platform/Architectures**
+* **Supported Platform-Architectures**
   * linux-x64
   * linux-arm64
-
-* **Supported Operating Systems**
-  * Azure Linux
-  * CentOS
-  * Debian
-  * RedHat
-  * Suse
-  * Ubuntu
-
-* **Supports Disconnected Scenarios**  
-  * No. Internet connection required.
 
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
@@ -73,14 +62,8 @@ differs from wrk in that it applies a constant throughput/rate to produce accura
 
 * [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-WEB-NGINX-WRK2.json)
 
-* **Supported Platform/Architectures**
+* **Supported Platform-Architectures**
   * linux-x64
-
-* **Supported Operating Systems**
-  * Ubuntu
-
-* **Supports Disconnected Scenarios**  
-  * No. Internet connection required.
 
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
@@ -134,20 +117,9 @@ This profile requires three nodes for the roles Client, Reverse Proxy, and Serve
 
 * [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-WEB-NGINX-WRK-RP.json)
 
-* **Supported Platform/Architectures**
+* **Supported Platform-Architectures**
   * linux-x64
   * linux-arm64
-
-* **Supported Operating Systems**
-  * Azure Linux
-  * CentOS
-  * Debian
-  * RedHat
-  * Suse
-  * Ubuntu
-
-* **Supports Disconnected Scenarios**  
-  * No. Internet connection required.
 
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
@@ -205,14 +177,8 @@ This profile requires three nodes for the roles Client, Reverse Proxy, and Serve
 
 * [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-WEB-NGINX-WRK2-RP.json)
 
-* **Supported Platform/Architectures**
+* **Supported Platform-Architectures**
   * linux-x64
-
-* **Supported Operating Systems**
-  * Ubuntu 22
-
-* **Supports Disconnected Scenarios**  
-  * No. Internet connection required.
 
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.

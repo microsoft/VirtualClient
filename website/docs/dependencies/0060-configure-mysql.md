@@ -10,7 +10,7 @@ Reference the following documentation before proceeding.
 
 * [Install MySQL](/docs/dependencies/install-mysql)
 
-## Supported Platform/Architectures
+## Supported Platform-Architectures
 * linux-x64
 * linux-arm64
 * win-x64

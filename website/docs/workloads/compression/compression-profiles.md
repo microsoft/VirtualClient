@@ -19,7 +19,7 @@ Runs the compression/decompression workloads which measures performance in terms
 
 * [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-COMPRESSION.json) 
 
-* **Supported Platform/Architectures**
+* **Supported Platform-Architectures**
   * win-x64  
     * 7zip
   * win-arm64
@@ -32,9 +32,6 @@ Runs the compression/decompression workloads which measures performance in terms
     * Lzbench
     * GZip
     * PBZip2
-
-* **Supports Disconnected Scenarios**  
-  * No. Internet connection required.
 
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
@@ -72,12 +69,9 @@ Runs the compression/decompression workloads which measures performance in terms
 
 * [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-COMPRESSION-LZBENCH.json) 
 
-* **Supported Platform/Architectures**
+* **Supported Platform-Architectures**
   * linux-x64
   * linux-arm64
-
-* **Supports Disconnected Scenarios**  
-  * No. Internet connection required.
 
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.

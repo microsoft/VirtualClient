@@ -9,7 +9,7 @@ details for integrating this into the profile.
 - [Chocolatey Official Page](https://chocolatey.org/)
 - [Chocolatey Packages](https://community.chocolatey.org/packages)
 
-## Supported Platform/Architectures
+## Supported Platform-Architectures
 * win-x64
 * win-arm64
 

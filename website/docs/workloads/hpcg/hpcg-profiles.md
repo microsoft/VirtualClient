@@ -16,9 +16,6 @@ Runs the HPCG benchmark workload.
   * linux-x64
   * linux-arm64
 
-* **Supports Disconnected Scenarios**  
-  * No. Internet connection required.
-
 * **Supported Compilers**  
   The following compilers are supported with the workload for this profile. See profile parameters and usage examples below.
 

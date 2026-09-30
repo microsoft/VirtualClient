@@ -20,6 +20,48 @@ Azure environments including guest/VM systems, host/blade systems and data cente
 ## Team Contacts
 * [virtualclient@microsoft.com](mailto:virtualclient@microsoft.com)
 
+## Supported Operating Systems
+The following section defines operating systems for which the Virtual Client application is tested and generally confirmed to run on depending upon the workload or monitor. The application is compiled for both
+Linux and Windows operating systems and for X64/AMD64 and ARM64 CPU architectures. Each workload and monitor
+however may have a limited set of platforms on which it is expected to operate. The details are covered in the documentation for each of workload or monitor profiles noted below. The following list are the recommended operating systems on which the application is tested and confirmed to work by Microsoft teams:
+
+* **Linux Operating Systems**  
+  * Azure Linux 3
+  * Azure Linux 4
+  * CentOS 8
+  * CentOS 9
+  * Debian (upstreams of Ubuntu distros noted below)
+  * Fedora (upstreams of RedHat distros noted below)
+  * RedHat Enterprise 8
+  * RedHat Enterprise 9
+  * Ubuntu 18.04
+  * Ubuntu 20.04
+  * Ubuntu 22.04
+  * Ubuntu 24.04
+  * Ubuntu 26.04
+
+* **Windows Operating Systems**  
+  * Windows 10
+  * Windows 11
+  * Windows Server 2019
+  * Windows Server 2022
+  * Windows Server 2025
+
+## Supported Platform-Architectures
+The following section defines the operating system platform-architectures for which the Virtual Client application is tested and generally confirmed to run on depending upon the workload or monitor. The application is compiled for both Linux and Windows operating systems and for X64/AMD64 and ARM64 CPU architectures.
+
+* **linux-arm64**  
+  Offers releases that run on Linux operating systems with ARM64 processors.  
+
+* **linux-x64**  
+  Offers releases that run on Linux operating systems with X64/AMD64 (AMD, Intel) processors.  
+
+* **win-arm64**  
+  Offers releases that run on Windows operating systems with ARM64 processors.  
+
+* **win-x64**  
+  Offers releases that run on Windows operating systems with X64/AMD64 (AMD, Intel) processors.  
+
 ## Supported Workloads/Benchmarks
 The following list of workloads are used by Virtual Client profiles to exercise the system components in a consistent way required to measure performance baselines and differences.
 

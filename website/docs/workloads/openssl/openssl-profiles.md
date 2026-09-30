@@ -22,14 +22,10 @@ system. It will use a single core/vCPU to run each test. On Linux, VC starts Spe
 
 * [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-CPU-OPENSSL.json) 
 
-* **Supported Platform/Architectures**
+* **Supported Platform-Architectures**
   * linux-x64
   * linux-arm64
   * win-x64
-
-* **Supports Disconnected Scenarios**  
-  * Yes. When the OpenSSL package is included in 'packages' directory of the Virtual Client.
-    * [Installing VC Packages](/docs/dependencies/install-vc-packages).
 
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.

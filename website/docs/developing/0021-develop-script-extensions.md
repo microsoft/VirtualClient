@@ -236,8 +236,8 @@ script-based extensions development process. The following illustrates an exampl
       # Toolsets go in 'binaries' subdirectory
       /binaries
 
-          # Toolsets for the specific platform/architecture (e.g. linux-x64) go in
-          # a subdirectory named for that platform/architecture.
+          # Toolsets for the specific platform-architecture (e.g. linux-x64) go in
+          # a subdirectory named for that platform-architecture.
           /customutil
               # Toolsets that work on Linux OS and ARM64 CPU architectures.
               /linux-arm64
