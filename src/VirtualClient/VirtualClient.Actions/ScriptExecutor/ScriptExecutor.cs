@@ -79,6 +79,25 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// A directory path, relative to the directory containing the script executable, in which the script
+        /// writes its 'test-metrics.json' file (e.g. {experimentId}). This allows scripts that emit metrics into
+        /// a scoped/isolated subdirectory to be supported without changing the metrics file name itself. When not
+        /// defined, the metrics file is expected in the script directory itself. Default = not defined.
+        /// </summary>
+        public string MetricsFileDirectory
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.MetricsFileDirectory), string.Empty);
+            }
+
+            set
+            {
+                this.Parameters[nameof(this.MetricsFileDirectory)] = value;
+            }
+        }
+
+        /// <summary>
         /// The ToolName for better logging and metadata
         /// </summary>
         public string ToolName
@@ -192,7 +211,12 @@ namespace VirtualClient.Actions
 
             this.ExecutableDirectory = this.fileSystem.Path.GetDirectoryName(this.ExecutablePath);
 
-            this.MetricsFilePath = this.Combine(this.ExecutableDirectory, ScriptExecutor.MetricsFileName);
+            // The metrics file name is fixed by contract. Only the directory in which the script writes it
+            // can be scoped (e.g. to an experiment-specific subdirectory) via the 'MetricsFileDirectory' parameter.
+            this.MetricsFilePath = string.IsNullOrWhiteSpace(this.MetricsFileDirectory)
+                ? this.Combine(this.ExecutableDirectory, ScriptExecutor.MetricsFileName)
+                : this.fileSystem.Path.GetFullPath(this.Combine(this.ExecutableDirectory, this.MetricsFileDirectory, ScriptExecutor.MetricsFileName));
+
             if (this.fileSystem.File.Exists(this.MetricsFilePath))
             {
                 this.fileSystem.File.Delete(this.MetricsFilePath);
