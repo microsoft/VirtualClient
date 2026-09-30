@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Developer Guide | Virtual Client Platform</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://microsoft.github.io/VirtualClient/docs/developing/develop-guide/"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="keywords" content="performance, benchmarking, automation, framework, microsoft"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Developer Guide | Virtual Client Platform"><meta data-rh="true" name="description" content="Welcome to the Virtual Client development team! The Virtual Client is a .NET 8.0 command line application written in C# that offers both cross-platform and multi-architecture support. As such, the"><meta data-rh="true" property="og:description" content="Welcome to the Virtual Client development team! The Virtual Client is a .NET 8.0 command line application written in C# that offers both cross-platform and multi-architecture support. As such, the"><link data-rh="true" rel="icon" href="/VirtualClient/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://microsoft.github.io/VirtualClient/docs/developing/develop-guide/"><link data-rh="true" rel="alternate" href="https://microsoft.github.io/VirtualClient/docs/developing/develop-guide/" hreflang="en"><link data-rh="true" rel="alternate" href="https://microsoft.github.io/VirtualClient/docs/developing/develop-guide/" hreflang="x-default"><link data-rh="true" rel="preconnect" href="https://0I7D8A07MA-dsn.algolia.net" crossorigin="anonymous"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Developing","item":"https://microsoft.github.io/VirtualClient/docs/category/developing"},{"@type":"ListItem","position":2,"name":"Developer Guide","item":"https://microsoft.github.io/VirtualClient/docs/developing/develop-guide"}]}</script><link rel="search" type="application/opensearchdescription+xml" title="Virtual Client Platform" href="/VirtualClient/opensearch.xml"><link rel="stylesheet" href="/VirtualClient/assets/css/styles.7f776683.css">
-<script src="/VirtualClient/assets/js/runtime~main.3e058b2b.js" defer="defer"></script>
+<script src="/VirtualClient/assets/js/runtime~main.5d7f4de4.js" defer="defer"></script>
 <script src="/VirtualClient/assets/js/main.6ee5fa7f.js" defer="defer"></script>
 </head>
 <body>
@@ -94,7 +94,7 @@ folder. Good documentation is an important part of the quality bar that the team
 about the Virtual Client. There are patterns in place within the documentation to guide developers through the process.</p>
 </li>
 <li class="">
-<p><strong>Components should be implemented to support ALL possible platform/architectures</strong><br>
+<p><strong>Components should be implemented to support ALL possible platform-architectures</strong><br>
 <!-- -->The Virtual Client is generally designed to run in as many scenarios as possible. To do so, a developer has to consider whether the component
 they are onboarding can run on Windows or Linux, x64 (Intel, AMD) or ARM64 architecture. Many times the .NET framework itself provides for the
 ability to run cross-OS platform/cross-CPU architecture. However, there are times when the logic must implement support in a slightly different
@@ -593,7 +593,7 @@ method is required to be implemented. The other methods are optional and may be 
 <!-- -->Method is executed to determin whether or not the component should be executed on the system. Reasons why a component might not be valid/supported
 for a given system include:</p>
 <ul>
-<li class="">The component or its dependencies cannot run on the current platform/architecture (e.g. win-arm64, linux-arm64).</li>
+<li class="">The component or its dependencies cannot run on the current platform-architecture (e.g. win-arm64, linux-arm64).</li>
 <li class="">The component or its dependencies cannot run on the current distro of the operating system (e.g. Ubuntu, Redhat).</li>
 </ul>
 </li>
