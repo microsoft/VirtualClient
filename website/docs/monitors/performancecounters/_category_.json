@@ -1,8 +1,0 @@
-{
-  "label": "Performance Counters",
-  "position": 2,
-  "link": {
-    "type": "generated-index",
-    "description": "Performance Counter monitors supported by the Virtual Client."
-  }
-}

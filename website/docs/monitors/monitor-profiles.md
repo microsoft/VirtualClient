@@ -1,5 +1,6 @@
 ---
 slug: /monitors/monitor-profiles
+sidebar_position: 1
 ---
 
 # Monitor Profiles

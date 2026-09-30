@@ -9,7 +9,6 @@ on the operating system to log important events and can be a valuable resource f
 * [Windows Event Viewer](https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2008-R2-and-2008/cc766042(v=ws.11))
 * [Windows Event Tracing](https://learn.microsoft.com/en-us/windows/win32/etw/event-tracing-portal)  
 
-
 ## Supported Platforms 
   * win-arm64
   * win-x64

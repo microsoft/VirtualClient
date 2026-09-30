@@ -1,8 +1,9 @@
 {
-  "label": "GPU",
-  "position": 1,
-  "link": {
-    "type": "generated-index",
-    "description": "GPU monitors supported by the Virtual Client."
-  }
+    "label": "GPU",
+    "position": 2,
+    "link": {
+        "type": "generated-index",
+        "description": "GPU monitors supported by the Virtual Client.",
+        "slug": "/category/monitors/gpu"
+    }
 }
