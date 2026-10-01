@@ -38,14 +38,14 @@ for evaluating the performance of the CPU for processing calculations.
 
   | Parameter                 | Purpose                                                                         | Default value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
-  | CompilerVersion           | Optional. The version of the compiler to use.  | The default version for the OS/distro.<br/><br/><ul><li>See [Linux Defaults](https://documentation.ubuntu.com/ubuntu-for-developers/reference/availability/gcc/).</li><li>See [Windows Defaults](https://cygwin.com/packages/summary/gcc-core.html)</li></ul> |
+  | CompilerVersion           | Optional. The version of the compiler to use.  | 13 |
   | Iterations                | Optional. The number of iterations for speccpu to run the benchmark/suite.  | 2 |
   | Benchmarks                | Optional. The benchmark suite or list of benchmarks to run.  | fprate |
   | RunPeak                   | Optional. True to run the workload 'Peak' scenario, False to run the workload 'Base' scenario. | false (Base) |
   | Threads                   | Optional. Determines the number of threads to use for running the benchmark. | # logical processors |
   | Copies                    | Optional. Determines the number of copies of the benchmark to run concurrently. | # logical processors |
-  | BaseOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Base' scenario | -g -O3 -march=native -frecord-gcc-switches|
-  | PeakOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Peak' scenario | -g -Ofast -march=native -flto -frecord-gcc-switches |
+  | BaseOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Base' scenario | <ul><li>X64 systems: -g -O2 -march=x86-64-v3 -flto -frecord-gcc-switches</li><li>ARM64 systems: -g -O2 -march=armv8.2-a -flto -frecord-gcc-switches</li></ul> |
+  | PeakOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Peak' scenario | <ul><li>X64 systems: -g -O3 -march=x86-64-v3 -flto -frecord-gcc-switches</li><li>ARM64 systems: -g -O3 -march=armv8.2-a -flto -frecord-gcc-switches</li></ul> |
 
 * **Profile Runtimes**  
   The following timings represent the length of time required to run a single round of profile actions. These timings can be used to determine
@@ -92,14 +92,14 @@ for evaluating the performance of the CPU for processing calculations.
 
   | Parameter                 | Purpose                                                                         | Default value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
-  | CompilerVersion           | Optional. The version of the compiler to use.  | The default version for the OS/distro.<br/><br/><ul><li>See [Linux Defaults](https://documentation.ubuntu.com/ubuntu-for-developers/reference/availability/gcc/).</li><li>See [Windows Defaults](https://cygwin.com/packages/summary/gcc-core.html)</li></ul> |
+  | CompilerVersion           | Optional. The version of the compiler to use.  | 13 |
   | Iterations                | Optional. The number of iterations for speccpu to run the benchmark/suite.  | 2 |
   | Benchmarks                | Optional. The benchmark suite or list of benchmarks to run.  | fpspeed |
   | RunPeak                   | Optional. True to run the workload 'Peak' scenario, False to run the workload 'Base' scenario. | false (Base) |
   | Threads                   | Optional. Determines the number of threads to use for running the benchmark. | # logical processors |
   | Copies                    | Optional. Determines the number of copies of the benchmark to run concurrently. | # logical processors |
-  | BaseOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Base' scenario | -g -O3 -march=native -frecord-gcc-switches|
-  | PeakOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Peak' scenario | -g -Ofast -march=native -flto -frecord-gcc-switches |
+  | BaseOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Base' scenario | <ul><li>X64 systems: -g -O2 -march=x86-64-v3 -flto -frecord-gcc-switches</li><li>ARM64 systems: -g -O2 -march=armv8.2-a -flto -frecord-gcc-switches</li></ul> |
+  | PeakOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Peak' scenario | <ul><li>X64 systems: -g -O3 -march=x86-64-v3 -flto -frecord-gcc-switches</li><li>ARM64 systems: -g -O3 -march=armv8.2-a -flto -frecord-gcc-switches</li></ul> |
 
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
@@ -141,14 +141,14 @@ for evaluating the performance of the CPU for processing calculations.
 
   | Parameter                 | Purpose                                                                         | Default value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
-  | CompilerVersion           | Optional. The version of the compiler to use.  | The default version for the OS/distro.<br/><br/><ul><li>See [Linux Defaults](https://documentation.ubuntu.com/ubuntu-for-developers/reference/availability/gcc/).</li><li>See [Windows Defaults](https://cygwin.com/packages/summary/gcc-core.html)</li></ul> |
+  | CompilerVersion           | Optional. The version of the compiler to use.  | 13 |
   | Iterations                | Optional. The number of iterations for speccpu to run the benchmark/suite.  | 2 |
   | Benchmarks                | Optional. The benchmark suite or list of benchmarks to run.  | intrate |
   | RunPeak                   | Optional. True to run the workload 'Peak' scenario, False to run the workload 'Base' scenario. | false (Base) |
   | Threads                   | Optional. Determines the number of threads to use for running the benchmark. | # logical processors |
   | Copies                    | Optional. Determines the number of copies of the benchmark to run concurrently. | # logical processors |
-  | BaseOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Base' scenario | -g -O3 -march=native -frecord-gcc-switches|
-  | PeakOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Peak' scenario | -g -Ofast -march=native -flto -frecord-gcc-switches |
+  | BaseOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Base' scenario | <ul><li>X64 systems: -g -O2 -march=x86-64-v3 -flto -frecord-gcc-switches</li><li>ARM64 systems: -g -O2 -march=armv8.2-a -flto -frecord-gcc-switches</li></ul> |
+  | PeakOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Peak' scenario | <ul><li>X64 systems: -g -O3 -march=x86-64-v3 -flto -frecord-gcc-switches</li><li>ARM64 systems: -g -O3 -march=armv8.2-a -flto -frecord-gcc-switches</li></ul> |
 
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
@@ -190,14 +190,14 @@ for evaluating the performance of the CPU for processing calculations.
 
   | Parameter                 | Purpose                                                                         | Default value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
-  | CompilerVersion           | Optional. The version of the compiler to use.  | The default version for the OS/distro.<br/><br/><ul><li>See [Linux Defaults](https://documentation.ubuntu.com/ubuntu-for-developers/reference/availability/gcc/).</li><li>See [Windows Defaults](https://cygwin.com/packages/summary/gcc-core.html)</li></ul> |
+  | CompilerVersion           | Optional. The version of the compiler to use.  | 13 |
   | Iterations                | Optional. The number of iterations for speccpu to run the benchmark/suite.  | 2 |
   | Benchmarks                | Optional. The benchmark suite or list of benchmarks to run.  | intspeed |
   | RunPeak                   | Optional. True to run the workload 'Peak' scenario, False to run the workload 'Base' scenario. | false (Base) |
   | Threads                   | Optional. Determines the number of threads to use for running the benchmark. | # logical processors |
   | Copies                    | Optional. Determines the number of copies of the benchmark to run concurrently. | # logical processors |
-  | BaseOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Base' scenario | -g -O3 -march=native -frecord-gcc-switches|
-  | PeakOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Peak' scenario | -g -Ofast -march=native -flto -frecord-gcc-switches |
+  | BaseOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Base' scenario | <ul><li>X64 systems: -g -O2 -march=x86-64-v3 -flto -frecord-gcc-switches</li><li>ARM64 systems: -g -O2 -march=armv8.2-a -flto -frecord-gcc-switches</li></ul> |
+  | PeakOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Peak' scenario | <ul><li>X64 systems: -g -O3 -march=x86-64-v3 -flto -frecord-gcc-switches</li><li>ARM64 systems: -g -O3 -march=armv8.2-a -flto -frecord-gcc-switches</li></ul> |
 
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
@@ -219,7 +219,7 @@ for evaluating the performance of the CPU for processing calculations.
 Runs the SPEC CPU 2026 Floating Point Rate (fprate) benchmark workload on the system focusing on baseline + peak measurements. This workload is an industry standard 
 for evaluating the performance of the CPU for processing calculations.
 
-* [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-SPECCPU-FPRATE.json)
+* [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-SPECCPU2026-FPRATE.json)
 
 * **Supported Platform-Architectures**
   * linux-x64
@@ -239,14 +239,14 @@ for evaluating the performance of the CPU for processing calculations.
 
   | Parameter                 | Purpose                                                                         | Default value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
-  | CompilerVersion           | Optional. The version of the compiler to use.  | The default version for the OS/distro.<br/><br/><ul><li>See [Linux Defaults](https://documentation.ubuntu.com/ubuntu-for-developers/reference/availability/gcc/).</li><li>See [Windows Defaults](https://cygwin.com/packages/summary/gcc-core.html)</li></ul> |
+  | CompilerVersion           | Optional. The version of the compiler to use.  | 13 |
   | Iterations                | Optional. The number of iterations for speccpu to run the benchmark/suite.  | 2 |
   | Benchmarks                | Optional. The benchmark suite or list of benchmarks to run.  | fprate |
   | RunPeak                   | Optional. True to run the workload 'Peak' scenario, False to run the workload 'Base' scenario. | false (Base) |
   | Threads                   | Optional. Determines the number of threads to use for running the benchmark. | # logical processors |
   | Copies                    | Optional. Determines the number of copies of the benchmark to run concurrently. | # logical processors |
-  | BaseOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Base' scenario | -g -O3 -march=native -frecord-gcc-switches|
-  | PeakOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Peak' scenario | -g -Ofast -march=native -flto -frecord-gcc-switches |
+  | BaseOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Base' scenario | <ul><li>X64 systems: -g -O2 -march=x86-64-v3 -flto -frecord-gcc-switches</li><li>ARM64 systems: -g -O2 -march=armv8.2-a -flto -frecord-gcc-switches</li></ul> |
+  | PeakOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Peak' scenario | <ul><li>X64 systems: -g -O3 -march=x86-64-v3 -flto -frecord-gcc-switches</li><li>ARM64 systems: -g -O3 -march=armv8.2-a -flto -frecord-gcc-switches</li></ul> |
 
 * **Profile Runtimes**  
   The following timings represent the length of time required to run a single round of profile actions. These timings can be used to determine
@@ -270,7 +270,7 @@ for evaluating the performance of the CPU for processing calculations.
 Runs the SPEC CPU 2026 Floating Point Speed (fpspeed) benchmark workload on the system focusing on baseline + peak measurements. This workload is an industry standard 
 for evaluating the performance of the CPU for processing calculations.
 
-* [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-SPECCPU-FPSPEED.json)
+* [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-SPECCPU2026-FPSPEED.json)
 
 * **OS/Architecture Platforms**
   * linux-x64
@@ -288,14 +288,14 @@ for evaluating the performance of the CPU for processing calculations.
 
   | Parameter                 | Purpose                                                                         | Default value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
-  | CompilerVersion           | Optional. The version of the compiler to use.  | The default version for the OS/distro.<br/><br/><ul><li>See [Linux Defaults](https://documentation.ubuntu.com/ubuntu-for-developers/reference/availability/gcc/).</li><li>See [Windows Defaults](https://cygwin.com/packages/summary/gcc-core.html)</li></ul> |
+  | CompilerVersion           | Optional. The version of the compiler to use.  | 13 |
   | Iterations                | Optional. The number of iterations for speccpu to run the benchmark/suite.  | 2 |
   | Benchmarks                | Optional. The benchmark suite or list of benchmarks to run.  | fpspeed |
   | RunPeak                   | Optional. True to run the workload 'Peak' scenario, False to run the workload 'Base' scenario. | false (Base) |
   | Threads                   | Optional. Determines the number of threads to use for running the benchmark. | # logical processors |
   | Copies                    | Optional. Determines the number of copies of the benchmark to run concurrently. | # logical processors |
-  | BaseOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Base' scenario | -g -O3 -march=native -frecord-gcc-switches|
-  | PeakOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Peak' scenario | -g -Ofast -march=native -flto -frecord-gcc-switches |
+  | BaseOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Base' scenario | <ul><li>X64 systems: -g -O2 -march=x86-64-v3 -flto -frecord-gcc-switches</li><li>ARM64 systems: -g -O2 -march=armv8.2-a -flto -frecord-gcc-switches</li></ul> |
+  | PeakOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Peak' scenario | <ul><li>X64 systems: -g -O3 -march=x86-64-v3 -flto -frecord-gcc-switches</li><li>ARM64 systems: -g -O3 -march=armv8.2-a -flto -frecord-gcc-switches</li></ul> |
 
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
@@ -314,7 +314,7 @@ for evaluating the performance of the CPU for processing calculations.
 Runs the SPEC CPU 2026 Integer Rate (intrate) benchmark workload on the system focusing on baseline + peak measurements. This workload is an industry standard 
 for evaluating the performance of the CPU for processing calculations.
 
-* [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-SPECCPU-INTRATE.json)
+* [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-SPECCPU2026-INTRATE.json)
 
 * **OS/Architecture Platforms**
   * linux-x64
@@ -332,14 +332,14 @@ for evaluating the performance of the CPU for processing calculations.
 
   | Parameter                 | Purpose                                                                         | Default value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
-  | CompilerVersion           | Optional. The version of the compiler to use.  | The default version for the OS/distro.<br/><br/><ul><li>See [Linux Defaults](https://documentation.ubuntu.com/ubuntu-for-developers/reference/availability/gcc/).</li><li>See [Windows Defaults](https://cygwin.com/packages/summary/gcc-core.html)</li></ul> |
+  | CompilerVersion           | Optional. The version of the compiler to use.  | 13 |
   | Iterations                | Optional. The number of iterations for speccpu to run the benchmark/suite.  | 2 |
   | Benchmarks                | Optional. The benchmark suite or list of benchmarks to run.  | intrate |
   | RunPeak                   | Optional. True to run the workload 'Peak' scenario, False to run the workload 'Base' scenario. | false (Base) |
   | Threads                   | Optional. Determines the number of threads to use for running the benchmark. | # logical processors |
   | Copies                    | Optional. Determines the number of copies of the benchmark to run concurrently. | # logical processors |
-  | BaseOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Base' scenario | -g -O3 -march=native -frecord-gcc-switches|
-  | PeakOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Peak' scenario | -g -Ofast -march=native -flto -frecord-gcc-switches |
+  | BaseOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Base' scenario | <ul><li>X64 systems: -g -O2 -march=x86-64-v3 -flto -frecord-gcc-switches</li><li>ARM64 systems: -g -O2 -march=armv8.2-a -flto -frecord-gcc-switches</li></ul> |
+  | PeakOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Peak' scenario | <ul><li>X64 systems: -g -O3 -march=x86-64-v3 -flto -frecord-gcc-switches</li><li>ARM64 systems: -g -O3 -march=armv8.2-a -flto -frecord-gcc-switches</li></ul> |
 
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
@@ -358,7 +358,7 @@ for evaluating the performance of the CPU for processing calculations.
 Runs the SPEC CPU 2026 Integer Speed (intspeed) benchmark workload on the system focusing on baseline + peak measurements. This workload is an industry standard 
 for evaluating the performance of the CPU for processing calculations.
 
-* [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-SPECCPU-INTSPEED.json)
+* [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-SPECCPU2026-INTSPEED.json)
 
 * **OS/Architecture Platforms**
   * linux-x64
@@ -376,14 +376,14 @@ for evaluating the performance of the CPU for processing calculations.
 
   | Parameter                 | Purpose                                                                         | Default value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
-  | CompilerVersion           | Optional. The version of the compiler to use.  | The default version for the OS/distro.<br/><br/><ul><li>See [Linux Defaults](https://documentation.ubuntu.com/ubuntu-for-developers/reference/availability/gcc/).</li><li>See [Windows Defaults](https://cygwin.com/packages/summary/gcc-core.html)</li></ul> |
+  | CompilerVersion           | Optional. The version of the compiler to use.  | 13 |
   | Iterations                | Optional. The number of iterations for speccpu to run the benchmark/suite.  | 2 |
   | Benchmarks                | Optional. The benchmark suite or list of benchmarks to run.  | intspeed |
   | RunPeak                   | Optional. True to run the workload 'Peak' scenario, False to run the workload 'Base' scenario. | false (Base) |
   | Threads                   | Optional. Determines the number of threads to use for running the benchmark. | # logical processors |
   | Copies                    | Optional. Determines the number of copies of the benchmark to run concurrently. | # logical processors |
-  | BaseOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Base' scenario | -g -O3 -march=native -frecord-gcc-switches|
-  | PeakOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Peak' scenario | -g -Ofast -march=native -flto -frecord-gcc-switches |
+  | BaseOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Base' scenario | <ul><li>X64 systems: -g -O2 -march=x86-64-v3 -flto -frecord-gcc-switches</li><li>ARM64 systems: -g -O2 -march=armv8.2-a -flto -frecord-gcc-switches</li></ul> |
+  | PeakOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Peak' scenario | <ul><li>X64 systems: -g -O3 -march=x86-64-v3 -flto -frecord-gcc-switches</li><li>ARM64 systems: -g -O3 -march=armv8.2-a -flto -frecord-gcc-switches</li></ul> |
 
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
