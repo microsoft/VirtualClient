@@ -5,9 +5,7 @@
         "SupportedPlatforms": "win-x64,win-arm64,linux-x64",
         "SupportedOperatingSystems": "Windows,Ubuntu"
     },
-    "Parameters": {
-        "PackageBlobName": "mlc-3.12.zip"
-    },
+    "Parameters": { },
     "Actions": [
         {
             "Type": "MemoryLatencyCheckerExecutor",
@@ -70,11 +68,11 @@
         {
             "Type": "DependencyPackageInstallation",
             "Parameters": {
-              "Scenario": "InstallMLCPackage",
-              "BlobContainer": "packages",
-              "BlobName": "$.Parameters.PackageBlobName",
-              "PackageName": "mlc",
-              "Extract": true
+                "Scenario": "InstallMLCPackage",
+                "BlobContainer": "packages",
+                "BlobName": "mlc-3.12.zip",
+                "PackageName": "mlc",
+                "Extract": true
             }
         }
     ]
