@@ -74,6 +74,7 @@ for using them.
 | **Workload/Benchmark** | **Specialization** | **Supported Platforms/Architectures** | **License(s)** |
 |------------------------|--------------------|---------------------------------------|----------------|
 | [7zip](/docs/workloads/compression/7zip/) | Compression | linux-x64, linux-arm64 | [GNU LGPL](https://www.7-zip.org/faq.html) |
+| [ApacheBench](/docs/workloads/apachebench) | HTTP Server Performance | linux-x64, linux-arm64, win-x64 | [Apache-2.0](https://github.com/apache/httpd/blob/trunk/LICENSE) |
 | [ASP.NET Bench](/docs/workloads/aspnetbench) | ASP.NET Kestrel web server throughput and latency.  | linux-x64, linux-arm64, win-x64, win-arm64 | [MIT (ASP.NET)](https://github.com/dotnet/aspnetcore/blob/main/LICENSE.txt)<br/>[MIT (Bombardier)](https://github.com/codesenberg/bombardier/blob/master/LICENSE)<br/>[Apache 2.0 (Wrk)](https://github.com/wg/wrk/blob/master/LICENSE) |
 | [BlenderBenchmark](/docs/workloads/blenderbenchmark) | GPU/Graphics Rendering Performance | win-x64 | [GNU LGPL](https://projects.blender.org/infrastructure/blender-open-data/src/branch/main/LICENSE) |
 | [CoreMark](/docs/workloads/coremark/) | CPU Performance | linux-x64, linux-arm64 | [Apache+Custom](https://github.com/eembc/coremark/blob/main/LICENSE.md)  |
