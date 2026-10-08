@@ -36,3 +36,21 @@ The following metrics are examples of those captured by the Virtual Client when 
 | Total time per request | 5.781         | milliseconds    | Mean request latency across all concurrent requests      |
 | Total data transferred | 65006         | bytes           | Total response data transferred                          |
 | Data transfer rate     | 109.81        | kilobytes/sec   | Average response data transfer rate                      |
+
+## Troubleshooting
+
+### The Benchmark Cannot Connect to Localhost
+Confirm that the Apache HTTP Server is running and listening on port 80. On Linux, check `systemctl status apache2`. On Windows, check the
+Apache service and review the `Apache24/logs` directory in the extracted package.
+
+### Windows Reports a Missing DLL
+The Windows package includes `vc_redist.x64.exe`, which the executor installs before Apache HTTP Server. A failure with `0xC0000135`
+generally indicates that the Visual C++ runtime was not installed successfully.
+
+### Linux Setup Fails While Configuring the Firewall
+The executor runs `ufw allow 80/tcp` with elevated permissions. Ensure `ufw` is available and that the Virtual Client process can run
+elevated commands.
+
+### Results Parsing Fails
+Retain the ApacheBench standard output in the Virtual Client logs. The parser requires the standard summary fields beginning with
+`Concurrency Level` and reports a workload-results parsing error when those fields are absent or incomplete.
