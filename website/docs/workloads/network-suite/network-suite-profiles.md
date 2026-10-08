@@ -145,4 +145,13 @@ are used. On Windows systems the NCPS, NTttcp and Latte workloads are used.
 
   # On the Server role system
   ./VirtualClient --profile=PERF-NETWORK.json --system=Demo --timeout=1440 --client-id=Server01 --layout="/any/path/to/layout.json"
+
+  # Client/server layouts can be defined on the command line explicitly as well (i.e. no file required).
+  # Format = {client_id},{client_ip_address},{client_role};{server_id},{server_ip_address},{server_role}
+  #
+  # Client role system
+  VirtualClient.exe --profile=PERF-NETWORK-CTSTRAFFIC.json --timeout=1440 --client-id=Client01 --layout="Client01,  10.1.0.1,Client;Server01,10.1.0.2,Server"
+  
+  # Server role system
+  VirtualClient.exe --profile=PERF-NETWORK-CTSTRAFFIC.json --timeout=1440 --client-id=Server01 --layout="Client01,  10.1.0.1,Client;Server01,10.1.0.2,Server"
   ```

@@ -96,6 +96,7 @@ for using them.
 | [LMbench](/docs/workloads/lmbench) | Memory Performance | linux-x64, linux-arm64 | [GPL-2.0](https://github.com/intel/lmbench/blob/master/COPYING)  |
 | [LZBench](/docs/workloads/compression/lzbench) | Compression/Streaming | linux-x64, linux-arm64, win-x64, win-arm64 | [None](https://github.com/inikep/lzbench)  |
 | [Memcached](/docs/workloads/memcached) | In-Memory Data Cache | linux-x64, linux-arm64 | [BSD-3 (Memcached)](https://github.com/memcached/memcached/blob/master/LICENSE)<br/>[GPL-2.0 (Memtier)](https://github.com/RedisLabs/memtier_benchmark/blob/master/COPYING)  |
+| [Memory Latency Checker (MLC)](https://microsoft.github.io/VirtualClient/docs/workloads/mlc) | Memory Performance | linux-x64, win-x64 | [Intel Limited Tools License Agreement](https://cdrdv2.intel.com/v1/dl/getContent/736633) |
 | [NAS Parallel](/docs/workloads/nasparallel) | High Performance Compute (HPC) | linux-x64, linux-arm64 | [NASA-1.3](https://opensource.org/licenses/nasa1.3.php)  |
 | [Network ICMP Ping](/docs/workloads/network-ping) | Network Latencies | linux-x64, linux-arm64, win-x64, win-arm64 | [MIT](https://github.com/microsoft/VirtualClient/blob/main/LICENSE)  |
 | [NGINX](/docs/workloads/nginx) | Web Server | linux-x64, linux-arm64, win-x64, win-arm64 | [BSD-2-Clause (NGINX)](https://github.com/nginx/nginx/blob/master/LICENSE)<br/>[Apache 2.0 (Wrk)](https://github.com/wg/wrk/blob/master/LICENSE)<br/>[Apache 2.0 (Wrk2)](https://github.com/giltene/wrk2/blob/master/LICENSE)  |

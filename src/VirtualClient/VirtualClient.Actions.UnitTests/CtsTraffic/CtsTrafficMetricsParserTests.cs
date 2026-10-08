@@ -20,8 +20,7 @@ namespace VirtualClient.Actions
         public void Setup()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "test_examples", "CtsTraffic", "CtsTrafficResultsExample.csv");
-            this.rawText = File.ReadAllText(outputPath);
+            this.rawText = MockFixture.ReadTestResourcesFile("ctstraffic", "CtsTrafficResultsExample.csv");
             this.testParser = new CtsTrafficMetricsParser(this.rawText);
         }
 
