@@ -78,7 +78,7 @@ for using them.
 | [BlenderBenchmark](/docs/workloads/blenderbenchmark) | GPU/Graphics Rendering Performance | win-x64 | [GNU LGPL](https://projects.blender.org/infrastructure/blender-open-data/src/branch/main/LICENSE) |
 | [CoreMark](/docs/workloads/coremark/) | CPU Performance | linux-x64, linux-arm64 | [Apache+Custom](https://github.com/eembc/coremark/blob/main/LICENSE.md)  |
 | [CoreMark Pro](/docs/workloads/coremark) | Precision CPU | linux-x64, linux-arm64, win-x64, win-arm64 | [Apache+Custom](https://github.com/eembc/coremark-pro/blob/main/LICENSE.md) |
-| [NCPS](/docs/workloads/network-suite) | Network Connection Reliability | linux-x64, linux-arm64, win-x64, win-arm64 | Microsoft-Developed  |
+| [ctsTraffic](/docs/workloads/ctstraffic) | Network Performance | win-x64, win-arm64 | [Apache 2.0](https://github.com/microsoft/ctsTraffic/blob/master/LICENSE)  |
 | [DCGMI](/docs/workloads/dcgmi) | GPU Qualification| linux-x64 | [Apache-2.0](https://github.com/NVIDIA/DCGM/blob/master/LICENSE) |
 | [DeathStarBench](/docs/workloads/deathstarbench) | Docker Swarm/Container Microservices | linux-x64, linux-arm64, win-x64, win-arm64 | [Apache-2.0](https://github.com/delimitrou/DeathStarBench/blob/master/LICENSE)  |
 | [DiskSpd](/docs/workloads/diskspd) | Disk I/O Performance | win-x64, win-arm64 | [MIT](https://github.com/microsoft/diskspd/blob/master/LICENSE)  |
@@ -98,6 +98,7 @@ for using them.
 | [Memcached](/docs/workloads/memcached) | In-Memory Data Cache | linux-x64, linux-arm64 | [BSD-3 (Memcached)](https://github.com/memcached/memcached/blob/master/LICENSE)<br/>[GPL-2.0 (Memtier)](https://github.com/RedisLabs/memtier_benchmark/blob/master/COPYING)  |
 | [Memory Latency Checker (MLC)](https://microsoft.github.io/VirtualClient/docs/workloads/mlc) | Memory Performance | linux-x64, win-x64 | [Intel Limited Tools License Agreement](https://cdrdv2.intel.com/v1/dl/getContent/736633) |
 | [NAS Parallel](/docs/workloads/nasparallel) | High Performance Compute (HPC) | linux-x64, linux-arm64 | [NASA-1.3](https://opensource.org/licenses/nasa1.3.php)  |
+| [NCPS](/docs/workloads/network-suite) | Network Connection Reliability | linux-x64, linux-arm64, win-x64, win-arm64 | Microsoft-Developed  |
 | [Network ICMP Ping](/docs/workloads/network-ping) | Network Latencies | linux-x64, linux-arm64, win-x64, win-arm64 | [MIT](https://github.com/microsoft/VirtualClient/blob/main/LICENSE)  |
 | [NGINX](/docs/workloads/nginx) | Web Server | linux-x64, linux-arm64, win-x64, win-arm64 | [BSD-2-Clause (NGINX)](https://github.com/nginx/nginx/blob/master/LICENSE)<br/>[Apache 2.0 (Wrk)](https://github.com/wg/wrk/blob/master/LICENSE)<br/>[Apache 2.0 (Wrk2)](https://github.com/giltene/wrk2/blob/master/LICENSE)  |
 | [NTttcp](/docs/workloads/network-suite) | Network Bandwidth | linux-x64, linux-arm64, win-x64, win-arm64 | [MIT](https://github.com/microsoft/ntttcp/blob/main/LICENSE)  |
