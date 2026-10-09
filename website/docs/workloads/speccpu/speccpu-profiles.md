@@ -49,12 +49,14 @@ for evaluating the performance of the CPU for processing calculations.
 
 * **Profile Runtimes**  
   The following timings represent the length of time required to run a single round of profile actions. These timings can be used to determine
-  minimum required runtimes for the Virtual Client in order to get results. These are estimates based on the number of system cores.
+  minimum required runtimes for the Virtual Client in order to get results. These are estimates based on the number of system cores. When running
+  the SPEC CPU workload, the timing can be difficult to predict. It is recommended that you avoid using timeouts on the command line and use iterations
+  instead (e.g. ~~--timeout=1440~~ -> --iterations=1)
 
-  * Base Scenario (8-cores/vCPUs) =~ 14 hours
-  * Base scenario (48-cores/vCPUs) =~ 10 hours
-  * Peak scenario (8-cores/vCPUs) =~ 28 hours
-  * Peak scenario (48-cores/vCPUs) =~ 18 hours
+  * Base Scenario (8-cores/vCPUs) =~ 10 hours
+  * Base scenario (48-cores/vCPUs) =~ 14 hours
+  * Peak scenario (8-cores/vCPUs) =~ 18 hours
+  * Peak scenario (48-cores/vCPUs) =~ 28 hours
 
 * **Usage Examples**  
   The following section provides a few basic examples of how to use the workload profile. Additional usage examples can be found in the
@@ -65,7 +67,7 @@ for evaluating the performance of the CPU for processing calculations.
 
   ``` bash
   # Execute the workload profile
-  ./VirtualClient --profile=PERF-SPECCPU-FPRATE.json --logger=csv
+  ./VirtualClient --profile=PERF-SPECCPU-FPRATE.json --iterations=1 --logger=csv
   ```
 
 ## PERF-SPECCPU-FPSPEED.json
@@ -104,7 +106,13 @@ for evaluating the performance of the CPU for processing calculations.
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
   actions. These timings can be used to determine minimum required runtimes for the Virtual Client in order to get results. These are often estimates based on the
-  number of system cores. 
+  number of system cores. When running the SPEC CPU workload, the timing can be difficult to predict. It is recommended that you avoid using timeouts on the command line and use iterations
+  instead (e.g. ~~--timeout=1440~~ -> --iterations=1)
+
+  * Base Scenario (8-cores/vCPUs) =~ 4 hours
+  * Base scenario (48-cores/vCPUs) =~ 6 hours
+  * Peak scenario (8-cores/vCPUs) =~ 5 hours
+  * Peak scenario (48-cores/vCPUs) =~ 8 hours
   
 * **Usage Examples**  
   The following section provides a few basic examples of how to use the workload profile.
@@ -114,7 +122,7 @@ for evaluating the performance of the CPU for processing calculations.
 
   ``` bash
   # Execute the workload profile
-  ./VirtualClient --profile=PERF-SPECCPU-FPSPEED.json --logger=csv
+  ./VirtualClient --profile=PERF-SPECCPU-FPSPEED.json --iterations=1 --logger=csv
   ```
 
 ## PERF-SPECCPU-INTRATE.json
@@ -153,7 +161,13 @@ for evaluating the performance of the CPU for processing calculations.
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
   actions. These timings can be used to determine minimum required runtimes for the Virtual Client in order to get results. These are often estimates based on the
-  number of system cores. 
+  number of system cores. When running the SPEC CPU workload, the timing can be difficult to predict. It is recommended that you avoid using timeouts on the command line and use iterations
+  instead (e.g. ~~--timeout=1440~~ -> --iterations=1)
+
+  * Base Scenario (8-cores/vCPUs) =~ 10 hours
+  * Base scenario (48-cores/vCPUs) =~ 14 hours
+  * Peak scenario (8-cores/vCPUs) =~ 18 hours
+  * Peak scenario (48-cores/vCPUs) =~ 28 hours
 
 * **Usage Examples**  
   The following section provides a few basic examples of how to use the workload profile.
@@ -163,7 +177,7 @@ for evaluating the performance of the CPU for processing calculations.
 
   ``` bash
   # Execute the workload profile
-  ./VirtualClient --profile=PERF-SPECCPU-INTRATE.json --logger=csv
+  ./VirtualClient --profile=PERF-SPECCPU-INTRATE.json --iterations=1 --logger=csv
   ```
 
 ## PERF-SPECCPU-INTSPEED.json
@@ -202,7 +216,13 @@ for evaluating the performance of the CPU for processing calculations.
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
   actions. These timings can be used to determine minimum required runtimes for the Virtual Client in order to get results. These are often estimates based on the
-  number of system cores. 
+  number of system cores. When running the SPEC CPU workload, the timing can be difficult to predict. It is recommended that you avoid using timeouts on the command line and use iterations
+  instead (e.g. ~~--timeout=1440~~ -> --iterations=1)
+
+  * Base Scenario (8-cores/vCPUs) =~ 4 hours
+  * Base scenario (48-cores/vCPUs) =~ 6 hours
+  * Peak scenario (8-cores/vCPUs) =~ 5 hours
+  * Peak scenario (48-cores/vCPUs) =~ 8 hours
 
 * **Usage Examples**  
   The following section provides a few basic examples of how to use the workload profile.
@@ -212,7 +232,7 @@ for evaluating the performance of the CPU for processing calculations.
 
   ``` bash
   # Execute the workload profile
-  ./VirtualClient --profile=PERF-SPECCPU-INTSPEED.json --logger=csv
+  ./VirtualClient --profile=PERF-SPECCPU-INTSPEED.json --iterations=1 --logger=csv
   ```
 
 ## PERF-SPECCPU2026-FPRATE.json
@@ -251,11 +271,13 @@ for evaluating the performance of the CPU for processing calculations.
 * **Profile Runtimes**  
   The following timings represent the length of time required to run a single round of profile actions. These timings can be used to determine
   minimum required runtimes for the Virtual Client in order to get results. These are estimates based on the number of system cores.
+  When running the SPEC CPU workload, the timing can be difficult to predict. It is recommended that you avoid using timeouts on the command line and use iterations
+  instead (e.g. ~~--timeout=1440~~ -> --iterations=1)
 
-  * Base Scenario (8-cores/vCPUs) =~ 14 hours
-  * Base scenario (48-cores/vCPUs) =~ 10 hours
-  * Peak scenario (8-cores/vCPUs) =~ 28 hours
-  * Peak scenario (48-cores/vCPUs) =~ 18 hours
+  * Base Scenario (8-cores/vCPUs) =~ 10 hours
+  * Base scenario (48-cores/vCPUs) =~ 14 hours
+  * Peak scenario (8-cores/vCPUs) =~ 18 hours
+  * Peak scenario (48-cores/vCPUs) =~ 28 hours
 
 * **Usage Examples**  
   The following section provides a few basic examples of how to use the workload profile. Additional usage examples can be found in the
@@ -263,7 +285,7 @@ for evaluating the performance of the CPU for processing calculations.
 
   ``` bash
   # Execute the workload profile
-  ./VirtualClient --profile=PERF-SPECCPU2026-FPRATE.json --logger=csv
+  ./VirtualClient --profile=PERF-SPECCPU2026-FPRATE.json --iterations=1 --logger=csv
   ```
 
 ## PERF-SPECCPU2026-FPSPEED.json
@@ -300,14 +322,20 @@ for evaluating the performance of the CPU for processing calculations.
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
   actions. These timings can be used to determine minimum required runtimes for the Virtual Client in order to get results. These are often estimates based on the
-  number of system cores. 
+  number of system cores. When running the SPEC CPU workload, the timing can be difficult to predict. It is recommended that you avoid using timeouts on the command line and use iterations
+  instead (e.g. ~~--timeout=1440~~ -> --iterations=1)
+
+  * Base Scenario (8-cores/vCPUs) =~ 4 hours
+  * Base scenario (48-cores/vCPUs) =~ 6 hours
+  * Peak scenario (8-cores/vCPUs) =~ 5 hours
+  * Peak scenario (48-cores/vCPUs) =~ 8 hours
   
 * **Usage Examples**  
   The following section provides a few basic examples of how to use the workload profile.
 
   ``` bash
   # Execute the workload profile
-  ./VirtualClient --profile=PERF-SPECCPU2026-FPSPEED.json --logger=csv
+  ./VirtualClient --profile=PERF-SPECCPU2026-FPSPEED.json --iterations=1 --logger=csv
   ```
 
 ## PERF-SPECCPU2026-INTRATE.json
@@ -344,14 +372,20 @@ for evaluating the performance of the CPU for processing calculations.
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
   actions. These timings can be used to determine minimum required runtimes for the Virtual Client in order to get results. These are often estimates based on the
-  number of system cores. 
+  number of system cores. When running the SPEC CPU workload, the timing can be difficult to predict. It is recommended that you avoid using timeouts on the command line and use iterations
+  instead (e.g. ~~--timeout=1440~~ -> --iterations=1)
+
+  * Base Scenario (8-cores/vCPUs) =~ 10 hours
+  * Base scenario (48-cores/vCPUs) =~ 14 hours
+  * Peak scenario (8-cores/vCPUs) =~ 18 hours
+  * Peak scenario (48-cores/vCPUs) =~ 28 hours
 
 * **Usage Examples**  
   The following section provides a few basic examples of how to use the workload profile.
 
   ``` bash
   # Execute the workload profile
-  ./VirtualClient --profile=PERF-SPECCPU2026-INTRATE.json --logger=csv
+  ./VirtualClient --profile=PERF-SPECCPU2026-INTRATE.json --iterations=1 --logger=csv
   ```
 
 ## PERF-SPECCPU2026-INTSPEED.json
@@ -388,12 +422,18 @@ for evaluating the performance of the CPU for processing calculations.
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
   actions. These timings can be used to determine minimum required runtimes for the Virtual Client in order to get results. These are often estimates based on the
-  number of system cores. 
+  number of system cores. When running the SPEC CPU workload, the timing can be difficult to predict. It is recommended that you avoid using timeouts on the command line and use iterations
+  instead (e.g. ~~--timeout=1440~~ -> --iterations=1)
+
+  * Base Scenario (8-cores/vCPUs) =~ 4 hours
+  * Base scenario (48-cores/vCPUs) =~ 6 hours
+  * Peak scenario (8-cores/vCPUs) =~ 5 hours
+  * Peak scenario (48-cores/vCPUs) =~ 8 hours
 
 * **Usage Examples**  
   The following section provides a few basic examples of how to use the workload profile.
 
   ``` bash
   # Execute the workload profile
-  ./VirtualClient --profile=PERF-SPECCPU2026-INTSPEED.json --logger=csv
+  ./VirtualClient --profile=PERF-SPECCPU2026-INTSPEED.json --iterations=1 --logger=csv
   ```
