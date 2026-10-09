@@ -44,7 +44,7 @@ namespace VirtualClient
             Assert.IsInstanceOf<FileSystem>(systemManagement.FileSystem);
             Assert.IsInstanceOf<WindowsFirewallManager>(systemManagement.FirewallManager);
             Assert.IsInstanceOf<PackageManager>(systemManagement.PackageManager);
-            Assert.IsInstanceOf<WindowsProcessManager>(systemManagement.ProcessManager);
+            Assert.IsInstanceOf<ProcessManager>(systemManagement.ProcessManager);
             Assert.IsInstanceOf<StateManager>(systemManagement.StateManager);
         }
 
@@ -67,7 +67,7 @@ namespace VirtualClient
             Assert.IsInstanceOf<FileSystem>(systemManagement.FileSystem);
             Assert.IsInstanceOf<UnixFirewallManager>(systemManagement.FirewallManager);
             Assert.IsInstanceOf<PackageManager>(systemManagement.PackageManager);
-            Assert.IsInstanceOf<UnixProcessManager>(systemManagement.ProcessManager);
+            Assert.IsInstanceOf<ProcessManager>(systemManagement.ProcessManager);
             Assert.IsInstanceOf<StateManager>(systemManagement.StateManager);
         }
     }

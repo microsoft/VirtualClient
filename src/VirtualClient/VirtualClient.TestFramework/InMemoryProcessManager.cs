@@ -21,8 +21,8 @@ namespace VirtualClient
         /// Initializes a new instance of the <see cref="InMemoryProcessManager"/> class.
         /// </summary>
         public InMemoryProcessManager(PlatformID platform)
+            : base(platform)
         {
-            this.Platform = platform;
             this.Processes = new List<IProcessProxy>();
         }
 
@@ -79,9 +79,6 @@ namespace VirtualClient
         /// </list>
         /// </summary>
         public Action<IProcessProxy> OnProcessCreated { get; set; }
-
-        /// <inheritdoc />
-        public override PlatformID Platform { get; }
 
         /// <summary>
         /// Gets the process tracking instance. This is populated after the <see cref="TrackProcesses"/> method is called.

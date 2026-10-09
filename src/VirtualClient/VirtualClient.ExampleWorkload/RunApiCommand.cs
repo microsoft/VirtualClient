@@ -101,11 +101,11 @@ namespace VirtualClient
             switch (Environment.OSVersion.Platform)
             {
                 case PlatformID.Win32NT:
-                    firewallManager = new WindowsFirewallManager(new WindowsProcessManager());
+                    firewallManager = new WindowsFirewallManager(new ProcessManager(PlatformID.Win32NT));
                     break;
 
                 case PlatformID.Unix:
-                    firewallManager = new UnixFirewallManager(new UnixProcessManager());
+                    firewallManager = new UnixFirewallManager(new ProcessManager(PlatformID.Unix));
                     break;
             }
 
