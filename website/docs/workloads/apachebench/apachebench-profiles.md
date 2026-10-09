@@ -31,8 +31,8 @@ HTTP keep-alive enabled using the configured request count and concurrency level
 
   | Parameter              | Purpose                                                | Default Value |
   |------------------------|--------------------------------------------------------|---------------|
-  | NoOfRequests           | Total number of requests sent during each iteration.   | 50000         |
-  | NoOfConcurrentRequests | Number of requests issued concurrently.                | 50            |
+  | RequestCount           | Total number of requests sent during each iteration.   | 50000         |
+  | ConcurrentRequestCount | Number of requests issued concurrently.                | 50            |
 
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of
@@ -45,5 +45,5 @@ HTTP keep-alive enabled using the configured request count and concurrency level
   ./VirtualClient --profile=PERF-APACHEBENCH.json --system=Demo --timeout=60
 
   # Execute with a custom request count and concurrency level
-  ./VirtualClient --profile=PERF-APACHEBENCH.json --system=Demo --timeout=60 --parameters="NoOfRequests=100000,,,NoOfConcurrentRequests=100"
+  ./VirtualClient --profile=PERF-APACHEBENCH.json --system=Demo --timeout=60 --parameters="RequestCount=100000,,,ConcurrentRequestCount=100"
   ```
