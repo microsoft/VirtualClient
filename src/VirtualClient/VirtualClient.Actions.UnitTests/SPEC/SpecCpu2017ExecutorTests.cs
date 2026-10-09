@@ -589,6 +589,121 @@ namespace VirtualClient.Actions
             Assert.IsFalse(writtenConfigText.Contains("$Gcc10Workaround$"), "Placeholder '$Gcc10Workaround$' should be replaced.");
         }
 
+        [TestCase("intrate", "0-3", "$SPECCOPYNUM", null)]
+        [TestCase("intrate", "2,4,8,10", "$BIND", "bind = 2,4,8,10")]
+        [TestCase("fprate", "2,4,8,10", "$BIND", "bind = 2,4,8,10")]
+        public async Task SpecCpu2017ExecutorPinsRateCopies(string profile, string cpuIds, string copyCpu, string expectedBind)
+        {
+            this.SetupLinux();
+            this.SetupInstalledAffinityRun(cpuIds);
+            this.mockFixture.Parameters[nameof(SpecCpuExecutor.SpecProfile)] = profile;
+            this.mockFixture.Parameters[nameof(SpecCpuExecutor.Benchmarks)] = profile;
+
+            string pinnedConfig = null;
+            string pinnedPath = null;
+            this.mockFixture.File.Setup(f => f.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Callback<string, string, CancellationToken>((path, content, token) =>
+                {
+                    pinnedPath = path;
+                    pinnedConfig = content;
+                })
+                .Returns(Task.CompletedTask);
+
+            List<string> commands = new List<string>();
+            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            {
+                commands.Add($"{exe} {arguments}");
+                return new InMemoryProcess
+                {
+                    StartInfo = new ProcessStartInfo { FileName = exe, Arguments = arguments },
+                    ExitCode = 0,
+                    OnStart = () => true,
+                    OnHasExited = () => true
+                };
+            };
+
+            using (TestSpecCpu2017Executor executor = new TestSpecCpu2017Executor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                await executor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+            }
+
+            StringAssert.Contains("vc-linux-x64-2017-affinity-", Path.GetFileName(pinnedPath));
+            StringAssert.Contains($"submit = numactl --localalloc --physcpubind={copyCpu} -- $command", pinnedConfig);
+            if (expectedBind != null)
+            {
+                StringAssert.Contains(expectedBind, pinnedConfig);
+            }
+
+            Assert.IsTrue(commands.Any(command => command == "numactl --version"));
+            Assert.IsTrue(commands.Any(command => command == $"numactl --localalloc -C {cpuIds} true"));
+            Assert.IsTrue(commands.Any(command => command.Contains($"--config {Path.GetFileName(pinnedPath)}")));
+        }
+
+        [TestCase("0-2")]
+        [TestCase("0,invalid,2,3")]
+        public void SpecCpu2017ExecutorRejectsInvalidProcessorAffinity(string cpuIds)
+        {
+            this.SetupLinux();
+            this.SetupInstalledAffinityRun(cpuIds);
+
+            using (TestSpecCpu2017Executor executor = new TestSpecCpu2017Executor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                Assert.ThrowsAsync<ArgumentException>(async () => await executor.ExecuteAsync(CancellationToken.None));
+            }
+        }
+
+        [Test]
+        public void SpecCpu2017ExecutorRejectsAffinityOnSpeedRuns()
+        {
+            this.SetupLinux();
+            this.SetupInstalledAffinityRun("0-3");
+            this.mockFixture.Parameters[nameof(SpecCpuExecutor.SpecProfile)] = "intspeed";
+
+            using (TestSpecCpu2017Executor executor = new TestSpecCpu2017Executor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                Assert.ThrowsAsync<NotSupportedException>(async () => await executor.ExecuteAsync(CancellationToken.None));
+            }
+        }
+
+        [TestCase("--version", typeof(DependencyException))]
+        [TestCase("--localalloc", typeof(ArgumentException))]
+        public void SpecCpu2017ExecutorValidatesNumactl(string failingCommand, Type expectedException)
+        {
+            this.SetupLinux();
+            this.SetupInstalledAffinityRun("0-3");
+            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) => new InMemoryProcess
+            {
+                StartInfo = new ProcessStartInfo { FileName = exe, Arguments = arguments },
+                ExitCode = exe == "numactl" && arguments.StartsWith(failingCommand) ? 1 : 0,
+                OnStart = () => true,
+                OnHasExited = () => true
+            };
+
+            using (TestSpecCpu2017Executor executor = new TestSpecCpu2017Executor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                Assert.ThrowsAsync(expectedException, async () => await executor.ExecuteAsync(CancellationToken.None));
+            }
+        }
+
+        [Test]
+        public void SpecCpu2017ExecutorRejectsAffinityOnWindows()
+        {
+            this.SetupWindows();
+            this.SetupInstalledAffinityRun("0-3");
+
+            using (TestSpecCpu2017Executor executor = new TestSpecCpu2017Executor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                Assert.ThrowsAsync<NotSupportedException>(async () => await executor.ExecuteAsync(CancellationToken.None));
+            }
+        }
+
+        private void SetupInstalledAffinityRun(string cpuIds)
+        {
+            State state = new State(new Dictionary<string, IConvertible> { ["SpecCpuInitialized"] = true });
+            this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.Parse(state.ToJson()));
+            this.mockFixture.Parameters[nameof(SpecCpuExecutor.ProcessorAffinity)] = cpuIds;
+        }
+
         private void SetupLinux()
         {
             this.mockFixture = new MockFixture();

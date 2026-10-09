@@ -5,18 +5,22 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
+    using System.ComponentModel;
     using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
     using System.Runtime.InteropServices;
+    using System.Security.Cryptography;
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
     using global::VirtualClient.Common;
     using global::VirtualClient.Common.Extensions;
+    using global::VirtualClient.Common.ProcessAffinity;
     using global::VirtualClient.Common.Telemetry;
     using global::VirtualClient.Contracts;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
     using VirtualClient.Contracts.Metadata;
 
     /// <summary>
@@ -154,7 +158,19 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// Optional list of physical CPU IDs to assign to SPECrate copies, one CPU per copy.
+        /// </summary>
+        public string ProcessorAffinity
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(SpecCpuExecutor.ProcessorAffinity), string.Empty);
+            }
+        }
+
+        /// <summary>
         /// A feature flag to apply. For example 'UseCsvResults' can be used to parse the CSV file results vs. the standard output.
+        /// The CSV results have finer-grained results with additional significant figures.
         /// </summary>
         public string FeatureFlag
         {
@@ -216,11 +232,21 @@ namespace VirtualClient.Actions
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
         protected async Task ExecuteSpecCpuAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
+            string stage = "Configuration";
             try
             {
                 using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
-                    string commandLineArguments = this.GetCommandLineArguments();
+                    string configurationFile = this.GetConfigurationFileName();
+                    if (!string.IsNullOrWhiteSpace(this.ProcessorAffinity))
+                    {
+                        stage = "AffinityConfiguration";
+                        configurationFile = await this.WritePinnedSpecCpuConfigAsync(telemetryContext, cancellationToken);
+                    }
+
+                    this.LogSpecCpuStep(telemetryContext, "ConfigSelected", ("configurationFile", configurationFile));
+                    string commandLineArguments = this.GetCommandLineArguments(configurationFile);
+
                     string command;
                     string commandArguments;
 
@@ -235,6 +261,9 @@ namespace VirtualClient.Actions
                         commandArguments = $"/c {SpecCpuExecutor.SpecCpuRunBat} {commandLineArguments}";
                     }
 
+                    stage = "Run";
+                    this.LogSpecCpuStep(telemetryContext, "RunStarted", ("configurationFile", configurationFile), ("command", command), ("arguments", commandArguments));
+                    DateTime runStart = DateTime.UtcNow;
                     using (IProcessProxy process = await this.ExecuteCommandAsync(
                         command,
                         commandArguments,
@@ -246,12 +275,24 @@ namespace VirtualClient.Actions
                         if (!cancellationToken.IsCancellationRequested)
                         {
                             await this.LogProcessDetailsAsync(process, telemetryContext, "SPECcpu", logToFile: true);
+                            this.LogSpecCpuStep(telemetryContext, "RunCompleted", ("configurationFile", configurationFile), ("exitCode", process.ExitCode), ("durationMs", (DateTime.UtcNow - runStart).TotalMilliseconds));
                             process.ThrowIfWorkloadFailed();
 
+                            stage = "Metrics";
                             await this.CaptureMetricsAsync(process, commandLineArguments, telemetryContext, cancellationToken);
                         }
                     }
                 }
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                this.LogSpecCpuStep(telemetryContext, "Cancelled", ("stage", stage));
+                throw;
+            }
+            catch (Exception exc)
+            {
+                this.LogSpecCpuFailure(telemetryContext, stage, exc);
+                throw;
             }
             finally
             {
@@ -269,28 +310,48 @@ namespace VirtualClient.Actions
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
         protected async Task InitializeSpecCpuAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            DependencyPath workloadPackage = await this.packageManager.GetPackageAsync(this.PackageName, CancellationToken.None);
-
-            if (workloadPackage == null)
+            string stage = "PackageLookup";
+            try
             {
-                throw new DependencyException(
-                    $"The expected package '{this.PackageName}' does not exist on the system or is not registered.",
-                    ErrorReason.WorkloadDependencyMissing);
+                this.LogSpecCpuStep(telemetryContext, "PackageLookupStarted", ("packageName", this.PackageName));
+                DependencyPath workloadPackage = await this.packageManager.GetPackageAsync(this.PackageName, CancellationToken.None);
+
+                if (workloadPackage == null)
+                {
+                    throw new DependencyException(
+                        $"The expected package '{this.PackageName}' does not exist on the system or is not registered.",
+                        ErrorReason.WorkloadDependencyMissing);
+                }
+
+                this.PackageDirectory = workloadPackage.Path;
+                this.ResultsDirectory = this.Combine(this.PackageDirectory, "result");
+                this.LogSpecCpuStep(telemetryContext, "PackageReady", ("packageName", this.PackageName));
+
+                // Clean any previous results from the system.
+                if (this.fileSystem.Directory.Exists(this.ResultsDirectory))
+                {
+                    await this.fileSystem.Directory.DeleteAsync(this.ResultsDirectory);
+                    this.fileSystem.Directory.CreateDirectory(this.ResultsDirectory);
+                }
+
+                stage = "Setup";
+                string imageFile = this.GetIsoFilePath(workloadPackage);
+                telemetryContext.AddContext(nameof(imageFile), imageFile);
+
+                this.LogSpecCpuStep(telemetryContext, "SetupStarted", ("imageFile", Path.GetFileName(imageFile)));
+                await this.SetupSpecCpuAsync(imageFile, telemetryContext, cancellationToken);
+                this.LogSpecCpuStep(telemetryContext, "SetupCompleted");
             }
-
-            this.PackageDirectory = workloadPackage.Path;
-            this.ResultsDirectory = this.Combine(this.PackageDirectory, "result");
-
-            if (this.fileSystem.Directory.Exists(this.ResultsDirectory))
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
-                await this.fileSystem.Directory.DeleteAsync(this.ResultsDirectory);
-                this.fileSystem.Directory.CreateDirectory(this.ResultsDirectory);
+                this.LogSpecCpuStep(telemetryContext, "Cancelled", ("stage", stage));
+                throw;
             }
-
-            string imageFile = this.GetIsoFilePath(workloadPackage);
-            telemetryContext.AddContext(nameof(imageFile), imageFile);
-
-            await this.SetupSpecCpuAsync(imageFile, telemetryContext, cancellationToken);
+            catch (Exception exc)
+            {
+                this.LogSpecCpuFailure(telemetryContext, stage, exc);
+                throw;
+            }
         }
 
         /// <summary>
@@ -439,11 +500,13 @@ namespace VirtualClient.Actions
             SpecCpuState state = await this.stateManager.GetStateAsync<SpecCpuState>(stateId, cancellationToken)
                 ?? new SpecCpuState();
 
+            this.LogSpecCpuStep(telemetryContext, "SetupStateRead", ("alreadyInitialized", state.SpecCpuInitialized));
             if (state.SpecCpuInitialized)
             {
                 return;
             }
 
+            this.LogSpecCpuStep(telemetryContext, "InstallationStarted");
             string mountPath = this.PlatformSpecifics.Combine(this.PlatformSpecifics.GetPackagePath(), "speccpu_mount");
             this.fileSystem.Directory.CreateDirectory(mountPath);
 
@@ -458,6 +521,7 @@ namespace VirtualClient.Actions
 
             state.SpecCpuInitialized = true;
             await this.stateManager.SaveStateAsync<SpecCpuState>(stateId, state, cancellationToken);
+            this.LogSpecCpuStep(telemetryContext, "InstallationCompleted");
         }
 
         private async Task LinuxSetupAsync(
@@ -579,6 +643,7 @@ namespace VirtualClient.Actions
                     this.GetResultsFileSearchPattern(extension),
                     SearchOption.TopDirectoryOnly);
 
+                int metricCount = 0;
                 foreach (string file in outputFiles)
                 {
                     KeyValuePair<string, string> results = await this.LoadResultsAsync(file, cancellationToken);
@@ -588,6 +653,7 @@ namespace VirtualClient.Actions
                     IList<Metric> metrics = parser.Parse();
 
                     metrics.LogConsole(this.Scenario, "SPECcpu");
+                    metricCount += metrics.Count;
                     metrics.ToList().ForEach(m => m.Categorization = $"{this.SpecProfile}-{this.tuning}");
 
                     foreach (Metric metric in metrics)
@@ -603,6 +669,8 @@ namespace VirtualClient.Actions
                             this.Tags);
                     }
                 }
+
+                this.LogSpecCpuStep(telemetryContext, "MetricsCaptured", ("resultFileCount", outputFiles.Length), ("metricCount", metricCount), ("format", useCsv ? "csv" : "txt"));
             }
         }
 
@@ -640,10 +708,9 @@ namespace VirtualClient.Actions
             }
         }
 
-        private string GetCommandLineArguments()
+        private string GetCommandLineArguments(string configurationFile)
         {
             List<string> suites = new List<string> { "intrate", "intspeed", "fprate", "fpspeed" };
-            string configurationFile = this.GetConfigurationFileName();
             string command = $"--config {configurationFile} --iterations {this.Iterations} --copies {this.Copies} --threads {this.Threads} --tune {this.tuning}";
 
             bool reportable = this.Platform == PlatformID.Unix
@@ -652,6 +719,107 @@ namespace VirtualClient.Actions
 
             command = reportable ? $"{command} --reportable" : $"{command} --noreportable";
             return $"{command} {this.Benchmarks}";
+        }
+
+        private async Task<string> WritePinnedSpecCpuConfigAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            this.LogSpecCpuStep(telemetryContext, "AffinityValidationStarted", ("requestedCpuIds", this.ProcessorAffinity));
+            if (this.Platform != PlatformID.Unix ||
+                (!string.Equals(this.SpecProfile, "intrate", StringComparison.OrdinalIgnoreCase) &&
+                 !string.Equals(this.SpecProfile, "fprate", StringComparison.OrdinalIgnoreCase)))
+            {
+                throw new NotSupportedException("SPEC CPU per-copy processor affinity is supported only for Linux intrate and fprate runs.");
+            }
+
+            LinuxProcessAffinityConfiguration affinityConfig = (LinuxProcessAffinityConfiguration)ProcessAffinityConfiguration.Create(this.Platform, this.ProcessorAffinity);
+            IReadOnlyList<int> cores = affinityConfig.Cores;
+            if (cores.Count != this.Copies)
+            {
+                throw new ArgumentException($"ProcessorAffinity must specify exactly one distinct CPU per SPEC copy (Copies={this.Copies}, CPUs={cores.Count}).", nameof(this.ProcessorAffinity));
+            }
+
+            bool useCopyNumber = cores.Select((core, copy) => core == copy).All(matches => matches);
+            string copyCpu = useCopyNumber ? "$SPECCOPYNUM" : "$BIND";
+            this.LogSpecCpuStep(telemetryContext, "AffinityValidated", ("cpuIds", string.Join(",", cores)), ("mapping", copyCpu));
+
+            this.LogSpecCpuStep(telemetryContext, "NumactlCheckStarted");
+            try
+            {
+                using (IProcessProxy process = this.systemManager.ProcessManager.CreateProcess("numactl", "--version", this.PackageDirectory))
+                {
+                    await process.StartAndWaitAsync(cancellationToken);
+                    if (!cancellationToken.IsCancellationRequested && process.IsErrored())
+                    {
+                        throw new DependencyException("SPEC CPU processor affinity requires a working numactl installation.", ErrorReason.WorkloadDependencyMissing);
+                    }
+
+                    this.LogSpecCpuStep(telemetryContext, "NumactlChecked", ("exitCode", process.ExitCode));
+                }
+            }
+            catch (Win32Exception exc)
+            {
+                throw new DependencyException("SPEC CPU processor affinity requires numactl to be installed.", exc, ErrorReason.WorkloadDependencyMissing);
+            }
+
+            (string executable, string arguments) = affinityConfig.GetAffinityProcessInfo("true");
+            this.LogSpecCpuStep(telemetryContext, "AffinityPreflightStarted", ("arguments", $"--localalloc {arguments}"));
+            using (IProcessProxy process = this.systemManager.ProcessManager.CreateProcess(executable, $"--localalloc {arguments}", this.PackageDirectory))
+            {
+                await process.StartAndWaitAsync(cancellationToken);
+                if (!cancellationToken.IsCancellationRequested && process.IsErrored())
+                {
+                    throw new ArgumentException($"ProcessorAffinity contains CPUs that cannot be bound with numactl --localalloc. {process.StandardError}", nameof(this.ProcessorAffinity));
+                }
+
+                this.LogSpecCpuStep(telemetryContext, "AffinityPreflightCompleted", ("exitCode", process.ExitCode));
+            }
+
+            string configurationFile = this.GetConfigurationFileName();
+            string configurationPath = this.Combine(this.PackageDirectory, "config", configurationFile);
+            string configText = await this.fileSystem.File.ReadAllTextAsync(configurationPath);
+            const string rateSection = "intrate,fprate:";
+            if (!configText.Contains(rateSection, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new WorkloadException($"SPEC CPU configuration '{configurationPath}' is missing the '{rateSection}' section required for processor affinity.");
+            }
+
+            string bind = useCopyNumber ? string.Empty : $"   bind = {string.Join(",", cores)}\n";
+            string submit = $"   submit = numactl --localalloc --physcpubind={copyCpu} -- $command";
+            configText = configText.Replace(rateSection, $"{rateSection}\n{bind}{submit}", StringComparison.OrdinalIgnoreCase);
+
+            string configId = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(string.Join(",", cores)))).Substring(0, 16);
+            string pinnedConfigFile = $"{Path.GetFileNameWithoutExtension(configurationFile)}-affinity-{configId}.cfg";
+            await this.fileSystem.File.WriteAllTextAsync(this.Combine(this.PackageDirectory, "config", pinnedConfigFile), configText, cancellationToken);
+            this.LogSpecCpuStep(telemetryContext, "ConfigGenerated", ("configurationFile", pinnedConfigFile), ("cpuIds", string.Join(",", cores)), ("submit", submit));
+            return pinnedConfigFile;
+        }
+
+        private void LogSpecCpuStep(EventContext telemetryContext, string step, params (string Name, object Value)[] details)
+        {
+            EventContext stepContext = telemetryContext.Clone()
+                .AddContext("scenario", this.Scenario ?? string.Empty)
+                .AddContext("specProfile", this.SpecProfile ?? string.Empty)
+                .AddContext("benchmarks", this.Benchmarks ?? string.Empty)
+                .AddContext("copies", this.Copies)
+                .AddContext("pinningEnabled", !string.IsNullOrWhiteSpace(this.ProcessorAffinity));
+
+            foreach ((string name, object value) in details)
+            {
+                stepContext.AddContext(name, value);
+            }
+
+            this.Logger.LogMessage($"{this.TypeName}.{step}", LogLevel.Information, stepContext);
+        }
+
+        private void LogSpecCpuFailure(EventContext telemetryContext, string stage, Exception exception)
+        {
+            EventContext errorContext = telemetryContext.Clone()
+                .AddContext("scenario", this.Scenario ?? string.Empty)
+                .AddContext("specProfile", this.SpecProfile ?? string.Empty)
+                .AddContext("stage", stage)
+                .AddError(exception);
+
+            this.Logger.LogMessage($"{this.TypeName}.Failed", LogLevel.Error, errorContext);
         }
 
         private async Task WriteSpecCpuConfigAsync(CancellationToken cancellationToken)
