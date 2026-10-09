@@ -48,13 +48,13 @@ namespace VirtualClient.Actions
                         else
                         {
                             // bytes/sec that were sent within the TimeSlice period
-                            this.AddMetric(new Metric($"SendBps(TimeSlice-{values[0].Trim()})", Convert.ToDouble(values[1]), "B/s", MetricRelativity.Undefined));
+                            this.AddMetric(new Metric($"SendBps(TimeSlice-{values[0].Trim()})", Convert.ToDouble(values[1]), MetricUnit.BytesPerSecond, MetricRelativity.HigherIsBetter));
 
                             // bytes/sec that were received within the TimeSlice period
-                            this.AddMetric(new Metric($"RecvBps(TimeSlice-{values[0].Trim()})", Convert.ToDouble(values[2]), "B/s", MetricRelativity.Undefined));
+                            this.AddMetric(new Metric($"RecvBps(TimeSlice-{values[0].Trim()})", Convert.ToDouble(values[2]), MetricUnit.BytesPerSecond, MetricRelativity.HigherIsBetter));
 
                             // count of established connections transmitting IO pattern data
-                            this.AddMetric(new Metric($"InFlight(TimeSlice-{values[0].Trim()})", Convert.ToDouble(values[3]), MetricRelativity.Undefined));
+                            this.AddMetric(new Metric($"InFlight(TimeSlice-{values[0].Trim()})", Convert.ToDouble(values[3]), MetricRelativity.HigherIsBetter));
 
                             // cumulative count of successfully completed IO patterns
                             this.AddMetric(new Metric($"Completed(TimeSlice-{values[0].Trim()})", Convert.ToDouble(values[4]), MetricRelativity.HigherIsBetter));

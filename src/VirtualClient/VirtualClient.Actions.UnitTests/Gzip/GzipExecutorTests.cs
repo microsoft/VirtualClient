@@ -56,7 +56,7 @@ namespace VirtualClient.Actions
             };
 
             string currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string resultsPath = Path.Combine(currentDirectory, "Examples", "Gzip", "GzipResultsExample.txt");
+            string resultsPath = Path.Combine(currentDirectory, "test_examples", "Gzip", "GzipResultsExample.txt");
             string results = File.ReadAllText(resultsPath);
             this.defaultOutput.Clear();
             this.defaultOutput.Append(results);

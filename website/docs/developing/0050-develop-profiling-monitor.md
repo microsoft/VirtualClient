@@ -1,3 +1,7 @@
+---
+slug: /developing/develop-profiling-monitor
+---
+
 # Profiler Integration
 Profilers are applications/programs that are used to capture very detailed information for operations that are happening on the
 system. For example, the [Azure Profiler](https://eng.ms/docs/products/azure-profiler/azure-profiler) is a toolet that captures
@@ -9,8 +13,8 @@ workload and monitoring profiles.
 The following pieces of documentation are helpful to understand before implementing any new monitor or profiler support in the
 Virtual Client.
 
-* [Platform Overview](https://github.com/microsoft/VirtualClient/blob/main/website/docs/overview/features.md)
-* [Platform Design Aspects](https://github.com/microsoft/VirtualClient/blob/main/website/docs/overview/design.md)
+* [Platform Overview](/docs/overview/features/)
+* [Platform Design Aspects](/docs/overview/design/)
 
 Note that there is a project in the Virtual Client solution that showcases both interval-based as well as on-demand profiling
 scenarios. From Visual Studio, you can set the project [VirtualClient.Examples](https://msazure.visualstudio.com/One/_git/CRC-AIR-Workloads?path=/src/VirtualClient/VirtualClient.Examples)

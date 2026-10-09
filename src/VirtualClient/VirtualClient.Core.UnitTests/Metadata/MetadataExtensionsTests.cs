@@ -21,7 +21,7 @@ namespace VirtualClient.Metadata
     [Category("Unit")]
     public class MetadataExtensionsTests
     {
-        private static readonly string LspciExamples = Path.Combine(MockFixture.TestResourcesDirectory, "Unix", "lspci");
+        private static readonly string LspciExamples = Path.Combine(MockFixture.TestResourcesDirectory, "unix", "lspci");
         private MockFixture mockFixture;
 
         public void SetupFixture(PlatformID platform, Architecture architecture = Architecture.X64)

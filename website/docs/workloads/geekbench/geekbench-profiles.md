@@ -1,7 +1,11 @@
-# GeekBench Workload Profiles
+---
+slug: /workloads/geekbench-profiles
+---
+
+# GeekBench Profiles
 The following profiles run customer-representative or benchmarking scenarios using the GeekBench5 and GeekBench6 workloads.
 
-* [Workload Details](./geekbench.md)  
+* [Workload Details](/docs/workloads/geekbench)  
 
 ## PERF-CPU-GEEKBENCH5.json
 Runs a CPU-intensive workload using the GeekBench5 toolset to test the performance of the CPU across various types of common application algorithms 
@@ -10,7 +14,7 @@ against a baseline. GeekBench is an industry standard benchmarking toolset.
 
 * [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-CPU-GEEKBENCH5.json) 
 
-* **Supported Platform/Architectures**
+* **Supported Platform-Architectures**
   Note that GeekBench5 runs on linux-arm64 systems; however, to do so requires that the date be uploaded to Primate Labs' (the producer of GeekBench)
   data systems. We do not sanction or support uploading customer data to unexpected systems and thus do not support the use of GeekBench5 on
   linux-arm64 systems.
@@ -18,16 +22,12 @@ against a baseline. GeekBench is an industry standard benchmarking toolset.
   * win-x64
   * win-arm64
 
-* **Supports Disconnected Scenarios**  
-  * Yes. When the GeekBench5 package is included in 'packages' directory of the Virtual Client.
-    * [Installing VC Packages](../../dependencies/0001-install-vc-packages.md). 
-
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
   * Internet connection.
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
-  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+  * [Installing Dependencies](/docs/category/dependencies/)
 
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
@@ -50,22 +50,18 @@ against a baseline. GeekBench is an industry standard benchmarking toolset.
 
 * [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-CPU-GEEKBENCH.json) 
 
-* **Supported Platform/Architectures**
+* **Supported Platform-Architectures**
   * linux-x64 
   * linux-arm64 
   * win-x64
   * win-arm64
-
-* **Supports Disconnected Scenarios**  
-  * Yes. When the GeekBench6 package is included in 'packages' directory of the Virtual Client.
-    * [Installing VC Packages](../../dependencies/0001-install-vc-packages.md). 
 
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
   * Internet connection.
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
-  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+  * [Installing Dependencies](/docs/category/dependencies/)
 
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 

@@ -156,9 +156,11 @@ namespace VirtualClient
         /// online and writable rather than remaining offline or read-only.
         /// </summary>
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
-        public override Task SetSanPolicyAsync(CancellationToken cancellationToken)
+        /// <param name="timeout">A timeout to apply to the operation.</param>
+        public override Task SetSanPolicyAsync(CancellationToken cancellationToken, TimeSpan? timeout = null)
         {
             EventContext context = EventContext.Persisted();
+            TimeSpan effectiveTimeout = timeout ?? TimeSpan.FromSeconds(30);
 
             return this.Logger.LogMessageAsync($"{nameof(WindowsDiskManager)}.SetSanPolicy", context, async () =>
             {
@@ -185,7 +187,7 @@ namespace VirtualClient
                                     // Query the current SAN policy first.
                                     command = "san";
                                     await process.WriteInput(command)
-                                        .WaitForResponseAsync(@"SAN Policy\s*:", cancellationToken, timeout: TimeSpan.FromSeconds(30))
+                                        .WaitForResponseAsync(@"SAN Policy\s*:", cancellationToken, timeout: effectiveTimeout)
                                         .ConfigureAwait(false);
 
                                     string sanOutput = process.StandardOutput.ToString();
@@ -203,7 +205,7 @@ namespace VirtualClient
                                         // brought online and writable instead of remaining offline/read-only.
                                         command = "san policy=onlineall";
                                         await process.WriteInput(command)
-                                            .WaitForResponseAsync(@"DiskPart successfully changed the SAN policy for the current operating system\.", cancellationToken, timeout: TimeSpan.FromSeconds(30))
+                                            .WaitForResponseAsync(@"DiskPart successfully changed the SAN policy for the current operating system\.", cancellationToken, timeout: effectiveTimeout)
                                             .ConfigureAwait(false);
 
                                         this.Logger.LogTraceMessage("SAN policy set to OnlineAll.", context);
@@ -219,7 +221,7 @@ namespace VirtualClient
                                 finally
                                 {
                                     process.WriteInput("exit");
-                                    await Task.Delay(this.WaitTime).ConfigureAwait(false);
+                                    await Task.Delay(this.WaitTime);
                                     context.AddProcessDetails(process.ToProcessDetails("diskpart"), "diskpartProcess");
                                 }
                             }

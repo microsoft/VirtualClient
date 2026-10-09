@@ -2,14 +2,12 @@
 
 EXIT_CODE=0
 SCRIPT_DIR="$(dirname $(readlink -f "${BASH_SOURCE[0]}"))"
+OS_PLATFORM=""
 
 # Network configuration flags
 DISABLE_FIREWALL=false
 ENABLE_BUSY_POLL=false
-NO_FILE_LIMIT=1048575
 EPHEMERAL_PORT_RANGE="10000 60000"
-LIMITS_FILE="/etc/security/limits.conf"
-SEARCH_TERM="# VC Settings Begin"
 
 Usage() {
     echo ""
@@ -23,33 +21,102 @@ Usage() {
     echo ""
     echo "Usage:"
     echo "---------------------"
-    echo "./config_network.sh [--disable-firewall] [--enable-busy-poll] [--port-range=<start end>]"
+    echo "config_network.sh [--disable-firewall] [--enable-busy-poll] [--port-range='<start end>']"
     echo ""
     echo "Examples:"
     echo "---------------------"
     echo "./config_network.sh"
-    echo "./config_network.sh --port-range=\"10000 60000\""
+    echo "./config_network.sh --port-range='10000 60000'"
     echo "./config_network.sh --disable-firewall"
     echo "./config_network.sh --enable-busy-poll"
-    echo "./config_network.sh --port-range=\"10000 60000\" --disable-firewall --enable-busy-poll"
+    echo "./config_network.sh --port-range='10000 60000' --disable-firewall --enable-busy-poll"
     echo ""
     Finish
 }
 
 Error() {
     EXIT_CODE=1
-    End
-}
-
-End() {
-    echo ""
-    echo "Exit Code: $EXIT_CODE"
-    echo ""
     Finish
 }
 
 Finish() {
+    echo ""
+    echo "Exit Code: $EXIT_CODE"
+    echo ""
     exit $EXIT_CODE
+}
+
+Set_Platform() {
+    # Source the os-release file
+    if [ -f /etc/os-release ]; then
+        . /etc/os-release
+    else
+        echo "Error: /etc/os-release not found." >&2
+        Error
+    fi
+
+    # Convert values to lowercase using Bash parameter expansion (,,)
+    # (Sourcing already automatically strips any surrounding quotes)
+    os_id="${ID,,}"
+    os_version="${VERSION_ID,,}"
+
+    # Set the OS platform
+    #
+    # e.g.
+    # azurelinux-3.0, azurelinux-4.0
+    # centos-7, centos-8
+    # debian-10, debian-11
+    # fedora-34, fedora-35
+    # opensuse-leap-16.0, opensuse-42.3
+    # rhel-8.10, rhel-9.6, rhel-10.0
+    # ubuntu-20.04, ubuntu-22.04, ubuntu-24.04, ubuntu-26.04
+    OS_PLATFORM="$os_id-$os_version"
+}
+
+Configure_Limits() {
+    # If a platform-specific implementation exists, use it (e.g. /network/ubuntu-26.04/config_limits.sh).
+    # Otherwise use the default implementation.
+    if [ -f "$SCRIPT_DIR/$OS_PLATFORM/config_limits.sh" ]; then
+        echo "Config = '<SCRIPT_DIR>/$OS_PLATFORM/config_limits.sh'"
+        bash "$SCRIPT_DIR/$OS_PLATFORM/config_limits.sh" --port-range="$EPHEMERAL_PORT_RANGE" --enable-busy-poll=$ENABLE_BUSY_POLL || Error
+    else
+        echo "Config = '<SCRIPT_DIR>/default/config_limits.sh'"
+        bash "$SCRIPT_DIR/default/config_limits.sh" --port-range="$EPHEMERAL_PORT_RANGE" --enable-busy-poll=$ENABLE_BUSY_POLL || Error
+    fi
+}
+
+Configure_Iptables() {
+    # If a platform-specific implementation exists, use it (e.g. /network/ubuntu-18.04/config_iptables.sh).
+    # Otherwise use the default implementation.
+    if [ -f "$SCRIPT_DIR/$OS_PLATFORM/config_iptables.sh" ]; then
+        echo "Config = '<SCRIPT_DIR>/$OS_PLATFORM/config_iptables.sh'"
+        bash "$SCRIPT_DIR/$OS_PLATFORM/config_iptables.sh" || Error
+    else
+        echo "Config = '<SCRIPT_DIR>/default/config_iptables.sh'"
+        bash "$SCRIPT_DIR/default/config_iptables.sh" || Error
+    fi
+}
+
+Configure_Nftables() {
+    # If a platform-specific implementation exists, use it (e.g. /network/ubuntu-18.04/config_nftables.sh).
+    # Otherwise use the default implementation.
+    if [ -f "$SCRIPT_DIR/$OS_PLATFORM/config_nftables.sh" ]; then
+        echo "Config = '<SCRIPT_DIR>/$OS_PLATFORM/config_nftables.sh'"
+        bash "$SCRIPT_DIR/$OS_PLATFORM/config_nftables.sh" || Error
+    else
+        echo "Config = '<SCRIPT_DIR>/default/config_nftables.sh'"
+        bash "$SCRIPT_DIR/default/config_nftables.sh" || Error
+    fi
+}
+
+Disable_Firewalld() {
+    # Check if firewalld service exists/is installed
+    if systemctl list-unit-files firewalld.service | grep -q firewalld.service; then
+        echo "Stop 'firewalld' service..."
+
+        # Stop firewalld
+        sudo systemctl stop firewalld
+    fi
 }
 
 # Parse arguments
@@ -72,10 +139,8 @@ while [[ $# -gt 0 ]]; do
             if [[ "$DISABLE" == "$1" ]]; then
                 DISABLE_FIREWALL=true
             else
-                # Normalize quotes and lowercase
                 DISABLE="${DISABLE,,}"
-                DISABLE="${DISABLE%\"}"
-                DISABLE="${DISABLE#\"}"
+                DISABLE="${DISABLE//[\"\']/}" # Strip single and double quotes
 
                 if [[ "$DISABLE" == "true" ]]; then
                     DISABLE_FIREWALL=true
@@ -91,10 +156,8 @@ while [[ $# -gt 0 ]]; do
             if [[ "$ENABLE" == "$1" ]]; then
                 ENABLE_BUSY_POLL=true
             else
-                # Normalize quotes and lowercase
                 ENABLE="${ENABLE,,}"
-                ENABLE="${ENABLE%\"}"
-                ENABLE="${ENABLE#\"}"
+                ENABLE="${ENABLE//[\"\']/}" # Strip single and double quotes
 
                 if [[ "$ENABLE" == "true" ]]; then
                     ENABLE_BUSY_POLL=true
@@ -104,6 +167,7 @@ while [[ $# -gt 0 ]]; do
         --port-range=*)
             # Extract everything after '='
             EPHEMERAL_PORT_RANGE="${1#*=}"
+            EPHEMERAL_PORT_RANGE="${EPHEMERAL_PORT_RANGE//[\"\']/}" # Strip single and double quotes
 
             # Split into two numbers
             PORT_RANGE_START=$(echo "$EPHEMERAL_PORT_RANGE" | awk '{print $1}')
@@ -111,11 +175,10 @@ while [[ $# -gt 0 ]]; do
 
             # Validate both values exist
             if [[ -z "$PORT_RANGE_START" || -z "$PORT_RANGE_END" ]]; then
-                echo "ERROR: --port-range requires two values, e.g. --port-range=\"10000 60000\""
+                echo "ERROR: --port-range requires two values, e.g. --port-range='10000 60000'"
                 Error
             fi
             ;;
-
         *)
             echo "Unknown option: $1"
             Usage
@@ -125,67 +188,28 @@ while [[ $# -gt 0 ]]; do
 done
 
 echo ""
-echo "CONFIGURE NETWORK"
 echo "**********************************************************************"
+echo "CONFIGURE NETWORK"
+echo ""
 echo "Disable Firewall     : $DISABLE_FIREWALL"
 echo "Enable Busy Poll     : $ENABLE_BUSY_POLL"
 echo "Ephemeral Port Range : $EPHEMERAL_PORT_RANGE"
 echo "Script Directory     : $SCRIPT_DIR"
 echo "**********************************************************************"
-echo ""
 
-echo "-------------------------------"
-echo "SET /etc/security/limits.conf"
-echo "-------------------------------"
-# 1. Check if the marker already exists in the file
-if grep -q "$SEARCH_TERM" "$LIMITS_FILE"; then
-    echo "Settings already exist..."
-else
-    echo "Apply settings to '$LIMITS_FILE'."
-
-    # 2. Append the block to the end of the file using sudo and tee
-    # The -a flag in tee stands for 'append'
-    sudo tee -a "$LIMITS_FILE" > /dev/null <<"EOF"
-# VC Settings Begin
-* soft    nofile    1048575
-* hard    nofile    1048575
-# VC Settings End
-EOF
-
-fi
+Set_Platform
 
 echo ""
 echo "-------------------------------"
-echo "SET SYSCTL SETTINGS"
+echo "DETERMINE PLATFORM"
 echo "-------------------------------"
-# https://www.kernel.org/doc/html/latest/networking/ip-sysctl.html
-#
-# increase the maximum number of file descriptors.
-sysctl -w fs.file-max=1048575 || Error
+echo "Platform = $OS_PLATFORM"
 
-# TIME_WAIT work-around
-sysctl -w net.ipv4.tcp_tw_reuse=1 || Error
-
-# increase ephemeral ports
-sysctl -w net.ipv4.ip_local_port_range="$EPHEMERAL_PORT_RANGE" || Error
-
-# disable SYN cookies (for network workloads)
-sysctl -w net.ipv4.tcp_syncookies=0 || Error
-
-# increase SYN backlog (for network workloads)
-sysctl -w net.ipv4.tcp_max_syn_backlog=2048 || Error
-
-# disable reverse path filtering (for network workloads)
-sysctl -w net.ipv4.conf.all.rp_filter=0 || Error
-
-# disable connection tracking
-sysctl -w net.netfilter.nf_conntrack_max=0 || Error
-
-# Busy poll settings
-if [[ "$ENABLE_BUSY_POLL" == true ]]; then
-     sysctl -w net.core.busy_poll=50 || Error
-     sysctl -w net.core.busy_read=50 || Error
-fi
+echo ""
+echo "-------------------------------"
+echo "SET LIMITS"
+echo "-------------------------------"
+Configure_Limits
 
 # Network firewall settings
 if [[ "$DISABLE_FIREWALL" == true ]]; then
@@ -193,28 +217,13 @@ if [[ "$DISABLE_FIREWALL" == true ]]; then
     echo "-------------------------------"
     echo "SET FIREWALL RULES"
     echo "-------------------------------"
+    Disable_Firewalld
 
-    nft flush ruleset
-    systemctl restart nftables
-
-     # https://linux.die.net/man/8/iptables
-     # disable connection tracking
-     iptables -t raw -I OUTPUT -j NOTRACK || Error
-     iptables -t raw -I PREROUTING -j NOTRACK || Error
-
-     # accept all inbound, outbound and forwarding traffic
-     iptables -P INPUT ACCEPT || Error
-     iptables -P OUTPUT ACCEPT || Error
-     iptables -P FORWARD ACCEPT || Error
-
-     # flush/accept new firewall settings
-     iptables --flush || Error
-
-     iptables -S
-     echo ""
-     iptables -t raw -L -v -n
-     echo ""
-     iptables -L -v -n
+    if command -v nft &> /dev/null; then
+        Configure_Nftables
+    elif command -v iptables &> /dev/null; then
+        Configure_Iptables
+    fi
 fi
 
-End
+Finish

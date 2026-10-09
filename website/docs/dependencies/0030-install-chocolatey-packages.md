@@ -1,3 +1,7 @@
+---
+slug: /dependencies/install-chocolatey-packages
+---
+
 # Installation Chocolatey Packages
 Install packages available in Chocolatey Package in Windows.
 
@@ -5,10 +9,10 @@ Install packages available in Chocolatey Package in Windows.
 - [Chocolatey Packages](https://community.chocolatey.org/packages)
 
 :::info
-This step depends on the [installation of Chocolatey](./0020-install-chocolatey.md).
+This step depends on the [installation of Chocolatey](/docs/dependencies/install-chocolatey).
 :::
 
-## Supported Platform/Architectures
+## Supported Platform-Architectures
 * win-x64
 * win-arm64
 

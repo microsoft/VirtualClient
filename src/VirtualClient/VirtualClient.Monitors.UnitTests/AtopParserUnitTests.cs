@@ -22,7 +22,7 @@ namespace VirtualClient.Monitors
         public void AtopParserParsesMetricsCorrectly_Scenario1()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "Atop", "AtopExample1.txt");
+            string outputPath = Path.Combine(workingDirectory, "test_examples", "Atop", "AtopExample1.txt");
             string rawText = File.ReadAllText(outputPath);
 
             // Single distinct sample group. If there is only one record we consider it.
@@ -144,7 +144,7 @@ namespace VirtualClient.Monitors
         public void AtopParserParsesMetricsCorrectly_Scenario2()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "Atop", "AtopExample2.txt");
+            string outputPath = Path.Combine(workingDirectory, "test_examples", "Atop", "AtopExample2.txt");
             string rawText = File.ReadAllText(outputPath);
 
             // Single distinct sample group. If there is only one record we consider it.
@@ -260,7 +260,7 @@ namespace VirtualClient.Monitors
         public void AtopParserParsesMetricsCorrectly_Scenario3()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "Atop", "AtopExample-1s-5s.txt");
+            string outputPath = Path.Combine(workingDirectory, "test_examples", "Atop", "AtopExample-1s-5s.txt");
             string rawText = File.ReadAllText(outputPath);
 
             // 1 second sample rate, 5 intervals = 4 distinct sample groups as we don't consider first atop sample.
@@ -421,7 +421,7 @@ namespace VirtualClient.Monitors
         public void AtopParserParsesMetricsCorrectly_Scenario4()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "Atop", "AtopExample-1s-60s.txt");
+            string outputPath = Path.Combine(workingDirectory, "test_examples", "Atop", "AtopExample-1s-60s.txt");
             string rawText = File.ReadAllText(outputPath);
 
             // 1 second sample rate, 60 intervals = 59 distinct sample groups as we don't consider first atop sample.
@@ -597,7 +597,7 @@ namespace VirtualClient.Monitors
         public void AtopParserParsesMetricsCorrectly_Scenario5()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "Atop", "AtopExample3.txt");
+            string outputPath = Path.Combine(workingDirectory, "test_examples", "Atop", "AtopExample3.txt");
             string rawText = File.ReadAllText(outputPath);
 
             // Single distinct sample group
@@ -613,7 +613,7 @@ namespace VirtualClient.Monitors
         {
             // Subsets of Counters
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "Atop", "AtopExample-1s-60s.txt");
+            string outputPath = Path.Combine(workingDirectory, "test_examples", "Atop", "AtopExample-1s-60s.txt");
             string rawText = File.ReadAllText(outputPath);
 
             AtopParser testParser = new AtopParser(rawText);
@@ -635,7 +635,7 @@ namespace VirtualClient.Monitors
         {
             // Individual/Single Counters
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "Atop", "AtopExample-1s-60s.txt");
+            string outputPath = Path.Combine(workingDirectory, "test_examples", "Atop", "AtopExample-1s-60s.txt");
             string rawText = File.ReadAllText(outputPath);
 
             AtopParser testParser = new AtopParser(rawText);

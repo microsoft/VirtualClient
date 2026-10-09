@@ -77,6 +77,7 @@ namespace VirtualClient
                 Assert.IsTrue(object.ReferenceEquals(expectedInfo, client.ConnectionInfo));
                 Assert.IsTrue(object.ReferenceEquals(expectedInfo, client.SessionClient.ConnectionInfo));
                 Assert.IsTrue(object.ReferenceEquals(expectedInfo, client.SessionScpClient.ConnectionInfo));
+                Assert.IsTrue(object.ReferenceEquals(RemotePathTransformation.ShellQuote, client.SessionScpClient.RemotePathTransformation));
             }
         }
 

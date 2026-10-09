@@ -1,3 +1,7 @@
+---
+slug: /workloads/compression/gzip
+---
+
 # Gzip
 gzip is a single-file/stream lossless data compression utility, where the resulting compressed file generally has the suffix .gz.
 gzip also refers to the associated compressed data format used by the utility.

@@ -1,8 +1,8 @@
 {
     "Description": "Default Monitors for Nvidia GPU systems.",
     "Metadata": {
-        "SupportedPlatforms": "linux-arm64,linux-x64,win-x64",
-        "SupportedOperatingSystems": "CentOS,Debian,RedHat,Suse,Ubuntu,Windows",
+        "SupportedPlatforms": "linux-x64,linux-arm64,win-x64",
+        "SupportedOperatingSystems": "CentOS,Debian,OpenSuse,RedHat,Ubuntu,Windows",
         "PreliminaryRequirements": "Please note that the Nvidia GPU driver and CUDA toolsets MUST be already installed on the system for the monitors to function correctly."
     },
     "Parameters": {

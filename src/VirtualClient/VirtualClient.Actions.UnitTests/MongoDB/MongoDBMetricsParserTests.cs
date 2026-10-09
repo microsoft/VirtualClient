@@ -19,7 +19,7 @@ namespace VirtualClient.Actions.UnitTests.MongoDB
         {
             // Build path relative to test assembly root; examples copied to output per csproj settings.
             string baseDir = TestContext.CurrentContext.TestDirectory;
-            exampleOutputPath = System.IO.Path.Combine(baseDir, "Examples", "MongoDB", "YCSBMongoDBOutputExample.txt");
+            exampleOutputPath = System.IO.Path.Combine(baseDir, "test_examples", "MongoDB", "YCSBMongoDBOutputExample.txt");
         }
 
         [Test]

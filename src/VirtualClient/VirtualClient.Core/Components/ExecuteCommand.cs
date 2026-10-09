@@ -5,6 +5,7 @@ namespace VirtualClient
 {
     using System;
     using System.Collections.Generic;
+    using System.ComponentModel;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
@@ -171,6 +172,7 @@ namespace VirtualClient
 
                                         using (IProcessProxy process = this.processManager.CreateProcess(effectiveCommand, effectiveCommandArguments, effectiveWorkingDirectory))
                                         {
+                                            this.AddEnvironmentVariables(process);
                                             this.AddEnvironmentVariables(process, environmentVariables);
                                             await process.StartAndWaitAsync(cancellationToken);
 

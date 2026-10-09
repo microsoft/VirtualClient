@@ -12,6 +12,7 @@ namespace VirtualClient.Actions
     using NUnit.Framework;
     using VirtualClient.Common;
     using VirtualClient.Contracts;
+    using VirtualClient.TestExtensions;
 
     [TestFixture]
     [Category("Functional")]
@@ -23,7 +24,7 @@ namespace VirtualClient.Actions
         public void SetupFixture()
         {
             this.mockFixture = new DependencyFixture();
-            ComponentTypeCache.Instance.LoadComponentTypes(TestDependencies.TestDirectory);
+            ComponentTypeCache.Instance.LoadComponentTypes(MockFixture.TestAssemblyDirectory);
         }
 
         [Test]
@@ -32,7 +33,7 @@ namespace VirtualClient.Actions
         public void OpenFOAMWorkloadProfileParametersAreInlinedCorrectly(string profile, PlatformID platform, Architecture architecture)
         {
             this.SetupDefaultMockBehavior(platform, architecture);
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
             {
                 WorkloadAssert.ParameterReferencesInlined(executor.Profile);
             }
@@ -54,13 +55,13 @@ namespace VirtualClient.Actions
                 IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
                 if (arguments.EndsWith("Allrun\"", StringComparison.OrdinalIgnoreCase))
                 {
-                    process.StandardOutput.Append(TestDependencies.GetResourceFileContents("OpenFoamResults.txt"));
+                    process.StandardOutput.Append(MockFixture.ReadTestResourcesFile("OpenFoamResults.txt"));
                 }
 
                 return process;
             };
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
             {
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
 
@@ -77,7 +78,7 @@ namespace VirtualClient.Actions
             // We ensure the workload package does not exist.
             this.mockFixture.PackageManager.Clear();
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
             {
                 executor.ExecuteDependencies = false;
 
@@ -147,7 +148,7 @@ namespace VirtualClient.Actions
 
             this.mockFixture.SetupPackage("openfoam", expectedFiles: expectedFiles.ToArray());
 
-            string resultsFileContent = TestDependencies.GetResourceFileContents("OpenFoamResults.txt");
+            string resultsFileContent = MockFixture.ReadTestResourcesFile("OpenFoamResults.txt");
             this.mockFixture.SetupFile("openfoam", $"{platformArch}/airFoil2D/log.simpleFoam", resultsFileContent);
             this.mockFixture.SetupFile("openfoam", $"{platformArch}/elbow/log.icoFoam", resultsFileContent);
             this.mockFixture.SetupFile("openfoam", $"{platformArch}/lockExchange/log.twoLiquidMixingFoam", resultsFileContent);

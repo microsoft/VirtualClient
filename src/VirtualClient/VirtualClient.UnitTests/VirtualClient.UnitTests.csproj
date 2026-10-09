@@ -21,48 +21,34 @@
         <ProjectReference Include="..\VirtualClient.TestExtensions\VirtualClient.TestExtensions.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-        <Content Include="..\VirtualClient.Main\profiles\MONITORS-DEFAULT.json" Link="profiles\MONITORS-DEFAULT.json">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-        
-        <None Update="profiles\TEST-WORKLOAD-PROFILE-2.json">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-		<None Update="profiles\TEST-WORKLOAD-PROFILE-3.json">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	<ItemGroup>
+		<None Include="..\TestResources\**\*">
+			<Link>TestResources\%(RecursiveDir)%(Filename)%(Extension)</Link>
 		</None>
-        <None Update="profiles\TEST-WORKLOAD-PROFILE.json">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Update="Resources\TestOptions.rsp">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Update="TestData\TestExecutionProfile.json">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Update="TestData\ActionWithNoArguments.json">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Update="TestData\EmptyOutput.txt">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Update="TestData\TestNestedExecutionProfile.json">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Update="TestData\TestFioJson.txt">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Update="TestData\TestFioJsonWithError.txt">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Update="TestData\TarDummyArchive.tar">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Update="TestData\TarGZDummyArchive.tar.gz">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-    </ItemGroup>
+	</ItemGroup>
+
+	<!--
+    Copies test resources into the target output directory.
+    -->
+	<Target Name="CopyProfilesToOutputDirectory" AfterTargets="Build">
+		<ItemGroup>
+			<ProfileFiles Include="profiles\*.*" />
+			<ProfileFiles Include="..\VirtualClient.Main\profiles\MONITORS-DEFAULT.json" />
+		</ItemGroup>
+
+		<Copy SourceFiles="@(ProfileFiles)" DestinationFiles="@(ProfileFiles->'$(OutputPath)profiles\%(RecursiveDir)%(Filename)%(Extension)')" />
+	</Target>
+	
+	<!--
+    Copies test resources into the target output directory.
+    -->
+	<Target Name="CopyResourcesToOutputDirectory" AfterTargets="Build">
+		<ItemGroup>
+			<ResourceFiles Include="Resources\*.*" />
+		</ItemGroup>
+
+		<Copy SourceFiles="@(ResourceFiles)" DestinationFiles="@(ResourceFiles->'$(OutputPath)test_resources\%(RecursiveDir)%(Filename)%(Extension)')" />
+	</Target>
 
     <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Module.props))\Module.props" />
 

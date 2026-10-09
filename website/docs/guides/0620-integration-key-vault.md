@@ -1,3 +1,7 @@
+---
+slug: /guides/integration-key-vault
+---
+
 # Azure Key Vault Integration
 
 Azure Key Vault is a secure cloud service for storing and accessing secrets, keys, and certificates. Virtual Client supports integration with Azure Key Vault, allowing you to retrieve secrets and certificates for use in your workloads, monitors, automation, and telemetry scenarios.
@@ -152,5 +156,4 @@ Refer to the logs for detailed error messages. See unit tests in `KeyVaultManage
 ## References
 
 - [Azure Key Vault Documentation](https://learn.microsoft.com/en-us/azure/key-vault/)
-- [Virtual Client Command-Line Reference](https://microsoft.github.io/VirtualClient/docs/guides/0010-command-line/)
-
+- [Virtual Client Command-Line Reference](/docs/guides/command-line/)

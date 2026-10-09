@@ -1,3 +1,7 @@
+---
+slug: /workloads/diskspd
+---
+
 # DiskSpd
 DiskSpd a Microsoft toolset designed to simulate different I/O workload patterns. It allows us to quickly define and run workloads, and reports a variety 
 of metrics about each run. This allows us to compare results under different conditions, such as different hardware and firmware configurations, with 

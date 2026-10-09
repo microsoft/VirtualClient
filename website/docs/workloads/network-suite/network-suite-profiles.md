@@ -1,9 +1,13 @@
-# Network Workload Suite Profiles
+---
+slug: /workloads/network-suite-profiles
+---
+
+# Network Suite Profiles
 The following profiles run customer-representative or benchmarking scenarios using the suite of network workloads (CPS, NCPS, NTttcp, Latte and SockPerf).
 
-* [Workload Details](./network-suite.md)  
-* [Client/Server Workloads](../../guides/0020-client-server.md)
-* [Profiling Monitors](../../developing/0050-develop-profiling-monitor.md)
+* [Workload Details](/docs/workloads/network-suite)  
+* [Client/Server Workloads](/docs/guides/client-server)
+* [Profiling Monitors](/docs/developing/develop-profiling-monitor)
 
 ## Client/Server Topology Support
 The Networking workload profiles ALL require a client/server topology in order to operate. This means that there must be 2 distinct systems in order
@@ -12,7 +16,7 @@ the client and server systems will synchronize with each other before running ea
 to each instance of the Virtual Client on the command line to describe the IP address/location of other Virtual Client instances. See the section below 
 on 'Client/Server Topologies'.
 
-[Environment Layouts](../../guides/0020-client-server.md)
+[Environment Layouts](/docs/guides/client-server)
 
 In the environment layout file provided to the Virtual Client, define the role of the client system/VM as "Client" and the role of the server system/VM as "Server".
 The spelling of the roles must be exact. The IP addresses of the systems/VMs must be correct as well. The following example illustrates the
@@ -46,43 +50,13 @@ VirtualClient.exe --profile=PERF-NETWORK.json --system=Demo --timeout=1440 --cli
 Runs the suite of workloads on the system to evaluate the average and peak performance of the network hardware and stack. On Linux systems, the NCPS, NTttcp and SockPerf workloads
 are used. On Windows systems the NCPS, NTttcp and Latte workloads are used.
 
-:::danger
-*By default, the systems have settings applied to ensure the OS is configured for full network performance. These settings require the systems to be rebooted in order to be applied.
-Unless otherwise directed, be aware that the systems will be rebooted on first run. This behavior can be excluded by using the 'ConfigureNetwork' parameter described below but should
-not be modified in real performance measurement scenarios.*
-:::
-
-``` bash
-# Settings applied on Windows systems
-# ------------------------------------------------------------------
-PowerShell.exe Set-NetTCPSetting -AutoReusePortRangeStartPort 10000 -AutoReusePortRangeNumberOfPorts 50000"
-
-# Settings applied on Linux systems
-# ------------------------------------------------------------------
-# 1) The following changes are made to the '/etc/security/limits.conf' file:
-*   soft    nofile  1048575
-*   hard    nofile  1048575
-
-# 2) The following changes are made to the '/etc/rc.local' file:
-#!/bin/sh
-sysctl -w net.ipv4.tcp_tw_reuse=1 # TIME_WAIT work-around
-sysctl -w net.ipv4.ip_local_port_range=\"10000 60000\"  # ephemeral ports increased
-iptables -t raw -I OUTPUT -j NOTRACK  # disable connection tracking
-iptables -t raw -I PREROUTING -j NOTRACK  # disable connection tracking
-sysctl -w net.core.busy_poll=50
-sysctl -w net.core.busy_read=50
-```
-
 * [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-NETWORK.json) 
 
-* **Supported Platform/Architectures**
+* **Supported Platform-Architectures**
   * linux-x64
   * linux-arm64
   * win-x64
   * win-arm64
-
-* **Supports Disconnected Scenarios**  
-  * No. Internet connection required.
 
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
@@ -91,11 +65,27 @@ sysctl -w net.core.busy_read=50
   * The name of the Client and Server instances defined in the environment layout must match the agent/client IDs supplied on the command line (e.g. --client-id)
     or must match the name of the system as defined by the operating system itself.
   * The ports used for each of the network suite workloads (defined in the profile parameters) must NOT be used by other applications or services on the
-    systems in which they are running or different ports must be used.
+    systems in which they are running or different ports must be used:  
+    
+    | Workload | Default Port(s) |
+    |----------|-----------------|
+    | NTttcp   | 5500 if NTttcpDuplexMode=Half, 5500 + 5600 if NTttcpDuplexMode=Full |
+    | Latte    | 6100 |
+    | SockPerf | 8201 |
+    | NCPS     | 9800 |
+    
+    Note that the ports used for each of the workloads can be optionally modified on the command line (e.g. --parameters="NTttcpPort=5700,,,SockPerfPort=8205").
 
-  Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
-  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+  Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:  
+  
+  [Installing Dependencies](/docs/category/dependencies/)
 
+* **Network Firewall Configuration**  
+  This profile modifies network and firewall settings on the system in order to optimize the performance of the network workloads. The following scripts are used to 
+  apply network and firewall settings when using this profile:  
+  
+  [Network Configuration Scripts](https://github.com/microsoft/VirtualClient/tree/main/src/VirtualClient/VirtualClient.Main/scripts/network)
+ 
 * **Scenarios**  
   The following scenarios are covered by this workload profile.
 
@@ -133,6 +123,7 @@ sysctl -w net.core.busy_read=50
   | NcpsDuration              | Optional. The amount of time (in seconds) to run the NCPS workload. | 300 secs |
   | NcpsPort                  | Optional. The starting port on which connections will be established between client and server when running the NCPS workload. The NCPS workload will use connections on additional ports starting with this port for each of the number of connections (e.g. 16) defined in the component/action. | 9800 |
   | LattePort                 | Optional. The starting port on which connections will be established between client and server when running the Latte workload. The Latte workload will use connections on additional ports starting with this port. | 6100 |
+  | NTttcpDuplexMode          | Optional. Set to "Full" for full-duplex/bidirectional testing. Set to "Half" or leave undefined for standard half-duplex/unidirectional testing. | Half |
   | NTttcpDuration            | Optional. The amount of time (in seconds) to run the NTttcp workload. | 60 secs |
   | NTttcpPort                | Optional. The starting port on which connections will be established between client and server when running the NTttcp workload. The NTttcp workload will use connections on additional ports starting with this port. | 5500 |
   | SockPerfDuration          | Optional. The amount of time (in seconds) to run the SockPerf workload. | 60 secs |
@@ -140,14 +131,6 @@ sysctl -w net.core.busy_read=50
   | ProfilingEnabled          | Optional. True if background profiling should be enabled while the workloads are running. False if not. When profiling is enabled, any number of profiles containing profiler monitors can be used to run the profiler toolsets within in the background. Set the documentation at the top for additional information on profiler monitors. | false |
   | ProfilingMode             | Optional. Defines the profiling mode (Interval or OnDemand). In 'Interval' mode, the profilers will run in the background constantly and independent of the workload(s). In 'OnDemand' mode, the profilers will be signaled by the workload(s) and will run ONLY while they are running. | None |
   
-
-* **Component Parameters**  
-  The following parameters describe the parameters within the profile components.
-
-  | Parameter                 | Purpose                                                           | Default Value |
-  |---------------------------|-------------------------------------------------------------------|---------------|
-  | TestDuration              | Optional. Defines the duration in seconds to run the workload.    |  |
-
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
   actions. These timings can be used to determine minimum required runtimes for the Virtual Client in order to get results. These are often estimates based on the
@@ -162,4 +145,13 @@ sysctl -w net.core.busy_read=50
 
   # On the Server role system
   ./VirtualClient --profile=PERF-NETWORK.json --system=Demo --timeout=1440 --client-id=Server01 --layout="/any/path/to/layout.json"
+
+  # Client/server layouts can be defined on the command line explicitly as well (i.e. no file required).
+  # Format = {client_id},{client_ip_address},{client_role};{server_id},{server_ip_address},{server_role}
+  #
+  # Client role system
+  VirtualClient.exe --profile=PERF-NETWORK-CTSTRAFFIC.json --timeout=1440 --client-id=Client01 --layout="Client01,  10.1.0.1,Client;Server01,10.1.0.2,Server"
+  
+  # Server role system
+  VirtualClient.exe --profile=PERF-NETWORK-CTSTRAFFIC.json --timeout=1440 --client-id=Server01 --layout="Client01,  10.1.0.1,Client;Server01,10.1.0.2,Server"
   ```

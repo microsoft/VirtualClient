@@ -113,7 +113,7 @@ namespace VirtualClient.Actions
         {
             string currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             this.currentDirectoryPath = new DependencyPath("DotNetRuntime", currentDirectory);
-            string resultsPath = this.fixture.PlatformSpecifics.Combine(this.currentDirectoryPath.Path, "Examples", "DotNetRuntimeResultsExample.txt");
+            string resultsPath = this.fixture.PlatformSpecifics.Combine(this.currentDirectoryPath.Path, "test_examples", "DotNetRuntimeResultsExample.txt");
             this.rawString = File.ReadAllText(resultsPath);
             this.fixture.FileSystem.Setup(fe => fe.File.Exists(It.IsAny<string>())).Returns(true);
             this.fixture.FileSystem.Setup(fe => fe.File.Exists(null)).Returns(false);

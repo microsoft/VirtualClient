@@ -20,13 +20,13 @@ namespace VirtualClient.Dependencies
         // Great examples could be found at https://github.com/chef/os_release
         private static readonly string HostnamectlExamples = MockFixture.GetDirectory(
             typeof(LinuxPackageInstallationTests),
-            "TestResources",
+            "MockFixture",
             "Unix",
             "hostnamectl");
 
         private static readonly string OSReleaseExamples = MockFixture.GetDirectory(
             typeof(LinuxPackageInstallationTests),
-            "TestResources",
+            "MockFixture",
             "Unix",
             "os-release");
 

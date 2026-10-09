@@ -35,7 +35,7 @@ namespace VirtualClient.Actions
         [Test]
         public void GeekBench5ParserVerifyMetricsSingleCore_Test()
         {
-            string outputPath = Path.Combine(workingDirectory, "Examples", "Geekbench", "GeekBench5Example.txt");
+            string outputPath = Path.Combine(workingDirectory, "test_examples", "Geekbench", "GeekBench5Example.txt");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new GeekBenchMetricsParser(this.rawText);
             IList<Metric> metrics = this.testParser.Parse();
@@ -87,7 +87,7 @@ namespace VirtualClient.Actions
         [Test]
         public void GeekBench5ParserVerifyMetricsMultiCore()
         {
-            string outputPath = Path.Combine(workingDirectory, "Examples", "Geekbench", "GeekBench5Example.txt");
+            string outputPath = Path.Combine(workingDirectory, "test_examples", "Geekbench", "GeekBench5Example.txt");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new GeekBenchMetricsParser(this.rawText);
             IList<Metric> metrics = this.testParser.Parse();
@@ -139,7 +139,7 @@ namespace VirtualClient.Actions
         [Test]
         public void GeekBench5ParserVerifyMetricsSummary()
         {
-            string outputPath = Path.Combine(workingDirectory, "Examples", "Geekbench", "GeekBench5Example.txt");
+            string outputPath = Path.Combine(workingDirectory, "test_examples", "Geekbench", "GeekBench5Example.txt");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new GeekBenchMetricsParser(this.rawText);
             IList<Metric> metrics = this.testParser.Parse();
@@ -158,7 +158,7 @@ namespace VirtualClient.Actions
         [Test]
         public void GeekBench6ParserVerifyMetricsSingleCore()
         {
-            string outputPath = Path.Combine(workingDirectory, "Examples", "Geekbench", "GeekBench6Example.txt");
+            string outputPath = Path.Combine(workingDirectory, "test_examples", "Geekbench", "GeekBench6Example.txt");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new GeekBenchMetricsParser(this.rawText);
             IList<Metric> metrics = this.testParser.Parse();
@@ -200,7 +200,7 @@ namespace VirtualClient.Actions
         [Test]
         public void GeekBench6ParserVerifyMetricsMultiCore()
         {
-            string outputPath = Path.Combine(workingDirectory, "Examples", "Geekbench", "GeekBench6Example.txt");
+            string outputPath = Path.Combine(workingDirectory, "test_examples", "Geekbench", "GeekBench6Example.txt");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new GeekBenchMetricsParser(this.rawText);
             IList<Metric> metrics = this.testParser.Parse();
@@ -242,7 +242,7 @@ namespace VirtualClient.Actions
         [Test]
         public void GeekBench6ParserVerifyMetricsSummary()
         {
-            string outputPath = Path.Combine(workingDirectory, "Examples", "Geekbench", "GeekBench6Example.txt");
+            string outputPath = Path.Combine(workingDirectory, "test_examples", "Geekbench", "GeekBench6Example.txt");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new GeekBenchMetricsParser(this.rawText);
             IList<Metric> metrics = this.testParser.Parse();

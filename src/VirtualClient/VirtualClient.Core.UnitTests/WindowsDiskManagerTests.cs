@@ -131,7 +131,7 @@ namespace VirtualClient
                 }
             };
 
-            await this.diskManager.CreateMountPointAsync(diskPartition, expectedMountPath, CancellationToken.None).ConfigureAwait(false);
+            await this.diskManager.CreateMountPointAsync(diskPartition, expectedMountPath, CancellationToken.None);
 
             Assert.IsNotEmpty(actualCommands);
             Assert.AreEqual(expectedCommands.Count, actualCommands.Count);
@@ -180,9 +180,9 @@ namespace VirtualClient
                 }
             };
 
-            await this.diskManager.CreateMountPointAsync(diskPartition, expectedMountPath, CancellationToken.None).ConfigureAwait(false);
+            await this.diskManager.CreateMountPointAsync(diskPartition, expectedMountPath, CancellationToken.None);
 
-            Assert.IsNotEmpty(actualCommands);
+            Assert.IsNotEmpty(actualCommands);      
             Assert.AreEqual(expectedCommands.Count, actualCommands.Count);
             CollectionAssert.AreEquivalent(expectedCommands, actualCommands);
         }
@@ -274,7 +274,7 @@ namespace VirtualClient
                 }
             };
 
-            await this.diskManager.FormatDiskAsync(diskToFormat, PartitionType.Gpt, FileSystemType.Ntfs, CancellationToken.None).ConfigureAwait(false);
+            await this.diskManager.FormatDiskAsync(diskToFormat, PartitionType.Gpt, FileSystemType.Ntfs, CancellationToken.None);
 
             Assert.IsNotEmpty(actualCommands);
             Assert.AreEqual(expectedCommands.Count, actualCommands.Count);
@@ -350,7 +350,7 @@ namespace VirtualClient
                 }
             };
 
-            await this.diskManager.FormatDiskAsync(diskToFormat, PartitionType.Gpt, fileSystemType, CancellationToken.None).ConfigureAwait(false);
+            await this.diskManager.FormatDiskAsync(diskToFormat, PartitionType.Gpt, fileSystemType, CancellationToken.None);
 
             Assert.IsNotEmpty(actualCommands);
             Assert.IsTrue(actualCommands.Contains($"format fs={fileSystemType.ToString().ToLowerInvariant()} quick"));
@@ -436,7 +436,7 @@ namespace VirtualClient
                 }
             };
 
-            await this.diskManager.FormatDiskAsync(diskToFormat, PartitionType.Gpt, FileSystemType.Ntfs, CancellationToken.None).ConfigureAwait(false);
+            await this.diskManager.FormatDiskAsync(diskToFormat, PartitionType.Gpt, FileSystemType.Ntfs, CancellationToken.None);
 
             Assert.IsNotEmpty(actualCommands);
             Assert.AreEqual(expectedCommands.Count, actualCommands.Count);
@@ -1662,7 +1662,7 @@ namespace VirtualClient
                 }
             };
 
-            IEnumerable<Disk> actualDisks = await this.diskManager.GetDisksAsync(CancellationToken.None).ConfigureAwait(false);
+            IEnumerable<Disk> actualDisks = await this.diskManager.GetDisksAsync(CancellationToken.None);
 
             Assert.IsNotNull(actualDisks);
             Assert.IsNotEmpty(actualDisks);
@@ -1709,7 +1709,7 @@ namespace VirtualClient
                 }
             };
 
-            await this.diskManager.SetSanPolicyAsync(CancellationToken.None).ConfigureAwait(false);
+            await this.diskManager.SetSanPolicyAsync(CancellationToken.None, TimeSpan.FromMilliseconds(10));
 
             Assert.IsNotEmpty(actualCommands);
             Assert.AreEqual(expectedCommands.Count, actualCommands.Count);
@@ -1751,7 +1751,7 @@ namespace VirtualClient
                 }
             };
 
-            await this.diskManager.SetSanPolicyAsync(CancellationToken.None).ConfigureAwait(false);
+            await this.diskManager.SetSanPolicyAsync(CancellationToken.None, TimeSpan.FromMilliseconds(10));
 
             Assert.IsNotEmpty(actualCommands);
             Assert.AreEqual(expectedCommands.Count, actualCommands.Count);
@@ -1767,7 +1767,7 @@ namespace VirtualClient
             // Do not write any response to standard output — the WaitForResponseAsync will time out.
             this.standardInput.BytesWritten += (sender, data) => { };
 
-            Assert.ThrowsAsync<ProcessException>(() => this.diskManager.SetSanPolicyAsync(CancellationToken.None));
+            Assert.ThrowsAsync<ProcessException>(() => this.diskManager.SetSanPolicyAsync(CancellationToken.None, TimeSpan.FromMilliseconds(10)));
         }
 
         private class TestWindowsDiskManager : WindowsDiskManager

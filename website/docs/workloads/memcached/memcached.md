@@ -1,3 +1,7 @@
+---
+slug: /workloads/memcached
+---
+
 # Memcached
 Memcached is an open source (BSD licensed), high-performance, distributed memory object caching system. Memcached is an in-memory key-value store for small 
 arbitrary data (strings, objects) from results of database calls, API calls, or page rendering. Memcached works with an in-memory dataset. It is a client-server

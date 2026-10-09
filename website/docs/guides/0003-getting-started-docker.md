@@ -1,3 +1,7 @@
+---
+slug: /guides/getting-started-docker
+---
+
 # Getting Started (Docker)
 
 In this document, we are going to run OpenSSL workload in a Docker Container.
@@ -59,7 +63,7 @@ You can check the container console logs to see if the workloads is running as e
 ```
 
 :::info
-Since you can't easily access the VC metric files in containers, it is recommended to setup [Telemetry](./0040-telemetry.md) to get automatic data upload.
+Since you can't easily access the VC metric files in containers, it is recommended to setup [Telemetry](/docs/guides/telemetry) to get automatic data upload.
 :::
 
 ## Congratulations !!

@@ -1,26 +1,27 @@
-# Graph500 Workload Profiles
+---
+slug: /workloads/graph500-profiles
+---
+
+# Graph500 Profiles
 The following profiles run customer-representative or benchmarking scenarios using the Graph500 workload.  
 
-* [Workload Details](./graph500.md)  
+* [Workload Details](/docs/workloads/graph500)  
 
 ## PERF-GRAPH500.json
 Runs a data-intensive workload using the Graph500 toolset to test the performance of underlying hardware.
 This profile is designed to identify general/broad regressions when compared against a baseline by validating the time taken to create a graph, perform 
 BFS(Breadth First Search) and SSSP(Single Source Shortest Path).
 
-* **Supported Platform/Architectures**
+* **Supported Platform-Architectures**
   * linux-x64
   * linux-arm64
-
-* **Supports Disconnected Scenarios**  
-  * No. Internet connection required.
 
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
   * Internet connection.
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
-  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+  * [Installing Dependencies](/docs/category/dependencies/)
 
 * **Profile Parameters**  
   The following parameters can be optionally supplied on the command line to modify the behaviors of the workload.

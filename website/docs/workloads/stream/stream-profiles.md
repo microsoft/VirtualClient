@@ -1,7 +1,11 @@
-# STREAM Workload Profiles
+---
+slug: /workloads/stream-profiles
+---
+
+# STREAM Profiles
 The following profiles run customer-representative or benchmarking scenarios using the STREAM workload.
 
-* [Workload Details](./stream.md)  
+* [Workload Details](/docs/workloads/stream)  
 
 ## PERF-MEM-STREAM.json
 Runs a memory-intensive workload using the STREAM benchmark to test the sustainable memory bandwidth of the system. STREAM measures memory bandwidth 
@@ -9,14 +13,11 @@ using four simple vector kernels (Copy, Scale, Add, and Triad) designed to stres
 
 * [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-MEM-STREAM.json)
 
-* **Supported Platform/Architectures**
+* **Supported Platform-Architectures**
   * linux-x64
   * linux-arm64
   * win-x64
   * win-arm64
-
-* **Supports Disconnected Scenarios**  
-  * No. Internet connection required.
 
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
@@ -25,7 +26,7 @@ using four simple vector kernels (Copy, Scale, Add, and Triad) designed to stres
 	* https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-MEM-STREAM.json
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
-  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+  * [Installing Dependencies](/docs/category/dependencies/)
 
 * **Profile Parameters**  
   The following parameters can be optionally supplied on the command line to modify the behaviors of the workload.
@@ -65,11 +66,8 @@ the most representative of real-world memory access patterns.
 
 * [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-MEM-STREAMTRIAD.json)
 
-* **Supported Platform/Architectures**
+* **Supported Platform-Architectures**
   * linux-x64
-
-* **Supports Disconnected Scenarios**  
-  * No. Internet connection required.
 
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
@@ -78,7 +76,7 @@ the most representative of real-world memory access patterns.
 	* https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-MEM-STREAMTRIAD.json
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
-  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+  * [Installing Dependencies](/docs/category/dependencies/)
 
 * **Profile Parameters**  
   The following parameters can be optionally supplied on the command line to modify the behaviors of the workload.
@@ -112,11 +110,8 @@ includes additional memory operations (Read and Write) beyond the standard STREA
 
 * [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-MEM-STREAMMSFT.json)
 
-* **Supported Platform/Architectures**
+* **Supported Platform-Architectures**
   * linux-arm64
-
-* **Supports Disconnected Scenarios**  
-  * No. Internet connection required.
 
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
@@ -125,7 +120,7 @@ includes additional memory operations (Read and Write) beyond the standard STREA
 	* https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-MEM-STREAMMSFT.json
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
-  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+  * [Installing Dependencies](/docs/category/dependencies/)
 
 * **Profile Parameters**  
   The following parameters can be optionally supplied on the command line to modify the behaviors of the workload.

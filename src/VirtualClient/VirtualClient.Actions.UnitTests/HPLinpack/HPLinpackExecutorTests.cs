@@ -19,7 +19,7 @@ namespace VirtualClient.Actions
     [Category("Unit")]
     public class HPLinpackExecutorTests
     {
-        private static readonly string ExamplesDirectory = MockFixture.GetDirectory(typeof(HPLinpackExecutorTests), "Examples", "HPLinpack");
+        private static readonly string ExamplesDirectory = MockFixture.GetDirectory(typeof(HPLinpackExecutorTests), "test_examples", "HPLinpack");
 
         private MockFixture mockFixture;
         private DependencyPath mockPackage;

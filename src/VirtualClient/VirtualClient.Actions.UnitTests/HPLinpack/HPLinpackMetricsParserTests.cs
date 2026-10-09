@@ -24,7 +24,7 @@ namespace VirtualClient.Actions
         public void HPLParserVerifyArmResults()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string armoutputPath = Path.Combine(workingDirectory, "Examples", "HPLinpack", "HPLResultsArm.txt");
+            string armoutputPath = Path.Combine(workingDirectory, "test_examples", "HPLinpack", "HPLResultsArm.txt");
             this.rawText = File.ReadAllText(armoutputPath);
             this.testParser = new HPLinpackMetricsParser(this.rawText);
 
@@ -48,7 +48,7 @@ namespace VirtualClient.Actions
         public void HPLParserVerifyIntelResults()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string inteloutputPath = Path.Combine(workingDirectory, "Examples", "HPLinpack", "HPLResultsIntel.txt");
+            string inteloutputPath = Path.Combine(workingDirectory, "test_examples", "HPLinpack", "HPLResultsIntel.txt");
             this.rawText = File.ReadAllText(inteloutputPath);
             this.testParser = new HPLinpackMetricsParser(this.rawText);
 
@@ -70,7 +70,7 @@ namespace VirtualClient.Actions
         public void HPLParserThrowIfInvalidOutput()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "HPLinpack", "HPLIncorrectResults.txt");
+            string outputPath = Path.Combine(workingDirectory, "test_examples", "HPLinpack", "HPLIncorrectResults.txt");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new HPLinpackMetricsParser(this.rawText);
             SchemaException exception = Assert.Throws<SchemaException>(() => this.testParser.Parse());
@@ -81,7 +81,7 @@ namespace VirtualClient.Actions
         public void HPLParserExtractsVersionCorrectly()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string armoutputPath = Path.Combine(workingDirectory, "Examples", "HPLinpack", "HPLResultsArm.txt");
+            string armoutputPath = Path.Combine(workingDirectory, "test_examples", "HPLinpack", "HPLResultsArm.txt");
             this.rawText = File.ReadAllText(armoutputPath);
             this.testParser = new HPLinpackMetricsParser(this.rawText);
 
@@ -89,7 +89,7 @@ namespace VirtualClient.Actions
             Assert.AreEqual("2.3", this.testParser.Version);
             
             // Test Intel output version extraction
-            string inteloutputPath = Path.Combine(workingDirectory, "Examples", "HPLinpack", "HPLResultsIntel.txt");
+            string inteloutputPath = Path.Combine(workingDirectory, "test_examples", "HPLinpack", "HPLResultsIntel.txt");
             this.rawText = File.ReadAllText(inteloutputPath);
             this.testParser = new HPLinpackMetricsParser(this.rawText);
             

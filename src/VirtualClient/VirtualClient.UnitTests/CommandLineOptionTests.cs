@@ -24,7 +24,7 @@ namespace VirtualClient
     {
         private static readonly string ResourcesDirectory = Path.Combine(
             Path.GetDirectoryName(Assembly.GetAssembly(typeof(CommandLineOptionTests)).Location),
-            "Resources");
+            "test_resources");
 
         [Test]
         [TestCase(

@@ -26,7 +26,7 @@ namespace VirtualClient.Actions
             {
                 OpenSslMetricsParserTests.examplesDir = Path.Combine(
                     Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location),
-                    "Examples", "OpenSSL");
+                    "test_examples", "OpenSSL");
             }
             catch (FileNotFoundException exc)
             {

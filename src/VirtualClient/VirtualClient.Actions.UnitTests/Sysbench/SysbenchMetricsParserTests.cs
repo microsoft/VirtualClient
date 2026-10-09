@@ -18,7 +18,7 @@ namespace VirtualClient.Actions
     [Category("Unit")]
     public class SysbenchMetricsParserTests
     {
-        private static string examplesDirectory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Examples", "Sysbench");
+        private static string examplesDirectory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "test_examples", "Sysbench");
 
         [Test]
         public void SysbenchParserParsesCorrectly()

@@ -22,7 +22,7 @@ namespace VirtualClient.Actions
             this.Setup(platform);
             this.Parameters["PackageName"] = "coremarkpro";
 
-            string results = MockFixture.ReadFile(MockFixture.ExamplesDirectory, "CoreMark", "CoreMarkProExample1.txt");
+            string results = MockFixture.ReadFile(MockFixture.TestExamplesDirectory, "CoreMark", "CoreMarkProExample1.txt");
             this.coremarkProOutput.Clear();
             this.coremarkProOutput.Append(results);
 

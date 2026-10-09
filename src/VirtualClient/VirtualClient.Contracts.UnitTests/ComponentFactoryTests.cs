@@ -32,7 +32,7 @@ namespace VirtualClient.Contracts
         [TestCase("TEST-PROFILE-2.json")]
         public void ComponentFactoryCreatesExpectedComponentsFromAnExecutionProfile(string profileName)
         {
-            ExecutionProfile profile = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, "Resources", profileName))
+            ExecutionProfile profile = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, "test_resources", profileName))
                 .FromJson<ExecutionProfile>();
 
             foreach (ExecutionProfileElement action in profile.Actions)
@@ -73,7 +73,7 @@ namespace VirtualClient.Contracts
         [TestCase("TEST-PROFILE-1.json")]
         public void ComponentFactorySetsComponentPropertiesToExpectedDefaults(string profileName)
         {
-            ExecutionProfile profile = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, "Resources", profileName))
+            ExecutionProfile profile = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, "test_resources", profileName))
                 .FromJson<ExecutionProfile>();
 
             foreach (ExecutionProfileElement action in profile.Actions)
@@ -92,7 +92,7 @@ namespace VirtualClient.Contracts
         [TestCase("TEST-PROFILE-5.json")]
         public void ComponentFactoryDoesNotInadvertentlyOverwriteComponentLevelProperties(string profileName)
         {
-            ExecutionProfile profile = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, "Resources", profileName))
+            ExecutionProfile profile = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, "test_resources", profileName))
                 .FromJson<ExecutionProfile>();
 
             ComponentSettings settings = new ComponentSettings
@@ -116,7 +116,7 @@ namespace VirtualClient.Contracts
         [TestCase("TEST-PROFILE-3-PARALLEL.json")]
         public void ComponentFactoryCreatesExpectedParallelExecutionComponentsFromAnExecutionProfile(string profileName)
         {
-            ExecutionProfile profile = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, "Resources", profileName))
+            ExecutionProfile profile = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, "test_resources", profileName))
                 .FromJson<ExecutionProfile>();
 
             bool confirmed = false;
@@ -150,7 +150,7 @@ namespace VirtualClient.Contracts
         [TestCase("TEST-PROFILE-4.json")]
         public void ComponentFactoryAddsExpectedComponentLevelMetadata(string profileName)
         {
-            ExecutionProfile profile = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, "Resources", profileName))
+            ExecutionProfile profile = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, "test_resources", profileName))
                 .FromJson<ExecutionProfile>();
 
             foreach (ExecutionProfileElement action in profile.Actions)
@@ -175,7 +175,7 @@ namespace VirtualClient.Contracts
         [TestCase("TEST-PROFILE-2-PARALLEL-LOOP.json")]
         public void ComponentFactoryAddsExpectedComponentLevelMetadataToSubComponents(string profileName)
         {
-            ExecutionProfile profile = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, "Resources", profileName))
+            ExecutionProfile profile = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, "test_resources", profileName))
                 .FromJson<ExecutionProfile>();
 
             VirtualClientComponent component = ComponentFactory.CreateComponent(profile.Actions.First(), this.mockFixture.Dependencies);
@@ -219,7 +219,7 @@ namespace VirtualClient.Contracts
         [TestCase("TEST-PROFILE-1-PARALLEL-LOOP.json")]
         public void ComponentFactoryCreatesExpectedParallelLoopExecutionComponentsFromAnExecutionProfile(string profileName)
         {
-            ExecutionProfile profile = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, "Resources", profileName))
+            ExecutionProfile profile = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, "test_resources", profileName))
                 .FromJson<ExecutionProfile>();
 
             bool confirmed = false;
@@ -253,7 +253,7 @@ namespace VirtualClient.Contracts
         [TestCase("TEST-PROFILE-1-SEQUENTIAL.json")]
         public void ComponentFactoryCreatesExpectedSequentialExecutionComponentsFromAnExecutionProfile(string profileName)
         {
-            ExecutionProfile profile = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, "Resources", profileName))
+            ExecutionProfile profile = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, "test_resources", profileName))
                 .FromJson<ExecutionProfile>();
 
             bool confirmed = false;
@@ -407,7 +407,7 @@ namespace VirtualClient.Contracts
         [TestCase("TEST-PROFILE-4.json")]
         public void ComponentFactoryAddsExpectedComponentLevelExtensions(string profileName)
         {
-            ExecutionProfile profile = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, "Resources", profileName))
+            ExecutionProfile profile = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, "test_resources", profileName))
                 .FromJson<ExecutionProfile>();
 
             foreach (ExecutionProfileElement action in profile.Actions)
@@ -425,7 +425,7 @@ namespace VirtualClient.Contracts
         [TestCase("TEST-PROFILE-4-PARALLEL.json")]
         public void ComponentFactoryAddsExpectedComponentLevelExtensionsToSubComponents(string profileName)
         {
-            ExecutionProfile profile = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, "Resources", profileName))
+            ExecutionProfile profile = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, "test_resources", profileName))
                 .FromJson<ExecutionProfile>();
 
             foreach (ExecutionProfileElement action in profile.Actions)
@@ -454,7 +454,7 @@ namespace VirtualClient.Contracts
             // A partner team is trying to pass in extensions objects to components within side
             // of a parallel execution block. The information in the extensions objects for the first component
             // in the parallel execution block seems to be overriding the ones that come afterwards.
-            ExecutionProfile profile = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, "Resources", profileName))
+            ExecutionProfile profile = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, "test_resources", profileName))
                 .FromJson<ExecutionProfile>();
 
             ExecutionProfileElement parallelLoop = profile.Actions.First();
@@ -619,7 +619,7 @@ namespace VirtualClient.Contracts
         [TestCase("TEST-PROFILE-4.json")]
         public void ComponentFactoryAppliesCommandLineInstructionsProvidedToComponents(string profileName)
         {
-            ExecutionProfile profile = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, "Resources", profileName))
+            ExecutionProfile profile = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, "test_resources", profileName))
                 .FromJson<ExecutionProfile>();
 
             foreach (ExecutionProfileElement action in profile.Actions)
@@ -645,7 +645,7 @@ namespace VirtualClient.Contracts
         [TestCase("TEST-PROFILE-4-PARALLEL.json")]
         public void ComponentFactoryAppliesCommandLineInstructionsProvidedToSubComponents(string profileName)
         {
-            ExecutionProfile profile = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, "Resources", profileName))
+            ExecutionProfile profile = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, "test_resources", profileName))
                 .FromJson<ExecutionProfile>();
 
             foreach (ExecutionProfileElement action in profile.Actions)

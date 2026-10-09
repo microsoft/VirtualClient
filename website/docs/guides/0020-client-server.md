@@ -1,3 +1,7 @@
+---
+slug: /guides/client-server
+---
+
 # Client/Server Support
 The Virtual Client supports workloads that run across more than 1 systems. These are often called "client/server" workloads. For example the networking
 workload suite requires 2 systems in order to operate the workload. One system performs the role of the "Client" and one the role of the "Server". The Client
@@ -140,7 +144,7 @@ the workload should be ran under an account with access to modify the firewall s
 The port in wich the REST API uses can be changed if needed. For example, it is possible that some other application running on the system is already using the default
 port. The following examples illustrate how to use a different port:
 
-* [Command Line Options](./0010-command-line.md)
+* [Command Line Options](/docs/guides/command-line)
 
 ``` bash
 # Use a different port by specifying the --api-port

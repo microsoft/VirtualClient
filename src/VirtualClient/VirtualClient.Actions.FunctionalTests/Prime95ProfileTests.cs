@@ -11,6 +11,7 @@ namespace VirtualClient.Actions
     using NUnit.Framework;
     using VirtualClient.Common;
     using VirtualClient.Contracts;
+    using VirtualClient.TestExtensions;
 
     [TestFixture]
     [Category("Functional")]
@@ -22,7 +23,7 @@ namespace VirtualClient.Actions
         public void SetupFixture()
         {
             this.fixture = new DependencyFixture();
-            ComponentTypeCache.Instance.LoadComponentTypes(TestDependencies.TestDirectory);
+            ComponentTypeCache.Instance.LoadComponentTypes(MockFixture.TestAssemblyDirectory);
         }
 
         [Test]
@@ -31,7 +32,7 @@ namespace VirtualClient.Actions
         public void Prime95WorkloadProfileParametersAreInlinedCorrectly(string profile, PlatformID platform)
         {
             this.fixture.Setup(platform);
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
+            using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(profile, this.fixture.Dependencies))
             {
                 WorkloadAssert.ParameterReferencesInlined(executor.Profile);
             }
@@ -53,12 +54,12 @@ namespace VirtualClient.Actions
             this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
                 IProcessProxy process = this.fixture.CreateProcess(command, arguments, workingDir);
-                process.StandardOutput.Append(TestDependencies.GetResourceFileContents("Results_Prime95.txt"));
+                process.StandardOutput.Append(MockFixture.ReadTestResourcesFile("Results_Prime95.txt"));
 
                 return process;
             };
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
+            using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(profile, this.fixture.Dependencies))
             {
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None)
                     .ConfigureAwait(false);
@@ -97,12 +98,12 @@ namespace VirtualClient.Actions
             if (platform == PlatformID.Win32NT)
             {
                 this.fixture.SetupPackage("prime95", expectedFiles: @"win-x64/prime95.exe");
-                this.fixture.SetupFile("prime95", @"win-x64\results.txt", TestDependencies.GetResourceFileContents("Results_Prime95.txt"));
+                this.fixture.SetupFile("prime95", @"win-x64\results.txt", MockFixture.ReadTestResourcesFile("Results_Prime95.txt"));
             }
             else
             {
                 this.fixture.SetupPackage("prime95", expectedFiles: @"linux-x64/mprime");
-                this.fixture.SetupFile("prime95", @"linux-x64/results.txt", TestDependencies.GetResourceFileContents("Results_Prime95.txt"));
+                this.fixture.SetupFile("prime95", @"linux-x64/results.txt", MockFixture.ReadTestResourcesFile("Results_Prime95.txt"));
             }
         }
     }

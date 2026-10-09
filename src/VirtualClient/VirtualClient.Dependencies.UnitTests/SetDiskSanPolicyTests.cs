@@ -28,7 +28,7 @@ namespace VirtualClient.Dependencies
                 await component.ExecuteAsync(CancellationToken.None);
 
                 this.mockFixture.DiskManager.Verify(
-                    mgr => mgr.SetSanPolicyAsync(It.IsAny<CancellationToken>()),
+                    mgr => mgr.SetSanPolicyAsync(It.IsAny<CancellationToken>(), It.IsAny<TimeSpan?>()),
                     Times.Once);
             }
         }
@@ -44,7 +44,7 @@ namespace VirtualClient.Dependencies
                 await component.ExecuteAsync(CancellationToken.None);
 
                 this.mockFixture.DiskManager.Verify(
-                    mgr => mgr.SetSanPolicyAsync(It.IsAny<CancellationToken>()),
+                    mgr => mgr.SetSanPolicyAsync(It.IsAny<CancellationToken>(), It.IsAny<TimeSpan?>()),
                     Times.Never);
             }
         }
@@ -56,7 +56,7 @@ namespace VirtualClient.Dependencies
             this.mockFixture.Setup(PlatformID.Win32NT);
 
             this.mockFixture.DiskManager
-                .Setup(mgr => mgr.SetSanPolicyAsync(It.IsAny<CancellationToken>()))
+                .Setup(mgr => mgr.SetSanPolicyAsync(It.IsAny<CancellationToken>(), It.IsAny<TimeSpan?>()))
                 .ThrowsAsync(new ProcessException("DiskPart SAN policy command failed.", ErrorReason.DiskFormatFailed));
 
             using (SetDiskSanPolicy component = new SetDiskSanPolicy(this.mockFixture.Dependencies, this.mockFixture.Parameters))

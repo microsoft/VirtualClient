@@ -18,7 +18,7 @@ namespace VirtualClient.Actions
     [Category("Unit")]
     public class StressAppTestExecutorTests
     {
-        private static readonly string ExamplesDirectory = MockFixture.GetDirectory(typeof(ScriptExecutorTests), "Examples", "StressAppTest");
+        private static readonly string ExamplesDirectory = MockFixture.GetDirectory(typeof(ScriptExecutorTests), "test_examples", "StressAppTest");
 
         private MockFixture mockFixture;
         private DependencyPath mockPackage;

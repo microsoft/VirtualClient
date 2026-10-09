@@ -1,29 +1,30 @@
-# HPLinpack Workload Profiles
+---
+slug: /workloads/hplinpack-profiles
+---
+
+# HPLinpack Profiles
 The following profiles run customer-representative or benchmarking scenarios using the HPLinpack workload.  
 
-* [Workload Details](./hplinpack.md)  
+* [Workload Details](/docs/workloads/hplinpack)  
 
 ## PERF-CPU-HPLINPACK.json
 This profile runs HPLinpack workload on the system without any specific performance libraries used.
 
 * [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-CPU-HPLINPACK.json) 
 
-* **Supported Platform/Architectures**
+* **Supported Platform-Architectures**
   * linux-x64
   * linux-arm64
 
 * **Supported Linux Distrbutions**
     * Ubuntu
 
-* **Supports Disconnected Scenarios**  
-  * No. Internet connection required.
-
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
   * Internet connection.
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
-  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+  * [Installing Dependencies](/docs/category/dependencies/)
 
 * **Profile Parameters**  
   The following parameters are specific to this workload and decides behavior of the workload.
@@ -72,21 +73,18 @@ This profile runs HPLinpack workload with AMD performance libraries.
 
 * [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-CPU-HPLINPACK-AMD.json) 
 
-* **Supported Platform/Architectures**
+* **Supported Platform-Architectures**
   * linux-x64
 
 * **Supported Linux Distrbutions**
     * Ubuntu
-
-* **Supports Disconnected Scenarios**  
-  * No. Internet connection required.
 
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
   * Internet connection.
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
-  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+  * [Installing Dependencies](/docs/category/dependencies/)
 
 * **Profile Parameters**  
   The following parameters are specific to this workload and decides behavior of the workload.
@@ -125,21 +123,18 @@ This profile runs HPLinpack workload with ARM performance libraries.
 
 * [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-CPU-HPLINPACK-ARM.json) 
 
-* **Supported Platform/Architectures**
+* **Supported Platform-Architectures**
   * linux-arm64
 
 * **Supported Linux Distrbutions**
     * Ubuntu
-
-* **Supports Disconnected Scenarios**  
-  * No. Internet connection required.
 
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
   * Internet connection.
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
-  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+  * [Installing Dependencies](/docs/category/dependencies/)
 
 * **Profile Parameters**  
   The following parameters are specific to this workload and decides behavior of the workload.
@@ -178,21 +173,18 @@ This profile runs HPLinpack workload with Intel performance libraries.
 
 * [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-CPU-HPLINPACK-INTEL.json) 
 
-* **Supported Platform/Architectures**
+* **Supported Platform-Architectures**
   * linux-x64
 
 * **Supported Linux Distrbutions**
     * Ubuntu
-
-* **Supports Disconnected Scenarios**  
-  * No. Internet connection required.
 
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
   * Internet connection.
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
-  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+  * [Installing Dependencies](/docs/category/dependencies/)
 
 * **Profile Parameters**  
   The following parameters are specific to this workload and decides behavior of the workload.

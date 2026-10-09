@@ -20,32 +20,22 @@
         <ProjectReference Include="..\VirtualClient.TestExtensions\VirtualClient.TestExtensions.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Compile Update="Properties\Resources.Designer.cs">
-        <DesignTime>True</DesignTime>
-        <AutoGen>True</AutoGen>
-        <DependentUpon>Resources.resx</DependentUpon>
-      </Compile>
-    </ItemGroup>
+	<ItemGroup>
+		<None Include="..\TestResources\**\*">
+			<Link>TestResources\%(RecursiveDir)%(Filename)%(Extension)</Link>
+		</None>
+	</ItemGroup>
 
-    <ItemGroup>
-      <EmbeddedResource Update="Properties\Resources.resx">
-        <Generator>ResXFileCodeGenerator</Generator>
-        <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-      </EmbeddedResource>
-    </ItemGroup>
+	<!--
+    Copies test resources into the target output directory.
+    -->
+	<Target Name="CopyTestResourcesToOutputDirectory" AfterTargets="Build">
+		<ItemGroup>
+			<TestResourceFiles Include="..\TestResources\**\*.*" />
+		</ItemGroup>
 
-    <ItemGroup>
-        <!-- 
-        Test Resources/Examples:
-        Include ALL of the examples/files in the solution 'TestResources' folder in the unit test
-        output.
-        -->
-        <Content Include="..\TestResources\**\*.*">
-            <Link>TestResources\%(RecursiveDir)%(Filename)%(Extension)</Link>
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-    </ItemGroup>
+		<Copy SourceFiles="@(TestResourceFiles)" DestinationFiles="@(TestResourceFiles->'$(OutputPath)test_resources\%(RecursiveDir)%(Filename)%(Extension)')" />
+	</Target>
 
     <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Module.props))\Module.props" />
 

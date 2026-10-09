@@ -44,7 +44,7 @@ namespace VirtualClient.Actions
             this.mockFixture.Parameters["Protocol"] = "Tcp";
 
             string currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string resultsPath = Path.Combine(currentDirectory, "Examples", "Latte", "Latte_Results_Example.txt");
+            string resultsPath = Path.Combine(currentDirectory, "test_examples", "Latte", "Latte_Results_Example.txt");
             string results = File.ReadAllText(resultsPath);
 
             this.mockFixture.FileSystem.Setup(rt => rt.File.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))

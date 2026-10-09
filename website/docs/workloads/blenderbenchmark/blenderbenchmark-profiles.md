@@ -1,18 +1,19 @@
-# Blender Workload Profiles
+---
+slug: /workloads/blenderbenchmark-profiles
+---
+
+# Blender Profiles
 The following profile runs the Blender benchmark Workloads.
 
-* [Workload Details](./blenderbenchmark.md)  
+* [Workload Details](/docs/workloads/blenderbenchmark)  
 
 ## PERF-BLENDER-AMD.json
 Runs the Blender Workloads.
 
 * [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-BLENDER-AMD.json) 
 
-* **Supported Platform/Architectures**
+* **Supported Platform-Architectures**
   * win-x64
-
-* **Supports Disconnected Scenarios**  
-  * No. Internet connection required.
 
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
@@ -22,7 +23,7 @@ Runs the Blender Workloads.
     * Model = mi25
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
-  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+  * [Installing Dependencies](/docs/category/dependencies/)
 
 * **Profile Parameters**  
   | Parameter                 | Purpose                                                                                           | Default Value |

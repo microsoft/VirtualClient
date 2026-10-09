@@ -1,3 +1,7 @@
+---
+slug: /dependencies/install-amd-drivers
+---
+
 # Install AMD GPU Drivers
 Virtual Client has a dependency component that can be added to a workload or monitor profile to install AMD drivers in Linux and Windows systems. The following section illustrates the
 details for integrating this into the profile.
@@ -7,7 +11,7 @@ details for integrating this into the profile.
 - [Windows Drivers] (https://learn.microsoft.com/en-us/azure/virtual-machines/windows/n-series-amd-driver-setup)
 - [Linux Drivers] (https://repo.radeon.com/amdgpu-install)
 
-## Supported Platform/Architectures
+## Supported Platform-Architectures
 * linux-x64 (Ubuntu)
 * win-x64
 

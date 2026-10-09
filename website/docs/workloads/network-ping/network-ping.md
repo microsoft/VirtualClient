@@ -1,3 +1,7 @@
+---
+slug: /workloads/network-ping
+---
+
 # Network Ping/ICMP
 This workload uses the out-of-box Windows or Linux network ping commands.
 

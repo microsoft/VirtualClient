@@ -31,9 +31,9 @@ namespace VirtualClient.Dependencies
         {
             this.SetupTest(PlatformID.Unix);
 
-            using (MountDisks diskMounter = new MountDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (MountDisks component = new MountDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
-                await diskMounter.ExecuteAsync(CancellationToken.None);
+                await component.ExecuteAsync(CancellationToken.None);
 
                 foreach (DiskVolume diskVolume in this.diskVolumes)
                 {
@@ -42,7 +42,89 @@ namespace VirtualClient.Dependencies
                     // /home/user/mnt_dev_sdd1
                     // /home/user/mnt_dev_sdd2
                     string expectedMountPoint = $"/home/{Environment.UserName}/{diskVolume.GetDefaultMountPointName()}";
-                    this.mockFixture.DiskManager.Verify(mgr => mgr.CreateMountPointAsync(diskVolume, expectedMountPoint, It.IsAny<CancellationToken>()));
+                    this.mockFixture.DiskManager.Verify(
+                        mgr => mgr.CreateMountPointAsync(diskVolume, expectedMountPoint, It.IsAny<CancellationToken>()), 
+                        Times.Once);
+                }
+            }
+        }
+
+        [Test]
+        public async Task MountDisksMountsTheExpectedPathOnUnixMatchingTheDiskFilterWhenSupplied_DiskPath()
+        {
+            this.SetupTest(PlatformID.Unix);
+
+            string diskPath1 = "/dev/sdc";
+            string diskPath2 = "/dev/sdd";
+
+            this.mockFixture.Parameters[nameof(MountDisks.DiskFilter)] = $"DiskPath:{diskPath1},{diskPath2}";
+
+            using (MountDisks component = new MountDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                await component.ExecuteAsync(CancellationToken.None);
+
+                foreach (Disk disk in this.disks)
+                {
+                    DiskVolume diskVolume = disk.Volumes.FirstOrDefault();
+
+                    // e.g.
+                    // /home/user/mnt_dev_sdc1
+                    // /home/user/mnt_dev_sdd1
+                    // /home/user/mnt_dev_sdd2
+                    string expectedMountPoint = $"/home/{Environment.UserName}/{diskVolume.GetDefaultMountPointName()}";
+
+                    if (disk.DevicePath == diskPath1 || disk.DevicePath == diskPath2)
+                    {
+                        this.mockFixture.DiskManager.Verify(
+                            mgr => mgr.CreateMountPointAsync(diskVolume, expectedMountPoint, It.IsAny<CancellationToken>()), 
+                            Times.Once);
+                    }
+                    else
+                    {
+                        this.mockFixture.DiskManager.Verify(
+                            mgr => mgr.CreateMountPointAsync(diskVolume, expectedMountPoint, It.IsAny<CancellationToken>()),
+                            Times.Never);
+                    }
+                }
+            }
+        }
+
+        [Test]
+        [Platform("Win")]
+        public async Task MountDisksMountsTheExpectedPathOnWindowsMatchingTheDiskFilterWhenSupplied_DiskPath()
+        {
+            this.SetupTest(PlatformID.Win32NT);
+
+            string diskPath1 = "D:/";
+            string diskPath2 = "E:/";
+
+            this.mockFixture.Parameters[nameof(MountDisks.DiskFilter)] = $"DiskPath:{diskPath1},{diskPath2}";
+
+            using (MountDisks component = new MountDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                await component.ExecuteAsync(CancellationToken.None);
+
+                foreach (Disk disk in this.disks)
+                {
+                    DiskVolume diskVolume = disk.Volumes.FirstOrDefault();
+
+                    // e.g.
+                    // C:\\Users\\bryan\\mnt_d
+                    // C:\\Users\\bryan\\mnt_e
+                    string expectedMountPoint = $"C:\\Users\\{Environment.UserName}\\{diskVolume.GetDefaultMountPointName()}";
+
+                    if (diskVolume.DevicePath.StartsWith(diskPath1.Substring(0, 1)) || diskVolume.DevicePath.StartsWith(diskPath2.Substring(0, 1)))
+                    {
+                        this.mockFixture.DiskManager.Verify(
+                            mgr => mgr.CreateMountPointAsync(diskVolume, expectedMountPoint, It.IsAny<CancellationToken>()),
+                            Times.Once);
+                    }
+                    else
+                    {
+                        this.mockFixture.DiskManager.Verify(
+                            mgr => mgr.CreateMountPointAsync(diskVolume, expectedMountPoint, It.IsAny<CancellationToken>()),
+                            Times.Never);
+                    }
                 }
             }
         }
@@ -54,9 +136,9 @@ namespace VirtualClient.Dependencies
             // 3 volumes/partitions on the disk == 3 mount points
             this.SetupTest(PlatformID.Unix, withMultipleVolumes: true);
 
-            using (MountDisks diskMounter = new MountDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (MountDisks component = new MountDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
-                await diskMounter.ExecuteAsync(CancellationToken.None);
+                await component.ExecuteAsync(CancellationToken.None);
 
                 foreach (DiskVolume diskVolume in this.diskVolumes)
                 {
@@ -71,10 +153,10 @@ namespace VirtualClient.Dependencies
         {
             this.SetupTest(PlatformID.Unix);
 
-            using (MountDisks diskMounter = new MountDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (MountDisks component = new MountDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
-                diskMounter.PlatformSpecifics.SetEnvironmentVariable(EnvironmentVariable.SUDO_USER, "user01");
-                await diskMounter.ExecuteAsync(CancellationToken.None);
+                component.PlatformSpecifics.SetEnvironmentVariable(EnvironmentVariable.SUDO_USER, "user01");
+                await component.ExecuteAsync(CancellationToken.None);
 
                 foreach (DiskVolume diskVolume in this.diskVolumes)
                 {
@@ -93,11 +175,11 @@ namespace VirtualClient.Dependencies
         {
             this.SetupTest(PlatformID.Unix);
 
-            using (MountDisks diskMounter = new MountDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (MountDisks component = new MountDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
                 // SUDO_USER will be set to "root" when logged in as root.
-                diskMounter.PlatformSpecifics.SetEnvironmentVariable(EnvironmentVariable.SUDO_USER, "root");
-                await diskMounter.ExecuteAsync(CancellationToken.None);
+                component.PlatformSpecifics.SetEnvironmentVariable(EnvironmentVariable.SUDO_USER, "root");
+                await component.ExecuteAsync(CancellationToken.None);
 
                 foreach (DiskVolume diskVolume in this.diskVolumes)
                 {
@@ -121,9 +203,9 @@ namespace VirtualClient.Dependencies
             this.SetupTest(PlatformID.Unix);
             this.mockFixture.Parameters["MountLocation"] = expectedMountLocation;
 
-            using (MountDisks diskMounter = new MountDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (MountDisks component = new MountDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
-                await diskMounter.ExecuteAsync(CancellationToken.None);
+                await component.ExecuteAsync(CancellationToken.None);
 
                 foreach (DiskVolume diskVolume in this.diskVolumes)
                 {
@@ -139,9 +221,9 @@ namespace VirtualClient.Dependencies
             this.SetupTest(PlatformID.Unix);
             this.mockFixture.Parameters["MountPointPrefix"] = "mnt_test";
 
-            using (MountDisks diskMounter = new MountDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (MountDisks component = new MountDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
-                await diskMounter.ExecuteAsync(CancellationToken.None);
+                await component.ExecuteAsync(CancellationToken.None);
 
                 foreach (DiskVolume diskVolume in this.diskVolumes)
                 {
@@ -156,9 +238,9 @@ namespace VirtualClient.Dependencies
         {
             this.SetupTest(PlatformID.Unix);
 
-            using (MountDisks diskMounter = new MountDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (MountDisks component = new MountDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
-                await diskMounter.ExecuteAsync(CancellationToken.None);
+                await component.ExecuteAsync(CancellationToken.None);
 
                 foreach (DiskVolume diskVolume in this.diskVolumes)
                 {
@@ -175,11 +257,11 @@ namespace VirtualClient.Dependencies
         {
             this.SetupTest(PlatformID.Unix);
 
-            using (MountDisks diskMounter = new MountDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (MountDisks component = new MountDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
                 // SUDO_USER will be set to "root" when logged in as root.
-                diskMounter.PlatformSpecifics.SetEnvironmentVariable(EnvironmentVariable.SUDO_USER, "root");
-                await diskMounter.ExecuteAsync(CancellationToken.None);
+                component.PlatformSpecifics.SetEnvironmentVariable(EnvironmentVariable.SUDO_USER, "root");
+                await component.ExecuteAsync(CancellationToken.None);
 
                 foreach (DiskVolume diskVolume in this.diskVolumes)
                 {
@@ -196,9 +278,9 @@ namespace VirtualClient.Dependencies
         {
             this.SetupTest(PlatformID.Win32NT);
 
-            using (MountDisks diskMounter = new MountDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (MountDisks component = new MountDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
-                await diskMounter.ExecuteAsync(CancellationToken.None);
+                await component.ExecuteAsync(CancellationToken.None);
 
                 foreach (DiskVolume diskVolume in this.diskVolumes)
                 {
@@ -215,9 +297,9 @@ namespace VirtualClient.Dependencies
             // 3 volumes/partitions on the disk == 3 mount points
             this.SetupTest(PlatformID.Win32NT, withMultipleVolumes: true);
 
-            using (MountDisks diskMounter = new MountDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (MountDisks component = new MountDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
-                await diskMounter.ExecuteAsync(CancellationToken.None);
+                await component.ExecuteAsync(CancellationToken.None);
 
                 foreach (DiskVolume diskVolume in this.diskVolumes)
                 {
@@ -236,9 +318,9 @@ namespace VirtualClient.Dependencies
             this.SetupTest(PlatformID.Win32NT);
             this.mockFixture.Parameters["MountLocation"] = expectedMountLocation;
 
-            using (MountDisks diskMounter = new MountDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (MountDisks component = new MountDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
-                await diskMounter.ExecuteAsync(CancellationToken.None);
+                await component.ExecuteAsync(CancellationToken.None);
 
                 foreach (DiskVolume diskVolume in this.diskVolumes)
                 {
@@ -254,9 +336,9 @@ namespace VirtualClient.Dependencies
             this.SetupTest(PlatformID.Win32NT);
             this.mockFixture.Parameters["MountPointPrefix"] = "mnt_test";
 
-            using (MountDisks diskMounter = new MountDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (MountDisks component = new MountDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
-                await diskMounter.ExecuteAsync(CancellationToken.None);
+                await component.ExecuteAsync(CancellationToken.None);
 
                 foreach (DiskVolume diskVolume in this.diskVolumes)
                 {
@@ -301,9 +383,9 @@ namespace VirtualClient.Dependencies
             this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>())).Returns(true);
             this.mockFixture.Directory.Setup(d => d.Exists(It.IsAny<string>())).Returns(true);
 
-            using (MountDisks diskMounter = new MountDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (MountDisks component = new MountDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
-                await diskMounter.ExecuteAsync(CancellationToken.None);
+                await component.ExecuteAsync(CancellationToken.None);
 
                 // The reserved partition must never be handed to the disk manager for mounting.
                 this.mockFixture.DiskManager.Verify(
@@ -352,9 +434,9 @@ namespace VirtualClient.Dependencies
             this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>())).Returns(true);
             this.mockFixture.Directory.Setup(d => d.Exists(It.IsAny<string>())).Returns(true);
 
-            using (MountDisks diskMounter = new MountDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (MountDisks component = new MountDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
-                await diskMounter.ExecuteAsync(CancellationToken.None);
+                await component.ExecuteAsync(CancellationToken.None);
 
                 // The partition without a device path must never be handed to the disk manager.
                 this.mockFixture.DiskManager.Verify(

@@ -1,3 +1,7 @@
+---
+slug: /workloads/aspnetbench
+---
+
 # ASP.NET Benchmarks
 The ASP.NET benchmarks measure the throughput and latency of ASP.NET Kestrel web applications under sustained HTTP load.
 The workloads use a client-server architecture where the server runs an ASP.NET application and the client generates
@@ -19,8 +23,8 @@ server process to be pinned to specific CPU cores for controlled performance mea
 * [ASP.NET Benchmarks GitHub](https://github.com/aspnet/benchmarks)
 * [OrchardCore GitHub](https://github.com/orchardcms/orchardcore)
 * [TechEmpower Framework Benchmarks](https://www.techempower.com/benchmarks/)
-* [Bombardier Documentation](../bombardier/bombardier.md)
-* [Wrk/Wrk2 Documentation](../wrk/wrk.md)
+* [Bombardier Documentation](/docs/workloads/bombardier)
+* [Wrk/Wrk2 Documentation](/docs/workloads/wrk)
 
 ## Platform Support
 The ASP.NET Kestrel and OrchardCore server components run on all supported platforms (`linux-x64`, `linux-arm64`,

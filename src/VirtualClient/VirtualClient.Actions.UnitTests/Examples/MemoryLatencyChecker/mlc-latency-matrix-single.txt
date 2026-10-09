@@ -1,0 +1,5 @@
+﻿Intel(R) Memory Latency Checker - v3.9a
+Measuring idle latencies (in ns)...
+		Numa node
+Numa node	     0
+       0	 103.9

@@ -53,7 +53,7 @@ namespace VirtualClient.Contracts
         [TestCase("TEST-PROFILE-2.json")]
         public void ExecutionProfileCanDeserializeProfileFiles(string profileName)
         {
-            ExecutionProfile profile = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, "Resources", profileName))
+            ExecutionProfile profile = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, "test_resources", profileName))
                 .FromJson<ExecutionProfile>();
         }
 
@@ -61,7 +61,7 @@ namespace VirtualClient.Contracts
         [TestCase("TEST-PROFILE-3-PARALLEL.json")]
         public void ExecutionProfileCanDeserializeProfileFilesWithParallelExecutionComponents(string profileName)
         {
-            ExecutionProfile profile = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, "Resources", profileName))
+            ExecutionProfile profile = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, "test_resources", profileName))
                 .FromJson<ExecutionProfile>();
 
             Assert.IsNotEmpty(profile.Actions);
@@ -75,7 +75,7 @@ namespace VirtualClient.Contracts
         [TestCase("TEST-PROFILE-1-PARALLEL-LOOP.json")]
         public void ExecutionProfileCanDeserializeProfileFilesWithParallelLoopExecutionComponents(string profileName)
         {
-            ExecutionProfile profile = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, "Resources", profileName))
+            ExecutionProfile profile = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, "test_resources", profileName))
                 .FromJson<ExecutionProfile>();
 
             Assert.IsNotEmpty(profile.Actions);
@@ -89,7 +89,7 @@ namespace VirtualClient.Contracts
         [TestCase("TEST-PROFILE-1-SEQUENTIAL.json")]
         public void ExecutionProfileCanDeserializeProfileFilesWithSequentialExecutionComponents(string profileName)
         {
-            ExecutionProfile profile = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, "Resources", profileName))
+            ExecutionProfile profile = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, "test_resources", profileName))
                 .FromJson<ExecutionProfile>();
 
             Assert.IsNotEmpty(profile.Actions);
@@ -128,7 +128,7 @@ namespace VirtualClient.Contracts
             // The hash should not change regardless of the number of times the profile is deserialized.
             for (int check = 0; check < 10; check++)
             {
-                ExecutionProfile profile = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, "Resources", profileName))
+                ExecutionProfile profile = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, "test_resources", profileName))
                     .FromJson<ExecutionProfile>();
 
                 string actualHashCode = profile.GetPredictableHashCode().ToString();
@@ -149,7 +149,7 @@ namespace VirtualClient.Contracts
             // The hash should not change regardless of the number of times the profile is deserialized.
             for (int check = 0; check < 10; check++)
             {
-                ExecutionProfile profile = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, "Resources", profileName))
+                ExecutionProfile profile = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, "test_resources", profileName))
                     .FromJson<ExecutionProfile>();
 
                 string actualHashCode = profile.GetPredictableHashCode(includeMetadata: true).ToString();
@@ -163,7 +163,7 @@ namespace VirtualClient.Contracts
         [TestCase("TEST-PROFILE-4.json", "1326284617660594785167171193396646697439110051452")]
         public void ExecutionProfileGeneratesPredictableHashCodesWhenMetadataIsModifiedButExcludedFromHashingMechanics(string profileName, string expectedHashCode)
         {
-            ExecutionProfile profile = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, "Resources", profileName))
+            ExecutionProfile profile = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, "test_resources", profileName))
                 .FromJson<ExecutionProfile>();
 
             string actualHashCode = profile.GetPredictableHashCode(includeMetadata: false).ToString();

@@ -1,3 +1,7 @@
+---
+slug: /guides/profiles
+---
+
 # Profiles
 The Virtual Client defines the work/operations that will happen on a system in structured JSON documents called "profiles". Profiles can be thought
 of as recipes for how to utilize resources and to work the system. Profiles are divided into different sections within a profile including Metadata, Parameters,
@@ -27,6 +31,31 @@ properties that one might find in a profile.
 | RecommendedMinimumExecutionTime | Optional. Provides a recommendation for the minimum length of time for running the profile. This time is typically based on the amount of time expected to execute all actions in the profile 1 full round. Actions are generally executed in sequential order. Note that this is an estimate based on empirical evidence, but it is always a good idea to leave a little extra time buffer. | |
 | SupportedPlatforms              | Optional. Defines a set of OS platforms and CPU architectures on which the profile (and all components within) is confirmed to run correctly (e.g. win-x64 -> Windows OS, X64 architecture). | |
 | SupportedOperatingSystems       | Optional. Defines a set of operating systems on which the profile is confirmed to run correctly (e.g. Ubuntu, CentOS, Windows). This list does not indicate that the Virtual Client will run on every version of these operating systems. Focus on latest versions of the operating systems for support. | |
+
+### Standard Metadata Values
+The metadata properties above are all optional. Where a profile does define them, the profiles in this repo write the values in a consistent
+format so that the information reads the same way across every profile. The following describes the conventions used.
+
+| Property                        | Format | Values Used |
+|---------------------------------|--------|-------------|
+| SupportedPlatforms              | Comma-delimited | `linux-x64`, `linux-arm64`, `win-x64`, `win-arm64` |
+| SupportedOperatingSystems       | Comma-delimited | The `LinuxDistribution` enumeration names (`AmazonLinux`, `AzureLinux`, `CentOS`, `Debian`, `Fedora`, `Flatcar`, `Gentoo`, `OpenSuse`, `RedHat`, `Ubuntu`) plus `Windows` |
+| RecommendedMinimumExecutionTime | Timespan, or timespans scaled by core count | `01:00:00`, or `(4-cores)=02:00:00,(16-cores)=04:00:00` |
+
+Note that `AzureLinux` is the canonical name for the distro previously written as `CBL-Mariner`, and `AmazonLinux` for `AwsLinux`. Version
+numbers are not included; note version-specific support in a profile-specific property instead (e.g. `SupportedLinuxDistros`).
+
+``` json
+{
+    "Description": "OpenSSL CPU Performance Workload",
+    "Metadata": {
+        "RecommendedMinimumExecutionTime": "01:00:00",
+        "SupportedPlatforms": "linux-x64,linux-arm64,win-x64",
+        "SupportedOperatingSystems": "AzureLinux,CentOS,Debian,OpenSuse,RedHat,Ubuntu,Windows"
+    },
+    ...
+}
+```
 
 ## Parameters
 The section 'Parameters' within the profile defines a set of 1 or more parameters (typically with default values) that can be used to override the default values in the components that
@@ -753,16 +782,16 @@ completes. The The `SequentialExecution` component will complete when all compon
 ```
 
 ### ParallelLoopExecution
-Executes all child components **in parallel**, and **repeats** this execution for a specified duration or minimum number of 
-iterations. Each component runs in its own loop, independently, until the overall duration or the minimum iteration count is 
-reached.
+Executes all child components **in parallel**, and **repeats** this execution for a specified duration. Each component runs in its 
+own loop, independently. Each component first completes `MinimumIterations` iterations, even if that takes longer than `Duration`. 
+After that, iterations repeat until `Duration` elapses, at which point any in-flight iteration is cancelled.
 
 #### Supported Parameters
 
 | Parameter          | Purpose                                                     | Default Value |
 |--------------------|-------------------------------------------------------------|---------------|
 | Duration           | Maximum time to run the parallel loop (hh:mm:ss format).    | -1 (no limit) |
-| MinimumIterations  | Minimum number of times each child component should run. Set this value to 1 to ensure each component executes to completion at least once. | 0 |
+| MinimumIterations  | Number of iterations each child component must complete, even if `Duration` elapses. Set this value to 0 to allow `Duration` to cancel the first iteration. | 1 |
 
 ```json
 { 

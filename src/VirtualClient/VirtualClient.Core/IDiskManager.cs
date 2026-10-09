@@ -3,6 +3,7 @@
 
 namespace VirtualClient
 {
+    using System;
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
@@ -46,6 +47,7 @@ namespace VirtualClient
         /// marked read-only by the OS. This operation is a no-op on Linux.
         /// </summary>
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
-        Task SetSanPolicyAsync(CancellationToken cancellationToken);
+        /// <param name="timeout">A timeout to apply to the operation.</param>
+        Task SetSanPolicyAsync(CancellationToken cancellationToken, TimeSpan? timeout = null);
     }
 }

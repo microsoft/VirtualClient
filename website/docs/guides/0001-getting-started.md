@@ -1,6 +1,7 @@
 ---
 id: getting-started
 sidebar_position: 1
+slug: /guides/getting-started
 ---
 
 # Getting Started
@@ -219,12 +220,11 @@ below to learn how you can incorporate "big data" Azure resources.
 You are ready to begin using Virtual Client to run a range of different supported industry standard benchmarks and customer representative workloads. The following
 links provide details for natural next steps.
 
-* [Supported Workloads](https://microsoft.github.io/VirtualClient/docs/category/workloads/)
-* [Supported Monitors](https://microsoft.github.io/VirtualClient/docs/category/monitors/)
-* [Profiles](./0011-profiles.md)
-* [Command Line Options](./0010-command-line.md)
-* [Usage Examples](./0200-usage-examples.md)
-* [Telemetry/Data](./0040-telemetry.md)
-* [Azure Event Hubs Telemetry Integration](./0600-integration-blob-storage.md)
-* [Azure Storage Account Integration](./0610-integration-event-hub.md)
-
+* [Supported Workloads](/docs/category/workloads/)
+* [Supported Monitors](/docs/category/monitors/)
+* [Profiles](/docs/guides/profiles)
+* [Command Line Options](/docs/guides/command-line)
+* [Usage Examples](/docs/guides/usage-examples)
+* [Telemetry/Data](/docs/guides/telemetry)
+* [Azure Event Hubs Telemetry Integration](/docs/guides/integration-blob-storage)
+* [Azure Storage Account Integration](/docs/guides/integration-event-hub)

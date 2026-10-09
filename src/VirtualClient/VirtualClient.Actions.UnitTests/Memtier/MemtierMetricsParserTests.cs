@@ -13,12 +13,12 @@ namespace VirtualClient.Actions
     [Category("Unit")]
     public class MemtierMetricsParserTests
     {
-        private static string ExamplesDirectory = MockFixture.GetDirectory(typeof(MemtierMetricsParserTests), "Examples", "Memtier");
+        private static string ExamplesDirectory = MockFixture.GetDirectory(typeof(MemtierMetricsParserTests), "test_examples", "Memtier");
 
         [Test]
         public void MemtierMetricsParserParsesTheExpectedMetricsFromResults_RawMetrics_1()
         {
-            string results = File.ReadAllText(MockFixture.GetDirectory(typeof(MemtierMetricsParserTests), "Examples", "Memtier", "Memtier_Memcached_Results_1.txt"));
+            string results = File.ReadAllText(MockFixture.GetDirectory(typeof(MemtierMetricsParserTests), "test_examples", "Memtier", "Memtier_Memcached_Results_1.txt"));
             var parser = new MemtierMetricsParser(results);
 
             IList<Metric> metrics = parser.Parse();
@@ -61,7 +61,7 @@ namespace VirtualClient.Actions
         [Test]
         public void MemtierMetricsParserParsesTheExpectedMetricsFromResults_RawMetrics_2()
         {
-            string results = File.ReadAllText(MockFixture.GetDirectory(typeof(MemtierMetricsParserTests), "Examples", "Memtier", "Memtier_Memcached_Results_2.txt"));
+            string results = File.ReadAllText(MockFixture.GetDirectory(typeof(MemtierMetricsParserTests), "test_examples", "Memtier", "Memtier_Memcached_Results_2.txt"));
             var parser = new MemtierMetricsParser(results);
 
             IList<Metric> metrics = parser.Parse();
@@ -104,11 +104,11 @@ namespace VirtualClient.Actions
         [Test]
         public void MemtierMetricsParserAggregatesMetricsIntoTheExpectedSetGivenASetOfIndividualResults()
         {
-            string results1 = File.ReadAllText(MockFixture.GetDirectory(typeof(MemtierMetricsParserTests), "Examples", "Memtier", "Memtier_Memcached_Results_1.txt"));
-            string results2 = File.ReadAllText(MockFixture.GetDirectory(typeof(MemtierMetricsParserTests), "Examples", "Memtier", "Memtier_Memcached_Results_2.txt"));
-            string results3 = File.ReadAllText(MockFixture.GetDirectory(typeof(MemtierMetricsParserTests), "Examples", "Memtier", "Memtier_Memcached_Results_3.txt"));
-            string results4 = File.ReadAllText(MockFixture.GetDirectory(typeof(MemtierMetricsParserTests), "Examples", "Memtier", "Memtier_Memcached_Results_4.txt"));
-            string results5 = File.ReadAllText(MockFixture.GetDirectory(typeof(MemtierMetricsParserTests), "Examples", "Memtier", "Memtier_Memcached_Results_5.txt"));
+            string results1 = File.ReadAllText(MockFixture.GetDirectory(typeof(MemtierMetricsParserTests), "test_examples", "Memtier", "Memtier_Memcached_Results_1.txt"));
+            string results2 = File.ReadAllText(MockFixture.GetDirectory(typeof(MemtierMetricsParserTests), "test_examples", "Memtier", "Memtier_Memcached_Results_2.txt"));
+            string results3 = File.ReadAllText(MockFixture.GetDirectory(typeof(MemtierMetricsParserTests), "test_examples", "Memtier", "Memtier_Memcached_Results_3.txt"));
+            string results4 = File.ReadAllText(MockFixture.GetDirectory(typeof(MemtierMetricsParserTests), "test_examples", "Memtier", "Memtier_Memcached_Results_4.txt"));
+            string results5 = File.ReadAllText(MockFixture.GetDirectory(typeof(MemtierMetricsParserTests), "test_examples", "Memtier", "Memtier_Memcached_Results_5.txt"));
 
             var parser1 = new MemtierMetricsParser(results1);
             var parser2 = new MemtierMetricsParser(results2);
@@ -279,7 +279,7 @@ namespace VirtualClient.Actions
         [Test]
         public void MemtierMetricsParserAssociatesTheCorrectRelativityWithEachOfTheMetrics()
         {
-            string results = File.ReadAllText(MockFixture.GetDirectory(typeof(MemtierMetricsParserTests), "Examples", "Memtier", "Memtier_Memcached_Results_1.txt"));
+            string results = File.ReadAllText(MockFixture.GetDirectory(typeof(MemtierMetricsParserTests), "test_examples", "Memtier", "Memtier_Memcached_Results_1.txt"));
             var parser = new MemtierMetricsParser(results);
 
             IList<Metric> metrics = parser.Parse();
@@ -296,7 +296,7 @@ namespace VirtualClient.Actions
         [Test]
         public void MemtierMetricsParserThrowsIfInvalidResultsAreProvided()
         {
-            string invalidResults = File.ReadAllText(MockFixture.GetDirectory(typeof(MemtierMetricsParserTests), "Examples", "Memtier", "Memtier_Invalid_Results_1.txt"));
+            string invalidResults = File.ReadAllText(MockFixture.GetDirectory(typeof(MemtierMetricsParserTests), "test_examples", "Memtier", "Memtier_Invalid_Results_1.txt"));
             var parser = new MemtierMetricsParser(invalidResults);
 
             WorkloadResultsException exception = Assert.Throws<WorkloadResultsException>(() => parser.Parse());

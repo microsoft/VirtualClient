@@ -1,3 +1,7 @@
+---
+slug: /guides/telemetry
+---
+
 # Data/Telemetry Support
 The Virtual Client emits a range of different types of data/telemetry as part of the execution of workload and monitoring
 profiles. This data/telemetry might for example include measurements/metrics emitted by a particular workload, performance counters
@@ -631,7 +635,7 @@ Fields that are part of the custom dimensions.
 | Field                   | Required    | Description |
 |-------------------------|-------------|-------------|
 | clientId                | Yes         | A unique identifier for the application (as a client running on the system). Note that there can be more than one running on a system and this enables a way to distinguish one instance of an application from another. This might simply be the system/machine name similar to 'appHost' if distinguishing between different instances of the same application running is not required. |
-| profileName             | Yes         | An identifier for the application/software end-to-end workflow. Virtual Client defines the entirety of a workflow (actions, monitors, dependency installation) using files called [Profiles](https://microsoft.github.io/VirtualClient/docs/guides/0011-profiles/). Although an application external to Virtual Client may not use a file to describe the workflow expectations, the same concept can be applied (i.e. it does not need to be a JSON name). |
+| profileName             | Yes         | An identifier for the application/software end-to-end workflow. Virtual Client defines the entirety of a workflow (actions, monitors, dependency installation) using files called [Profiles](/docs/guides/profiles/). Although an application external to Virtual Client may not use a file to describe the workflow expectations, the same concept can be applied (i.e. it does not need to be a JSON name). |
 | experimentId            | Yes         | The fundamental correlation identifier for Virtual Client, the experiment ID is a unique identifier that can be used to group all telemetry together for a given execution of the application. Note that the determination of what defines an "experiment" is up to the user. The user might prefer to have each individual execution of the application have a unique ID. The user might also prefer to aggregate any number of executions together as "1 experiment" and thus would use the same experiment ID across those different runs. Either of these preferences readily serve a wide range of automation process telemetry correlation needs. |
 | metricName              | Yes         | The name of the metric. |
 | metricRelativity        | Yes         | Describes whether higher or lower values indicate better outcomes. Supported values = Undefined, HigherIsBetter, LowerIsBetter. |
@@ -903,7 +907,7 @@ Fields that are part of the custom dimensions.
 | Field                   | Required    | Description |
 |-------------------------|-------------|-------------|
 | clientId                | Yes         | A unique identifier for the application (as a client running on the system). Note that there can be more than one running on a system and this enables a way to distinguish one instance of an application from another. This might simply be the system/machine name similar to 'appHost' if distinguishing between different instances of the same application running is not required. |
-| profileName             | Yes         | An identifier for the application/software end-to-end workflow. Virtual Client defines the entirety of a workflow (actions, monitors, dependency installation) using files called [Profiles](https://microsoft.github.io/VirtualClient/docs/guides/0011-profiles/). Although an application external to Virtual Client may not use a file to describe the workflow expectations, the same concept can be applied (i.e. it does not need to be a JSON name). |
+| profileName             | Yes         | An identifier for the application/software end-to-end workflow. Virtual Client defines the entirety of a workflow (actions, monitors, dependency installation) using files called [Profiles](/docs/guides/profiles/). Although an application external to Virtual Client may not use a file to describe the workflow expectations, the same concept can be applied (i.e. it does not need to be a JSON name). |
 | experimentId            | Yes         | The fundamental correlation identifier for Virtual Client, the experiment ID is a unique identifier that can be used to group all telemetry together for a given execution of the application. Note that the determination of what defines an "experiment" is up to the user. The user might prefer to have each individual execution of the application have a unique ID. The user might also prefer to aggregate any number of executions together as "1 experiment" and thus would use the same experiment ID across those different runs. Either of these preferences readily serve a wide range of automation process telemetry correlation needs. |
 | eventId                 | Yes         | An identifier for the event (e.g. eventlog.journalctl). |
 | eventSource             | Yes         | The source/provider of the event (e.g. journalctl). |
@@ -1132,7 +1136,7 @@ of the Virtual Client. Event Hubs can support both the scale and the need to agg
 allows users to request data/telemetry be sent to a set of Event Hubs by supplying the connection string to the Event Hub Namespace on the command line.
 
 See the following documentation for more information:
-* [Event Hubs Integration](./0610-integration-event-hub.md)
+* [Event Hubs Integration](/docs/guides/integration-event-hub)
 
 ### Azure Storage Account Support
 An Azure Storage Account is a large-scale file/blob storage platform available in the Azure cloud. The platform is one of the most fundamental resources available
@@ -1140,4 +1144,4 @@ in the Azure cloud and it integrates with many other resources such as Azure Dat
 be uploaded to a Storage Account by passing in a connection string or a SAS URI to the Storage Account on the command line.
 
 See the following documentation for more information:
-* [Storage Account Integration](./0600-integration-blob-storage.md)
+* [Storage Account Integration](/docs/guides/integration-blob-storage)

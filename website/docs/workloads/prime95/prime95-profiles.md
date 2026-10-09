@@ -1,8 +1,12 @@
-# Prime95 Workload Profiles
+---
+slug: /workloads/prime95-profiles
+---
+
+# Prime95 Profiles
 The following profiles run customer-representative or benchmarking scenarios using the
  Prime95 workload.
 
-* [Workload Details](./prime95.md)
+* [Workload Details](/docs/workloads/prime95)
 
 ## PERF-CPU-PRIME95.json
 Runs the Prime95 workload for a specific period of time on the system. This profile is designed to allow the user to run the workload for the purpose of evaluating
@@ -10,20 +14,16 @@ the performance of the CPU over various periods of time while also allowing the 
 
 * [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-CPU-PRIME95.json)
 
-* **Supported Platform/Architectures**
+* **Supported Platform-Architectures**
   * linux-x64
   * win-x64
-
-* **Supports Disconnected Scenarios**  
-  * Yes. When the Prime95 package is included in 'packages' directory of the Virtual Client.
-    * [Installing VC Packages](../../dependencies/0001-install-vc-packages.md).
 
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
   * Internet connection.
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
-  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+  * [Installing Dependencies](/docs/category/dependencies/)
 
 * **Profile Parameters**
   The following parameters can be optionally supplied on the command line to modify the behaviors of the workload.

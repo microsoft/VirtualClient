@@ -1,3 +1,7 @@
+---
+slug: /guides/usage-examples
+---
+
 # Usage: Command Line Examples
 The following documentation covers a range of usage scenarios that apply to the Virtual Client. The sections that follow are meant
 to illustrate how to use Virtual Client within these various scenarios as well as what to expect.
@@ -28,7 +32,7 @@ layout describes the topology...where the other Virtual Client instances are and
 with defining an environment layouts, see the documentation below. Note that each of the workload profiles has documentation that
 provides examples of a valid environment layout for that particular workload profile/workload.
 
-* [Environment Layouts](./0020-client-server.md)
+* [Environment Layouts](/docs/guides/client-server)
 
 ``` bash
 # Run the workload using the default port for hosting the REST API
@@ -111,7 +115,7 @@ The Virtual Client supports the ability to upload metrics, counters, logs etc...
 Event Hubs are a highly-scalable messaging platform in the Azure Cloud that can be integrated out-of-the-box with other big-data platforms such as Azure Data Explorer (ADX/Kusto).
 Note that the Virtual Client does have a set of explicit expectations for how the Event Hubs are setup. See the following documentation for additional details.
 
-* [Event Hub Support](./0610-integration-event-hub.md) 
+* [Event Hub Support](/docs/guides/integration-event-hub) 
 
 ``` bash
 # To send data to an Event Hub, supply a connection string to the Event Hub namespace on the command line.
@@ -122,7 +126,7 @@ VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --timeout=180 --logger="eventh
 Whereas the open source instance of Virtual Client provides a package store for workload package downloads, users can use their own storage accounts for package
 downloads. This is useful when developing extensions to the Virtual Client platform. See the following documentation for additional details.
 
-* [Storage Account Support](./0600-integration-blob-storage.md)
+* [Storage Account Support](/docs/guides/integration-blob-storage)
 
 ``` bash
 # Pass a connection string in to use a different storage account for package downloads.
@@ -137,7 +141,7 @@ Most components in the Virtual Client allow the user to upload information or fi
 a cloud Blob store. In order to enable this, the connection string or SAS URI to the Blob store should be supplied on the command line. See the following documentation for 
 additional details.
 
-* [Storage Account Support](./0600-integration-blob-storage.md)
+* [Storage Account Support](/docs/guides/integration-blob-storage)
 
 ``` bash
 # Pass a connection string in to use a different storage account for log/content file uploads.

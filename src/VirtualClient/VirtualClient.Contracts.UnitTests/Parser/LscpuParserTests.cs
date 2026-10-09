@@ -13,7 +13,7 @@ namespace VirtualClient.Contracts
     [Category("Unit")]
     internal class LscpuParserTests
     {
-        private static readonly string ExamplesDirectory = MockFixture.GetDirectory(typeof(LscpuParserTests), "TestResources", "Unix", "lscpu");
+        private static readonly string ExamplesDirectory = MockFixture.GetDirectory(typeof(LscpuParserTests), "test_resources", "unix", "lscpu");
 
         [Test]
         public void LscpuParserParsesTheExpectedResultsFromIntelSystems_Scenario1()

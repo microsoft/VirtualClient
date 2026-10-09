@@ -1,3 +1,7 @@
+---
+slug: /developing/workload-onboarding
+---
+
 # Workload Onboarding Process
 The following documentation provides guidance on the steps that the Virtual Client requires to onboard workloads to platform. The steps
 defined are not exactly the same every time; however, this gives a developer the general idea of what to expect.
@@ -17,8 +21,8 @@ defined are not exactly the same every time; however, this gives a developer the
 It is recommended that any workload software that can be packaged in a Virtual Client package (*.vcpkg) is packaged this way. There are a host of benefits
 to packaging workloads and dependencies in easy-to-consume Virtual Client packages.
 
-* [VC Packages](./0040-vc-packages.md)
-* [Storage Account Support](../guides/0600-integration-blob-storage.md)
+* [VC Packages](/docs/developing/vc-packages)
+* [Storage Account Support](/docs/guides/integration-blob-storage)
 
 ## Step 3: Create Parsers and Unit Tests
 * Create a parser class file with name \<Workload_name>ResultsParser.cs(e.g. WebFundamentalsResultsParser.cs) in project VirtualClient.Parser.
@@ -107,6 +111,6 @@ An example of this is the SPEC CPU workload requirements for an *.iso file. This
   A standard pattern is in place for describing the details of the workload (what it is and what it does) as well as the different profiles that are offered to run that workload as well as what type of metrics to we capture when the workload is run. 
   This is very important for users of the Virtual Client to understand fine-grained details about these workloads and profile scenarios. This information is divided into 3 parts/documents. Use the examples below for reference.
   
-  * [Example - OpenSSL Overview/Details](../workloads/openssl/openssl.md)
-  * [Example - OpenSSL Workload Profiles](../workloads/openssl/openssl-profiles.md)
+  * [Example - OpenSSL Overview/Details](/docs/workloads/openssl)
+  * [Example - OpenSSL Workload Profiles](/docs/workloads/openssl-profiles)
 

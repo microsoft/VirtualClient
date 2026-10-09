@@ -1,10 +1,14 @@
+---
+slug: /dependencies/install-postgresql
+---
+
 # Install PostgreSQL Database
 Virtual Client has dependency components that can be added to a workload or monitor profile to create a PostgreSQL database on the system. The following section illustrates the
 details for integrating this into the profile.
 
 - [PostgreSQL Documentation](https://learn.microsoft.com/en-us/dotnet/core/sdk)
 
-## Supported Platform/Architectures
+## Supported Platform-Architectures
 * linux-x64
 * linux-arm64
 * win-x64

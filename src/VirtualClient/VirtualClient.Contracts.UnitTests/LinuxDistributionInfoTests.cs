@@ -13,14 +13,14 @@ namespace VirtualClient.Contracts
         // Great examples could be found at https://github.com/chef/os_release
         private static readonly string HostnamectlExamples = MockFixture.GetDirectory(
             typeof(LinuxDistributionInfoTests), 
-            "TestResources",
-            "Unix",
+            "test_resources",
+            "unix",
             "hostnamectl");
 
         private static readonly string OSReleaseExamples = MockFixture.GetDirectory(
             typeof(LinuxDistributionInfoTests), 
-            "TestResources",
-            "Unix",
+            "test_resources",
+            "unix",
             "os-release");
 
         [Test]

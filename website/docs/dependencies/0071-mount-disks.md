@@ -1,10 +1,14 @@
+---
+slug: /dependencies/mount-disks
+---
+
 # Mount Disks
 Virtual Client has a dependency component that can be added to a workload or monitor profile to mount disks before execution. The following section illustrates the details for integrating this into the profile.
 
 NOTE: It is going to mount the disk volumes which does not have any mount points and are already formatted.
 It is going to name using the mount point prefix like following example: mountpointprefix0,mountpointprefix1,etc.
 
-## Supported Platform/Architectures
+## Supported Platform-Architectures
 
 * linux-x64
 * linux-arm64

@@ -1,3 +1,7 @@
+---
+slug: /workloads/graph500
+---
+
 # Graph500
 Graph500 3.0.0 is an open-source data-intensive workload. The intent of benchmark problems (“Search” and “Shortest-Path”) is to 
 develop a compact application that has multiple analysis techniques (multiple kernels) accessing a single data structure representing

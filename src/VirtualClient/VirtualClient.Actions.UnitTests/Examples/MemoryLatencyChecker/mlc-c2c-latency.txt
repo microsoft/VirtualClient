@@ -1,0 +1,6 @@
+﻿Intel(R) Memory Latency Checker - v3.9a
+
+Measuring cache-to-cache transfer latency (in ns)...
+Using small pages for allocating buffers
+Local Socket L2->L2 HIT  latency	53.4
+Local Socket L2->L2 HITM latency	54.2

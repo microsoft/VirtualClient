@@ -1,9 +1,9 @@
 {
     "Description": "DCGMI Monitor",
     "Metadata": {
-        "RecommendedMinimumExecutionTime": "00:60:00",
+        "RecommendedMinimumExecutionTime": "01:00:00",
         "SupportedPlatforms": "linux-x64",
-        "SupportedOperatingSystems": "Ubuntu, Debian, CentOS, RedHat, SUSE"
+        "SupportedOperatingSystems": "CentOS,Debian,OpenSuse,RedHat,Ubuntu"
     },
     "Parameters": {
         "Level": "4",

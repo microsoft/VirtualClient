@@ -22,7 +22,7 @@ namespace VirtualClient.Actions
         public void Setup()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            this.examplePath = Path.Combine(workingDirectory, "Examples", "ElasticsearchRally");
+            this.examplePath = Path.Combine(workingDirectory, "test_examples", "ElasticsearchRally");
         }
 
         [Test]

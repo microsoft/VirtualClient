@@ -1,8 +1,12 @@
-﻿# DotNetRuntime Workload Profiles
+﻿---
+slug: /workloads/dotnetruntime-profiles
+---
+
+# DotNetRuntime Profiles
 The following profiles run customer-representative or benchmarking scenarios using the .NET Runtime workload.  
 
-* [Getting Started](https://microsoft.github.io/VirtualClient/)
-* [Workload Details](./dotnetruntime.md)  
+* [Getting Started](/)
+* [Workload Details](/docs/workloads/dotnetruntime)  
 
 ## PERF-CPU-DOTNETRUNTIME.json
 Runs a CPU-intensive workload using the DotNetRuntime toolset to test the performance of the CPU in processing transactions to the database(warehouse).
@@ -10,19 +14,16 @@ This profile is designed by the Intel team as part of Cloud R1 Workload to ident
 
 * [Workload Profile](https://msazure.visualstudio.com/One/_git/CRC-AIR-Workloads?path=/src/VirtualClient/CRC.VirtualClient.Packaging/profiles/PERF-CPU-DOTNETRUNTIME.json)  
 
-* **Supported Platform/Architectures**
+* **Supported Platform-Architectures**
   * win-x64
   * win-arm64
-
-* **Supported Operating Systems**
-  * Windows
 
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
   * Internet connection.
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
-  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+  * [Installing Dependencies](/docs/category/dependencies/)
 
 * **Profile Parameters**  
   The following parameters can be optionally supplied on the command line to modify the behaviors of the workload.

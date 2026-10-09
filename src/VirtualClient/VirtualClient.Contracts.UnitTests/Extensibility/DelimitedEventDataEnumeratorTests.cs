@@ -16,7 +16,7 @@ namespace VirtualClient.Contracts.Extensibility
     [Category("Unit")]
     public class DelimitedEventDataEnumeratorTests : MockFixture
     {
-        private static readonly string Examples = MockFixture.GetDirectory(typeof(DelimitedEventDataEnumeratorTests), "Examples", "Extensibility");
+        private static readonly string examples = MockFixture.GetDirectory(typeof(DelimitedEventDataEnumeratorTests), "test_examples", "Extensibility");
 
         public void SetupTest(PlatformID platform, Architecture architecture = Architecture.X64)
         {
@@ -34,7 +34,7 @@ namespace VirtualClient.Contracts.Extensibility
             //
             // Note that the results being verified below are defined in the example file below.
             // Any changes to this file can invalidate the test.
-            string csvContent = System.IO.File.ReadAllText(this.Combine(DelimitedEventDataEnumeratorTests.Examples, "csv.events"));
+            string csvContent = System.IO.File.ReadAllText(this.Combine(DelimitedEventDataEnumeratorTests.examples, "csv.events"));
 
             using (var enumerator = new DelimitedEventDataEnumerator(csvContent, DataFormat.Csv))
             {
@@ -62,7 +62,7 @@ namespace VirtualClient.Contracts.Extensibility
             // "Timestamp","ExperimentID","ExecutionSystem","ProfileName","ClientID","SeverityLevel"
             // "2025-07-23T20:34:48.6439102Z","6c83d269-2dff-4fb5-9924-375d84602c5b","Metis","METIS-CPU-CRYPTOGRAPHIC","linux-demo01-client-01","1"
 
-            string csvContent = System.IO.File.ReadAllText(this.Combine(DelimitedEventDataEnumeratorTests.Examples, "csv_with_quotes.events"));
+            string csvContent = System.IO.File.ReadAllText(this.Combine(DelimitedEventDataEnumeratorTests.examples, "csv_with_quotes.events"));
 
             using (var enumerator = new DelimitedEventDataEnumerator(csvContent, DataFormat.Csv))
             {
@@ -85,7 +85,7 @@ namespace VirtualClient.Contracts.Extensibility
             // This test is designed to evaluate parsing logic from an actual file produced by the 
             // SDK (e.g. Export-EventCsv).
 
-            string csvContent = System.IO.File.ReadAllText(this.Combine(DelimitedEventDataEnumeratorTests.Examples, "csv_for_sdk.events"));
+            string csvContent = System.IO.File.ReadAllText(this.Combine(DelimitedEventDataEnumeratorTests.examples, "csv_for_sdk.events"));
             List<EventDataPoint> dataPoints = new List<EventDataPoint>();
 
             Assert.DoesNotThrow(() =>
@@ -113,7 +113,7 @@ namespace VirtualClient.Contracts.Extensibility
             //
             // Note that the results being verified below are defined in the example file below.
             // Any changes to this file can invalidate the test.
-            string jsonContent = System.IO.File.ReadAllText(this.Combine(DelimitedEventDataEnumeratorTests.Examples, "json.events"));
+            string jsonContent = System.IO.File.ReadAllText(this.Combine(DelimitedEventDataEnumeratorTests.examples, "json.events"));
 
             using (var enumerator = new DelimitedEventDataEnumerator(jsonContent, DataFormat.Json))
             {
@@ -138,7 +138,7 @@ namespace VirtualClient.Contracts.Extensibility
             //
             // Note that the results being verified below are defined in the example file below.
             // Any changes to this file can invalidate the test.
-            string yamlContent = System.IO.File.ReadAllText(this.Combine(DelimitedEventDataEnumeratorTests.Examples, "yaml.events"));
+            string yamlContent = System.IO.File.ReadAllText(this.Combine(DelimitedEventDataEnumeratorTests.examples, "yaml.events"));
 
             using (var enumerator = new DelimitedEventDataEnumerator(yamlContent, DataFormat.Yaml))
             {
@@ -156,7 +156,7 @@ namespace VirtualClient.Contracts.Extensibility
         public void DelimitedEventDataEnumeratorHandlesRepeatedCallsCorrectly()
         {
             this.SetupTest(PlatformID.Unix);
-            string jsonContent = System.IO.File.ReadAllText(this.Combine(DelimitedEventDataEnumeratorTests.Examples, "json.events"));
+            string jsonContent = System.IO.File.ReadAllText(this.Combine(DelimitedEventDataEnumeratorTests.examples, "json.events"));
 
             using (var enumerator = new DelimitedEventDataEnumerator(jsonContent, DataFormat.Json))
             {
@@ -180,7 +180,7 @@ namespace VirtualClient.Contracts.Extensibility
         public void DelimitedEventDataEnumeratorHandlesResetsCorrectly()
         {
             this.SetupTest(PlatformID.Unix);
-            string jsonContent = System.IO.File.ReadAllText(this.Combine(DelimitedEventDataEnumeratorTests.Examples, "json.events"));
+            string jsonContent = System.IO.File.ReadAllText(this.Combine(DelimitedEventDataEnumeratorTests.examples, "json.events"));
 
             using (var enumerator = new DelimitedEventDataEnumerator(jsonContent, DataFormat.Json))
             {
@@ -221,7 +221,7 @@ namespace VirtualClient.Contracts.Extensibility
             // exception is handled during enumeration.
 
             this.SetupTest(PlatformID.Unix);
-            string csvContent = System.IO.File.ReadAllText(this.Combine(DelimitedEventDataEnumeratorTests.Examples, "csv_with_errors.events"));
+            string csvContent = System.IO.File.ReadAllText(this.Combine(DelimitedEventDataEnumeratorTests.examples, "csv_with_errors.events"));
 
             using (var enumerator = new DelimitedEventDataEnumerator(csvContent, DataFormat.Csv))
             {
@@ -263,7 +263,7 @@ namespace VirtualClient.Contracts.Extensibility
             // exception is handled during enumeration.
 
             this.SetupTest(PlatformID.Unix);
-            string jsonContent = System.IO.File.ReadAllText(this.Combine(DelimitedEventDataEnumeratorTests.Examples, "json_with_errors.events"));
+            string jsonContent = System.IO.File.ReadAllText(this.Combine(DelimitedEventDataEnumeratorTests.examples, "json_with_errors.events"));
 
             using (var enumerator = new DelimitedEventDataEnumerator(jsonContent, DataFormat.Json))
             {
@@ -304,7 +304,7 @@ namespace VirtualClient.Contracts.Extensibility
             // exception is handled during enumeration.
 
             this.SetupTest(PlatformID.Unix);
-            string yamlContent = System.IO.File.ReadAllText(this.Combine(DelimitedEventDataEnumeratorTests.Examples, "yaml_with_errors.events"));
+            string yamlContent = System.IO.File.ReadAllText(this.Combine(DelimitedEventDataEnumeratorTests.examples, "yaml_with_errors.events"));
 
             using (var enumerator = new DelimitedEventDataEnumerator(yamlContent, DataFormat.Yaml))
             {

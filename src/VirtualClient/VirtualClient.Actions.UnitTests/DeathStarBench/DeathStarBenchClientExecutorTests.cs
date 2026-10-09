@@ -27,7 +27,7 @@ namespace VirtualClient.Actions
     [Category("Unit")]
     public class DeathStarBenchClientExecutorTests
     {
-        private static readonly string ExamplesDirectory = MockFixture.GetDirectory(typeof(DeathStarBenchClientExecutorTests), "Examples", "DeathStarBench");
+        private static readonly string ExamplesDirectory = MockFixture.GetDirectory(typeof(DeathStarBenchClientExecutorTests), "test_examples", "DeathStarBench");
 
         private MockFixture mockFixture;
         private DependencyPath mockPackage;

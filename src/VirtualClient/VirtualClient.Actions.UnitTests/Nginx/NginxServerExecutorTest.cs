@@ -387,7 +387,7 @@ namespace VirtualClient.Actions
                 else if (arguments == "nginx -V")
                 {
                     nginxServiceCalls++;
-                    string examplesDirectory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Examples", "Nginx");
+                    string examplesDirectory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "test_examples", "Nginx");
                     string outputPath = Path.Combine(examplesDirectory, @"NginxVersionExample.txt");
                     string rawText = File.ReadAllText(outputPath);
                     this.memoryProcess.StandardError = new ConcurrentBuffer(new StringBuilder(rawText));
@@ -476,7 +476,7 @@ namespace VirtualClient.Actions
         public async Task NginxExecutorParsesNginxVersion(PlatformID platform, Architecture architecture)
         {
             this.mockFixture.Setup(platform, architecture, nameof(State));
-            string examplesDirectory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Examples", "Nginx");
+            string examplesDirectory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "test_examples", "Nginx");
             string outputPath = Path.Combine(examplesDirectory, @"NginxVersionExample.txt");
             string rawText = File.ReadAllText(outputPath);
 

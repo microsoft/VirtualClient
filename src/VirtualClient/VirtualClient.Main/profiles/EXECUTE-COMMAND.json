@@ -1,5 +1,9 @@
 {
     "Description": "Executes a command on the local system.",
+    "Metadata": {
+        "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64",
+        "SupportedOperatingSystems": "AmazonLinux,AzureLinux,CentOS,Debian,OpenSuse,RedHat,Ubuntu,Windows"
+    },
     "Parameters": {
         "Command": null,
         "Scenario": "ExecuteCommand",

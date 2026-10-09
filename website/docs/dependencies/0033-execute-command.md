@@ -1,7 +1,11 @@
+---
+slug: /dependencies/execute-command
+---
+
 # Execute Command
 A dependency to execute a command on the system, in a specified working directory.
 
-## Supported Platform/Architectures
+## Supported Platform-Architectures
 * linux-x64
 * linux-arm64
 * win-x64

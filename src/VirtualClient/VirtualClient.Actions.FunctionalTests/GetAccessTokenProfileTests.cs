@@ -6,12 +6,9 @@ namespace VirtualClient.Actions
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Threading;
-    using System.Threading.Tasks;
-    using Moq;
     using NUnit.Framework;
-    using VirtualClient.Common;
     using VirtualClient.Contracts;
+    using VirtualClient.TestExtensions;
 
     [TestFixture]
     [Category("Functional")]
@@ -23,7 +20,7 @@ namespace VirtualClient.Actions
         public void SetupFixture()
         {
             this.dependencyFixture = new DependencyFixture();
-            ComponentTypeCache.Instance.LoadComponentTypes(TestDependencies.TestDirectory);
+            ComponentTypeCache.Instance.LoadComponentTypes(MockFixture.TestAssemblyDirectory);
         }
 
         [Test]
@@ -32,7 +29,7 @@ namespace VirtualClient.Actions
         public void GetAccessTokenProfileParametersAreInlinedCorrectly(string profile, PlatformID platform)
         {
             this.dependencyFixture.Setup(platform);
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.dependencyFixture.Dependencies))
+            using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(profile, this.dependencyFixture.Dependencies))
             {
                 WorkloadAssert.ParameterReferencesInlined(executor.Profile);
             }
@@ -46,7 +43,7 @@ namespace VirtualClient.Actions
             this.dependencyFixture.Setup(platform);
 
             var mandatoryParameters = new List<string> { "TenantId" };
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.dependencyFixture.Dependencies))
+            using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(profile, this.dependencyFixture.Dependencies))
             {
                 Assert.IsEmpty(executor.Profile.Actions);
                 Assert.AreEqual(1, executor.Profile.Dependencies.Count);

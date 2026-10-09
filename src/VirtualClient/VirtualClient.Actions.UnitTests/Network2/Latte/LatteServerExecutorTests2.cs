@@ -19,7 +19,7 @@ namespace VirtualClient.Actions
     [Category("Unit")]
     public class LatteServerExecutorTests2
     {
-        private static readonly string ExamplesDirectory = MockFixture.GetDirectory(typeof(ScriptExecutorTests), "Examples", "Latte");
+        private static readonly string ExamplesDirectory = MockFixture.GetDirectory(typeof(ScriptExecutorTests), "test_examples", "Latte");
 
         private MockFixture mockFixture;
         private DependencyPath mockPackage;

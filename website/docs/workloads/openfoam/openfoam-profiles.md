@@ -1,14 +1,18 @@
-# OpenFOAM Workload Profiles
+---
+slug: /workloads/openfoam-profiles
+---
+
+# OpenFOAM Profiles
 The following profiles run customer-representative or benchmarking scenarios using the OpenFOAM workload.
 
-* [Workload Details](./openfoam.md)  
+* [Workload Details](/docs/workloads/openfoam)  
 
 ## PERF-OPENFOAM.json
 Runs the OpenFOAM workload which measures performance in terms of iterations per minute. 
 
 * [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-OPENFOAM.json) 
 
-* **Supported Platform/Architectures**
+* **Supported Platform-Architectures**
   * linux-x64
   * linux-arm64
 
@@ -17,7 +21,7 @@ Runs the OpenFOAM workload which measures performance in terms of iterations per
   * Internet connection.
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
-  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+  * [Installing Dependencies](/docs/category/dependencies/)
 
 * **Scenarios**  
   The following scenarios are covered by this workload profile.

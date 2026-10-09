@@ -1,7 +1,11 @@
+---
+slug: /dependencies/set-environment-variables
+---
+
 # Set Environment Variables
 Set one or multiple environment variables on the system.
 
-## Supported Platform/Architectures
+## Supported Platform-Architectures
 * linux-x64
 * linux-arm64
 * win-x64

@@ -1,7 +1,11 @@
-# SPECviewperf Workload Profiles
+---
+slug: /workloads/specview-profiles
+---
+
+# SPECviewperf Profiles
 The following profile runs the SPECviewperf Workloads.
 
-* [Workload Details](./specview.md)  
+* [Workload Details](/docs/workloads/specview)  
 
 ## PERF-GPU-SPECVIEW.json
 Runs the stock SPECviewperf Workloads.
@@ -13,11 +17,8 @@ any of the dependencies required by the driver. If the driver is not already ins
 
 * [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-GPU-SPECVIEW.json) 
 
-* **Supported Platform/Architectures**
+* **Supported Platform-Architectures**
   * win-x64
-
-* **Supports Disconnected Scenarios**  
-  * No. Internet connection required.
 
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
@@ -25,7 +26,7 @@ any of the dependencies required by the driver. If the driver is not already ins
   * The system must have the GPU driver (e.g. AMD, Nvidia) and related toolsets (e.g. CUDA) installed.
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
-  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+  * [Installing Dependencies](/docs/category/dependencies/)
 
 * **Profile Parameters**  
   | Parameter                 | Purpose                                                                                           | Default Value |

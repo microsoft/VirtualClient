@@ -1,0 +1,6 @@
+"Selected Results Table"
+
+Benchmark,"Base # Copies","Est. Base Run Time","Est. Base Rate","Base Selected","Base Status","Peak # Copies","Est. Peak Run Time","Est. Peak Rate","Peak Selected","Peak Status",Description
+706.stockfish_r,16,410.25,49.325,1,S,16,390.5,51.75,1,S,"SelectedIteration (base #1; peak #1)"
+SPECrate2026_int_base,49.325,,49.325
+SPECrate2026_int_peak,51.75,,,,,,,51.75

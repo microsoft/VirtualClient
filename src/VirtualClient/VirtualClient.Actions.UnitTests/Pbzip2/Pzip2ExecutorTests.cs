@@ -55,7 +55,7 @@ namespace VirtualClient.Actions
             };
 
             string currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string resultsPath = Path.Combine(currentDirectory, "Examples", "Pbzip2", "Pbzip2ResultsExample.txt");
+            string resultsPath = Path.Combine(currentDirectory, "test_examples", "Pbzip2", "Pbzip2ResultsExample.txt");
             string results = File.ReadAllText(resultsPath);
             this.defaultOutput.Clear();
             this.defaultOutput.Append(results);

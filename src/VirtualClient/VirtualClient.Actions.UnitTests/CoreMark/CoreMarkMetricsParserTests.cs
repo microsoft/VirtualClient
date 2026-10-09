@@ -21,7 +21,7 @@ namespace VirtualClient.Actions
         public void Setup()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "CoreMark", "CoreMarkExampleSingleThread.txt");
+            string outputPath = Path.Combine(workingDirectory, "test_examples", "CoreMark", "CoreMarkExampleSingleThread.txt");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new CoreMarkMetricsParser(this.rawText);
             this.testParser.Parse();
@@ -31,7 +31,7 @@ namespace VirtualClient.Actions
         public void CoreMarkParserVerifyMetricsSingleThread()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "CoreMark", "CoreMarkExampleSingleThread.txt");
+            string outputPath = Path.Combine(workingDirectory, "test_examples", "CoreMark", "CoreMarkExampleSingleThread.txt");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new CoreMarkMetricsParser(this.rawText);
             IList<Metric> metrics = this.testParser.Parse();
@@ -53,7 +53,7 @@ namespace VirtualClient.Actions
         public void CoreMarkParserVerifyMetricsMultiThread()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "CoreMark", "CoreMarkExampleMultiThread.txt");
+            string outputPath = Path.Combine(workingDirectory, "test_examples", "CoreMark", "CoreMarkExampleMultiThread.txt");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new CoreMarkMetricsParser(this.rawText);
             IList<Metric> metrics = this.testParser.Parse();

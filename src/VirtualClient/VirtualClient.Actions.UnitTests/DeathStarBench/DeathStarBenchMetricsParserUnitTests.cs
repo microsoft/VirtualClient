@@ -25,7 +25,7 @@ namespace VirtualClient.Actions
         public void Setup()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "DeathStarBench", "DeathStarBenchOutputExample.txt");
+            string outputPath = Path.Combine(workingDirectory, "test_examples", "DeathStarBench", "DeathStarBenchOutputExample.txt");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new DeathStarBenchMetricsParser(this.rawText);
         }
@@ -56,7 +56,7 @@ namespace VirtualClient.Actions
         public void DeathStarBenchMetricsParserThrowIfInvalidOutputFormat()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string incorrectDeathBenchoutputPath = Path.Combine(workingDirectory, "Examples", "DeathStarBench", "DeathStarBenchIncorrectOutputExample.txt");
+            string incorrectDeathBenchoutputPath = Path.Combine(workingDirectory, "test_examples", "DeathStarBench", "DeathStarBenchIncorrectOutputExample.txt");
 
             this.rawText = File.ReadAllText(incorrectDeathBenchoutputPath);
             this.testParser = new DeathStarBenchMetricsParser(this.rawText);

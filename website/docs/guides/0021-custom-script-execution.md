@@ -1,10 +1,14 @@
+---
+slug: /guides/custom-script-execution
+---
+
 # Custom Script Execution
 The following sections provide an overview on how to use the Virtual Client application as a runtime agent for the execution
 of custom developed scripts (e.g. Python, PowerShell). This document focuses on script execution but does not cover the script 
 development process. Reference the following documentation for recommendations on the implementation of script-based extensions 
 encapsulated as `self-contained packages` for execution through Virtual Client.
 
-[Script Development Guidelines](../developing/0021-develop-script-extensions.md)
+[Script Development Guidelines](/docs/developing/develop-script-extensions)
 
 ## Step 1: Add Custom Packages/Scripts to the Folder Structure
 Custom script packages should be copied/placed inside the `packages` folder in the Virtual Client executable/application directory.
@@ -43,7 +47,7 @@ packages are downloaded from a storage account used to support the open source p
 from a storage account and executed similarly to the above example. The difference is that the package name must be supplied on the command
 line in a parameter called `Package` and the `--package-store` option must be used to specify the storage account from which to download the package.
 
-[Azure Storage Account Integration](https://microsoft.github.io/VirtualClient/docs/guides/0600-integration-blob-storage/)
+[Azure Storage Account Integration](/docs/guides/integration-blob-storage/)
 
 ### Supported Parameters
 In addition to the required `Package` parameter, the following describes additional parameters that can be defined on the command line.
@@ -54,7 +58,7 @@ In addition to the required `Package` parameter, the following describes additio
 | LogFolderName       | The name of the folder in which the log file will be created when the `--log-to-file` flag is provided on the command line. | |
 | PackageContainer    | The name of the storage container in which the package is located. | packages |
 | Scenario            | The name of the scenario to use for the execution of the package. This is used in telemetry for the results if the execution. | ExecuteScript |
-| TelemetryFileFormat | A regular expression that defines the telemetry file format of files written by the scripts and that contain telemetry information (e.g. metrics, events) for capture. See the 'Metrics' and 'Events' schema sections in the [Data/Telemetry Support](https://microsoft.github.io/VirtualClient/docs/guides/0040-telemetry/#log-files) documentation. | Csv |
+| TelemetryFileFormat | A regular expression that defines the telemetry file format of files written by the scripts and that contain telemetry information (e.g. metrics, events) for capture. See the 'Metrics' and 'Events' schema sections in the [Data/Telemetry Support](/docs/guides/telemetry/#log-files) documentation. | Csv |
 
 ``` bash
 # Windows Examples

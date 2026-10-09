@@ -1,4 +1,5 @@
 ---
+slug: /workloads/compression-profiles
 id: compression-profiles
 sidebar_position: 1
 ---
@@ -6,8 +7,8 @@ sidebar_position: 1
 # Compression/Decompression Workloads Profiles
 The following profiles run customer-representative or benchmarking scenarios using the compression/decompression workloads.
 
-* [Workload Details](./compression.md)  
-* [Command Line Usage](https://microsoft.github.io/VirtualClient/docs/guides/0010-command-line/)
+* [Workload Details](/docs/workloads/compression)  
+* [Command Line Usage](/docs/guides/command-line)
 
 ## Preliminaries
 The profiles below require the ability to download workload packages and dependencies from a package store. In order to download the workload packages, connection information 
@@ -18,7 +19,7 @@ Runs the compression/decompression workloads which measures performance in terms
 
 * [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-COMPRESSION.json) 
 
-* **Supported Platform/Architectures**
+* **Supported Platform-Architectures**
   * win-x64  
     * 7zip
   * win-arm64
@@ -32,15 +33,12 @@ Runs the compression/decompression workloads which measures performance in terms
     * GZip
     * PBZip2
 
-* **Supports Disconnected Scenarios**  
-  * No. Internet connection required.
-
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
   * Internet connection.
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
-  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+  * [Installing Dependencies](/docs/category/dependencies/)
 
 * **Profile Parameters**  
   The following parameters can be optionally supplied on the command line to modify the behaviors of the workload.
@@ -71,19 +69,16 @@ Runs the compression/decompression workloads which measures performance in terms
 
 * [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-COMPRESSION-LZBENCH.json) 
 
-* **Supported Platform/Architectures**
+* **Supported Platform-Architectures**
   * linux-x64
   * linux-arm64
-
-* **Supports Disconnected Scenarios**  
-  * No. Internet connection required.
 
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
   * Internet connection.
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
-  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+  * [Installing Dependencies](/docs/category/dependencies/)
 
 * **Profile Parameters**  
   The following parameters can be optionally supplied on the command line to modify the behaviors of the workload.
@@ -108,4 +103,3 @@ Runs the compression/decompression workloads which measures performance in terms
   # Override the profile default parameters to use a different GCC compiler version
   ./VirtualClient --profile=PERF-COMPRESSION-LZBENCH.json --system=Demo --timeout=1440 --parameters="CompilerVersion=11"
   ```
-

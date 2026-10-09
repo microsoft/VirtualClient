@@ -1,13 +1,17 @@
+---
+slug: /dependencies/install-snap-packages
+---
+
 # Install Snap Packages
 Install packages available using the Snap Package Manager.
 
 - [Official Snap Documentation](https://snapcraft.io/docs/snap-tutorials)
 
 :::info
-Installing snap packages depends on the successful installation of the snapd service. Follow the example below to make sure the snapd service is installed correctly using the [LinuxPackageInstallation dependency](./0010-install-linux-packages.md) before adding this one.
+Installing snap packages depends on the successful installation of the snapd service. Follow the example below to make sure the snapd service is installed correctly using the [LinuxPackageInstallation dependency](/docs/dependencies/install-linux-packages) before adding this one.
 :::
 
-## Supported Platform/Architectures
+## Supported Platform-Architectures
 * linux-x64
 * linux-arm64
 

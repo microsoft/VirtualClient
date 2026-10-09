@@ -1,7 +1,11 @@
-# HPCG Workload Profiles
+---
+slug: /workloads/hpcg-profiles
+---
+
+# HPCG Profiles
 The following profiles run customer-representative or benchmarking scenarios using the HPCG workload.
 
-* [Workload Details](./hpcg.md)  
+* [Workload Details](/docs/workloads/hpcg)  
 
 ## PERF-CPU-HPCG.json
 Runs the HPCG benchmark workload.
@@ -11,9 +15,6 @@ Runs the HPCG benchmark workload.
 * **OS/Architecture Platforms**
   * linux-x64
   * linux-arm64
-
-* **Supports Disconnected Scenarios**  
-  * No. Internet connection required.
 
 * **Supported Compilers**  
   The following compilers are supported with the workload for this profile. See profile parameters and usage examples below.
@@ -25,7 +26,7 @@ Runs the HPCG benchmark workload.
   * Internet connection.
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
-  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+  * [Installing Dependencies](/docs/category/dependencies/)
 
 * **Profile Parameters**  
   The following parameters can be optionally supplied on the command line to modify the behaviors of the workload.

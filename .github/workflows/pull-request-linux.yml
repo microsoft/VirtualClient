@@ -8,6 +8,7 @@ on:
     # branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+  workflow_dispatch: # This enables the manual button
 
 jobs:
   build:
@@ -26,10 +27,10 @@ jobs:
         # Learn more about CodeQL language support at https://aka.ms/codeql-docs/language-support
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
     - name: Setup .NET
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@55ec9447dda3d1cf6bd587150f3262f30ee10815 # v3.4.2
       with:
         dotnet-version: 9.0.x
 
@@ -37,7 +38,7 @@ jobs:
       run: chmod -R +x *.sh
 
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@v2
+      uses: github/codeql-action/init@v3
       with:
         languages: ${{ matrix.language }}
         # If you wish to specify custom queries, you can do so here or in a config file.
@@ -54,6 +55,6 @@ jobs:
       run: ./build-test.sh
 
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v2
+      uses: github/codeql-action/analyze@b8d3b6e8af63cde30bdc382c0bc28114f4346c88 # v2.28.1
       with:
         category: "/language:${{matrix.language}}"

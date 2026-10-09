@@ -133,7 +133,8 @@ namespace VirtualClient
         /// No-op in the test/in-memory disk manager. SAN policy changes are Windows-only.
         /// </summary>
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
-        public Task SetSanPolicyAsync(CancellationToken cancellationToken)
+        /// <param name="timeout">A timeout to apply to the operation.</param>
+        public Task SetSanPolicyAsync(CancellationToken cancellationToken, TimeSpan? timeout = null)
         {
             return Task.CompletedTask;
         }

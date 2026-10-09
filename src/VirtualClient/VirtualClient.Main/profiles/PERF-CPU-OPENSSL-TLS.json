@@ -3,7 +3,7 @@
     "Metadata": {
         "RecommendedMinimumExecutionTime": "03:00:00",
         "SupportedPlatforms": "linux-x64,linux-arm64,win-x64",
-        "SupportedOperatingSystems": "AzureLinux,CentOS,Debian,RedHat,Suse,Ubuntu,Windows"
+        "SupportedOperatingSystems": "AzureLinux,CentOS,Debian,OpenSuse,RedHat,Ubuntu,Windows"
     },
     "Parameters": {
         "ServerPort": 5000,

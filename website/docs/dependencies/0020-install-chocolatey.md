@@ -1,3 +1,7 @@
+---
+slug: /dependencies/install-chocolatey
+---
+
 # Install Chocolatey
 Virtual Client has a dependency component that can be added to a workload or monitor profile to install dependency packages from a package store. The following section illustrates the
 details for integrating this into the profile.
@@ -5,7 +9,7 @@ details for integrating this into the profile.
 - [Chocolatey Official Page](https://chocolatey.org/)
 - [Chocolatey Packages](https://community.chocolatey.org/packages)
 
-## Supported Platform/Architectures
+## Supported Platform-Architectures
 * win-x64
 * win-arm64
 

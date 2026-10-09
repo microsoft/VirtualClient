@@ -24,7 +24,7 @@ namespace VirtualClient.Actions
     [Category("Unit")]
     public class NCPSServerExecutorTests
     {
-        private static readonly string ExamplesDirectory = MockFixture.GetDirectory(typeof(NTttcpExecutorTests2), "Examples", "NCPS");
+        private static readonly string ExamplesDirectory = MockFixture.GetDirectory(typeof(NTttcpExecutorTests2), "test_examples", "NCPS");
 
         private MockFixture mockFixture;
         private DependencyPath mockPackage;

@@ -20,7 +20,7 @@ namespace VirtualClient.Monitors.UnitTests
         [Test]
         public void NvidiaSmiParserParsesExpectedMetricsFromC2CResults_Single_GPU()
         {
-            string outputPath = Path.Combine(MockFixture.GetDirectory(typeof(NvidiaSmiResultsParserUnitTests), "Examples", "nvidia-smi"), "query-c2c.txt");
+            string outputPath = Path.Combine(MockFixture.GetDirectory(typeof(NvidiaSmiResultsParserUnitTests), "test_examples", "nvidia-smi"), "query-c2c.txt");
             string exampleResults = File.ReadAllText(outputPath);
 
             IList<Metric> metrics = NvidiaSmiResultsParser.ParseC2CResults(exampleResults);
@@ -41,7 +41,7 @@ namespace VirtualClient.Monitors.UnitTests
         [Test]
         public void NvidiaSmiParserParsesExpectedMetricsFromC2CResults_Multiple_GPUs()
         {
-            string outputPath = Path.Combine(MockFixture.GetDirectory(typeof(NvidiaSmiResultsParserUnitTests), "Examples", "nvidia-smi"), "query-c2c-multiple-gpu.txt");
+            string outputPath = Path.Combine(MockFixture.GetDirectory(typeof(NvidiaSmiResultsParserUnitTests), "test_examples", "nvidia-smi"), "query-c2c-multiple-gpu.txt");
             string exampleResults = File.ReadAllText(outputPath);
 
             IList<Metric> metrics = NvidiaSmiResultsParser.ParseC2CResults(exampleResults);
@@ -75,7 +75,7 @@ namespace VirtualClient.Monitors.UnitTests
         [Test]
         public void NvidiaSmiParserParsesExpectedMetricsFromQueryResults_Scenario1xT4()
         {
-            string outputPath = Path.Combine(MockFixture.GetDirectory(typeof(NvidiaSmiResultsParserUnitTests), "Examples", "nvidia-smi"), "query-gpu-1xH100.csv");
+            string outputPath = Path.Combine(MockFixture.GetDirectory(typeof(NvidiaSmiResultsParserUnitTests), "test_examples", "nvidia-smi"), "query-gpu-1xH100.csv");
             string exampleResults = File.ReadAllText(outputPath);
 
             IList<Metric> metrics = NvidiaSmiResultsParser.ParseQueryResults(exampleResults);
@@ -119,7 +119,7 @@ namespace VirtualClient.Monitors.UnitTests
         [Test]
         public void NvidiaSmiParserParsesExpectedMetricsFromQueryResults_Scenario1xT4_2()
         {
-            string outputPath = Path.Combine(MockFixture.GetDirectory(typeof(NvidiaSmiResultsParserUnitTests), "Examples", "nvidia-smi"), "query-gpu-1xT4-NA.csv");
+            string outputPath = Path.Combine(MockFixture.GetDirectory(typeof(NvidiaSmiResultsParserUnitTests), "test_examples", "nvidia-smi"), "query-gpu-1xT4-NA.csv");
             string exampleResults = File.ReadAllText(outputPath);
 
             IList<Metric> metrics = NvidiaSmiResultsParser.ParseQueryResults(exampleResults);
@@ -163,7 +163,7 @@ namespace VirtualClient.Monitors.UnitTests
         [Test]
         public void NvidiaSmiParserParsesExpectedMetricsFromQueryResults_Scenario4xT4()
         {
-            string outputPath = Path.Combine(MockFixture.GetDirectory(typeof(NvidiaSmiResultsParserUnitTests), "Examples", "nvidia-smi"), "query-gpu-8xH100.csv");
+            string outputPath = Path.Combine(MockFixture.GetDirectory(typeof(NvidiaSmiResultsParserUnitTests), "test_examples", "nvidia-smi"), "query-gpu-8xH100.csv");
             string exampleResults = File.ReadAllText(outputPath);
 
             IList<Metric> metrics = NvidiaSmiResultsParser.ParseQueryResults(exampleResults);

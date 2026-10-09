@@ -49,7 +49,7 @@ namespace VirtualClient.Actions
                 { nameof(Compression7zipExecutor.Scenario), "mockScenario"}
             };
 
-            string exampleResults = MockFixture.ReadFile(MockFixture.ExamplesDirectory, "Compressor7zip", "Compressor7zipResultsExample.txt");
+            string exampleResults = MockFixture.ReadFile(MockFixture.TestExamplesDirectory, "Compressor7zip", "Compressor7zipResultsExample.txt");
             this.defaultOutput.Clear();
             this.defaultOutput.Append(exampleResults);
         }

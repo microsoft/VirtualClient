@@ -9,25 +9,26 @@
     "Metadata": {
         "RecommendedMinimumExecutionTime": "(8-cores)=04:00:00,(16-cores)=08:00:00,(64-cores)=10:00:00",
         "SupportedPlatforms": "linux-x64,linux-arm64,win-x64",
-        "SupportedOperatingSystems": "Azure Linux,CentOS,Debian,RedHat,Suse,Ubuntu,Windows",
+        "SupportedOperatingSystems": "AzureLinux,CentOS,Debian,OpenSuse,RedHat,Ubuntu,Windows",
         "Notes": "Using a private package 'speccpu.2017.1.1.9-danielbowers.zip' to enable support for speccpu on Ubuntu 24. SPEC CPU 2017 was not initially designed for win-arm64. Optional ProcessorAffinity is Linux-only: provide one distinct CPU ID per copy (e.g. 0-3 for Copies=4), install numactl, or leave empty to disable pinning.",
         "Limitations": "The following benchmarks don't work on Windows: 500, 502, 520, 523, 531"
     },
     "Parameters": {
-        "CompilerVersion": "",
+        "CompilerVersion": 13,
         "Iterations": 2,
+        "Benchmarks": "{calculate(\"{Platform}\".StartsWith(\"linux\") ? \"intrate\" : \"505 525 541 548 557\")}",
         "RunPeak": false,
         "Threads": "{LogicalCoreCount}",
         "Copies": "{LogicalCoreCount}",
         "ProcessorAffinity": "",
-        "BaseOptimizingFlags": "-g -O3 -march={calculate((\"{Platform}\".StartsWith(\"win\") || \"{Architecture}\" == \"x64\") ? \"native\" : \"armv8-a\")} -frecord-gcc-switches",
-        "PeakOptimizingFlags": "-g -Ofast -march={calculate((\"{Platform}\".StartsWith(\"win\") || \"{Architecture}\" == \"x64\") ? \"native\" : \"armv8-a\")} -flto -frecord-gcc-switches"
+        "BaseOptimizingFlags": "-O2 -march={calculate((\"{Architecture}\" == \"x64\") ? \"x86-64-v3\" : \"armv8.2-a\")} -flto -frecord-gcc-switches",
+        "PeakOptimizingFlags": "-O3 -march={calculate((\"{Architecture}\" == \"x64\") ? \"x86-64-v3\" : \"armv8.2-a\")} -flto -frecord-gcc-switches"
     },
     "Actions": [
         {
             "Type": "SpecCpuExecutor",
             "Parameters": {
-                "Scenario": "benchmark_500.perlbench_r",
+                "Scenario": "ExecuteSPECBenchmark",
                 "Iterations": "$.Parameters.Iterations",
                 "SpecProfile": "intrate",
                 "Benchmarks": "500",

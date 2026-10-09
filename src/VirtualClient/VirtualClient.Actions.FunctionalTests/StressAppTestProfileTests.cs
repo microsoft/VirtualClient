@@ -11,6 +11,7 @@ namespace VirtualClient.Actions
     using NUnit.Framework;
     using VirtualClient.Common;
     using VirtualClient.Contracts;
+    using VirtualClient.TestExtensions;
 
     [TestFixture]
     [Category("Functional")]
@@ -22,7 +23,7 @@ namespace VirtualClient.Actions
         public void SetupFixture()
         {
             this.fixture = new DependencyFixture();
-            ComponentTypeCache.Instance.LoadComponentTypes(TestDependencies.TestDirectory);
+            ComponentTypeCache.Instance.LoadComponentTypes(MockFixture.TestAssemblyDirectory);
         }
 
         [Test]
@@ -30,7 +31,7 @@ namespace VirtualClient.Actions
         public void StressAppTestWorkloadProfileParametersAreInlinedCorrectly(string profile, PlatformID platform)
         {
             this.fixture.Setup(platform);
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
+            using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(profile, this.fixture.Dependencies))
             {
                 WorkloadAssert.ParameterReferencesInlined(executor.Profile);
             }
@@ -54,7 +55,7 @@ namespace VirtualClient.Actions
                 return process;
             };
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
+            using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(profile, this.fixture.Dependencies))
             {
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None)
                     .ConfigureAwait(false);
@@ -84,7 +85,7 @@ namespace VirtualClient.Actions
             if (platform == PlatformID.Unix)
             {
                 this.fixture.SetupPackage("stressapptest", expectedFiles: @"linux-x64/stressapptest");
-                this.fixture.SetupFile("stressapptest", @"linux-x64/stressapptestLogs_1.txt", TestDependencies.GetResourceFileContents("Results_StressAppTest.txt"));                
+                this.fixture.SetupFile("stressapptest", @"linux-x64/stressapptestLogs_1.txt", MockFixture.ReadTestResourcesFile("Results_StressAppTest.txt"));                
             }
         }
     }

@@ -1,8 +1,12 @@
+---
+slug: /dependencies/wait-executor
+---
+
 # Wait Executor Dependency
 Virtual Client has a dependency component that can be added to a workload or monitor profile to wait for given amount of time between actions/dependencies steps in VC. The following section illustrates the
 details for integrating this into the profile.
 
-## Supported Platform/Architectures
+## Supported Platform-Architectures
 * linux-x64
 * linux-arm64
 * win-x64

@@ -117,7 +117,7 @@ namespace VirtualClient.Actions
             this.mockFixture.FileSystem.SetupGet(fs => fs.File).Returns(this.mockFixture.File.Object);
 
             string currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string resultsPath = Path.Combine(currentDirectory,"Examples", "StressNg", "StressNgCpuExample.yaml");
+            string resultsPath = Path.Combine(currentDirectory,"test_examples", "StressNg", "StressNgCpuExample.yaml");
             string results = File.ReadAllText(resultsPath);
 
             this.mockFixture.File.Setup(f => f.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(results);

@@ -4,7 +4,7 @@
     "Metadata": {
         "RecommendedMinimumExecutionTime": "(4-cores)=04:00:00,(16-cores)=10:00:00,(64-cores)=16:00:00",
         "SupportedPlatforms": "linux-x64,linux-arm64",
-        "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu",
+        "SupportedOperatingSystems": "AzureLinux,CentOS,Debian,OpenSuse,RedHat,Ubuntu",
         "Notes_Runtime": "The benchmark takes approximately 6 to 8 minutes per 1 GB of RAM targeted. The default profile uses 25% of the total RAM."
     },
     "Parameters": {

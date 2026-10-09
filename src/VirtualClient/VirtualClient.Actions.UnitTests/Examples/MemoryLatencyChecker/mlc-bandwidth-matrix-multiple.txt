@@ -1,0 +1,12 @@
+﻿Intel(R) Memory Latency Checker - v3.9a
+
+Measuring Memory Bandwidths between nodes within system 
+Bandwidths are in MB/sec (1 MB/sec = 1,000,000 Bytes/sec)
+Using all the threads from each core if Hyper-threading is enabled
+Using Read-only traffic type
+		Numa node
+Numa node	     0	     1	     2	     3	
+       0	22309.4	27217.5	26673.9	14753.8	
+       1	23013.1	28811.3	28358.4	14649.6	
+       2	22348.3	28319.6	28454.4	14748.9	
+       3	14088.9	14503.1	15001.2	29195.3	

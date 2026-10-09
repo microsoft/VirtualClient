@@ -9,7 +9,6 @@ const config = {
   url: 'https://microsoft.github.io',
   baseUrl: '/VirtualClient/',
   onBrokenLinks: 'warn',
-  onBrokenMarkdownLinks: 'warn',
   favicon: 'img/favicon.ico',
 
   // GitHub pages deployment config.

@@ -1,3 +1,7 @@
+---
+slug: /developing/develop-guide
+---
+
 # Developer Guide
 Welcome to the Virtual Client development team! The Virtual Client is a .NET 8.0 command line application written in C# that offers both cross-platform and multi-architecture support. As such, the 
 application can run on both Windows and Linux operating systems as well as on hardware with x64 and arm64 architecture CPUs/processors. The following documentation covers details, concepts and 
@@ -12,7 +16,7 @@ these first.
 
 If you are developing extensions to the Virtual Client platform in another repo, the following documentation can get you started.
 
-* [Developing Virtual Client Extensions](./0020-develop-extensions.md)
+* [Developing Virtual Client Extensions](/docs/developing/develop-extensions)
 
 
 After going through this developer guide, there are links code examples at the bottom of this document to get you hands-on experience.
@@ -110,7 +114,7 @@ important thing is to keep things as simple as possible.
   in place protecting the correct functioning of the logic for the future. There are plenty of good examples and patterns in the source
   code to follow.
 
-  * [Testing Guide](./0090-testing.md)
+  * [Testing Guide](/docs/developing/testing)
 
 * **Functional tests are required for new profiles.**  
   Functional tests are similar to unit tests except that they focus on the correct integration of all components. When the VC Team creates new
@@ -123,7 +127,7 @@ important thing is to keep things as simple as possible.
   folder. Good documentation is an important part of the quality bar that the team holds ensuring that users/customers can always learn more
   about the Virtual Client. There are patterns in place within the documentation to guide developers through the process.
 
-* **Components should be implemented to support ALL possible platform/architectures**  
+* **Components should be implemented to support ALL possible platform-architectures**  
   The Virtual Client is generally designed to run in as many scenarios as possible. To do so, a developer has to consider whether the component
   they are onboarding can run on Windows or Linux, x64 (Intel, AMD) or ARM64 architecture. Many times the .NET framework itself provides for the
   ability to run cross-OS platform/cross-CPU architecture. However, there are times when the logic must implement support in a slightly different
@@ -298,7 +302,7 @@ for functional correctness.
 
 * **API Clients**  
   Certain workload scenarios require multiple systems to operate (e.g. networking workloads, client/server). These workloads have a requirement to communicate
-  with each other to be able to synchronize client-side executions with server-side expectations. The Virtual Client uses an [environment layout](../guides/0020-client-server.md) provided on
+  with each other to be able to synchronize client-side executions with server-side expectations. The Virtual Client uses an [environment layout](/docs/guides/client-server) provided on
   the command line to determine the IP addresses of other instances. API client creation and management is encapsulated in the following interfaces/classes:
 
   * IApiClientManager
@@ -554,7 +558,7 @@ exhaustive list but does illustrate things that are "fundamental" to development
   it has its own developer guidance documentation. Follow the recommendations in the documentation to ensure high quality exceptions and error information is
   always provided to users of the Virtual Client.
 
-  * [Virtual Client Error Handling Developer Guide](./0070-error-handling.md)
+  * [Virtual Client Error Handling Developer Guide](/docs/developing/error-handling)
 
 ## General Code Flow
 The following section provides information on the general flow of the code for a Virtual Client component. This is helpful to understand when developing new
@@ -593,7 +597,7 @@ method is required to be implemented. The other methods are optional and may be 
 * **IsSupported**  
   Method is executed to determin whether or not the component should be executed on the system. Reasons why a component might not be valid/supported
   for a given system include:
-  * The component or its dependencies cannot run on the current platform/architecture (e.g. win-arm64, linux-arm64).
+  * The component or its dependencies cannot run on the current platform-architecture (e.g. win-arm64, linux-arm64).
   * The component or its dependencies cannot run on the current distro of the operating system (e.g. Ubuntu, Redhat).
 
 * **InitializeAsync**  
@@ -605,7 +609,7 @@ method is required to be implemented. The other methods are optional and may be 
 * **Validate**  
   Method allows the developer to validate the component and parameters that were passed to the component in the constructor. This happens after
   the initialization step to allow for any parameters that have "calculated" or replacement values to be evaluated. The developer should call the
-  "EvaluateParametersAsync" method to apply any well-known placeholders to the parameters. See the documentation on [profiles](https://microsoft.github.io/VirtualClient/docs/guides/0011-profiles/)
+  "EvaluateParametersAsync" method to apply any well-known placeholders to the parameters. See the documentation on [profiles](/docs/guides/profiles/)
   for more information on parameter references and well-known parameter values.
 
 * **ExecuteAsync**  
@@ -743,7 +747,7 @@ logging is routed correctly. There are 3 different categories of telemetry in th
   hardware and workload/monitor scenarios. In fact certain information about the host, operating system, hardware and profile workload/monitor is included in
   the output of the Virtual Client by default.
 
-  * [Metadata Contract Details and Examples](../guides/0040-telemetry.md)  
+  * [Metadata Contract Details and Examples](/docs/guides/telemetry)  
     Familiarize yourself with the different categories of metadata available (e.g. default, dependencies, host, runtime, scenario).
 
   * Persisted/Global Metadata  

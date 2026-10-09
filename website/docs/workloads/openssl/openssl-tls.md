@@ -1,3 +1,7 @@
+---
+slug: /workloads/openssl-tls
+---
+
 # OpenSSL-TLS
 This version workload sets up OpenSSL client and server processes and measures the file throughput at the client side. 
 OpenSSL offers a pair of benchmarking tools to measure the network performance of TLS connections: `openssl s_server_` and `openssl s_time`.
@@ -27,7 +31,7 @@ This command requests an html file of size 1K and uses AES_128_GCM_SHA256 algori
 
 s_server/s_time can be used with SSL/TLS different versions, we decided to restrict to Tls1_3 as this is the most widely used cyphersuite currently.
 
-Difference between Tls1_2 and Tls1_3 is documented [here](Tls12vsTls13.md).
+Difference between Tls1_2 and Tls1_3 is documented [here](/docs/workloads/openssl-tls12-vs-tls13).
 
 The following Tls1_3 cryptographic cypher suites are measured.
 

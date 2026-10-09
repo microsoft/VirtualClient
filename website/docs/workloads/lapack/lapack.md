@@ -1,3 +1,7 @@
+---
+slug: /workloads/lapack
+---
+
 # LAPACK
 LAPACK 3.10.0 is an open-source set of libraries written in Fortran 90 and provides routines for solving systems of simultaneous linear equations,
 least-squares solutions of linear systems of equations, eigenvalue problems, and singular value problems. 

@@ -1,11 +1,15 @@
+---
+slug: /workloads/sysbench-addendum
+---
+
 # Sysbench Client/Server Addendum
 
 All SQL workloads tend to have a lot of moving parts and complexities. Below details a comprehensive look into the lifecycle of this workload, in order to offer a clearer look as to what is 
 happening under the hood when VC runs the Sysbench workload on a MySQL server.
 
 ## MySQL Database Installation and Configuration
-Using the [LinuxPackageInstallation](../../dependencies/0060-install-mysql.md), [MySQLServerInstallation](../../dependencies/0060-install-mysql.md), and 
-[MySQLServerConfiguration](../../dependencies/0060-configure-mysql.md) dependencies, VC can install and create a fresh, new database for the purpose of running Sysbench. 
+Using the [LinuxPackageInstallation](/docs/dependencies/install-mysql), [MySQLServerInstallation](/docs/dependencies/install-mysql), and 
+[MySQLServerConfiguration](/docs/dependencies/configure-mysql) dependencies, VC can install and create a fresh, new database for the purpose of running Sysbench. 
 Additionally, a user can provide their own database and skip database creation. However, if opting for this, take note that Sysbench will only successfully run against 
 databases with its expected table naming conventions (ie. sbtest1, sbtest2, ...) and schema. That is, Sysbench will not run against any random database. Its workload scripts 
 are specifically designed to recognize databases of a certain setup.
@@ -44,12 +48,12 @@ sudo apt-get purge --auto-remove mysql-server
 ```
 
 ## Setting Up Disks
-A user will likely want to run Sysbench on one or multiple disks. In that case, VC is able to [FormatDisks](../../dependencies/0070-format-disks.md) and 
-[MountDisks](../../dependencies/0071-mount-disks.md) for the user. VC will then use the mount points it created to store the testing database. VC will run Sysbench on 
+A user will likely want to run Sysbench on one or multiple disks. In that case, VC is able to [FormatDisks](/docs/dependencies/format-disks) and 
+[MountDisks](/docs/dependencies/mount-disks) for the user. VC will then use the mount points it created to store the testing database. VC will run Sysbench on 
 up to five disks.
 
 ## About Sysbench
-Sysbench prepares queries to test a MySQL server. Sysbench has various benchmark types (executed by lua scripts) it can run against the server, listed [here](./sysbench.md).
+Sysbench prepares queries to test a MySQL server. Sysbench has various benchmark types (executed by lua scripts) it can run against the server, listed [here](/docs/workloads/sysbench).
 Sysbench exposes parameters that allow a user to execute the workload in single-server and client-server scenarios. However, any disk configuration must be done by the user themselves. 
 That is, Sysbench does not expose any parameter to distribute the tables to one or multiple disks (ie. a data directory). If MySQL is not setup beforehand to prepare the server to put 
 the database on one or multiple disks, Sysbench will go ahead and place the tables in the default location, the OS disk. Sysbench also configures a few parameters, covered in depth below.
@@ -64,7 +68,7 @@ the database on one or multiple disks, Sysbench will go ahead and place the tabl
 
 * **RecordCount and NumTables**  
   Sysbench does not configure its database by size, only by record and table counts. The number of records can be configured in the Default scenario, and can be programmatically determined in the 
-  Balanced Scenario. More on what each scenario offers can be found in the [profiles section](./sysbench-profiles.md). Note: the select_random_* workloads only run on 1 table.
+  Balanced Scenario. More on what each scenario offers can be found in the [profiles section](/docs/workloads/sysbench-profiles). Note: the select_random_* workloads only run on 1 table.
 
 * **Duration**  
   Recommended execution time is 20 minutes; it is advised to run the workload for at least 10 to 15 minutes for stable, consistent results.

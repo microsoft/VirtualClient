@@ -14,6 +14,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Actions.Memtier;
     using VirtualClient.Common;
     using VirtualClient.Contracts;
+    using VirtualClient.TestExtensions;
 
     [TestFixture]
     [Category("Functional")]
@@ -30,7 +31,7 @@ namespace VirtualClient.Actions
             this.clientAgentId = $"{Environment.MachineName}-Client";
             this.serverAgentId = $"{Environment.MachineName}-Server";
 
-            ComponentTypeCache.Instance.LoadComponentTypes(TestDependencies.TestDirectory);
+            ComponentTypeCache.Instance.LoadComponentTypes(MockFixture.TestAssemblyDirectory);
 
             this.mockFixture.Setup(PlatformID.Unix, Architecture.X64, this.clientAgentId).SetupLayout(
                 new ClientInstance(this.clientAgentId, "1.2.3.4", "Client"),
@@ -46,7 +47,7 @@ namespace VirtualClient.Actions
             // We ensure the Client workload package does not exist.
             this.mockFixture.PackageManager.Clear();
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
             {
                 executor.ExecuteDependencies = false;
 
@@ -87,13 +88,13 @@ namespace VirtualClient.Actions
 
                 if (arguments?.Contains("memtier_benchmark", StringComparison.OrdinalIgnoreCase) == true)
                 {
-                    process.StandardOutput.Append(TestDependencies.GetResourceFileContents("Results_MemcachedMemtier.txt"));
+                    process.StandardOutput.Append(MockFixture.ReadTestResourcesFile("Results_MemcachedMemtier.txt"));
                 }
 
                 return process;
             };
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
             {
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None)
                     .ConfigureAwait(false);

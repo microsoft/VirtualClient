@@ -1,3 +1,7 @@
+---
+slug: /workloads/specjvm
+---
+
 # SPECjvm
 The SPECjvm® 2008 benchmark is a suite for measuring the performance of a Java Runtime Environment (JRE). 
 It contains several real-life applications and benchmarks focusing on core Java functionality. 

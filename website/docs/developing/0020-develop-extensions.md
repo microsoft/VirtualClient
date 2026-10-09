@@ -1,11 +1,15 @@
+---
+slug: /developing/develop-extensions
+---
+
 # Developing Extensions
 The following sections cover the fundamentals to consider when developing extensions to the Virtual Client. Extensions refers to profiles or component
 binaries/.dlls containing actions, monitors, dependency handlers etc... that are developed in a separate repo/location than the Virtual Client platform/core
 repo. Extensions allow development teams to add features to the Virtual Client runtime platform that are specialized towards their team's needs and charter.
 Before getting started, it is helpful to familiarize yourself with the Virtual Client platform design and concepts.
 
-* [General Developer Guide](./0010-develop-guide.md)
-* [Integrating Extensions at Runtime](../guides/0221-usage-extensions.md)
+* [General Developer Guide](/docs/developing/develop-guide)
+* [Integrating Extensions at Runtime](/docs/guides/usage-extensions)
 
 The following example extensions repo can be used for reference to the details described within this guide.
 
@@ -87,7 +91,7 @@ binaries, scripts etc... This is an important concept both for producing repeata
 
 
 For extensions packages, the following illustrates the expected folder structure and contents. Note that you do not have to compile your libraries
-specifically for the platform/architectures noted below. Compilation against 'AnyCPU' is sufficient to keep things simple. An extensions package
+specifically for the platform-architectures noted below. Compilation against 'AnyCPU' is sufficient to keep things simple. An extensions package
 will have the following content.
 
 * **Package Definition File**  
@@ -110,11 +114,11 @@ will have the following content.
   ```
 
 * **Profile Extensions**  
-  Profile extensions are not required. If they exist, the files should be placed inside of the appropriate folder for each platform/architecture supported 
+  Profile extensions are not required. If they exist, the files should be placed inside of the appropriate folder for each platform-architecture supported 
   (e.g. win-x64, linux-x64) in a folder named **profiles**.
 
 * **Binary/.dll Extensions**  
-   Binary extensions are not required. If they exist, the binary/.dll extensions should be placed inside of the appropriate folder for each platform/architecture supported 
+   Binary extensions are not required. If they exist, the binary/.dll extensions should be placed inside of the appropriate folder for each platform-architecture supported 
   (e.g. win-x64, linux-x64).
 
   The following illustrates the folder structure expected for an extensions package called 'crc.vc.extensions'.
@@ -225,7 +229,7 @@ locations (normal operation) as well as within these alternate locations.
 
 #### Supported Environment Variables
 The following environment variables can be used to define alternate locations for dependencies. See the 
-[Usage Examples](https://microsoft.github.io/VirtualClient/docs/guides/0200-usage-examples/) documentation for the full set of supported environment variables.
+[Usage Examples](/docs/guides/usage-examples/) documentation for the full set of supported environment variables.
 
 * **VC_LIBRARY_PATH**   
   Defines 1 or more path locations where extensions assemblies/.dlls exist and that should be loaded at runtime. Multiple directory paths can be defined separated
@@ -325,7 +329,7 @@ The developer can choose to use a custom profile for bootstrapping/installing ex
 This next section is going to cover the topic of debugging Virtual Client extensions. It is very helpful at times when doing development work to have
 the ability to run the Virtual Client runtime executable while enabling the ability to step through the code line by line. For this section, we will be
 looking at how to do this using the Visual Studio IDE and facilities that it has to make debugging easier. Make sure to review the section "Debugging Virtual Client Code"
-at the bottom of the [General Developer Guide](./0010-develop-guide.md) for more information on debugging.
+at the bottom of the [General Developer Guide](/docs/developing/develop-guide) for more information on debugging.
 
 * **Debug Using Unit/Functional Tests**  
   This option is documented in the general developer guide. The technique is the same for debugging extensions as it is for any other component.

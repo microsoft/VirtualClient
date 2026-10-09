@@ -21,7 +21,7 @@ namespace VirtualClient.Actions
         public void Setup()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, @"Examples", "DotNetRuntimeResultsExample.txt");
+            string outputPath = Path.Combine(workingDirectory, @"test_examples", "DotNetRuntimeResultsExample.txt");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new DotNetRuntimeMetricsParser(this.rawText);
         }
@@ -45,7 +45,7 @@ namespace VirtualClient.Actions
         public void DotNetRuntimeParserThrowIfInvalidOutputFormat()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string IncorrectDotNetoutputPath =Path.Combine(workingDirectory, @"Examples", "IncorrectDotNetRuntimeResultsExample.txt");
+            string IncorrectDotNetoutputPath =Path.Combine(workingDirectory, @"test_examples", "IncorrectDotNetRuntimeResultsExample.txt");
             this.rawText = File.ReadAllText(IncorrectDotNetoutputPath);
             this.testParser = new DotNetRuntimeMetricsParser(this.rawText);
             SchemaException exception = Assert.Throws<SchemaException>(() => this.testParser.Parse());

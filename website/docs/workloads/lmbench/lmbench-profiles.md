@@ -1,7 +1,11 @@
-# LMbench Workload Profiles
+---
+slug: /workloads/lmbench-profiles
+---
+
+# LMbench Profiles
 The following profiles run customer-representative or benchmarking scenarios using the LMbench workload.  
 
-* [Workload Details](./lmbench.md)  
+* [Workload Details](/docs/workloads/lmbench)  
 
 ## PERF-MEM-LMBENCH.json
 Runs a memory-intensive workload using the LMbench toolset to test the performance of the system RAM/memory. This profile is designed to identify general/broad 
@@ -9,19 +13,16 @@ regressions when compared against a baseline.
 
 * [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-MEM-LMBENCH.json)
 
-* **Supported Platform/Architectures**
+* **Supported Platform-Architectures**
   * linux-x64
   * linux-arm64
-
-* **Supports Disconnected Scenarios**  
-  * No. Internet connection required.
 
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
   * Internet connection.
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
-  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+  * [Installing Dependencies](/docs/category/dependencies/)
 
 * **Profile Parameters**  
   The following parameters can be optionally supplied on the command line to modify the behaviors of the workload.

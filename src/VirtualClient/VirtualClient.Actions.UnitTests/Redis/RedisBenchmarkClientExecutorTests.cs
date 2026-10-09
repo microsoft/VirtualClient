@@ -50,7 +50,7 @@ namespace VirtualClient.Actions
                 .ReturnsAsync(this.mockPackage);
 
             this.fixture.FileSystem.Setup(fe => fe.File.Exists(It.IsAny<string>())).Returns(true);
-            this.results = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, "Examples", "Redis", "RedisBenchmarkResults.txt"));
+            this.results = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, "test_examples", "Redis", "RedisBenchmarkResults.txt"));
 
             this.fixture.File.Setup(f => f.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(this.results);

@@ -5,13 +5,9 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
-    using System.Net;
-    using System.Threading;
-    using System.Threading.Tasks;
     using NUnit.Framework;
-    using VirtualClient.Common;
     using VirtualClient.Contracts;
+    using VirtualClient.TestExtensions;
 
     [TestFixture]
     [Category("Functional")]
@@ -27,7 +23,7 @@ namespace VirtualClient.Actions
             this.clientAgentId = $"{Environment.MachineName}-Client";
             this.serverAgentId = $"{Environment.MachineName}-Server";
 
-            ComponentTypeCache.Instance.LoadComponentTypes(TestDependencies.TestDirectory);
+            ComponentTypeCache.Instance.LoadComponentTypes(MockFixture.TestAssemblyDirectory);
         }
 
         [SetUp]
@@ -45,7 +41,7 @@ namespace VirtualClient.Actions
                 new ClientInstance(this.clientAgentId, "1.2.3.5", ClientRole.Client),
                 new ClientInstance(this.serverAgentId, "1.2.3.4", ClientRole.Server));
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
             {
                 WorkloadAssert.ParameterReferencesInlined(executor.Profile);
             }
@@ -66,7 +62,7 @@ namespace VirtualClient.Actions
 
             var clientPrams = new List<string> { "PackageName", "Role", "Timeout", "TestDuration", "FileSizeInKB", "Connection", "ThreadCount", "CommandArguments", "MetricScenario", "Scenario" };
 
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
             {
                 foreach (var actionBlock in executor.Profile.Actions)
                 {

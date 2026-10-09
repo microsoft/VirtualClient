@@ -1,3 +1,7 @@
+---
+slug: /workloads/stressapptest
+---
+
 # StressAppTest
 Stressful Application Test (or stressapptest, its unix name) is a memory interface test.
 It tries to maximize randomized traffic to memory from processor and I/O, with the intent of creating a realistic high load situation in order

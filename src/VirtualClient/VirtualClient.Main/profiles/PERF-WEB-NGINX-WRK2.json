@@ -3,7 +3,7 @@
     "Metadata": {
         "RecommendedMinimumExecutionTime": "01:00:00",
         "SupportedPlatforms": "linux-x64",
-        "SupportedOperatingSystems": "Ubuntu 22"
+        "SupportedOperatingSystems": "Ubuntu"
     },
     "Parameters": {
         "TestDuration": "00:02:30",

@@ -1,9 +1,11 @@
+---
+slug: /developing/develop-script-extensions
+---
+
 # Developing Script Extensions
 The use of scripting languages (e.g. Python, PowerShell) is a popular choice for software and system engineers responsible for automating test coverage
 on bare metal hardware systems. The Virtual Client platform provides runtime support for running scripts directly from the command line and additionally 
 supports a controller/agent workflow for remote execution through SSH sessions on both Linux and Windows systems.
-
-[Controller/Agent Overview](../guides/0021-controller-agent.md)
 
 The following document provides a set of general guidelines to consider when developing script-based automation extensions so that they can be readily integrated
 into the Virtual Client platform. 
@@ -234,8 +236,8 @@ script-based extensions development process. The following illustrates an exampl
       # Toolsets go in 'binaries' subdirectory
       /binaries
 
-          # Toolsets for the specific platform/architecture (e.g. linux-x64) go in
-          # a subdirectory named for that platform/architecture.
+          # Toolsets for the specific platform-architecture (e.g. linux-x64) go in
+          # a subdirectory named for that platform-architecture.
           /customutil
               # Toolsets that work on Linux OS and ARM64 CPU architectures.
               /linux-arm64
@@ -288,7 +290,6 @@ script-based extensions development process. The following illustrates an exampl
           - install-debug-toolsets.sh
           - debug-toolsets.deb
   ```
-
 
 
 

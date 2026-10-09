@@ -1,3 +1,7 @@
+---
+slug: /workloads/sysbench
+---
+
 # Sysbench
 Sysbench is an open-source multi-threaded database benchmark tool for database online transacation processing (OLTP) operations against a
 MySQL database.

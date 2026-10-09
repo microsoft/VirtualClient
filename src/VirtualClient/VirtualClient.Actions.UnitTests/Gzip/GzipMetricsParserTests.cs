@@ -26,7 +26,7 @@ namespace VirtualClient.Actions
         public void Setup()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "Gzip", "GzipResultsExample.txt");
+            string outputPath = Path.Combine(workingDirectory, "test_examples", "Gzip", "GzipResultsExample.txt");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new GzipMetricsParser(this.rawText);
         }
@@ -61,7 +61,7 @@ namespace VirtualClient.Actions
         public void GzipResultsParserThrowsWhenInvalidResultsAreProvided()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string incorrectGzipoutputPath = Path.Combine(workingDirectory, "Examples", "Gzip", "GzipResultsInvalidExample.txt");
+            string incorrectGzipoutputPath = Path.Combine(workingDirectory, "test_examples", "Gzip", "GzipResultsInvalidExample.txt");
             this.rawText = File.ReadAllText(incorrectGzipoutputPath);
             this.testParser = new GzipMetricsParser(this.rawText);
             SchemaException exception = Assert.Throws<SchemaException>(() => this.testParser.Parse());

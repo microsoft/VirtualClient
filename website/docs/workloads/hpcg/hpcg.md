@@ -1,3 +1,7 @@
+---
+slug: /workloads/hpcg
+---
+
 # HPCG
 HPCG is a software package that performs a fixed number of multigrid preconditioned (using a symmetric Gauss-Seidel smoother) conjugate gradient (PCG) 
 iterations using double precision (64 bit) floating point values.

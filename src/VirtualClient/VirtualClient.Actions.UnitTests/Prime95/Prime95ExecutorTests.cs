@@ -18,7 +18,7 @@ namespace VirtualClient.Actions
     [Category("Unit")]
     public class Prime95ExecutorTests
     {
-        private static readonly string ExamplesDirectory = MockFixture.GetDirectory(typeof(Prime95ExecutorTests), "Examples", "Prime95");
+        private static readonly string ExamplesDirectory = MockFixture.GetDirectory(typeof(Prime95ExecutorTests), "test_examples", "Prime95");
 
         private MockFixture mockFixture;
         private DependencyPath mockPackage;

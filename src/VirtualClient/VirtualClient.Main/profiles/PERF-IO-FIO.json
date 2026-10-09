@@ -3,7 +3,8 @@
     "Metadata": {
         "RecommendedMinimumExecutionTime": "02:00:00",
         "SupportedPlatforms": "linux-x64,linux-arm64,win-x64",
-        "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows"
+        "SupportedOperatingSystems": "AzureLinux,CentOS,Debian,OpenSuse,RedHat,Ubuntu,Windows",
+        "Documentation": "https://microsoft.github.io/VirtualClient/docs/workloads/fio/"
     },
     "Parameters": {
         "DiskFillSize": "500G",
@@ -14,7 +15,8 @@
         "Engine": "{calculate(\"{Platform}\".StartsWith(\"linux\") ? \"libaio\" : \"windowsaio\")}",
         "ThreadCount": "{calculate({LogicalCoreCount}/2)}",
         "QueueDepth": "{calculate(512/{ThreadCount})}",
-        "ProcessModel": "SingleProcess"
+        "ProcessModel": "SingleProcess",
+        "RawDisk": false
     },
     "Actions": [
         {
@@ -29,6 +31,7 @@
                 "DiskFill": true,
                 "DiskFillSize": "$.Parameters.DiskFillSize",
                 "ProcessModel": "SingleProcessPerDisk",
+                "RawDisk": "$.Parameters.RawDisk",
                 "DeleteTestFilesOnFinish": false
             }
         },
@@ -46,6 +49,7 @@
                 "FileSize": "$.Parameters.FileSize",
                 "Duration": "$.Parameters.Duration",
                 "ProcessModel": "$.Parameters.ProcessModel",
+                "RawDisk": "$.Parameters.RawDisk",
                 "DeleteTestFilesOnFinish": false,
                 "Tags": "IO,FIO,randwrite"
             }
@@ -64,6 +68,7 @@
                 "FileSize": "$.Parameters.FileSize",
                 "Duration": "$.Parameters.Duration",
                 "ProcessModel": "$.Parameters.ProcessModel",
+                "RawDisk": "$.Parameters.RawDisk",
                 "DeleteTestFilesOnFinish": false,
                 "Tags": "IO,FIO,randwrite"
             }
@@ -82,6 +87,7 @@
                 "FileSize": "$.Parameters.FileSize",
                 "Duration": "$.Parameters.Duration",
                 "ProcessModel": "$.Parameters.ProcessModel",
+                "RawDisk": "$.Parameters.RawDisk",
                 "DeleteTestFilesOnFinish": false,
                 "Tags": "IO,FIO,randwrite"
             }
@@ -100,6 +106,7 @@
                 "FileSize": "$.Parameters.FileSize",
                 "Duration": "$.Parameters.Duration",
                 "ProcessModel": "$.Parameters.ProcessModel",
+                "RawDisk": "$.Parameters.RawDisk",
                 "DeleteTestFilesOnFinish": false,
                 "Tags": "IO,FIO,randwrite"
             }
@@ -118,6 +125,7 @@
                 "FileSize": "$.Parameters.FileSize",
                 "Duration": "$.Parameters.Duration",
                 "ProcessModel": "$.Parameters.ProcessModel",
+                "RawDisk": "$.Parameters.RawDisk",
                 "DeleteTestFilesOnFinish": false,
                 "Tags": "IO,FIO,randwrite"
             }
@@ -136,6 +144,7 @@
                 "FileSize": "$.Parameters.FileSize",
                 "Duration": "$.Parameters.Duration",
                 "ProcessModel": "$.Parameters.ProcessModel",
+                "RawDisk": "$.Parameters.RawDisk",
                 "DeleteTestFilesOnFinish": false,
                 "Tags": "IO,FIO,write"
             }
@@ -154,6 +163,7 @@
                 "FileSize": "$.Parameters.FileSize",
                 "Duration": "$.Parameters.Duration",
                 "ProcessModel": "$.Parameters.ProcessModel",
+                "RawDisk": "$.Parameters.RawDisk",
                 "DeleteTestFilesOnFinish": false,
                 "Tags": "IO,FIO,write"
             }
@@ -172,6 +182,7 @@
                 "FileSize": "$.Parameters.FileSize",
                 "Duration": "$.Parameters.Duration",
                 "ProcessModel": "$.Parameters.ProcessModel",
+                "RawDisk": "$.Parameters.RawDisk",
                 "DeleteTestFilesOnFinish": false,
                 "Tags": "IO,FIO,write"
             }
@@ -190,6 +201,7 @@
                 "FileSize": "$.Parameters.FileSize",
                 "Duration": "$.Parameters.Duration",
                 "ProcessModel": "$.Parameters.ProcessModel",
+                "RawDisk": "$.Parameters.RawDisk",
                 "DeleteTestFilesOnFinish": false,
                 "Tags": "IO,FIO,write"
             }
@@ -208,6 +220,7 @@
                 "FileSize": "$.Parameters.FileSize",
                 "Duration": "$.Parameters.Duration",
                 "ProcessModel": "$.Parameters.ProcessModel",
+                "RawDisk": "$.Parameters.RawDisk",
                 "DeleteTestFilesOnFinish": false,
                 "Tags": "IO,FIO,write"
             }
@@ -226,6 +239,7 @@
                 "FileSize": "$.Parameters.FileSize",
                 "Duration": "$.Parameters.Duration",
                 "ProcessModel": "$.Parameters.ProcessModel",
+                "RawDisk": "$.Parameters.RawDisk",
                 "DeleteTestFilesOnFinish": false,
                 "Tags": "IO,FIO,randread"
             }
@@ -244,6 +258,7 @@
                 "FileSize": "$.Parameters.FileSize",
                 "Duration": "$.Parameters.Duration",
                 "ProcessModel": "$.Parameters.ProcessModel",
+                "RawDisk": "$.Parameters.RawDisk",
                 "DeleteTestFilesOnFinish": false,
                 "Tags": "IO,FIO,randread"
             }
@@ -262,6 +277,7 @@
                 "FileSize": "$.Parameters.FileSize",
                 "Duration": "$.Parameters.Duration",
                 "ProcessModel": "$.Parameters.ProcessModel",
+                "RawDisk": "$.Parameters.RawDisk",
                 "DeleteTestFilesOnFinish": false,
                 "Tags": "IO,FIO,randread"
             }
@@ -280,6 +296,7 @@
                 "FileSize": "$.Parameters.FileSize",
                 "Duration": "$.Parameters.Duration",
                 "ProcessModel": "$.Parameters.ProcessModel",
+                "RawDisk": "$.Parameters.RawDisk",
                 "DeleteTestFilesOnFinish": false,
                 "Tags": "IO,FIO,randread"
             }
@@ -298,6 +315,7 @@
                 "FileSize": "$.Parameters.FileSize",
                 "Duration": "$.Parameters.Duration",
                 "ProcessModel": "$.Parameters.ProcessModel",
+                "RawDisk": "$.Parameters.RawDisk",
                 "DeleteTestFilesOnFinish": false,
                 "Tags": "IO,FIO,randread"
             }
@@ -317,6 +335,7 @@
                 "FileSize": "$.Parameters.FileSize",
                 "Duration": "$.Parameters.Duration",
                 "ProcessModel": "$.Parameters.ProcessModel",
+                "RawDisk": "$.Parameters.RawDisk",
                 "DeleteTestFilesOnFinish": false,
                 "Tags": "IO,FIO,read"
             }
@@ -335,6 +354,7 @@
                 "FileSize": "$.Parameters.FileSize",
                 "Duration": "$.Parameters.Duration",
                 "ProcessModel": "$.Parameters.ProcessModel",
+                "RawDisk": "$.Parameters.RawDisk",
                 "DeleteTestFilesOnFinish": false,
                 "Tags": "IO,FIO,read"
             }
@@ -353,6 +373,7 @@
                 "FileSize": "$.Parameters.FileSize",
                 "Duration": "$.Parameters.Duration",
                 "ProcessModel": "$.Parameters.ProcessModel",
+                "RawDisk": "$.Parameters.RawDisk",
                 "DeleteTestFilesOnFinish": false,
                 "Tags": "IO,FIO,read"
             }
@@ -371,6 +392,7 @@
                 "FileSize": "$.Parameters.FileSize",
                 "Duration": "$.Parameters.Duration",
                 "ProcessModel": "$.Parameters.ProcessModel",
+                "RawDisk": "$.Parameters.RawDisk",
                 "DeleteTestFilesOnFinish": false,
                 "Tags": "IO,FIO,read"
             }
@@ -389,6 +411,7 @@
                 "FileSize": "$.Parameters.FileSize",
                 "Duration": "$.Parameters.Duration",
                 "ProcessModel": "$.Parameters.ProcessModel",
+                "RawDisk": "$.Parameters.RawDisk",
                 "DeleteTestFilesOnFinish": false,
                 "Tags": "IO,FIO,read"
             }
@@ -405,6 +428,7 @@
                 "TestFocus": "DataIntegrity",
                 "FileSize": "$.Parameters.DataIntegrityFileSize",
                 "ProcessModel": "$.Parameters.ProcessModel",
+                "RawDisk": "$.Parameters.RawDisk",
                 "DeleteTestFilesOnFinish": true,
                 "Tags": "IO,FIO,randwrite,data integrity"
             }
@@ -421,6 +445,7 @@
                 "TestFocus": "DataIntegrity",
                 "FileSize": "$.Parameters.DataIntegrityFileSize",
                 "ProcessModel": "$.Parameters.ProcessModel",
+                "RawDisk": "$.Parameters.RawDisk",
                 "DeleteTestFilesOnFinish": true,
                 "Tags": "IO,FIO,randwrite,data integrity"
             }
@@ -437,6 +462,7 @@
                 "TestFocus": "DataIntegrity",
                 "FileSize": "$.Parameters.DataIntegrityFileSize",
                 "ProcessModel": "$.Parameters.ProcessModel",
+                "RawDisk": "$.Parameters.RawDisk",
                 "DeleteTestFilesOnFinish": true,
                 "Tags": "IO,FIO,randwrite,data integrity"
             }
@@ -453,6 +479,7 @@
                 "TestFocus": "DataIntegrity",
                 "FileSize": "$.Parameters.DataIntegrityFileSize",
                 "ProcessModel": "$.Parameters.ProcessModel",
+                "RawDisk": "$.Parameters.RawDisk",
                 "DeleteTestFilesOnFinish": true,
                 "Tags": "IO,FIO,write,data integrity"
             }
@@ -469,6 +496,7 @@
                 "TestFocus": "DataIntegrity",
                 "FileSize": "$.Parameters.DataIntegrityFileSize",
                 "ProcessModel": "$.Parameters.ProcessModel",
+                "RawDisk": "$.Parameters.RawDisk",
                 "DeleteTestFilesOnFinish": true,
                 "Tags": "IO,FIO,write,data integrity"
             }
@@ -485,6 +513,7 @@
                 "TestFocus": "DataIntegrity",
                 "FileSize": "$.Parameters.DataIntegrityFileSize",
                 "ProcessModel": "$.Parameters.ProcessModel",
+                "RawDisk": "$.Parameters.RawDisk",
                 "DeleteTestFilesOnFinish": true,
                 "Tags": "IO,FIO,randwrite,data integrity"
             }

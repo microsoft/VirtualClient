@@ -23,7 +23,7 @@ namespace VirtualClient.Actions
             get
             {
                 string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-                return Path.Combine(workingDirectory, "Examples", "SPECjvm");
+                return Path.Combine(workingDirectory, "test_examples", "SPECjvm");
             }
         }
 

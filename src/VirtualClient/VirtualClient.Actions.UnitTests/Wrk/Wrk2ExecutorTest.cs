@@ -293,7 +293,7 @@ namespace VirtualClient.Actions
                 }
                 else
                 {
-                    string examplesDirectory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Examples", "Wrk");
+                    string examplesDirectory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "test_examples", "Wrk");
                     string outputPath = Path.Combine(examplesDirectory, @"wrkStandardExample1.txt");
                     this.memoryProcess.StandardOutput = new ConcurrentBuffer(new StringBuilder(File.ReadAllText(outputPath)));
                 }
@@ -412,7 +412,7 @@ namespace VirtualClient.Actions
                     ".*wrk.*-t 10 -c 100.*",
                     File.ReadAllText(Path.Combine(
                         Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location),
-                        "Examples", "Wrk", "wrkStandardExample1.txt")));
+                        "test_examples", "Wrk", "wrkStandardExample1.txt")));
 
             TestWrk2Executor executor = new TestWrk2Executor(this.mockFixture);
             await executor.InitializeAsync();
@@ -470,7 +470,7 @@ namespace VirtualClient.Actions
                 else
                 {
                     Assert.AreEqual(arguments, $"bash {executor.Combine(directory, "runwrk.sh")} {results}");
-                    string examplesDirectory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Examples", "Wrk");
+                    string examplesDirectory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "test_examples", "Wrk");
                     string outputPath = Path.Combine(examplesDirectory, @"wrkStandardExample1.txt");
                     this.memoryProcess.StandardOutput = new ConcurrentBuffer(new StringBuilder(File.ReadAllText(outputPath)));
                 }
@@ -483,7 +483,7 @@ namespace VirtualClient.Actions
 
         public void SetUpWorkloadOutput()
         {
-            string examplesDirectory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Examples", "Wrk");
+            string examplesDirectory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "test_examples", "Wrk");
             string outputPath = Path.Combine(examplesDirectory, @"wrkStandardExample2.txt");
             this.memoryProcess.StandardOutput = new ConcurrentBuffer(new StringBuilder(File.ReadAllText(outputPath)));
         }

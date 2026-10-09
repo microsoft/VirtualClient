@@ -1,13 +1,16 @@
+---
+slug: /workloads/speccpu
+---
+
 # SPECcpu
 SPEC CPU is a workload created and licensed by the Standard Performance Evalution Corporation. The SPEC CPU® 2017 benchmark package contains SPEC's 
 next-generation, industry-standardized, CPU intensive suites for measuring and comparing compute intensive performance, stressing a system's processor, 
 memory subsystem and compiler.
 
-* [SPEC CPU Documentation](https://www.spec.org/cpu2017/)  
-* [SPEC CPU 2017 QuickStart](https://spec.org/cpu2017/Docs/quick-start.html)  
-* [SPEC CPU Download](https://pro.spec.org/private/osg/cpu/cpu2017/src/)  
-* [SPEC CPU Benchmarks](https://www.spec.org/cpu2017/Docs/overview.html#Q13)
-
+* [SPEC CPU 2017 Documentation](https://www.spec.org/cpu2017/) 
+* [SPEC CPU 2017 Benchmarks](https://www.spec.org/cpu2017/Docs/overview.html#Q13)
+* [SPEC CPU 2026 Documentation](https://www.spec.org/cpu2026/)
+* [SPEC CPU 2026 Benchmarks](https://www.spec.org/cpu2026/Docs/overview.html#Q13)
 
 ## System Requirements
 The following section provides special considerations required for the system on which the SPEC CPU workload will be run.
@@ -17,21 +20,21 @@ https://spec.org/cpu2017/Docs/system-requirements.html
 * Physical Memory = 16 GB minimum  
 * Disk Space = 250 GB minimum on the OS disk
 
-## How to package SPECcpu
-:::info
-SPECcpu2017 is a commercial workload. VirtualClient cannot distribute the license and binary. You need to follow the following steps to package this workload and make it available locally or in a storage that you own.
-:::
-1. SPECcpu can be downloaded here https://pro.spec.org/private/osg/cpu/cpu2017/src/, with SPEC credentials. Download ISO file cpu2017-1.1.8.iso.
+## How to Get and Integrate SPEC CPU 2017
+The SPEC CPU 2017 workload is not provided out-of-box with Virtual Client. SPEC CPU 2017 requires the user to have a valid license. The license and workload files required can be found on the SPEC website
+linked below. The following steps describe how to download SPEC CPU 2017 and create the package in the format required for integration with Virtual Client.
 
-2. Please create a new directory `speccpu` (flexible), and insert one `speccpu2017.vcpkg` json file.
-  ```treeview {3}
+1. Purchase a license for SPEC CPU 2017 from the SPEC website https://www.spec.org/cpu2017/. After purchasing a license, download the ISO file `cpu2017-1.1.8.iso` from the SPEC website.
+
+2. Place the SPEC CPU 2017 ISO file and a `speccpu2017.vcpkg` json file together in a directory. The directory structure should look like the following:
+  ```treeview
     speccpu
     ├───cpu2017-1.1.8.iso
     └───speccpu2017.vcpkg
   ```
 
-  `speccpu2017.vcpkg` json example
-  ```json
+  `speccpu2017.vcpkg` JSON content definition
+  ``` json
   {
     "name": "speccpu2017",
     "description": "SPEC CPU 2017 benchmark toolsets.",
@@ -41,20 +44,72 @@ SPECcpu2017 is a commercial workload. VirtualClient cannot distribute the licens
     }
   }
   ```
-
-
-  
-3. Zip the speccpu-1.1.8 directory into `speccpu-1.1.8.zip`, make sure that no extra `/speccpu-1.1.8/` top directory is created.
-  ```bash
-  7z a speccpu-1.1.8.zip ./speccpu-1.1.8/*
+ 
+3. Zip the directory into `speccpu.2017-1.1.8.zip`:
+  ```treeview
+    speccpu.2017-1.1.8.zip
+    ├───cpu2017-1.1.8.iso
+    └───speccpu2017.vcpkg
   ```
-    or 
-  ```bash
-  cd speccpu-1.1.8; zip -r ../speccpu-1.1.8.zip *
-  ```
-4. Modify the [SPECcpu profiles](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-SPECCPU-INTRATE.json) as needed. If you are using your own blob storage, you can use the profile as is. If you are copying the zip file locally under `vc/packages`, you can simply remove the DependencyPackageInstallation step.
 
-## What is Being Measured?
+## How to Get and Integrate SPEC CPU 2026
+The SPEC CPU 2026 workload is not provided out-of-box with Virtual Client. SPEC CPU 2026 requires the user to have a valid license. The license and workload files required can be found on the SPEC website
+linked below. The following steps describe how to download SPEC CPU 2026 and create the package in the format required for integration with Virtual Client.
+
+1. Purchase a license for SPEC CPU 2026 from the SPEC website https://www.spec.org/cpu2026/. After purchasing a license, download the ISO file `cpu2026-1.0.1.iso` from the SPEC website.
+
+2. Place the SPEC CPU 2026 ISO file and a `speccpu2026.vcpkg` json file together in a directory. The directory structure should look like the following:
+  ```treeview
+    speccpu
+    ├───cpu2026-1.0.1.iso
+    └───speccpu2026.vcpkg
+  ```
+
+  `speccpu2026.vcpkg` JSON content definition
+  ``` json
+  {
+    "name": "speccpu2026",
+    "description": "SPEC CPU 2026 benchmark toolsets.",
+    "version": "1.0.1",
+    "metadata": {
+        "isoName": "cpu2026-1.0.1.iso"
+    }
+  }
+  ```
+
+3. For Windows scenario usage, include the required code header files. SPEC CPU 2026 requires all six headers for operation on Windows and copies them to `/usr/local/include/speccpu2026`.
+
+```text
+speccpu2026.vcpkg
+cpu2026-1.0.1.iso
+virtualclient/
+└── cygwin/
+    └── include/
+        ├── execinfo.h
+        ├── link.h
+        ├── speccpu-cygwin-femflow.h
+        ├── speccpu-cygwin-flac.h
+        ├── speccpu-cygwin-gcc.h
+        └── speccpu-cygwin-omnetpp.h
+```
+
+4. Zip the directory into `speccpu.2026-1.0.1.zip`:
+  ```treeview
+    speccpu.2026-1.0.1.zip
+    ├───cpu2026-1.0.1.iso
+    ├───speccpu2026.vcpkg
+    └───virtualclient/
+        └───cygwin/
+            └───include/
+                ├───execinfo.h
+                ├───link.h
+                ├───speccpu-cygwin-femflow.h
+                ├───speccpu-cygwin-flac.h
+                ├───speccpu-cygwin-gcc.h
+                └───speccpu-cygwin-omnetpp.h
+  ```
+
+## What is Being Measured (SPEC CPU 2017)?
 SPEC teams designed these suites to provide a comparative measure of compute-intensive performance across the widest practical range of hardware 
 using workloads developed from real user applications. The benchmarks are provided as source code and require the use of compiler commands 
 as well as other commands via a shell or command prompt window. SPEC CPU 2017 also includes an optional metric for measuring energy consumption.
@@ -69,7 +124,7 @@ The SPEC CPU 2017 benchmark package contains 43 benchmarks, organized into four 
 * SPECrate® 2017 Floating Point
   * Measure the throughput or work per unit of time on the computer for floating-point calculations.
 
-## Workload Metrics
+## Workload Metrics (SPEC CPU 2017)
 The following metrics are examples of those captured by the Virtual Client when running the SPECcpu workload.
 
 | Scenario | Metric Name | Example Value (min) | Example Value (max) | Example Value (avg) | Unit |

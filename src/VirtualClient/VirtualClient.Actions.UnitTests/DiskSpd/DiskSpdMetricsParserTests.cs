@@ -17,7 +17,7 @@ namespace VirtualClient.Actions
         [Test]
         public void DiskSpdParserVerifyReadWrite()
         {
-            string results = File.ReadAllText(MockFixture.GetDirectory(typeof(DiskSpdMetricsParserTests), "Examples", "DiskSpd", "DiskSpdExample-ReadWrite.txt"));
+            string results = File.ReadAllText(MockFixture.GetDirectory(typeof(DiskSpdMetricsParserTests), "test_examples", "DiskSpd", "DiskSpdExample-ReadWrite.txt"));
             var parser = new DiskSpdMetricsParser(results, "diskspd.exe -b8K -r8K -t32 -o16 -w50 -d900 -Suw -W50 -D -L -Rtext D:\\diskspd-test.dat");
 
             IList<Metric> metrics = parser.Parse();
@@ -128,7 +128,7 @@ namespace VirtualClient.Actions
         [Test]
         public void DiskSpdParserVerifyWriteOnly()
         {
-            string results = File.ReadAllText(MockFixture.GetDirectory(typeof(DiskSpdMetricsParserTests), "Examples", "DiskSpd", "DiskSpdExample-WriteOnly.txt"));
+            string results = File.ReadAllText(MockFixture.GetDirectory(typeof(DiskSpdMetricsParserTests), "test_examples", "DiskSpd", "DiskSpdExample-WriteOnly.txt"));
             var parser = new DiskSpdMetricsParser(results, "diskspd.exe -b8K -r8K -t32 -o16 -w100 -d900 -Suw -W30 -D -L -Rtext D:\\diskspd-test.dat");
 
             IList<Metric> metrics = parser.Parse();
@@ -204,7 +204,7 @@ namespace VirtualClient.Actions
         {
             // DiskSpd v2.2.0 changed the CPU table to include Socket | Node | Group | Core | CPU columns.
             // The parser must normalise this extended header without throwing a KeyNotFoundException.
-            string results = File.ReadAllText(MockFixture.GetDirectory(typeof(DiskSpdMetricsParserTests), "Examples", "DiskSpd", "DiskSpdExample-WriteOnly-v2.2.0.txt"));
+            string results = File.ReadAllText(MockFixture.GetDirectory(typeof(DiskSpdMetricsParserTests), "test_examples", "DiskSpd", "DiskSpdExample-WriteOnly-v2.2.0.txt"));
             var parser = new DiskSpdMetricsParser(results, "diskspd.exe -b4K -r4K -t160 -o3 -w100 -d900 -Suw -W15 -D -L -Rtext D:\\diskspd-test.dat");
 
             IList<Metric> metrics = parser.Parse();
@@ -245,7 +245,7 @@ namespace VirtualClient.Actions
             // latency table "Total latency distribution:" (not the legacy "total:"). Prior to the
             // fix this threw "The given key 'CPU' was not present in the dictionary" (and, once
             // that was fixed, "The given key 'Latency' was not present in the dictionary").
-            string results = File.ReadAllText(MockFixture.GetDirectory(typeof(DiskSpdMetricsParserTests), "Examples", "DiskSpd", "DiskSpdExample-WriteOnly-v2.2.0-SingleGroup.txt"));
+            string results = File.ReadAllText(MockFixture.GetDirectory(typeof(DiskSpdMetricsParserTests), "test_examples", "DiskSpd", "DiskSpdExample-WriteOnly-v2.2.0-SingleGroup.txt"));
             var parser = new DiskSpdMetricsParser(results, "diskspd.exe -c1G -b4K -r4K -t4 -o16 -w100 -d10 -Suw -W5 -D -L -Rtext C:\\diskspd-test.dat");
 
             IList<Metric> metrics = parser.Parse();
@@ -291,7 +291,7 @@ namespace VirtualClient.Actions
         [Test]
         public void DiskSpdParserVerifyForCoreCountGreaterThan64WhichAddsProcessorGrouping()
         {
-            string results = File.ReadAllText(MockFixture.GetDirectory(typeof(DiskSpdMetricsParserTests), "Examples", "DiskSpd", "Write8k.txt"));
+            string results = File.ReadAllText(MockFixture.GetDirectory(typeof(DiskSpdMetricsParserTests), "test_examples", "DiskSpd", "Write8k.txt"));
             var parser = new DiskSpdMetricsParser(results, "diskspd.exe -b8K -r8K -t32 -o16 -w100 -d900 -Suw -W30 -D -L -Rtext D:\\diskspd-test.dat");
 
             IList<Metric> metrics = parser.Parse();
@@ -344,7 +344,7 @@ namespace VirtualClient.Actions
             // fixes special-cased, so before NormalizeCpuTable it threw "The given key 'CPU' was not
             // present in the dictionary" (the title was inserted mid-line, keying the section
             // "Socket | Node | CPU").
-            string results = File.ReadAllText(MockFixture.GetDirectory(typeof(DiskSpdMetricsParserTests), "Examples", "DiskSpd", "DiskSpdExample-WriteOnly-v2.2.0-MultiSocketSingleGroup.txt"));
+            string results = File.ReadAllText(MockFixture.GetDirectory(typeof(DiskSpdMetricsParserTests), "test_examples", "DiskSpd", "DiskSpdExample-WriteOnly-v2.2.0-MultiSocketSingleGroup.txt"));
             var parser = new DiskSpdMetricsParser(results, "diskspd.exe -c64M -b4K -r4K -t4 -o4 -w100 -d5 -Suw -W2 -D -L -Rtext C:\\dskspd\\testfile.dat");
 
             IList<Metric> metrics = parser.Parse();
@@ -380,7 +380,7 @@ namespace VirtualClient.Actions
             // boundary (group 1's CPU 0 becomes id 64 = 64*group + cpu). Without retaining Group, the
             // group-relative CPU numbers (0,1,2,.. repeated per group) would collide. Before the
             // dynamic fix this header threw "The given key 'CPU' was not present in the dictionary".
-            string results = File.ReadAllText(MockFixture.GetDirectory(typeof(DiskSpdMetricsParserTests), "Examples", "DiskSpd", "DiskSpdExample-WriteOnly-v2.2.0-MultiNumaMultiGroup.txt"));
+            string results = File.ReadAllText(MockFixture.GetDirectory(typeof(DiskSpdMetricsParserTests), "test_examples", "DiskSpd", "DiskSpdExample-WriteOnly-v2.2.0-MultiNumaMultiGroup.txt"));
             var parser = new DiskSpdMetricsParser(results, "diskspd.exe -c64M -b4K -r4K -t4 -o4 -w100 -d5 -Suw -W2 -D -L -Rtext C:\\dskspd\\testfile.dat");
 
             IList<Metric> metrics = parser.Parse();

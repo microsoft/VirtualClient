@@ -1,5 +1,9 @@
 {
     "Description": "DotNetRuntime CPU Performance workload",
+    "Metadata": {
+        "SupportedPlatforms": "win-x64",
+        "SupportedOperatingSystems": "Windows"
+    },
     "Parameters": {
         "NumberOfJvmInstances": "1",
         "NumberOfWarehouses": "8",

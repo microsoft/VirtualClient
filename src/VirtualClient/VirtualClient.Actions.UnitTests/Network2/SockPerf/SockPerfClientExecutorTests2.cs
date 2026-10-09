@@ -43,7 +43,7 @@ namespace VirtualClient.Actions
             this.Parameters["MessagesPerSecond"] = "max";
             this.Parameters["ConfidenceLevel"] = "99";
 
-            string exampleResults = MockFixture.ReadFile(MockFixture.ExamplesDirectory, "SockPerf", "SockPerfClientExample1.txt");
+            string exampleResults = MockFixture.ReadFile(MockFixture.TestExamplesDirectory, "SockPerf", "SockPerfClientExample1.txt");
 
             SockPerfWorkloadState executionStartedState = new SockPerfWorkloadState(ClientServerStatus.ExecutionStarted);
             Item<SockPerfWorkloadState> expectedStateItem = new Item<SockPerfWorkloadState>(nameof(SockPerfWorkloadState), executionStartedState);

@@ -1,9 +1,13 @@
+---
+slug: /dependencies/wget-installation
+---
+
 # Wget Installation
 A dependency to assist installing packages from a remote location using the 'wget' toolset.
 
 - [Wget Documentation](https://www.gnu.org/software/wget/manual/wget.html)
 
-## Supported Platform/Architectures
+## Supported Platform-Architectures
 * linux-x64
 * linux-arm64
 * win-x64

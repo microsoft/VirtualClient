@@ -21,7 +21,7 @@ namespace VirtualClient.Dependencies
     [Category("Unit")]
     public class UploadTelemetryTests : MockFixture
     {
-        private static readonly string Examples = MockFixture.GetDirectory(typeof(UploadTelemetryTests), "Examples", "Extensibility");
+        private static readonly string Examples = MockFixture.GetDirectory(typeof(UploadTelemetryTests), "test_examples", "Extensibility");
 
         public void SetupTest(PlatformID platform, Architecture architecture = Architecture.X64)
         {

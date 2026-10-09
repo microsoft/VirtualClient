@@ -1,21 +1,22 @@
-# SPECpower Workload Profiles
+---
+slug: /workloads/specpower-profiles
+---
+
+# SPECpower Profiles
 The following profiles run customer-representative or benchmarking scenarios using the SPEC Power workload.
 
-* [Workload Details](./specpower.md)  
+* [Workload Details](/docs/workloads/specpower)  
 
 ## POWER-SPEC30.json
 Runs the SPEC Power benchmark workload on the system targeting 30% system resource usage. This workload is an industry standard toolset for evaluating the power
 consumption/draw on a system. Each of the different profiles is designed to use a specific percentage of the resources on the 
 system in a steady-state usage pattern.
 
-* **Supported Platform/Architectures**
+* **Supported Platform-Architectures**
   * linux-x64
   * linux-arm64
   * win-x64
   * win-arm64
-
-* **Supports Disconnected Scenarios**  
-  * No. Internet connection required.
 
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
@@ -26,7 +27,7 @@ system in a steady-state usage pattern.
     is used on the Azure host to capture the temperature and power metrics (using the IPMIUtil toolset).
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
-  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+  * [Installing Dependencies](/docs/category/dependencies/)
 
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
@@ -52,9 +53,6 @@ system in a steady-state usage pattern.
   * win-x64
   * win-arm64
 
-* **Supports Disconnected Scenarios**  
-  * No. Internet connection required.
-
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
   * Internet connection.
@@ -64,7 +62,7 @@ system in a steady-state usage pattern.
     is used on the Azure host to capture the temperature and power metrics (using the IPMIUtil toolset).
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
-  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+  * [Installing Dependencies](/docs/category/dependencies/)
 
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
@@ -90,9 +88,6 @@ system in a steady-state usage pattern.
   * win-x64
   * win-arm64
 
-* **Supports Disconnected Scenarios**  
-  * No. Internet connection required.
-
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
   * Internet connection.
@@ -102,7 +97,7 @@ system in a steady-state usage pattern.
     is used on the Azure host to capture the temperature and power metrics (using the IPMIUtil toolset).
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
-  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+  * [Installing Dependencies](/docs/category/dependencies/)
 
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
@@ -128,9 +123,6 @@ system in a steady-state usage pattern.
   * win-x64
   * win-arm64
 
-* **Supports Disconnected Scenarios**  
-  * No. Internet connection required.
-
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
   * Internet connection.
@@ -140,7 +132,7 @@ system in a steady-state usage pattern.
     is used on the Azure host to capture the temperature and power metrics (using the IPMIUtil toolset).
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
-  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+  * [Installing Dependencies](/docs/category/dependencies/)
 
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 

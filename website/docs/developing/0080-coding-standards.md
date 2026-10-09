@@ -1,3 +1,7 @@
+---
+slug: /developing/coding-standards
+---
+
 # Coding Standards
 
 ### Style Guidelines

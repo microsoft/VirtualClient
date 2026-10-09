@@ -1,8 +1,12 @@
+---
+slug: /guides/usage-extensions
+---
+
 # Using/Integrating Extensions
 The Virtual Client platform supports a few different "extensions" models enabling developers to create feature sets and for users to integrate those into the platform
 runtime. This document covers how to use and integrate extensions into the platform. Additional documentation exists that focuses on the development process itself.
 
-* [Developing Extensions](../developing/0020-develop-extensions.md)
+* [Developing Extensions](/docs/developing/develop-extensions)
 
 ## What are Extensions
 Extensions in a simple sense are extra feature sets for actions, monitors or dependency handlers that can be developed independently of the core Virtual Client platform
@@ -79,18 +83,18 @@ is covered more in-depth in the `Developing Extensions` documentation noted at t
   ~/virtualclient.1.15.0/linux-x64/packages/any.virtualclient.extensions.1.0.0
   ~/virtualclient.1.15.0/linux-x64/packages/any.virtualclient.extensions.1.0.0/any.virtualclient.extensions.1.0.0.vcpkg
 
-  # Each extensions package may contain 1 or more platform/architecture folders.
+  # Each extensions package may contain 1 or more platform-architecture folders.
   ~/virtualclient.1.15.0/linux-x64/packages/any.virtualclient.extensions.1.0.0/linux-arm64
   ~/virtualclient.1.15.0/linux-x64/packages/any.virtualclient.extensions.1.0.0/linux-x64
   ~/virtualclient.1.15.0/linux-x64/packages/any.virtualclient.extensions.1.0.0/win-arm64
   ~/virtualclient.1.15.0/linux-x64/packages/any.virtualclient.extensions.1.0.0/win-x64
 
-  # Binary extensions within each supported platform/architecture folder.
+  # Binary extensions within each supported platform-architecture folder.
   ~/virtualclient.1.15.0/linux-x64/packages/any.virtualclient.extensions.1.0.0/linux-x64/Any.VirtualClient.Extensions.Actions.dll
   ~/virtualclient.1.15.0/linux-x64/packages/any.virtualclient.extensions.1.0.0/linux-x64/Any.VirtualClient.Extensions.Dependencies.dll
   ~/virtualclient.1.15.0/linux-x64/packages/any.virtualclient.extensions.1.0.0/linux-x64/Any.VirtualClient.Extensions.Monitors.dll
 
-   # Profile extensions within each supported platform/architecture folder
+   # Profile extensions within each supported platform-architecture folder
    # in a 'profiles' sub-folder.
   ~/virtualclient.1.15.0/linux-x64/packages/any.virtualclient.extensions.1.0.0/linux-x64/profiles
   ~/virtualclient.1.15.0/linux-x64/packages/any.virtualclient.extensions.1.0.0/linux-x64/profiles/MONITORS-CUSTOM-1.json
@@ -122,18 +126,18 @@ is covered more in-depth in the `Developing Extensions` documentation noted at t
   /home/user/extensions_packages/any.virtualclient.extensions.1.0.0
   /home/user/extensions_packages/any.virtualclient.extensions.1.0.0/any.virtualclient.extensions.1.0.0.vcpkg
 
-  # Each extensions package may contain 1 or more platform/architecture folders.
+  # Each extensions package may contain 1 or more platform-architecture folders.
   /home/user/extensions_packages/any.virtualclient.extensions.1.0.0/linux-arm64
   /home/user/extensions_packages/any.virtualclient.extensions.1.0.0/linux-x64
   /home/user/extensions_packages/any.virtualclient.extensions.1.0.0/win-arm64
   /home/user/extensions_packages/any.virtualclient.extensions.1.0.0/win-x64
 
-  # Binary extensions within each supported platform/architecture folder.
+  # Binary extensions within each supported platform-architecture folder.
   /home/user/extensions_packages/any.virtualclient.extensions.1.0.0/linux-x64/Any.VirtualClient.Extensions.Actions.dll
   /home/user/extensions_packages/any.virtualclient.extensions.1.0.0/linux-x64/Any.VirtualClient.Extensions.Dependencies.dll
   /home/user/extensions_packages/any.virtualclient.extensions.1.0.0/linux-x64/Any.VirtualClient.Extensions.Monitors.dll
 
-   # Profile extensions within each supported platform/architecture folder
+   # Profile extensions within each supported platform-architecture folder
    # in a 'profiles' sub-folder.
   /home/user/extensions_packages/any.virtualclient.extensions.1.0.0/linux-x64/profiles
   /home/user/extensions_packages/any.virtualclient.extensions.1.0.0/linux-x64/profiles/MONITORS-CUSTOM-1.json
@@ -200,7 +204,7 @@ how to incorporate script-based extensions:
   ~/virtualclient.1.15.0/linux-x64/packages/any.script.extensions.1.0.0/linux-x64/execute.py
   ~/virtualclient.1.15.0/linux-x64/packages/any.script.extensions.1.0.0/linux-x64/some_executable
 
-  # There may be different scripts (and supporting binaries) per platform/architecture. This facility is typically 
+  # There may be different scripts (and supporting binaries) per platform-architecture. This facility is typically 
   # employed to support applications compiled to run on different OS platforms such as Windows and Linux as well 
   # as on different CPU architectures such as x64 and ARM64. However, there are times when this separation is needed 
   # to support cross-platform/cross-architecture for scripts also.
@@ -210,7 +214,7 @@ how to incorporate script-based extensions:
   C:\virtualclient.1.15.0\win-x64\packages\any.script.extensions.1.0.0/win-x64/execute.py
   C:\virtualclient.1.15.0\win-x64\packages\any.script.extensions.1.0.0/win-x64/some_executable.exe
 
-   # Profile extensions within each supported platform/architecture folder
+   # Profile extensions within each supported platform-architecture folder
    # in a 'profiles' sub-folder.
   ~/virtualclient.1.15.0/linux-x64/packages/any.script.extensions.1.0.0/linux-x64/profiles
   ~/virtualclient.1.15.0/linux-x64/packages/any.script.extensions.1.0.0/linux-x64/profiles/SCRIPT-WORKLOAD-1.json
@@ -316,14 +320,14 @@ how to incorporate script-based extensions:
   /home/user/script_extensions_packages/any.script.extensions.1.0.0/linux-x64/execute.py
   /home/user/script_extensions_packages/any.script.extensions.1.0.0/linux-x64/some_executable
 
-  # There may be different scripts (and supporting binaries) per platform/architecture. This facility is typically 
+  # There may be different scripts (and supporting binaries) per platform-architecture. This facility is typically 
   # employed to support applications compiled to run on different OS platforms such as Windows and Linux as well 
   # as on different CPU architectures such as x64 and ARM64. However, there are times when this separation is needed 
   # to support cross-platform/cross-architecture for scripts also.
   /home/user/script_extensions_packages/any.script.extensions.1.0.0/linux-x64/execute.py
   /home/user/script_extensions_packages/any.script.extensions.1.0.0/linux-x64/some_executable
 
-   # Profile extensions within each supported platform/architecture folder
+   # Profile extensions within each supported platform-architecture folder
    # in a 'profiles' sub-folder.
   /home/user/script_extensions_packages/any.script.extensions.1.0.0/linux-x64/profiles
   /home/user/script_extensions_packages/any.script.extensions.1.0.0/linux-x64/profiles/SCRIPT-WORKLOAD-1.json
@@ -467,8 +471,8 @@ and requirements.
     objective measurements typically related to performance and reliability that can be used to analyze systems in side-by-side comparisons. The following resources provide context and examples
     for the concept of metrics.
 
-    * [DiskSpd Workload Metrics](https://microsoft.github.io/VirtualClient/docs/workloads/diskspd/)
-    * [Geekbench Workload Metrics](https://microsoft.github.io/VirtualClient/docs/workloads/geekbench/)
+    * [DiskSpd Workload Metrics](/docs/workloads/diskspd/)
+    * [Geekbench Workload Metrics](/docs/workloads/geekbench/)
     
     Virtual Client provides a facility for script-based automation to emit metrics for capture as well. To enable metrics capture, scripts emit the metrics to a single/central file on the file
     system. The file should be named ```test-metrics.json``` and should exist in the same directory as the script that generated it. There are two acceptable formats for test-metrics.json. 
@@ -565,6 +569,7 @@ This component can be used to execute generic scripts using facilities common to
     |  CommandLine | The command line arguments to be used with the script/executable |
     |  ScriptPath  | The Script Path can be an absolute Path, or be relative to the Virtual Client Executable or be relative to platformspecific package if the script is downloaded as a package using DependencyPackageInstallation. |
     |  LogPaths    | A list of file/folder paths separated by semicolons ";". Note that Virtual Client will move any log files found to the central "logs" directory in the Virtual Client executable parent directory. | 
+    |  MetricsFileDirectory | A directory path, relative to the directory containing the script, in which the script writes its "test-metrics.json" file (e.g. `{experimentId}`). Used when the script emits metrics into a scoped/isolated subdirectory. The file name itself is not changed. Default is the script directory itself. |
     |  PackageName | Name of the workload package built for running the script. If the workload package is being downloaded from blob package store, this needs to match with the package name defined in DependencyPackageInstallation. | String |
     |  FailFast    | Flag indicates that the application should exit immediately on first/any errors regardless of their severity. | Boolean  |
     |  UsePython3  | (Only valid for PythonExecutor) A true value indicates use of "python3" as environment variable to execute python, a false value will use "python" as the environment variable. | Boolean (Default is true) |
@@ -580,6 +585,7 @@ This component can be used to execute generic scripts using facilities common to
                 "CommandLine": "argument1 argument2",
                 "ScriptPath": "script.sh",
                 "LogPaths":  "*.log;*.txt;",
+                "MetricsFileDirectory": "",
                 "ToolName":  "Name_Of_Tool",
                 "PackageName":  "exampleWorkload",
                 "FailFast":  false,
