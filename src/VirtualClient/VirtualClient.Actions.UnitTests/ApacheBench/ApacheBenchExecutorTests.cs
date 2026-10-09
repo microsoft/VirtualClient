@@ -293,8 +293,8 @@ namespace VirtualClient.Actions
             {
                 { "PackageName", "apachehttpserver" },
                 { "Scenario", "ExecuteApacheBenchBenchmark" },
-                { "NoOfRequests", noOfRequests },
-                { "NoOfConcurrentRequests", noOfConcurrentRequests },
+                { "RequestCount", noOfRequests },
+                { "ConcurrentRequestCount", noOfConcurrentRequests },
             };
 
             bool allowPortCommandExecuted = false;
@@ -359,8 +359,8 @@ namespace VirtualClient.Actions
             {
                 { "PackageName", "apachehttpserver" },
                 { "Scenario", "ExecuteApacheBenchBenchmark" },
-                { "NoOfRequests", noOfRequests },
-                { "NoOfConcurrentRequests", noOfConcurrentRequests },
+                { "RequestCount", noOfRequests },
+                { "ConcurrentRequestCount", noOfConcurrentRequests },
             };
 
             bool vcRedistCommandExecuted = false;
