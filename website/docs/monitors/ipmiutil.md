@@ -32,7 +32,8 @@ sudo ./VirtualClient --profile=MONITORS-IPMIUTIL.json --timeout=30 --logger=csv 
 VirtualClient.exe --profile=MONITORS-IPMIUTIL.json --timeout=30 --packages="<package store connection>" --logger=csv --log-to-file
 ```
 
-The monitors also search for `ipmiutil` or `ipmiutil.exe` on `PATH`. On Windows, the legacy `C:\BladeFX_latest\BladeFX\Tools\IpmiUtil\ipmiutil.exe` location is checked as a final fallback.
+The monitors search for `ipmiutil` or `ipmiutil.exe` on `PATH`. The SEL monitor also checks the legacy
+`C:\BladeFX_latest\BladeFX\Tools\IpmiUtil\ipmiutil.exe` location as a final fallback.
 
 ## Sensor Monitoring
 

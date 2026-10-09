@@ -11,7 +11,7 @@ order to capture performance and reliability information from the system while w
 ## MONITORS-AZURE-HOST.json
 This compatibility profile captures IPMIUtil sensors, BMC SEL records, and Windows performance counters on an Azure host or blade. It preserves the monitor names, intervals, event filter, and counter definitions from the profile previously distributed by the internal Virtual Client extension.
 
-The profile supports `win-x64` and `win-arm64` and requires direct access to an IPMI-capable physical host. IPMIUtil must already be available on `PATH`, in the legacy BladeFX tool location, or in an installed `host.monitors` package.
+The profile supports `win-x64` and `win-arm64` and requires direct access to an IPMI-capable physical host. IPMIUtil must already be available on `PATH`. The SEL monitor can also use the legacy BladeFX tool location.
 
 See the [IPMIUtil monitor documentation](/docs/monitors/ipmiutil) for hardware requirements and emitted telemetry.
 

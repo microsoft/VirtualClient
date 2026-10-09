@@ -21,7 +21,7 @@ The monitor supports the following provider types:
 
 * **Kernel** - Enables Windows kernel providers. `ProviderKeywords` is required and `ProviderEvents` can limit collection to specific kernel
   events.
-* **NonKernel** - Enables an application or system provider by name or GUID. The provider's dynamic events are collected.
+* **NonKernel** - Enables an application or system provider by name. The provider's dynamic events are collected.
 
 Only one provider is configured per monitor instance. Add multiple monitor entries to a profile to collect from multiple providers.
 
@@ -50,7 +50,7 @@ The following parameters are available for the `WindowsETWMonitor` component.
 | Parameter | Required | Description | Default value |
 |-----------|----------|-------------|---------------|
 | ProviderType | Yes | Provider category. Supported values are `Kernel` and `NonKernel`. | |
-| Provider | Yes | Provider name or GUID. Use `Windows Kernel` for the kernel provider. | |
+| Provider | Yes | Provider name. Use `Windows Kernel` for the kernel provider. | |
 | ProviderKeywords | Kernel only | Comma-delimited `KernelTraceEventParser.Keywords` values used to enable kernel events (for example, `ImageLoad,Process`). | |
 | ProviderEvents | No | Comma-delimited kernel event names to capture (for example, `ImageLoad,ProcessStart,ProcessStop`). When omitted for a kernel provider, all events enabled by the keywords are captured. | |
 | JsonFilters | No | JSON object whose values are string arrays. An event must match every filter key. Key and value comparisons are case-insensitive (for example, `{'EventName':['ProcessStart'],'Level':['4']}`). | |
