@@ -347,6 +347,7 @@ namespace VirtualClient
 
                 this.Initialize(args, platformSpecifics);
                 this.SetGlobalTelemetryProperties(args);
+                this.SetEnvironmentVariables();
 
                 // Users can override the location of the "logs", "packages" and "state" folders on the command line
                 // or by using environment variables. This is used in scenarios where VC may be used as a base for other
@@ -1222,6 +1223,21 @@ namespace VirtualClient
             }
 
             return FileContext.ResolvePathTemplate(path, this.pathReplacements, throwIfNotMatched: true);
+        }
+
+        private void SetEnvironmentVariables()
+        {
+            // We set environment variables at the process-level so that any child processes spawned by the Virtual Client will inherit these values.
+            // This allows for script-based extensions to access these values without having to pass them in as parameters.
+            Environment.SetEnvironmentVariable(EnvironmentVariable.SDK_CLIENT_ID, this.ClientId, EnvironmentVariableTarget.Process);
+            Environment.SetEnvironmentVariable(EnvironmentVariable.SDK_EXPERIMENT_ID, this.ExperimentId, EnvironmentVariableTarget.Process);
+
+            if (this.Metadata?.Any() == true)
+            {
+                Environment.SetEnvironmentVariable(
+                    EnvironmentVariable.SDK_METADATA, string.Join(";", this.Metadata.Select(entry => $"{entry.Key}={entry.Value}")),
+                    EnvironmentVariableTarget.Process);
+            }
         }
     }
 }

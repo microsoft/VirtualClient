@@ -3,18 +3,20 @@
 
 namespace VirtualClient.Contracts
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Threading;
-    using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.DependencyInjection.Extensions;
     using Moq;
     using Newtonsoft.Json.Linq;
     using NUnit.Framework;
+    using System;
+    using System.Collections.Generic;
+    using System.Collections.Specialized;
+    using System.Linq;
+    using System.Threading;
+    using System.Threading.Tasks;
     using VirtualClient.Common;
     using VirtualClient.Common.Contracts;
+    using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts.Metadata;
 

@@ -172,7 +172,6 @@ namespace VirtualClient
 
                                         using (IProcessProxy process = this.processManager.CreateProcess(effectiveCommand, effectiveCommandArguments, effectiveWorkingDirectory))
                                         {
-                                            this.AddEnvironmentVariables(process);
                                             this.AddEnvironmentVariables(process, environmentVariables);
                                             await process.StartAndWaitAsync(cancellationToken);
 
