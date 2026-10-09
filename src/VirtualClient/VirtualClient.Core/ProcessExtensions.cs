@@ -155,6 +155,36 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Creates a Linux process with CPU affinity binding to specific cores.
+        /// </summary>
+        /// <param name="processManager">The process manager used to create the process.</param>
+        /// <param name="command">The command to run.</param>
+        /// <param name="arguments">The command line arguments to supply to the command.</param>
+        /// <param name="workingDir">The working directory for the command.</param>
+        /// <param name="affinityConfig">The CPU affinity configuration specifying which cores to bind to.</param>
+        /// <returns>A process proxy with CPU affinity applied via numactl.</returns>
+        public static IProcessProxy CreateProcess(this ProcessManager processManager, string command, string arguments, string workingDir, ProcessAffinityConfiguration affinityConfig)
+        {
+            return processManager.CreateProcessWithAffinity(command, arguments, workingDir, affinityConfig);
+        }
+
+        /// <summary>
+        /// Creates a Linux process with CPU affinity binding and elevated privileges when needed.
+        /// </summary>
+        /// <param name="processManager">The process manager used to create the process.</param>
+        /// <param name="platform">The OS platform.</param>
+        /// <param name="command">The command to run.</param>
+        /// <param name="arguments">The command line arguments to supply to the command.</param>
+        /// <param name="workingDir">The working directory for the command.</param>
+        /// <param name="affinityConfig">The CPU affinity configuration specifying which cores to bind to.</param>
+        /// <param name="username">The username to use for running the command (Linux only).</param>
+        /// <returns>A process proxy with CPU affinity and elevated privileges applied.</returns>
+        public static IProcessProxy CreateProcess(this ProcessManager processManager, PlatformID platform, string command, string arguments, string workingDir, ProcessAffinityConfiguration affinityConfig, string username = null)
+        {
+            return processManager.CreateElevatedProcessWithAffinity(platform, command, arguments, workingDir, affinityConfig, username);
+        }
+
+        /// <summary>
         /// Applies Windows CPU affinity to a running process.
         /// This should be called after the process has started.
         /// </summary>

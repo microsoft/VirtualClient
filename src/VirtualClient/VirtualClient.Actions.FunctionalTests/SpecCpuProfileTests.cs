@@ -5,6 +5,8 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
+    using System.IO;
+    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using global::VirtualClient;
@@ -35,6 +37,27 @@ namespace VirtualClient.Actions
             using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
             {
                 WorkloadAssert.ParameterReferencesInlined(executor.Profile);
+            }
+        }
+
+        [Test]
+        [TestCase("PERF-SPECCPU-INTRATE.json")]
+        [TestCase("PERF-SPECCPU-FPRATE.json")]
+        public async Task SpecCpuRateProfilesForwardProcessorAffinityToEveryAction(string profileName)
+        {
+            this.mockFixture.Setup(PlatformID.Unix);
+
+            ExecutionProfile profile = await ExecutionProfile.ReadProfileAsync(Path.Combine(TestDependencies.ProfileDirectory, profileName));
+            profile.Parameters["ProcessorAffinity"] = "2,4,8,10";
+            profile.Parameters["Copies"] = 4;
+            profile.Inline();
+
+            List<ExecutionProfileElement> actions = profile.Actions.Where(action => action.Type == "SpecCpuExecutor").ToList();
+            Assert.IsNotEmpty(actions);
+            foreach (ExecutionProfileElement action in actions)
+            {
+                Assert.AreEqual("2,4,8,10", action.Parameters["ProcessorAffinity"]);
+                Assert.AreEqual("4", action.Parameters["Copies"].ToString());
             }
         }
 
