@@ -1,0 +1,76 @@
+{
+    "Description": "Captures BMC sensor readings and System Event Log (SEL) events using ipmiutil.",
+    "Metadata": {
+        "RecommendedMinimumExecutionTime": "00:05:00",
+        "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64",
+        "SupportedOperatingSystems": "AzureLinux,CentOS,Debian,OpenSuse,RedHat,Ubuntu,Windows",
+        "PreliminaryRequirements": "The target system must expose a supported IPMI/BMC interface. Linux package installation requires access to the configured operating-system package repositories. Windows package installation requires access to the Virtual Client packages store."
+    },
+    "Parameters": {
+        "MonitorFrequency": "00:01:00",
+        "MonitorWarmupPeriod": "00:00:00",
+        "MonitorIterations": -1,
+        "ClearSel": false,
+        "EventsFilter": "MAJ|CRT",
+        "CaptureSuspectedEvents": false,
+        "IncludeWarningsInSuspectedEvents": true,
+        "EnableSelDecoding": false,
+        "DecoderType": "",
+        "DecoderArguments": "",
+        "DecoderPackageName": "",
+        "DecoderExecutableName": ""
+    },
+    "Monitors": [
+        {
+            "Type": "IpmiUtilSensorMonitor",
+            "Parameters": {
+                "Scenario": "CaptureBmcSensorData",
+                "PackageName": "host.monitors",
+                "MonitorFrequency": "$.Parameters.MonitorFrequency",
+                "MonitorWarmupPeriod": "$.Parameters.MonitorWarmupPeriod",
+                "MonitorIterations": "$.Parameters.MonitorIterations"
+            }
+        },
+        {
+            "Type": "IpmiUtilSelMonitor",
+            "Parameters": {
+                "Scenario": "CaptureBmcSelData",
+                "PackageName": "host.monitors",
+                "MonitorFrequency": "$.Parameters.MonitorFrequency",
+                "MonitorWarmupPeriod": "$.Parameters.MonitorWarmupPeriod",
+                "MonitorIterations": "$.Parameters.MonitorIterations",
+                "ClearSel": "$.Parameters.ClearSel",
+                "EventsFilter": "$.Parameters.EventsFilter",
+                "CaptureSuspectedEvents": "$.Parameters.CaptureSuspectedEvents",
+                "IncludeWarningsInSuspectedEvents": "$.Parameters.IncludeWarningsInSuspectedEvents",
+                "EnableSelDecoding": "$.Parameters.EnableSelDecoding",
+                "DecoderType": "$.Parameters.DecoderType",
+                "DecoderArguments": "$.Parameters.DecoderArguments",
+                "DecoderPackageName": "$.Parameters.DecoderPackageName",
+                "DecoderExecutableName": "$.Parameters.DecoderExecutableName"
+            }
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallIpmiutilWindowsPackage",
+                "BlobContainer": "packages",
+                "BlobName": "host.monitors.1.0.1.zip",
+                "PackageName": "host.monitors",
+                "Extract": true,
+                "SupportedPlatforms": "win-x64,win-arm64"
+            }
+        },
+        {
+            "Type": "LinuxPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallIpmiutilLinuxPackage",
+                "Packages": "ipmiutil",
+                "AllowUpgrades": true,
+                "SupportedPlatforms": "linux-x64,linux-arm64"
+            }
+        }
+    ]
+}

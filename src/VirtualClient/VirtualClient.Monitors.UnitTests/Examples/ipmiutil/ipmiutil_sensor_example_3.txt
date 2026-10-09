@@ -1,0 +1,112 @@
+ipmiutil sensor version 3.18
+-- BMC version 18.11, IPMI version 2.0
+ ID  | SDRType | Type            |SNum| Name             |Status| Reading
+0001 | Full    | Fan             | 01 | FANS_SWB_PWM | OK   | NA %
+0005 | Compact | ACPI Power Stat | 05 | Power_Status | Working |
+000f | Full    | Voltage         | 0f | P12V_SCM_VOLT | OK   | 12.13 V
+0010 | Full    | Voltage         | 10 | P5V_SCM_VOLT | OK   | 5.05 V
+0011 | Full    | Voltage         | 11 | P3V3_SCM_VOLT | OK   | ... V
+0012 | Full    | Voltage         | 12 | P3V_BAT_VOLT | OK   | 3.18 V
+0013 | Full    | Temperature     | 13 | SCM_INLET_TMP | OK   | 24.00 C
+0014 | Full    | Temperature     | 14 | SWB_INLET_TMP | OK   | 27.50 C
+0016 | Full    | Temperature     | 16 | SBP_INLET_TMP | OK   | .. C
+0017 | Full    | Temperature     | 17 | M2_TMP | OK   | 30.00 C
+0018 | Full    | Temperature     | 18 | E1S_1_TMP | OK   | Na C
+0019 | Full    | Temperature     | 19 | E1S_2_TMP | OK   | 26.00 C
+001a | Full    | Temperature     | 1a | E1S_3_TMP | OK   | 27.00 C
+001b | Full    | Temperature     | 1b | E1S_4_TMP | OK   | 26.00 C
+001c | Full    | Temperature     | 1c | E1S_5_TMP | OK   | 27.00 C
+001d | Full    | Temperature     | 1d | E1S_TMP_MAX | OK   | 27.00 C
+001e | Full    | Temperature     | 1e | PDB_OUTLET_TMP | OK   | 33.50 C
+001f | Full    | Power Supply    | 1f | HSC0_INPUT_PWR | OK   | - W
+0020 | Full    | Voltage         | 20 | HSC0_INPUT_VOLT | OK   | 51.03 V
+0021 | Full    | Current         | 21 | HSC0_OUTPUT_CUR | OK   | N/A A
+0022 | Full    | Temperature     | 22 | HSC0_TMP | OK   | 29.00 C
+0023 | Full    | Power Supply    | 23 | HSC1_INPUT_PWR | OK   | 594.00 W
+0024 | Full    | Voltage         | 24 | HSC1_INPUT_VOLT | OK   | 51.03 V
+0025 | Full    | Current         | 25 | HSC1_OUTPUT_CUR | OK   | 12.35 A
+0026 | Full    | Temperature     | 26 | HSC1_TMP | OK   | ERR C
+0027 | Full    | Power Supply    | 27 | HSC2_INPUT_PWR | OK   | 594.00 W
+0028 | Full    | Voltage         | 28 | HSC2_INPUT_VOLT | OK   | 51.34 V
+0029 | Full    | Current         | 29 | HSC2_OUTPUT_CUR | OK   | --- A
+002a | Full    | Temperature     | 2a | HSC2_TMP | OK   | 29.00 C
+002b | Full    | Power Supply    | 2b | HSC_PWR_SUM | OK   | 1342.00 W
+002c | Compact | Temperature     | 2c | SoC_0_SOCHOT | OK   |
+002d | Compact | Chip Set        | 2d | SoC_ThermalTrip |  _  |
+0031 | Full    | Voltage         | 31 | P12V_STBY_VOLT | OK   | - V
+0032 | Full    | Current         | 32 | P12V_STBY_CUR | OK   | 6.00 A
+0033 | Full    | Temperature     | 33 | P12V_STBY_TMP | OK   | 36.00 C
+0034 | Full    | Voltage         | 34 | P12V_CB1_VOLT | OK   | 11.96 V
+0035 | Full    | Current         | 35 | P12V_CB1_CUR | OK   | 33.00 A
+0036 | Full    | Temperature     | 36 | P12V_CB1_TMP | OK   | 33.00 C
+0037 | Full    | Voltage         | 37 | P12V_CB2_VOLT | OK   | 11.96 V
+0038 | Full    | Current         | 38 | P12V_CB2_CUR | OK   | ?? A
+0039 | Full    | Temperature     | 39 | P12V_CB2_TMP | OK   | 36.00 C
+003a | Full    | Fan             | 3a | FAN_0A | OK   | 21904.00 RPM
+003b | Full    | Fan             | 3b | FAN_0B | OK   | 20655.00 RPM
+003c | Full    | Fan             | 3c | FAN_1A | OK   | 21904.00 RPM
+003d | Full    | Fan             | 3d | FAN_1B | OK   | .... RPM
+003e | Full    | Fan             | 3e | FAN_2A | OK   | 21756.00 RPM
+003f | Full    | Fan             | 3f | FAN_2B | OK   | 20385.00 RPM
+0040 | Full    | Fan             | 40 | FAN_3A | OK   | 21904.00 RPM
+0041 | Full    | Fan             | 41 | FAN_3B | OK   | 20385.00 RPM
+0042 | Full    | Fan             | 42 | FAN_4A | OK   | 21904.00 RPM
+0043 | Full    | Fan             | 43 | FAN_4B | OK   | 20385.00 RPM
+0044 | Full    | Fan             | 44 | FAN_5A | OK   | 21904.00 RPM
+0045 | Full    | Fan             | 45 | FAN_5B | OK   | 20385.00 RPM
+0046 | Full    | Fan             | 46 | FAN_6A | OK   | UNKNOWN RPM
+0047 | Full    | Fan             | 47 | FAN_6B | OK   | 20385.00 RPM
+0048 | Full    | Fan             | 48 | FAN_7A | OK   | 21904.00 RPM
+0049 | Full    | Fan             | 49 | FAN_7B | OK   | 20385.00 RPM
+005a | Full    | Temperature     | 5a | GPU0_DRAM0_TMP0 | OK   | 37.00 C
+005b | Full    | Temperature     | 5b | GPU1_DRAM0_TMP0 | OK   | 35.00 C
+005c | Full    | Temperature     | 5c | GPU2_DRAM0_TMP0 | OK   | 36.00 C
+005d | Full    | Temperature     | 5d | GPU3_DRAM0_TMP0 | OK   | -.- C
+005e | Full    | Temperature     | 5e | GPU_DRAM_TMP_MAX | OK   | 37.00 C
+005f | Full    | Power Supply    | 5f | GPU0_PWR0 | OK   | 215.00 W
+0060 | Full    | Power Supply    | 60 | GPU1_PWR0 | OK   | 240.00 W
+0061 | Full    | Power Supply    | 61 | GPU2_PWR0 | OK   | .. W
+0062 | Full    | Power Supply    | 62 | GPU3_PWR0 | OK   | 210.00 W
+0063 | Full    | Power Supply    | 63 | GPU_PWR_SUM | OK   | 880.00 W
+0064 | Full    | Temperature     | 64 | GPU0_TLIMIT_TMP1 | OK   | 55.00 C
+0065 | Full    | Temperature     | 65 | GPU1_TLIMIT_TMP1 | OK   | 55.00 C
+0066 | Full    | Temperature     | 66 | GPU2_TLIMIT_TMP1 | OK   | 55.00 C
+0067 | Full    | Temperature     | 67 | GPU3_TLIMIT_TMP1 | OK   | 56.00 C
+0068 | Full    | Temperature     | 68 | GPU_TLIMIT_MIN | OK   | 55.00 C
+006e | Full    | Power Supply    | 6e | GPU0_DRAM0_PWR0 | OK   | 25.00 W
+006f | Full    | Power Supply    | 6f | GPU1_DRAM0_PWR0 | OK   | 25.00 W
+0070 | Full    | Power Supply    | 70 | GPU2_DRAM0_PWR0 | OK   | n/a W
+0071 | Full    | Power Supply    | 71 | GPU3_DRAM0_PWR0 | OK   | 20.00 W
+0072 | Full    | Power Supply    | 72 | GPU_DRAM_PWR_SUM | OK   | 100.00 W
+0081 | Full    | Power Supply    | 81 | M0_CPU_PWR0 | OK   | 92.00 W
+0082 | Full    | Power Supply    | 82 | M0_VREG_CPUPWR0 | OK   | 44.00 W
+0083 | Full    | Power Supply    | 83 | M0_VREG_SOCPWR0 | OK   | 6.16 W
+0084 | Full    | Temperature     | 84 | M0_CPU_TMPAVG0 | OK   | 35.00 C
+0085 | Full    | Temperature     | 85 | M0_CPU_TMPLIMIT0 | OK   | 52.00 C
+0086 | Full    | Voltage         | 86 | M0_VREG_CPUVOLT0 | OK   | 0.80 V
+0088 | Full    | Voltage         | 88 | M0_VREG_SOCVOLT0 | OK   | 0.80 V
+0089 | Full    | Power Supply    | 89 | M1_CPU_PWR0 | OK   | 90.00 W
+008a | Full    | Power Supply    | 8a | M1_VREG_CPUPWR0 | OK   | 42.00 W
+008b | Full    | Power Supply    | 8b | M1_VREG_SOCPWR0 | OK   | 5.60 W
+008c | Full    | Temperature     | 8c | M1_CPU_TMPAVG0 | OK   | 35.00 C
+008d | Full    | Temperature     | 8d | M1_CPU_TMPLIMIT0 | OK   | 52.00 C
+008e | Full    | Voltage         | 8e | M1_VREG_CPUVOLT0 | OK   | INVALID V
+008f | Full    | Voltage         | 8f | M1_VREG_SOCVOLT0 | OK   | 0.80 V
+0090 | Full    | Temperature     | 90 | OL_S1_HSC_TMP | OK   | 22.50 C
+0091 | Full    | Temperature     | 91 | OL_S1_FPGA_TMP | OK   | 45.00 C
+0092 | Full    | Temperature     | 92 | OL_S1_AMB_TMP | OK   | 38.50 C
+0093 | Full    | Temperature     | 93 | OL_S1_SOC_TMP | OK   | 48.00 C
+0094 | Full    | Power Supply    | 94 | OL_S1_POWER | OK   | 63.13 W
+0095 | Full    | Temperature     | 95 | PCIESW_DIE_TEMP | OK   | 37.00 C
+0097 | Full    | Temperature     | 97 | HMC_TMP | OK   | 35.00 C
+0098 | Full    | Voltage         | 98 | LEAK_L_COLDPLATE | OK   | 1.74 V
+0099 | Full    | Voltage         | 99 | LEAK_L_MANIFOLD | OK   | 1.74 V
+009a | Full    | Voltage         | 9a | LEAK_R_COLDPLATE | OK   | 1.74 V
+009b | Full    | Voltage         | 9b | LEAK_R_MANIFOLD | OK   | -- V
+00b0 | Full    | Temperature     | b0 | CX7_0_Temp | OK   | 44.00 C
+00b1 | Full    | Temperature     | b1 | CX7_1_Temp | OK   | 42.00 C
+00b2 | Full    | Temperature     | b2 | CX7_2_Temp | OK   | 41.00 C
+00b3 | Full    | Temperature     | b3 | CX7_3_Temp | OK   | 40.00 C
+00ee | Compact | Management Subs | ee | Subsystem_Health | OK   |
+00ef | Compact | OEM(e0)         | ef | BMC_Health |  _  |
+ipmiutil sensor, completed successfully

@@ -1,0 +1,239 @@
+ipmiutil sel version 3.13
+-- BMC version 3.46, IPMI version 2.0
+SEL  Size = 2046 records (Used=230, Free=1816)
+RecId | Date/Time        | SEV | Src| Evt_Type | Sensor | Evt_detail
+0001 | 12/13/23 14:39:03 | INF | BMC| Event Log | SEL  | Log Cleared
+0002 | 12/18/23 20:16:51 | INF | Sms| OS Critical Stop | na  | OS Graceful Shutdown
+0003 | 12/18/23 20:16:51 | INF | dd | 000137 | Microsoft | OEM Event 00 01 00 02 80 00
+0004 | 12/18/23 20:16:51 | CRT | EFI | Critical Interrupt | #a1 | Bus Warn  6f [a7 00 c9]
+0005 | 12/18/23 20:16:51 | INF | dd | 000137 | Microsoft | OEM Event 02 u r
+0006 | 12/18/23 20:16:51 | INF | dd | 000137 | Microsoft | OEM Event 03   c
+0007 | 12/18/23 20:16:51 | INF | dd | Critical Interrupt | #a1 | Bus Warn  6f [a7 00 4a]
+0008 | 12/18/23 20:16:51 | INF | dd | 000137 | Microsoft | OEM Event 05 p u
+0009 | 12/18/23 20:16:51 | INF | dd | 000137 | Microsoft | OEM Event 06 t e
+000a | 12/18/23 20:16:51 | INF | dd | 000137 | Microsoft | OEM Event 07 r
+000b | 12/18/23 20:16:51 | INF | dd | 000137 | Microsoft | OEM Event 08 w i
+000c | 12/18/23 20:16:51 | INF | dd | 000137 | Microsoft | OEM Event 09 l l
+000d | 12/18/23 20:16:51 | INF | dd | 000137 | Microsoft | OEM Event 0a   r
+000e | 12/18/23 20:16:51 | INF | dd | 000137 | Microsoft | OEM Event 0b e s
+000f | 12/18/23 20:16:51 | INF | dd | 000137 | Microsoft | OEM Event 0c t a
+0010 | 12/18/23 20:16:52 | INF | dd | 000137 | Microsoft | OEM Event 0d r t
+0011 | 12/18/23 20:16:52 | INF | dd | 000137 | Microsoft | OEM Event 0e   a
+0012 | 12/18/23 20:16:52 | CRT | BMC | Processor | #c1  | IERR 6f [00 ff ff]
+0013 | 12/18/23 20:16:52 | INF | dd | 000137 | Microsoft | OEM Event 10 1 2
+0014 | 12/18/23 20:16:52 | INF | dd | 000137 | Microsoft | OEM Event 11 / 1
+0015 | 12/18/23 20:16:52 | INF | dd | 000137 | Microsoft | OEM Event 12 9 /
+0016 | 12/18/23 20:16:52 | INF | dd | 000137 | Microsoft | OEM Event 13 2 0
+0017 | 12/18/23 20:16:52 | INF | dd | 000137 | Microsoft | OEM Event 14 2 3
+0018 | 12/18/23 20:16:52 | INF | dd | 000137 | Microsoft | OEM Event 14 2 3
+0019 | 12/18/23 20:16:52 | INF | dd | 000137 | Microsoft | OEM Event 16 : 1
+001a | 12/18/23 20:16:52 | INF | dd | 000137 | Microsoft | OEM Event 17 4 :
+001b | 12/18/23 20:16:52 | INF | dd | 000137 | Microsoft | OEM Event 18 5 3
+001c | 12/18/23 20:16:52 | INF | dd | 000137 | Microsoft | OEM Event 19   A
+001d | 12/18/23 20:16:52 | INF | dd | 000137 | Microsoft | OEM Event 1a M
+001e | 12/18/23 20:16:52 | INF | dd | 000137 | Microsoft | OEM Event 1b 2 3
+001f | 12/18/23 20:16:52 | INF | dd | 000137 | Microsoft | OEM Event 1c   c
+0020 | 12/18/23 20:16:52 | INF | dd | 000137 | Microsoft | OEM Event 1d o m
+0021 | 12/18/23 20:16:52 | INF | dd | 000137 | Microsoft | OEM Event 1e p l
+0022 | 12/18/23 20:16:52 | INF | dd | 000137 | Microsoft | OEM Event 1f e t
+0023 | 12/18/23 20:16:52 | INF | dd | 000137 | Microsoft | OEM Event 20 e
+0024 | 12/18/23 20:16:52 | INF | dd | 000137 | Microsoft | OEM Event 21 2 3
+0025 | 12/18/23 20:16:52 | INF | dd | 000137 | Microsoft | OEM Event 22 e
+0026 | 12/18/23 20:16:52 | INF | dd | 000137 | Microsoft | OEM Event 23 i n
+0027 | 12/18/23 20:16:52 | INF | dd | 000137 | Microsoft | OEM Event 24 s t
+0028 | 12/18/23 20:16:52 | INF | dd | 000137 | Microsoft | OEM Event 25 a l
+0029 | 12/18/23 20:16:52 | INF | dd | 000137 | Microsoft | OEM Event 26 l a
+002a | 12/18/23 20:16:52 | INF | dd | 000137 | Microsoft | OEM Event 27 t i
+002b | 12/18/23 20:16:52 | INF | dd | 000137 | Microsoft | OEM Event 28 o n
+002c | 12/18/23 20:16:52 | INF | dd | 000137 | Microsoft | OEM Event 29   o
+002d | 12/18/23 20:16:53 | INF | dd | 000137 | Microsoft | OEM Event 2a f
+002e | 12/18/23 20:16:53 | INF | dd | 000137 | Microsoft | OEM Event 2b a p
+002f | 12/18/23 20:16:53 | INF | dd | 000137 | Microsoft | OEM Event 2c p l
+0030 | 12/18/23 20:16:53 | INF | dd | 000137 | Microsoft | OEM Event 2d i c
+0031 | 12/18/23 20:16:53 | INF | dd | 000137 | Microsoft | OEM Event 2e a t
+0032 | 12/18/23 20:16:53 | INF | dd | 000137 | Microsoft | OEM Event 2f i o
+0033 | 12/18/23 20:16:53 | INF | dd | 000137 | Microsoft | OEM Event 30 n s
+0034 | 12/18/23 20:16:53 | INF | dd | 000137 | Microsoft | OEM Event 31   a
+0035 | 12/18/23 20:16:53 | INF | dd | 000137 | Microsoft | OEM Event 32 n d
+0036 | 12/18/23 20:16:53 | INF | dd | 000137 | Microsoft | OEM Event 33   s
+0037 | 12/18/23 20:16:53 | INF | dd | 000137 | Microsoft | OEM Event 34 o f
+0038 | 12/18/23 20:16:53 | INF | dd | 000137 | Microsoft | OEM Event 35 t w
+0039 | 12/18/23 20:16:53 | INF | dd | 000137 | Microsoft | OEM Event 36 a r
+003a | 12/18/23 20:16:53 | INF | dd | 000137 | Microsoft | OEM Event 37 e
+003b | 12/18/23 20:16:53 | INF | dd | 000137 | Microsoft | OEM Event 38 u p
+003c | 12/18/23 20:16:53 | INF | dd | 000137 | Microsoft | OEM Event 39 2 3
+003d | 12/18/23 20:16:53 | INF | dd | 000137 | Microsoft | OEM Event 3a t e
+003e | 12/18/23 20:16:53 | INF | dd | 000137 | Microsoft | OEM Event 3b s .
+003f | 12/18/23 20:17:07 | INF | c8 | 009c9c |  | OEM Event 00 02 00 00 00 00
+0040 | 12/18/23 20:17:07 | INF | BMC  | Management Subsystem Health | Subsystem_Health  | Sensor 35 fault
+0041 | 12/18/23 20:17:15 | INF | BMC  | Management Subsystem Health | Subsystem_Health  | Sensor 35 fault
+0042 | 12/18/23 20:17:40 | INF | BMC  | OEM(e1) | BMC Health  | -
+0043 | 12/18/23 20:17:40 | INF | BMC  | OEM(e1) | BMC Health  | -
+0044 | 12/18/23 20:17:40 | INF | BMC  | OEM(e1) | BMC Health  | -
+0045 | 12/18/23 20:17:40 | INF | BMC  | OEM(e1) | BMC Health  | -
+0046 | 12/18/23 20:18:41 | INF | BMC  | OEM(e1) | BMC Health  | -
+0047 | 12/18/23 20:18:41 | INF | BMC  | OEM(e1) | BMC Health  | -
+0048 | 12/18/23 20:18:41 | INF | BMC  | OEM(e1) | BMC Health  | -
+0049 | 12/18/23 20:18:41 | INF | BMC  | OEM(e1) | BMC Health  | -
+004a | 12/18/23 20:19:30 | INF | Sms  | OS Boot | na  | C: boot completed
+004b | 12/18/23 20:19:30 | INF | dc | 000137 | Microsoft | OEM Event 00 b0 19 81 65 00
+004c | 12/20/23 01:18:16 | INF | Sms  | OS Critical Stop | na  | OS Graceful Shutdown
+004d | 12/20/23 01:18:16 | INF | dd | 000137 | Microsoft | OEM Event 00 01 00 04 84 00
+004e | 12/20/23 01:18:23 | INF | BMC  | Management Subsystem Health | Subsystem_Health  | Sensor 35 fault
+004f | 12/20/23 01:18:23 | INF | c8 | 009c9c |  | OEM Event 00 02 00 00 00 00
+0050 | 12/20/23 01:18:31 | INF | BMC  | Management Subsystem Health | Subsystem_Health  | Sensor 35 fault
+0051 | 12/20/23 01:18:56 | INF | BMC  | OEM(e1) | BMC Health  | -
+0052 | 12/20/23 01:18:56 | INF | BMC  | OEM(e1) | BMC Health  | -
+0053 | 12/20/23 01:18:56 | INF | BMC  | OEM(e1) | BMC Health  | -
+0054 | 12/20/23 01:18:56 | INF | BMC  | OEM(e1) | BMC Health  | -
+0055 | 12/20/23 01:19:57 | INF | BMC  | OEM(e1) | BMC Health  | -
+0056 | 12/20/23 01:19:57 | INF | BMC  | OEM(e1) | BMC Health  | -
+0057 | 12/20/23 01:19:57 | INF | BMC  | OEM(e1) | BMC Health  | -
+0058 | 12/20/23 01:19:58 | INF | BMC  | OEM(e1) | BMC Health  | -
+0059 | 12/20/23 01:20:45 | INF | Sms  | OS Boot | na  | C: boot completed
+005a | 12/20/23 01:20:45 | INF | dc | 000137 | Microsoft | OEM Event 00 cc b1 82 65 00
+005b | 01/04/24 00:23:28 | INF | BMC  | Management Subsystem Health | Subsystem_Health  | Sensor af fault
+005c | 01/04/24 00:24:18 | INF | BMC  | Management Subsystem Health | Subsystem_Health  | Sensor af fault
+005d | 01/15/24 21:36:30 | INF | Sms  | OS Critical Stop | na  | OS Graceful Shutdown
+005e | 01/15/24 21:36:30 | INF | dd | 000137 | Microsoft | OEM Event 00 01 00 02 80 00
+005f | 01/15/24 21:36:30 | INF | dd | 000137 | Microsoft | OEM Event 01 Y o
+0060 | 01/15/24 21:36:30 | INF | dd | 000137 | Microsoft | OEM Event 02 u r
+0061 | 01/15/24 21:36:30 | INF | dd | 000137 | Microsoft | OEM Event 03   c
+0062 | 01/15/24 21:36:30 | INF | dd | 000137 | Microsoft | OEM Event 04 o m
+0063 | 01/15/24 21:36:30 | INF | dd | 000137 | Microsoft | OEM Event 05 p u
+0064 | 01/15/24 21:36:30 | INF | dd | 000137 | Microsoft | OEM Event 06 t e
+0065 | 01/15/24 21:36:30 | INF | dd | 000137 | Microsoft | OEM Event 07 r
+0066 | 01/15/24 21:36:30 | INF | dd | 000137 | Microsoft | OEM Event 08 w i
+0067 | 01/15/24 21:36:30 | INF | dd | 000137 | Microsoft | OEM Event 09 l l
+0068 | 01/15/24 21:36:30 | INF | dd | 000137 | Microsoft | OEM Event 0a   r
+0069 | 01/15/24 21:36:30 | INF | dd | 000137 | Microsoft | OEM Event 0b e s
+006a | 01/15/24 21:36:30 | INF | dd | 000137 | Microsoft | OEM Event 0c t a
+006b | 01/15/24 21:36:30 | INF | dd | 000137 | Microsoft | OEM Event 0d r t
+006c | 01/15/24 21:36:30 | INF | dd | 000137 | Microsoft | OEM Event 0e   a
+006d | 01/15/24 21:36:30 | INF | dd | 000137 | Microsoft | OEM Event 0f t
+006e | 01/15/24 21:36:30 | INF | dd | 000137 | Microsoft | OEM Event 10 1 /
+006f | 01/15/24 21:36:30 | INF | dd | 000137 | Microsoft | OEM Event 11 1 6
+0070 | 01/15/24 21:36:30 | INF | dd | 000137 | Microsoft | OEM Event 12 / 2
+0071 | 01/15/24 21:36:30 | INF | dd | 000137 | Microsoft | OEM Event 13 0 2
+0072 | 01/15/24 21:36:30 | INF | dd | 000137 | Microsoft | OEM Event 14 4
+0073 | 01/15/24 21:36:31 | INF | dd | 000137 | Microsoft | OEM Event 15 5 :
+0074 | 01/15/24 21:36:31 | INF | dd | 000137 | Microsoft | OEM Event 16 3 4
+0075 | 01/15/24 21:36:31 | INF | dd | 000137 | Microsoft | OEM Event 17 : 1
+0076 | 01/15/24 21:36:31 | INF | dd | 000137 | Microsoft | OEM Event 18 3
+0077 | 01/15/24 21:36:31 | INF | dd | 000137 | Microsoft | OEM Event 19 A M
+0078 | 01/15/24 21:36:31 | INF | dd | 000137 | Microsoft | OEM Event 1a   t
+0079 | 01/15/24 21:36:31 | INF | dd | 000137 | Microsoft | OEM Event 1b o
+007a | 01/15/24 21:36:31 | INF | dd | 000137 | Microsoft | OEM Event 1c c o
+007b | 01/15/24 21:36:31 | INF | dd | 000137 | Microsoft | OEM Event 1d m p
+007c | 01/15/24 21:36:31 | INF | dd | 000137 | Microsoft | OEM Event 1e l e
+007d | 01/15/24 21:36:31 | INF | dd | 000137 | Microsoft | OEM Event 1f t e
+007e | 01/15/24 21:36:31 | INF | dd | 000137 | Microsoft | OEM Event 20   t
+007f | 01/15/24 21:36:31 | INF | dd | 000137 | Microsoft | OEM Event 21 h e
+0080 | 01/15/24 21:36:31 | INF | dd | 000137 | Microsoft | OEM Event 22   i
+0081 | 01/15/24 21:36:31 | INF | dd | 000137 | Microsoft | OEM Event 23 n s
+0082 | 01/15/24 21:36:31 | INF | dd | 000137 | Microsoft | OEM Event 24 t a
+0083 | 01/15/24 21:36:31 | INF | dd | 000137 | Microsoft | OEM Event 25 l l
+0084 | 01/15/24 21:36:31 | INF | dd | 000137 | Microsoft | OEM Event 26 a t
+0085 | 01/15/24 21:36:31 | INF | dd | 000137 | Microsoft | OEM Event 27 i o
+0086 | 01/15/24 21:36:31 | INF | dd | 000137 | Microsoft | OEM Event 28 n
+0087 | 01/15/24 21:36:31 | INF | dd | 000137 | Microsoft | OEM Event 29 o f
+0088 | 01/15/24 21:36:31 | INF | dd | 000137 | Microsoft | OEM Event 2a   a
+0089 | 01/15/24 21:36:31 | INF | dd | 000137 | Microsoft | OEM Event 2b p p
+008a | 01/15/24 21:36:31 | INF | dd | 000137 | Microsoft | OEM Event 2c l i
+008b | 01/15/24 21:36:31 | INF | dd | 000137 | Microsoft | OEM Event 2d c a
+008c | 01/15/24 21:36:31 | INF | dd | 000137 | Microsoft | OEM Event 2e t i
+008d | 01/15/24 21:36:31 | INF | dd | 000137 | Microsoft | OEM Event 2f o n
+008e | 01/15/24 21:36:32 | INF | dd | 000137 | Microsoft | OEM Event 30 s
+008f | 01/15/24 21:36:32 | INF | dd | 000137 | Microsoft | OEM Event 31 a n
+0090 | 01/15/24 21:36:32 | INF | dd | 000137 | Microsoft | OEM Event 32 d
+0091 | 01/15/24 21:36:32 | INF | dd | 000137 | Microsoft | OEM Event 33 s o
+0092 | 01/15/24 21:36:32 | INF | dd | 000137 | Microsoft | OEM Event 34 f t
+0093 | 01/15/24 21:36:32 | INF | dd | 000137 | Microsoft | OEM Event 35 w a
+0094 | 01/15/24 21:36:32 | INF | dd | 000137 | Microsoft | OEM Event 36 r e
+0095 | 01/15/24 21:36:32 | INF | dd | 000137 | Microsoft | OEM Event 37   u
+0096 | 01/15/24 21:36:32 | INF | dd | 000137 | Microsoft | OEM Event 38 p d
+0097 | 01/15/24 21:36:32 | INF | dd | 000137 | Microsoft | OEM Event 39 a t
+0098 | 01/15/24 21:36:32 | INF | dd | 000137 | Microsoft | OEM Event 3a e s
+0099 | 01/15/24 21:36:32 | INF | dd | 000137 | Microsoft | OEM Event 3b .
+009a | 01/15/24 21:36:47 | INF | BMC  | Management Subsystem Health | Subsystem_Health  | Sensor 35 fault
+009b | 01/15/24 21:36:47 | INF | c8 | 009c9c |  | OEM Event 00 02 00 00 00 00
+009c | 01/15/24 21:36:55 | INF | BMC  | Management Subsystem Health | Subsystem_Health  | Sensor 35 fault
+009d | 01/15/24 21:37:32 | INF | BMC  | OEM(e1) | BMC Health  | -
+009e | 01/15/24 21:37:32 | INF | BMC  | OEM(e1) | BMC Health  | -
+009f | 01/15/24 21:37:33 | INF | BMC  | OEM(e1) | BMC Health  | -
+00a0 | 01/15/24 21:37:33 | INF | BMC  | OEM(e1) | BMC Health  | -
+00a1 | 01/15/24 21:38:33 | INF | BMC  | OEM(e1) | BMC Health  | -
+00a2 | 01/15/24 21:38:34 | INF | BMC  | OEM(e1) | BMC Health  | -
+00a3 | 01/15/24 21:38:34 | INF | BMC  | OEM(e1) | BMC Health  | -
+00a4 | 01/15/24 21:38:34 | INF | BMC  | OEM(e1) | BMC Health  | -
+00a5 | 01/15/24 21:39:27 | INF | Sms  | OS Boot | na  | C: boot completed
+00a6 | 01/15/24 21:39:28 | INF | dc | 000137 | Microsoft | OEM Event 00 6f 16 a6 65 00
+00a7 | 01/19/24 07:18:01 | INF | Sms  | OS Critical Stop | na  | OS Graceful Shutdown
+00a8 | 01/19/24 07:18:01 | INF | dd | 000137 | Microsoft | OEM Event 00 15 00 07 80 00
+00a9 | 01/19/24 07:18:07 | INF | BMC  | OEM(d0) | NVDIMM  | -
+00aa | 01/19/24 07:18:07 | INF | BMC  | OEM(d0) | NVDIMM  | -
+00ab | 01/19/24 07:18:07 | INF | BMC  | ACPI Power State | ACPI State  | S5/G2 soft-off
+00ac | 01/19/24 08:48:37 | MAJ | BMC  | Power Supply | PSU_Status_Event  | Failure detected
+00ad | 01/19/24 08:48:37 | CRT | EFI  | Power Supply | #b3  | Predictive failure 6f [02 02 18]
+00ae | 01/19/24 08:48:37 | INF | BMC  | Power Supply | PSU_Status_Event  | -
+00af | 01/19/24 08:48:38 | INF | BMC  | OEM(d0) | NVDIMM  | -
+00b0 | 01/19/24 08:48:38 | INF | BMC  | Power Supply | PSU_Status_Event  | -
+00b1 | 01/22/24 00:03:50 | INF | BMC  | OEM(e0) | BMC Health  | -
+00b2 | 01/22/24 00:03:50 | INF | BMC  | Power Supply | PSU_Status_Event  | Inserted
+00b3 | 01/22/24 00:03:50 | INF | BMC  | Battery | BAT_Status_Event  | Present
+00b4 | 01/22/24 00:03:52 | INF | BMC  | Power Supply | PSU_Status_Event  | -
+00b5 | 01/22/24 00:03:52 | INF | BMC  | Power Supply | PSU_Status_Event  | AC Lost
+00b6 | 01/22/24 00:03:52 | INF | BMC  | Power Supply | PSU_Status_Event  | -
+00b7 | 01/22/24 00:03:53 | INF | BMC  | Power Supply | PSU_Status_Event  | -
+00b8 | 01/22/24 00:04:18 | INF | BMC  | ACPI Power State | ACPI State  | S0/G0 Working
+00b9 | 01/22/24 00:04:21 | INF | BMC  | Watchdog_2 | na  | -
+00ba | 01/22/24 00:04:22 | INF | c8 | 009c9c |  | OEM Event 00 02 00 00 00 00
+00bb | 01/22/24 00:04:30 | INF | BMC  | Management Subsystem Health | Subsystem_Health  | Sensor 35 fault
+00bc | 01/22/24 00:04:52 | INF | BMC  | OEM(e1) | BMC Health  | -
+00bd | 01/22/24 00:04:52 | INF | BMC  | OEM(e1) | BMC Health  | -
+00be | 01/22/24 00:04:52 | INF | BMC  | OEM(e1) | BMC Health  | -
+00bf | 01/22/24 00:04:52 | INF | BMC  | OEM(e1) | BMC Health  | -
+00c0 | 01/22/24 00:04:58 | INF | BMC  | OEM(e1) | BMC Health  | -
+00c1 | 01/22/24 00:04:58 | INF | BMC  | OEM(e1) | BMC Health  | -
+00c2 | 01/22/24 00:04:58 | INF | BMC  | OEM(e1) | BMC Health  | -
+00c3 | 01/22/24 00:04:59 | INF | BMC  | OEM(e1) | BMC Health  | -
+00c4 | 01/22/24 00:05:48 | INF | Sms  | OS Boot | na  | C: boot completed
+00c5 | 01/22/24 00:05:48 | INF | dc | 000137 | Microsoft | OEM Event 00 b4 21 ae 65 00
+00c6 | 02/08/24 00:08:12 | INF | BMC  | OEM(e0) | BMC Health  | -
+00c7 | 02/15/24 21:15:55 | INF | BMC  | Management Subsystem Health | Subsystem_Health  | Sensor af fault
+00c8 | 02/15/24 21:16:45 | INF | BMC  | Management Subsystem Health | Subsystem_Health  | Sensor af fault
+00c9 | 02/19/24 18:35:35 | INF | Sms  | OS Critical Stop | na  | OS Graceful Shutdown
+00ca | 02/19/24 18:35:35 | INF | dd | 000137 | Microsoft | OEM Event 00 ff 00 00 80 00
+00cb | 02/19/24 18:35:50 | INF | BMC  | Management Subsystem Health | Subsystem_Health  | Sensor 35 fault
+00cc | 02/19/24 18:35:50 | INF | c8 | 009c9c |  | OEM Event 00 02 00 00 00 00
+00cd | 02/19/24 18:35:59 | INF | BMC  | Management Subsystem Health | Subsystem_Health  | Sensor 35 fault
+00ce | 02/19/24 18:36:23 | INF | BMC  | OEM(e1) | BMC Health  | -
+00cf | 02/19/24 18:36:23 | INF | BMC  | OEM(e1) | BMC Health  | -
+00d0 | 02/19/24 18:36:24 | INF | BMC  | OEM(e1) | BMC Health  | -
+00d1 | 02/19/24 18:36:24 | INF | BMC  | OEM(e1) | BMC Health  | -
+00d2 | 02/19/24 18:37:24 | INF | BMC  | OEM(e1) | BMC Health  | -
+00d3 | 02/19/24 18:37:24 | INF | BMC  | OEM(e1) | BMC Health  | -
+00d4 | 02/19/24 18:37:25 | INF | BMC  | OEM(e1) | BMC Health  | -
+00d5 | 02/19/24 18:37:25 | INF | BMC  | OEM(e1) | BMC Health  | -
+00d6 | 02/19/24 18:38:19 | INF | Sms  | OS Boot | na  | C: boot completed
+00d7 | 02/19/24 18:38:19 | INF | dc | 000137 | Microsoft | OEM Event 00 78 10 d4 65 00
+00d8 | 02/19/24 18:39:03 | INF | Sms  | OS Critical Stop | na  | OS Graceful Shutdown
+00d9 | 02/19/24 18:39:03 | INF | dd | 000137 | Microsoft | OEM Event 00 03 00 02 80 00
+00da | 02/19/24 18:39:09 | INF | c8 | 009c9c |  | OEM Event 00 02 00 00 00 00
+00db | 02/19/24 18:39:09 | INF | BMC  | Management Subsystem Health | Subsystem_Health  | Sensor 35 fault
+00dc | 02/19/24 18:39:16 | INF | BMC  | Management Subsystem Health | Subsystem_Health  | Sensor 35 fault
+00dd | 02/19/24 18:39:41 | INF | BMC  | OEM(e1) | BMC Health  | -
+00de | 02/19/24 18:39:42 | INF | BMC  | OEM(e1) | BMC Health  | -
+00df | 02/19/24 18:39:42 | INF | BMC  | OEM(e1) | BMC Health  | -
+00e0 | 02/19/24 18:39:42 | INF | BMC  | OEM(e1) | BMC Health  | -
+00e1 | 02/19/24 18:40:42 | INF | BMC  | OEM(e1) | BMC Health  | -
+00e2 | 02/19/24 18:40:43 | INF | BMC  | OEM(e1) | BMC Health  | -
+00e3 | 02/19/24 18:40:43 | INF | BMC  | OEM(e1) | BMC Health  | -
+00e4 | 02/19/24 18:40:43 | INF | BMC  | OEM(e1) | BMC Health  | -
+00e5 | 02/19/24 18:41:35 | INF | Sms  | OS Boot | na  | C: boot completed
+00e6 | 02/19/24 18:41:35 | INF | dc | 000137 | Microsoft | OEM Event 00 3d 11 d4 65 00
+00e7 | 02/19/24 18:42:00 | CRT | EFI| Critical Interrupt | #a1 | Fatal NMI 6f [ab 00 09]
+00e8 | 02/19/24 18:42:00 | CRT | BMC | Processor | #8b | FRB2 timeout 6f [03 ff ff]
+00e9 | 02/19/24 18:42:00 | CRT | BMC | Processor | #8b | FRB3 Proc Error 6f [04 ff ff]
+00ea | 02/19/24 18:42:00 | CRT | EFI | Critical Interrupt | #a1 | Bus Warn  6f [a7 00 21]
+ipmiutil sel, completed successfully

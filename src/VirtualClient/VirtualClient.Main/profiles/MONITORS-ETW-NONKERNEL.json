@@ -1,0 +1,30 @@
+{
+  "Description": "Capturing the ETW traces for Nonkernel provider",
+  "Metadata": {
+    "SupportedPlatforms": "win-x64,win-arm64",
+    "SupportedOperatingSystems": "Windows"
+  },
+  "Parameters": {
+    "ProfilingEnabled": true,
+    "ProfilingMode": "Interval",
+    "ProfilingPeriod": "00:05:00",
+    "ProfilingInterval": "00:00:30",
+    "ProfilingWarmUpPeriod": "00:00:10"
+  },
+  "Monitors": [
+    {
+      "Type": "WindowsETWMonitor",
+      "Parameters": {
+        "Scenario": "CaptureNonKernelETWTraces",
+        "ProfilingEnabled": "$.Parameters.ProfilingEnabled",
+        "ProfilingMode": "$.Parameters.ProfilingMode",
+        "ProfilingPeriod": "$.Parameters.ProfilingPeriod",
+        "ProfilingInterval": "$.Parameters.ProfilingInterval",
+        "ProfilingWarmUpPeriod": "$.Parameters.ProfilingWarmUpPeriod",
+        "ProviderType": "NonKernel",
+        "Provider": "Microsoft-Windows-DotNETRuntime",
+        "JsonFilters": "{'EventName':['GCSetGCHandle','GCTriggered'],'Level':['4','2']}"
+      }
+    }
+  ]
+}
