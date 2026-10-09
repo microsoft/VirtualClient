@@ -8,6 +8,13 @@ The following sections describe the various monitor profiles that are available 
 define the background monitors that will run on the system. Monitors are often ran in conjunction with workloads (defined in workload profiles) in
 order to capture performance and reliability information from the system while workloads are running.
 
+## MONITORS-AZURE-HOST.json
+This compatibility profile captures IPMIUtil sensors, BMC SEL records, and Windows performance counters on an Azure host or blade. It preserves the monitor names, intervals, event filter, and counter definitions from the profile previously distributed by the internal Virtual Client extension.
+
+The profile supports `win-x64` and `win-arm64` and requires direct access to an IPMI-capable physical host. IPMIUtil must already be available on `PATH`. The SEL monitor can also use the legacy BladeFX tool location.
+
+See the [IPMIUtil monitor documentation](/docs/monitors/ipmiutil) for hardware requirements and emitted telemetry.
+
 ## MONITORS-DEFAULT.json
 The default monitor profile for the Virtual Client. This profile captures performance counters on the system using one or more different specialized
 toolsets. This monitor profile will be used when no other monitor profiles are specified on the command line.
@@ -140,3 +147,77 @@ any of the dependencies required by the driver. If the driver is not already ins
   # Run the monitoring facilities only.
   ./VirtualClient --profile=MONITORS-GPU-NVIDIA.json --logger=csv --log-to-file
   ```
+
+## MONITORS-ETW.json
+This profile runs both the kernel and non-kernel [Windows ETW monitor](/docs/monitors/windows-etw) configurations.
+
+* **Supported Platform-Architectures**
+  * win-x64
+  * win-arm64
+
+* **Scenarios**
+  * `CaptureKernelETWTraces` captures process start, process stop, and image-load events from the Windows kernel provider.
+  * `CaptureNonKernelETWTraces` captures selected garbage-collection events from the .NET runtime provider.
+
+* **Profile Parameters**
+
+  | Parameter | Purpose | Default value |
+  |-----------|---------|---------------|
+  | ProfilingEnabled | Enables or disables ETW collection. | `true` |
+  | ProfilingMode | Collection mode (`Interval` or `OnDemand`). | `Interval` |
+  | ProfilingPeriod | Length of each interval collection period. | `00:05:00` |
+  | ProfilingInterval | Delay between interval collection periods. | `00:00:30` |
+  | ProfilingWarmUpPeriod | Delay before interval collection starts. | `00:00:10` |
+
+* **Usage Examples**
+
+  ```powershell
+  # Run both ETW monitor configurations.
+  VirtualClient.exe --profile=MONITORS-ETW.json --timeout=00:30:00 --log-to-file
+
+  # Run ETW monitoring with a workload profile.
+  VirtualClient.exe --profile=PERF-NETWORK.json --profile=MONITORS-ETW.json --timeout=00:30:00 --log-to-file
+  ```
+
+## MONITORS-ETW-KERNEL.json
+This profile runs the [Windows ETW monitor](/docs/monitors/windows-etw) for the Windows kernel provider. It captures `ImageLoad`,
+`ProcessStart`, and `ProcessStop` events enabled by the `ImageLoad` and `Process` keywords.
+
+The profile supports win-x64 and win-arm64 and exposes the same profile parameters documented for
+[MONITORS-ETW.json](#monitors-etwjson).
+
+```powershell
+VirtualClient.exe --profile=MONITORS-ETW-KERNEL.json --timeout=00:30:00 --log-to-file
+```
+
+## MONITORS-ETW-NONKERNEL.json
+This profile runs the [Windows ETW monitor](/docs/monitors/windows-etw) for the `Microsoft-Windows-DotNETRuntime` provider. It captures
+`GCSetGCHandle` and `GCTriggered` events at the configured levels.
+
+The profile supports win-x64 and win-arm64 and exposes the same profile parameters documented for
+[MONITORS-ETW.json](#monitors-etwjson).
+
+```powershell
+VirtualClient.exe --profile=MONITORS-ETW-NONKERNEL.json --timeout=00:30:00 --log-to-file
+```
+
+## MONITORS-IPMIUTIL.json
+The IPMIUtil monitor profile captures BMC sensor measurements and System Event Log records throughout a Virtual Client run.
+
+* **Supported Platform-Architectures**
+  * linux-x64
+  * linux-arm64
+  * win-x64
+  * win-arm64
+
+* **Dependencies**
+  * A supported IPMI/BMC interface and sufficient privileges to access it.
+  * Linux access to an operating-system package repository that provides `ipmiutil`.
+  * Windows access to the Virtual Client package store containing `host.monitors.1.0.1.zip`.
+
+* **Scenarios**
+  * Capture numeric BMC sensor readings.
+  * Capture and combine decoded and raw BMC SEL records.
+  * Optionally preserve suspected hardware events and clear the SEL.
+
+See the [IPMIUtil monitor documentation](/docs/monitors/ipmiutil) for metrics, parameters, setup requirements, and examples.
