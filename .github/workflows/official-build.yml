@@ -61,6 +61,53 @@ jobs:
             call "%REPO_ROOT%\build-packages.cmd" --suffix -%VERSION_SUFFIX%
         )
 
+    #- name: Sign NuGet Packages
+    #  uses: microsoft/esrp-release-action@v1
+    #  with:
+    #    # Intent & Content Options
+    #    Intent: 'PackageDistribution'
+    #    ContentType: 'NuGet'
+    #    PackageLocation: '${{ env.REPO_ROOT }}'
+    #    Pattern: '*.nupkg'
+    #    ProductState: 'Existing' # Use 'New' if this is your first release
+    #    
+    #    # AAD App Registration & Tenant Mapping (from ADO ConnectedServiceName inputs)
+    #    DomainTenantId: '33e01921-4d64-4f8c-a055-5bdaffd5e33d'
+    #    KVName: 'virtualclient-vault-esrp'
+    #    KVAuthClient: '0225fe5c-2a99-4459-af16-27a7dcd1c14a'
+    #    KVAuthSecret: ${{ secrets.ESRP_KV_AUTH_SECRET }} # Store your app registration password/secret in GitHub Secrets
+    #    AuthCertName: 'virtualclient-esrp-cert-auth'
+    #    SignCertName: 'virtualclient-esrp-cert-sign'
+    #    
+    #    # Inline Signing Configuration JSON (mapping CP-401405 / NuGetSign / NuGetVerify)
+    #    InlineOperation: |
+    #      [
+    #        {
+    #          "KeyCode": "CP-401405",
+    #          "OperationCode": "NuGetSign",
+    #          "Parameters": {},
+    #          "ToolName": "sign",
+    #          "ToolVersion": "1.0"
+    #        },
+    #        {
+    #          "KeyCode": "CP-401405",
+    #          "OperationCode": "NuGetVerify",
+    #          "Parameters": {},
+    #          "ToolName": "sign",
+    #          "ToolVersion": "1.0"
+    #        }
+    #      ]
+    #    # Execution Controls & Timeouts
+    #    SessionTimeout: '60'
+    #    MaxConcurrency: '50'
+    #    MaxRetryAttempts: '5'
+    #    PendingAnalysisWaitTimeoutMinutes: '5'
+    #    
+    #    # Ownership metadata
+    #    Owners: 'virtualclient_msft'
+    #    MainPublisher: 'Microsoft'
+    #    ServiceEndpointUrl: 'https://api.esrp.microsoft.com'
+
       # Exchanges GitHub OIDC token for a short-lived NuGet API key (~1 hour lifespan)
     - name: Login to NuGet
       id: nuget-login
