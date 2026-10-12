@@ -1,0 +1,71 @@
+# This workflow will build a .NET project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
+
+name: Official Build
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch: # This enables the manual button
+    inputs:
+        version_suffix:
+          description: 'Version suffix (e.g. beta)'
+          required: false
+          default: 'beta'
+          type: string
+
+jobs:
+  publish:
+    name: Official Build and Test
+    runs-on: windows-latest
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+      security-events: write
+
+    # Define environment variables for the job. 
+    # TIP: If using a repository-level variable from GitHub Settings > Secrets and variables > Actions, 
+    # replace ${{ env.VERSION_SUFFIX }} with ${{ vars.VERSION_SUFFIX }}.
+    env:
+      VERSION_SUFFIX: ${{ inputs.version_suffix }}
+
+    strategy:
+      fail-fast: false
+
+    steps:
+    - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 9.0.x
+
+      # Build the source code projects.
+    - name: Build
+      run: ./build.cmd
+
+    - name: Build Packages
+      shell: cmd
+      run: |
+        if "%VERSION_SUFFIX%" == "" (
+            echo:
+            echo Building stable release...
+            ./build-packages.cmd
+        ) else (
+            echo:
+            echo Building '%VERSION_SUFFIX%' release...
+            ./build-packages.cmd --suffix -%VERSION_SUFFIX%
+        )
+
+      # Exchanges GitHub OIDC token for a short-lived NuGet API key (~1 hour lifespan)
+    - name: Login to NuGet
+      id: nuget-login
+      uses: NuGet/login@v1
+      with:
+        user: 'VirtualClient' # Your NuGet.org account or org username
+
+      # Push using the temporary key output by the login step
+    - name: Publish to NuGet.org
+      run: >
+        dotnet nuget push "./out/packages/*.nupkg" --api-key ${{ steps.nuget-login.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
