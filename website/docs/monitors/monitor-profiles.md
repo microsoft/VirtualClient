@@ -155,6 +155,9 @@ This profile runs both the kernel and non-kernel [Windows ETW monitor](/docs/mon
   * win-x64
   * win-arm64
 
+* **Dependencies**
+  * Virtual Client must run with administrator privileges.
+
 * **Scenarios**
   * `CaptureKernelETWTraces` captures process start, process stop, and image-load events from the Windows kernel provider.
   * `CaptureNonKernelETWTraces` captures selected garbage-collection events from the .NET runtime provider.
@@ -172,34 +175,69 @@ This profile runs both the kernel and non-kernel [Windows ETW monitor](/docs/mon
 * **Usage Examples**
 
   ```powershell
-  # Run both ETW monitor configurations.
-  VirtualClient.exe --profile=MONITORS-ETW.json --timeout=00:30:00 --log-to-file
+  # Run both ETW monitor configurations and write telemetry locally.
+  VirtualClient.exe --profile=MONITORS-ETW.json --timeout=00:30:00 --logger=file
 
-  # Run ETW monitoring with a workload profile.
-  VirtualClient.exe --profile=PERF-NETWORK.json --profile=MONITORS-ETW.json --timeout=00:30:00 --log-to-file
+  # Run both ETW monitor configurations with a workload profile.
+  VirtualClient.exe --profile=PERF-NETWORK.json --profile=MONITORS-ETW.json --timeout=00:30:00 --logger=file
+
+  # Upload ETW telemetry to an Event Hub. Internet connectivity is required.
+  VirtualClient.exe --profile=PERF-NETWORK.json --profile=MONITORS-ETW.json --timeout=00:30:00 --event-hub="<Event Hub connection>"
   ```
 
 ## MONITORS-ETW-KERNEL.json
 This profile runs the [Windows ETW monitor](/docs/monitors/windows-etw) for the Windows kernel provider. It captures `ImageLoad`,
 `ProcessStart`, and `ProcessStop` events enabled by the `ImageLoad` and `Process` keywords.
 
-The profile supports win-x64 and win-arm64 and exposes the same profile parameters documented for
-[MONITORS-ETW.json](#monitors-etwjson).
+* **Supported Platform-Architectures**
+  * win-x64
+  * win-arm64
 
-```powershell
-VirtualClient.exe --profile=MONITORS-ETW-KERNEL.json --timeout=00:30:00 --log-to-file
-```
+* **Dependencies**
+  * Virtual Client must run with administrator privileges.
+
+* **Profile Parameters**
+  See [MONITORS-ETW.json](#monitors-etwjson).
+
+* **Usage Examples**
+
+  ```powershell
+  # Run the kernel ETW monitor and write telemetry locally.
+  VirtualClient.exe --profile=MONITORS-ETW-KERNEL.json --timeout=00:30:00 --logger=file
+
+  # Run the kernel ETW monitor with a workload profile.
+  VirtualClient.exe --profile=PERF-NETWORK.json --profile=MONITORS-ETW-KERNEL.json --timeout=00:30:00 --logger=file
+
+  # Upload kernel ETW telemetry to an Event Hub. Internet connectivity is required.
+  VirtualClient.exe --profile=PERF-NETWORK.json --profile=MONITORS-ETW-KERNEL.json --timeout=00:30:00 --event-hub="<Event Hub connection>"
+  ```
 
 ## MONITORS-ETW-NONKERNEL.json
 This profile runs the [Windows ETW monitor](/docs/monitors/windows-etw) for the `Microsoft-Windows-DotNETRuntime` provider. It captures
 `GCSetGCHandle` and `GCTriggered` events at the configured levels.
 
-The profile supports win-x64 and win-arm64 and exposes the same profile parameters documented for
-[MONITORS-ETW.json](#monitors-etwjson).
+* **Supported Platform-Architectures**
+  * win-x64
+  * win-arm64
 
-```powershell
-VirtualClient.exe --profile=MONITORS-ETW-NONKERNEL.json --timeout=00:30:00 --log-to-file
-```
+* **Dependencies**
+  * Virtual Client must run with administrator privileges.
+
+* **Profile Parameters**
+  See [MONITORS-ETW.json](#monitors-etwjson).
+
+* **Usage Examples**
+
+  ```powershell
+  # Run the non-kernel ETW monitor and write telemetry locally.
+  VirtualClient.exe --profile=MONITORS-ETW-NONKERNEL.json --timeout=00:30:00 --logger=file
+
+  # Run the non-kernel ETW monitor with a workload profile.
+  VirtualClient.exe --profile=PERF-NETWORK.json --profile=MONITORS-ETW-NONKERNEL.json --timeout=00:30:00 --logger=file
+
+  # Upload non-kernel ETW telemetry to an Event Hub. Internet connectivity is required.
+  VirtualClient.exe --profile=PERF-NETWORK.json --profile=MONITORS-ETW-NONKERNEL.json --timeout=00:30:00 --event-hub="<Event Hub connection>"
+  ```
 
 ## MONITORS-IPMIUTIL.json
 The IPMIUtil monitor profile captures BMC sensor measurements and System Event Log records throughout a Virtual Client run.

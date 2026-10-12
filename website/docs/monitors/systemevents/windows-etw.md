@@ -117,7 +117,7 @@ Virtual Client includes ready-to-use profiles for kernel, non-kernel, and combin
 
 ## Troubleshooting
 * **Unauthorized error** - Start Virtual Client from an elevated command prompt or PowerShell session.
-* **No events captured** - Confirm the provider name or GUID, keywords, and event names. The provider must emit events while the session is
+* **No events captured** - Confirm the provider name, keywords, and event names. The provider must emit events while the session is
   active.
 * **No events after adding filters** - Confirm each filter key matches an emitted header or payload field and each value is represented as a
   string in an array.
