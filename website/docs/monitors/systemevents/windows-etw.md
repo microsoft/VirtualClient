@@ -41,8 +41,8 @@ The event information includes standard ETW fields such as `ActivityID`, `Provid
 `Task`, `TaskName`, `OpCode`, `OpCodeName`, `Keywords`, `TimeStamp`, `ProcessID`, `ProcessName`, `ProcessorNumber`, `ThreadID`, and
 `EventName`. Provider-specific payload fields are added using their ETW payload names.
 
-When `--log-to-file` is specified, the configured Virtual Client logger writes these events to the local logs directory. Other configured
-telemetry loggers can consume the same system-event records.
+When `--logger=file` is specified, Virtual Client writes these events to the local logs directory. Other configured telemetry loggers can
+consume the same system-event records.
 
 ## Parameters
 The following parameters are available for the `WindowsETWMonitor` component.
@@ -58,7 +58,7 @@ The following parameters are available for the `WindowsETWMonitor` component.
 | ProfilingMode | No | Collection mode. Supported values are `Interval` and `OnDemand`. | `None` |
 | ProfilingPeriod | Interval mode | Length of each collection period. | `00:05:00` |
 | ProfilingInterval | Interval mode | Delay between collection periods. | `00:00:30` |
-| ProfilingWarmUpPeriod | No | Delay before interval collection begins. On-demand requests supply their own warm-up period. | `00:00:10` in the provided profiles |
+| ProfilingWarmUpPeriod | No | Delay before interval collection begins. On-demand requests supply their own warm-up period. | |
 | Scenario | No | Name describing the purpose of the monitor in the profile. | |
 
 `JsonFilters` values must be strings, including values that represent numbers. For example:
@@ -68,7 +68,8 @@ The following parameters are available for the `WindowsETWMonitor` component.
 ```
 
 ## Usage Examples
-The following example captures process and image-load kernel events on an interval:
+Add one or both of the following monitor entries to the `Monitors` section of an execution profile. The following example captures process and
+image-load kernel events on an interval:
 
 ```json
 "Monitors": [
@@ -112,8 +113,18 @@ The following example captures selected .NET runtime events:
 ]
 ```
 
-Virtual Client includes ready-to-use profiles for kernel, non-kernel, and combined collection. See
-[Monitor Profiles](/docs/monitors/monitor-profiles#monitors-etwjson).
+After saving the profile (for example, as `MONITORS-CUSTOM-ETW.json`), run it by itself or with a workload:
+
+```powershell
+# Run ETW monitoring and write telemetry locally.
+VirtualClient.exe --profile=MONITORS-CUSTOM-ETW.json --timeout=00:30:00 --logger=file
+
+# Run ETW monitoring with a workload profile.
+VirtualClient.exe --profile=PERF-NETWORK.json --profile=MONITORS-CUSTOM-ETW.json --timeout=00:30:00 --logger=file
+
+# Upload ETW telemetry to an Event Hub. Internet connectivity is required.
+VirtualClient.exe --profile=PERF-NETWORK.json --profile=MONITORS-CUSTOM-ETW.json --timeout=00:30:00 --event-hub="<Event Hub connection>"
+```
 
 ## Troubleshooting
 * **Unauthorized error** - Start Virtual Client from an elevated command prompt or PowerShell session.

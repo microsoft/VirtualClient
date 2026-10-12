@@ -22,15 +22,8 @@ The system must expose an IPMI/BMC interface that IPMIUtil can access. The monit
 
 ## Installation
 
-The `MONITORS-IPMIUTIL.json` profile installs IPMIUtil from the operating-system package repository on Linux. On Windows, it downloads `host.monitors.1.0.1.zip` from the Virtual Client `packages` container, so a package store must be supplied when the package is not already cached.
-
-``` bash
-# Linux
-sudo ./VirtualClient --profile=MONITORS-IPMIUTIL.json --timeout=30 --logger=csv --log-to-file
-
-# Windows
-VirtualClient.exe --profile=MONITORS-IPMIUTIL.json --timeout=30 --packages="<package store connection>" --logger=csv --log-to-file
-```
+Install `ipmiutil` from the operating-system package repository on Linux. On Windows, install `host.monitors.1.0.1.zip` from the Virtual Client
+`packages` container, supplying a package store when the package is not already cached. The usage example below shows both dependency definitions.
 
 The monitors search for `ipmiutil` or `ipmiutil.exe` on `PATH`. The SEL monitor also checks the legacy
 `C:\BladeFX_latest\BladeFX\Tools\IpmiUtil\ipmiutil.exe` location as a final fallback.
@@ -101,15 +94,75 @@ Optional SEL decoding requires a separately supplied decoder package. The IPMIUt
 
 ## Usage Examples
 
-``` bash
+The following sections can be added to a custom execution profile:
+
+```json
+"Parameters": {
+  "MonitorFrequency": "00:01:00",
+  "MonitorWarmupPeriod": "00:00:00",
+  "MonitorIterations": -1,
+  "ClearSel": false,
+  "EventsFilter": "MAJ|CRT"
+},
+"Monitors": [
+  {
+    "Type": "IpmiUtilSensorMonitor",
+    "Parameters": {
+      "Scenario": "CaptureBmcSensorData",
+      "PackageName": "host.monitors",
+      "MonitorFrequency": "$.Parameters.MonitorFrequency",
+      "MonitorWarmupPeriod": "$.Parameters.MonitorWarmupPeriod",
+      "MonitorIterations": "$.Parameters.MonitorIterations"
+    }
+  },
+  {
+    "Type": "IpmiUtilSelMonitor",
+    "Parameters": {
+      "Scenario": "CaptureBmcSelData",
+      "PackageName": "host.monitors",
+      "MonitorFrequency": "$.Parameters.MonitorFrequency",
+      "MonitorWarmupPeriod": "$.Parameters.MonitorWarmupPeriod",
+      "MonitorIterations": "$.Parameters.MonitorIterations",
+      "ClearSel": "$.Parameters.ClearSel",
+      "EventsFilter": "$.Parameters.EventsFilter"
+    }
+  }
+],
+"Dependencies": [
+  {
+    "Type": "DependencyPackageInstallation",
+    "Parameters": {
+      "Scenario": "InstallIpmiutilWindowsPackage",
+      "BlobContainer": "packages",
+      "BlobName": "host.monitors.1.0.1.zip",
+      "PackageName": "host.monitors",
+      "Extract": true,
+      "SupportedPlatforms": "win-x64,win-arm64"
+    }
+  },
+  {
+    "Type": "LinuxPackageInstallation",
+    "Parameters": {
+      "Scenario": "InstallIpmiutilLinuxPackage",
+      "Packages": "ipmiutil",
+      "AllowUpgrades": true,
+      "SupportedPlatforms": "linux-x64,linux-arm64"
+    }
+  }
+]
+```
+
+After saving the profile (for example, as `MONITORS-CUSTOM-IPMIUTIL.json`), run it with the desired parameters:
+
+```bash
 # Capture sensors and major/critical SEL events for 30 minutes.
-sudo ./VirtualClient --profile=MONITORS-IPMIUTIL.json --timeout=30
+sudo ./VirtualClient --profile=MONITORS-CUSTOM-IPMIUTIL.json --timeout=30
 
 # Capture all decoded SEL severities without clearing the SEL.
-sudo ./VirtualClient --profile=MONITORS-IPMIUTIL.json --timeout=30 --parameters="EventsFilter=.*;;;ClearSel=false"
+sudo ./VirtualClient --profile=MONITORS-CUSTOM-IPMIUTIL.json --timeout=30 --parameters="EventsFilter=.*;;;ClearSel=false"
 
-# Capture only one iteration after a 10-second warmup.
-VirtualClient.exe --profile=MONITORS-IPMIUTIL.json --timeout=5 --parameters="MonitorIterations=1;;;MonitorWarmupPeriod=00:00:10" --packages="<package store connection>"
+# Capture one iteration after a 10-second warmup on Windows.
+VirtualClient.exe --profile=MONITORS-CUSTOM-IPMIUTIL.json --timeout=5 --parameters="MonitorIterations=1;;;MonitorWarmupPeriod=00:00:10" --packages="<package store connection>"
 ```
 
 ## Troubleshooting
