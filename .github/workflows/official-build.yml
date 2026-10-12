@@ -28,6 +28,7 @@ jobs:
     # TIP: If using a repository-level variable from GitHub Settings > Secrets and variables > Actions, 
     # replace ${{ env.VERSION_SUFFIX }} with ${{ vars.VERSION_SUFFIX }}.
     env:
+      REPO_ROOT: ${{ github.workspace }}
       VERSION_SUFFIX: ${{ inputs.version_suffix }}
 
     strategy:
@@ -43,7 +44,9 @@ jobs:
 
       # Build the source code projects.
     - name: Build
-      run: ./build.cmd
+      shell: cmd
+      run: |
+        call "%REPO_ROOT%\build.cmd"
 
     - name: Build Packages
       shell: cmd
@@ -51,11 +54,11 @@ jobs:
         if "%VERSION_SUFFIX%" == "" (
             echo:
             echo Building stable release...
-            ./build-packages.cmd
+            call "%REPO_ROOT%\build-packages.cmd"
         ) else (
             echo:
             echo Building '%VERSION_SUFFIX%' release...
-            ./build-packages.cmd --suffix -%VERSION_SUFFIX%
+            call "%REPO_ROOT%\build-packages.cmd" --suffix -%VERSION_SUFFIX%
         )
 
       # Exchanges GitHub OIDC token for a short-lived NuGet API key (~1 hour lifespan)
@@ -67,5 +70,6 @@ jobs:
 
       # Push using the temporary key output by the login step
     - name: Publish to NuGet.org
-      run: >
-        dotnet nuget push "./out/packages/*.nupkg" --api-key ${{ steps.nuget-login.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+      shell: cmd
+      run: |
+        dotnet nuget push "%REPO_ROOT%\out\packages\*.nupkg" --api-key ${{ steps.nuget-login.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
