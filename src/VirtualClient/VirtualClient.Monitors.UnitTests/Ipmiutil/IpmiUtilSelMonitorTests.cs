@@ -1829,7 +1829,7 @@ ID    Timestamp (UTC)      Sensor/OEM(Owner)                              Sensor
             Assert.IsNotNull(capturedInputPath);
             // Millisecond format: yyyy-MM-dd-HH-mm-ss-fff — the timestamp portion has 23 chars
             // Example: 2026-05-17-10-27-15-830_input_selRecords.txt
-            string fileName = Path.GetFileName(capturedInputPath);
+            string fileName = Path.GetFileName(capturedInputPath.Replace('\\', Path.DirectorySeparatorChar));
             string timestampPart = fileName.Substring(0, fileName.IndexOf("_input_selRecords"));
             Assert.AreEqual(23, timestampPart.Length, "Timestamp should be in yyyy-MM-dd-HH-mm-ss-fff format (23 chars).");
         }
