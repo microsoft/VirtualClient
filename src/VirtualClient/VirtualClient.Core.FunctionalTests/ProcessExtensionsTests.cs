@@ -79,7 +79,7 @@ namespace VirtualClient
                 {
                     using (var tokenSource = new CancellationTokenSource())
                     {
-                        var processManager = new WindowsProcessManager();
+                        var processManager = new ProcessManager(PlatformID.Win32NT);
                         using (IProcessProxy process = processManager.CreateProcess("ipconfig", "/all"))
                         {
                             await process.StartAndWaitAsync(tokenSource.Token);
@@ -112,7 +112,7 @@ namespace VirtualClient
                 {
                     using (var tokenSource = new CancellationTokenSource())
                     {
-                        var processManager = new WindowsProcessManager();
+                        var processManager = new ProcessManager(PlatformID.Win32NT);
                         using (IProcessProxy process = processManager.CreateProcess("ipconfig", "/all"))
                         {
                             await tokenSource.CancelAsync();
@@ -146,7 +146,7 @@ namespace VirtualClient
                 {
                     using (var tokenSource = new CancellationTokenSource())
                     {
-                        var processManager = new WindowsProcessManager();
+                        var processManager = new ProcessManager(PlatformID.Win32NT);
                         using (IProcessProxy process = processManager.CreateProcess("ipconfig", "/all"))
                         {
                             await process.StartAndWaitAsync(tokenSource.Token, timeout: TimeSpan.Zero);
@@ -182,7 +182,7 @@ namespace VirtualClient
                 {
                     using (var tokenSource = new CancellationTokenSource())
                     {
-                        var processManager = new UnixProcessManager();
+                        var processManager = new ProcessManager(PlatformID.Unix);
                         using (IProcessProxy process = processManager.CreateProcess("bash", "--version"))
                         {
                             await process.StartAndWaitAsync(tokenSource.Token);
@@ -215,7 +215,7 @@ namespace VirtualClient
                 {
                     using (var tokenSource = new CancellationTokenSource())
                     {
-                        var processManager = new UnixProcessManager();
+                        var processManager = new ProcessManager(PlatformID.Unix);
                         using (IProcessProxy process = processManager.CreateProcess("bash", "--version"))
                         {
                             await tokenSource.CancelAsync();
@@ -249,7 +249,7 @@ namespace VirtualClient
                 {
                     using (var tokenSource = new CancellationTokenSource())
                     {
-                        var processManager = new UnixProcessManager();
+                        var processManager = new ProcessManager(PlatformID.Unix);
                         using (IProcessProxy process = processManager.CreateProcess("bash", "--version"))
                         {
                             await process.StartAndWaitAsync(tokenSource.Token, timeout: TimeSpan.Zero);

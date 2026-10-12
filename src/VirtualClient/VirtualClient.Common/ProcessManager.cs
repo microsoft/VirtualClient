@@ -7,16 +7,38 @@ namespace VirtualClient.Common
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
+    using VirtualClient.Common.Extensions;
 
     /// <summary>
     /// Provides methods for creating and managing processes on the system.
     /// </summary>
-    public abstract class ProcessManager
+    public class ProcessManager
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ProcessManager"/> class.
+        /// </summary>
+        public ProcessManager()
+        {
+            this.Platform = Environment.OSVersion.Platform;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ProcessManager"/> class.
+        /// </summary>
+        public ProcessManager(PlatformID platform)
+        {
+            this.Platform = platform;
+        }
+
+        /// <summary>
+        /// Event that is raised when a process is created on the system.
+        /// </summary>
+        public event EventHandler<IProcessProxy> ProcessCreated;
+
         /// <summary>
         /// The OS platform for the current runtime.
         /// </summary>
-        public abstract PlatformID Platform { get; }
+        public PlatformID Platform { get; }
 
         /// <summary>
         /// Creates a process manager for the OS/system.
@@ -28,11 +50,11 @@ namespace VirtualClient.Common
             switch (platform)
             {
                 case PlatformID.Win32NT:
-                    manager = new WindowsProcessManager();
+                    manager = new ProcessManager(platform);
                     break;
 
                 case PlatformID.Unix:
-                    manager = new UnixProcessManager();
+                    manager = new ProcessManager(platform);
                     break;
 
                 default:
@@ -48,7 +70,29 @@ namespace VirtualClient.Common
         /// <param name="command">The command to execute.</param>
         /// <param name="arguments">The arguments pass to the command.</param>
         /// <param name="workingDir">Path to the working directory</param>
-        public abstract IProcessProxy CreateProcess(string command, string arguments = null, string workingDir = null);
+        public virtual IProcessProxy CreateProcess(string command, string arguments = null, string workingDir = null)
+        {
+            command.ThrowIfNullOrWhiteSpace(nameof(command));
+
+            Process process = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = command,
+                    Arguments = arguments,
+                    WorkingDirectory = workingDir,
+                    CreateNoWindow = true,
+                    UseShellExecute = false,
+                    RedirectStandardError = true,
+                    RedirectStandardOutput = true
+                }
+            };
+
+            IProcessProxy proxy = new ProcessProxy(process);
+            this.ProcessCreated?.Invoke(this, proxy);
+
+            return proxy;
+        }
 
         /// <summary>
         /// Returns the process with a matching ID.
