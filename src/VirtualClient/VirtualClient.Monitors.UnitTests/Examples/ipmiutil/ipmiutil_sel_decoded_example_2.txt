@@ -1,0 +1,1946 @@
+ipmiutil sel version 3.18
+-- BMC version 18.11, IPMI version 2.0 
+SEL  Size = 2048 records (Used=1940, Free=3640)
+Showing SEL Time as UTC
+RecId | Date/Time  | SEV | Src | Evt_Type | Sensor | Evt_detail 
+1601 | 01/28/25 04:03:51 | INF | d0 | 000020 |  | OEM Event 94 98 94 97 93 97 
+1602 | 01/28/25 04:03:51 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1603 | 01/28/25 04:03:51 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1604 | 01/28/25 04:03:51 | MIN | BMC  | Temperature | HMC_TMP  | Hi Noncrit thresh actual=127.00 C, threshold=75.00 C
+1605 | 01/28/25 04:03:51 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1606 | 01/28/25 04:03:51 | INF | d0 | 000020 |  | OEM Event 94 98 94 97 93 97 
+1607 | 01/28/25 04:03:51 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1608 | 01/28/25 04:03:51 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1609 | 01/28/25 04:03:51 | INF | BMC  | OEM(e0) | BMC_Health  | - 
+160a | 01/28/25 04:03:52 | INF | BMC  | Temperature | HMC_TMP  | HiU thresh OK now actual=34.00 C, threshold=85.00 C
+160b | 01/28/25 04:03:52 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+160c | 01/28/25 04:03:52 | INF | d0 | 000020 |  | OEM Event 94 98 94 97 94 97 
+160d | 01/28/25 04:03:52 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+160e | 01/28/25 04:03:52 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+160f | 01/28/25 04:03:52 | INF | BMC  | Temperature | HMC_TMP  | HiC thresh OK now actual=34.00 C, threshold=80.00 C
+1610 | 01/28/25 04:03:52 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1611 | 01/28/25 04:03:52 | INF | d0 | 000020 |  | OEM Event 94 98 94 97 94 97 
+1612 | 01/28/25 04:03:52 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1613 | 01/28/25 04:03:52 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1614 | 01/28/25 04:03:52 | INF | BMC  | Temperature | HMC_TMP  | HiN thresh OK now actual=34.00 C, threshold=75.00 C
+1615 | 01/28/25 04:03:52 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1616 | 01/28/25 04:03:52 | INF | d0 | 000020 |  | OEM Event 94 98 94 97 94 97 
+1617 | 01/28/25 04:03:52 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1618 | 01/28/25 04:03:52 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1619 | 01/28/25 05:50:08 | CRT | BMC  | Temperature | GPU1_DRAM0_TMP0  | Hi Unrec thresh actual=127.00 C, threshold=110.00 C
+161a | 01/28/25 05:50:08 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+161b | 01/28/25 05:50:09 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+161c | 01/28/25 05:50:09 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+161d | 01/28/25 05:50:09 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+161e | 01/28/25 05:50:09 | MAJ | BMC  | Temperature | GPU1_DRAM0_TMP0  | Hi Crit thresh actual=127.00 C, threshold=107.00 C
+161f | 01/28/25 05:50:09 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1620 | 01/28/25 05:50:09 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+1621 | 01/28/25 05:50:09 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1622 | 01/28/25 05:50:09 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1623 | 01/28/25 05:50:09 | MIN | BMC  | Temperature | GPU1_DRAM0_TMP0  | Hi Noncrit thresh actual=127.00 C, threshold=105.00 C
+1624 | 01/28/25 05:50:09 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1625 | 01/28/25 05:50:09 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+1626 | 01/28/25 05:50:09 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1627 | 01/28/25 05:50:09 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1628 | 01/28/25 05:50:09 | INF | BMC  | Temperature | GPU1_DRAM0_TMP0  | HiU thresh OK now actual=39.00 C, threshold=110.00 C
+1629 | 01/28/25 05:50:09 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+162a | 01/28/25 05:50:10 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+162b | 01/28/25 05:50:10 | INF | d0 | 000020 |  | OEM Event 94 97 94 96 94 97 
+162c | 01/28/25 05:50:10 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+162d | 01/28/25 05:50:10 | INF | BMC  | Temperature | GPU1_DRAM0_TMP0  | HiC thresh OK now actual=39.00 C, threshold=107.00 C
+162e | 01/28/25 05:50:10 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+162f | 01/28/25 05:50:10 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+1630 | 01/28/25 05:50:10 | INF | d0 | 000020 |  | OEM Event 94 97 94 96 94 97 
+1631 | 01/28/25 05:50:10 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1632 | 01/28/25 05:50:10 | INF | BMC  | Temperature | GPU1_DRAM0_TMP0  | HiN thresh OK now actual=39.00 C, threshold=105.00 C
+1633 | 01/28/25 05:50:10 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1634 | 01/28/25 05:50:10 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+1635 | 01/28/25 05:50:10 | INF | d0 | 000020 |  | OEM Event 94 97 94 96 94 97 
+1636 | 01/28/25 05:50:10 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1637 | 01/28/25 08:09:43 | CRT | BMC  | Temperature | HMC_TMP  | Hi Unrec thresh actual=127.00 C, threshold=85.00 C
+1638 | 01/28/25 08:09:43 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1639 | 01/28/25 08:09:44 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+163a | 01/28/25 08:09:44 | INF | d0 | 000020 |  | OEM Event 94 97 94 96 94 97 
+163b | 01/28/25 08:09:44 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+163c | 01/28/25 08:09:44 | MAJ | BMC  | Temperature | HMC_TMP  | Hi Crit thresh actual=127.00 C, threshold=80.00 C
+163d | 01/28/25 08:09:44 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+163e | 01/28/25 08:09:44 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+163f | 01/28/25 08:09:44 | INF | d0 | 000020 |  | OEM Event 94 97 94 96 94 97 
+1640 | 01/28/25 08:09:44 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 ff ff 
+1641 | 01/28/25 08:09:44 | MIN | BMC  | Temperature | HMC_TMP  | Hi Noncrit thresh actual=127.00 C, threshold=75.00 C
+1642 | 01/28/25 08:09:44 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1643 | 01/28/25 08:09:44 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+1644 | 01/28/25 08:09:44 | INF | d0 | 000020 |  | OEM Event 94 97 94 96 94 97 
+1645 | 01/28/25 08:09:44 | INF | d0 | 000020 |  | OEM Event 94 96 94 96 ff ff 
+1646 | 01/28/25 08:09:44 | INF | BMC  | Temperature | HMC_TMP  | HiU thresh OK now actual=34.00 C, threshold=85.00 C
+1647 | 01/28/25 08:09:44 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1648 | 01/28/25 08:09:44 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+1649 | 01/28/25 08:09:44 | INF | d0 | 000020 |  | OEM Event 94 97 94 96 94 97 
+164a | 01/28/25 08:09:44 | INF | d0 | 000020 |  | OEM Event 94 96 94 96 ff ff 
+164b | 01/28/25 08:09:45 | INF | BMC  | Temperature | HMC_TMP  | HiC thresh OK now actual=34.00 C, threshold=80.00 C
+164c | 01/28/25 08:09:45 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+164d | 01/28/25 08:09:45 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+164e | 01/28/25 08:09:45 | INF | d0 | 000020 |  | OEM Event 94 97 94 96 94 97 
+164f | 01/28/25 08:09:45 | INF | d0 | 000020 |  | OEM Event 94 97 94 96 ff ff 
+1650 | 01/28/25 08:09:45 | INF | BMC  | Temperature | HMC_TMP  | HiN thresh OK now actual=34.00 C, threshold=75.00 C
+1651 | 01/28/25 08:09:45 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1652 | 01/28/25 08:09:45 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+1653 | 01/28/25 08:09:45 | INF | d0 | 000020 |  | OEM Event 94 97 94 96 94 97 
+1654 | 01/28/25 08:09:45 | INF | d0 | 000020 |  | OEM Event 94 97 94 96 ff ff 
+1655 | 01/29/25 04:20:23 | CRT | BMC  | Temperature | GPU2_DRAM0_TMP0  | Hi Unrec thresh actual=127.00 C, threshold=110.00 C
+1656 | 01/29/25 04:20:23 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1657 | 01/29/25 04:20:23 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+1658 | 01/29/25 04:20:23 | INF | d0 | 000020 |  | OEM Event 94 96 94 96 94 97 
+1659 | 01/29/25 04:20:23 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+165a | 01/29/25 04:20:23 | MAJ | BMC  | Temperature | GPU2_DRAM0_TMP0  | Hi Crit thresh actual=127.00 C, threshold=107.00 C
+165b | 01/29/25 04:20:23 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+165c | 01/29/25 04:20:24 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+165d | 01/29/25 04:20:24 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 94 97 
+165e | 01/29/25 04:20:24 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+165f | 01/29/25 04:20:24 | MIN | BMC  | Temperature | GPU2_DRAM0_TMP0  | Hi Noncrit thresh actual=127.00 C, threshold=105.00 C
+1660 | 01/29/25 04:20:24 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1661 | 01/29/25 04:20:24 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+1662 | 01/29/25 04:20:24 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 94 97 
+1663 | 01/29/25 04:20:24 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1664 | 01/29/25 04:20:24 | INF | BMC  | Temperature | GPU2_DRAM0_TMP0  | HiU thresh OK now actual=33.00 C, threshold=110.00 C
+1665 | 01/29/25 04:20:24 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1666 | 01/29/25 04:20:24 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+1667 | 01/29/25 04:20:24 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 94 97 
+1668 | 01/29/25 04:20:24 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1669 | 01/29/25 04:20:24 | INF | BMC  | Temperature | GPU2_DRAM0_TMP0  | HiC thresh OK now actual=33.00 C, threshold=107.00 C
+166a | 01/29/25 04:20:24 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+166b | 01/29/25 04:20:25 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+166c | 01/29/25 04:20:25 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+166d | 01/29/25 04:20:25 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 ff ff 
+166e | 01/29/25 04:20:25 | INF | BMC  | Temperature | GPU2_DRAM0_TMP0  | HiN thresh OK now actual=33.00 C, threshold=105.00 C
+166f | 01/29/25 04:20:25 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1670 | 01/29/25 04:20:25 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+1671 | 01/29/25 04:20:25 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1672 | 01/29/25 04:20:25 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 ff ff 
+1673 | 01/29/25 05:10:52 | CRT | BMC  | Temperature | GPU0_DRAM0_TMP0  | Hi Unrec thresh actual=127.00 C, threshold=110.00 C
+1674 | 01/29/25 05:10:52 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1675 | 01/29/25 05:10:52 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 98 
+1676 | 01/29/25 05:10:52 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 94 97 
+1677 | 01/29/25 05:10:52 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1678 | 01/29/25 05:10:52 | MAJ | BMC  | Temperature | GPU0_DRAM0_TMP0  | Hi Crit thresh actual=127.00 C, threshold=107.00 C
+1679 | 01/29/25 05:10:52 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+167a | 01/29/25 05:10:52 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 98 
+167b | 01/29/25 05:10:52 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+167c | 01/29/25 05:10:52 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+167d | 01/29/25 05:10:52 | MIN | BMC  | Temperature | GPU0_DRAM0_TMP0  | Hi Noncrit thresh actual=127.00 C, threshold=105.00 C
+167e | 01/29/25 05:10:52 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+167f | 01/29/25 05:10:52 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 98 
+1680 | 01/29/25 05:10:52 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1681 | 01/29/25 05:10:52 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 ff ff 
+1682 | 01/29/25 05:10:53 | INF | BMC  | OEM(e0) | BMC_Health  | - 
+1683 | 01/29/25 05:10:53 | INF | BMC  | Temperature | GPU0_DRAM0_TMP0  | HiU thresh OK now actual=38.00 C, threshold=110.00 C
+1684 | 01/29/25 05:10:53 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1685 | 01/29/25 05:10:53 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+1686 | 01/29/25 05:10:53 | INF | d0 | 000020 |  | OEM Event 94 97 94 96 94 97 
+1687 | 01/29/25 05:10:53 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 ff ff 
+1688 | 01/29/25 05:10:53 | INF | BMC  | Temperature | GPU0_DRAM0_TMP0  | HiC thresh OK now actual=38.00 C, threshold=107.00 C
+1689 | 01/29/25 05:10:53 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+168a | 01/29/25 05:10:53 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+168b | 01/29/25 05:10:53 | INF | d0 | 000020 |  | OEM Event 94 97 94 96 94 97 
+168c | 01/29/25 05:10:53 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 ff ff 
+168d | 01/29/25 05:10:53 | INF | BMC  | Temperature | GPU0_DRAM0_TMP0  | HiN thresh OK now actual=38.00 C, threshold=105.00 C
+168e | 01/29/25 05:10:53 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+168f | 01/29/25 05:10:53 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+1690 | 01/29/25 05:10:53 | INF | d0 | 000020 |  | OEM Event 94 97 94 96 94 97 
+1691 | 01/29/25 05:10:53 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 ff ff 
+1692 | 01/29/25 11:42:14 | CRT | BMC  | Temperature | GPU0_DRAM0_TMP0  | Hi Unrec thresh actual=127.00 C, threshold=110.00 C
+1693 | 01/29/25 11:42:14 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1694 | 01/29/25 11:42:14 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+1695 | 01/29/25 11:42:14 | INF | d0 | 000020 |  | OEM Event 94 96 94 96 94 97 
+1696 | 01/29/25 11:42:14 | INF | d0 | 000020 |  | OEM Event 94 97 94 96 ff ff 
+1697 | 01/29/25 11:42:14 | MAJ | BMC  | Temperature | GPU0_DRAM0_TMP0  | Hi Crit thresh actual=127.00 C, threshold=107.00 C
+1698 | 01/29/25 11:42:14 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1699 | 01/29/25 11:42:15 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+169a | 01/29/25 11:42:15 | INF | d0 | 000020 |  | OEM Event 94 96 94 96 94 97 
+169b | 01/29/25 11:42:15 | INF | d0 | 000020 |  | OEM Event 93 97 94 97 ff ff 
+169c | 01/29/25 11:42:15 | MIN | BMC  | Temperature | GPU0_DRAM0_TMP0  | Hi Noncrit thresh actual=127.00 C, threshold=105.00 C
+169d | 01/29/25 11:42:15 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+169e | 01/29/25 11:42:15 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+169f | 01/29/25 11:42:15 | INF | d0 | 000020 |  | OEM Event 94 96 94 96 94 97 
+16a0 | 01/29/25 11:42:15 | INF | d0 | 000020 |  | OEM Event 93 97 94 97 ff ff 
+16a1 | 01/29/25 11:42:15 | INF | BMC  | Temperature | GPU0_DRAM0_TMP0  | HiU thresh OK now actual=42.00 C, threshold=110.00 C
+16a2 | 01/29/25 11:42:15 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+16a3 | 01/29/25 11:42:15 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+16a4 | 01/29/25 11:42:15 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 94 97 
+16a5 | 01/29/25 11:42:15 | INF | d0 | 000020 |  | OEM Event 93 97 94 97 ff ff 
+16a6 | 01/29/25 11:42:15 | INF | BMC  | Temperature | GPU0_DRAM0_TMP0  | HiC thresh OK now actual=42.00 C, threshold=107.00 C
+16a7 | 01/29/25 11:42:15 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+16a8 | 01/29/25 11:42:16 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+16a9 | 01/29/25 11:42:16 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 94 97 
+16aa | 01/29/25 11:42:16 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+16ab | 01/29/25 11:42:16 | INF | BMC  | Temperature | GPU0_DRAM0_TMP0  | HiN thresh OK now actual=42.00 C, threshold=105.00 C
+16ac | 01/29/25 11:42:16 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+16ad | 01/29/25 11:42:16 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+16ae | 01/29/25 11:42:16 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 94 97 
+16af | 01/29/25 11:42:16 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+16b0 | 01/29/25 13:09:43 | MIN | BMC  | Temperature | HMC_TMP  | Lo Noncrit thresh actual=128.00 C, threshold=5.00 C
+16b1 | 01/29/25 13:09:43 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+16b2 | 01/29/25 13:09:43 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+16b3 | 01/29/25 13:09:43 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+16b4 | 01/29/25 13:09:43 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+16b5 | 01/29/25 13:09:44 | INF | BMC  | Temperature | HMC_TMP  | LoN thresh OK now actual=34.00 C, threshold=5.00 C
+16b6 | 01/29/25 13:09:44 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+16b7 | 01/29/25 13:09:44 | INF | d0 | 000020 |  | OEM Event 94 98 94 97 94 97 
+16b8 | 01/29/25 13:09:44 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+16b9 | 01/29/25 13:09:44 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+16ba | 01/30/25 00:29:56 | MIN | BMC  | Temperature | HMC_TMP  | Lo Noncrit thresh actual=128.00 C, threshold=5.00 C
+16bb | 01/30/25 00:29:56 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+16bc | 01/30/25 00:29:56 | INF | d0 | 000020 |  | OEM Event 94 98 94 97 93 98 
+16bd | 01/30/25 00:29:56 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+16be | 01/30/25 00:29:56 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+16bf | 01/30/25 00:29:57 | INF | BMC  | Temperature | HMC_TMP  | LoN thresh OK now actual=34.00 C, threshold=5.00 C
+16c0 | 01/30/25 00:29:57 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+16c1 | 01/30/25 00:29:57 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+16c2 | 01/30/25 00:29:57 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+16c3 | 01/30/25 00:29:57 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+16c4 | 01/30/25 08:19:43 | CRT | BMC  | Temperature | GPU0_DRAM0_TMP0  | Hi Unrec thresh actual=127.00 C, threshold=110.00 C
+16c5 | 01/30/25 08:19:43 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+16c6 | 01/30/25 08:19:44 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+16c7 | 01/30/25 08:19:44 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 94 97 
+16c8 | 01/30/25 08:19:44 | INF | d0 | 000020 |  | OEM Event 94 96 94 96 ff ff 
+16c9 | 01/30/25 08:19:44 | MAJ | BMC  | Temperature | GPU0_DRAM0_TMP0  | Hi Crit thresh actual=127.00 C, threshold=107.00 C
+16ca | 01/30/25 08:19:44 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+16cb | 01/30/25 08:19:44 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+16cc | 01/30/25 08:19:44 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 94 97 
+16cd | 01/30/25 08:19:44 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 ff ff 
+16ce | 01/30/25 08:19:44 | MIN | BMC  | Temperature | GPU0_DRAM0_TMP0  | Hi Noncrit thresh actual=127.00 C, threshold=105.00 C
+16cf | 01/30/25 08:19:44 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+16d0 | 01/30/25 08:19:44 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+16d1 | 01/30/25 08:19:44 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 94 97 
+16d2 | 01/30/25 08:19:44 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 ff ff 
+16d3 | 01/30/25 08:19:44 | INF | BMC  | Temperature | GPU0_DRAM0_TMP0  | HiU thresh OK now actual=42.00 C, threshold=110.00 C
+16d4 | 01/30/25 08:19:44 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+16d5 | 01/30/25 08:19:45 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+16d6 | 01/30/25 08:19:45 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 94 97 
+16d7 | 01/30/25 08:19:45 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 ff ff 
+16d8 | 01/30/25 08:19:45 | INF | BMC  | Temperature | GPU0_DRAM0_TMP0  | HiC thresh OK now actual=42.00 C, threshold=107.00 C
+16d9 | 01/30/25 08:19:45 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+16da | 01/30/25 08:19:45 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+16db | 01/30/25 08:19:45 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 94 97 
+16dc | 01/30/25 08:19:45 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 ff ff 
+16dd | 01/30/25 08:19:45 | INF | BMC  | Temperature | GPU0_DRAM0_TMP0  | HiN thresh OK now actual=42.00 C, threshold=105.00 C
+16de | 01/30/25 08:19:45 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+16df | 01/30/25 08:19:45 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 98 
+16e0 | 01/30/25 08:19:45 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 94 97 
+16e1 | 01/30/25 08:19:45 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 ff ff 
+16e2 | 01/30/25 21:06:55 | CRT | BMC  | Temperature | GPU3_DRAM0_TMP0  | Hi Unrec thresh actual=127.00 C, threshold=110.00 C
+16e3 | 01/30/25 21:06:55 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+16e4 | 01/30/25 21:06:56 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+16e5 | 01/30/25 21:06:56 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+16e6 | 01/30/25 21:06:56 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+16e7 | 01/30/25 21:06:56 | MAJ | BMC  | Temperature | GPU3_DRAM0_TMP0  | Hi Crit thresh actual=127.00 C, threshold=107.00 C
+16e8 | 01/30/25 21:06:56 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+16e9 | 01/30/25 21:06:56 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+16ea | 01/30/25 21:06:56 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+16eb | 01/30/25 21:06:56 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+16ec | 01/30/25 21:06:56 | MIN | BMC  | Temperature | GPU3_DRAM0_TMP0  | Hi Noncrit thresh actual=127.00 C, threshold=105.00 C
+16ed | 01/30/25 21:06:56 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+16ee | 01/30/25 21:06:56 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+16ef | 01/30/25 21:06:56 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+16f0 | 01/30/25 21:06:56 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+16f1 | 01/30/25 21:06:56 | INF | BMC  | Temperature | GPU3_DRAM0_TMP0  | HiU thresh OK now actual=31.00 C, threshold=110.00 C
+16f2 | 01/30/25 21:06:56 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+16f3 | 01/30/25 21:06:57 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+16f4 | 01/30/25 21:06:57 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+16f5 | 01/30/25 21:06:57 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+16f6 | 01/30/25 21:06:57 | INF | BMC  | Temperature | GPU3_DRAM0_TMP0  | HiC thresh OK now actual=31.00 C, threshold=107.00 C
+16f7 | 01/30/25 21:06:57 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+16f8 | 01/30/25 21:06:57 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+16f9 | 01/30/25 21:06:57 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+16fa | 01/30/25 21:06:57 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+16fb | 01/30/25 21:06:57 | INF | BMC  | Temperature | GPU3_DRAM0_TMP0  | HiN thresh OK now actual=31.00 C, threshold=105.00 C
+16fc | 01/30/25 21:06:57 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+16fd | 01/30/25 21:06:57 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+16fe | 01/30/25 21:06:57 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+16ff | 01/30/25 21:06:57 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1700 | 01/30/25 21:37:32 | CRT | BMC  | Temperature | GPU2_DRAM0_TMP0  | Hi Unrec thresh actual=127.00 C, threshold=110.00 C
+1701 | 01/30/25 21:37:32 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1702 | 01/30/25 21:37:33 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 98 
+1703 | 01/30/25 21:37:33 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1704 | 01/30/25 21:37:33 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1705 | 01/30/25 21:37:33 | MAJ | BMC  | Temperature | GPU2_DRAM0_TMP0  | Hi Crit thresh actual=127.00 C, threshold=107.00 C
+1706 | 01/30/25 21:37:33 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1707 | 01/30/25 21:37:33 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+1708 | 01/30/25 21:37:33 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1709 | 01/30/25 21:37:33 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+170a | 01/30/25 21:37:33 | MIN | BMC  | Temperature | GPU2_DRAM0_TMP0  | Hi Noncrit thresh actual=127.00 C, threshold=105.00 C
+170b | 01/30/25 21:37:33 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+170c | 01/30/25 21:37:33 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+170d | 01/30/25 21:37:33 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+170e | 01/30/25 21:37:33 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+170f | 01/30/25 21:37:33 | INF | BMC  | OEM(e0) | BMC_Health  | - 
+1710 | 01/30/25 21:37:33 | INF | BMC  | Temperature | GPU2_DRAM0_TMP0  | HiU thresh OK now actual=32.00 C, threshold=110.00 C
+1711 | 01/30/25 21:37:33 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1712 | 01/30/25 21:37:34 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+1713 | 01/30/25 21:37:34 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1714 | 01/30/25 21:37:34 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1715 | 01/30/25 21:37:34 | INF | BMC  | Temperature | GPU2_DRAM0_TMP0  | HiC thresh OK now actual=32.00 C, threshold=107.00 C
+1716 | 01/30/25 21:37:34 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1717 | 01/30/25 21:37:34 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+1718 | 01/30/25 21:37:34 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1719 | 01/30/25 21:37:34 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+171a | 01/30/25 21:37:34 | INF | BMC  | Temperature | GPU2_DRAM0_TMP0  | HiN thresh OK now actual=32.00 C, threshold=105.00 C
+171b | 01/30/25 21:37:34 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+171c | 01/30/25 21:37:34 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+171d | 01/30/25 21:37:34 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+171e | 01/30/25 21:37:34 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+171f | 01/30/25 23:25:59 | CRT | BMC  | Temperature | GPU3_DRAM0_TMP0  | Hi Unrec thresh actual=127.00 C, threshold=110.00 C
+1720 | 01/30/25 23:25:59 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1721 | 01/30/25 23:25:59 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+1722 | 01/30/25 23:25:59 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1723 | 01/30/25 23:25:59 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1724 | 01/30/25 23:25:59 | MAJ | BMC  | Temperature | GPU3_DRAM0_TMP0  | Hi Crit thresh actual=127.00 C, threshold=107.00 C
+1725 | 01/30/25 23:25:59 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1726 | 01/30/25 23:25:59 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+1727 | 01/30/25 23:25:59 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1728 | 01/30/25 23:25:59 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1729 | 01/30/25 23:25:59 | MIN | BMC  | Temperature | GPU3_DRAM0_TMP0  | Hi Noncrit thresh actual=127.00 C, threshold=105.00 C
+172a | 01/30/25 23:25:59 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+172b | 01/30/25 23:26:00 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 98 
+172c | 01/30/25 23:26:00 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+172d | 01/30/25 23:26:00 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+172e | 01/30/25 23:26:00 | INF | BMC  | Temperature | GPU3_DRAM0_TMP0  | HiU thresh OK now actual=31.00 C, threshold=110.00 C
+172f | 01/30/25 23:26:00 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1730 | 01/30/25 23:26:00 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 98 
+1731 | 01/30/25 23:26:00 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1732 | 01/30/25 23:26:00 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1733 | 01/30/25 23:26:00 | INF | BMC  | Temperature | GPU3_DRAM0_TMP0  | HiC thresh OK now actual=31.00 C, threshold=107.00 C
+1734 | 01/30/25 23:26:00 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1735 | 01/30/25 23:26:00 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 98 
+1736 | 01/30/25 23:26:00 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1737 | 01/30/25 23:26:00 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1738 | 01/30/25 23:26:00 | INF | BMC  | Temperature | GPU3_DRAM0_TMP0  | HiN thresh OK now actual=31.00 C, threshold=105.00 C
+1739 | 01/30/25 23:26:00 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+173a | 01/30/25 23:26:01 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 98 
+173b | 01/30/25 23:26:01 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+173c | 01/30/25 23:26:01 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+173d | 01/31/25 04:49:43 | CRT | BMC  | Temperature | GPU2_DRAM0_TMP0  | Hi Unrec thresh actual=127.00 C, threshold=110.00 C
+173e | 01/31/25 04:49:43 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+173f | 01/31/25 04:49:43 | INF | d0 | 000020 |  | OEM Event 94 98 94 97 94 97 
+1740 | 01/31/25 04:49:43 | INF | d0 | 000020 |  | OEM Event 94 96 95 97 94 97 
+1741 | 01/31/25 04:49:43 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1742 | 01/31/25 04:49:43 | MAJ | BMC  | Temperature | GPU2_DRAM0_TMP0  | Hi Crit thresh actual=127.00 C, threshold=107.00 C
+1743 | 01/31/25 04:49:43 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1744 | 01/31/25 04:49:43 | INF | d0 | 000020 |  | OEM Event 94 98 94 97 94 98 
+1745 | 01/31/25 04:49:43 | INF | d0 | 000020 |  | OEM Event 94 96 95 97 94 97 
+1746 | 01/31/25 04:49:43 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1747 | 01/31/25 04:49:43 | MIN | BMC  | Temperature | GPU2_DRAM0_TMP0  | Hi Noncrit thresh actual=127.00 C, threshold=105.00 C
+1748 | 01/31/25 04:49:43 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1749 | 01/31/25 04:49:43 | INF | d0 | 000020 |  | OEM Event 94 98 94 97 94 98 
+174a | 01/31/25 04:49:43 | INF | d0 | 000020 |  | OEM Event 94 96 95 97 94 97 
+174b | 01/31/25 04:49:43 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+174c | 01/31/25 04:49:44 | INF | BMC  | Temperature | GPU2_DRAM0_TMP0  | HiU thresh OK now actual=35.00 C, threshold=110.00 C
+174d | 01/31/25 04:49:44 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+174e | 01/31/25 04:49:44 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+174f | 01/31/25 04:49:44 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1750 | 01/31/25 04:49:44 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1751 | 01/31/25 04:49:44 | INF | BMC  | Temperature | GPU2_DRAM0_TMP0  | HiC thresh OK now actual=35.00 C, threshold=107.00 C
+1752 | 01/31/25 04:49:44 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1753 | 01/31/25 04:49:44 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+1754 | 01/31/25 04:49:44 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1755 | 01/31/25 04:49:44 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1756 | 01/31/25 04:49:44 | INF | BMC  | Temperature | GPU2_DRAM0_TMP0  | HiN thresh OK now actual=35.00 C, threshold=105.00 C
+1757 | 01/31/25 04:49:44 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1758 | 01/31/25 04:49:44 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+1759 | 01/31/25 04:49:44 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+175a | 01/31/25 04:49:44 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+175b | 01/31/25 11:22:40 | MIN | BMC  | Temperature | HMC_TMP  | Lo Noncrit thresh actual=128.00 C, threshold=5.00 C
+175c | 01/31/25 11:22:40 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+175d | 01/31/25 11:22:40 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+175e | 01/31/25 11:22:40 | INF | d0 | 000020 |  | OEM Event 94 96 94 96 94 97 
+175f | 01/31/25 11:22:40 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1760 | 01/31/25 11:22:41 | INF | BMC  | Temperature | HMC_TMP  | LoN thresh OK now actual=34.00 C, threshold=5.00 C
+1761 | 01/31/25 11:22:41 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1762 | 01/31/25 11:22:41 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+1763 | 01/31/25 11:22:41 | INF | d0 | 000020 |  | OEM Event 94 96 94 96 94 97 
+1764 | 01/31/25 11:22:41 | INF | d0 | 000020 |  | OEM Event 93 96 94 96 ff ff 
+1765 | 01/31/25 12:21:13 | CRT | BMC  | Temperature | GPU1_DRAM0_TMP0  | Hi Unrec thresh actual=127.00 C, threshold=110.00 C
+1766 | 01/31/25 12:21:13 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1767 | 01/31/25 12:21:13 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+1768 | 01/31/25 12:21:13 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 94 97 
+1769 | 01/31/25 12:21:13 | INF | d0 | 000020 |  | OEM Event 94 97 94 96 ff ff 
+176a | 01/31/25 12:21:13 | MAJ | BMC  | Temperature | GPU1_DRAM0_TMP0  | Hi Crit thresh actual=127.00 C, threshold=107.00 C
+176b | 01/31/25 12:21:13 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+176c | 01/31/25 12:21:14 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+176d | 01/31/25 12:21:14 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 94 97 
+176e | 01/31/25 12:21:14 | INF | d0 | 000020 |  | OEM Event 94 97 94 96 ff ff 
+176f | 01/31/25 12:21:14 | MIN | BMC  | Temperature | GPU1_DRAM0_TMP0  | Hi Noncrit thresh actual=127.00 C, threshold=105.00 C
+1770 | 01/31/25 12:21:14 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1771 | 01/31/25 12:21:14 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+1772 | 01/31/25 12:21:14 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1773 | 01/31/25 12:21:14 | INF | d0 | 000020 |  | OEM Event 94 97 94 96 ff ff 
+1774 | 01/31/25 12:21:14 | INF | BMC  | Temperature | GPU1_DRAM0_TMP0  | HiU thresh OK now actual=43.00 C, threshold=110.00 C
+1775 | 01/31/25 12:21:14 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1776 | 01/31/25 12:21:14 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+1777 | 01/31/25 12:21:14 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1778 | 01/31/25 12:21:14 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1779 | 01/31/25 12:21:14 | INF | BMC  | Temperature | GPU1_DRAM0_TMP0  | HiC thresh OK now actual=43.00 C, threshold=107.00 C
+177a | 01/31/25 12:21:14 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+177b | 01/31/25 12:21:14 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+177c | 01/31/25 12:21:14 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+177d | 01/31/25 12:21:14 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+177e | 01/31/25 12:21:14 | INF | BMC  | Temperature | GPU1_DRAM0_TMP0  | HiN thresh OK now actual=43.00 C, threshold=105.00 C
+177f | 01/31/25 12:21:14 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1780 | 01/31/25 12:21:15 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+1781 | 01/31/25 12:21:15 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1782 | 01/31/25 12:21:15 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1783 | 01/31/25 12:21:15 | INF | BMC  | OEM(e0) | BMC_Health  | - 
+1784 | 01/31/25 17:22:26 | CRT | BMC  | Temperature | GPU0_DRAM0_TMP0  | Hi Unrec thresh actual=127.00 C, threshold=110.00 C
+1785 | 01/31/25 17:22:26 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1786 | 01/31/25 17:22:26 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+1787 | 01/31/25 17:22:26 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1788 | 01/31/25 17:22:26 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1789 | 01/31/25 17:22:26 | MAJ | BMC  | Temperature | GPU0_DRAM0_TMP0  | Hi Crit thresh actual=127.00 C, threshold=107.00 C
+178a | 01/31/25 17:22:26 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+178b | 01/31/25 17:22:26 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+178c | 01/31/25 17:22:26 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+178d | 01/31/25 17:22:26 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+178e | 01/31/25 17:22:26 | MIN | BMC  | Temperature | GPU0_DRAM0_TMP0  | Hi Noncrit thresh actual=127.00 C, threshold=105.00 C
+178f | 01/31/25 17:22:26 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1790 | 01/31/25 17:22:26 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+1791 | 01/31/25 17:22:26 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1792 | 01/31/25 17:22:26 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1793 | 01/31/25 17:22:27 | INF | BMC  | Temperature | GPU0_DRAM0_TMP0  | HiU thresh OK now actual=33.00 C, threshold=110.00 C
+1794 | 01/31/25 17:22:27 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1795 | 01/31/25 17:22:27 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+1796 | 01/31/25 17:22:27 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 94 97 
+1797 | 01/31/25 17:22:27 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1798 | 01/31/25 17:22:27 | INF | BMC  | Temperature | GPU0_DRAM0_TMP0  | HiC thresh OK now actual=33.00 C, threshold=107.00 C
+1799 | 01/31/25 17:22:27 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+179a | 01/31/25 17:22:27 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+179b | 01/31/25 17:22:27 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 94 97 
+179c | 01/31/25 17:22:27 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+179d | 01/31/25 17:22:27 | INF | BMC  | Temperature | GPU0_DRAM0_TMP0  | HiN thresh OK now actual=33.00 C, threshold=105.00 C
+179e | 01/31/25 17:22:27 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+179f | 01/31/25 17:22:27 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+17a0 | 01/31/25 17:22:27 | INF | d0 | 000020 |  | OEM Event 94 96 95 97 94 97 
+17a1 | 01/31/25 17:22:27 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+17a2 | 01/31/25 20:43:09 | MIN | BMC  | Temperature | HMC_TMP  | Lo Noncrit thresh actual=128.00 C, threshold=5.00 C
+17a3 | 01/31/25 20:43:09 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+17a4 | 01/31/25 20:43:09 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 98 
+17a5 | 01/31/25 20:43:09 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+17a6 | 01/31/25 20:43:09 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 ff ff 
+17a7 | 01/31/25 20:43:10 | INF | BMC  | Temperature | HMC_TMP  | LoN thresh OK now actual=34.00 C, threshold=5.00 C
+17a8 | 01/31/25 20:43:10 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+17a9 | 01/31/25 20:43:10 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+17aa | 01/31/25 20:43:10 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+17ab | 01/31/25 20:43:10 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+17ac | 02/01/25 08:32:22 | MIN | BMC  | Temperature | HMC_TMP  | Lo Noncrit thresh actual=128.00 C, threshold=5.00 C
+17ad | 02/01/25 08:32:22 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+17ae | 02/01/25 08:32:22 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+17af | 02/01/25 08:32:22 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+17b0 | 02/01/25 08:32:22 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+17b1 | 02/01/25 08:32:23 | INF | BMC  | Temperature | HMC_TMP  | LoN thresh OK now actual=34.00 C, threshold=5.00 C
+17b2 | 02/01/25 08:32:23 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+17b3 | 02/01/25 08:32:23 | INF | d0 | 000020 |  | OEM Event 94 98 94 97 93 97 
+17b4 | 02/01/25 08:32:23 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+17b5 | 02/01/25 08:32:23 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+17b6 | 02/01/25 09:41:39 | CRT | BMC  | Temperature | HMC_TMP  | Hi Unrec thresh actual=127.00 C, threshold=85.00 C
+17b7 | 02/01/25 09:41:39 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+17b8 | 02/01/25 09:41:39 | INF | d0 | 000020 |  | OEM Event 94 98 94 97 93 97 
+17b9 | 02/01/25 09:41:39 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+17ba | 02/01/25 09:41:39 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+17bb | 02/01/25 09:41:39 | MAJ | BMC  | Temperature | HMC_TMP  | Hi Crit thresh actual=127.00 C, threshold=80.00 C
+17bc | 02/01/25 09:41:39 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+17bd | 02/01/25 09:41:39 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+17be | 02/01/25 09:41:39 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+17bf | 02/01/25 09:41:39 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+17c0 | 02/01/25 09:41:39 | MIN | BMC  | Temperature | HMC_TMP  | Hi Noncrit thresh actual=127.00 C, threshold=75.00 C
+17c1 | 02/01/25 09:41:39 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+17c2 | 02/01/25 09:41:39 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+17c3 | 02/01/25 09:41:39 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+17c4 | 02/01/25 09:41:39 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+17c5 | 02/01/25 09:41:40 | INF | BMC  | Temperature | HMC_TMP  | HiU thresh OK now actual=34.00 C, threshold=85.00 C
+17c6 | 02/01/25 09:41:40 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+17c7 | 02/01/25 09:41:40 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+17c8 | 02/01/25 09:41:40 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+17c9 | 02/01/25 09:41:40 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+17ca | 02/01/25 09:41:40 | INF | BMC  | Temperature | HMC_TMP  | HiC thresh OK now actual=34.00 C, threshold=80.00 C
+17cb | 02/01/25 09:41:40 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+17cc | 02/01/25 09:41:40 | INF | d0 | 000020 |  | OEM Event 94 98 94 97 93 97 
+17cd | 02/01/25 09:41:40 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+17ce | 02/01/25 09:41:40 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+17cf | 02/01/25 09:41:40 | INF | BMC  | Temperature | HMC_TMP  | HiN thresh OK now actual=34.00 C, threshold=75.00 C
+17d0 | 02/01/25 09:41:40 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+17d1 | 02/01/25 09:41:40 | INF | d0 | 000020 |  | OEM Event 94 98 94 97 93 97 
+17d2 | 02/01/25 09:41:40 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+17d3 | 02/01/25 09:41:40 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+17d4 | 02/01/25 15:46:31 | INF | BMC  | ACPI Power State | Power_Status  | S5/G2 soft-off 
+17d5 | 02/01/25 15:46:31 | INF | BMC  | OEM(df) | GP_PowerGood  | - 
+17d6 | 02/01/25 15:46:31 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+17d7 | 02/01/25 15:46:31 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+17d8 | 02/01/25 15:46:31 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+17d9 | 02/01/25 15:46:31 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+17da | 02/01/25 15:46:31 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+17db | 02/01/25 15:48:34 | INF | BMC  | ACPI Power State | Power_Status  | S0/G0 Working 
+17dc | 02/01/25 15:48:35 | INF | BMC  | OEM(df) | GP_PowerGood  | - 
+17dd | 02/01/25 15:48:35 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+17de | 02/01/25 15:48:35 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+17df | 02/01/25 15:48:35 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+17e0 | 02/01/25 15:48:35 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+17e1 | 02/01/25 15:48:35 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+17e2 | 02/01/25 16:06:50 | INF | BMC  | ACPI Power State | Power_Status  | S5/G2 soft-off 
+17e3 | 02/01/25 16:06:50 | INF | BMC  | OEM(df) | GP_PowerGood  | - 
+17e4 | 02/01/25 16:06:50 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+17e5 | 02/01/25 16:06:50 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+17e6 | 02/01/25 16:06:50 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+17e7 | 02/01/25 16:06:50 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+17e8 | 02/01/25 16:06:50 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+17e9 | 02/01/25 16:08:52 | INF | BMC  | OEM(df) | GP_PowerGood  | - 
+17ea | 02/01/25 16:08:52 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+17eb | 02/01/25 16:08:52 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+17ec | 02/01/25 16:08:52 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+17ed | 02/01/25 16:08:52 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+17ee | 02/01/25 16:08:52 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+17ef | 02/01/25 16:08:53 | INF | BMC  | ACPI Power State | Power_Status  | S0/G0 Working 
+17f0 | 02/01/25 16:49:51 | INF | BMC  | ACPI Power State | Power_Status  | S0/G0 Working 
+17f1 | 02/01/25 16:54:08 | INF | BMC  | ACPI Power State | Power_Status  | S0/G0 Working 
+17f2 | 02/01/25 16:54:15 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+17f3 | 02/01/25 16:54:15 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+17f4 | 02/01/25 16:54:15 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+17f5 | 02/01/25 16:54:15 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+17f6 | 02/01/25 16:54:15 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+17f7 | 02/01/25 16:54:15 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+17f8 | 02/01/25 16:54:15 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+17f9 | 02/01/25 16:54:15 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+17fa | 02/01/25 16:54:15 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+17fb | 02/01/25 16:54:15 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+17fc | 02/01/25 16:54:15 | INF | BMC  | OEM(df) | E1S_Present  | - 
+17fd | 02/01/25 16:54:20 | INF | BMC  | OEM(da) | GPUB_HMC_STATE  | - 
+17fe | 02/01/25 16:54:20 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+17ff | 02/01/25 16:54:20 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+1800 | 02/01/25 16:54:20 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+1801 | 02/01/25 16:54:20 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+1802 | 02/01/25 16:54:20 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+1803 | 02/01/25 16:54:20 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+1804 | 02/01/25 16:54:20 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+1805 | 02/01/25 16:54:20 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+1806 | 02/01/25 16:54:20 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+1807 | 02/01/25 16:54:20 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+1808 | 02/01/25 16:54:20 | INF | BMC  | OEM(df) | E1S_Present  | - 
+1809 | 02/01/25 16:54:21 | INF | BMC  | OEM(e0) | BMC_Health  | - 
+180a | 02/01/25 16:54:22 | INF | BMC  | OEM(da) | GPUB_HMC_STATE  | - 
+180b | 02/01/25 17:06:01 | MAJ | BMC  | Fan | FAN_3B  | Lo Crit thresh actual=0.00 RPM, threshold=4455.00 RPM
+180c | 02/01/25 17:06:01 | MAJ | BMC  | Fan | FAN_3A  | Lo Crit thresh actual=0.00 RPM, threshold=4440.00 RPM
+180d | 02/01/25 17:06:01 | MAJ | BMC  | Fan | FAN_6B  | Lo Crit thresh actual=0.00 RPM, threshold=4455.00 RPM
+180e | 02/01/25 17:06:01 | MAJ | BMC  | Fan | FAN_6A  | Lo Crit thresh actual=0.00 RPM, threshold=4440.00 RPM
+180f | 02/01/25 17:06:01 | MAJ | BMC  | Fan | FAN_7B  | Lo Crit thresh actual=0.00 RPM, threshold=4455.00 RPM
+1810 | 02/01/25 17:06:01 | MAJ | BMC  | Fan | FAN_7A  | Lo Crit thresh actual=0.00 RPM, threshold=4440.00 RPM
+1811 | 02/01/25 17:06:01 | MAJ | BMC  | Fan | FAN_2B  | Lo Crit thresh actual=0.00 RPM, threshold=4455.00 RPM
+1812 | 02/01/25 17:06:01 | MAJ | BMC  | Fan | FAN_1A  | Lo Crit thresh actual=0.00 RPM, threshold=4440.00 RPM
+1813 | 02/01/25 17:06:01 | MAJ | BMC  | Fan | FAN_2A  | Lo Crit thresh actual=0.00 RPM, threshold=4440.00 RPM
+1814 | 02/01/25 17:06:01 | MAJ | BMC  | Fan | FAN_0B  | Lo Crit thresh actual=0.00 RPM, threshold=4455.00 RPM
+1815 | 02/01/25 17:06:01 | MAJ | BMC  | Fan | FAN_0A  | Lo Crit thresh actual=0.00 RPM, threshold=4440.00 RPM
+1816 | 02/01/25 17:06:01 | MAJ | BMC  | Fan | FAN_1B  | Lo Crit thresh actual=0.00 RPM, threshold=4455.00 RPM
+1817 | 02/01/25 17:06:01 | MAJ | BMC  | Fan | FAN_5B  | Lo Crit thresh actual=0.00 RPM, threshold=4455.00 RPM
+1818 | 02/01/25 17:06:01 | MAJ | BMC  | Fan | FAN_5A  | Lo Crit thresh actual=0.00 RPM, threshold=4440.00 RPM
+1819 | 02/01/25 17:06:01 | MAJ | BMC  | Fan | FAN_4B  | Lo Crit thresh actual=0.00 RPM, threshold=4455.00 RPM
+181a | 02/01/25 17:06:01 | MAJ | BMC  | Fan | FAN_4A  | Lo Crit thresh actual=0.00 RPM, threshold=4440.00 RPM
+181b | 02/01/25 17:06:01 | INF | BMC  | FRU Sensor | SWB_CPLD_Status  | - 
+181c | 02/01/25 17:06:01 | INF | BMC  | FRU Sensor | SWB_CPLD_Status  | - 
+181d | 02/01/25 17:06:01 | INF | BMC  | FRU Sensor | SWB_CPLD_Status  | - 
+181e | 02/01/25 17:06:02 | INF | BMC  | FRU Sensor | SWB_CPLD_Status  | - 
+181f | 02/01/25 17:06:02 | INF | BMC  | FRU Sensor | SWB_CPLD_Status  | - 
+1820 | 02/01/25 17:06:02 | INF | BMC  | FRU Sensor | SWB_CPLD_Status  | - 
+1821 | 02/01/25 17:06:02 | INF | BMC  | FRU Sensor | SWB_CPLD_Status  | - 
+1822 | 02/01/25 17:06:03 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1823 | 02/01/25 17:06:03 | INF | d0 | 000020 |  | OEM Event 00 00 00 00 00 00 
+1824 | 02/01/25 17:06:03 | INF | d0 | 000020 |  | OEM Event 00 00 00 00 00 00 
+1825 | 02/01/25 17:06:03 | INF | d0 | 000020 |  | OEM Event 00 00 00 00 ff ff 
+1826 | 02/01/25 17:06:05 | INF | BMC  | OEM(da) | GPUB_HMC_STATE  | - 
+1827 | 02/01/25 17:06:05 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+1828 | 02/01/25 17:06:05 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+1829 | 02/01/25 17:06:05 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+182a | 02/01/25 17:06:05 | INF | BMC  | OEM(e0) | BMC_Health  | - 
+182b | 02/01/25 17:06:05 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+182c | 02/01/25 17:06:05 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+182d | 02/01/25 17:06:06 | INF | BMC  | OEM(df) | E1S_Present  | - 
+182e | 02/01/25 17:06:06 | INF | BMC  | OEM(df) | E1S_Present  | - 
+182f | 02/01/25 17:06:06 | INF | BMC  | OEM(e0) | BMC_Health  | - 
+1830 | 02/01/25 17:06:06 | INF | BMC  | OEM(df) | E1S_Present  | - 
+1831 | 02/01/25 17:06:06 | INF | BMC  | OEM(df) | E1S_Present  | - 
+1832 | 02/01/25 17:06:06 | INF | BMC  | OEM(df) | E1S_Present  | - 
+1833 | 02/01/25 17:06:06 | INF | BMC  | OEM(da) | GPUB_HMC_STATE  | - 
+1834 | 02/01/25 17:06:06 | MAJ | BMC  | Power Supply | HSC_0_Status  | Failure detected 
+1835 | 02/01/25 17:06:06 | INF | BMC  | OEM(e0) | BMC_Health  | - 
+1836 | 02/01/25 17:06:45 | INF | BMC  | FRU Sensor | SWB_CPLD_Status  | - 
+1837 | 02/01/25 17:06:45 | INF | BMC  | FRU Sensor | SWB_CPLD_Status  | - 
+1838 | 02/01/25 17:06:45 | INF | BMC  | FRU Sensor | SWB_CPLD_Status  | - 
+1839 | 02/01/25 17:06:45 | INF | BMC  | FRU Sensor | SWB_CPLD_Status  | - 
+183a | 02/01/25 17:06:45 | INF | BMC  | FRU Sensor | SWB_CPLD_Status  | - 
+183b | 02/01/25 17:06:45 | INF | BMC  | FRU Sensor | SWB_CPLD_Status  | - 
+183c | 02/01/25 17:06:45 | INF | BMC  | FRU Sensor | SWB_CPLD_Status  | - 
+183d | 02/01/25 17:06:45 | INF | BMC  | OEM(df) | E1S_Present  | - 
+183e | 02/01/25 17:06:47 | INF | BMC  | FRU Sensor | SWB_CPLD_Status  | - 
+183f | 02/01/25 17:06:47 | INF | BMC  | FRU Sensor | SWB_CPLD_Status  | - 
+1840 | 02/01/25 17:06:47 | INF | BMC  | FRU Sensor | SWB_CPLD_Status  | - 
+1841 | 02/01/25 17:06:47 | INF | BMC  | Fan | FAN_3A  | LoC thresh OK now actual=6660.00 RPM, threshold=4440.00 RPM
+1842 | 02/01/25 17:06:47 | INF | BMC  | Fan | FAN_2A  | LoC thresh OK now actual=7400.00 RPM, threshold=4440.00 RPM
+1843 | 02/01/25 17:06:47 | INF | BMC  | Fan | FAN_1A  | LoC thresh OK now actual=7400.00 RPM, threshold=4440.00 RPM
+1844 | 02/01/25 17:06:47 | INF | BMC  | Fan | FAN_1B  | LoC thresh OK now actual=6885.00 RPM, threshold=4455.00 RPM
+1845 | 02/01/25 17:06:47 | INF | BMC  | Fan | FAN_2B  | LoC thresh OK now actual=6750.00 RPM, threshold=4455.00 RPM
+1846 | 02/01/25 17:06:47 | INF | BMC  | Fan | FAN_0A  | LoC thresh OK now actual=7548.00 RPM, threshold=4440.00 RPM
+1847 | 02/01/25 17:06:47 | INF | BMC  | Fan | FAN_0B  | LoC thresh OK now actual=6885.00 RPM, threshold=4455.00 RPM
+1848 | 02/01/25 17:06:47 | INF | BMC  | Fan | FAN_3B  | LoC thresh OK now actual=6075.00 RPM, threshold=4455.00 RPM
+1849 | 02/01/25 17:06:49 | INF | BMC  | Fan | FAN_5B  | LoC thresh OK now actual=8640.00 RPM, threshold=4455.00 RPM
+184a | 02/01/25 17:06:49 | INF | BMC  | Fan | FAN_5A  | LoC thresh OK now actual=9324.00 RPM, threshold=4440.00 RPM
+184b | 02/01/25 17:06:49 | INF | BMC  | Fan | FAN_4B  | LoC thresh OK now actual=8640.00 RPM, threshold=4455.00 RPM
+184c | 02/01/25 17:06:49 | INF | BMC  | Fan | FAN_4A  | LoC thresh OK now actual=9472.00 RPM, threshold=4440.00 RPM
+184d | 02/01/25 17:06:49 | MIN | BMC  | Temperature | HMC_TMP  | Lo Noncrit thresh actual=0.00 C, threshold=5.00 C
+184e | 02/01/25 17:06:49 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+184f | 02/01/25 17:06:50 | INF | d0 | 000020 |  | OEM Event 8d 8d 51 8b 50 8a 
+1850 | 02/01/25 17:06:50 | INF | d0 | 000020 |  | OEM Event 87 84 40 40 3f 40 
+1851 | 02/01/25 17:06:50 | INF | d0 | 000020 |  | OEM Event 00 00 00 00 ff ff 
+1852 | 02/01/25 17:06:50 | INF | BMC  | Fan | FAN_6B  | LoC thresh OK now actual=8775.00 RPM, threshold=4455.00 RPM
+1853 | 02/01/25 17:06:50 | INF | BMC  | Fan | FAN_6A  | LoC thresh OK now actual=9472.00 RPM, threshold=4440.00 RPM
+1854 | 02/01/25 17:06:50 | INF | BMC  | Fan | FAN_7A  | LoC thresh OK now actual=9472.00 RPM, threshold=4440.00 RPM
+1855 | 02/01/25 17:06:50 | INF | BMC  | Fan | FAN_7B  | LoC thresh OK now actual=8775.00 RPM, threshold=4455.00 RPM
+1856 | 02/01/25 17:06:50 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1857 | 02/01/25 17:06:50 | INF | d0 | 000020 |  | OEM Event 8d 8d 8c 8b 8b 8a 
+1858 | 02/01/25 17:06:50 | INF | d0 | 000020 |  | OEM Event 87 84 63 61 62 61 
+1859 | 02/01/25 17:06:50 | INF | d0 | 000020 |  | OEM Event 40 40 40 40 ff ff 
+185a | 02/01/25 17:06:51 | INF | BMC  | OEM(da) | GPUB_HMC_STATE  | - 
+185b | 02/01/25 17:06:51 | INF | BMC  | OEM(da) | GPUB_HMC_STATE  | - 
+185c | 02/01/25 17:06:51 | INF | BMC  | ACPI Power State | Power_Status  | S5/G2 soft-off 
+185d | 02/01/25 17:06:51 | INF | BMC  | OEM(da) | GPUB_FPGA1_STATE  | - 
+185e | 02/01/25 17:06:51 | INF | BMC  | OEM(da) | GPUB_FPGA2_STATE  | - 
+185f | 02/01/25 17:06:51 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+1860 | 02/01/25 17:06:51 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+1861 | 02/01/25 17:06:51 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+1862 | 02/01/25 17:06:51 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+1863 | 02/01/25 17:06:52 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+1864 | 02/01/25 17:06:52 | INF | BMC  | OEM(df) | GP_PowerGood  | - 
+1865 | 02/01/25 17:06:52 | INF | BMC  | ACPI Power State | Power_Status  | S0/G0 Working 
+1866 | 02/01/25 17:06:55 | INF | BMC  | OEM(da) | GPUB_HMC_STATE  | - 
+1867 | 02/01/25 17:06:58 | INF | BMC  | System Event | System_Reconfig  | - 
+1868 | 02/01/25 17:07:10 | INF | db | OEM Event     ¡ 
+1869 | 02/01/25 17:07:12 | INF | BMC  | Temperature | HMC_TMP  | LoN thresh OK now actual=31.00 C, threshold=5.00 C
+186a | 02/01/25 17:07:12 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+186b | 02/01/25 17:07:12 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+186c | 02/01/25 17:07:12 | INF | d0 | 000020 |  | OEM Event 94 97 94 96 94 97 
+186d | 02/01/25 17:07:12 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+186e | 02/01/25 17:07:15 | INF | ca | 000137 |  | OEM Event 02 02 10 00 00 00 
+186f | 02/01/25 17:08:08 | INF | BMC  | OEM(e2) | FailSafe_Status  | - 
+1870 | 02/01/25 17:09:02 | INF | BMC  | OEM(e0) | BMC_Health  | - 
+1871 | 02/01/25 17:12:17 | INF | db | OEM Event      ¿
+1872 | 02/01/25 17:12:17 | INF | db | OEM Event   @Ä¡
+1873 | 02/01/25 17:12:17 | INF | db | OEM Event   @ ê¡
+1874 | 02/01/25 17:12:17 | INF | db | OEM Event   @ †¡
+1875 | 02/01/25 17:12:35 | INF | db | OEM Event     ¡ 
+1876 | 02/01/25 17:12:40 | INF | ca | 000137 |  | OEM Event 02 02 10 00 00 00 
+1877 | 02/01/25 17:12:52 | INF | db | OEM Event     
+1878 | 02/01/25 17:13:35 | INF | db | OEM Event     
+1879 | 02/01/25 17:13:35 | INF | db | OEM Event    Ä 
+187a | 02/01/25 17:13:41 | INF | db | OEM Event   @ 
+187b | 02/01/25 17:13:42 | INF | db | OEM Event     
+187c | 02/01/25 17:13:42 | INF | db | OEM Event    Ä 
+187d | 02/01/25 17:13:42 | INF | db | OEM Event   @ 
+187e | 02/01/25 17:13:42 | INF | db | OEM Event   @ 
+187f | 02/01/25 17:13:42 | INF | db | OEM Event   @ 
+1880 | 02/01/25 17:13:42 | INF | db | OEM Event   @ 
+1881 | 02/01/25 17:13:51 | INF | db | OEM Event   @ 
+1882 | 02/01/25 17:13:51 | INF | EFI  | Boot Error | na  | - 
+1883 | 02/01/25 17:13:51 | INF | db | OEM Event   @ 
+1884 | 02/01/25 17:13:51 | INF | db | OEM Event     
+1885 | 02/01/25 17:13:51 | INF | BMC  | OEM(e0) | BMC_Health  | - 
+1886 | 02/01/25 17:13:51 | INF | db | OEM Event    Ä 
+1887 | 02/01/25 17:13:51 | INF | db | OEM Event    Ä 
+1888 | 02/01/25 17:13:54 | INF | db | OEM Event     
+1889 | 02/01/25 18:02:11 | MIN | BMC  | Temperature | HMC_TMP  | Lo Noncrit thresh actual=128.00 C, threshold=5.00 C
+188a | 02/01/25 18:02:11 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+188b | 02/01/25 18:02:11 | INF | d0 | 000020 |  | OEM Event 94 98 94 97 93 98 
+188c | 02/01/25 18:02:11 | INF | d0 | 000020 |  | OEM Event 94 96 95 97 94 97 
+188d | 02/01/25 18:02:11 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+188e | 02/01/25 18:02:12 | INF | BMC  | Temperature | HMC_TMP  | LoN thresh OK now actual=31.00 C, threshold=5.00 C
+188f | 02/01/25 18:02:12 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1890 | 02/01/25 18:02:12 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+1891 | 02/01/25 18:02:12 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1892 | 02/01/25 18:02:12 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1893 | 02/02/25 06:52:30 | CRT | BMC  | Temperature | GPU3_DRAM0_TMP0  | Hi Unrec thresh actual=127.00 C, threshold=110.00 C
+1894 | 02/02/25 06:52:30 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1895 | 02/02/25 06:52:30 | INF | d0 | 000020 |  | OEM Event 94 98 94 97 93 98 
+1896 | 02/02/25 06:52:30 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1897 | 02/02/25 06:52:30 | INF | d0 | 000020 |  | OEM Event 94 97 94 96 ff ff 
+1898 | 02/02/25 06:52:30 | MAJ | BMC  | Temperature | GPU3_DRAM0_TMP0  | Hi Crit thresh actual=127.00 C, threshold=107.00 C
+1899 | 02/02/25 06:52:30 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+189a | 02/02/25 06:52:30 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 98 
+189b | 02/02/25 06:52:30 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+189c | 02/02/25 06:52:30 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+189d | 02/02/25 06:52:30 | MIN | BMC  | Temperature | GPU3_DRAM0_TMP0  | Hi Noncrit thresh actual=127.00 C, threshold=105.00 C
+189e | 02/02/25 06:52:30 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+189f | 02/02/25 06:52:30 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+18a0 | 02/02/25 06:52:30 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+18a1 | 02/02/25 06:52:30 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+18a2 | 02/02/25 06:52:31 | INF | BMC  | Temperature | GPU3_DRAM0_TMP0  | HiU thresh OK now actual=32.00 C, threshold=110.00 C
+18a3 | 02/02/25 06:52:31 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+18a4 | 02/02/25 06:52:31 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+18a5 | 02/02/25 06:52:31 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+18a6 | 02/02/25 06:52:31 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+18a7 | 02/02/25 06:52:31 | INF | BMC  | Temperature | GPU3_DRAM0_TMP0  | HiC thresh OK now actual=32.00 C, threshold=107.00 C
+18a8 | 02/02/25 06:52:31 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+18a9 | 02/02/25 06:52:31 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+18aa | 02/02/25 06:52:31 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+18ab | 02/02/25 06:52:31 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+18ac | 02/02/25 06:52:31 | INF | BMC  | Temperature | GPU3_DRAM0_TMP0  | HiN thresh OK now actual=32.00 C, threshold=105.00 C
+18ad | 02/02/25 06:52:31 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+18ae | 02/02/25 06:52:31 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+18af | 02/02/25 06:52:31 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+18b0 | 02/02/25 06:52:31 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+18b1 | 02/02/25 07:11:17 | CRT | BMC  | Temperature | GPU0_DRAM0_TMP0  | Hi Unrec thresh actual=127.00 C, threshold=110.00 C
+18b2 | 02/02/25 07:11:17 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+18b3 | 02/02/25 07:11:17 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+18b4 | 02/02/25 07:11:17 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+18b5 | 02/02/25 07:11:17 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+18b6 | 02/02/25 07:11:17 | MAJ | BMC  | Temperature | GPU0_DRAM0_TMP0  | Hi Crit thresh actual=127.00 C, threshold=107.00 C
+18b7 | 02/02/25 07:11:17 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+18b8 | 02/02/25 07:11:17 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+18b9 | 02/02/25 07:11:17 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+18ba | 02/02/25 07:11:17 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+18bb | 02/02/25 07:11:17 | MIN | BMC  | Temperature | GPU0_DRAM0_TMP0  | Hi Noncrit thresh actual=127.00 C, threshold=105.00 C
+18bc | 02/02/25 07:11:17 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+18bd | 02/02/25 07:11:17 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+18be | 02/02/25 07:11:17 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+18bf | 02/02/25 07:11:17 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+18c0 | 02/02/25 07:11:18 | INF | BMC  | Temperature | GPU0_DRAM0_TMP0  | HiU thresh OK now actual=34.00 C, threshold=110.00 C
+18c1 | 02/02/25 07:11:18 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+18c2 | 02/02/25 07:11:18 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+18c3 | 02/02/25 07:11:18 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+18c4 | 02/02/25 07:11:18 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+18c5 | 02/02/25 07:11:18 | INF | BMC  | Temperature | GPU0_DRAM0_TMP0  | HiC thresh OK now actual=34.00 C, threshold=107.00 C
+18c6 | 02/02/25 07:11:18 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+18c7 | 02/02/25 07:11:18 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+18c8 | 02/02/25 07:11:18 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+18c9 | 02/02/25 07:11:18 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+18ca | 02/02/25 07:11:18 | INF | BMC  | Temperature | GPU0_DRAM0_TMP0  | HiN thresh OK now actual=34.00 C, threshold=105.00 C
+18cb | 02/02/25 07:11:18 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+18cc | 02/02/25 07:11:18 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+18cd | 02/02/25 07:11:18 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+18ce | 02/02/25 07:11:18 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+18cf | 02/02/25 19:17:01 | CRT | BMC  | Temperature | HMC_TMP  | Hi Unrec thresh actual=127.00 C, threshold=85.00 C
+18d0 | 02/02/25 19:17:01 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+18d1 | 02/02/25 19:17:02 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+18d2 | 02/02/25 19:17:02 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+18d3 | 02/02/25 19:17:02 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+18d4 | 02/02/25 19:17:02 | MAJ | BMC  | Temperature | HMC_TMP  | Hi Crit thresh actual=127.00 C, threshold=80.00 C
+18d5 | 02/02/25 19:17:02 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+18d6 | 02/02/25 19:17:02 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 98 
+18d7 | 02/02/25 19:17:02 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+18d8 | 02/02/25 19:17:02 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+18d9 | 02/02/25 19:17:02 | MIN | BMC  | Temperature | HMC_TMP  | Hi Noncrit thresh actual=127.00 C, threshold=75.00 C
+18da | 02/02/25 19:17:02 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+18db | 02/02/25 19:17:02 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 98 
+18dc | 02/02/25 19:17:02 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+18dd | 02/02/25 19:17:02 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+18de | 02/02/25 19:17:02 | INF | BMC  | Temperature | HMC_TMP  | HiU thresh OK now actual=31.00 C, threshold=85.00 C
+18df | 02/02/25 19:17:02 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+18e0 | 02/02/25 19:17:02 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+18e1 | 02/02/25 19:17:02 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+18e2 | 02/02/25 19:17:03 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+18e3 | 02/02/25 19:17:03 | INF | BMC  | Temperature | HMC_TMP  | HiC thresh OK now actual=31.00 C, threshold=80.00 C
+18e4 | 02/02/25 19:17:03 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+18e5 | 02/02/25 19:17:03 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+18e6 | 02/02/25 19:17:03 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+18e7 | 02/02/25 19:17:03 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+18e8 | 02/02/25 19:17:03 | INF | BMC  | Temperature | HMC_TMP  | HiN thresh OK now actual=31.00 C, threshold=75.00 C
+18e9 | 02/02/25 19:17:03 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+18ea | 02/02/25 19:17:03 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+18eb | 02/02/25 19:17:03 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+18ec | 02/02/25 19:17:03 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+18ed | 02/02/25 19:35:49 | CRT | BMC  | Temperature | GPU3_DRAM0_TMP0  | Hi Unrec thresh actual=127.00 C, threshold=110.00 C
+18ee | 02/02/25 19:35:49 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+18ef | 02/02/25 19:35:49 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+18f0 | 02/02/25 19:35:49 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+18f1 | 02/02/25 19:35:49 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+18f2 | 02/02/25 19:35:49 | MAJ | BMC  | Temperature | GPU3_DRAM0_TMP0  | Hi Crit thresh actual=127.00 C, threshold=107.00 C
+18f3 | 02/02/25 19:35:49 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+18f4 | 02/02/25 19:35:49 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+18f5 | 02/02/25 19:35:49 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+18f6 | 02/02/25 19:35:49 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+18f7 | 02/02/25 19:35:49 | MIN | BMC  | Temperature | GPU3_DRAM0_TMP0  | Hi Noncrit thresh actual=127.00 C, threshold=105.00 C
+18f8 | 02/02/25 19:35:49 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+18f9 | 02/02/25 19:35:50 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+18fa | 02/02/25 19:35:50 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+18fb | 02/02/25 19:35:50 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+18fc | 02/02/25 19:35:50 | INF | BMC  | Temperature | GPU3_DRAM0_TMP0  | HiU thresh OK now actual=32.00 C, threshold=110.00 C
+18fd | 02/02/25 19:35:50 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+18fe | 02/02/25 19:35:50 | INF | d0 | 000020 |  | OEM Event 94 98 94 97 94 98 
+18ff | 02/02/25 19:35:50 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1900 | 02/02/25 19:35:50 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1901 | 02/02/25 19:35:50 | INF | BMC  | Temperature | GPU3_DRAM0_TMP0  | HiC thresh OK now actual=32.00 C, threshold=107.00 C
+1902 | 02/02/25 19:35:50 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1903 | 02/02/25 19:35:50 | INF | d0 | 000020 |  | OEM Event 94 98 94 97 93 98 
+1904 | 02/02/25 19:35:50 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1905 | 02/02/25 19:35:50 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1906 | 02/02/25 19:35:50 | INF | BMC  | OEM(e0) | BMC_Health  | - 
+1907 | 02/02/25 19:35:50 | INF | BMC  | Temperature | GPU3_DRAM0_TMP0  | HiN thresh OK now actual=32.00 C, threshold=105.00 C
+1908 | 02/02/25 19:35:50 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1909 | 02/02/25 19:35:51 | INF | d0 | 000020 |  | OEM Event 94 98 94 97 93 98 
+190a | 02/02/25 19:35:51 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+190b | 02/02/25 19:35:51 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+190c | 02/03/25 09:07:59 | MIN | BMC  | Temperature | HMC_TMP  | Lo Noncrit thresh actual=128.00 C, threshold=5.00 C
+190d | 02/03/25 09:07:59 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+190e | 02/03/25 09:07:59 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+190f | 02/03/25 09:07:59 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1910 | 02/03/25 09:07:59 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1911 | 02/03/25 09:08:00 | INF | BMC  | Temperature | HMC_TMP  | LoN thresh OK now actual=31.00 C, threshold=5.00 C
+1912 | 02/03/25 09:08:00 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1913 | 02/03/25 09:08:00 | INF | d0 | 000020 |  | OEM Event 94 98 94 97 93 98 
+1914 | 02/03/25 09:08:00 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1915 | 02/03/25 09:08:00 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1916 | 02/04/25 00:09:18 | CRT | BMC  | Temperature | GPU3_DRAM0_TMP0  | Hi Unrec thresh actual=127.00 C, threshold=110.00 C
+1917 | 02/04/25 00:09:18 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1918 | 02/04/25 00:09:18 | INF | d0 | 000020 |  | OEM Event 94 98 94 97 93 97 
+1919 | 02/04/25 00:09:18 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+191a | 02/04/25 00:09:18 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+191b | 02/04/25 00:09:19 | MAJ | BMC  | Temperature | GPU3_DRAM0_TMP0  | Hi Crit thresh actual=127.00 C, threshold=107.00 C
+191c | 02/04/25 00:09:19 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+191d | 02/04/25 00:09:19 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+191e | 02/04/25 00:09:19 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+191f | 02/04/25 00:09:19 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1920 | 02/04/25 00:09:19 | MIN | BMC  | Temperature | GPU3_DRAM0_TMP0  | Hi Noncrit thresh actual=127.00 C, threshold=105.00 C
+1921 | 02/04/25 00:09:19 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1922 | 02/04/25 00:09:19 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+1923 | 02/04/25 00:09:19 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1924 | 02/04/25 00:09:19 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1925 | 02/04/25 00:09:19 | INF | BMC  | Temperature | GPU3_DRAM0_TMP0  | HiU thresh OK now actual=32.00 C, threshold=110.00 C
+1926 | 02/04/25 00:09:19 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1927 | 02/04/25 00:09:19 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+1928 | 02/04/25 00:09:19 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1929 | 02/04/25 00:09:19 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+192a | 02/04/25 00:09:19 | INF | BMC  | Temperature | GPU3_DRAM0_TMP0  | HiC thresh OK now actual=32.00 C, threshold=107.00 C
+192b | 02/04/25 00:09:19 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+192c | 02/04/25 00:09:20 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+192d | 02/04/25 00:09:20 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+192e | 02/04/25 00:09:20 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+192f | 02/04/25 00:09:20 | INF | BMC  | Temperature | GPU3_DRAM0_TMP0  | HiN thresh OK now actual=32.00 C, threshold=105.00 C
+1930 | 02/04/25 00:09:20 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1931 | 02/04/25 00:09:20 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+1932 | 02/04/25 00:09:20 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1933 | 02/04/25 00:09:20 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1934 | 02/04/25 00:35:04 | CRT | BMC  | Temperature | GPU2_DRAM0_TMP0  | Hi Unrec thresh actual=127.00 C, threshold=110.00 C
+1935 | 02/04/25 00:35:04 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1936 | 02/04/25 00:35:04 | INF | d0 | 000020 |  | OEM Event 94 98 94 97 93 97 
+1937 | 02/04/25 00:35:04 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1938 | 02/04/25 00:35:04 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 ff ff 
+1939 | 02/04/25 00:35:04 | MAJ | BMC  | Temperature | GPU2_DRAM0_TMP0  | Hi Crit thresh actual=127.00 C, threshold=107.00 C
+193a | 02/04/25 00:35:04 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+193b | 02/04/25 00:35:04 | INF | d0 | 000020 |  | OEM Event 94 98 94 97 93 97 
+193c | 02/04/25 00:35:04 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+193d | 02/04/25 00:35:04 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 ff ff 
+193e | 02/04/25 00:35:04 | MIN | BMC  | Temperature | GPU2_DRAM0_TMP0  | Hi Noncrit thresh actual=127.00 C, threshold=105.00 C
+193f | 02/04/25 00:35:04 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1940 | 02/04/25 00:35:05 | INF | d0 | 000020 |  | OEM Event 94 98 94 97 93 97 
+1941 | 02/04/25 00:35:05 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1942 | 02/04/25 00:35:05 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 ff ff 
+1943 | 02/04/25 00:35:05 | INF | BMC  | Temperature | GPU2_DRAM0_TMP0  | HiU thresh OK now actual=33.00 C, threshold=110.00 C
+1944 | 02/04/25 00:35:05 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1945 | 02/04/25 00:35:05 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+1946 | 02/04/25 00:35:05 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1947 | 02/04/25 00:35:05 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 ff ff 
+1948 | 02/04/25 00:35:05 | INF | BMC  | Temperature | GPU2_DRAM0_TMP0  | HiC thresh OK now actual=33.00 C, threshold=107.00 C
+1949 | 02/04/25 00:35:05 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+194a | 02/04/25 00:35:05 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+194b | 02/04/25 00:35:05 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+194c | 02/04/25 00:35:05 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+194d | 02/04/25 00:35:05 | INF | BMC  | Temperature | GPU2_DRAM0_TMP0  | HiN thresh OK now actual=33.00 C, threshold=105.00 C
+194e | 02/04/25 00:35:05 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+194f | 02/04/25 00:35:05 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+1950 | 02/04/25 00:35:05 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1951 | 02/04/25 00:35:05 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1952 | 02/04/25 01:58:15 | MIN | BMC  | Temperature | HMC_TMP  | Lo Noncrit thresh actual=128.00 C, threshold=5.00 C
+1953 | 02/04/25 01:58:15 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1954 | 02/04/25 01:58:15 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+1955 | 02/04/25 01:58:15 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1956 | 02/04/25 01:58:15 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1957 | 02/04/25 01:58:16 | INF | BMC  | Temperature | HMC_TMP  | LoN thresh OK now actual=31.00 C, threshold=5.00 C
+1958 | 02/04/25 01:58:16 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1959 | 02/04/25 01:58:16 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+195a | 02/04/25 01:58:16 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+195b | 02/04/25 01:58:16 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+195c | 02/04/25 02:32:06 | CRT | BMC  | Temperature | GPU3_DRAM0_TMP0  | Hi Unrec thresh actual=127.00 C, threshold=110.00 C
+195d | 02/04/25 02:32:06 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+195e | 02/04/25 02:32:06 | INF | d0 | 000020 |  | OEM Event 94 98 94 97 94 97 
+195f | 02/04/25 02:32:06 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1960 | 02/04/25 02:32:06 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1961 | 02/04/25 02:32:06 | MAJ | BMC  | Temperature | GPU3_DRAM0_TMP0  | Hi Crit thresh actual=127.00 C, threshold=107.00 C
+1962 | 02/04/25 02:32:06 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1963 | 02/04/25 02:32:06 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+1964 | 02/04/25 02:32:06 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1965 | 02/04/25 02:32:06 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1966 | 02/04/25 02:32:06 | MIN | BMC  | Temperature | GPU3_DRAM0_TMP0  | Hi Noncrit thresh actual=127.00 C, threshold=105.00 C
+1967 | 02/04/25 02:32:06 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1968 | 02/04/25 02:32:06 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+1969 | 02/04/25 02:32:06 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+196a | 02/04/25 02:32:06 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+196b | 02/04/25 02:32:07 | INF | BMC  | Temperature | GPU3_DRAM0_TMP0  | HiU thresh OK now actual=32.00 C, threshold=110.00 C
+196c | 02/04/25 02:32:07 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+196d | 02/04/25 02:32:07 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+196e | 02/04/25 02:32:07 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+196f | 02/04/25 02:32:07 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1970 | 02/04/25 02:32:07 | INF | BMC  | Temperature | GPU3_DRAM0_TMP0  | HiC thresh OK now actual=32.00 C, threshold=107.00 C
+1971 | 02/04/25 02:32:07 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1972 | 02/04/25 02:32:07 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+1973 | 02/04/25 02:32:07 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1974 | 02/04/25 02:32:07 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1975 | 02/04/25 02:32:07 | INF | BMC  | Temperature | GPU3_DRAM0_TMP0  | HiN thresh OK now actual=32.00 C, threshold=105.00 C
+1976 | 02/04/25 02:32:07 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1977 | 02/04/25 02:32:07 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+1978 | 02/04/25 02:32:07 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1979 | 02/04/25 02:32:07 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+197a | 02/04/25 13:30:46 | CRT | BMC  | Temperature | HMC_TMP  | Hi Unrec thresh actual=127.00 C, threshold=85.00 C
+197b | 02/04/25 13:30:46 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+197c | 02/04/25 13:30:46 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+197d | 02/04/25 13:30:46 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+197e | 02/04/25 13:30:46 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+197f | 02/04/25 13:30:46 | MAJ | BMC  | Temperature | HMC_TMP  | Hi Crit thresh actual=127.00 C, threshold=80.00 C
+1980 | 02/04/25 13:30:46 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1981 | 02/04/25 13:30:46 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+1982 | 02/04/25 13:30:46 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1983 | 02/04/25 13:30:46 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1984 | 02/04/25 13:30:46 | INF | BMC  | OEM(e0) | BMC_Health  | - 
+1985 | 02/04/25 13:30:46 | MIN | BMC  | Temperature | HMC_TMP  | Hi Noncrit thresh actual=127.00 C, threshold=75.00 C
+1986 | 02/04/25 13:30:46 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1987 | 02/04/25 13:30:46 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+1988 | 02/04/25 13:30:46 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1989 | 02/04/25 13:30:46 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+198a | 02/04/25 13:30:47 | INF | BMC  | Temperature | HMC_TMP  | HiU thresh OK now actual=31.00 C, threshold=85.00 C
+198b | 02/04/25 13:30:47 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+198c | 02/04/25 13:30:47 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+198d | 02/04/25 13:30:47 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+198e | 02/04/25 13:30:47 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+198f | 02/04/25 13:30:47 | INF | BMC  | Temperature | HMC_TMP  | HiC thresh OK now actual=31.00 C, threshold=80.00 C
+1990 | 02/04/25 13:30:47 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1991 | 02/04/25 13:30:47 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+1992 | 02/04/25 13:30:47 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1993 | 02/04/25 13:30:47 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1994 | 02/04/25 13:30:47 | INF | BMC  | Temperature | HMC_TMP  | HiN thresh OK now actual=31.00 C, threshold=75.00 C
+1995 | 02/04/25 13:30:47 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1996 | 02/04/25 13:30:47 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+1997 | 02/04/25 13:30:47 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1998 | 02/04/25 13:30:47 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1999 | 02/04/25 15:11:40 | MAJ | BMC  | Fan | FAN_3B  | Lo Crit thresh actual=0.00 RPM, threshold=4455.00 RPM
+199a | 02/04/25 15:11:40 | MAJ | BMC  | Fan | FAN_3A  | Lo Crit thresh actual=0.00 RPM, threshold=4440.00 RPM
+199b | 02/04/25 15:11:40 | MAJ | BMC  | Fan | FAN_6B  | Lo Crit thresh actual=0.00 RPM, threshold=4455.00 RPM
+199c | 02/04/25 15:11:40 | MAJ | BMC  | Fan | FAN_6A  | Lo Crit thresh actual=0.00 RPM, threshold=4440.00 RPM
+199d | 02/04/25 15:11:40 | MAJ | BMC  | Fan | FAN_7B  | Lo Crit thresh actual=0.00 RPM, threshold=4455.00 RPM
+199e | 02/04/25 15:11:40 | MAJ | BMC  | Fan | FAN_7A  | Lo Crit thresh actual=0.00 RPM, threshold=4440.00 RPM
+199f | 02/04/25 15:11:40 | MAJ | BMC  | Fan | FAN_2B  | Lo Crit thresh actual=0.00 RPM, threshold=4455.00 RPM
+19a0 | 02/04/25 15:11:40 | MAJ | BMC  | Fan | FAN_1A  | Lo Crit thresh actual=0.00 RPM, threshold=4440.00 RPM
+19a1 | 02/04/25 15:11:40 | MAJ | BMC  | Fan | FAN_2A  | Lo Crit thresh actual=0.00 RPM, threshold=4440.00 RPM
+19a2 | 02/04/25 15:11:40 | MAJ | BMC  | Fan | FAN_0B  | Lo Crit thresh actual=0.00 RPM, threshold=4455.00 RPM
+19a3 | 02/04/25 15:11:40 | MAJ | BMC  | Fan | FAN_0A  | Lo Crit thresh actual=0.00 RPM, threshold=4440.00 RPM
+19a4 | 02/04/25 15:11:40 | MAJ | BMC  | Fan | FAN_1B  | Lo Crit thresh actual=0.00 RPM, threshold=4455.00 RPM
+19a5 | 02/04/25 15:11:40 | MAJ | BMC  | Fan | FAN_5B  | Lo Crit thresh actual=0.00 RPM, threshold=4455.00 RPM
+19a6 | 02/04/25 15:11:40 | MAJ | BMC  | Fan | FAN_5A  | Lo Crit thresh actual=0.00 RPM, threshold=4440.00 RPM
+19a7 | 02/04/25 15:11:40 | MAJ | BMC  | Fan | FAN_4B  | Lo Crit thresh actual=0.00 RPM, threshold=4455.00 RPM
+19a8 | 02/04/25 15:11:40 | MAJ | BMC  | Fan | FAN_4A  | Lo Crit thresh actual=0.00 RPM, threshold=4440.00 RPM
+19a9 | 02/04/25 15:11:40 | INF | BMC  | FRU Sensor | SWB_CPLD_Status  | - 
+19aa | 02/04/25 15:11:40 | INF | BMC  | FRU Sensor | SWB_CPLD_Status  | - 
+19ab | 02/04/25 15:11:40 | INF | BMC  | FRU Sensor | SWB_CPLD_Status  | - 
+19ac | 02/04/25 15:11:40 | INF | BMC  | FRU Sensor | SWB_CPLD_Status  | - 
+19ad | 02/04/25 15:11:40 | INF | BMC  | FRU Sensor | SWB_CPLD_Status  | - 
+19ae | 02/04/25 15:11:40 | INF | BMC  | FRU Sensor | SWB_CPLD_Status  | - 
+19af | 02/04/25 15:11:40 | INF | BMC  | FRU Sensor | SWB_CPLD_Status  | - 
+19b0 | 02/04/25 15:11:41 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+19b1 | 02/04/25 15:11:41 | INF | d0 | 000020 |  | OEM Event 00 00 00 00 00 00 
+19b2 | 02/04/25 15:11:41 | INF | d0 | 000020 |  | OEM Event 00 00 00 00 00 00 
+19b3 | 02/04/25 15:11:41 | INF | d0 | 000020 |  | OEM Event 00 00 00 00 ff ff 
+19b4 | 02/04/25 15:11:43 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+19b5 | 02/04/25 15:11:43 | INF | BMC  | OEM(e0) | BMC_Health  | - 
+19b6 | 02/04/25 15:11:43 | INF | BMC  | OEM(e0) | BMC_Health  | - 
+19b7 | 02/04/25 15:11:43 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+19b8 | 02/04/25 15:11:43 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+19b9 | 02/04/25 15:11:43 | INF | BMC  | OEM(da) | GPUB_HMC_STATE  | - 
+19ba | 02/04/25 15:11:43 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+19bb | 02/04/25 15:11:43 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+19bc | 02/04/25 15:11:44 | INF | BMC  | OEM(df) | E1S_Present  | - 
+19bd | 02/04/25 15:11:44 | INF | BMC  | OEM(df) | E1S_Present  | - 
+19be | 02/04/25 15:11:44 | INF | BMC  | OEM(df) | E1S_Present  | - 
+19bf | 02/04/25 15:11:44 | INF | BMC  | OEM(df) | E1S_Present  | - 
+19c0 | 02/04/25 15:11:44 | INF | BMC  | OEM(da) | GPUB_HMC_STATE  | - 
+19c1 | 02/04/25 15:11:44 | INF | BMC  | OEM(e0) | BMC_Health  | - 
+19c2 | 02/04/25 15:11:44 | INF | BMC  | OEM(df) | E1S_Present  | - 
+19c3 | 02/04/25 15:11:44 | MAJ | BMC  | Power Supply | HSC_0_Status  | Failure detected 
+19c4 | 02/04/25 15:12:26 | INF | BMC  | FRU Sensor | SWB_CPLD_Status  | - 
+19c5 | 02/04/25 15:12:26 | INF | BMC  | FRU Sensor | SWB_CPLD_Status  | - 
+19c6 | 02/04/25 15:12:26 | INF | BMC  | FRU Sensor | SWB_CPLD_Status  | - 
+19c7 | 02/04/25 15:12:26 | INF | BMC  | FRU Sensor | SWB_CPLD_Status  | - 
+19c8 | 02/04/25 15:12:26 | INF | BMC  | FRU Sensor | SWB_CPLD_Status  | - 
+19c9 | 02/04/25 15:12:26 | INF | BMC  | FRU Sensor | SWB_CPLD_Status  | - 
+19ca | 02/04/25 15:12:26 | INF | BMC  | OEM(df) | E1S_Present  | - 
+19cb | 02/04/25 15:12:26 | INF | BMC  | FRU Sensor | SWB_CPLD_Status  | - 
+19cc | 02/04/25 15:12:27 | INF | BMC  | Fan | FAN_3B  | LoC thresh OK now actual=7020.00 RPM, threshold=4455.00 RPM
+19cd | 02/04/25 15:12:28 | INF | BMC  | Fan | FAN_3A  | LoC thresh OK now actual=7844.00 RPM, threshold=4440.00 RPM
+19ce | 02/04/25 15:12:28 | INF | BMC  | FRU Sensor | SWB_CPLD_Status  | - 
+19cf | 02/04/25 15:12:28 | INF | BMC  | FRU Sensor | SWB_CPLD_Status  | - 
+19d0 | 02/04/25 15:12:28 | INF | BMC  | FRU Sensor | SWB_CPLD_Status  | - 
+19d1 | 02/04/25 15:12:29 | INF | BMC  | Fan | FAN_1B  | LoC thresh OK now actual=8505.00 RPM, threshold=4455.00 RPM
+19d2 | 02/04/25 15:12:29 | INF | BMC  | Fan | FAN_1A  | LoC thresh OK now actual=13764.00 RPM, threshold=4440.00 RPM
+19d3 | 02/04/25 15:12:29 | INF | BMC  | Fan | FAN_2A  | LoC thresh OK now actual=9176.00 RPM, threshold=4440.00 RPM
+19d4 | 02/04/25 15:12:29 | INF | BMC  | Fan | FAN_0B  | LoC thresh OK now actual=8640.00 RPM, threshold=4455.00 RPM
+19d5 | 02/04/25 15:12:29 | INF | BMC  | Fan | FAN_0A  | LoC thresh OK now actual=13912.00 RPM, threshold=4440.00 RPM
+19d6 | 02/04/25 15:12:29 | INF | BMC  | Fan | FAN_2B  | LoC thresh OK now actual=8505.00 RPM, threshold=4455.00 RPM
+19d7 | 02/04/25 15:12:30 | INF | BMC  | Fan | FAN_4A  | LoC thresh OK now actual=9620.00 RPM, threshold=4440.00 RPM
+19d8 | 02/04/25 15:12:30 | INF | BMC  | Fan | FAN_4B  | LoC thresh OK now actual=8775.00 RPM, threshold=4455.00 RPM
+19d9 | 02/04/25 15:12:30 | INF | BMC  | Fan | FAN_5A  | LoC thresh OK now actual=9472.00 RPM, threshold=4440.00 RPM
+19da | 02/04/25 15:12:30 | INF | BMC  | Fan | FAN_6B  | LoC thresh OK now actual=8910.00 RPM, threshold=4455.00 RPM
+19db | 02/04/25 15:12:30 | INF | BMC  | Fan | FAN_7B  | LoC thresh OK now actual=8775.00 RPM, threshold=4455.00 RPM
+19dc | 02/04/25 15:12:30 | INF | BMC  | Fan | FAN_5B  | LoC thresh OK now actual=8775.00 RPM, threshold=4455.00 RPM
+19dd | 02/04/25 15:12:30 | INF | BMC  | Fan | FAN_6A  | LoC thresh OK now actual=9620.00 RPM, threshold=4440.00 RPM
+19de | 02/04/25 15:12:30 | INF | BMC  | Fan | FAN_7A  | LoC thresh OK now actual=9620.00 RPM, threshold=4440.00 RPM
+19df | 02/04/25 15:12:30 | MIN | BMC  | Temperature | HMC_TMP  | Lo Noncrit thresh actual=0.00 C, threshold=5.00 C
+19e0 | 02/04/25 15:12:30 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+19e1 | 02/04/25 15:12:30 | INF | d0 | 000020 |  | OEM Event 9e 9f 9c 9c 9b 9b 
+19e2 | 02/04/25 15:12:30 | INF | d0 | 000020 |  | OEM Event 8f 8d 40 40 40 40 
+19e3 | 02/04/25 15:12:30 | INF | d0 | 000020 |  | OEM Event 40 41 41 41 ff ff 
+19e4 | 02/04/25 15:12:30 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+19e5 | 02/04/25 15:12:31 | INF | d0 | 000020 |  | OEM Event 9e 9f 9c db da dd 
+19e6 | 02/04/25 15:12:31 | INF | d0 | 000020 |  | OEM Event 8f ce 65 63 63 63 
+19e7 | 02/04/25 15:12:31 | INF | d0 | 000020 |  | OEM Event 66 66 67 66 ff ff 
+19e8 | 02/04/25 15:12:31 | INF | BMC  | OEM(da) | GPUB_HMC_STATE  | - 
+19e9 | 02/04/25 15:12:31 | INF | BMC  | OEM(da) | GPUB_HMC_STATE  | - 
+19ea | 02/04/25 15:12:31 | INF | BMC  | ACPI Power State | Power_Status  | S5/G2 soft-off 
+19eb | 02/04/25 15:12:31 | INF | BMC  | OEM(da) | GPUB_FPGA1_STATE  | - 
+19ec | 02/04/25 15:12:31 | INF | BMC  | OEM(da) | GPUB_FPGA2_STATE  | - 
+19ed | 02/04/25 15:12:32 | INF | BMC  | ACPI Power State | Power_Status  | S0/G0 Working 
+19ee | 02/04/25 15:12:33 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+19ef | 02/04/25 15:12:33 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+19f0 | 02/04/25 15:12:33 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+19f1 | 02/04/25 15:12:33 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+19f2 | 02/04/25 15:12:33 | INF | BMC  | OEM(df) | GP_PowerGood  | - 
+19f3 | 02/04/25 15:12:33 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+19f4 | 02/04/25 15:12:36 | INF | BMC  | OEM(da) | GPUB_HMC_STATE  | - 
+19f5 | 02/04/25 15:12:37 | INF | BMC  | System Event | System_Reconfig  | - 
+19f6 | 02/04/25 15:12:51 | INF | BMC  | Temperature | HMC_TMP  | LoN thresh OK now actual=31.00 C, threshold=5.00 C
+19f7 | 02/04/25 15:12:51 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+19f8 | 02/04/25 15:12:51 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+19f9 | 02/04/25 15:12:51 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+19fa | 02/04/25 15:12:51 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+19fb | 02/04/25 15:12:51 | INF | db | OEM Event     ¡ 
+19fc | 02/04/25 15:12:56 | INF | ca | 000137 |  | OEM Event 02 02 10 00 00 00 
+19fd | 02/04/25 15:13:48 | INF | BMC  | OEM(e2) | FailSafe_Status  | - 
+19fe | 02/04/25 15:14:42 | INF | BMC  | OEM(e0) | BMC_Health  | - 
+19ff | 02/04/25 15:17:57 | INF | db | OEM Event      ¿
+1a00 | 02/04/25 15:17:57 | INF | db | OEM Event   @Ä¡
+1a01 | 02/04/25 15:17:57 | INF | db | OEM Event   @ ê¡
+1a02 | 02/04/25 15:17:57 | INF | db | OEM Event   @ †¡
+1a03 | 02/04/25 15:17:58 | INF | BMC  | OEM(e0) | BMC_Health  | - 
+1a04 | 02/04/25 15:18:15 | INF | db | OEM Event     ¡ 
+1a05 | 02/04/25 15:18:20 | INF | ca | 000137 |  | OEM Event 02 02 10 00 00 00 
+1a06 | 02/04/25 15:18:32 | INF | db | OEM Event     
+1a07 | 02/04/25 15:19:09 | INF | c5 | 000137 |  | OEM Event 03 00 00 00 00 00 
+1a08 | 02/04/25 15:19:09 | INF | db | OEM Event     
+1a09 | 02/04/25 15:19:11 | INF | BMC  | OEM(e1) | BMC_Health  | - 
+1a0a | 02/04/25 15:19:11 | INF | BMC  | OEM(e1) | BMC_Health  | - 
+1a0b | 02/04/25 15:19:11 | INF | BMC  | OEM(e1) | BMC_Health  | - 
+1a0c | 02/04/25 15:19:11 | INF | BMC  | OEM(e1) | BMC_Health  | - 
+1a0d | 02/04/25 15:19:14 | INF | db | OEM Event     
+1a0e | 02/04/25 15:19:14 | INF | db | OEM Event    Ä 
+1a0f | 02/04/25 15:19:14 | INF | db | OEM Event    Ä 
+1a10 | 02/04/25 15:19:17 | INF | db | OEM Event     
+1a11 | 02/04/25 23:55:28 | CRT | BMC  | Temperature | GPU0_DRAM0_TMP0  | Hi Unrec thresh actual=127.00 C, threshold=110.00 C
+1a12 | 02/04/25 23:55:28 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1a13 | 02/04/25 23:55:28 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 98 
+1a14 | 02/04/25 23:55:28 | INF | d0 | 000020 |  | OEM Event 94 96 94 96 94 97 
+1a15 | 02/04/25 23:55:28 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1a16 | 02/04/25 23:55:28 | MAJ | BMC  | Temperature | GPU0_DRAM0_TMP0  | Hi Crit thresh actual=127.00 C, threshold=107.00 C
+1a17 | 02/04/25 23:55:28 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1a18 | 02/04/25 23:55:28 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 98 
+1a19 | 02/04/25 23:55:28 | INF | d0 | 000020 |  | OEM Event 94 96 94 96 94 97 
+1a1a | 02/04/25 23:55:28 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1a1b | 02/04/25 23:55:28 | MIN | BMC  | Temperature | GPU0_DRAM0_TMP0  | Hi Noncrit thresh actual=127.00 C, threshold=105.00 C
+1a1c | 02/04/25 23:55:28 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1a1d | 02/04/25 23:55:28 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+1a1e | 02/04/25 23:55:28 | INF | d0 | 000020 |  | OEM Event 94 96 94 96 94 97 
+1a1f | 02/04/25 23:55:28 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1a20 | 02/04/25 23:55:29 | INF | BMC  | Temperature | GPU0_DRAM0_TMP0  | HiU thresh OK now actual=44.00 C, threshold=110.00 C
+1a21 | 02/04/25 23:55:29 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1a22 | 02/04/25 23:55:29 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+1a23 | 02/04/25 23:55:29 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 94 97 
+1a24 | 02/04/25 23:55:29 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1a25 | 02/04/25 23:55:29 | INF | BMC  | Temperature | GPU0_DRAM0_TMP0  | HiC thresh OK now actual=44.00 C, threshold=107.00 C
+1a26 | 02/04/25 23:55:29 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1a27 | 02/04/25 23:55:29 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+1a28 | 02/04/25 23:55:29 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 94 97 
+1a29 | 02/04/25 23:55:29 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1a2a | 02/04/25 23:55:29 | INF | BMC  | Temperature | GPU0_DRAM0_TMP0  | HiN thresh OK now actual=44.00 C, threshold=105.00 C
+1a2b | 02/04/25 23:55:29 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1a2c | 02/04/25 23:55:29 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 98 
+1a2d | 02/04/25 23:55:29 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 94 97 
+1a2e | 02/04/25 23:55:29 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1a2f | 02/05/25 00:59:52 | CRT | BMC  | Temperature | GPU2_DRAM0_TMP0  | Hi Unrec thresh actual=127.00 C, threshold=110.00 C
+1a30 | 02/05/25 00:59:52 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1a31 | 02/05/25 00:59:53 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+1a32 | 02/05/25 00:59:53 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 94 97 
+1a33 | 02/05/25 00:59:53 | INF | d0 | 000020 |  | OEM Event 94 97 94 96 ff ff 
+1a34 | 02/05/25 00:59:53 | MAJ | BMC  | Temperature | GPU2_DRAM0_TMP0  | Hi Crit thresh actual=127.00 C, threshold=107.00 C
+1a35 | 02/05/25 00:59:53 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1a36 | 02/05/25 00:59:53 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+1a37 | 02/05/25 00:59:53 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 94 97 
+1a38 | 02/05/25 00:59:53 | INF | d0 | 000020 |  | OEM Event 94 97 94 96 ff ff 
+1a39 | 02/05/25 00:59:53 | MIN | BMC  | Temperature | GPU2_DRAM0_TMP0  | Hi Noncrit thresh actual=127.00 C, threshold=105.00 C
+1a3a | 02/05/25 00:59:53 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1a3b | 02/05/25 00:59:53 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+1a3c | 02/05/25 00:59:53 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 94 97 
+1a3d | 02/05/25 00:59:53 | INF | d0 | 000020 |  | OEM Event 94 97 94 96 ff ff 
+1a3e | 02/05/25 00:59:53 | INF | BMC  | Temperature | GPU2_DRAM0_TMP0  | HiU thresh OK now actual=43.00 C, threshold=110.00 C
+1a3f | 02/05/25 00:59:53 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1a40 | 02/05/25 00:59:54 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+1a41 | 02/05/25 00:59:54 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 94 97 
+1a42 | 02/05/25 00:59:54 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1a43 | 02/05/25 00:59:54 | INF | BMC  | Temperature | GPU2_DRAM0_TMP0  | HiC thresh OK now actual=43.00 C, threshold=107.00 C
+1a44 | 02/05/25 00:59:54 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1a45 | 02/05/25 00:59:54 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+1a46 | 02/05/25 00:59:54 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 94 97 
+1a47 | 02/05/25 00:59:54 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1a48 | 02/05/25 00:59:54 | INF | BMC  | Temperature | GPU2_DRAM0_TMP0  | HiN thresh OK now actual=43.00 C, threshold=105.00 C
+1a49 | 02/05/25 00:59:54 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1a4a | 02/05/25 00:59:54 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+1a4b | 02/05/25 00:59:54 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 94 97 
+1a4c | 02/05/25 00:59:54 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1a4d | 02/05/25 02:44:34 | INF | BMC  | Temperature | SoC_0_SOCHOT  | Temp Asserted 
+1a4e | 02/05/25 02:44:34 | INF | BMC  | ACPI Power State | Power_Status  | S5/G2 soft-off 
+1a4f | 02/05/25 02:44:36 | INF | BMC  | OEM(df) | GP_PowerGood  | - 
+1a50 | 02/05/25 02:44:36 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+1a51 | 02/05/25 02:44:36 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+1a52 | 02/05/25 02:44:36 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+1a53 | 02/05/25 02:44:36 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+1a54 | 02/05/25 02:44:36 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+1a55 | 02/05/25 02:44:40 | INF | BMC  | OEM(df) | GP_PowerGood  | - 
+1a56 | 02/05/25 02:44:40 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+1a57 | 02/05/25 02:44:40 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+1a58 | 02/05/25 02:44:40 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+1a59 | 02/05/25 02:44:40 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+1a5a | 02/05/25 02:44:40 | INF | BMC  | OEM(df) | E1S_PowerGood  | - 
+1a5b | 02/05/25 02:44:41 | INF | BMC  | ACPI Power State | Power_Status  | S0/G0 Working 
+1a5c | 02/05/25 02:45:00 | INF | db | OEM Event     ¡ 
+1a5d | 02/05/25 02:45:05 | INF | ca | 000137 |  | OEM Event 02 02 10 00 00 00 
+1a5e | 02/05/25 02:50:06 | INF | db | OEM Event      ¿
+1a5f | 02/05/25 02:50:06 | INF | db | OEM Event   @Ä¡
+1a60 | 02/05/25 02:50:06 | INF | db | OEM Event   @ ê¡
+1a61 | 02/05/25 02:50:06 | INF | db | OEM Event   @ †¡
+1a62 | 02/05/25 02:50:24 | INF | db | OEM Event     ¡ 
+1a63 | 02/05/25 02:50:29 | INF | ca | 000137 |  | OEM Event 02 02 10 00 00 00 
+1a64 | 02/05/25 02:50:41 | INF | db | OEM Event     
+1a65 | 02/05/25 02:51:40 | INF | db | OEM Event   @ 
+1a66 | 02/05/25 02:51:40 | INF | EFI  | Boot Error | na  | - 
+1a67 | 02/05/25 02:51:40 | INF | db | OEM Event   @ 
+1a68 | 02/05/25 02:51:41 | INF | db | OEM Event     
+1a69 | 02/05/25 02:51:41 | INF | db | OEM Event    Ä 
+1a6a | 02/05/25 02:51:41 | INF | db | OEM Event    Ä 
+1a6b | 02/05/25 02:51:44 | INF | db | OEM Event     
+1a6c | 02/05/25 10:34:14 | CRT | BMC  | Temperature | GPU2_DRAM0_TMP0  | Hi Unrec thresh actual=127.00 C, threshold=110.00 C
+1a6d | 02/05/25 10:34:14 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1a6e | 02/05/25 10:34:15 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+1a6f | 02/05/25 10:34:15 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1a70 | 02/05/25 10:34:15 | INF | d0 | 000020 |  | OEM Event 93 97 94 96 ff ff 
+1a71 | 02/05/25 10:34:15 | MAJ | BMC  | Temperature | GPU2_DRAM0_TMP0  | Hi Crit thresh actual=127.00 C, threshold=107.00 C
+1a72 | 02/05/25 10:34:15 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1a73 | 02/05/25 10:34:15 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+1a74 | 02/05/25 10:34:15 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1a75 | 02/05/25 10:34:15 | INF | d0 | 000020 |  | OEM Event 94 97 94 96 ff ff 
+1a76 | 02/05/25 10:34:15 | MIN | BMC  | Temperature | GPU2_DRAM0_TMP0  | Hi Noncrit thresh actual=127.00 C, threshold=105.00 C
+1a77 | 02/05/25 10:34:15 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1a78 | 02/05/25 10:34:15 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+1a79 | 02/05/25 10:34:15 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1a7a | 02/05/25 10:34:15 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1a7b | 02/05/25 10:34:15 | INF | BMC  | Temperature | GPU2_DRAM0_TMP0  | HiU thresh OK now actual=42.00 C, threshold=110.00 C
+1a7c | 02/05/25 10:34:15 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1a7d | 02/05/25 10:34:16 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+1a7e | 02/05/25 10:34:16 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1a7f | 02/05/25 10:34:16 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1a80 | 02/05/25 10:34:16 | INF | BMC  | Temperature | GPU2_DRAM0_TMP0  | HiC thresh OK now actual=42.00 C, threshold=107.00 C
+1a81 | 02/05/25 10:34:16 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1a82 | 02/05/25 10:34:16 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+1a83 | 02/05/25 10:34:16 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1a84 | 02/05/25 10:34:16 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1a85 | 02/05/25 10:34:16 | INF | BMC  | OEM(e0) | BMC_Health  | - 
+1a86 | 02/05/25 10:34:16 | INF | BMC  | Temperature | GPU2_DRAM0_TMP0  | HiN thresh OK now actual=42.00 C, threshold=105.00 C
+1a87 | 02/05/25 10:34:16 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1a88 | 02/05/25 10:34:16 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+1a89 | 02/05/25 10:34:16 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1a8a | 02/05/25 10:34:16 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1a8b | 02/06/25 04:09:05 | CRT | BMC  | Temperature | GPU1_DRAM0_TMP0  | Hi Unrec thresh actual=127.00 C, threshold=110.00 C
+1a8c | 02/06/25 04:09:05 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1a8d | 02/06/25 04:09:05 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 98 
+1a8e | 02/06/25 04:09:05 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 94 97 
+1a8f | 02/06/25 04:09:05 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 ff ff 
+1a90 | 02/06/25 04:09:05 | MAJ | BMC  | Temperature | GPU1_DRAM0_TMP0  | Hi Crit thresh actual=127.00 C, threshold=107.00 C
+1a91 | 02/06/25 04:09:05 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1a92 | 02/06/25 04:09:06 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 98 
+1a93 | 02/06/25 04:09:06 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 94 97 
+1a94 | 02/06/25 04:09:06 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 ff ff 
+1a95 | 02/06/25 04:09:06 | MIN | BMC  | Temperature | GPU1_DRAM0_TMP0  | Hi Noncrit thresh actual=127.00 C, threshold=105.00 C
+1a96 | 02/06/25 04:09:06 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1a97 | 02/06/25 04:09:06 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 98 
+1a98 | 02/06/25 04:09:06 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 94 97 
+1a99 | 02/06/25 04:09:06 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 ff ff 
+1a9a | 02/06/25 04:09:06 | INF | BMC  | Temperature | GPU1_DRAM0_TMP0  | HiU thresh OK now actual=44.00 C, threshold=110.00 C
+1a9b | 02/06/25 04:09:06 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1a9c | 02/06/25 04:09:06 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+1a9d | 02/06/25 04:09:06 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 94 97 
+1a9e | 02/06/25 04:09:06 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1a9f | 02/06/25 04:09:06 | INF | BMC  | Temperature | GPU1_DRAM0_TMP0  | HiC thresh OK now actual=44.00 C, threshold=107.00 C
+1aa0 | 02/06/25 04:09:06 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1aa1 | 02/06/25 04:09:07 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+1aa2 | 02/06/25 04:09:07 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 94 97 
+1aa3 | 02/06/25 04:09:07 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1aa4 | 02/06/25 04:09:07 | INF | BMC  | Temperature | GPU1_DRAM0_TMP0  | HiN thresh OK now actual=44.00 C, threshold=105.00 C
+1aa5 | 02/06/25 04:09:07 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1aa6 | 02/06/25 04:09:07 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+1aa7 | 02/06/25 04:09:07 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 94 97 
+1aa8 | 02/06/25 04:09:07 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1aa9 | 02/06/25 13:33:17 | CRT | BMC  | Temperature | GPU0_DRAM0_TMP0  | Hi Unrec thresh actual=127.00 C, threshold=110.00 C
+1aaa | 02/06/25 13:33:17 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1aab | 02/06/25 13:33:17 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+1aac | 02/06/25 13:33:17 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 94 97 
+1aad | 02/06/25 13:33:17 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1aae | 02/06/25 13:33:17 | MAJ | BMC  | Temperature | GPU0_DRAM0_TMP0  | Hi Crit thresh actual=127.00 C, threshold=107.00 C
+1aaf | 02/06/25 13:33:17 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1ab0 | 02/06/25 13:33:17 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+1ab1 | 02/06/25 13:33:17 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 94 97 
+1ab2 | 02/06/25 13:33:17 | INF | d0 | 000020 |  | OEM Event 94 97 94 96 ff ff 
+1ab3 | 02/06/25 13:33:17 | MIN | BMC  | Temperature | GPU0_DRAM0_TMP0  | Hi Noncrit thresh actual=127.00 C, threshold=105.00 C
+1ab4 | 02/06/25 13:33:17 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1ab5 | 02/06/25 13:33:17 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+1ab6 | 02/06/25 13:33:17 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 94 97 
+1ab7 | 02/06/25 13:33:17 | INF | d0 | 000020 |  | OEM Event 94 97 94 96 ff ff 
+1ab8 | 02/06/25 13:33:18 | INF | BMC  | Temperature | GPU0_DRAM0_TMP0  | HiU thresh OK now actual=45.00 C, threshold=110.00 C
+1ab9 | 02/06/25 13:33:18 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1aba | 02/06/25 13:33:18 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+1abb | 02/06/25 13:33:18 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1abc | 02/06/25 13:33:18 | INF | d0 | 000020 |  | OEM Event 94 97 94 96 ff ff 
+1abd | 02/06/25 13:33:18 | INF | BMC  | Temperature | GPU0_DRAM0_TMP0  | HiC thresh OK now actual=45.00 C, threshold=107.00 C
+1abe | 02/06/25 13:33:18 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1abf | 02/06/25 13:33:18 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+1ac0 | 02/06/25 13:33:18 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1ac1 | 02/06/25 13:33:18 | INF | d0 | 000020 |  | OEM Event 94 97 94 96 ff ff 
+1ac2 | 02/06/25 13:33:18 | INF | BMC  | Temperature | GPU0_DRAM0_TMP0  | HiN thresh OK now actual=45.00 C, threshold=105.00 C
+1ac3 | 02/06/25 13:33:18 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1ac4 | 02/06/25 13:33:18 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+1ac5 | 02/06/25 13:33:18 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1ac6 | 02/06/25 13:33:18 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1ac7 | 02/06/25 14:40:55 | CRT | BMC  | Temperature | HMC_TMP  | Hi Unrec thresh actual=127.00 C, threshold=85.00 C
+1ac8 | 02/06/25 14:40:55 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1ac9 | 02/06/25 14:40:55 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+1aca | 02/06/25 14:40:56 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 94 97 
+1acb | 02/06/25 14:40:56 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 ff ff 
+1acc | 02/06/25 14:40:56 | MAJ | BMC  | Temperature | HMC_TMP  | Hi Crit thresh actual=127.00 C, threshold=80.00 C
+1acd | 02/06/25 14:40:56 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1ace | 02/06/25 14:40:56 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+1acf | 02/06/25 14:40:56 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 94 97 
+1ad0 | 02/06/25 14:40:56 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 ff ff 
+1ad1 | 02/06/25 14:40:56 | MIN | BMC  | Temperature | HMC_TMP  | Hi Noncrit thresh actual=127.00 C, threshold=75.00 C
+1ad2 | 02/06/25 14:40:56 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1ad3 | 02/06/25 14:40:56 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+1ad4 | 02/06/25 14:40:56 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 94 97 
+1ad5 | 02/06/25 14:40:56 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 ff ff 
+1ad6 | 02/06/25 14:40:56 | INF | BMC  | Temperature | HMC_TMP  | HiU thresh OK now actual=31.00 C, threshold=85.00 C
+1ad7 | 02/06/25 14:40:56 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1ad8 | 02/06/25 14:40:56 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+1ad9 | 02/06/25 14:40:56 | INF | d0 | 000020 |  | OEM Event 94 96 95 97 94 97 
+1ada | 02/06/25 14:40:56 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1adb | 02/06/25 14:40:56 | INF | BMC  | Temperature | HMC_TMP  | HiC thresh OK now actual=31.00 C, threshold=80.00 C
+1adc | 02/06/25 14:40:56 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1add | 02/06/25 14:40:57 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+1ade | 02/06/25 14:40:57 | INF | d0 | 000020 |  | OEM Event 94 96 95 97 94 97 
+1adf | 02/06/25 14:40:57 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1ae0 | 02/06/25 14:40:57 | INF | BMC  | Temperature | HMC_TMP  | HiN thresh OK now actual=31.00 C, threshold=75.00 C
+1ae1 | 02/06/25 14:40:57 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1ae2 | 02/06/25 14:40:57 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+1ae3 | 02/06/25 14:40:57 | INF | d0 | 000020 |  | OEM Event 94 96 95 97 94 97 
+1ae4 | 02/06/25 14:40:57 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1ae5 | 02/06/25 16:49:14 | CRT | BMC  | Temperature | GPU1_DRAM0_TMP0  | Hi Unrec thresh actual=127.00 C, threshold=110.00 C
+1ae6 | 02/06/25 16:49:14 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1ae7 | 02/06/25 16:49:14 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+1ae8 | 02/06/25 16:49:14 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1ae9 | 02/06/25 16:49:14 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 ff ff 
+1aea | 02/06/25 16:49:14 | MAJ | BMC  | Temperature | GPU1_DRAM0_TMP0  | Hi Crit thresh actual=127.00 C, threshold=107.00 C
+1aeb | 02/06/25 16:49:14 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1aec | 02/06/25 16:49:15 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+1aed | 02/06/25 16:49:15 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1aee | 02/06/25 16:49:15 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 ff ff 
+1aef | 02/06/25 16:49:15 | MIN | BMC  | Temperature | GPU1_DRAM0_TMP0  | Hi Noncrit thresh actual=127.00 C, threshold=105.00 C
+1af0 | 02/06/25 16:49:15 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1af1 | 02/06/25 16:49:15 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 98 
+1af2 | 02/06/25 16:49:15 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1af3 | 02/06/25 16:49:15 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1af4 | 02/06/25 16:49:15 | INF | BMC  | Temperature | GPU1_DRAM0_TMP0  | HiU thresh OK now actual=44.00 C, threshold=110.00 C
+1af5 | 02/06/25 16:49:15 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1af6 | 02/06/25 16:49:15 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 98 
+1af7 | 02/06/25 16:49:15 | INF | d0 | 000020 |  | OEM Event 94 97 94 96 94 97 
+1af8 | 02/06/25 16:49:15 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1af9 | 02/06/25 16:49:15 | INF | BMC  | Temperature | GPU1_DRAM0_TMP0  | HiC thresh OK now actual=44.00 C, threshold=107.00 C
+1afa | 02/06/25 16:49:15 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1afb | 02/06/25 16:49:16 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 98 
+1afc | 02/06/25 16:49:16 | INF | d0 | 000020 |  | OEM Event 94 97 94 96 94 97 
+1afd | 02/06/25 16:49:16 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1afe | 02/06/25 16:49:16 | INF | BMC  | Temperature | GPU1_DRAM0_TMP0  | HiN thresh OK now actual=44.00 C, threshold=105.00 C
+1aff | 02/06/25 16:49:16 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1b00 | 02/06/25 16:49:16 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+1b01 | 02/06/25 16:49:16 | INF | d0 | 000020 |  | OEM Event 94 97 94 96 94 97 
+1b02 | 02/06/25 16:49:16 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1b03 | 02/06/25 16:49:16 | INF | BMC  | OEM(e0) | BMC_Health  | - 
+1b04 | 02/06/25 19:22:46 | CRT | BMC  | Temperature | GPU0_DRAM0_TMP0  | Hi Unrec thresh actual=127.00 C, threshold=110.00 C
+1b05 | 02/06/25 19:22:46 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1b06 | 02/06/25 19:22:46 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 98 
+1b07 | 02/06/25 19:22:46 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1b08 | 02/06/25 19:22:46 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 ff ff 
+1b09 | 02/06/25 19:22:46 | MAJ | BMC  | Temperature | GPU0_DRAM0_TMP0  | Hi Crit thresh actual=127.00 C, threshold=107.00 C
+1b0a | 02/06/25 19:22:46 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1b0b | 02/06/25 19:22:46 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 98 
+1b0c | 02/06/25 19:22:46 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1b0d | 02/06/25 19:22:46 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1b0e | 02/06/25 19:22:46 | MIN | BMC  | Temperature | GPU0_DRAM0_TMP0  | Hi Noncrit thresh actual=127.00 C, threshold=105.00 C
+1b0f | 02/06/25 19:22:46 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1b10 | 02/06/25 19:22:46 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 98 
+1b11 | 02/06/25 19:22:46 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1b12 | 02/06/25 19:22:46 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1b13 | 02/06/25 19:22:47 | INF | BMC  | Temperature | GPU0_DRAM0_TMP0  | HiU thresh OK now actual=44.00 C, threshold=110.00 C
+1b14 | 02/06/25 19:22:47 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1b15 | 02/06/25 19:22:47 | INF | d0 | 000020 |  | OEM Event 94 98 94 97 94 97 
+1b16 | 02/06/25 19:22:47 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 94 97 
+1b17 | 02/06/25 19:22:47 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1b18 | 02/06/25 19:22:47 | INF | BMC  | Temperature | GPU0_DRAM0_TMP0  | HiC thresh OK now actual=44.00 C, threshold=107.00 C
+1b19 | 02/06/25 19:22:47 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1b1a | 02/06/25 19:22:47 | INF | d0 | 000020 |  | OEM Event 94 98 94 97 94 97 
+1b1b | 02/06/25 19:22:47 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 94 97 
+1b1c | 02/06/25 19:22:47 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1b1d | 02/06/25 19:22:47 | INF | BMC  | Temperature | GPU0_DRAM0_TMP0  | HiN thresh OK now actual=44.00 C, threshold=105.00 C
+1b1e | 02/06/25 19:22:47 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1b1f | 02/06/25 19:22:47 | INF | d0 | 000020 |  | OEM Event 94 98 94 97 94 97 
+1b20 | 02/06/25 19:22:47 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 94 97 
+1b21 | 02/06/25 19:22:47 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1b22 | 02/06/25 21:40:11 | CRT | BMC  | Temperature | GPU1_DRAM0_TMP0  | Hi Unrec thresh actual=127.00 C, threshold=110.00 C
+1b23 | 02/06/25 21:40:11 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1b24 | 02/06/25 21:40:11 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+1b25 | 02/06/25 21:40:11 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1b26 | 02/06/25 21:40:11 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1b27 | 02/06/25 21:40:11 | MAJ | BMC  | Temperature | GPU1_DRAM0_TMP0  | Hi Crit thresh actual=127.00 C, threshold=107.00 C
+1b28 | 02/06/25 21:40:11 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1b29 | 02/06/25 21:40:11 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+1b2a | 02/06/25 21:40:11 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1b2b | 02/06/25 21:40:11 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1b2c | 02/06/25 21:40:11 | MIN | BMC  | Temperature | GPU1_DRAM0_TMP0  | Hi Noncrit thresh actual=127.00 C, threshold=105.00 C
+1b2d | 02/06/25 21:40:11 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1b2e | 02/06/25 21:40:12 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+1b2f | 02/06/25 21:40:12 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1b30 | 02/06/25 21:40:12 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1b31 | 02/06/25 21:40:12 | INF | BMC  | Temperature | GPU1_DRAM0_TMP0  | HiU thresh OK now actual=32.00 C, threshold=110.00 C
+1b32 | 02/06/25 21:40:12 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1b33 | 02/06/25 21:40:12 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+1b34 | 02/06/25 21:40:12 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1b35 | 02/06/25 21:40:12 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1b36 | 02/06/25 21:40:12 | INF | BMC  | Temperature | GPU1_DRAM0_TMP0  | HiC thresh OK now actual=32.00 C, threshold=107.00 C
+1b37 | 02/06/25 21:40:12 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1b38 | 02/06/25 21:40:12 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+1b39 | 02/06/25 21:40:12 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1b3a | 02/06/25 21:40:12 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1b3b | 02/06/25 21:40:12 | INF | BMC  | Temperature | GPU1_DRAM0_TMP0  | HiN thresh OK now actual=32.00 C, threshold=105.00 C
+1b3c | 02/06/25 21:40:12 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1b3d | 02/06/25 21:40:13 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 98 
+1b3e | 02/06/25 21:40:13 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1b3f | 02/06/25 21:40:13 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1b40 | 02/07/25 10:23:02 | CRT | BMC  | Temperature | HMC_TMP  | Hi Unrec thresh actual=127.00 C, threshold=85.00 C
+1b41 | 02/07/25 10:23:02 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1b42 | 02/07/25 10:23:02 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 98 
+1b43 | 02/07/25 10:23:02 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1b44 | 02/07/25 10:23:02 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1b45 | 02/07/25 10:23:02 | MAJ | BMC  | Temperature | HMC_TMP  | Hi Crit thresh actual=127.00 C, threshold=80.00 C
+1b46 | 02/07/25 10:23:02 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1b47 | 02/07/25 10:23:02 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 98 
+1b48 | 02/07/25 10:23:02 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1b49 | 02/07/25 10:23:02 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1b4a | 02/07/25 10:23:02 | MIN | BMC  | Temperature | HMC_TMP  | Hi Noncrit thresh actual=127.00 C, threshold=75.00 C
+1b4b | 02/07/25 10:23:02 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1b4c | 02/07/25 10:23:02 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 98 
+1b4d | 02/07/25 10:23:02 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1b4e | 02/07/25 10:23:02 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1b4f | 02/07/25 10:23:03 | INF | BMC  | Temperature | HMC_TMP  | HiU thresh OK now actual=31.00 C, threshold=85.00 C
+1b50 | 02/07/25 10:23:03 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1b51 | 02/07/25 10:23:03 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 98 
+1b52 | 02/07/25 10:23:03 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1b53 | 02/07/25 10:23:03 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1b54 | 02/07/25 10:23:03 | INF | BMC  | Temperature | HMC_TMP  | HiC thresh OK now actual=31.00 C, threshold=80.00 C
+1b55 | 02/07/25 10:23:03 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1b56 | 02/07/25 10:23:03 | INF | d0 | 000020 |  | OEM Event 94 98 94 97 93 98 
+1b57 | 02/07/25 10:23:03 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1b58 | 02/07/25 10:23:03 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1b59 | 02/07/25 10:23:03 | INF | BMC  | Temperature | HMC_TMP  | HiN thresh OK now actual=31.00 C, threshold=75.00 C
+1b5a | 02/07/25 10:23:03 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1b5b | 02/07/25 10:23:03 | INF | d0 | 000020 |  | OEM Event 94 98 94 97 93 98 
+1b5c | 02/07/25 10:23:03 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1b5d | 02/07/25 10:23:03 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1b5e | 02/07/25 12:40:59 | CRT | BMC  | Temperature | GPU2_DRAM0_TMP0  | Hi Unrec thresh actual=127.00 C, threshold=110.00 C
+1b5f | 02/07/25 12:40:59 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1b60 | 02/07/25 12:40:59 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+1b61 | 02/07/25 12:40:59 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1b62 | 02/07/25 12:40:59 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1b63 | 02/07/25 12:40:59 | MAJ | BMC  | Temperature | GPU2_DRAM0_TMP0  | Hi Crit thresh actual=127.00 C, threshold=107.00 C
+1b64 | 02/07/25 12:40:59 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1b65 | 02/07/25 12:40:59 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+1b66 | 02/07/25 12:40:59 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 98 
+1b67 | 02/07/25 12:40:59 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1b68 | 02/07/25 12:40:59 | MIN | BMC  | Temperature | GPU2_DRAM0_TMP0  | Hi Noncrit thresh actual=127.00 C, threshold=105.00 C
+1b69 | 02/07/25 12:40:59 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1b6a | 02/07/25 12:40:59 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+1b6b | 02/07/25 12:40:59 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 98 
+1b6c | 02/07/25 12:40:59 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1b6d | 02/07/25 12:41:00 | INF | BMC  | Temperature | GPU2_DRAM0_TMP0  | HiU thresh OK now actual=33.00 C, threshold=110.00 C
+1b6e | 02/07/25 12:41:00 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1b6f | 02/07/25 12:41:00 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+1b70 | 02/07/25 12:41:00 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 98 
+1b71 | 02/07/25 12:41:00 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1b72 | 02/07/25 12:41:00 | INF | BMC  | Temperature | GPU2_DRAM0_TMP0  | HiC thresh OK now actual=33.00 C, threshold=107.00 C
+1b73 | 02/07/25 12:41:00 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1b74 | 02/07/25 12:41:00 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+1b75 | 02/07/25 12:41:00 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1b76 | 02/07/25 12:41:00 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1b77 | 02/07/25 12:41:00 | INF | BMC  | Temperature | GPU2_DRAM0_TMP0  | HiN thresh OK now actual=33.00 C, threshold=105.00 C
+1b78 | 02/07/25 12:41:00 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1b79 | 02/07/25 12:41:00 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+1b7a | 02/07/25 12:41:00 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1b7b | 02/07/25 12:41:00 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1b7c | 02/08/25 10:42:06 | CRT | BMC  | Temperature | GPU1_DRAM0_TMP0  | Hi Unrec thresh actual=127.00 C, threshold=110.00 C
+1b7d | 02/08/25 10:42:06 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1b7e | 02/08/25 10:42:07 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+1b7f | 02/08/25 10:42:07 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1b80 | 02/08/25 10:42:07 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1b81 | 02/08/25 10:42:07 | MAJ | BMC  | Temperature | GPU1_DRAM0_TMP0  | Hi Crit thresh actual=127.00 C, threshold=107.00 C
+1b82 | 02/08/25 10:42:07 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1b83 | 02/08/25 10:42:07 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+1b84 | 02/08/25 10:42:07 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1b85 | 02/08/25 10:42:07 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1b86 | 02/08/25 10:42:07 | MIN | BMC  | Temperature | GPU1_DRAM0_TMP0  | Hi Noncrit thresh actual=127.00 C, threshold=105.00 C
+1b87 | 02/08/25 10:42:07 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1b88 | 02/08/25 10:42:07 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+1b89 | 02/08/25 10:42:07 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1b8a | 02/08/25 10:42:07 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1b8b | 02/08/25 10:42:07 | INF | BMC  | OEM(e0) | BMC_Health  | - 
+1b8c | 02/08/25 10:42:07 | INF | BMC  | Temperature | GPU1_DRAM0_TMP0  | HiU thresh OK now actual=33.00 C, threshold=110.00 C
+1b8d | 02/08/25 10:42:07 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1b8e | 02/08/25 10:42:08 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+1b8f | 02/08/25 10:42:08 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1b90 | 02/08/25 10:42:08 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1b91 | 02/08/25 10:42:08 | INF | BMC  | Temperature | GPU1_DRAM0_TMP0  | HiC thresh OK now actual=33.00 C, threshold=107.00 C
+1b92 | 02/08/25 10:42:08 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1b93 | 02/08/25 10:42:08 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+1b94 | 02/08/25 10:42:08 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1b95 | 02/08/25 10:42:08 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1b96 | 02/08/25 10:42:08 | INF | BMC  | Temperature | GPU1_DRAM0_TMP0  | HiN thresh OK now actual=33.00 C, threshold=105.00 C
+1b97 | 02/08/25 10:42:08 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1b98 | 02/08/25 10:42:08 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+1b99 | 02/08/25 10:42:08 | INF | d0 | 000020 |  | OEM Event 94 96 95 97 94 97 
+1b9a | 02/08/25 10:42:08 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1b9b | 02/08/25 12:14:27 | CRT | BMC  | Temperature | HMC_TMP  | Hi Unrec thresh actual=127.00 C, threshold=85.00 C
+1b9c | 02/08/25 12:14:27 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1b9d | 02/08/25 12:14:27 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 98 
+1b9e | 02/08/25 12:14:27 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1b9f | 02/08/25 12:14:27 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1ba0 | 02/08/25 12:14:27 | MAJ | BMC  | Temperature | HMC_TMP  | Hi Crit thresh actual=127.00 C, threshold=80.00 C
+1ba1 | 02/08/25 12:14:27 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1ba2 | 02/08/25 12:14:27 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 98 
+1ba3 | 02/08/25 12:14:27 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1ba4 | 02/08/25 12:14:27 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1ba5 | 02/08/25 12:14:27 | MIN | BMC  | Temperature | HMC_TMP  | Hi Noncrit thresh actual=127.00 C, threshold=75.00 C
+1ba6 | 02/08/25 12:14:27 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1ba7 | 02/08/25 12:14:27 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 98 
+1ba8 | 02/08/25 12:14:27 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1ba9 | 02/08/25 12:14:27 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1baa | 02/08/25 12:14:28 | INF | BMC  | Temperature | HMC_TMP  | HiU thresh OK now actual=31.00 C, threshold=85.00 C
+1bab | 02/08/25 12:14:28 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1bac | 02/08/25 12:14:28 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+1bad | 02/08/25 12:14:28 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1bae | 02/08/25 12:14:28 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1baf | 02/08/25 12:14:28 | INF | BMC  | Temperature | HMC_TMP  | HiC thresh OK now actual=31.00 C, threshold=80.00 C
+1bb0 | 02/08/25 12:14:28 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1bb1 | 02/08/25 12:14:28 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+1bb2 | 02/08/25 12:14:28 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1bb3 | 02/08/25 12:14:28 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1bb4 | 02/08/25 12:14:28 | INF | BMC  | Temperature | HMC_TMP  | HiN thresh OK now actual=31.00 C, threshold=75.00 C
+1bb5 | 02/08/25 12:14:28 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1bb6 | 02/08/25 12:14:28 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+1bb7 | 02/08/25 12:14:28 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1bb8 | 02/08/25 12:14:28 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 ff ff 
+1bb9 | 02/08/25 14:22:45 | CRT | BMC  | Temperature | HMC_TMP  | Hi Unrec thresh actual=127.00 C, threshold=85.00 C
+1bba | 02/08/25 14:22:45 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1bbb | 02/08/25 14:22:45 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+1bbc | 02/08/25 14:22:45 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1bbd | 02/08/25 14:22:45 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 ff ff 
+1bbe | 02/08/25 14:22:45 | MAJ | BMC  | Temperature | HMC_TMP  | Hi Crit thresh actual=127.00 C, threshold=80.00 C
+1bbf | 02/08/25 14:22:45 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1bc0 | 02/08/25 14:22:45 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+1bc1 | 02/08/25 14:22:45 | INF | d0 | 000020 |  | OEM Event 94 96 95 97 94 97 
+1bc2 | 02/08/25 14:22:45 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 ff ff 
+1bc3 | 02/08/25 14:22:45 | MIN | BMC  | Temperature | HMC_TMP  | Hi Noncrit thresh actual=127.00 C, threshold=75.00 C
+1bc4 | 02/08/25 14:22:45 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1bc5 | 02/08/25 14:22:45 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+1bc6 | 02/08/25 14:22:45 | INF | d0 | 000020 |  | OEM Event 94 96 95 97 94 97 
+1bc7 | 02/08/25 14:22:45 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1bc8 | 02/08/25 14:22:46 | INF | BMC  | Temperature | HMC_TMP  | HiU thresh OK now actual=31.00 C, threshold=85.00 C
+1bc9 | 02/08/25 14:22:46 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1bca | 02/08/25 14:22:46 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+1bcb | 02/08/25 14:22:46 | INF | d0 | 000020 |  | OEM Event 94 96 95 97 94 98 
+1bcc | 02/08/25 14:22:46 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1bcd | 02/08/25 14:22:46 | INF | BMC  | Temperature | HMC_TMP  | HiC thresh OK now actual=31.00 C, threshold=80.00 C
+1bce | 02/08/25 14:22:46 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1bcf | 02/08/25 14:22:46 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+1bd0 | 02/08/25 14:22:46 | INF | d0 | 000020 |  | OEM Event 94 96 95 97 94 98 
+1bd1 | 02/08/25 14:22:46 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1bd2 | 02/08/25 14:22:46 | INF | BMC  | Temperature | HMC_TMP  | HiN thresh OK now actual=31.00 C, threshold=75.00 C
+1bd3 | 02/08/25 14:22:46 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1bd4 | 02/08/25 14:22:46 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+1bd5 | 02/08/25 14:22:46 | INF | d0 | 000020 |  | OEM Event 94 96 95 97 94 98 
+1bd6 | 02/08/25 14:22:46 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1bd7 | 02/08/25 18:15:11 | CRT | BMC  | Temperature | GPU1_DRAM0_TMP0  | Hi Unrec thresh actual=127.00 C, threshold=110.00 C
+1bd8 | 02/08/25 18:15:11 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1bd9 | 02/08/25 18:15:11 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+1bda | 02/08/25 18:15:11 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1bdb | 02/08/25 18:15:11 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1bdc | 02/08/25 18:15:11 | MAJ | BMC  | Temperature | GPU1_DRAM0_TMP0  | Hi Crit thresh actual=127.00 C, threshold=107.00 C
+1bdd | 02/08/25 18:15:11 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1bde | 02/08/25 18:15:11 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+1bdf | 02/08/25 18:15:11 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1be0 | 02/08/25 18:15:11 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1be1 | 02/08/25 18:15:11 | MIN | BMC  | Temperature | GPU1_DRAM0_TMP0  | Hi Noncrit thresh actual=127.00 C, threshold=105.00 C
+1be2 | 02/08/25 18:15:11 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1be3 | 02/08/25 18:15:11 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+1be4 | 02/08/25 18:15:11 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1be5 | 02/08/25 18:15:11 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1be6 | 02/08/25 18:15:12 | INF | BMC  | Temperature | GPU1_DRAM0_TMP0  | HiU thresh OK now actual=32.00 C, threshold=110.00 C
+1be7 | 02/08/25 18:15:12 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1be8 | 02/08/25 18:15:12 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+1be9 | 02/08/25 18:15:12 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1bea | 02/08/25 18:15:12 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1beb | 02/08/25 18:15:12 | INF | BMC  | Temperature | GPU1_DRAM0_TMP0  | HiC thresh OK now actual=32.00 C, threshold=107.00 C
+1bec | 02/08/25 18:15:12 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1bed | 02/08/25 18:15:12 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+1bee | 02/08/25 18:15:12 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1bef | 02/08/25 18:15:12 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1bf0 | 02/08/25 18:15:12 | INF | BMC  | Temperature | GPU1_DRAM0_TMP0  | HiN thresh OK now actual=32.00 C, threshold=105.00 C
+1bf1 | 02/08/25 18:15:12 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1bf2 | 02/08/25 18:15:12 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+1bf3 | 02/08/25 18:15:12 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1bf4 | 02/08/25 18:15:12 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1bf5 | 02/08/25 19:28:42 | MIN | BMC  | Temperature | HMC_TMP  | Lo Noncrit thresh actual=128.00 C, threshold=5.00 C
+1bf6 | 02/08/25 19:28:42 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1bf7 | 02/08/25 19:28:42 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+1bf8 | 02/08/25 19:28:42 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1bf9 | 02/08/25 19:28:42 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1bfa | 02/08/25 19:28:43 | INF | BMC  | Temperature | HMC_TMP  | LoN thresh OK now actual=31.00 C, threshold=5.00 C
+1bfb | 02/08/25 19:28:43 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1bfc | 02/08/25 19:28:43 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+1bfd | 02/08/25 19:28:43 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1bfe | 02/08/25 19:28:43 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1bff | 02/08/25 21:04:50 | CRT | BMC  | Temperature | GPU3_DRAM0_TMP0  | Hi Unrec thresh actual=127.00 C, threshold=110.00 C
+1c00 | 02/08/25 21:04:50 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1c01 | 02/08/25 21:04:50 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+1c02 | 02/08/25 21:04:50 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1c03 | 02/08/25 21:04:50 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1c04 | 02/08/25 21:04:50 | MAJ | BMC  | Temperature | GPU3_DRAM0_TMP0  | Hi Crit thresh actual=127.00 C, threshold=107.00 C
+1c05 | 02/08/25 21:04:50 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1c06 | 02/08/25 21:04:50 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+1c07 | 02/08/25 21:04:50 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1c08 | 02/08/25 21:04:50 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1c09 | 02/08/25 21:04:50 | INF | BMC  | OEM(e0) | BMC_Health  | - 
+1c0a | 02/08/25 21:04:50 | MIN | BMC  | Temperature | GPU3_DRAM0_TMP0  | Hi Noncrit thresh actual=127.00 C, threshold=105.00 C
+1c0b | 02/08/25 21:04:50 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1c0c | 02/08/25 21:04:50 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+1c0d | 02/08/25 21:04:50 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1c0e | 02/08/25 21:04:50 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1c0f | 02/08/25 21:04:51 | INF | BMC  | Temperature | GPU3_DRAM0_TMP0  | HiU thresh OK now actual=33.00 C, threshold=110.00 C
+1c10 | 02/08/25 21:04:51 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1c11 | 02/08/25 21:04:51 | INF | d0 | 000020 |  | OEM Event 94 98 94 97 93 98 
+1c12 | 02/08/25 21:04:51 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1c13 | 02/08/25 21:04:51 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1c14 | 02/08/25 21:04:51 | INF | BMC  | Temperature | GPU3_DRAM0_TMP0  | HiC thresh OK now actual=33.00 C, threshold=107.00 C
+1c15 | 02/08/25 21:04:51 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1c16 | 02/08/25 21:04:51 | INF | d0 | 000020 |  | OEM Event 94 98 94 97 93 98 
+1c17 | 02/08/25 21:04:51 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1c18 | 02/08/25 21:04:51 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1c19 | 02/08/25 21:04:51 | INF | BMC  | Temperature | GPU3_DRAM0_TMP0  | HiN thresh OK now actual=33.00 C, threshold=105.00 C
+1c1a | 02/08/25 21:04:51 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1c1b | 02/08/25 21:04:51 | INF | d0 | 000020 |  | OEM Event 94 98 94 97 93 98 
+1c1c | 02/08/25 21:04:51 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1c1d | 02/08/25 21:04:51 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1c1e | 02/08/25 21:42:57 | CRT | BMC  | Temperature | GPU0_DRAM0_TMP0  | Hi Unrec thresh actual=127.00 C, threshold=110.00 C
+1c1f | 02/08/25 21:42:57 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1c20 | 02/08/25 21:42:57 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+1c21 | 02/08/25 21:42:57 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1c22 | 02/08/25 21:42:57 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1c23 | 02/08/25 21:42:57 | MAJ | BMC  | Temperature | GPU0_DRAM0_TMP0  | Hi Crit thresh actual=127.00 C, threshold=107.00 C
+1c24 | 02/08/25 21:42:57 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1c25 | 02/08/25 21:42:57 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+1c26 | 02/08/25 21:42:57 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1c27 | 02/08/25 21:42:57 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1c28 | 02/08/25 21:42:57 | MIN | BMC  | Temperature | GPU0_DRAM0_TMP0  | Hi Noncrit thresh actual=127.00 C, threshold=105.00 C
+1c29 | 02/08/25 21:42:57 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1c2a | 02/08/25 21:42:57 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+1c2b | 02/08/25 21:42:57 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1c2c | 02/08/25 21:42:57 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1c2d | 02/08/25 21:42:58 | INF | BMC  | Temperature | GPU0_DRAM0_TMP0  | HiU thresh OK now actual=35.00 C, threshold=110.00 C
+1c2e | 02/08/25 21:42:58 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1c2f | 02/08/25 21:42:58 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+1c30 | 02/08/25 21:42:58 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1c31 | 02/08/25 21:42:58 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1c32 | 02/08/25 21:42:58 | INF | BMC  | Temperature | GPU0_DRAM0_TMP0  | HiC thresh OK now actual=35.00 C, threshold=107.00 C
+1c33 | 02/08/25 21:42:58 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1c34 | 02/08/25 21:42:58 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+1c35 | 02/08/25 21:42:58 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1c36 | 02/08/25 21:42:58 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1c37 | 02/08/25 21:42:58 | INF | BMC  | Temperature | GPU0_DRAM0_TMP0  | HiN thresh OK now actual=35.00 C, threshold=105.00 C
+1c38 | 02/08/25 21:42:58 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1c39 | 02/08/25 21:42:58 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+1c3a | 02/08/25 21:42:58 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1c3b | 02/08/25 21:42:58 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1c3c | 02/09/25 00:36:53 | CRT | BMC  | Temperature | GPU0_DRAM0_TMP0  | Hi Unrec thresh actual=127.00 C, threshold=110.00 C
+1c3d | 02/09/25 00:36:53 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1c3e | 02/09/25 00:36:54 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 98 
+1c3f | 02/09/25 00:36:54 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1c40 | 02/09/25 00:36:54 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1c41 | 02/09/25 00:36:54 | MAJ | BMC  | Temperature | GPU0_DRAM0_TMP0  | Hi Crit thresh actual=127.00 C, threshold=107.00 C
+1c42 | 02/09/25 00:36:54 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1c43 | 02/09/25 00:36:54 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 98 
+1c44 | 02/09/25 00:36:54 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1c45 | 02/09/25 00:36:54 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1c46 | 02/09/25 00:36:54 | MIN | BMC  | Temperature | GPU0_DRAM0_TMP0  | Hi Noncrit thresh actual=127.00 C, threshold=105.00 C
+1c47 | 02/09/25 00:36:54 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1c48 | 02/09/25 00:36:54 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+1c49 | 02/09/25 00:36:54 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1c4a | 02/09/25 00:36:54 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1c4b | 02/09/25 00:36:54 | INF | BMC  | Temperature | GPU0_DRAM0_TMP0  | HiU thresh OK now actual=34.00 C, threshold=110.00 C
+1c4c | 02/09/25 00:36:54 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1c4d | 02/09/25 00:36:55 | INF | d0 | 000020 |  | OEM Event 94 98 94 97 93 97 
+1c4e | 02/09/25 00:36:55 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1c4f | 02/09/25 00:36:55 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1c50 | 02/09/25 00:36:55 | INF | BMC  | Temperature | GPU0_DRAM0_TMP0  | HiC thresh OK now actual=34.00 C, threshold=107.00 C
+1c51 | 02/09/25 00:36:55 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1c52 | 02/09/25 00:36:55 | INF | d0 | 000020 |  | OEM Event 94 98 94 97 93 97 
+1c53 | 02/09/25 00:36:55 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1c54 | 02/09/25 00:36:55 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1c55 | 02/09/25 00:36:55 | INF | BMC  | Temperature | GPU0_DRAM0_TMP0  | HiN thresh OK now actual=34.00 C, threshold=105.00 C
+1c56 | 02/09/25 00:36:55 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1c57 | 02/09/25 00:36:55 | INF | d0 | 000020 |  | OEM Event 94 98 94 97 93 97 
+1c58 | 02/09/25 00:36:55 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1c59 | 02/09/25 00:36:55 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1c5a | 02/09/25 07:30:48 | CRT | BMC  | Temperature | GPU1_DRAM0_TMP0  | Hi Unrec thresh actual=127.00 C, threshold=110.00 C
+1c5b | 02/09/25 07:30:48 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1c5c | 02/09/25 07:30:48 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+1c5d | 02/09/25 07:30:48 | INF | d0 | 000020 |  | OEM Event 94 96 95 97 94 97 
+1c5e | 02/09/25 07:30:48 | INF | d0 | 000020 |  | OEM Event 94 97 94 96 ff ff 
+1c5f | 02/09/25 07:30:48 | MAJ | BMC  | Temperature | GPU1_DRAM0_TMP0  | Hi Crit thresh actual=127.00 C, threshold=107.00 C
+1c60 | 02/09/25 07:30:48 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1c61 | 02/09/25 07:30:49 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+1c62 | 02/09/25 07:30:49 | INF | d0 | 000020 |  | OEM Event 94 96 95 97 94 97 
+1c63 | 02/09/25 07:30:49 | INF | d0 | 000020 |  | OEM Event 94 97 94 96 ff ff 
+1c64 | 02/09/25 07:30:49 | MIN | BMC  | Temperature | GPU1_DRAM0_TMP0  | Hi Noncrit thresh actual=127.00 C, threshold=105.00 C
+1c65 | 02/09/25 07:30:49 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1c66 | 02/09/25 07:30:49 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+1c67 | 02/09/25 07:30:49 | INF | d0 | 000020 |  | OEM Event 94 96 95 97 94 97 
+1c68 | 02/09/25 07:30:49 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1c69 | 02/09/25 07:30:49 | INF | BMC  | Temperature | GPU1_DRAM0_TMP0  | HiU thresh OK now actual=33.00 C, threshold=110.00 C
+1c6a | 02/09/25 07:30:49 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1c6b | 02/09/25 07:30:49 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+1c6c | 02/09/25 07:30:49 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 94 97 
+1c6d | 02/09/25 07:30:49 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1c6e | 02/09/25 07:30:49 | INF | BMC  | Temperature | GPU1_DRAM0_TMP0  | HiC thresh OK now actual=33.00 C, threshold=107.00 C
+1c6f | 02/09/25 07:30:49 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1c70 | 02/09/25 07:30:49 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+1c71 | 02/09/25 07:30:49 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 94 97 
+1c72 | 02/09/25 07:30:49 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1c73 | 02/09/25 07:30:49 | INF | BMC  | Temperature | GPU1_DRAM0_TMP0  | HiN thresh OK now actual=33.00 C, threshold=105.00 C
+1c74 | 02/09/25 07:30:50 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1c75 | 02/09/25 07:30:50 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+1c76 | 02/09/25 07:30:50 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 94 97 
+1c77 | 02/09/25 07:30:50 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1c78 | 02/09/25 10:45:40 | CRT | BMC  | Temperature | GPU2_DRAM0_TMP0  | Hi Unrec thresh actual=127.00 C, threshold=110.00 C
+1c79 | 02/09/25 10:45:40 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1c7a | 02/09/25 10:45:40 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+1c7b | 02/09/25 10:45:40 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1c7c | 02/09/25 10:45:40 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1c7d | 02/09/25 10:45:40 | MAJ | BMC  | Temperature | GPU2_DRAM0_TMP0  | Hi Crit thresh actual=127.00 C, threshold=107.00 C
+1c7e | 02/09/25 10:45:40 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1c7f | 02/09/25 10:45:41 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+1c80 | 02/09/25 10:45:41 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1c81 | 02/09/25 10:45:41 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1c82 | 02/09/25 10:45:41 | MIN | BMC  | Temperature | GPU2_DRAM0_TMP0  | Hi Noncrit thresh actual=127.00 C, threshold=105.00 C
+1c83 | 02/09/25 10:45:41 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1c84 | 02/09/25 10:45:41 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+1c85 | 02/09/25 10:45:41 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1c86 | 02/09/25 10:45:41 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1c87 | 02/09/25 10:45:41 | INF | BMC  | OEM(e0) | BMC_Health  | - 
+1c88 | 02/09/25 10:45:41 | INF | BMC  | Temperature | GPU2_DRAM0_TMP0  | HiU thresh OK now actual=33.00 C, threshold=110.00 C
+1c89 | 02/09/25 10:45:41 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1c8a | 02/09/25 10:45:41 | INF | d0 | 000020 |  | OEM Event 94 98 94 97 93 98 
+1c8b | 02/09/25 10:45:41 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1c8c | 02/09/25 10:45:41 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1c8d | 02/09/25 10:45:41 | INF | BMC  | Temperature | GPU2_DRAM0_TMP0  | HiC thresh OK now actual=33.00 C, threshold=107.00 C
+1c8e | 02/09/25 10:45:41 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1c8f | 02/09/25 10:45:41 | INF | d0 | 000020 |  | OEM Event 94 98 94 97 93 98 
+1c90 | 02/09/25 10:45:41 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1c91 | 02/09/25 10:45:42 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1c92 | 02/09/25 10:45:42 | INF | BMC  | Temperature | GPU2_DRAM0_TMP0  | HiN thresh OK now actual=33.00 C, threshold=105.00 C
+1c93 | 02/09/25 10:45:42 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1c94 | 02/09/25 10:45:42 | INF | d0 | 000020 |  | OEM Event 94 98 94 97 93 98 
+1c95 | 02/09/25 10:45:42 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1c96 | 02/09/25 10:45:42 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1c97 | 02/09/25 13:18:40 | CRT | BMC  | Temperature | GPU2_DRAM0_TMP0  | Hi Unrec thresh actual=127.00 C, threshold=110.00 C
+1c98 | 02/09/25 13:18:40 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1c99 | 02/09/25 13:18:40 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+1c9a | 02/09/25 13:18:40 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1c9b | 02/09/25 13:18:40 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1c9c | 02/09/25 13:18:40 | MAJ | BMC  | Temperature | GPU2_DRAM0_TMP0  | Hi Crit thresh actual=127.00 C, threshold=107.00 C
+1c9d | 02/09/25 13:18:40 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1c9e | 02/09/25 13:18:40 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+1c9f | 02/09/25 13:18:40 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1ca0 | 02/09/25 13:18:40 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1ca1 | 02/09/25 13:18:40 | MIN | BMC  | Temperature | GPU2_DRAM0_TMP0  | Hi Noncrit thresh actual=127.00 C, threshold=105.00 C
+1ca2 | 02/09/25 13:18:40 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1ca3 | 02/09/25 13:18:40 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+1ca4 | 02/09/25 13:18:40 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1ca5 | 02/09/25 13:18:40 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1ca6 | 02/09/25 13:18:41 | INF | BMC  | Temperature | GPU2_DRAM0_TMP0  | HiU thresh OK now actual=32.00 C, threshold=110.00 C
+1ca7 | 02/09/25 13:18:41 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1ca8 | 02/09/25 13:18:41 | INF | d0 | 000020 |  | OEM Event 94 98 94 97 94 98 
+1ca9 | 02/09/25 13:18:41 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1caa | 02/09/25 13:18:41 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1cab | 02/09/25 13:18:41 | INF | BMC  | Temperature | GPU2_DRAM0_TMP0  | HiC thresh OK now actual=32.00 C, threshold=107.00 C
+1cac | 02/09/25 13:18:41 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1cad | 02/09/25 13:18:41 | INF | d0 | 000020 |  | OEM Event 94 98 94 97 94 98 
+1cae | 02/09/25 13:18:41 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1caf | 02/09/25 13:18:41 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1cb0 | 02/09/25 13:18:41 | INF | BMC  | Temperature | GPU2_DRAM0_TMP0  | HiN thresh OK now actual=32.00 C, threshold=105.00 C
+1cb1 | 02/09/25 13:18:41 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1cb2 | 02/09/25 13:18:41 | INF | d0 | 000020 |  | OEM Event 94 98 94 97 93 98 
+1cb3 | 02/09/25 13:18:41 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1cb4 | 02/09/25 13:18:41 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1cb5 | 02/09/25 17:03:52 | INF | db | OEM Event      ¿
+1cb6 | 02/09/25 17:03:52 | INF | BMC  | ACPI Power State | Power_Status  | S0/G0 Working 
+1cb7 | 02/09/25 17:03:54 | INF | BMC  | OEM(da) | GPUB_HMC_STATE  | - 
+1cb8 | 02/09/25 17:03:58 | INF | BMC  | OEM(da) | GPUB_HMC_STATE  | - 
+1cb9 | 02/09/25 17:04:10 | INF | db | OEM Event     ¡ 
+1cba | 02/09/25 17:04:15 | INF | ca | 000137 |  | OEM Event 02 02 10 00 00 00 
+1cbb | 02/09/25 17:05:05 | INF | c5 | 000137 |  | OEM Event 03 00 00 00 00 00 
+1cbc | 02/09/25 17:05:05 | INF | db | OEM Event     
+1cbd | 02/09/25 17:05:07 | INF | BMC  | OEM(e1) | BMC_Health  | - 
+1cbe | 02/09/25 17:05:07 | INF | BMC  | OEM(e1) | BMC_Health  | - 
+1cbf | 02/09/25 17:05:07 | INF | BMC  | OEM(e1) | BMC_Health  | - 
+1cc0 | 02/09/25 17:05:08 | INF | BMC  | OEM(e1) | BMC_Health  | - 
+1cc1 | 02/09/25 17:05:10 | INF | db | OEM Event     
+1cc2 | 02/09/25 17:05:10 | INF | db | OEM Event    Ä 
+1cc3 | 02/09/25 17:05:10 | INF | db | OEM Event    Ä 
+1cc4 | 02/09/25 17:05:13 | INF | db | OEM Event     
+1cc5 | 02/09/25 17:48:41 | INF | db | OEM Event      ¿
+1cc6 | 02/09/25 17:48:41 | INF | BMC  | ACPI Power State | Power_Status  | S0/G0 Working 
+1cc7 | 02/09/25 17:48:59 | INF | db | OEM Event     ¡ 
+1cc8 | 02/09/25 17:49:04 | INF | ca | 000137 |  | OEM Event 02 02 10 00 00 00 
+1cc9 | 02/09/25 17:49:16 | INF | db | OEM Event     
+1cca | 02/09/25 17:49:53 | INF | c5 | 000137 |  | OEM Event 03 00 00 00 00 00 
+1ccb | 02/09/25 17:49:53 | INF | db | OEM Event     
+1ccc | 02/09/25 17:49:55 | INF | BMC  | OEM(e1) | BMC_Health  | - 
+1ccd | 02/09/25 17:49:55 | INF | BMC  | OEM(e1) | BMC_Health  | - 
+1cce | 02/09/25 17:49:55 | INF | BMC  | OEM(e1) | BMC_Health  | - 
+1ccf | 02/09/25 17:49:55 | INF | BMC  | OEM(e1) | BMC_Health  | - 
+1cd0 | 02/09/25 17:49:57 | INF | db | OEM Event     
+1cd1 | 02/09/25 17:49:57 | INF | db | OEM Event    Ä 
+1cd2 | 02/09/25 17:49:58 | INF | db | OEM Event    Ä 
+1cd3 | 02/09/25 17:50:00 | INF | db | OEM Event     
+1cd4 | 02/09/25 18:00:14 | INF | db | OEM Event      ¿
+1cd5 | 02/09/25 18:00:15 | INF | BMC  | ACPI Power State | Power_Status  | S0/G0 Working 
+1cd6 | 02/09/25 18:00:33 | INF | db | OEM Event     ¡ 
+1cd7 | 02/09/25 18:00:37 | INF | ca | 000137 |  | OEM Event 02 02 10 00 00 00 
+1cd8 | 02/09/25 18:00:49 | INF | db | OEM Event     
+1cd9 | 02/09/25 18:01:39 | INF | db | OEM Event     
+1cda | 02/09/25 18:01:39 | INF | db | OEM Event    Ä 
+1cdb | 02/09/25 18:01:39 | INF | db | OEM Event   @ 
+1cdc | 02/09/25 18:01:39 | INF | db | OEM Event   @ 
+1cdd | 02/09/25 18:01:39 | INF | db | OEM Event   @ 
+1cde | 02/09/25 18:01:39 | INF | db | OEM Event   @ 
+1cdf | 02/09/25 18:02:38 | INF | db | OEM Event   @ 
+1ce0 | 02/09/25 18:02:38 | INF | EFI  | Boot Error | na  | - 
+1ce1 | 02/09/25 18:02:39 | INF | db | OEM Event   @ 
+1ce2 | 02/09/25 18:02:39 | INF | db | OEM Event     
+1ce3 | 02/09/25 18:02:39 | INF | db | OEM Event    Ä 
+1ce4 | 02/09/25 18:02:39 | INF | db | OEM Event    Ä 
+1ce5 | 02/09/25 18:02:42 | INF | db | OEM Event     
+1ce6 | 02/09/25 19:53:35 | INF | db | OEM Event      ¿
+1ce7 | 02/09/25 19:53:36 | INF | BMC  | ACPI Power State | Power_Status  | S0/G0 Working 
+1ce8 | 02/09/25 19:53:53 | INF | db | OEM Event     ¡ 
+1ce9 | 02/09/25 19:53:58 | INF | ca | 000137 |  | OEM Event 02 02 10 00 00 00 
+1cea | 02/09/25 19:54:48 | INF | c5 | 000137 |  | OEM Event 03 00 00 00 00 00 
+1ceb | 02/09/25 19:54:48 | INF | db | OEM Event     
+1cec | 02/09/25 19:54:51 | INF | BMC  | OEM(e1) | BMC_Health  | - 
+1ced | 02/09/25 19:54:51 | INF | BMC  | OEM(e1) | BMC_Health  | - 
+1cee | 02/09/25 19:54:52 | INF | BMC  | OEM(e1) | BMC_Health  | - 
+1cef | 02/09/25 19:54:52 | INF | BMC  | OEM(e1) | BMC_Health  | - 
+1cf0 | 02/09/25 19:54:54 | INF | db | OEM Event     
+1cf1 | 02/09/25 19:54:54 | INF | db | OEM Event    Ä 
+1cf2 | 02/09/25 19:54:54 | INF | db | OEM Event    Ä 
+1cf3 | 02/09/25 19:54:57 | INF | db | OEM Event     
+1cf4 | 02/09/25 21:17:05 | INF | db | OEM Event      ¿
+1cf5 | 02/09/25 21:17:06 | INF | BMC  | ACPI Power State | Power_Status  | S0/G0 Working 
+1cf6 | 02/09/25 21:17:08 | INF | BMC  | OEM(da) | GPUB_HMC_STATE  | - 
+1cf7 | 02/09/25 21:17:08 | INF | BMC  | OEM(df) | GP_PowerGood  | - 
+1cf8 | 02/09/25 21:17:12 | INF | BMC  | OEM(da) | GPUB_HMC_STATE  | - 
+1cf9 | 02/09/25 21:17:12 | INF | BMC  | OEM(df) | GP_PowerGood  | - 
+1cfa | 02/09/25 21:17:23 | INF | db | OEM Event     ¡ 
+1cfb | 02/09/25 21:17:28 | INF | ca | 000137 |  | OEM Event 02 02 10 00 00 00 
+1cfc | 02/09/25 21:17:40 | INF | db | OEM Event     
+1cfd | 02/09/25 21:18:18 | INF | c5 | 000137 |  | OEM Event 03 00 00 00 00 00 
+1cfe | 02/09/25 21:18:18 | INF | db | OEM Event     
+1cff | 02/09/25 21:18:19 | INF | BMC  | OEM(e1) | BMC_Health  | - 
+1d00 | 02/09/25 21:18:19 | INF | BMC  | OEM(e1) | BMC_Health  | - 
+1d01 | 02/09/25 21:18:19 | INF | BMC  | OEM(e1) | BMC_Health  | - 
+1d02 | 02/09/25 21:18:20 | INF | BMC  | OEM(e1) | BMC_Health  | - 
+1d03 | 02/09/25 21:18:20 | INF | BMC  | OEM(e0) | BMC_Health  | - 
+1d04 | 02/09/25 21:18:22 | INF | db | OEM Event     
+1d05 | 02/09/25 21:18:22 | INF | db | OEM Event    Ä 
+1d06 | 02/09/25 21:18:22 | INF | db | OEM Event    Ä 
+1d07 | 02/09/25 21:18:25 | INF | db | OEM Event     
+1d08 | 02/09/25 22:55:17 | CRT | BMC  | Temperature | HMC_TMP  | Hi Unrec thresh actual=127.00 C, threshold=85.00 C
+1d09 | 02/09/25 22:55:17 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1d0a | 02/09/25 22:55:18 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+1d0b | 02/09/25 22:55:18 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1d0c | 02/09/25 22:55:18 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 ff ff 
+1d0d | 02/09/25 22:55:18 | MAJ | BMC  | Temperature | HMC_TMP  | Hi Crit thresh actual=127.00 C, threshold=80.00 C
+1d0e | 02/09/25 22:55:18 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1d0f | 02/09/25 22:55:18 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+1d10 | 02/09/25 22:55:18 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1d11 | 02/09/25 22:55:18 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 ff ff 
+1d12 | 02/09/25 22:55:18 | MIN | BMC  | Temperature | HMC_TMP  | Hi Noncrit thresh actual=127.00 C, threshold=75.00 C
+1d13 | 02/09/25 22:55:18 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1d14 | 02/09/25 22:55:18 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+1d15 | 02/09/25 22:55:18 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1d16 | 02/09/25 22:55:18 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 ff ff 
+1d17 | 02/09/25 22:55:18 | INF | BMC  | Temperature | HMC_TMP  | HiU thresh OK now actual=31.00 C, threshold=85.00 C
+1d18 | 02/09/25 22:55:18 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1d19 | 02/09/25 22:55:19 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+1d1a | 02/09/25 22:55:19 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1d1b | 02/09/25 22:55:19 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1d1c | 02/09/25 22:55:19 | INF | BMC  | Temperature | HMC_TMP  | HiC thresh OK now actual=31.00 C, threshold=80.00 C
+1d1d | 02/09/25 22:55:19 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1d1e | 02/09/25 22:55:19 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+1d1f | 02/09/25 22:55:19 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1d20 | 02/09/25 22:55:19 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1d21 | 02/09/25 22:55:19 | INF | BMC  | Temperature | HMC_TMP  | HiN thresh OK now actual=31.00 C, threshold=75.00 C
+1d22 | 02/09/25 22:55:19 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1d23 | 02/09/25 22:55:19 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+1d24 | 02/09/25 22:55:19 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1d25 | 02/09/25 22:55:19 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1d26 | 02/09/25 23:46:50 | CRT | BMC  | Temperature | HMC_TMP  | Hi Unrec thresh actual=127.00 C, threshold=85.00 C
+1d27 | 02/09/25 23:46:50 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1d28 | 02/09/25 23:46:50 | INF | d0 | 000020 |  | OEM Event 94 98 94 97 93 97 
+1d29 | 02/09/25 23:46:50 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 98 
+1d2a | 02/09/25 23:46:50 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1d2b | 02/09/25 23:46:50 | MAJ | BMC  | Temperature | HMC_TMP  | Hi Crit thresh actual=127.00 C, threshold=80.00 C
+1d2c | 02/09/25 23:46:50 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1d2d | 02/09/25 23:46:50 | INF | d0 | 000020 |  | OEM Event 94 98 94 97 93 97 
+1d2e | 02/09/25 23:46:50 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 98 
+1d2f | 02/09/25 23:46:50 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1d30 | 02/09/25 23:46:50 | MIN | BMC  | Temperature | HMC_TMP  | Hi Noncrit thresh actual=127.00 C, threshold=75.00 C
+1d31 | 02/09/25 23:46:50 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1d32 | 02/09/25 23:46:50 | INF | d0 | 000020 |  | OEM Event 94 98 94 97 94 97 
+1d33 | 02/09/25 23:46:50 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1d34 | 02/09/25 23:46:50 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1d35 | 02/09/25 23:46:51 | INF | BMC  | Temperature | HMC_TMP  | HiU thresh OK now actual=31.00 C, threshold=85.00 C
+1d36 | 02/09/25 23:46:51 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1d37 | 02/09/25 23:46:51 | INF | d0 | 000020 |  | OEM Event 94 98 94 97 94 97 
+1d38 | 02/09/25 23:46:51 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1d39 | 02/09/25 23:46:51 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1d3a | 02/09/25 23:46:51 | INF | BMC  | Temperature | HMC_TMP  | HiC thresh OK now actual=31.00 C, threshold=80.00 C
+1d3b | 02/09/25 23:46:51 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1d3c | 02/09/25 23:46:51 | INF | d0 | 000020 |  | OEM Event 94 98 94 97 94 97 
+1d3d | 02/09/25 23:46:51 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1d3e | 02/09/25 23:46:51 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1d3f | 02/09/25 23:46:51 | INF | BMC  | Temperature | HMC_TMP  | HiN thresh OK now actual=31.00 C, threshold=75.00 C
+1d40 | 02/09/25 23:46:51 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1d41 | 02/09/25 23:46:51 | INF | d0 | 000020 |  | OEM Event 94 98 94 97 93 97 
+1d42 | 02/09/25 23:46:51 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1d43 | 02/09/25 23:46:51 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1d44 | 02/10/25 03:23:40 | MIN | BMC  | Temperature | HMC_TMP  | Lo Noncrit thresh actual=128.00 C, threshold=5.00 C
+1d45 | 02/10/25 03:23:40 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1d46 | 02/10/25 03:23:40 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+1d47 | 02/10/25 03:23:40 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1d48 | 02/10/25 03:23:40 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1d49 | 02/10/25 03:23:41 | INF | BMC  | Temperature | HMC_TMP  | LoN thresh OK now actual=31.00 C, threshold=5.00 C
+1d4a | 02/10/25 03:23:41 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1d4b | 02/10/25 03:23:41 | INF | d0 | 000020 |  | OEM Event 94 98 94 97 93 97 
+1d4c | 02/10/25 03:23:41 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1d4d | 02/10/25 03:23:41 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1d4e | 02/10/25 04:03:56 | MIN | BMC  | Temperature | HMC_TMP  | Lo Noncrit thresh actual=128.00 C, threshold=5.00 C
+1d4f | 02/10/25 04:03:56 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1d50 | 02/10/25 04:03:56 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 97 
+1d51 | 02/10/25 04:03:56 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1d52 | 02/10/25 04:03:56 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1d53 | 02/10/25 04:03:57 | INF | BMC  | Temperature | HMC_TMP  | LoN thresh OK now actual=31.00 C, threshold=5.00 C
+1d54 | 02/10/25 04:03:57 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1d55 | 02/10/25 04:03:57 | INF | d0 | 000020 |  | OEM Event 94 98 94 97 93 97 
+1d56 | 02/10/25 04:03:57 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1d57 | 02/10/25 04:03:57 | INF | d0 | 000020 |  | OEM Event 94 97 94 96 ff ff 
+1d58 | 02/10/25 11:27:22 | CRT | BMC  | Temperature | GPU2_DRAM0_TMP0  | Hi Unrec thresh actual=127.00 C, threshold=110.00 C
+1d59 | 02/10/25 11:27:22 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1d5a | 02/10/25 11:27:22 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+1d5b | 02/10/25 11:27:22 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1d5c | 02/10/25 11:27:22 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1d5d | 02/10/25 11:27:22 | MAJ | BMC  | Temperature | GPU2_DRAM0_TMP0  | Hi Crit thresh actual=127.00 C, threshold=107.00 C
+1d5e | 02/10/25 11:27:22 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1d5f | 02/10/25 11:27:22 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+1d60 | 02/10/25 11:27:22 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1d61 | 02/10/25 11:27:22 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1d62 | 02/10/25 11:27:22 | MIN | BMC  | Temperature | GPU2_DRAM0_TMP0  | Hi Noncrit thresh actual=127.00 C, threshold=105.00 C
+1d63 | 02/10/25 11:27:22 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1d64 | 02/10/25 11:27:23 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+1d65 | 02/10/25 11:27:23 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1d66 | 02/10/25 11:27:23 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1d67 | 02/10/25 11:27:23 | INF | BMC  | Temperature | GPU2_DRAM0_TMP0  | HiU thresh OK now actual=33.00 C, threshold=110.00 C
+1d68 | 02/10/25 11:27:23 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1d69 | 02/10/25 11:27:23 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+1d6a | 02/10/25 11:27:23 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1d6b | 02/10/25 11:27:23 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1d6c | 02/10/25 11:27:23 | INF | BMC  | Temperature | GPU2_DRAM0_TMP0  | HiC thresh OK now actual=33.00 C, threshold=107.00 C
+1d6d | 02/10/25 11:27:23 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1d6e | 02/10/25 11:27:23 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+1d6f | 02/10/25 11:27:23 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1d70 | 02/10/25 11:27:23 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1d71 | 02/10/25 11:27:23 | INF | BMC  | Temperature | GPU2_DRAM0_TMP0  | HiN thresh OK now actual=33.00 C, threshold=105.00 C
+1d72 | 02/10/25 11:27:23 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1d73 | 02/10/25 11:27:24 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 94 98 
+1d74 | 02/10/25 11:27:24 | INF | d0 | 000020 |  | OEM Event 94 97 95 97 94 97 
+1d75 | 02/10/25 11:27:24 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1d76 | 02/10/25 18:02:30 | CRT | BMC  | Temperature | HMC_TMP  | Hi Unrec thresh actual=127.00 C, threshold=85.00 C
+1d77 | 02/10/25 18:02:30 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1d78 | 02/10/25 18:02:30 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+1d79 | 02/10/25 18:02:30 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 94 97 
+1d7a | 02/10/25 18:02:30 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1d7b | 02/10/25 18:02:30 | MAJ | BMC  | Temperature | HMC_TMP  | Hi Crit thresh actual=127.00 C, threshold=80.00 C
+1d7c | 02/10/25 18:02:30 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1d7d | 02/10/25 18:02:30 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+1d7e | 02/10/25 18:02:30 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 94 97 
+1d7f | 02/10/25 18:02:30 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1d80 | 02/10/25 18:02:30 | MIN | BMC  | Temperature | HMC_TMP  | Hi Noncrit thresh actual=127.00 C, threshold=75.00 C
+1d81 | 02/10/25 18:02:30 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1d82 | 02/10/25 18:02:30 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+1d83 | 02/10/25 18:02:30 | INF | d0 | 000020 |  | OEM Event 94 96 94 97 94 97 
+1d84 | 02/10/25 18:02:30 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1d85 | 02/10/25 18:02:30 | INF | BMC  | OEM(e0) | BMC_Health  | - 
+1d86 | 02/10/25 18:02:31 | INF | BMC  | Temperature | HMC_TMP  | HiU thresh OK now actual=31.00 C, threshold=85.00 C
+1d87 | 02/10/25 18:02:31 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1d88 | 02/10/25 18:02:31 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+1d89 | 02/10/25 18:02:31 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1d8a | 02/10/25 18:02:31 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1d8b | 02/10/25 18:02:31 | INF | BMC  | Temperature | HMC_TMP  | HiC thresh OK now actual=31.00 C, threshold=80.00 C
+1d8c | 02/10/25 18:02:31 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1d8d | 02/10/25 18:02:31 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+1d8e | 02/10/25 18:02:31 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1d8f | 02/10/25 18:02:31 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+1d90 | 02/10/25 18:02:31 | INF | BMC  | Temperature | HMC_TMP  | HiN thresh OK now actual=31.00 C, threshold=75.00 C
+1d91 | 02/10/25 18:02:31 | INF | BMC  | Fan | FANS_SWB_PWM  | - 
+1d92 | 02/10/25 18:02:31 | INF | d0 | 000020 |  | OEM Event 94 99 94 97 93 97 
+1d93 | 02/10/25 18:02:31 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 94 97 
+1d94 | 02/10/25 18:02:31 | INF | d0 | 000020 |  | OEM Event 94 97 94 97 ff ff 
+ipmiutil sel, completed successfully
