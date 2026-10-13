@@ -1,0 +1,37 @@
+This is ApacheBench, Version 2.3 <$Revision: 1111111 $>
+Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://localhost:80/
+Licensed to The Apache Software Foundation, http://www.apache.org/
+
+Benchmarking www.holisticseo.digital (be patient).....done
+
+Connection Times (ms)
+              min  mean[+/-sd] median   max
+Connect:        0    5   7.5      0      16
+Processing:    16  268 155.8    266     547
+Waiting:        0  263 155.6    266     531
+Total:         16  274 156.0    281     562
+
+Percentage of the requests served within a certain time (ms)
+  50%    281
+  66%    359
+  75%    406
+  80%    437
+  90%    484
+  95%    516
+  98%    531
+  99%    562
+ 100%    562 (longest request)
+
+ No fvModels present
+No fvConstraints present
+
+Starting time loop
+
+Time = 1
+
+smoothSolver:  Solving for Ux, Initial residual = 1, Final residual = 0.0611362, No Iterations 2
+smoothSolver:  Solving for Uy, Initial residual = 1, Final residual = 0.0585177, No Iterations 2
+GAMG:  Solving for p, Initial residual = 1, Final residual = 0.0796943, No Iterations 9
+time step continuity errors : sum local = 0.00025243, global = -8.28823e-05, cumulative = -8.28823e-05
+smoothSolver:  Solving for nuTilda, Initial residual = 1, Final residual = 0.0447475, No Iterations 2
+ExecutionTime = 0.23 s  ClockTime = 0 s

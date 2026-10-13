@@ -3,7 +3,7 @@ slug: /workloads/network-suite
 ---
 
 # Network Suite
-The Networking workload suite is a set of 5 workloads that are the recommended benchmarks for the Azure Networking team. The workloads are each designed to test network performance
+The Networking workload suite is a set of 4 or 5 workloads that are the recommended benchmarks for the Azure Networking team. The workloads are each designed to test network performance
 and reliability.
 
 The workloads that are a part of the suite include:
