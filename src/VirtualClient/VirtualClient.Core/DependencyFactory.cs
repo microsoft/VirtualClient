@@ -131,11 +131,11 @@ namespace VirtualClient
             switch (platform)
             {
                 case PlatformID.Win32NT:
-                    manager = new WindowsDiskManager(new WindowsProcessManager());
+                    manager = new WindowsDiskManager(new ProcessManager(platform));
                     break;
 
                 case PlatformID.Unix:
-                    manager = new UnixDiskManager(new UnixProcessManager());
+                    manager = new UnixDiskManager(new ProcessManager(platform));
                     break;
 
                 default:

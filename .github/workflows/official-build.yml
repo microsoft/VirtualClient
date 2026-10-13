@@ -1,0 +1,122 @@
+# This workflow will build a .NET project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
+
+name: Official Build
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch: # This enables the manual button
+    inputs:
+        version_suffix:
+          description: 'Version suffix (e.g. beta)'
+          required: false
+          default: 'beta'
+          type: string
+
+jobs:
+  publish:
+    name: Official Build and Test
+    runs-on: windows-latest
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+      security-events: write
+
+    # Define environment variables for the job. 
+    # TIP: If using a repository-level variable from GitHub Settings > Secrets and variables > Actions, 
+    # replace ${{ env.VERSION_SUFFIX }} with ${{ vars.VERSION_SUFFIX }}.
+    env:
+      REPO_ROOT: ${{ github.workspace }}
+      VERSION_SUFFIX: ${{ inputs.version_suffix }}
+
+    strategy:
+      fail-fast: false
+
+    steps:
+    - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 9.0.x
+
+      # Build the source code projects.
+    - name: Build
+      shell: cmd
+      run: |
+        call "%REPO_ROOT%\build.cmd"
+
+    - name: Build Packages
+      shell: cmd
+      run: |
+        if "%VERSION_SUFFIX%" == "" (
+            echo:
+            echo Building stable release...
+            call "%REPO_ROOT%\build-packages.cmd"
+        ) else (
+            echo:
+            echo Building '%VERSION_SUFFIX%' release...
+            call "%REPO_ROOT%\build-packages.cmd" --suffix -%VERSION_SUFFIX%
+        )
+
+    #- name: Sign NuGet Packages
+    #  uses: microsoft/esrp-release-action@v1
+    #  with:
+    #    # Intent & Content Options
+    #    Intent: 'PackageDistribution'
+    #    ContentType: 'NuGet'
+    #    PackageLocation: '${{ env.REPO_ROOT }}'
+    #    Pattern: '*.nupkg'
+    #    ProductState: 'Existing' # Use 'New' if this is your first release
+    #    
+    #    # AAD App Registration & Tenant Mapping (from ADO ConnectedServiceName inputs)
+    #    DomainTenantId: '33e01921-4d64-4f8c-a055-5bdaffd5e33d'
+    #    KVName: 'virtualclient-vault-esrp'
+    #    KVAuthClient: '0225fe5c-2a99-4459-af16-27a7dcd1c14a'
+    #    KVAuthSecret: ${{ secrets.ESRP_KV_AUTH_SECRET }} # Store your app registration password/secret in GitHub Secrets
+    #    AuthCertName: 'virtualclient-esrp-cert-auth'
+    #    SignCertName: 'virtualclient-esrp-cert-sign'
+    #    
+    #    # Inline Signing Configuration JSON (mapping CP-401405 / NuGetSign / NuGetVerify)
+    #    InlineOperation: |
+    #      [
+    #        {
+    #          "KeyCode": "CP-401405",
+    #          "OperationCode": "NuGetSign",
+    #          "Parameters": {},
+    #          "ToolName": "sign",
+    #          "ToolVersion": "1.0"
+    #        },
+    #        {
+    #          "KeyCode": "CP-401405",
+    #          "OperationCode": "NuGetVerify",
+    #          "Parameters": {},
+    #          "ToolName": "sign",
+    #          "ToolVersion": "1.0"
+    #        }
+    #      ]
+    #    # Execution Controls & Timeouts
+    #    SessionTimeout: '60'
+    #    MaxConcurrency: '50'
+    #    MaxRetryAttempts: '5'
+    #    PendingAnalysisWaitTimeoutMinutes: '5'
+    #    
+    #    # Ownership metadata
+    #    Owners: 'virtualclient_msft'
+    #    MainPublisher: 'Microsoft'
+    #    ServiceEndpointUrl: 'https://api.esrp.microsoft.com'
+
+      # Exchanges GitHub OIDC token for a short-lived NuGet API key (~1 hour lifespan)
+    - name: Login to NuGet
+      id: nuget-login
+      uses: NuGet/login@v1
+      with:
+        user: 'BryanD' # Your NuGet.org account or org username
+
+      # Push using the temporary key output by the login step
+    - name: Publish to NuGet.org
+      shell: cmd
+      run: |
+        dotnet nuget push "%REPO_ROOT%\out\packages\*.nupkg" --api-key ${{ steps.nuget-login.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate

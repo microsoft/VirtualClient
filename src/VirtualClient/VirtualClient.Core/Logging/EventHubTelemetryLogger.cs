@@ -226,9 +226,11 @@ namespace VirtualClient.Logging
                 else
                 {
                     // State context was provided by itself.
-                    eventMessage = state.ToString();
+                    eventMessage = state?.ToString();
                 }
             }
+
+            eventContext ??= EventContext.Persisted();
 
             object bufferInfo = null;
             if (this.DiagnosticsEnabled)

@@ -92,6 +92,7 @@ for using them.
 | [Gzip](/docs/workloads/compression/gzip) | Compression | linux-x64, linux-arm64 | [GPL](https://www.gnu.org/software/gzip/)  |
 | [HPCG](/docs/workloads/hpcg) | High Performance Compute (HPC) | linux-x64, linux-arm64 | [Custom](https://github.com/hpcg-benchmark/hpcg/blob/master/COPYING)  |
 | [HPLinpack](/docs/workloads/hplinpack) | Linear Equations | linux-x64, linux-arm64| [IBM](https://netlib.org/benchmark/hpl/IBM_LICENSE.TXT)  |
+| [IPMIUtil](/docs/monitors/ipmiutil) | BMC Sensor and System Event Monitoring | linux-x64, linux-arm64, win-x64, win-arm64 | [BSD-2-Clause](https://sourceforge.net/p/ipmiutil/code/ci/master/tree/COPYING) |
 | [LAPACK](/docs/workloads/lapack) | Linear Equations | linux-x64, linux-arm64, win-x64, win-arm64 | [Custom](https://github.com/Reference-LAPACK/lapack/blob/master/LICENSE)  |
 | [Latte](/docs/workloads/network-suite) | Network Latencies | win-x64, win-arm64 | [MIT](https://github.com/microsoft/latte/blob/main/LICENSE)  |
 | [LMbench](/docs/workloads/lmbench) | Memory Performance | linux-x64, linux-arm64 | [GPL-2.0](https://github.com/intel/lmbench/blob/master/COPYING)  |

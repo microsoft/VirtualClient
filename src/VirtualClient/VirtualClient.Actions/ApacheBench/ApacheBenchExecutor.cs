@@ -61,20 +61,20 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return $"-k -n {this.NoOfRequests} -c {this.NoOfConcurrentRequests} http://localhost:80/";
+                return $"-k -n {this.RequestCount} -c {this.ConcurrentRequestCount} http://localhost:80/";
             }
         }
 
         /// <summary>
         /// Allows overwrite to ApacheBench param for number of requests. 
         /// </summary>
-        public int NoOfRequests
+        public int RequestCount
         {
             get
             {
                 int noOfRequests = 50000;
 
-                if (this.Parameters.TryGetValue(nameof(this.NoOfRequests), out IConvertible value) && value != null)
+                if (this.Parameters.TryGetValue(nameof(this.RequestCount), out IConvertible value) && value != null)
                 {
                     noOfRequests = value.ToInt32(CultureInfo.InvariantCulture);
                 }
@@ -86,13 +86,13 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Allows overwrite to ApacheBench param for number of requests. 
         /// </summary>
-        public int NoOfConcurrentRequests
+        public int ConcurrentRequestCount
         {
             get
             {
                 int noOfConcurrentRequests = 50;
 
-                if (this.Parameters.TryGetValue(nameof(this.NoOfConcurrentRequests), out IConvertible value) && value != null)
+                if (this.Parameters.TryGetValue(nameof(this.ConcurrentRequestCount), out IConvertible value) && value != null)
                 {
                     noOfConcurrentRequests = value.ToInt32(CultureInfo.InvariantCulture);
                 }

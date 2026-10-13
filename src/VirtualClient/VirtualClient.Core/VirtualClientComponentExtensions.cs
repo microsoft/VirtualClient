@@ -31,29 +31,6 @@ namespace VirtualClient
             .WaitAndRetryAsync(5, (retries) => TimeSpan.FromSeconds(retries + 1));
 
         /// <summary>
-        /// Adds core/SDK environment variables to the process that is being executed.
-        /// </summary>
-        /// <param name="component">The component supplying the environment variable values.</param>
-        /// <param name="process">The process to which the environment variable should be added.</param>
-        public static void AddEnvironmentVariables(this VirtualClientComponent component, IProcessProxy process)
-        {
-            component.ThrowIfNull(nameof(component));
-
-            if (process.EnvironmentVariables != null)
-            {
-                // SDK_EXPERIMENT_ID
-                process.EnvironmentVariables[EnvironmentVariable.SDK_EXPERIMENT_ID] = component.ExperimentId;
-
-                // SDK_METADATA
-                if (component.Metadata?.Any() == true)
-                {
-                    string metadata = string.Join(';', component.Metadata.Select(entry => $"{entry.Key}={entry.Value}"));
-                    process.EnvironmentVariables[EnvironmentVariable.SDK_METADATA] = metadata;
-                }
-            }
-        }
-
-        /// <summary>
         /// Executes a command within an isolated process.
         /// </summary>
         /// <param name="component">The component that is executing the process/command.</param>
@@ -170,7 +147,6 @@ namespace VirtualClient
                     process = processManager.CreateElevatedProcess(component.Platform, command, commandArguments, workingDirectory, username);
                 }
 
-                component.AddEnvironmentVariables(process);
                 component.CleanupTasks.Add(() => process.SafeKill(component.Logger));
                 component.Logger.LogTraceMessage($"Executing: {command} {safeArguments}".Trim(), relatedContext);
 

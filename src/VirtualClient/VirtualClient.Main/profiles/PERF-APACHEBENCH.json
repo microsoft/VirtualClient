@@ -7,8 +7,8 @@
     "SupportedOperatingSystems": "Debian,Ubuntu,Windows"
   },
   "Parameters": {
-    "NoOfRequests": "50000",
-    "NoOfConcurrentRequests": "50"
+    "RequestCount": "50000",
+    "ConcurrentRequestCount": "50"
   },
   "Actions": [
     {
@@ -17,8 +17,8 @@
         "Scenario": "ExecuteApacheBenchBenchmark",
         "SupportedPlatforms": "win-x64, linux-x64, linux-arm64",
         "PackageName": "apachehttpserver",
-        "NoOfRequests": "$.Parameters.NoOfRequests",
-        "NoOfConcurrentRequests": "$.Parameters.NoOfConcurrentRequests"
+        "RequestCount": "$.Parameters.RequestCount",
+        "ConcurrentRequestCount": "$.Parameters.ConcurrentRequestCount"
       }
     }
   ],
