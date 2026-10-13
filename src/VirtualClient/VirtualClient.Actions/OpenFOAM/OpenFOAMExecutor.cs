@@ -67,12 +67,12 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Iterations for which simulation need to be run.
         /// </summary>
-        public string Iterations
+        public string IterationCount
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(OpenFOAMExecutor.Iterations), out IConvertible iterations);
-                return iterations?.ToString();
+                this.Parameters.TryGetValue(nameof(OpenFOAMExecutor.IterationCount), out IConvertible iterationCount);
+                return iterationCount?.ToString();
             }
         }
 
@@ -268,10 +268,10 @@ namespace VirtualClient.Actions
 
         private async Task InitializeSimulationIterationsAsync(string iterationsFilePath, CancellationToken cancellationToken)
         {
-            if (this.Iterations != null)
+            if (this.IterationCount != null)
             {
                 await this.fileSystem.File.ReplaceInFileAsync(
-                    iterationsFilePath, @"endTime(\s)+[0-9]+", $"endTime      {this.Iterations}", cancellationToken);
+                    iterationsFilePath, @"endTime(\s)+[0-9]+", $"endTime      {this.IterationCount}", cancellationToken);
             }
         }
 

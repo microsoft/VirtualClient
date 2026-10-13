@@ -25,7 +25,7 @@ namespace VirtualClient.Contracts
         public VirtualClientMonitorComponent(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
             : base(dependencies, parameters)
         {
-            if (this.MonitorEnabled && this.MonitorFrequency == null && this.MonitorIterations == null && this.MonitorStrategy == null)
+            if (this.MonitorEnabled && this.MonitorFrequency == null && this.MonitorIterationCount == null && this.MonitorStrategy == null)
             {
                 this.MonitorStrategy = VirtualClient.MonitorStrategy.Once;
             }
@@ -67,16 +67,16 @@ namespace VirtualClient.Contracts
         /// The number of iterations with which this monitor runs
         /// Default is set to -1 for infinite loop.
         /// </summary>
-        public long? MonitorIterations
+        public long? MonitorIterationCount
         {
             get
             {
-                return this.Parameters.GetValue<long>(nameof(this.MonitorIterations));
+                return this.Parameters.GetValue<long>(nameof(this.MonitorIterationCount));
             }
 
             protected set
             {
-                this.Parameters[nameof(this.MonitorIterations)] = value.ToString();
+                this.Parameters[nameof(this.MonitorIterationCount)] = value.ToString();
             }
         }
 
@@ -121,12 +121,12 @@ namespace VirtualClient.Contracts
         /// <returns>True if the expected iterations are completed. False if not.</returns>
         public bool IsIterationComplete(long currentIteration)
         {
-            if (this.MonitorIterations <= 0)
+            if (this.MonitorIterationCount <= 0)
             {
                 return false;
             }
 
-            return currentIteration > this.MonitorIterations;
+            return currentIteration > this.MonitorIterationCount;
         }
 
         /// <summary>
@@ -206,10 +206,10 @@ namespace VirtualClient.Contracts
         {
             base.Validate();
 
-            if (this.MonitorFrequency != null && this.MonitorIterations != null)
+            if (this.MonitorFrequency != null && this.MonitorIterationCount != null)
             {
                 throw new MonitorException(
-                    $"Invalid parameter usage. The parameters '{nameof(this.MonitorFrequency)}' and '{nameof(this.MonitorIterations)}' cannot be used together.",
+                    $"Invalid parameter usage. The parameters '{nameof(this.MonitorFrequency)}' and '{nameof(this.MonitorIterationCount)}' cannot be used together.",
                     ErrorReason.NotSupported);
             }
 
@@ -220,10 +220,10 @@ namespace VirtualClient.Contracts
                     ErrorReason.NotSupported);
             }
 
-            if (this.MonitorIterations != null && this.MonitorStrategy != null)
+            if (this.MonitorIterationCount != null && this.MonitorStrategy != null)
             {
                 throw new MonitorException(
-                    $"Invalid parameter usage. The parameters '{nameof(this.MonitorIterations)}' and '{nameof(this.MonitorStrategy)}' cannot be used together.",
+                    $"Invalid parameter usage. The parameters '{nameof(this.MonitorIterationCount)}' and '{nameof(this.MonitorStrategy)}' cannot be used together.",
                     ErrorReason.NotSupported);
             }
         }

@@ -211,16 +211,16 @@ namespace VirtualClient.Actions.NetworkPerformance
         /// <summary>
         /// Parameter defines the number of connections to use in the workload toolset tests.
         /// </summary>
-        public int Connections
+        public int ConnectionCount
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(NetworkingWorkloadExecutor.Connections), 8);
+                return this.Parameters.GetValue<int>(nameof(NetworkingWorkloadExecutor.ConnectionCount), 8);
             }
 
             set
             {
-                this.Parameters[nameof(NetworkingWorkloadExecutor.Connections)] = value;
+                this.Parameters[nameof(NetworkingWorkloadExecutor.ConnectionCount)] = value;
             }
         }
         
@@ -818,7 +818,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                                     this.TestMode = serverInstructions.TestMode;
                                     this.TestDuration = serverInstructions.TestDuration;
                                     this.MessageSize = serverInstructions.MessageSize;
-                                    this.Connections = serverInstructions.Connections;
+                                    this.ConnectionCount = serverInstructions.ConnectionCount;
                                     this.WarmupTime = serverInstructions.WarmupTime;
                                     this.DelayTime = serverInstructions.DelayTime;
                                     this.Port = serverInstructions.Port;
@@ -985,7 +985,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                             this.ThreadCount,
                             this.BufferSizeClient,
                             this.BufferSizeServer,
-                            this.Connections,
+                            this.ConnectionCount,
                             this.TestDuration.ToString(),
                             this.WarmupTime.ToString(),
                             this.DelayTime.ToString(),

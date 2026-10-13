@@ -42,7 +42,7 @@ namespace VirtualClient.Actions
                 ["Scenario"] = "Redis_Scenario",
                 ["PackageName"] = this.mockPackage.Name,
                 ["CommandLine"] = "-c 8 -d 32 -n 10000 -P 4 -q --csv",
-                ["ClientInstances"] = 1,
+                ["ClientInstanceCount"] = 1,
                 ["PipelineDepth"] = 32
             };
 
@@ -219,7 +219,7 @@ namespace VirtualClient.Actions
 
             using (var executor = new TestRedisBenchmarkClientExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
-                executor.Parameters["ClientInstances"] = 2;
+                executor.Parameters["ClientInstanceCount"] = 2;
 
                 await executor.ExecuteAsync(CancellationToken.None);
 
@@ -239,7 +239,7 @@ namespace VirtualClient.Actions
 
             using (var executor = new TestRedisBenchmarkClientExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
-                executor.Parameters["ClientInstances"] = 2;
+                executor.Parameters["ClientInstanceCount"] = 2;
 
                 ServerState serverState = new ServerState(new List<PortDescription>
                 {

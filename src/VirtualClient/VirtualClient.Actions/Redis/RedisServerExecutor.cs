@@ -93,11 +93,11 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Parameter defines the number of server instances/copies to run.
         /// </summary>
-        public int ServerInstances
+        public int ServerInstanceCount
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.ServerInstances));
+                return this.Parameters.GetValue<int>(nameof(this.ServerInstanceCount));
             }
         }
 
@@ -259,10 +259,10 @@ namespace VirtualClient.Actions
             base.Validate();
             CpuInfo cpuInfo = this.SystemManagement.GetCpuInfoAsync(CancellationToken.None).ConfigureAwait(false).GetAwaiter().GetResult();
 
-            if (this.BindToCores && this.ServerInstances > cpuInfo.LogicalProcessorCount)
+            if (this.BindToCores && this.ServerInstanceCount > cpuInfo.LogicalProcessorCount)
             {
                 throw new WorkloadException(
-                    $"Invalid '{nameof(this.ServerInstances)}' parameter value. The number of server instances cannot exceed the number of logical cores/vCPUs on the system " +
+                    $"Invalid '{nameof(this.ServerInstanceCount)}' parameter value. The number of server instances cannot exceed the number of logical cores/vCPUs on the system " +
                     $"when binding each of the servers to a logical core/vCPU. Set parameter '{nameof(this.BindToCores)}' = false to allow for additional server instances.",
                     ErrorReason.InvalidProfileDefinition);
             }
@@ -354,7 +354,7 @@ namespace VirtualClient.Actions
             return this.Logger.LogMessageAsync($"{this.TypeName}.SaveState", relatedContext, async () =>
             {
                 List<PortDescription> ports = new List<PortDescription>();
-                for (int i = 0; i < this.ServerInstances; i++)
+                for (int i = 0; i < this.ServerInstanceCount; i++)
                 {
                     ports.Add(new PortDescription
                     {
@@ -378,8 +378,8 @@ namespace VirtualClient.Actions
             this.serverProcesses.Clear();
 
             EventContext relatedContext = telemetryContext.Clone()
-                .AddContext("serverInstances", this.ServerInstances)
-                .AddContext("portRange", $"{this.Port}-{this.Port + this.ServerInstances}")
+                .AddContext("serverInstanceCount", this.ServerInstanceCount)
+                .AddContext("portRange", $"{this.Port}-{this.Port + this.ServerInstanceCount}")
                 .AddContext("bindToCores", this.BindToCores);
 
             this.Logger.LogMessage($"{this.TypeName}.StartServerInstances", relatedContext, () =>
@@ -392,7 +392,7 @@ namespace VirtualClient.Actions
                     relatedContext.AddContext("command", command);
                     relatedContext.AddContext("workingDir", workingDirectory);
 
-                    for (int i = 0; i < this.ServerInstances; i++)
+                    for (int i = 0; i < this.ServerInstanceCount; i++)
                     {
                         // We are starting the server instances in the background. Once they are running we
                         // will warm them up and then exit. We keep a reference to the server processes/tasks

@@ -41,11 +41,11 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Number workers used. Number cores nginx can use. Set to null or 0 to use all cores.
         /// </summary>
-        public int Workers
+        public int WorkerCount
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.Workers), 0);
+                return this.Parameters.GetValue<int>(nameof(this.WorkerCount), 0);
             }
         }
 
@@ -168,7 +168,7 @@ namespace VirtualClient.Actions
 
             ClientInstance backendInstance = this.GetLayoutClientInstances(ClientRole.Server).First();
             IPAddress.TryParse(backendInstance.IPAddress, out IPAddress backendIPAddress);
-            IProcessProxy process3 = await this.ExecuteCommandAsync(command: "bash", commandArguments: $"setup-config.sh {((this.Workers != 0) ? this.Workers : "auto")} {this.Role} {backendIPAddress}", workingDirectory: this.PackageDirectory, telemetryContext, cancellationToken, runElevated: true).ConfigureAwait(false);
+            IProcessProxy process3 = await this.ExecuteCommandAsync(command: "bash", commandArguments: $"setup-config.sh {((this.WorkerCount != 0) ? this.WorkerCount : "auto")} {this.Role} {backendIPAddress}", workingDirectory: this.PackageDirectory, telemetryContext, cancellationToken, runElevated: true).ConfigureAwait(false);
             await this.LogProcessDetailsAsync(process3, telemetryContext, this.PackageDirectory, logToFile: true);
             process3.ThrowIfWorkloadFailed();
 

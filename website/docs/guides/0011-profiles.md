@@ -153,7 +153,7 @@ the system. The following table describes the set of well-known parameters that 
             "CommandLine": "--protected-mode no --io-threads {ServerThreadCount} --maxmemory-policy noeviction --ignore-warnings ARM64-COW-BUG --save",
             "BindToCores": true,
             "Port": "$.Parameters.ServerPort",
-            "ServerInstances": "{LogicalProcessorCount}",
+            "ServerInstanceCount": "{LogicalProcessorCount}",
             "ServerThreadCount": "$.Parameters.ServerThreadCount",
             "Role": "Server"
         }
@@ -247,12 +247,12 @@ the system. The following table describes the set of well-known parameters that 
         "Parameters": {
             "Scenario": "Server",
             "PackageName": "memcached",
-            "CommandLine": "-p {Port} -t 4 -m {ServerMemory} -c {ServerMaxConnections}",
+            "CommandLine": "-p {Port} -t 4 -m {ServerMemory} -c {MaxServerConnectionCount}",
             "BindToCores": true,
             "Port": "$.Parameters.ServerPort",
             "Username": "$.Parameters.Username",
             "ServerThreadCount": 4,
-            "ServerMaxConnections": "$.Parameters.ServerMaxConnections",
+            "MaxServerConnectionCount": "$.Parameters.MaxServerConnectionCount",
             "ServerMemory": "{calculate({SystemMemoryMegabytes} / 2)}",
             "Role": "Server"
         }

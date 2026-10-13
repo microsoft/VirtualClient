@@ -39,11 +39,11 @@ for evaluating the performance of the CPU for processing calculations.
   | Parameter                 | Purpose                                                                         | Default value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
   | CompilerVersion           | Optional. The version of the compiler to use.  | 13 |
-  | Iterations                | Optional. The number of iterations for speccpu to run the benchmark/suite.  | 2 |
+  | IterationCount            | Optional. The number of iterations for speccpu to run the benchmark/suite.  | 2 |
   | Benchmarks                | Optional. The benchmark suite or list of benchmarks to run.  | fprate |
   | RunPeak                   | Optional. True to run the workload 'Peak' scenario, False to run the workload 'Base' scenario. | false (Base) |
-  | Threads                   | Optional. Determines the number of threads to use for running the benchmark. | # logical processors |
-  | Copies                    | Optional. Determines the number of copies of the benchmark to run concurrently. | # logical processors |
+  | ThreadCount               | Optional. Determines the number of threads to use for running the benchmark. | # logical processors |
+  | CopyCount                 | Optional. Determines the number of copies of the benchmark to run concurrently. | # logical processors |
   | BaseOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Base' scenario | <ul><li>X64 systems: -g -O2 -march=x86-64-v3 -flto -frecord-gcc-switches</li><li>ARM64 systems: -g -O2 -march=armv8.2-a -flto -frecord-gcc-switches</li></ul> |
   | PeakOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Peak' scenario | <ul><li>X64 systems: -g -O3 -march=x86-64-v3 -flto -frecord-gcc-switches</li><li>ARM64 systems: -g -O3 -march=armv8.2-a -flto -frecord-gcc-switches</li></ul> |
 
@@ -93,11 +93,11 @@ for evaluating the performance of the CPU for processing calculations.
   | Parameter                 | Purpose                                                                         | Default value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
   | CompilerVersion           | Optional. The version of the compiler to use.  | 13 |
-  | Iterations                | Optional. The number of iterations for speccpu to run the benchmark/suite.  | 2 |
+  | IterationCount            | Optional. The number of iterations for speccpu to run the benchmark/suite.  | 2 |
   | Benchmarks                | Optional. The benchmark suite or list of benchmarks to run.  | fpspeed |
   | RunPeak                   | Optional. True to run the workload 'Peak' scenario, False to run the workload 'Base' scenario. | false (Base) |
-  | Threads                   | Optional. Determines the number of threads to use for running the benchmark. | # logical processors |
-  | Copies                    | Optional. Determines the number of copies of the benchmark to run concurrently. | # logical processors |
+  | ThreadCount               | Optional. Determines the number of threads to use for running the benchmark. | # logical processors |
+  | CopyCount                 | Optional. Determines the number of copies of the benchmark to run concurrently. | # logical processors |
   | BaseOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Base' scenario | <ul><li>X64 systems: -g -O2 -march=x86-64-v3 -flto -frecord-gcc-switches</li><li>ARM64 systems: -g -O2 -march=armv8.2-a -flto -frecord-gcc-switches</li></ul> |
   | PeakOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Peak' scenario | <ul><li>X64 systems: -g -O3 -march=x86-64-v3 -flto -frecord-gcc-switches</li><li>ARM64 systems: -g -O3 -march=armv8.2-a -flto -frecord-gcc-switches</li></ul> |
 
@@ -142,11 +142,11 @@ for evaluating the performance of the CPU for processing calculations.
   | Parameter                 | Purpose                                                                         | Default value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
   | CompilerVersion           | Optional. The version of the compiler to use.  | 13 |
-  | Iterations                | Optional. The number of iterations for speccpu to run the benchmark/suite.  | 2 |
+  | IterationCount            | Optional. The number of iterations for speccpu to run the benchmark/suite.  | 2 |
   | Benchmarks                | Optional. The benchmark suite or list of benchmarks to run.  | intrate |
   | RunPeak                   | Optional. True to run the workload 'Peak' scenario, False to run the workload 'Base' scenario. | false (Base) |
-  | Threads                   | Optional. Determines the number of threads to use for running the benchmark. | # logical processors |
-  | Copies                    | Optional. Determines the number of copies of the benchmark to run concurrently. | # logical processors |
+  | ThreadCount               | Optional. Determines the number of threads to use for running the benchmark. | # logical processors |
+  | CopyCount                 | Optional. Determines the number of copies of the benchmark to run concurrently. | # logical processors |
   | BaseOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Base' scenario | <ul><li>X64 systems: -g -O2 -march=x86-64-v3 -flto -frecord-gcc-switches</li><li>ARM64 systems: -g -O2 -march=armv8.2-a -flto -frecord-gcc-switches</li></ul> |
   | PeakOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Peak' scenario | <ul><li>X64 systems: -g -O3 -march=x86-64-v3 -flto -frecord-gcc-switches</li><li>ARM64 systems: -g -O3 -march=armv8.2-a -flto -frecord-gcc-switches</li></ul> |
 
@@ -191,11 +191,11 @@ for evaluating the performance of the CPU for processing calculations.
   | Parameter                 | Purpose                                                                         | Default value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
   | CompilerVersion           | Optional. The version of the compiler to use.  | 13 |
-  | Iterations                | Optional. The number of iterations for speccpu to run the benchmark/suite.  | 2 |
+  | IterationCount            | Optional. The number of iterations for speccpu to run the benchmark/suite.  | 2 |
   | Benchmarks                | Optional. The benchmark suite or list of benchmarks to run.  | intspeed |
   | RunPeak                   | Optional. True to run the workload 'Peak' scenario, False to run the workload 'Base' scenario. | false (Base) |
-  | Threads                   | Optional. Determines the number of threads to use for running the benchmark. | # logical processors |
-  | Copies                    | Optional. Determines the number of copies of the benchmark to run concurrently. | # logical processors |
+  | ThreadCount               | Optional. Determines the number of threads to use for running the benchmark. | # logical processors |
+  | CopyCount                 | Optional. Determines the number of copies of the benchmark to run concurrently. | # logical processors |
   | BaseOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Base' scenario | <ul><li>X64 systems: -g -O2 -march=x86-64-v3 -flto -frecord-gcc-switches</li><li>ARM64 systems: -g -O2 -march=armv8.2-a -flto -frecord-gcc-switches</li></ul> |
   | PeakOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Peak' scenario | <ul><li>X64 systems: -g -O3 -march=x86-64-v3 -flto -frecord-gcc-switches</li><li>ARM64 systems: -g -O3 -march=armv8.2-a -flto -frecord-gcc-switches</li></ul> |
 
@@ -240,11 +240,11 @@ for evaluating the performance of the CPU for processing calculations.
   | Parameter                 | Purpose                                                                         | Default value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
   | CompilerVersion           | Optional. The version of the compiler to use.  | 13 |
-  | Iterations                | Optional. The number of iterations for speccpu to run the benchmark/suite.  | 2 |
+  | IterationCount            | Optional. The number of iterations for speccpu to run the benchmark/suite.  | 2 |
   | Benchmarks                | Optional. The benchmark suite or list of benchmarks to run.  | fprate |
   | RunPeak                   | Optional. True to run the workload 'Peak' scenario, False to run the workload 'Base' scenario. | false (Base) |
-  | Threads                   | Optional. Determines the number of threads to use for running the benchmark. | # logical processors |
-  | Copies                    | Optional. Determines the number of copies of the benchmark to run concurrently. | # logical processors |
+  | ThreadCount               | Optional. Determines the number of threads to use for running the benchmark. | # logical processors |
+  | CopyCount                 | Optional. Determines the number of copies of the benchmark to run concurrently. | # logical processors |
   | BaseOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Base' scenario | <ul><li>X64 systems: -g -O2 -march=x86-64-v3 -flto -frecord-gcc-switches</li><li>ARM64 systems: -g -O2 -march=armv8.2-a -flto -frecord-gcc-switches</li></ul> |
   | PeakOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Peak' scenario | <ul><li>X64 systems: -g -O3 -march=x86-64-v3 -flto -frecord-gcc-switches</li><li>ARM64 systems: -g -O3 -march=armv8.2-a -flto -frecord-gcc-switches</li></ul> |
 
@@ -289,11 +289,11 @@ for evaluating the performance of the CPU for processing calculations.
   | Parameter                 | Purpose                                                                         | Default value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
   | CompilerVersion           | Optional. The version of the compiler to use.  | 13 |
-  | Iterations                | Optional. The number of iterations for speccpu to run the benchmark/suite.  | 2 |
+  | IterationCount            | Optional. The number of iterations for speccpu to run the benchmark/suite.  | 2 |
   | Benchmarks                | Optional. The benchmark suite or list of benchmarks to run.  | fpspeed |
   | RunPeak                   | Optional. True to run the workload 'Peak' scenario, False to run the workload 'Base' scenario. | false (Base) |
-  | Threads                   | Optional. Determines the number of threads to use for running the benchmark. | # logical processors |
-  | Copies                    | Optional. Determines the number of copies of the benchmark to run concurrently. | # logical processors |
+  | ThreadCount               | Optional. Determines the number of threads to use for running the benchmark. | # logical processors |
+  | CopyCount                 | Optional. Determines the number of copies of the benchmark to run concurrently. | # logical processors |
   | BaseOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Base' scenario | <ul><li>X64 systems: -g -O2 -march=x86-64-v3 -flto -frecord-gcc-switches</li><li>ARM64 systems: -g -O2 -march=armv8.2-a -flto -frecord-gcc-switches</li></ul> |
   | PeakOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Peak' scenario | <ul><li>X64 systems: -g -O3 -march=x86-64-v3 -flto -frecord-gcc-switches</li><li>ARM64 systems: -g -O3 -march=armv8.2-a -flto -frecord-gcc-switches</li></ul> |
 
@@ -333,11 +333,11 @@ for evaluating the performance of the CPU for processing calculations.
   | Parameter                 | Purpose                                                                         | Default value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
   | CompilerVersion           | Optional. The version of the compiler to use.  | 13 |
-  | Iterations                | Optional. The number of iterations for speccpu to run the benchmark/suite.  | 2 |
+  | IterationCount            | Optional. The number of iterations for speccpu to run the benchmark/suite.  | 2 |
   | Benchmarks                | Optional. The benchmark suite or list of benchmarks to run.  | intrate |
   | RunPeak                   | Optional. True to run the workload 'Peak' scenario, False to run the workload 'Base' scenario. | false (Base) |
-  | Threads                   | Optional. Determines the number of threads to use for running the benchmark. | # logical processors |
-  | Copies                    | Optional. Determines the number of copies of the benchmark to run concurrently. | # logical processors |
+  | ThreadCount               | Optional. Determines the number of threads to use for running the benchmark. | # logical processors |
+  | CopyCount                 | Optional. Determines the number of copies of the benchmark to run concurrently. | # logical processors |
   | BaseOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Base' scenario | <ul><li>X64 systems: -g -O2 -march=x86-64-v3 -flto -frecord-gcc-switches</li><li>ARM64 systems: -g -O2 -march=armv8.2-a -flto -frecord-gcc-switches</li></ul> |
   | PeakOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Peak' scenario | <ul><li>X64 systems: -g -O3 -march=x86-64-v3 -flto -frecord-gcc-switches</li><li>ARM64 systems: -g -O3 -march=armv8.2-a -flto -frecord-gcc-switches</li></ul> |
 
@@ -377,11 +377,11 @@ for evaluating the performance of the CPU for processing calculations.
   | Parameter                 | Purpose                                                                         | Default value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
   | CompilerVersion           | Optional. The version of the compiler to use.  | 13 |
-  | Iterations                | Optional. The number of iterations for speccpu to run the benchmark/suite.  | 2 |
+  | IterationCount            | Optional. The number of iterations for speccpu to run the benchmark/suite.  | 2 |
   | Benchmarks                | Optional. The benchmark suite or list of benchmarks to run.  | intspeed |
   | RunPeak                   | Optional. True to run the workload 'Peak' scenario, False to run the workload 'Base' scenario. | false (Base) |
-  | Threads                   | Optional. Determines the number of threads to use for running the benchmark. | # logical processors |
-  | Copies                    | Optional. Determines the number of copies of the benchmark to run concurrently. | # logical processors |
+  | ThreadCount               | Optional. Determines the number of threads to use for running the benchmark. | # logical processors |
+  | CopyCount                 | Optional. Determines the number of copies of the benchmark to run concurrently. | # logical processors |
   | BaseOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Base' scenario | <ul><li>X64 systems: -g -O2 -march=x86-64-v3 -flto -frecord-gcc-switches</li><li>ARM64 systems: -g -O2 -march=armv8.2-a -flto -frecord-gcc-switches</li></ul> |
   | PeakOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Peak' scenario | <ul><li>X64 systems: -g -O3 -march=x86-64-v3 -flto -frecord-gcc-switches</li><li>ARM64 systems: -g -O3 -march=armv8.2-a -flto -frecord-gcc-switches</li></ul> |
 

@@ -98,16 +98,16 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Parameter defines the number of connections to use in the workload toolset tests.
         /// </summary>
-        public int Connections
+        public int ConnectionCount
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(CPSClientExecutor2.Connections), 8);
+                return this.Parameters.GetValue<int>(nameof(CPSClientExecutor2.ConnectionCount), 8);
             }
 
             set
             {
-                this.Parameters[nameof(CPSClientExecutor2.Connections)] = value;
+                this.Parameters[nameof(CPSClientExecutor2.ConnectionCount)] = value;
             }
         }
 
@@ -402,7 +402,7 @@ namespace VirtualClient.Actions
             string clientIPAddress = this.GetLayoutClientInstances(ClientRole.Client).First().IPAddress;
             string serverIPAddress = this.GetLayoutClientInstances(ClientRole.Server).First().IPAddress;
 
-            return $"-c -r {this.Connections} " +
+            return $"-c -r {this.ConnectionCount} " +
                 $"{clientIPAddress},0,{serverIPAddress},{this.Port},{this.ConnectionsPerThread},{this.MaxPendingRequestsPerThread},{this.ConnectionDuration},{this.DataTransferMode} " +
                 $"-i {this.DisplayInterval} -wt {this.WarmupTime.TotalSeconds} -t {this.TestDuration.TotalSeconds} " +
                 $"{((this.DelayTime != TimeSpan.Zero) ? $"-ds {this.DelayTime.TotalSeconds}" : string.Empty)}".Trim();

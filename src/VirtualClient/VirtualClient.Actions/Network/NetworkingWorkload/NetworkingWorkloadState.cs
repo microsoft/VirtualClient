@@ -116,7 +116,7 @@ namespace VirtualClient.Actions.NetworkPerformance
             int? threadCount = null,
             string bufferSizeClient = null,
             string bufferSizeServer = null,
-            int? connections = null,
+            int? connectionCount = null,
             string testDuration = null,
             string warmupTime = null,
             string delayTime = null,
@@ -152,7 +152,7 @@ namespace VirtualClient.Actions.NetworkPerformance
             this.Properties[nameof(this.ThreadCount)] = threadCount;
             this.Properties[nameof(this.BufferSizeClient)] = bufferSizeClient;
             this.Properties[nameof(this.BufferSizeServer)] = bufferSizeServer;
-            this.Properties[nameof(this.Connections)] = connections;
+            this.Properties[nameof(this.ConnectionCount)] = connectionCount;
             this.Properties[nameof(this.TestDuration)] = testDuration;
             this.Properties[nameof(this.WarmupTime)] = warmupTime;
             this.Properties[nameof(this.DelayTime)] = delayTime;
@@ -310,11 +310,11 @@ namespace VirtualClient.Actions.NetworkPerformance
         /// <summary>
         /// Number of connections (Parameter for Tools: CPS).
         /// </summary>
-        public int Connections
+        public int ConnectionCount
         {
             get
             {
-                return this.Properties.GetValue<int>(nameof(this.Connections), 0);
+                return this.Properties.GetValue<int>(nameof(this.ConnectionCount), 0);
             }
         }
 

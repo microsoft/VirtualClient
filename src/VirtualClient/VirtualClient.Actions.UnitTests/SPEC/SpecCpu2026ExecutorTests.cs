@@ -67,9 +67,9 @@ namespace VirtualClient.Actions
                 { nameof(SpecCpuExecutor.Benchmarks), "intrate" },
                 { nameof(SpecCpuExecutor.PackageName), "speccpu2026" },
                 { nameof(SpecCpuExecutor.RunPeak), false },
-                { nameof(SpecCpuExecutor.Iterations), 2 },
-                { nameof(SpecCpuExecutor.Threads), 8 },
-                { nameof(SpecCpuExecutor.Copies), 4 }
+                { nameof(SpecCpuExecutor.IterationCount), 2 },
+                { nameof(SpecCpuExecutor.ThreadCount), 8 },
+                { nameof(SpecCpuExecutor.CopyCount), 4 }
             };
 
             List<string> expectedCommands = new List<string>
@@ -351,9 +351,9 @@ namespace VirtualClient.Actions
                 { nameof(SpecCpuExecutor.Benchmarks), benchmarks },
                 { nameof(SpecCpuExecutor.PackageName), "speccpu2026" },
                 { nameof(SpecCpuExecutor.RunPeak), runPeak },
-                { nameof(SpecCpuExecutor.Iterations), iterations },
-                { nameof(SpecCpuExecutor.Threads), threads },
-                { nameof(SpecCpuExecutor.Copies), copies }
+                { nameof(SpecCpuExecutor.IterationCount), iterations },
+                { nameof(SpecCpuExecutor.ThreadCount), threads },
+                { nameof(SpecCpuExecutor.CopyCount), copies }
             };
         }
 

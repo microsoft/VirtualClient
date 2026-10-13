@@ -9,7 +9,7 @@
         "CompilerVersion": null,
         "ProblemSizeN": null,
         "BlockSizeNB": "256",
-        "NumberOfProcesses": "{LogicalCoreCount}",
+        "ProcessCount": "{LogicalCoreCount}",
         "BindToCores": false,
         "CCFLAGS": "-O3 -march={calculate(\"{Architecture}\" == \"x64\" ? \"native\" : \"armv8-a\")}"
     },
@@ -20,7 +20,7 @@
                 "Scenario": "ProcessorSpeed",
                 "ProblemSizeN": "$.Parameters.ProblemSizeN",
                 "BlockSizeNB": "$.Parameters.BlockSizeNB",
-                "NumberOfProcesses": "$.Parameters.NumberOfProcesses",
+                "ProcessCount": "$.Parameters.ProcessCount",
                 "CCFLAGS": "$.Parameters.CCFLAGS",
                 "BindToCores": "$.Parameters.BindToCores",
                 "PackageName": "hplinpack"

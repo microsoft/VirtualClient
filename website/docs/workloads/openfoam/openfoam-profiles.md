@@ -37,7 +37,7 @@ Runs the OpenFOAM workload which measures performance in terms of iterations per
 
   | Parameter                 | Purpose                                                                         | Default Value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
-  | Iterations                | Optional. Number of iterations for which particular simulation will be run.     | 500 |
+  | IterationCount            | Optional. Number of iterations for which particular simulation will be run.     | 500 |
 
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
@@ -49,7 +49,7 @@ Runs the OpenFOAM workload which measures performance in terms of iterations per
 
   ``` bash
   ./VirtualClient --profile=PERF-OPENFOAM.json 
-  ./VirtualClient --profile=PERF-OPENFOAM.json --parameters=Iterations=10
+  ./VirtualClient --profile=PERF-OPENFOAM.json --parameters=IterationCount=10
   ./VirtualClient --profile=PERF-OPENFOAM.json --scenarios=airFoil2D,elbow,motorBike
 
   ```

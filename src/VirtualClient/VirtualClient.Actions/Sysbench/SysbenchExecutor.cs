@@ -121,12 +121,12 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Number of threads.
         /// </summary>
-        public int? Threads
+        public int? ThreadCount
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(SysbenchClientExecutor.Threads), out IConvertible threads);
-                return threads?.ToInt32(CultureInfo.InvariantCulture);
+                this.Parameters.TryGetValue(nameof(SysbenchClientExecutor.ThreadCount), out IConvertible threadCount);
+                return threadCount?.ToInt32(CultureInfo.InvariantCulture);
             }
         }
 
@@ -391,7 +391,7 @@ namespace VirtualClient.Actions
         protected string BuildSysbenchLoggingArguments()
         {
             int tableCount = GetTableCount(this.DatabaseScenario, this.TableCount, this.Workload);
-            int threadCount = GetThreadCount(this.SystemManager, this.DatabaseScenario, this.Threads);
+            int threadCount = GetThreadCount(this.SystemManager, this.DatabaseScenario, this.ThreadCount);
 
             string loggingArguments = $"--dbName {this.DatabaseName} --databaseSystem {this.DatabaseSystem} --benchmark {this.Benchmark} --threadCount {threadCount} --tableCount {tableCount}";
 

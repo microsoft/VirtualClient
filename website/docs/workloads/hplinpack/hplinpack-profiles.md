@@ -35,7 +35,7 @@ This profile runs HPLinpack workload on the system without any specific performa
   | BlockSizeNB               | The partitioning blocking factor                                                   | 256 |
   | CompilerVersion           | Version of the GCC compiler to use.                                                | Default version of GCC for the Linux distro. |
   | CCFLAGS                   | GCC compiler flags                                                                 | <ul><li>Intel/AMD Systems: -O3 -march=native</li><li>ARM Systems: -O3 -march=armv8-a</li></ul>  |
-  | NumberOfProcesses         | The number of processes to launch in parallel.                                     |  # logical processors |
+  | ProcessCount              | The number of processes to launch in parallel.                                     |  # logical processors |
   | ProblemSizeN              | The order of coefficient matrix of set of linear equations that we want to solve   | Calculated to use approximately 80% of available memory on the system. |
 
   There are two other input values for HPLinpack. They are 
@@ -95,7 +95,7 @@ This profile runs HPLinpack workload with AMD performance libraries.
   | BlockSizeNB               | The partitioning blocking factor                                                   | 256 |
   | CompilerVersion           | Version of the GCC compiler to use.                                                | Default version of GCC for the Linux distro. |
   | CCFLAGS                   | GCC compiler flags                                                                 | -O3 -march=native  |
-  | NumberOfProcesses         | The number of processes to launch in parallel.                                     |  # logical processors |
+  | ProcessCount              | The number of processes to launch in parallel.                                     |  # logical processors |
   | PerformanceLibraryVersion | The version of the performance libraries you would like to use. Supported versions for AMD include: 4.2.0, 5.0.0, 5.1.0 | 5.1.0  |
   | ProblemSizeN              | The order of coefficient matrix of set of linear equations that we want to solve   | Calculated to use approximately 80% of available memory on the system. |
   
@@ -145,7 +145,7 @@ This profile runs HPLinpack workload with ARM performance libraries.
   | BlockSizeNB               | The partitioning blocking factor                                                   | 256 |
   | CompilerVersion           | Version of the GCC compiler to use.                                                | Default version of GCC for the Linux distro. |
   | CCFLAGS                   | GCC compiler flags                                                                 | -O3 -march=armv8-a  |
-  | NumberOfProcesses         | The number of processes to launch in parallel.                                     |  # logical processors |
+  | ProcessCount              | The number of processes to launch in parallel.                                     |  # logical processors |
   | PerformanceLibraryVersion | The version of the performance libraries you would like to use. Supported versions for ARM include: 23.04.1, 24.10, 25.04.1, 26.01.1 | 26.01.1  |
   | ProblemSizeN              | The order of coefficient matrix of set of linear equations that we want to solve   | Calculated to use approximately 80% of available memory on the system. |
   
@@ -195,7 +195,7 @@ This profile runs HPLinpack workload with Intel performance libraries.
   | BlockSizeNB               | The partitioning blocking factor                                                   | 256 |
   | CompilerVersion           | Version of the GCC compiler to use.                                                | Default version of GCC for the Linux distro. |
   | CCFLAGS                   | GCC compiler flags                                                                 | -O3 -march=native  |
-  | NumberOfProcesses         | The number of processes to launch in parallel.                                     |  # logical processors |
+  | ProcessCount              | The number of processes to launch in parallel.                                     |  # logical processors |
   | PerformanceLibraryVersion | The version of the performance libraries you would like to use. Supported versions for Intel include: 2024.2.2.17, 2025.1.0.803 | 2024.2.2.17  |
   | ProblemSizeN              | The order of coefficient matrix of set of linear equations that we want to solve   | Calculated to use approximately 80% of available memory on the system. |
   

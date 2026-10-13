@@ -131,7 +131,7 @@ namespace VirtualClient.Actions
         {
             SetupDefaultBehavior();
 
-            this.fixture.Parameters[nameof(SysbenchClientExecutor.Threads)] = "64";
+            this.fixture.Parameters[nameof(SysbenchClientExecutor.ThreadCount)] = "64";
             this.fixture.Parameters[nameof(SysbenchClientExecutor.RecordCount)] = "1000";
             this.fixture.Parameters[nameof(SysbenchClientExecutor.TableCount)] = "40";
             this.fixture.Parameters[nameof(SysbenchClientExecutor.DatabaseScenario)] = "Configure";

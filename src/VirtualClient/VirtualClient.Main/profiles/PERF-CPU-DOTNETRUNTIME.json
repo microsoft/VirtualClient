@@ -5,8 +5,8 @@
         "SupportedOperatingSystems": "Windows"
     },
     "Parameters": {
-        "NumberOfJvmInstances": "1",
-        "NumberOfWarehouses": "8",
+        "JvmInstanceCount": "1",
+        "WarehouseCount": "8",
         "RampUpSeconds": "60",
         "MeasurementSeconds": "3600",
         "FixedThroughput": "16000"
@@ -16,9 +16,9 @@
             "Type": "DotNetRuntimeExecutor",
             "Parameters": {
                 "Scenario": "CpuOperationThroughput",
-                "NumberOfJvmInstances": "$.Parameters.NumberOfJvmInstances",
+                "JvmInstanceCount": "$.Parameters.JvmInstanceCount",
                 "PackageName": "dotnetruntime",
-                "NumberOfWarehouses": "$.Parameters.NumberOfWarehouses",
+                "WarehouseCount": "$.Parameters.WarehouseCount",
                 "RampUpSeconds": "$.Parameters.RampUpSeconds",
                 "MeasurementSeconds": "$.Parameters.MeasurementSeconds",
                 "FixedThroughput": "$.Parameters.FixedThroughput"

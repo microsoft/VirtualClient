@@ -81,7 +81,7 @@ namespace VirtualClient.Monitors
                 string command = (this.Platform == PlatformID.Unix) ? "lspci" : "lspci.exe";
                 string commandArguments = "-vvv";
 
-                if (this.MonitorIterations != -1 && iteration >= this.MonitorIterations) 
+                if (this.MonitorIterationCount != -1 && iteration >= this.MonitorIterationCount)
                 {
                     // Default is set to -1 for infinite loop.
                     break;

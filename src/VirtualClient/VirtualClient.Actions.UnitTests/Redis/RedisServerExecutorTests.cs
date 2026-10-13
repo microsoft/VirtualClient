@@ -46,7 +46,7 @@ namespace VirtualClient.Actions
                 ["CommandLine"] = "--protected-mode no --io-threads {ServerThreadCount} --maxmemory-policy noeviction --ignore-warnings ARM64-COW-BUG --save --daemonize yes",
                 ["BindToCores"] = true,
                 ["Port"] = 6379,
-                ["ServerInstances"] = 1,
+                ["ServerInstanceCount"] = 1,
                 ["ServerThreadCount"] = 4,
                 ["IsTLSEnabled"] = false
             };
@@ -114,7 +114,7 @@ namespace VirtualClient.Actions
 
             using (var executor = new TestRedisServerExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
-                executor.Parameters[nameof(executor.ServerInstances)] = 2;
+                executor.Parameters[nameof(executor.ServerInstanceCount)] = 2;
 
                 await executor.ExecuteAsync(CancellationToken.None);
 

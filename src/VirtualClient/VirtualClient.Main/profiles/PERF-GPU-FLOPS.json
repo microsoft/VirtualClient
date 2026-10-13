@@ -15,7 +15,7 @@
             "Type": "DXFLOPSExecutor",
             "Parameters": {
                 "Scenario": "MeasureGPUPerformance",
-                "ShaderIterations": 100000,
+                "ShaderIterationCount": 100000,
                 "Precision": "f32",
                 "PackageName": "dx_microbenchmarks",
                 "SupportedPlatforms": "win-x64"

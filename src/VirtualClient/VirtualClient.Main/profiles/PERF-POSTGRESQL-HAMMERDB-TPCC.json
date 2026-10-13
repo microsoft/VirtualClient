@@ -11,7 +11,7 @@
         "DiskFilter": "osdisk:false&sizegreaterthan:256g",
         "Port": "5432",
         "Duration": "00:20:00",
-        "VirtualUsers": "{calculate({LogicalCoreCount})}",
+        "VirtualUserCount": "{calculate({LogicalCoreCount})}",
         "WarehouseCount": "{calculate({LogicalCoreCount} * 10)}",
         "SharedMemoryBuffer": "{calculate({SystemMemoryMegabytes} * 85 / 100)}"
     },
@@ -25,7 +25,7 @@
                 "SQLServer": "postgresql",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "Port": "$.Parameters.Port",
-                "VirtualUsers": "$.Parameters.VirtualUsers",
+                "VirtualUserCount": "$.Parameters.VirtualUserCount",
                 "WarehouseCount": "$.Parameters.WarehouseCount",
                 "Duration": "$.Parameters.Duration",
                 "Role": "Server"
@@ -40,7 +40,7 @@
                 "PackageName": "hammerdb",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "Port": "$.Parameters.Port",
-                "VirtualUsers": "$.Parameters.VirtualUsers",
+                "VirtualUserCount": "$.Parameters.VirtualUserCount",
                 "WarehouseCount": "$.Parameters.WarehouseCount",
                 "Duration": "$.Parameters.Duration",
                 "Role": "Client"
@@ -125,7 +125,7 @@
                 "Workload": "tpcc",
                 "SQLServer": "postgresql",
                 "PackageName": "hammerdb",
-                "VirtualUsers": "$.Parameters.VirtualUsers",
+                "VirtualUserCount": "$.Parameters.VirtualUserCount",
                 "WarehouseCount": "$.Parameters.WarehouseCount",
                 "Port": "$.Parameters.Port",
                 "Duration": "$.Parameters.Duration",

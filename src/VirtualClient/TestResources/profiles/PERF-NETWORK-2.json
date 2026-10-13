@@ -247,7 +247,7 @@
                 "ToolName": "CPS",
                 "Role": "Client",
                 "PackageName": "networking",
-                "Connections": 16,
+                "ConnectionCount": 16,
                 "TestDuration": "$.Parameters.CpsDuration",
                 "WarmupTime": "00:01:00",
                 "Port": "$.Parameters.CpsPort",

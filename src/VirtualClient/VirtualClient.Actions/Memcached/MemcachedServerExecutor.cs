@@ -82,11 +82,11 @@ namespace VirtualClient.Actions
         /// Parameter defines the maximum number of connections to set for the
         /// server.
         /// </summary>
-        public int ServerMaxConnections
+        public int MaxServerConnectionCount
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(MemcachedServerExecutor.ServerMaxConnections));
+                return this.Parameters.GetValue<int>(nameof(MemcachedServerExecutor.MaxServerConnectionCount));
             }
         }
 
@@ -308,7 +308,7 @@ namespace VirtualClient.Actions
             EventContext relatedContext = telemetryContext.Clone()
                 .AddContext("port", this.Port)
                 .AddContext("bindToCores", this.BindToCores)
-                .AddContext("serverMaxConnections", this.ServerMaxConnections)
+                .AddContext("maxServerConnectionCount", this.MaxServerConnectionCount)
                 .AddContext("serverThreadCount", this.ServerThreadCount);
 
             this.Logger.LogMessage($"{this.TypeName}.StartServerInstances", relatedContext, () =>

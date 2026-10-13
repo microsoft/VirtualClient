@@ -50,11 +50,11 @@ namespace VirtualClient.Actions.NetworkPerformance
         /// <summary>
         /// gets the number of connections value
         /// </summary>
-        public int Connections
+        public int ConnectionCount
         {
             get 
             {
-                return this.Parameters.GetValue<int>(nameof(this.Connections));
+                return this.Parameters.GetValue<int>(nameof(this.ConnectionCount));
             }
         }
 

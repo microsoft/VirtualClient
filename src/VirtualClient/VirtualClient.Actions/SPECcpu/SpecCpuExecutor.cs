@@ -108,14 +108,14 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Iterations.
+        /// Iteration count.
         /// Recommended default: 2.
         /// </summary>
-        public int Iterations
+        public int IterationCount
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(SpecCpuExecutor.Iterations), 2);
+                return this.Parameters.GetValue<int>(nameof(SpecCpuExecutor.IterationCount), 2);
             }
         }
 
@@ -132,24 +132,24 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Threads.
+        /// Thread count.
         /// </summary>
-        public int Threads
+        public int ThreadCount
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(SpecCpuExecutor.Threads), Environment.ProcessorCount);
+                return this.Parameters.GetValue<int>(nameof(SpecCpuExecutor.ThreadCount), Environment.ProcessorCount);
             }
         }
 
         /// <summary>
-        /// Copies.
+        /// Copy count.
         /// </summary>
-        public int Copies
+        public int CopyCount
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(SpecCpuExecutor.Copies), Environment.ProcessorCount);
+                return this.Parameters.GetValue<int>(nameof(SpecCpuExecutor.CopyCount), Environment.ProcessorCount);
             }
         }
 
@@ -644,11 +644,11 @@ namespace VirtualClient.Actions
         {
             List<string> suites = new List<string> { "intrate", "intspeed", "fprate", "fpspeed" };
             string configurationFile = this.GetConfigurationFileName();
-            string command = $"--config {configurationFile} --iterations {this.Iterations} --copies {this.Copies} --threads {this.Threads} --tune {this.tuning}";
+            string command = $"--config {configurationFile} --iterations {this.IterationCount} --copies {this.CopyCount} --threads {this.ThreadCount} --tune {this.tuning}";
 
             bool reportable = this.Platform == PlatformID.Unix
                 && suites.Contains(this.Benchmarks.ToLowerInvariant())
-                && (this.Iterations == 2 || this.Iterations == 3);
+                && (this.IterationCount == 2 || this.IterationCount == 3);
 
             command = reportable ? $"{command} --reportable" : $"{command} --noreportable";
             return $"{command} {this.Benchmarks}";
@@ -680,7 +680,7 @@ namespace VirtualClient.Actions
                 StringComparison.OrdinalIgnoreCase);
             templateText = templateText.Replace(
                 SpecCpuConfigPlaceholder.Threads,
-                this.Threads.ToString(),
+                this.ThreadCount.ToString(),
                 StringComparison.OrdinalIgnoreCase);
 
             await this.fileSystem.File.WriteAllTextAsync(

@@ -203,7 +203,7 @@ namespace VirtualClient.Actions
                 ["ProblemSizeN"] = "20000",
                 ["BlockSizeNB"] = "256",
                 ["Scenario"] = "ProcessorSpeed",
-                ["NumberOfProcesses"] = "2",
+                ["ProcessCount"] = "2",
                 ["BindToCores"] = false
             };
 
