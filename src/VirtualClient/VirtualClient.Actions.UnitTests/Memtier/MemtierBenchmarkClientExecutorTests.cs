@@ -111,6 +111,22 @@ namespace VirtualClient.Actions
         }
 
         [Test]
+        public void MemtierBenchmarkClientExecutorSupportsCurrentAndLegacyClientInstanceCountParameters()
+        {
+            this.mockFixture.Parameters.Remove("ClientInstanceCount");
+            this.mockFixture.Parameters["ClientInstances"] = 2;
+
+            using (var executor = new TestMemtierBenchmarkClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                Assert.AreEqual(2, executor.ClientInstanceCount);
+
+                executor.Parameters["ClientInstanceCount"] = 3;
+
+                Assert.AreEqual(3, executor.ClientInstanceCount);
+            }
+        }
+
+        [Test]
         public async Task MemtierBenchmarkClientExecutorOnInitializationGetsTheExpectedPackage()
         {
             using (var component = new TestMemtierBenchmarkClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))

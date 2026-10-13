@@ -82,6 +82,22 @@ namespace VirtualClient.Actions
         }
 
         [Test]
+        public void RedisServerExecutorSupportsCurrentAndLegacyServerInstanceCountParameters()
+        {
+            this.fixture.Parameters.Remove("ServerInstanceCount");
+            this.fixture.Parameters["ServerInstances"] = 2;
+
+            using (var executor = new TestRedisServerExecutor(this.fixture.Dependencies, this.fixture.Parameters))
+            {
+                Assert.AreEqual(2, executor.ServerInstanceCount);
+
+                executor.Parameters["ServerInstanceCount"] = 3;
+
+                Assert.AreEqual(3, executor.ServerInstanceCount);
+            }
+        }
+
+        [Test]
         public async Task RedisMemtierServerExecutorExecutesExpectedProcessWhenBindingToCores()
         {
             this.fixture

@@ -42,6 +42,34 @@ namespace VirtualClient.Actions
         }
 
         [Test]
+        public void SpecCpuExecutorSupportsCurrentAndLegacyCountParameters()
+        {
+            this.Setup(PlatformID.Unix);
+            Dictionary<string, IConvertible> parameters = new Dictionary<string, IConvertible>
+            {
+                [nameof(SpecCpuExecutor.RunPeak)] = false,
+                ["Iterations"] = 1,
+                ["Threads"] = 2,
+                ["Copies"] = 3
+            };
+
+            using (TestSpecCpuExecutor executor = new TestSpecCpuExecutor(this.Dependencies, parameters))
+            {
+                Assert.AreEqual(1, executor.IterationCount);
+                Assert.AreEqual(2, executor.ThreadCount);
+                Assert.AreEqual(3, executor.CopyCount);
+
+                executor.Parameters[nameof(executor.IterationCount)] = 4;
+                executor.Parameters[nameof(executor.ThreadCount)] = 5;
+                executor.Parameters[nameof(executor.CopyCount)] = 6;
+
+                Assert.AreEqual(4, executor.IterationCount);
+                Assert.AreEqual(5, executor.ThreadCount);
+                Assert.AreEqual(6, executor.CopyCount);
+            }
+        }
+
+        [Test]
         public async Task SpecCpu2026ExecutorExecutesTheCorrectCommandsWithInstallationInLinux()
         {
             this.Setup(PlatformID.Unix);

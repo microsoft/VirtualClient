@@ -97,7 +97,7 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.ServerInstanceCount));
+                return this.Parameters.GetValue<int>(new string[] { nameof(this.ServerInstanceCount), "ServerInstances" });
             }
         }
 

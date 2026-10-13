@@ -115,7 +115,7 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(SpecCpuExecutor.IterationCount), 2);
+                return this.Parameters.GetValue<int>(new string[] { nameof(SpecCpuExecutor.IterationCount), "Iterations" }, 2);
             }
         }
 
@@ -138,7 +138,7 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(SpecCpuExecutor.ThreadCount), Environment.ProcessorCount);
+                return this.Parameters.GetValue<int>(new string[] { nameof(SpecCpuExecutor.ThreadCount), "Threads" }, Environment.ProcessorCount);
             }
         }
 
@@ -149,7 +149,7 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(SpecCpuExecutor.CopyCount), Environment.ProcessorCount);
+                return this.Parameters.GetValue<int>(new string[] { nameof(SpecCpuExecutor.CopyCount), "Copies" }, Environment.ProcessorCount);
             }
         }
 
