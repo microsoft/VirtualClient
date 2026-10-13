@@ -140,6 +140,160 @@ namespace VirtualClient.Logging
             Assert.AreEqual(expectedTimestamp, eventBody["timestamp"].Value<DateTime>());
         }
 
+        [Test]
+        public void EventHubTelemetryLoggerLogsFormattedInformationWithoutAnEventContext()
+        {
+            TestEventHubTelemetryLogger logger = new TestEventHubTelemetryLogger(this.mockChannel, LogLevel.Information);
+
+            logger.LogInformation("Processed {Count} items", 42);
+
+            Assert.AreEqual(1, logger.Events.Count);
+            JObject eventBody = JObject.Parse(logger.Events[0].EventBody.ToString());
+            Assert.AreEqual("Processed 42 items", eventBody["message"].ToString());
+            Assert.AreEqual((int)LogLevel.Information, eventBody["severityLevel"].Value<int>());
+        }
+
+        [TestCase("Plain message")]
+        [TestCase(null)]
+        public void EventHubTelemetryLoggerLogsPlainOrNullStateWithoutAnEventContext(string state)
+        {
+            TestEventHubTelemetryLogger logger = new TestEventHubTelemetryLogger(this.mockChannel, LogLevel.Information);
+
+            logger.Log<string>(LogLevel.Information, default, state, null, null);
+
+            Assert.AreEqual(1, logger.Events.Count);
+            JObject eventBody = JObject.Parse(logger.Events[0].EventBody.ToString());
+            Assert.AreEqual(state, eventBody["message"]?.Value<string>());
+            Assert.AreEqual((int)LogLevel.Information, eventBody["severityLevel"].Value<int>());
+            Assert.IsNotNull(eventBody["customDimensions"]);
+        }
+
+        [TestCase("Plain message")]
+        [TestCase(null)]
+        public void EventHubTelemetryLoggerPreservesAnExplicitEventNameWithoutAnEventContext(string state)
+        {
+            TestEventHubTelemetryLogger logger = new TestEventHubTelemetryLogger(this.mockChannel, LogLevel.Information);
+
+            logger.Log<string>(LogLevel.Warning, new EventId(1, "NamedEvent"), state, null, (value, error) => "Formatted message");
+
+            Assert.AreEqual(1, logger.Events.Count);
+            JObject eventBody = JObject.Parse(logger.Events[0].EventBody.ToString());
+            Assert.AreEqual("NamedEvent", eventBody["message"].ToString());
+            Assert.AreEqual((int)LogLevel.Warning, eventBody["severityLevel"].Value<int>());
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public void EventHubTelemetryLoggerLogsExceptionsWithoutAnEventContext(bool withState)
+        {
+            TestEventHubTelemetryLogger logger = new TestEventHubTelemetryLogger(this.mockChannel, LogLevel.Information);
+            Exception exception = new ArgumentException("Test exception");
+
+            logger.Log<string>(
+                LogLevel.Error,
+                default,
+                withState ? "Test state" : null,
+                exception,
+                (value, error) => $"{value}: {error.Message}");
+
+            Assert.AreEqual(1, logger.Events.Count);
+            JObject eventBody = JObject.Parse(logger.Events[0].EventBody.ToString());
+            if (withState)
+            {
+                Assert.AreEqual("Test state: Test exception", eventBody["message"].ToString());
+            }
+            else
+            {
+                StringAssert.Contains("Test exception", eventBody["message"].ToString());
+                StringAssert.Contains(nameof(ArgumentException), eventBody["message"].ToString());
+            }
+
+            Assert.AreEqual((int)LogLevel.Error, eventBody["severityLevel"].Value<int>());
+        }
+
+        [Test]
+        [NonParallelizable]
+        public void EventHubTelemetryLoggerUsesPersistedContextForOrdinaryLogs()
+        {
+            TestEventHubTelemetryLogger logger = new TestEventHubTelemetryLogger(this.mockChannel, LogLevel.Information);
+            EventContext originalContext = EventContext.Persisted();
+            Guid activityId = Guid.NewGuid();
+            Guid parentActivityId = Guid.NewGuid();
+            string propertyName = Guid.NewGuid().ToString();
+
+            try
+            {
+                EventContext.Persist(activityId, parentActivityId);
+                EventContext.PersistentProperties[propertyName] = "Persistent value";
+
+                logger.LogInformation("Ordinary message");
+
+                Assert.AreEqual(1, logger.Events.Count);
+                JObject eventBody = JObject.Parse(logger.Events[0].EventBody.ToString());
+                Assert.AreEqual("Ordinary message", eventBody["message"].ToString());
+                Assert.AreEqual(activityId.ToString(), eventBody["operation_Id"].ToString());
+                Assert.AreEqual(parentActivityId.ToString(), eventBody["operation_ParentId"].ToString());
+                Assert.AreEqual("Persistent value", eventBody["customDimensions"][propertyName].ToString());
+            }
+            finally
+            {
+                EventContext.PersistentProperties.Remove(propertyName);
+                EventContext.Persist(originalContext.ActivityId, originalContext.ParentActivityId);
+            }
+        }
+
+        [Test]
+        public void EventHubTelemetryLoggerPreservesStructuredContextWhenLogging()
+        {
+            TestEventHubTelemetryLogger logger = new TestEventHubTelemetryLogger(this.mockChannel, LogLevel.Information);
+            DateTime timestamp = DateTime.UtcNow.AddMinutes(-30);
+            EventContext context = new EventContext(Guid.NewGuid(), Guid.NewGuid())
+                .AddContext("appHost", "Host01")
+                .AddContext("timestamp", timestamp.ToString("o"))
+                .AddContext("property1", "Value");
+
+            logger.Log<EventContext>(LogLevel.Information, new EventId(1, "StructuredEvent"), context, null, null);
+
+            Assert.AreEqual(1, logger.Events.Count);
+            JObject eventBody = JObject.Parse(logger.Events[0].EventBody.ToString());
+            Assert.AreEqual("StructuredEvent", eventBody["message"].ToString());
+            Assert.AreEqual(context.ActivityId.ToString(), eventBody["operation_Id"].ToString());
+            Assert.AreEqual(context.ParentActivityId.ToString(), eventBody["operation_ParentId"].ToString());
+            Assert.AreEqual(context.TransactionId.ToString(), eventBody["customDimensions"]["transactionId"].ToString());
+            Assert.AreEqual("Host01", eventBody["appHost"].ToString());
+            Assert.AreEqual(timestamp, eventBody["timestamp"].Value<DateTime>());
+            Assert.AreEqual("Value", eventBody["customDimensions"]["property1"].ToString());
+        }
+
+        [Test]
+        public void EventHubTelemetryLoggerPreservesOversizedContextHandling()
+        {
+            TestEventHubTelemetryLogger logger = new TestEventHubTelemetryLogger(this.mockChannel, LogLevel.Information);
+            EventContext context = new EventContext(Guid.NewGuid(), Guid.NewGuid())
+                .AddContext("largeProperty", new string('a', EventHubTelemetryChannel.MaxEventDataBytes));
+
+            logger.Log<EventContext>(LogLevel.Information, new EventId(1, "LargeEvent"), context, null, null);
+
+            Assert.AreEqual(1, logger.Events.Count);
+            JObject eventBody = JObject.Parse(logger.Events[0].EventBody.ToString());
+            Assert.AreEqual("LargeEvent", eventBody["message"].ToString());
+            Assert.AreEqual(context.ActivityId.ToString(), eventBody["operation_Id"].ToString());
+            Assert.AreEqual(context.ParentActivityId.ToString(), eventBody["operation_ParentId"].ToString());
+            Assert.AreEqual(bool.TrueString, eventBody["customDimensions"]["exceededSizeLimits"].ToString());
+            Assert.IsNull(eventBody["customDimensions"]["largeProperty"]);
+            Assert.Less(logger.Events[0].Body.Length, EventHubTelemetryChannel.MaxEventDataBytes);
+        }
+
+        [Test]
+        public void EventHubTelemetryLoggerDoesNotEmitDisabledLogs()
+        {
+            TestEventHubTelemetryLogger logger = new TestEventHubTelemetryLogger(this.mockChannel, LogLevel.Warning);
+
+            logger.LogInformation("Disabled message");
+
+            Assert.IsEmpty(logger.Events);
+        }
+
         private class TestEventHubTelemetryLogger : EventHubTelemetryLogger
         {
             public TestEventHubTelemetryLogger(EventHubTelemetryChannel channel, LogLevel level)
@@ -147,9 +301,16 @@ namespace VirtualClient.Logging
             {
             }
 
+            public IList<EventData> Events { get; } = new List<EventData>();
+
             public new EventData CreateEventObject(string eventMessage, LogLevel logLevel, DateTime eventTimestamp, EventContext eventContext, object bufferInfo = null)
             {
                 return base.CreateEventObject(eventMessage, logLevel, eventTimestamp, eventContext, bufferInfo);
+            }
+
+            protected override void AddEventDataToChannel(EventData eventData)
+            {
+                this.Events.Add(eventData);
             }
         }
     }
