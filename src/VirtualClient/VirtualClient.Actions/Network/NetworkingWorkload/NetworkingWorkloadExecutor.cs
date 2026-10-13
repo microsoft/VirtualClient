@@ -309,34 +309,34 @@ namespace VirtualClient.Actions.NetworkPerformance
         /// <summary>
         /// Parameter defines the number of threads per each server port in the workload toolset tests.
         /// </summary>
-        public int? ThreadsPerServerPort
+        public int? ThreadCountPerServerPort
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(NetworkingWorkloadExecutor.ThreadsPerServerPort), out IConvertible threadsPerServerPort);
-                return threadsPerServerPort?.ToInt32(CultureInfo.InvariantCulture);
+                this.Parameters.TryGetValue(nameof(NetworkingWorkloadExecutor.ThreadCountPerServerPort), out IConvertible threadCountPerServerPort);
+                return threadCountPerServerPort?.ToInt32(CultureInfo.InvariantCulture);
             }
 
             set
             {
-                this.Parameters[nameof(NetworkingWorkloadExecutor.ThreadsPerServerPort)] = value;
+                this.Parameters[nameof(NetworkingWorkloadExecutor.ThreadCountPerServerPort)] = value;
             }
         }
 
         /// <summary>
         /// Parameter defines the number of connections in each sender thread in the workload toolset tests.
         /// </summary>
-        public int? ConnectionsPerThread
+        public int? ConnectionCountPerThread
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(NetworkingWorkloadExecutor.ConnectionsPerThread), out IConvertible connectionsPerThread);
-                return connectionsPerThread?.ToInt32(CultureInfo.InvariantCulture);
+                this.Parameters.TryGetValue(nameof(NetworkingWorkloadExecutor.ConnectionCountPerThread), out IConvertible connectionCountPerThread);
+                return connectionCountPerThread?.ToInt32(CultureInfo.InvariantCulture);
             }
 
             set
             {
-                this.Parameters[nameof(NetworkingWorkloadExecutor.ConnectionsPerThread)] = value;
+                this.Parameters[nameof(NetworkingWorkloadExecutor.ConnectionCountPerThread)] = value;
             }
         }
 
@@ -824,8 +824,8 @@ namespace VirtualClient.Actions.NetworkPerformance
                                     this.Port = serverInstructions.Port;
                                     this.ReceiverMultiClientMode = serverInstructions.ReceiverMultiClientMode;
                                     this.SenderLastClient = serverInstructions.SenderLastClient;
-                                    this.ThreadsPerServerPort = serverInstructions.ThreadsPerServerPort;
-                                    this.ConnectionsPerThread = serverInstructions.ConnectionsPerThread;
+                                    this.ThreadCountPerServerPort = serverInstructions.ThreadCountPerServerPort;
+                                    this.ConnectionCountPerThread = serverInstructions.ConnectionCountPerThread;
                                     this.DevInterruptsDifferentiator = serverInstructions.DevInterruptsDifferentiator;
                                     this.MessagesPerSecond = serverInstructions.MessagesPerSecond;
                                     this.ConfidenceLevel = serverInstructions.ConfidenceLevel;
@@ -994,8 +994,8 @@ namespace VirtualClient.Actions.NetworkPerformance
                             this.Port,
                             this.ReceiverMultiClientMode,
                             this.SenderLastClient,
-                            this.ThreadsPerServerPort,
-                            this.ConnectionsPerThread,
+                            this.ThreadCountPerServerPort,
+                            this.ConnectionCountPerThread,
                             this.DevInterruptsDifferentiator,
                             this.MessagesPerSecond,
                             this.ConfidenceLevel,

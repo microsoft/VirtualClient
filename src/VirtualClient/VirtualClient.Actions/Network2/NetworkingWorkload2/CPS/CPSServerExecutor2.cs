@@ -106,14 +106,14 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// ConnectionsPerThread is only for client/sender role.
+        /// ConnectionCountPerThread is only for client/sender role.
         /// Parameter defines the number of connections in each sender thread.
         /// </summary>
-        public int ConnectionsPerThread
+        public int ConnectionCountPerThread
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.ConnectionsPerThread), 100);
+                return this.Parameters.GetValue<int>(nameof(this.ConnectionCountPerThread), 100);
             }
         }
 

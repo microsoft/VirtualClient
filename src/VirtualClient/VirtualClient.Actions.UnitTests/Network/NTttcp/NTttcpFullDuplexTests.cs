@@ -52,8 +52,8 @@ namespace VirtualClient.Actions
             this.mockFixture.Parameters["Port"] = 5500;
             this.mockFixture.Parameters["ReceiverMultiClientMode"] = true;
             this.mockFixture.Parameters["SenderLastClient"] = true;
-            this.mockFixture.Parameters["ThreadsPerServerPort"] = 2;
-            this.mockFixture.Parameters["ConnectionsPerThread"] = 2;
+            this.mockFixture.Parameters["ThreadCountPerServerPort"] = 2;
+            this.mockFixture.Parameters["ConnectionCountPerThread"] = 2;
             this.mockFixture.Parameters["DevInterruptsDifferentiator"] = "mlx";
             this.mockFixture.Parameters["DuplexMode"] = "Full";
 

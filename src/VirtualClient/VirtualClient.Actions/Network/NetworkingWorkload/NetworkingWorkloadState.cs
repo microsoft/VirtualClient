@@ -125,8 +125,8 @@ namespace VirtualClient.Actions.NetworkPerformance
             int? port = null,
             bool? receiverMultiClientMode = null,
             bool? senderLastClient = null,
-            int? threadsPerServerPort = null,
-            int? connectionsPerThread = null,
+            int? threadCountPerServerPort = null,
+            int? connectionCountPerThread = null,
             string devInterruptsDifferentiator = null,
             string messagesPerSecond = null,
             double? confidenceLevel = null,
@@ -161,8 +161,8 @@ namespace VirtualClient.Actions.NetworkPerformance
             this.Properties[nameof(this.Port)] = port;
             this.Properties[nameof(this.ReceiverMultiClientMode)] = receiverMultiClientMode;
             this.Properties[nameof(this.SenderLastClient)] = senderLastClient;
-            this.Properties[nameof(this.ThreadsPerServerPort)] = threadsPerServerPort;
-            this.Properties[nameof(this.ConnectionsPerThread)] = connectionsPerThread;
+            this.Properties[nameof(this.ThreadCountPerServerPort)] = threadCountPerServerPort;
+            this.Properties[nameof(this.ConnectionCountPerThread)] = connectionCountPerThread;
             this.Properties[nameof(this.DevInterruptsDifferentiator)] = devInterruptsDifferentiator;
             this.Properties[nameof(this.MessagesPerSecond)] = messagesPerSecond;
             this.Properties[nameof(this.ConfidenceLevel)] = confidenceLevel;
@@ -417,24 +417,24 @@ namespace VirtualClient.Actions.NetworkPerformance
         /// <summary>
         /// Number of threads per each server port (Parameter for Tools: NTttcp)
         /// </summary>
-        public int? ThreadsPerServerPort
+        public int? ThreadCountPerServerPort
         {
             get
             {
-                this.Properties.TryGetValue(nameof(this.ThreadsPerServerPort), out IConvertible threadsPerServerPort);
-                return threadsPerServerPort?.ToInt32(CultureInfo.InvariantCulture);
+                this.Properties.TryGetValue(nameof(this.ThreadCountPerServerPort), out IConvertible threadCountPerServerPort);
+                return threadCountPerServerPort?.ToInt32(CultureInfo.InvariantCulture);
             }
         }
 
         /// <summary>
         /// Number of connections in each sender thread (Parameter for Tools: NTttcp)
         /// </summary>
-        public int? ConnectionsPerThread
+        public int? ConnectionCountPerThread
         {
             get
             {
-                this.Properties.TryGetValue(nameof(this.ConnectionsPerThread), out IConvertible connectionsPerThread);
-                return connectionsPerThread?.ToInt32(CultureInfo.InvariantCulture);
+                this.Properties.TryGetValue(nameof(this.ConnectionCountPerThread), out IConvertible connectionCountPerThread);
+                return connectionCountPerThread?.ToInt32(CultureInfo.InvariantCulture);
             }
         }
 

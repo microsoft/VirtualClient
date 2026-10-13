@@ -146,28 +146,28 @@ namespace VirtualClient.Actions.NetworkPerformance
         }
 
         /// <summary>
-        /// ThreadsPerServerPort is only for client/sender role.
-        /// The ThreadsPerServerPort gets the number of threads per each server port.
+        /// ThreadCountPerServerPort is only for client/sender role.
+        /// The ThreadCountPerServerPort gets the number of threads per each server port.
         /// </summary>
-        public int? ThreadsPerServerPort
+        public int? ThreadCountPerServerPort
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(NetworkingWorkloadExecutor.ThreadsPerServerPort), out IConvertible threadsPerServerPort);
-                return threadsPerServerPort?.ToInt32(CultureInfo.InvariantCulture);
+                this.Parameters.TryGetValue(nameof(NetworkingWorkloadExecutor.ThreadCountPerServerPort), out IConvertible threadCountPerServerPort);
+                return threadCountPerServerPort?.ToInt32(CultureInfo.InvariantCulture);
             }
         }
 
         /// <summary>
-        /// ConnectionsPerThread is only for client/sender role.
-        /// The ConnectionsPerThread gets the number of connections in each sender thread.
+        /// ConnectionCountPerThread is only for client/sender role.
+        /// The ConnectionCountPerThread gets the number of connections in each sender thread.
         /// </summary>
-        public int? ConnectionsPerThread
+        public int? ConnectionCountPerThread
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(NetworkingWorkloadExecutor.ConnectionsPerThread), out IConvertible connectionsPerThread);
-                return connectionsPerThread?.ToInt32(CultureInfo.InvariantCulture);
+                this.Parameters.TryGetValue(nameof(NetworkingWorkloadExecutor.ConnectionCountPerThread), out IConvertible connectionCountPerThread);
+                return connectionCountPerThread?.ToInt32(CultureInfo.InvariantCulture);
             }
         }
 
@@ -880,8 +880,8 @@ namespace VirtualClient.Actions.NetworkPerformance
                 $"{(this.Protocol.ToLowerInvariant() == "udp" ? "-u" : string.Empty)} " +
                 $"{((isSender && this.SenderLastClient == true) ? "-L" : string.Empty)} " +
                 $"{((!isSender && this.ReceiverMultiClientMode == true) ? "-M" : string.Empty)} " +
-                $"{((isSender && this.ThreadsPerServerPort != null) ? $"-n {this.ThreadsPerServerPort}" : string.Empty)} " +
-                $"{((isSender && this.ConnectionsPerThread != null) ? $"-l {this.ConnectionsPerThread}" : string.Empty)} " +
+                $"{((isSender && this.ThreadCountPerServerPort != null) ? $"-n {this.ThreadCountPerServerPort}" : string.Empty)} " +
+                $"{((isSender && this.ConnectionCountPerThread != null) ? $"-l {this.ConnectionCountPerThread}" : string.Empty)} " +
                 $"{(this.NoSyncEnabled == true ? "-N" : string.Empty)} " +
                 $"{((this.DevInterruptsDifferentiator != null) ? $"--show-dev-interrupts {this.DevInterruptsDifferentiator}" : string.Empty)} " +
                 $"{(isSender && this.Protocol.ToLowerInvariant() == "tcp" ? "--show-tcp-retrans" : string.Empty)}".Trim();

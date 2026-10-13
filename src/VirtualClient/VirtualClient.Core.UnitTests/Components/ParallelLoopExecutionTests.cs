@@ -31,7 +31,7 @@ namespace VirtualClient
         [Test]
         public async Task ParallelLoopExecution_CancelsAndAwaitsTheInFlightIterationWhenTheDurationElapses()
         {
-            this.fixture.Parameters["MinimumIterations"] = 0;
+            this.fixture.Parameters["MinimumIterationCount"] = 0;
             bool cancellationObserved = false;
             var component = new TestComponent(this.fixture.Dependencies, this.fixture.Parameters, async token =>
             {
@@ -80,7 +80,7 @@ namespace VirtualClient
         [Test]
         public async Task ParallelLoopExecution_CancelsAndAwaitsAnIterationBeyondTheMinimumWhenTheDurationElapses()
         {
-            this.fixture.Parameters["MinimumIterations"] = 1;
+            this.fixture.Parameters["MinimumIterationCount"] = 1;
             bool cancellationObserved = false;
             var component = new TestComponent(this.fixture.Dependencies, this.fixture.Parameters, async token =>
             {
@@ -126,9 +126,9 @@ namespace VirtualClient
         }
 
         [Test]
-        public async Task ParallelLoopExecution_RespectsMinimumIterationsParameterAndTimeout()
+        public async Task ParallelLoopExecution_RespectsMinimumIterationCountParameterAndTimeout()
         {
-            this.fixture.Parameters["MinimumIterations"] = 2;
+            this.fixture.Parameters["MinimumIterationCount"] = 2;
             this.fixture.Parameters["Duration"] = "00:00:01";
 
             var component = new TestComponent(this.fixture.Dependencies, this.fixture.Parameters, async token =>
@@ -146,9 +146,9 @@ namespace VirtualClient
         }
 
         [Test]
-        public async Task ParallelLoopExecution_RespectsMinimumIterationsParameter()
+        public async Task ParallelLoopExecution_RespectsMinimumIterationCountParameter()
         {
-            this.fixture.Parameters["MinimumIterations"] = 7;
+            this.fixture.Parameters["MinimumIterationCount"] = 7;
             this.fixture.Parameters["Duration"] = "00:00:00.100";
 
             var component = new TestComponent(this.fixture.Dependencies, this.fixture.Parameters, async token =>

@@ -48,8 +48,8 @@ namespace VirtualClient.Actions
             this.mockFixture.Parameters["Port"] = 5500;
             this.mockFixture.Parameters["ReceiverMultiClientMode"] = true;
             this.mockFixture.Parameters["SenderLastClient"] = true;
-            this.mockFixture.Parameters["ThreadsPerServerPort"] = 2;
-            this.mockFixture.Parameters["ConnectionsPerThread"] = 2;
+            this.mockFixture.Parameters["ThreadCountPerServerPort"] = 2;
+            this.mockFixture.Parameters["ConnectionCountPerThread"] = 2;
             this.mockFixture.Parameters["DevInterruptsDifferentiator"] = "mlx";
 
             string exampleResults = File.ReadAllText(Path.Combine(NTttcpClientExecutorTests2.ExamplesDirectory, "ClientOutput.xml"));
@@ -109,8 +109,8 @@ namespace VirtualClient.Actions
                     Assert.AreEqual(notification.Definition.Properties["Port"], 5500);
                     Assert.AreEqual(notification.Definition.Properties["ReceiverMultiClientMode"], true);
                     Assert.AreEqual(notification.Definition.Properties["SenderLastClient"], true);
-                    Assert.AreEqual(notification.Definition.Properties["ThreadsPerServerPort"], 2);
-                    Assert.AreEqual(notification.Definition.Properties["ConnectionsPerThread"], 2);
+                    Assert.AreEqual(notification.Definition.Properties["ThreadCountPerServerPort"], 2);
+                    Assert.AreEqual(notification.Definition.Properties["ConnectionCountPerThread"], 2);
                     Assert.AreEqual(notification.Definition.Properties["DevInterruptsDifferentiator"], "mlx");
                 })
                 .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));

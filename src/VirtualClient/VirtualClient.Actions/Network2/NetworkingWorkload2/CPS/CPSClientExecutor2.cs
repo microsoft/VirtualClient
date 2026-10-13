@@ -38,7 +38,7 @@ namespace VirtualClient.Actions
             this.Parameters.SetIfNotDefined(nameof(this.ConnectionDuration), 0);
             this.Parameters.SetIfNotDefined(nameof(this.DataTransferMode), 1);
             this.Parameters.SetIfNotDefined(nameof(this.DisplayInterval), 10);
-            this.Parameters.SetIfNotDefined(nameof(this.ConnectionsPerThread), 100);
+            this.Parameters.SetIfNotDefined(nameof(this.ConnectionCountPerThread), 100);
             this.Parameters.SetIfNotDefined(nameof(this.MaxPendingRequestsPerThread), 100);
             this.Parameters.SetIfNotDefined(nameof(this.Port), 7201);
             this.Parameters.SetIfNotDefined(nameof(this.WarmupTime), 8);
@@ -128,14 +128,14 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// ConnectionsPerThread is only for client/sender role.
+        /// ConnectionCountPerThread is only for client/sender role.
         /// Parameter defines the number of connections in each sender thread.
         /// </summary>
-        public int ConnectionsPerThread
+        public int ConnectionCountPerThread
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(CPSClientExecutor2.ConnectionsPerThread), 100);
+                return this.Parameters.GetValue<int>(nameof(CPSClientExecutor2.ConnectionCountPerThread), 100);
             }
         }
 
@@ -403,7 +403,7 @@ namespace VirtualClient.Actions
             string serverIPAddress = this.GetLayoutClientInstances(ClientRole.Server).First().IPAddress;
 
             return $"-c -r {this.ConnectionCount} " +
-                $"{clientIPAddress},0,{serverIPAddress},{this.Port},{this.ConnectionsPerThread},{this.MaxPendingRequestsPerThread},{this.ConnectionDuration},{this.DataTransferMode} " +
+                $"{clientIPAddress},0,{serverIPAddress},{this.Port},{this.ConnectionCountPerThread},{this.MaxPendingRequestsPerThread},{this.ConnectionDuration},{this.DataTransferMode} " +
                 $"-i {this.DisplayInterval} -wt {this.WarmupTime.TotalSeconds} -t {this.TestDuration.TotalSeconds} " +
                 $"{((this.DelayTime != TimeSpan.Zero) ? $"-ds {this.DelayTime.TotalSeconds}" : string.Empty)}".Trim();
         }

@@ -47,11 +47,11 @@ namespace VirtualClient
         /// <summary>
         /// The number of iterations each child component must complete, even if the duration elapses. Default = 1.
         /// </summary>
-        public int MinimumIterations
+        public int MinimumIterationCount
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.MinimumIterations), 1);
+                return this.Parameters.GetValue<int>(nameof(this.MinimumIterationCount), 1);
             }
         }
 
@@ -111,7 +111,7 @@ namespace VirtualClient
 
             while (!cancellationToken.IsCancellationRequested)
             {
-                bool minimumSatisfied = completedIterations >= this.MinimumIterations;
+                bool minimumSatisfied = completedIterations >= this.MinimumIterationCount;
 
                 if (minimumSatisfied && durationToken.IsCancellationRequested)
                 {
@@ -126,7 +126,7 @@ namespace VirtualClient
                 EventContext iterationContext = telemetryContext.Clone()
                     .AddContext("currentIteration", completedIterations + 1);
 
-                // Iterations required to satisfy MinimumIterations are allowed to run past the duration.
+                // Iterations required to satisfy MinimumIterationCount are allowed to run past the duration.
                 using (CancellationTokenSource iterationSource = minimumSatisfied
                     ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, durationToken)
                     : CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
