@@ -98,7 +98,11 @@ namespace VirtualClient.Actions
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(this.ThreadCountPerServerPort), out IConvertible threadCountPerServerPort);
+                string parameterName = this.Parameters.ContainsKey(nameof(this.ThreadCountPerServerPort))
+                    ? nameof(this.ThreadCountPerServerPort)
+                    : "ThreadsPerServerPort";
+
+                this.Parameters.TryGetValue(parameterName, out IConvertible threadCountPerServerPort);
                 return threadCountPerServerPort?.ToInt32(CultureInfo.InvariantCulture);
             }
         }
@@ -111,7 +115,11 @@ namespace VirtualClient.Actions
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(this.ConnectionCountPerThread), out IConvertible connectionCountPerThread);
+                string parameterName = this.Parameters.ContainsKey(nameof(this.ConnectionCountPerThread))
+                    ? nameof(this.ConnectionCountPerThread)
+                    : "ConnectionsPerThread";
+
+                this.Parameters.TryGetValue(parameterName, out IConvertible connectionCountPerThread);
                 return connectionCountPerThread?.ToInt32(CultureInfo.InvariantCulture);
             }
         }

@@ -71,7 +71,8 @@ namespace VirtualClient.Contracts
         {
             get
             {
-                return this.Parameters.GetValue<long>(nameof(this.MonitorIterationCount));
+                return this.Parameters.GetValue<long>(
+                    new string[] { nameof(this.MonitorIterationCount), "MonitorIterations" });
             }
 
             protected set

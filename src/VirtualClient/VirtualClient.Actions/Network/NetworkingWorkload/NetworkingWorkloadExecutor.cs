@@ -215,7 +215,9 @@ namespace VirtualClient.Actions.NetworkPerformance
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(NetworkingWorkloadExecutor.ConnectionCount), 8);
+                return this.Parameters.GetValue<int>(
+                    new string[] { nameof(NetworkingWorkloadExecutor.ConnectionCount), "Connections" },
+                    8);
             }
 
             set
@@ -313,7 +315,11 @@ namespace VirtualClient.Actions.NetworkPerformance
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(NetworkingWorkloadExecutor.ThreadCountPerServerPort), out IConvertible threadCountPerServerPort);
+                string parameterName = this.Parameters.ContainsKey(nameof(NetworkingWorkloadExecutor.ThreadCountPerServerPort))
+                    ? nameof(NetworkingWorkloadExecutor.ThreadCountPerServerPort)
+                    : "ThreadsPerServerPort";
+
+                this.Parameters.TryGetValue(parameterName, out IConvertible threadCountPerServerPort);
                 return threadCountPerServerPort?.ToInt32(CultureInfo.InvariantCulture);
             }
 
@@ -330,7 +336,11 @@ namespace VirtualClient.Actions.NetworkPerformance
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(NetworkingWorkloadExecutor.ConnectionCountPerThread), out IConvertible connectionCountPerThread);
+                string parameterName = this.Parameters.ContainsKey(nameof(NetworkingWorkloadExecutor.ConnectionCountPerThread))
+                    ? nameof(NetworkingWorkloadExecutor.ConnectionCountPerThread)
+                    : "ConnectionsPerThread";
+
+                this.Parameters.TryGetValue(parameterName, out IConvertible connectionCountPerThread);
                 return connectionCountPerThread?.ToInt32(CultureInfo.InvariantCulture);
             }
 

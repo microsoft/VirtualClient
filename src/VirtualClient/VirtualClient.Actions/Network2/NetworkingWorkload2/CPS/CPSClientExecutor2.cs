@@ -102,7 +102,9 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(CPSClientExecutor2.ConnectionCount), 8);
+                return this.Parameters.GetValue<int>(
+                    new string[] { nameof(CPSClientExecutor2.ConnectionCount), "Connections" },
+                    8);
             }
 
             set
@@ -135,7 +137,9 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(CPSClientExecutor2.ConnectionCountPerThread), 100);
+                return this.Parameters.GetValue<int>(
+                    new string[] { nameof(CPSClientExecutor2.ConnectionCountPerThread), "ConnectionsPerThread" },
+                    100);
             }
         }
 

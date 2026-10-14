@@ -75,7 +75,9 @@ namespace VirtualClient.Contracts
         {
             get
             {
-                return this.Parameters.GetValue<long>(nameof(this.MonitorIterationCount), -1);
+                return this.Parameters.GetValue<long>(
+                    new string[] { nameof(this.MonitorIterationCount), "MonitorIterations" },
+                    -1);
             }
         }
 

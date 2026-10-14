@@ -314,7 +314,9 @@ namespace VirtualClient.Actions.NetworkPerformance
         {
             get
             {
-                return this.Properties.GetValue<int>(nameof(this.ConnectionCount), 0);
+                return this.Properties.GetValue<int>(
+                    new string[] { nameof(this.ConnectionCount), "Connections" },
+                    0);
             }
         }
 
@@ -421,7 +423,11 @@ namespace VirtualClient.Actions.NetworkPerformance
         {
             get
             {
-                this.Properties.TryGetValue(nameof(this.ThreadCountPerServerPort), out IConvertible threadCountPerServerPort);
+                string propertyName = this.Properties.ContainsKey(nameof(this.ThreadCountPerServerPort))
+                    ? nameof(this.ThreadCountPerServerPort)
+                    : "ThreadsPerServerPort";
+
+                this.Properties.TryGetValue(propertyName, out IConvertible threadCountPerServerPort);
                 return threadCountPerServerPort?.ToInt32(CultureInfo.InvariantCulture);
             }
         }
@@ -433,7 +439,11 @@ namespace VirtualClient.Actions.NetworkPerformance
         {
             get
             {
-                this.Properties.TryGetValue(nameof(this.ConnectionCountPerThread), out IConvertible connectionCountPerThread);
+                string propertyName = this.Properties.ContainsKey(nameof(this.ConnectionCountPerThread))
+                    ? nameof(this.ConnectionCountPerThread)
+                    : "ConnectionsPerThread";
+
+                this.Properties.TryGetValue(propertyName, out IConvertible connectionCountPerThread);
                 return connectionCountPerThread?.ToInt32(CultureInfo.InvariantCulture);
             }
         }

@@ -90,7 +90,9 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.ConnectionCount), 8);
+                return this.Parameters.GetValue<int>(
+                    new string[] { nameof(this.ConnectionCount), "Connections" },
+                    8);
             }
         }
 
@@ -113,7 +115,9 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.ConnectionCountPerThread), 100);
+                return this.Parameters.GetValue<int>(
+                    new string[] { nameof(this.ConnectionCountPerThread), "ConnectionsPerThread" },
+                    100);
             }
         }
 

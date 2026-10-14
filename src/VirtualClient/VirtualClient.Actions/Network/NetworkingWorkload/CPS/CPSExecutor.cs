@@ -54,7 +54,8 @@ namespace VirtualClient.Actions.NetworkPerformance
         {
             get 
             {
-                return this.Parameters.GetValue<int>(nameof(this.ConnectionCount));
+                return this.Parameters.GetValue<int>(
+                    new string[] { nameof(this.ConnectionCount), "Connections" });
             }
         }
 
@@ -99,7 +100,9 @@ namespace VirtualClient.Actions.NetworkPerformance
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(CPSExecutor.ConnectionCountPerThread), 100);
+                return this.Parameters.GetValue<int>(
+                    new string[] { nameof(CPSExecutor.ConnectionCountPerThread), "ConnectionsPerThread" },
+                    100);
             }
         }
 

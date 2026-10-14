@@ -51,7 +51,9 @@ namespace VirtualClient
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.MinimumIterationCount), 1);
+                return this.Parameters.GetValue<int>(
+                    new string[] { nameof(this.MinimumIterationCount), "MinimumIterations" },
+                    1);
             }
         }
 
