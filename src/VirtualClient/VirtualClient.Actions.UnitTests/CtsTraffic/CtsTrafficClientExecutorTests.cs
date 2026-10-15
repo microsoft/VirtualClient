@@ -38,8 +38,8 @@ namespace VirtualClient.Actions
                 ["BufferInBytes"] = 36654,
                 ["Pattern"] = "Duplex",
                 ["BytesToTransfer"] = "0x400000000",
-                ["Connections"] = 1,
-                ["Iterations"] = 1
+                ["ConnectionCount"] = 1,
+                ["IterationCount"] = 1
             };
 
             // Setup: Required packages exist on the system.
@@ -112,8 +112,8 @@ namespace VirtualClient.Actions
                     $"{ctsTrafficPackage}\\win-{arch}\\StartProcessInNumaNode.exe {executor.NumaNodeIndex} " +
                     $"\"{ctsTrafficPackage}\\win-{arch}\\ctsTraffic.exe -Target:1.2.3.5 -Consoleverbosity:1 " +
                     $"-StatusFilename:{ctsTrafficPackage}\\win-{arch}\\Results\\Status.csv -ConnectionFilename:{ctsTrafficPackage}\\win-{arch}\\Results\\Connections.csv " +
-                    $"-ErrorFileName:{ctsTrafficPackage}\\win-{arch}\\Results\\Errors.txt -Port:{executor.Port} -Connections:{executor.Connections} -Pattern:{executor.Pattern} " +
-                    $"-Iterations:{executor.Iterations} -Transfer:{executor.BytesToTransfer} -Buffer:{executor.BufferInBytes} -TimeLimit:150000\" --> {ctsTrafficPackage}\\win-{arch}"
+                    $"-ErrorFileName:{ctsTrafficPackage}\\win-{arch}\\Results\\Errors.txt -Port:{executor.Port} -Connections:{executor.ConnectionCount} -Pattern:{executor.Pattern} " +
+                    $"-Iterations:{executor.IterationCount} -Transfer:{executor.BytesToTransfer} -Buffer:{executor.BufferInBytes} -TimeLimit:150000\" --> {ctsTrafficPackage}\\win-{arch}"
                 };
 
                 this.ProcessManager.OnProcessCreated = (process) =>
@@ -146,8 +146,8 @@ namespace VirtualClient.Actions
 
                     $"{ctsTrafficPackage}\\win-{arch}\\ctsTraffic.exe -Target:1.2.3.5 -Consoleverbosity:1 " +
                     $"-StatusFilename:{ctsTrafficPackage}\\win-{arch}\\Results\\Status.csv -ConnectionFilename:{ctsTrafficPackage}\\win-{arch}\\Results\\Connections.csv " +
-                    $"-ErrorFileName:{ctsTrafficPackage}\\win-{arch}\\Results\\Errors.txt -Port:{executor.Port} -Connections:{executor.Connections} -Pattern:{executor.Pattern} " +
-                    $"-Iterations:{executor.Iterations} -Transfer:{executor.BytesToTransfer} -Buffer:{executor.BufferInBytes} -TimeLimit:150000 --> {ctsTrafficPackage}\\win-{arch}"
+                    $"-ErrorFileName:{ctsTrafficPackage}\\win-{arch}\\Results\\Errors.txt -Port:{executor.Port} -Connections:{executor.ConnectionCount} -Pattern:{executor.Pattern} " +
+                    $"-Iterations:{executor.IterationCount} -Transfer:{executor.BytesToTransfer} -Buffer:{executor.BufferInBytes} -TimeLimit:150000 --> {ctsTrafficPackage}\\win-{arch}"
                 };
 
                 this.ProcessManager.OnProcessCreated = (process) =>

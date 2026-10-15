@@ -245,7 +245,7 @@ namespace VirtualClient.Actions
         [Test]
         public async Task SysbenchConfigurationUsesDefinedParametersWhenRunningTheWorkload()
         {
-            this.fixture.Parameters[nameof(SysbenchConfiguration.Threads)] = "16";
+            this.fixture.Parameters[nameof(SysbenchConfiguration.ThreadCount)] = "16";
             this.fixture.Parameters[nameof(SysbenchConfiguration.RecordCount)] = "1000";
             this.fixture.Parameters[nameof(SysbenchConfiguration.TableCount)] = "40";
             this.fixture.Parameters[nameof(SysbenchClientExecutor.DatabaseScenario)] = "Configure";
@@ -399,7 +399,7 @@ namespace VirtualClient.Actions
         public async Task SysbenchConfigurationProperlyExecutesTPCCConfigurablePreparation()
         {
             this.fixture.Parameters[nameof(SysbenchConfiguration.Benchmark)] = "TPCC";
-            this.fixture.Parameters[nameof(SysbenchConfiguration.Threads)] = "16";
+            this.fixture.Parameters[nameof(SysbenchConfiguration.ThreadCount)] = "16";
             this.fixture.Parameters[nameof(SysbenchConfiguration.WarehouseCount)] = "1000";
             this.fixture.Parameters[nameof(SysbenchConfiguration.TableCount)] = "40";
             this.fixture.Parameters[nameof(SysbenchClientExecutor.DatabaseScenario)] = "Configure";
@@ -455,7 +455,7 @@ namespace VirtualClient.Actions
         public async Task SysbenchConfigurationProperlyExecutesPostgreSQLOLTPConfigurablePreparation()
         {
             this.fixture.Parameters[nameof(SysbenchConfiguration.DatabaseSystem)] = "PostgreSQL";
-            this.fixture.Parameters[nameof(SysbenchConfiguration.Threads)] = "16";
+            this.fixture.Parameters[nameof(SysbenchConfiguration.ThreadCount)] = "16";
             this.fixture.Parameters[nameof(SysbenchConfiguration.RecordCount)] = "1000";
             this.fixture.Parameters[nameof(SysbenchConfiguration.TableCount)] = "40";
             this.fixture.Parameters[nameof(SysbenchClientExecutor.DatabaseScenario)] = "Configure";
@@ -513,7 +513,7 @@ namespace VirtualClient.Actions
         {
             this.fixture.Parameters[nameof(SysbenchConfiguration.DatabaseSystem)] = "PostgreSQL";
             this.fixture.Parameters[nameof(SysbenchConfiguration.Benchmark)] = "TPCC";
-            this.fixture.Parameters[nameof(SysbenchConfiguration.Threads)] = "16";
+            this.fixture.Parameters[nameof(SysbenchConfiguration.ThreadCount)] = "16";
             this.fixture.Parameters[nameof(SysbenchConfiguration.WarehouseCount)] = "1000";
             this.fixture.Parameters[nameof(SysbenchConfiguration.TableCount)] = "40";
             this.fixture.Parameters[nameof(SysbenchClientExecutor.DatabaseScenario)] = "Configure";

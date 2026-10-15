@@ -55,7 +55,7 @@ namespace VirtualClient.Actions
             var executor = new TlsOpenSslClientExecutor(this.fixture.Dependencies, this.fixture.Parameters);
 
             Assert.IsNotNull(executor);
-            Assert.AreEqual(2, executor.ClientInstances);
+            Assert.AreEqual(2, executor.ClientInstanceCount);
             Assert.AreEqual(443, executor.ServerPort);
             Assert.IsTrue(executor.WarmUp);
             Assert.IsNotNull(executor.Parameters);
@@ -103,7 +103,7 @@ namespace VirtualClient.Actions
 
             this.fixture.Parameters = new Dictionary<string, IConvertible>
             {
-                { "ClientInstances", 2 },
+                { "ClientInstanceCount", 2 },
                 { "ServerPort", 443 },
                 { "WarmUp", true },
                 { "CommandArguments", "s_time -connect :443 -www /test_1k.html -time 30 -ciphersuites TLS_AES_256_GCM_SHA384 -tls1_3" },

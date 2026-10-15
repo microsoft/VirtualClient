@@ -28,7 +28,7 @@ workload that requires two separate systems/VMs (a Client and a Server) connecte
   | Timeout               | Optional. The maximum time to wait for the workload to complete. | 00:30:00 |
   | FileSizeInKB          | Optional. The size of the file (in KB) served by the NGINX server for each request. | 1 |
   | EmitLatencySpectrum   | Optional. Whether to emit the full latency spectrum in the results. | false |
-  | Workers               | Optional. The number of NGINX worker processes. If null, the default NGINX configuration is used. | null |
+  | WorkerCount           | Optional. The number of NGINX worker processes. If null, the default NGINX configuration is used. | null |
   | CommandArguments      | Optional. The command line arguments to pass to the Wrk toolset. |  |
 
 * **Profile Components**  
@@ -78,7 +78,7 @@ differs from wrk in that it applies a constant throughput/rate to produce accura
   | Timeout               | Optional. The maximum time to wait for the workload to complete. | 00:20:00 |
   | FileSizeInKB          | Optional. The size of the file (in KB) served by the NGINX server for each request. | 1 |
   | EmitLatencySpectrum   | Optional. Whether to emit the full latency spectrum in the results. | false |
-  | Workers               | Optional. The number of NGINX worker processes. If null, the default NGINX configuration is used. | null |
+  | WorkerCount           | Optional. The number of NGINX worker processes. If null, the default NGINX configuration is used. | null |
   | Rate                  | Optional. The constant request rate (requests/sec) applied by Wrk2. | 1000 |
   | CommandArguments      | Optional. The command line arguments to pass to the Wrk2 toolset. |  |
 
@@ -134,7 +134,7 @@ This profile requires three nodes for the roles Client, Reverse Proxy, and Serve
   | Timeout               | Optional. The maximum time to wait for the workload to complete. | 00:30:00 |
   | FileSizeInKB          | Optional. The size of the file (in KB) served by the NGINX server for each request. | 1 |
   | EmitLatencySpectrum   | Optional. Whether to emit the full latency spectrum in the results. | false |
-  | Workers               | Optional. The number of NGINX worker processes. If null, the default NGINX configuration is used. | null |
+  | WorkerCount           | Optional. The number of NGINX worker processes. If null, the default NGINX configuration is used. | null |
   | CommandArguments      | Optional. The command line arguments to pass to the Wrk toolset. |  |
 
 * **Profile Components**  
@@ -193,7 +193,7 @@ This profile requires three nodes for the roles Client, Reverse Proxy, and Serve
   | Timeout               | Optional. The maximum time to wait for the workload to complete. | 00:20:00 |
   | FileSizeInKB          | Optional. The size of the file (in KB) served by the NGINX server for each request. | 1 |
   | EmitLatencySpectrum   | Optional. Whether to emit the full latency spectrum in the results. | false |
-  | Workers               | Optional. The number of NGINX worker processes. If null, the default NGINX configuration is used. | null |
+  | WorkerCount           | Optional. The number of NGINX worker processes. If null, the default NGINX configuration is used. | null |
   | Rate                  | Optional. The constant request rate (requests/sec) applied by Wrk2. | 1000 |
   | CommandArguments      | Optional. The command line arguments to pass to the Wrk2 toolset. |  |
 

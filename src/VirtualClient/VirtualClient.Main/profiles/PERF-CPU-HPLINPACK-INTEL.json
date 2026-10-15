@@ -10,7 +10,7 @@
         "CompilerVersion": null,
         "ProblemSizeN": null,
         "BlockSizeNB": "256",
-        "NumberOfProcesses": "{LogicalCoreCount}",
+        "ProcessCount": "{LogicalCoreCount}",
         "PerformanceLibraryVersion": "2025.1.0.803",
         "BindToCores": false,
         "CCFLAGS": "-O3 -march=native"
@@ -22,7 +22,7 @@
                 "Scenario": "ProcessorSpeed",
                 "ProblemSizeN": "$.Parameters.ProblemSizeN",
                 "BlockSizeNB": "$.Parameters.BlockSizeNB",
-                "NumberOfProcesses": "$.Parameters.NumberOfProcesses",
+                "ProcessCount": "$.Parameters.ProcessCount",
                 "CCFLAGS": "$.Parameters.CCFLAGS",
                 "BindToCores": "$.Parameters.BindToCores",
                 "PackageName": "hplinpack",

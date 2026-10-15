@@ -8,7 +8,7 @@
     "Parameters": {
         "MonitorFrequency": "00:01:00",
         "MonitorWarmupPeriod": "00:01:00",
-        "MonitorIterations": -1
+        "MonitorIterationCount": -1
     },
     "Monitors": [
         {
@@ -17,7 +17,7 @@
                 "Scenario": "CaptureNvidiaSmiCounters",
                 "MonitorFrequency": "$.Parameters.MonitorFrequency",
                 "MonitorWarmupPeriod": "$.Parameters.MonitorWarmupPeriod",
-                "MonitorIterations": "$.Parameters.MonitorIterations",
+                "MonitorIterationCount": "$.Parameters.MonitorIterationCount",
                 "SupportedPlatforms": "linux-arm64,linux-x64,win-x64"
             }
         }

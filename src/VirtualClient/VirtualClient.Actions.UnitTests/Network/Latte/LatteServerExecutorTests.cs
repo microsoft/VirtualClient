@@ -39,7 +39,7 @@ namespace VirtualClient.Actions
                 .Returns(true);
 
             this.mockFixture.Parameters["PackageName"] = "networking";
-            this.mockFixture.Parameters["Connections"] = "256";
+            this.mockFixture.Parameters["ConnectionCount"] = "256";
             this.mockFixture.Parameters["TestDuration"] = "300";
             this.mockFixture.Parameters["WarmupTime"] = "300";
             this.mockFixture.Parameters["Protocol"] = "Tcp";

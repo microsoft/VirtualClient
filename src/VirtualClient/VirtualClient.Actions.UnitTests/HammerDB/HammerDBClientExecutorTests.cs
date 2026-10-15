@@ -110,7 +110,7 @@ namespace VirtualClient.Actions
                 { nameof(HammerDBClientExecutor.SuperUserPassword), "pass" },
                 { nameof(HammerDBClientExecutor.Workload), "tpcc" },
                 { nameof(HammerDBClientExecutor.SQLServer), "postgresql" },
-                { nameof(HammerDBClientExecutor.VirtualUsers), "1"},
+                { nameof(HammerDBClientExecutor.VirtualUserCount), "1"},
                 { nameof(HammerDBClientExecutor.WarehouseCount), "1"},
                 { nameof(HammerDBClientExecutor.Duration), "00:01:00" },
                 { "ServerIpAddress", "localhost"},

@@ -42,6 +42,34 @@ namespace VirtualClient.Actions
         }
 
         [Test]
+        public void SpecCpuExecutorSupportsCurrentAndLegacyCountParameters()
+        {
+            this.Setup(PlatformID.Unix);
+            Dictionary<string, IConvertible> parameters = new Dictionary<string, IConvertible>
+            {
+                [nameof(SpecCpuExecutor.RunPeak)] = false,
+                ["Iterations"] = 1,
+                ["Threads"] = 2,
+                ["Copies"] = 3
+            };
+
+            using (TestSpecCpuExecutor executor = new TestSpecCpuExecutor(this.Dependencies, parameters))
+            {
+                Assert.AreEqual(1, executor.IterationCount);
+                Assert.AreEqual(2, executor.ThreadCount);
+                Assert.AreEqual(3, executor.CopyCount);
+
+                executor.Parameters[nameof(executor.IterationCount)] = 4;
+                executor.Parameters[nameof(executor.ThreadCount)] = 5;
+                executor.Parameters[nameof(executor.CopyCount)] = 6;
+
+                Assert.AreEqual(4, executor.IterationCount);
+                Assert.AreEqual(5, executor.ThreadCount);
+                Assert.AreEqual(6, executor.CopyCount);
+            }
+        }
+
+        [Test]
         public async Task SpecCpu2026ExecutorExecutesTheCorrectCommandsWithInstallationInLinux()
         {
             this.Setup(PlatformID.Unix);
@@ -67,9 +95,9 @@ namespace VirtualClient.Actions
                 { nameof(SpecCpuExecutor.Benchmarks), "intrate" },
                 { nameof(SpecCpuExecutor.PackageName), "speccpu2026" },
                 { nameof(SpecCpuExecutor.RunPeak), false },
-                { nameof(SpecCpuExecutor.Iterations), 2 },
-                { nameof(SpecCpuExecutor.Threads), 8 },
-                { nameof(SpecCpuExecutor.Copies), 4 }
+                { nameof(SpecCpuExecutor.IterationCount), 2 },
+                { nameof(SpecCpuExecutor.ThreadCount), 8 },
+                { nameof(SpecCpuExecutor.CopyCount), 4 }
             };
 
             List<string> expectedCommands = new List<string>
@@ -351,9 +379,9 @@ namespace VirtualClient.Actions
                 { nameof(SpecCpuExecutor.Benchmarks), benchmarks },
                 { nameof(SpecCpuExecutor.PackageName), "speccpu2026" },
                 { nameof(SpecCpuExecutor.RunPeak), runPeak },
-                { nameof(SpecCpuExecutor.Iterations), iterations },
-                { nameof(SpecCpuExecutor.Threads), threads },
-                { nameof(SpecCpuExecutor.Copies), copies }
+                { nameof(SpecCpuExecutor.IterationCount), iterations },
+                { nameof(SpecCpuExecutor.ThreadCount), threads },
+                { nameof(SpecCpuExecutor.CopyCount), copies }
             };
         }
 

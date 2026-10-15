@@ -51,11 +51,11 @@ namespace VirtualClient.Actions
         /// Parameter defines the number of client instances to execute against
         /// each server instance. Default = # of logical cores/vCPUs on system.
         /// </summary>
-        public int ClientInstances
+        public int ClientInstanceCount
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.ClientInstances), 1);
+                return this.Parameters.GetValue<int>(nameof(this.ClientInstanceCount), 1);
             }
         }
 

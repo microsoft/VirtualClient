@@ -63,11 +63,11 @@ namespace VirtualClient.Actions
         /// Parameter defines the number of Memtier benchmark instances to execute against
         /// each server instance. Default = 1.
         /// </summary>
-        public int ClientInstances
+        public int ClientInstanceCount
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.ClientInstances), 1);
+                return this.Parameters.GetValue<int>(new string[] { nameof(this.ClientInstanceCount), "ClientInstances" }, 1);
             }
         }
 
@@ -446,7 +446,7 @@ namespace VirtualClient.Actions
 
                     if (maxClients == -1)
                     {
-                        maxClients = serverprocesscount * this.ClientInstances;
+                        maxClients = serverprocesscount * this.ClientInstanceCount;
                     }
 
                     for (int i = 0; i < serverprocesscount; i++)
@@ -454,13 +454,13 @@ namespace VirtualClient.Actions
                         PortDescription portDescription = serverState.Ports.ElementAt(i);
                         int serverPort = portDescription.Port;
 
-                        // Check if we can run all the ClientInstances for the next Server Process
-                        if (memtierProcessesCount + this.ClientInstances > maxClients)
+                        // Check if we can run all the client instances for the next server process.
+                        if (memtierProcessesCount + this.ClientInstanceCount > maxClients)
                         {
                             break;
                         }
 
-                        for (int instances = 0; instances < this.ClientInstances; instances++)
+                        for (int instances = 0; instances < this.ClientInstanceCount; instances++)
                         {
                             memtierCpuAffinity = (memtierCpuAffinity + this.MemtierCpuAffinityDelta) % logicalProcessorCount;
 

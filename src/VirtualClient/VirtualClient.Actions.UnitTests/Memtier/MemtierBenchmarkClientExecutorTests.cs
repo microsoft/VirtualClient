@@ -72,7 +72,7 @@ namespace VirtualClient.Actions
                 ["Scenario"] = "Memtier-Scenario",
                 ["PackageName"] = this.mockPackage.Name,
                 ["CommandLine"] = "--protocol memcache-text --threads 8 --clients 32 --ratio 1:1 --data-size 32 --pipeline 100 --key-minimum 1 --key-maximum 10000000 --key-prefix sm --key-pattern R:R",
-                ["ClientInstances"] = 1,
+                ["ClientInstanceCount"] = 1,
                 ["Duration"] = "00:03:00",
                 ["Username"] = "testuser"
             };
@@ -108,6 +108,22 @@ namespace VirtualClient.Actions
 
             this.mockFixture.ApiClient.OnGetServerOnline()
                 .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
+        }
+
+        [Test]
+        public void MemtierBenchmarkClientExecutorSupportsCurrentAndLegacyClientInstanceCountParameters()
+        {
+            this.mockFixture.Parameters.Remove("ClientInstanceCount");
+            this.mockFixture.Parameters["ClientInstances"] = 2;
+
+            using (var executor = new TestMemtierBenchmarkClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                Assert.AreEqual(2, executor.ClientInstanceCount);
+
+                executor.Parameters["ClientInstanceCount"] = 3;
+
+                Assert.AreEqual(3, executor.ClientInstanceCount);
+            }
         }
 
         [Test]
@@ -201,7 +217,7 @@ namespace VirtualClient.Actions
             using (var executor = new TestMemtierBenchmarkClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
                 // 2 client instances running in-parallel to target each of the 2 servers
-                executor.Parameters[nameof(executor.ClientInstances)] = 2;
+                executor.Parameters[nameof(executor.ClientInstanceCount)] = 2;
                 executor.Parameters[nameof(executor.MaxClients)] = 6;
                 executor.Parameters[nameof(executor.MemtierCpuAffinityDelta)] = 1;
 
@@ -245,7 +261,7 @@ namespace VirtualClient.Actions
             using (var executor = new TestMemtierBenchmarkClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
                 // 4 client instances running in-parallel to target 1 server as the other server will sit idle because MaxClients = 4, If we Set MaxClients >= 8 both the servers will be engaged . 
-                executor.Parameters[nameof(executor.ClientInstances)] = 4;
+                executor.Parameters[nameof(executor.ClientInstanceCount)] = 4;
                 executor.Parameters[nameof(executor.MaxClients)] = 4;
                 executor.Parameters[nameof(executor.MemtierCpuAffinityDelta)] = 1;
 

@@ -6,7 +6,7 @@
         "SupportedOperatingSystems": "AzureLinux,CentOS,Debian,OpenSuse,RedHat,Ubuntu"
     },
     "Parameters": {
-        "Iterations": "500"
+        "IterationCount": "500"
     },
     "Actions": [
         {
@@ -14,7 +14,7 @@
             "Parameters": {
                 "Scenario": "AirFoil2D",
                 "Simulation": "airFoil2D",
-                "Iterations": "$.Parameters.Iterations",
+                "IterationCount": "$.Parameters.IterationCount",
                 "Solver": "simpleFoam",
                 "PackageName": "openfoam",
                 "Tags": "airFoil2D,CPU,OpenFOAM,OpenFOAMSimulations"
@@ -25,7 +25,7 @@
             "Parameters": {
                 "Scenario": "Elbow",
                 "Simulation": "elbow",
-                "Iterations": "$.Parameters.Iterations",
+                "IterationCount": "$.Parameters.IterationCount",
                 "Solver": "icoFoam",
                 "PackageName": "openfoam",
                 "Tags": "elbow,CPU,OpenFOAM,OpenFOAMSimulations"
@@ -36,7 +36,7 @@
             "Parameters": {
                 "Scenario": "LockExchange",
                 "Simulation": "lockExchange",
-                "Iterations": "$.Parameters.Iterations",
+                "IterationCount": "$.Parameters.IterationCount",
                 "Solver": "twoLiquidMixingFoam",
                 "PackageName": "openfoam",
                 "Tags": "lockExchange,CPU,OpenFOAM,OpenFOAMSimulations"
@@ -47,7 +47,7 @@
             "Parameters": {
                 "Scenario": "MotorBike",
                 "Simulation": "motorBike",
-                "Iterations": "$.Parameters.Iterations",
+                "IterationCount": "$.Parameters.IterationCount",
                 "Solver": "simpleFoam",
                 "PackageName": "openfoam",
                 "Tags": "motorBike,CPU,OpenFOAM,OpenFOAMSimulations"
@@ -58,7 +58,7 @@
             "Parameters": {
                 "Scenario": "PitzDaily",
                 "Simulation": "pitzDaily",
-                "Iterations": "$.Parameters.Iterations",
+                "IterationCount": "$.Parameters.IterationCount",
                 "Solver": "simpleFoam",
                 "PackageName": "openfoam",
                 "Tags": "pitzDaily,CPU,OpenFOAM,OpenFOAMSimulations"

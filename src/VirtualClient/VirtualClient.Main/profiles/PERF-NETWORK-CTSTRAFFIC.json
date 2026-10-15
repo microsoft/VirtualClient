@@ -11,8 +11,8 @@
         "BufferInBytes": "65536",
         "Pattern": "Duplex",
         "BytesToTransfer": "0x400000000",
-        "Connections": "20",
-        "Iterations": "1",
+        "ConnectionCount": "20",
+        "IterationCount": "1",
         "ServerExitLimit": "1"
     },
     "Actions": [
@@ -25,8 +25,8 @@
                 "BufferInBytes": "$.Parameters.BufferInBytes",
                 "Pattern": "$.Parameters.Pattern",
                 "BytesToTransfer": "$.Parameters.BytesToTransfer",
-                "Connections": "$.Parameters.Connections",
-                "Iterations": "$.Parameters.Iterations",
+                "ConnectionCount": "$.Parameters.ConnectionCount",
+                "IterationCount": "$.Parameters.IterationCount",
                 "PackageName": "ctstraffic",
                 "ServerExitLimit": "$.Parameters.ServerExitLimit",
                 "Tags": "ctsTraffic,Network"

@@ -37,22 +37,22 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Parameter controls the total number of concurrent connections being made by client to the server(s) specified by –Target.
         /// </summary>
-        public int Connections
+        public int ConnectionCount
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.Connections), 1);
+                return this.Parameters.GetValue<int>(nameof(this.ConnectionCount), 1);
             }
         }
 
         /// <summary>
-        /// Parameter controls the number of times ctsTraffic will cycle across all the connections specified with Connections.
+        /// Parameter controls the number of times ctsTraffic will cycle across all the connections specified with ConnectionCount.
         /// </summary>
-        public int Iterations
+        public int IterationCount
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.Iterations), 1);
+                return this.Parameters.GetValue<int>(nameof(this.IterationCount), 1);
             }
         }
 
@@ -102,7 +102,7 @@ namespace VirtualClient.Actions
 
             string ctsTrafficCommandArgs = $"-Target:{targetIPAddress} -Consoleverbosity:1 -StatusFilename:{this.StatusFileName} " +
             $@"-ConnectionFilename:{this.ConnectionsFileName} -ErrorFileName:{this.ErrorFileName} -Port:{this.Port} " +
-            $@"-Connections:{this.Connections} -Pattern:{this.Pattern} -Iterations:{this.Iterations} -Transfer:{this.BytesToTransfer} " +
+            $@"-Connections:{this.ConnectionCount} -Pattern:{this.Pattern} -Iterations:{this.IterationCount} -Transfer:{this.BytesToTransfer} " +
             $@"-Buffer:{this.BufferInBytes} -TimeLimit:150000";
 
             string numaNodeCommandArgs = $@"{this.NumaNodeIndex} ""{this.CtsTrafficExe} {ctsTrafficCommandArgs}""";

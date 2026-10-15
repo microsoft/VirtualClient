@@ -10,7 +10,7 @@
         "Timeout": "00:30:00",
         "FileSizeInKB": 1,
         "EmitLatencySpectrum": false,
-        "Workers": null,
+        "WorkerCount": null,
         "TargetService": "server",
         "CommandArguments": "--latency --threads {ThreadCount} --connections {Connection} --duration {TestDuration.TotalSeconds}s --timeout 10s https://{serverip}/api_new/{FileSizeInKB}kb"
     },
@@ -22,7 +22,7 @@
                 "PackageName": "nginxconfiguration",
                 "FileSizeInKB": "$.Parameters.FileSizeInKB",
                 "Timeout": "$.Parameters.Timeout",
-                "Workers": "$.Parameters.Workers"
+                "WorkerCount": "$.Parameters.WorkerCount"
             }
         },
         {

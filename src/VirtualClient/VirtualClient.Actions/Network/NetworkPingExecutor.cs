@@ -56,12 +56,12 @@ namespace VirtualClient.Actions.NetworkPerformance
         /// Parameter. Defines the number of individual network pings that will be conducted to determine
         /// a rollup average on each round of profile action execution.
         /// </summary>
-        public int PingIterations
+        public int PingIterationCount
         {
             get
             {
-                const int defaultIterations = 50;
-                return this.Parameters.GetValue<int>(nameof(NetworkPingExecutor.PingIterations), defaultIterations);
+                const int defaultPingIterationCount = 50;
+                return this.Parameters.GetValue<int>(nameof(NetworkPingExecutor.PingIterationCount), defaultPingIterationCount);
             }
         }
 
@@ -190,13 +190,13 @@ namespace VirtualClient.Actions.NetworkPerformance
                 DateTime startTime = DateTime.UtcNow;
                 Stopwatch blipTimer = Stopwatch.StartNew();
 
-                // Use Duration if specified, otherwise use PingIterations
+                // Use Duration if specified, otherwise use PingIterationCount
                 DateTime stopTime = startTime.Add(this.Duration ?? TimeSpan.Zero);
 
                 while (!cancellationToken.IsCancellationRequested)
                 {
                     if ((this.Duration != null && DateTime.UtcNow >= stopTime) ||
-                        (this.Duration == null && iterations >= this.PingIterations))
+                        (this.Duration == null && iterations >= this.PingIterationCount))
                     {
                         break;
                     }
@@ -233,7 +233,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                                     // iteration counter here. Every ping attempt (successful or not) must advance
                                     // the loop so that a target that never replies cannot spin the loop until the
                                     // overall profile timeout (~hours). The loop is bounded by total attempts
-                                    // (PingIterations) or the configured Duration.
+                                    // (PingIterationCount) or the configured Duration.
                                     timedOutPings++;
                                     break;
 

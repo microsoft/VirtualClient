@@ -95,12 +95,12 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Parameter defines the number of virtual users.
         /// </summary>
-        public string VirtualUsers
+        public string VirtualUserCount
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(HammerDBExecutor.VirtualUsers), out IConvertible virtualUsers);
-                return virtualUsers?.ToString(CultureInfo.InvariantCulture);
+                this.Parameters.TryGetValue(nameof(HammerDBExecutor.VirtualUserCount), out IConvertible virtualUserCount);
+                return virtualUserCount?.ToString(CultureInfo.InvariantCulture);
             }
         }
 
@@ -348,7 +348,7 @@ namespace VirtualClient.Actions
         private Task GenerateCommandLineArguments(CancellationToken cancellationToken)
         {
             string arguments = $"{this.PlatformSpecifics.Combine(this.HammerDBPackagePath, "configure-workload-generator.py")} --workload {this.Workload} --sqlServer {this.SQLServer} --port {this.Port}" +
-                    $" --virtualUsers {this.VirtualUsers} --password {this.SuperUserPassword} --dbName {this.DatabaseName} --hostIPAddress {this.ServerIpAddress}";
+                    $" --virtualUsers {this.VirtualUserCount} --password {this.SuperUserPassword} --dbName {this.DatabaseName} --hostIPAddress {this.ServerIpAddress}";
 
             if (this.Workload.Equals("tpcc", StringComparison.OrdinalIgnoreCase))
             {

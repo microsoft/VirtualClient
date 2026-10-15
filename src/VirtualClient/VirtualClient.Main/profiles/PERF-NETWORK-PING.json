@@ -8,7 +8,7 @@
     "Parameters": {
         "IPAddress": null,
         "Duration": null,
-        "PingIterations": 300
+        "PingIterationCount": 300
     },
     "Actions": [
         {
@@ -17,7 +17,7 @@
                 "Scenario": "ICMP",
                 "IPAddress": "$.Parameters.IPAddress",
                 "Duration": "$.Parameters.Duration",
-                "PingIterations": "$.Parameters.PingIterations",
+                "PingIterationCount": "$.Parameters.PingIterationCount",
                 "Tags": "Performance,Networking,Ping"
             }
         }

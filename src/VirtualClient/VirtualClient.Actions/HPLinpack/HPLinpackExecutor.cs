@@ -84,11 +84,11 @@ namespace VirtualClient.Actions
         /// <summary>
         /// The number of instances of program to start. Defaults to number of logical processor count and can be overwritten from command line.
         /// </summary>
-        public int NumberOfProcesses
+        public int ProcessCount
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.NumberOfProcesses), this.cpuInfo.LogicalProcessorCount);
+                return this.Parameters.GetValue<int>(nameof(this.ProcessCount), this.cpuInfo.LogicalProcessorCount);
             }
         }
 
@@ -289,11 +289,11 @@ namespace VirtualClient.Actions
                 {
                     if (this.cpuInfo.IsHyperthreadingEnabled)
                     {
-                        this.commandArguments = $"--use-hwthread-cpus -np {this.NumberOfProcesses} --allow-run-as-root";
+                        this.commandArguments = $"--use-hwthread-cpus -np {this.ProcessCount} --allow-run-as-root";
                     }
                     else
                     {
-                        this.commandArguments = $"-np {this.NumberOfProcesses} --allow-run-as-root";
+                        this.commandArguments = $"-np {this.ProcessCount} --allow-run-as-root";
                     }
 
                     if (this.BindToCores)
@@ -345,10 +345,10 @@ namespace VirtualClient.Actions
 
         private void ValidateParameters()
         {
-            if (this.cpuInfo.IsHyperthreadingEnabled && this.NumberOfProcesses > this.coreCount)
+            if (this.cpuInfo.IsHyperthreadingEnabled && this.ProcessCount > this.coreCount)
             {
                 throw new WorkloadException(
-                    $"The '{nameof(this.NumberOfProcesses)}' parameter value should be less than or equal to number of logical processors on the system.",
+                    $"The '{nameof(this.ProcessCount)}' parameter value should be less than or equal to number of logical processors on the system.",
                     ErrorReason.InvalidProfileDefinition);
             }
         }
@@ -514,7 +514,7 @@ namespace VirtualClient.Actions
             else
             {
                 hplDatFile = this.Combine(this.HPLinpackPackagePath, "bin", "Linux_GCC", "HPL.dat");
-                this.SetParameters(this.NumberOfProcesses);
+                this.SetParameters(this.ProcessCount);
             }
 
             await this.fileSystem.File.ReplaceInFileAsync(hplDatFile, @"([0-9]+\s+)+# of problems sizes", $"1   # of problems sizes", cancellationToken);

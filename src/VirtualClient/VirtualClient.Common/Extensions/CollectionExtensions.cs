@@ -199,6 +199,38 @@ namespace VirtualClient.Common.Extensions
         }
 
         /// <summary>
+        /// Parses the first dictionary entry value found for the keys supplied into the <see cref="IConvertible"/> type supplied.
+        /// </summary>
+        /// <param name="dictionary">Dictionary containing a key with a value to parse.</param>
+        /// <param name="keys">The keys to check in priority order.</param>
+        /// <param name="defaultValue">A default value to return if none of the entries exist.</param>
+        public static T GetValue<T>(this IDictionary<string, IConvertible> dictionary, IEnumerable<string> keys, IConvertible defaultValue = null)
+            where T : IConvertible
+        {
+            dictionary.ThrowIfNull(nameof(dictionary));
+
+            IList<string> keyList = keys?.ToList();
+            keyList.ThrowIfNullOrEmpty(nameof(keys));
+
+            foreach (string key in keyList)
+            {
+                key.ThrowIfNullOrWhiteSpace(nameof(keys));
+                if (dictionary.ContainsKey(key))
+                {
+                    return dictionary.GetValue<T>(key, defaultValue);
+                }
+            }
+
+            if (defaultValue != null)
+            {
+                return dictionary.GetValue<T>(keyList[0], defaultValue);
+            }
+
+            throw new KeyNotFoundException(
+                $"The value cannot be parsed from the dictionary. An entry with any of the keys '{string.Join("', '", keyList)}' does not exist in the dictionary.");
+        }
+
+        /// <summary>
         /// Parses the delimited dictionary entry into a collection of values. The entries can be delimited
         /// by a comma (,) or a semi-colon (;).
         /// </summary>

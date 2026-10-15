@@ -212,6 +212,52 @@ namespace VirtualClient.Common.Extensions
         }
 
         [Test]
+        public void GetValueExtensionReturnsTheFirstValueDefinedForTheKeysSupplied()
+        {
+            IDictionary<string, IConvertible> dictionary = new Dictionary<string, IConvertible>
+            {
+                ["CurrentName"] = "CurrentValue",
+                ["LegacyName"] = "LegacyValue"
+            };
+
+            string value = dictionary.GetValue<string>(new string[] { "CurrentName", "LegacyName" });
+
+            Assert.AreEqual("CurrentValue", value);
+        }
+
+        [Test]
+        public void GetValueExtensionReturnsTheValueDefinedForAnAlternateKey()
+        {
+            IDictionary<string, IConvertible> dictionary = new Dictionary<string, IConvertible>
+            {
+                ["LegacyName"] = "123"
+            };
+
+            int value = dictionary.GetValue<int>(new string[] { "CurrentName", "LegacyName" });
+
+            Assert.AreEqual(123, value);
+        }
+
+        [Test]
+        public void GetValueExtensionReturnsTheDefaultValueWhenNoneOfTheKeysExist()
+        {
+            IDictionary<string, IConvertible> dictionary = new Dictionary<string, IConvertible>();
+
+            int value = dictionary.GetValue<int>(new string[] { "CurrentName", "LegacyName" }, 123);
+
+            Assert.AreEqual(123, value);
+        }
+
+        [Test]
+        public void GetValueExtensionThrowsWhenNoneOfTheKeysExist()
+        {
+            IDictionary<string, IConvertible> dictionary = new Dictionary<string, IConvertible>();
+
+            Assert.Throws<KeyNotFoundException>(
+                () => dictionary.GetValue<int>(new string[] { "CurrentName", "LegacyName" }));
+        }
+
+        [Test]
         public void GetEnumValueExtensionHandlesValuesThatCanBeParsedAsValidEnums()
         {
             IDictionary<string, IConvertible> dictionary = new Dictionary<string, IConvertible>

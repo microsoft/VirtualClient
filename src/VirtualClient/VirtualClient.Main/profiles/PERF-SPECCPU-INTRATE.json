@@ -15,11 +15,11 @@
     },
     "Parameters": {
         "CompilerVersion": 13,
-        "Iterations": 2,
+        "IterationCount": 2,
         "Benchmarks": "{calculate(\"{Platform}\".StartsWith(\"linux\") ? \"intrate\" : \"505 525 541 548 557\")}",
         "RunPeak": false,
-        "Threads": "{LogicalCoreCount}",
-        "Copies": "{LogicalCoreCount}",
+        "ThreadCount": "{LogicalCoreCount}",
+        "CopyCount": "{LogicalCoreCount}",
         "BaseOptimizingFlags": "-O2 -march={calculate((\"{Architecture}\" == \"x64\") ? \"x86-64-v3\" : \"armv8.2-a\")} -flto -frecord-gcc-switches",
         "PeakOptimizingFlags": "-O3 -march={calculate((\"{Architecture}\" == \"x64\") ? \"x86-64-v3\" : \"armv8.2-a\")} -flto -frecord-gcc-switches"
     },
@@ -28,13 +28,13 @@
             "Type": "SpecCpuExecutor",
             "Parameters": {
                 "Scenario": "ExecuteSPECBenchmark",
-                "Iterations": "$.Parameters.Iterations",
+                "IterationCount": "$.Parameters.IterationCount",
                 "SpecProfile": "intrate",
                 "Benchmarks": "$.Parameters.Benchmarks",
                 "PackageName": "speccpu2017",
                 "RunPeak": "$.Parameters.RunPeak",
-                "Threads": "$.Parameters.Threads",
-                "Copies": "$.Parameters.Copies",
+                "ThreadCount": "$.Parameters.ThreadCount",
+                "CopyCount": "$.Parameters.CopyCount",
                 "BaseOptimizingFlags": "$.Parameters.BaseOptimizingFlags",
                 "PeakOptimizingFlags": "$.Parameters.PeakOptimizingFlags"
             }

@@ -35,12 +35,12 @@ namespace VirtualClient.Actions
             {
                 ["Scenario"] = "Memtier_Scenario",
                 ["PackageName"] = this.mockMemcachedPackage.Name,
-                ["CommandLine"] = "-p {Port} -t {ServerThreadCount} -m 8192 -c {ServerMaxConnections}",
+                ["CommandLine"] = "-p {Port} -t {ServerThreadCount} -m 8192 -c {MaxServerConnectionCount}",
                 ["BindToCores"] = true,
                 ["Port"] = 6379,
                 ["Username"] = "testuser",
                 ["ServerThreadCount"] = 4,
-                ["ServerMaxConnections"] = 4096
+                ["MaxServerConnectionCount"] = 4096
             };
 
             this.fixture.SystemManagement.SetupGet(obj => obj.AgentId)

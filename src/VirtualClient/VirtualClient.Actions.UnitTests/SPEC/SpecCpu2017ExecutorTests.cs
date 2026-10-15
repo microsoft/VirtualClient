@@ -239,8 +239,8 @@ namespace VirtualClient.Actions
                 { nameof(SpecCpuExecutor.Benchmarks), "549.fotonik3d_r" },
                 { nameof(SpecCpuExecutor.PackageName), "speccpu" },
                 { nameof(SpecCpuExecutor.RunPeak), true },
-                { nameof(SpecCpuExecutor.Threads), 8 },
-                { nameof(SpecCpuExecutor.Copies), 4 }
+                { nameof(SpecCpuExecutor.ThreadCount), 8 },
+                { nameof(SpecCpuExecutor.CopyCount), 4 }
             };
 
             int coreCount = Environment.ProcessorCount;
@@ -384,7 +384,7 @@ namespace VirtualClient.Actions
                 { nameof(SpecCpuExecutor.SpecProfile), "intspeed" },
                 { nameof(SpecCpuExecutor.Benchmarks), "intspeed" },
                 { nameof(SpecCpuExecutor.PackageName), "speccpu" },
-                { nameof(SpecCpuExecutor.Iterations), 1 },
+                { nameof(SpecCpuExecutor.IterationCount), 1 },
                 { nameof(SpecCpuExecutor.RunPeak), true }
             };
             commandCalled = false;
@@ -616,8 +616,8 @@ namespace VirtualClient.Actions
                 { nameof(SpecCpuExecutor.Benchmarks), "intrate" },
                 { nameof(SpecCpuExecutor.PackageName), "speccpu" },
                 { nameof(SpecCpuExecutor.RunPeak), true },
-                { nameof(SpecCpuExecutor.Threads), 8 },
-                { nameof(SpecCpuExecutor.Copies), 4 }
+                { nameof(SpecCpuExecutor.ThreadCount), 8 },
+                { nameof(SpecCpuExecutor.CopyCount), 4 }
             };
         }
 
@@ -648,8 +648,8 @@ namespace VirtualClient.Actions
                 { nameof(SpecCpuExecutor.Benchmarks), "intrate" },
                 { nameof(SpecCpuExecutor.PackageName), "speccpu" },
                 { nameof(SpecCpuExecutor.RunPeak), true },
-                { nameof(SpecCpuExecutor.Threads), 8 },
-                { nameof(SpecCpuExecutor.Copies), 4 }
+                { nameof(SpecCpuExecutor.ThreadCount), 8 },
+                { nameof(SpecCpuExecutor.CopyCount), 4 }
             };
         }
 

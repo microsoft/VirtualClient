@@ -66,7 +66,7 @@ The TPCC scenario uses HammerDB to create and populate a PostgreSQL database wit
     "Workload": "tpcc",
     "SQLServer": "postgresql",
     "PackageName": "hammerdb",
-    "VirtualUsers": "{calculate({LogicalCoreCount})}",
+    "VirtualUserCount": "{calculate({LogicalCoreCount})}",
     "WarehouseCount": "{calculate({SystemMemoryMegabytes} * 15 / 800)}",
     "Port": "$.Parameters.Port",
     "Role": "Server"
@@ -91,7 +91,7 @@ The TPCH scenario uses HammerDB to create and populate a PostgreSQL database wit
     "Workload": "tpch",
     "SQLServer": "postgresql",
     "PackageName": "hammerdb",
-    "VirtualUsers": "{calculate({LogicalCoreCount})}",
+    "VirtualUserCount": "{calculate({LogicalCoreCount})}",
     "ScaleFactor": "10",
     "Port": "$.Parameters.Port",
     "Duration": "$.Parameters.Duration",
@@ -156,7 +156,7 @@ Runs the PostgreSQL workload against the HammerDB tool which generates analytica
   | Duration     | Optional. Duration for the workload execution. | "00:20:00" |
   | Workload              | Required. Either "tpcc" or "tpch"                                          | N/A          |
   | SQLServer              | Required. Normally "postgresql"                                          | N/A          |
-  | VirtualUsers              | Optional. Number of virtual users (threads) for the workload setup           |   vCPU    |
+  | VirtualUserCount          | Optional. Number of virtual users (threads) for the workload setup           |   vCPU    |
   | WarehouseCount             | Optional. Number of warehouses created (TPCC only).                         |  mem*15/800    |
   | ScaleFactor             | Optional. Scale factor for TPCH workload.                         |  10    |
   | SharedMemoryBuffer             | Optional. PostgreSQL shared memory buffer size.                         |  mem*85/100   |
