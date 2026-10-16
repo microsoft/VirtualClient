@@ -62,24 +62,24 @@ namespace VirtualClient.Actions
         /// <summary>
         /// The number of JVM(Java Virtual Machine) instances of the DotNetRuntime workload to be intialized.
         /// </summary>
-        public string NumberOfJvmInstances
+        public string JvmInstanceCount
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(DotNetRuntimeExecutor.NumberOfJvmInstances), out IConvertible numberOfJvmInstances);
-                return numberOfJvmInstances?.ToString();
+                this.Parameters.TryGetValue(nameof(DotNetRuntimeExecutor.JvmInstanceCount), out IConvertible jvmInstanceCount);
+                return jvmInstanceCount?.ToString();
             }
         }
 
         /// <summary>
         /// The number of Warehouses to be intialized.
         /// </summary>
-        public string NumberOfWarehouses
+        public string WarehouseCount
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(DotNetRuntimeExecutor.NumberOfWarehouses), out IConvertible numberOfWarehouses);
-                return numberOfWarehouses?.ToString();
+                this.Parameters.TryGetValue(nameof(DotNetRuntimeExecutor.WarehouseCount), out IConvertible warehouseCount);
+                return warehouseCount?.ToString();
             }
         }
 
@@ -192,18 +192,18 @@ namespace VirtualClient.Actions
         /// </summary>
         private async Task UpdatePropsFile(string propsFilePath)
         {
-            if (this.NumberOfJvmInstances != null)
+            if (this.JvmInstanceCount != null)
             {
                 await this.ReplaceInFileAsync(
-                    propsFilePath, @"input.jvm_instances=[0-9]+", $"input.jvm_instances={this.NumberOfJvmInstances}");
+                    propsFilePath, @"input.jvm_instances=[0-9]+", $"input.jvm_instances={this.JvmInstanceCount}");
             }
 
-            if (this.NumberOfWarehouses != null)
+            if (this.WarehouseCount != null)
             {
                 await this.ReplaceInFileAsync(
                     propsFilePath,
                     @"input.sequence_of_number_of_warehouses=[0-9]+",
-                    $"input.sequence_of_number_of_warehouses={this.NumberOfWarehouses}");
+                    $"input.sequence_of_number_of_warehouses={this.WarehouseCount}");
             }
 
             if (this.RampUpSeconds != null)

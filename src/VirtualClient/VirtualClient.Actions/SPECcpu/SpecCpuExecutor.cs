@@ -115,14 +115,14 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Iterations.
+        /// Iteration count.
         /// Recommended default: 2.
         /// </summary>
-        public int Iterations
+        public int IterationCount
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(SpecCpuExecutor.Iterations), 2);
+                return this.Parameters.GetValue<int>(new string[] { nameof(SpecCpuExecutor.IterationCount), "Iterations" }, 2);
             }
         }
 
@@ -139,24 +139,24 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Threads.
+        /// Thread count.
         /// </summary>
-        public int Threads
+        public int ThreadCount
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(SpecCpuExecutor.Threads), Environment.ProcessorCount);
+                return this.Parameters.GetValue<int>(new string[] { nameof(SpecCpuExecutor.ThreadCount), "Threads" }, Environment.ProcessorCount);
             }
         }
 
         /// <summary>
-        /// Copies.
+        /// Copy count.
         /// </summary>
-        public int Copies
+        public int CopyCount
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(SpecCpuExecutor.Copies), Environment.ProcessorCount);
+                return this.Parameters.GetValue<int>(new string[] { nameof(SpecCpuExecutor.CopyCount), "Copies" }, Environment.ProcessorCount);
             }
         }
 
@@ -754,11 +754,11 @@ namespace VirtualClient.Actions
         private string GetCommandLineArguments(string configurationFile)
         {
             List<string> suites = new List<string> { "intrate", "intspeed", "fprate", "fpspeed" };
-            string command = $"--config {configurationFile} --iterations {this.Iterations} --copies {this.Copies} --threads {this.Threads} --tune {this.tuning}";
+            string command = $"--config {configurationFile} --iterations {this.IterationCount} --copies {this.CopyCount} --threads {this.ThreadCount} --tune {this.tuning}";
 
             bool reportable = this.Platform == PlatformID.Unix
                 && suites.Contains(this.Benchmarks.ToLowerInvariant())
-                && (this.Iterations == 2 || this.Iterations == 3);
+                && (this.IterationCount == 2 || this.IterationCount == 3);
 
             command = reportable ? $"{command} --reportable" : $"{command} --noreportable";
             return $"{command} {this.Benchmarks}";
@@ -776,9 +776,9 @@ namespace VirtualClient.Actions
 
             LinuxProcessAffinityConfiguration affinityConfig = (LinuxProcessAffinityConfiguration)ProcessAffinityConfiguration.Create(this.Platform, this.ProcessorAffinity);
             IReadOnlyList<int> cores = affinityConfig.Cores;
-            if (cores.Count != this.Copies)
+            if (cores.Count != this.CopyCount)
             {
-                throw new ArgumentException($"ProcessorAffinity must specify exactly one distinct CPU per SPEC copy (Copies={this.Copies}, CPUs={cores.Count}).", nameof(this.ProcessorAffinity));
+                throw new ArgumentException($"ProcessorAffinity must specify exactly one distinct CPU per SPEC copy (CopyCount={this.CopyCount}, CPUs={cores.Count}).", nameof(this.ProcessorAffinity));
             }
 
             bool useCopyNumber = cores.Select((core, copy) => core == copy).All(matches => matches);
@@ -963,7 +963,7 @@ namespace VirtualClient.Actions
                 .AddContext("scenario", this.Scenario ?? string.Empty)
                 .AddContext("specProfile", this.SpecProfile ?? string.Empty)
                 .AddContext("benchmarks", this.Benchmarks ?? string.Empty)
-                .AddContext("copies", this.Copies)
+                .AddContext("copies", this.CopyCount)
                 .AddContext("pinningEnabled", !string.IsNullOrWhiteSpace(this.ProcessorAffinity));
 
             foreach ((string name, object value) in details)
@@ -1011,7 +1011,7 @@ namespace VirtualClient.Actions
                 StringComparison.OrdinalIgnoreCase);
             templateText = templateText.Replace(
                 SpecCpuConfigPlaceholder.Threads,
-                this.Threads.ToString(),
+                this.ThreadCount.ToString(),
                 StringComparison.OrdinalIgnoreCase);
 
             await this.fileSystem.File.WriteAllTextAsync(

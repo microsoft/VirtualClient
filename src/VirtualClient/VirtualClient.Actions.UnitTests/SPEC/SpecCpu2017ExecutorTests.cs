@@ -240,8 +240,8 @@ namespace VirtualClient.Actions
                 { nameof(SpecCpuExecutor.Benchmarks), "549.fotonik3d_r" },
                 { nameof(SpecCpuExecutor.PackageName), "speccpu" },
                 { nameof(SpecCpuExecutor.RunPeak), true },
-                { nameof(SpecCpuExecutor.Threads), 8 },
-                { nameof(SpecCpuExecutor.Copies), 4 }
+                { nameof(SpecCpuExecutor.ThreadCount), 8 },
+                { nameof(SpecCpuExecutor.CopyCount), 4 }
             };
 
             int coreCount = Environment.ProcessorCount;
@@ -385,7 +385,7 @@ namespace VirtualClient.Actions
                 { nameof(SpecCpuExecutor.SpecProfile), "intspeed" },
                 { nameof(SpecCpuExecutor.Benchmarks), "intspeed" },
                 { nameof(SpecCpuExecutor.PackageName), "speccpu" },
-                { nameof(SpecCpuExecutor.Iterations), 1 },
+                { nameof(SpecCpuExecutor.IterationCount), 1 },
                 { nameof(SpecCpuExecutor.RunPeak), true }
             };
             commandCalled = false;
@@ -591,6 +591,7 @@ namespace VirtualClient.Actions
         }
 
         [TestCase("intrate", "0-3", "$SPECCOPYNUM", null)]
+        [TestCase("intrate", "0,1,48,49", "$BIND", "bind = 0,1,48,49")]
         [TestCase("intrate", "2,4,8,10", "$BIND", "bind = 2,4,8,10")]
         [TestCase("fprate", "2,4,8,10", "$BIND", "bind = 2,4,8,10")]
         public async Task SpecCpu2017ExecutorPinsRateCopies(string profile, string cpuIds, string copyCpu, string expectedBind)
@@ -637,7 +638,7 @@ namespace VirtualClient.Actions
 
             Assert.IsTrue(commands.Any(command => command == "numactl --version"));
             Assert.IsTrue(commands.Any(command => command == $"numactl --localalloc -C {cpuIds} true"));
-            Assert.IsTrue(commands.Any(command => command.Contains($"--config {Path.GetFileName(pinnedPath)}")));
+            Assert.IsTrue(commands.Any(command => command.Contains($"--config {Path.GetFileName(pinnedPath)}") && command.Contains("--copies 4")));
         }
 
         [TestCase("", false, Architecture.X64)]
@@ -855,8 +856,8 @@ namespace VirtualClient.Actions
                 { nameof(SpecCpuExecutor.Benchmarks), "intrate" },
                 { nameof(SpecCpuExecutor.PackageName), "speccpu" },
                 { nameof(SpecCpuExecutor.RunPeak), true },
-                { nameof(SpecCpuExecutor.Threads), 8 },
-                { nameof(SpecCpuExecutor.Copies), 4 }
+                { nameof(SpecCpuExecutor.ThreadCount), 8 },
+                { nameof(SpecCpuExecutor.CopyCount), 4 }
             };
         }
 
@@ -887,8 +888,8 @@ namespace VirtualClient.Actions
                 { nameof(SpecCpuExecutor.Benchmarks), "intrate" },
                 { nameof(SpecCpuExecutor.PackageName), "speccpu" },
                 { nameof(SpecCpuExecutor.RunPeak), true },
-                { nameof(SpecCpuExecutor.Threads), 8 },
-                { nameof(SpecCpuExecutor.Copies), 4 }
+                { nameof(SpecCpuExecutor.ThreadCount), 8 },
+                { nameof(SpecCpuExecutor.CopyCount), 4 }
             };
         }
 

@@ -50,11 +50,12 @@ namespace VirtualClient.Actions.NetworkPerformance
         /// <summary>
         /// gets the number of connections value
         /// </summary>
-        public int Connections
+        public int ConnectionCount
         {
             get 
             {
-                return this.Parameters.GetValue<int>(nameof(this.Connections));
+                return this.Parameters.GetValue<int>(
+                    new string[] { nameof(this.ConnectionCount), "Connections" });
             }
         }
 
@@ -92,14 +93,16 @@ namespace VirtualClient.Actions.NetworkPerformance
         }
 
         /// <summary>
-        /// ConnectionsPerThread is only for client/sender role.
-        /// The ConnectionsPerThread gets the number of connections in each sender thread.
+        /// ConnectionCountPerThread is only for client/sender role.
+        /// The ConnectionCountPerThread gets the number of connections in each sender thread.
         /// </summary>
-        public int ConnectionsPerThread
+        public int ConnectionCountPerThread
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(CPSExecutor.ConnectionsPerThread), 100);
+                return this.Parameters.GetValue<int>(
+                    new string[] { nameof(CPSExecutor.ConnectionCountPerThread), "ConnectionsPerThread" },
+                    100);
             }
         }
 

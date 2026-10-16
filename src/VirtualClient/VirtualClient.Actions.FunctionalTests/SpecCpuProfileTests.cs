@@ -67,7 +67,7 @@ namespace VirtualClient.Actions
                 profile.Parameters["ProcessorAffinity"] = processorAffinity;
             }
 
-            profile.Parameters["Copies"] = 4;
+            profile.Parameters["CopyCount"] = 4;
 
             Assert.AreEqual(1, profile.Actions.Count, "A SPEC CPU rate suite must run as one action, not separate benchmarks.");
             ExecutionProfileElement action = profile.Actions.Single();
@@ -81,7 +81,7 @@ namespace VirtualClient.Actions
 
             Assert.AreEqual(expectedBenchmarks, action.Parameters["Benchmarks"]);
             Assert.AreEqual(processorAffinity ?? string.Empty, action.Parameters["ProcessorAffinity"]);
-            Assert.AreEqual("4", action.Parameters["Copies"].ToString());
+            Assert.AreEqual("4", action.Parameters["CopyCount"].ToString());
         }
 
         [Test]

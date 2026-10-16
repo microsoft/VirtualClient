@@ -153,7 +153,7 @@ the system. The following table describes the set of well-known parameters that 
             "CommandLine": "--protected-mode no --io-threads {ServerThreadCount} --maxmemory-policy noeviction --ignore-warnings ARM64-COW-BUG --save",
             "BindToCores": true,
             "Port": "$.Parameters.ServerPort",
-            "ServerInstances": "{LogicalProcessorCount}",
+            "ServerInstanceCount": "{LogicalProcessorCount}",
             "ServerThreadCount": "$.Parameters.ServerThreadCount",
             "Role": "Server"
         }
@@ -247,12 +247,12 @@ the system. The following table describes the set of well-known parameters that 
         "Parameters": {
             "Scenario": "Server",
             "PackageName": "memcached",
-            "CommandLine": "-p {Port} -t 4 -m {ServerMemory} -c {ServerMaxConnections}",
+            "CommandLine": "-p {Port} -t 4 -m {ServerMemory} -c {MaxServerConnectionCount}",
             "BindToCores": true,
             "Port": "$.Parameters.ServerPort",
             "Username": "$.Parameters.Username",
             "ServerThreadCount": 4,
-            "ServerMaxConnections": "$.Parameters.ServerMaxConnections",
+            "MaxServerConnectionCount": "$.Parameters.MaxServerConnectionCount",
             "ServerMemory": "{calculate({SystemMemoryMegabytes} / 2)}",
             "Role": "Server"
         }
@@ -783,7 +783,7 @@ completes. The The `SequentialExecution` component will complete when all compon
 
 ### ParallelLoopExecution
 Executes all child components **in parallel**, and **repeats** this execution for a specified duration. Each component runs in its 
-own loop, independently. Each component first completes `MinimumIterations` iterations, even if that takes longer than `Duration`. 
+own loop, independently. Each component first completes `MinimumIterationCount` iterations, even if that takes longer than `Duration`.
 After that, iterations repeat until `Duration` elapses, at which point any in-flight iteration is cancelled.
 
 #### Supported Parameters
@@ -791,14 +791,14 @@ After that, iterations repeat until `Duration` elapses, at which point any in-fl
 | Parameter          | Purpose                                                     | Default Value |
 |--------------------|-------------------------------------------------------------|---------------|
 | Duration           | Maximum time to run the parallel loop (hh:mm:ss format).    | -1 (no limit) |
-| MinimumIterations  | Number of iterations each child component must complete, even if `Duration` elapses. Set this value to 0 to allow `Duration` to cancel the first iteration. | 1 |
+| MinimumIterationCount  | Number of iterations each child component must complete, even if `Duration` elapses. Set this value to 0 to allow `Duration` to cancel the first iteration. | 1 |
 
 ```json
 { 
     "Type": "ParallelLoopExecution",
     "Parameters": {
         "Duration": "00:10:00",
-        "MinimumIterations": 3
+        "MinimumIterationCount": 3
     },
     "Components": [ 
         { 

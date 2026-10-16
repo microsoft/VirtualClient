@@ -98,28 +98,36 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// ThreadsPerServerPort is only for client/sender role.
-        /// The ThreadsPerServerPort gets the number of threads per each server port.
+        /// ThreadCountPerServerPort is only for client/sender role.
+        /// The ThreadCountPerServerPort gets the number of threads per each server port.
         /// </summary>
-        public int? ThreadsPerServerPort
+        public int? ThreadCountPerServerPort
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(NTttcpClientExecutor2.ThreadsPerServerPort), out IConvertible threadsPerServerPort);
-                return threadsPerServerPort?.ToInt32(CultureInfo.InvariantCulture);
+                string parameterName = this.Parameters.ContainsKey(nameof(NTttcpClientExecutor2.ThreadCountPerServerPort))
+                    ? nameof(NTttcpClientExecutor2.ThreadCountPerServerPort)
+                    : "ThreadsPerServerPort";
+
+                this.Parameters.TryGetValue(parameterName, out IConvertible threadCountPerServerPort);
+                return threadCountPerServerPort?.ToInt32(CultureInfo.InvariantCulture);
             }
         }
 
         /// <summary>
-        /// ConnectionsPerThread is only for client/sender role.
-        /// The ConnectionsPerThread gets the number of connections in each sender thread.
+        /// ConnectionCountPerThread is only for client/sender role.
+        /// The ConnectionCountPerThread gets the number of connections in each sender thread.
         /// </summary>
-        public int? ConnectionsPerThread
+        public int? ConnectionCountPerThread
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(NTttcpClientExecutor2.ConnectionsPerThread), out IConvertible connectionsPerThread);
-                return connectionsPerThread?.ToInt32(CultureInfo.InvariantCulture);
+                string parameterName = this.Parameters.ContainsKey(nameof(NTttcpClientExecutor2.ConnectionCountPerThread))
+                    ? nameof(NTttcpClientExecutor2.ConnectionCountPerThread)
+                    : "ConnectionsPerThread";
+
+                this.Parameters.TryGetValue(parameterName, out IConvertible connectionCountPerThread);
+                return connectionCountPerThread?.ToInt32(CultureInfo.InvariantCulture);
             }
         }
 
@@ -279,8 +287,8 @@ namespace VirtualClient.Actions
                 $"{(this.Protocol.ToString().ToLowerInvariant() == "udp" ? "-u" : string.Empty)} " +
                 $"{(((this.Role == ClientRole.Client) && this.SenderLastClient == true) ? "-L" : string.Empty)} " +
                 $"{(((this.Role == ClientRole.Client) && this.ReceiverMultiClientMode == true) ? "-M" : string.Empty)} " +
-                $"{(((this.Role == ClientRole.Client) && this.ThreadsPerServerPort != null) ? $"-n {this.ThreadsPerServerPort}" : string.Empty)} " +
-                $"{(((this.Role == ClientRole.Client) && this.ConnectionsPerThread != null) ? $"-l {this.ConnectionsPerThread}" : string.Empty)} " +
+                $"{(((this.Role == ClientRole.Client) && this.ThreadCountPerServerPort != null) ? $"-n {this.ThreadCountPerServerPort}" : string.Empty)} " +
+                $"{(((this.Role == ClientRole.Client) && this.ConnectionCountPerThread != null) ? $"-l {this.ConnectionCountPerThread}" : string.Empty)} " +
                 $"{((this.DevInterruptsDifferentiator != null) ? $"--show-dev-interrupts {this.DevInterruptsDifferentiator}" : string.Empty)}".Trim();
         }
 

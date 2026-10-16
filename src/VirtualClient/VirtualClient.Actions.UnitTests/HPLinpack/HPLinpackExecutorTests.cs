@@ -65,7 +65,7 @@ namespace VirtualClient.Actions
                 ["ProblemSizeN"] = "20000",
                 ["BlockSizeNB"] = "256",
                 ["Scenario"] = "ProcessorSpeed",
-                ["NumberOfProcesses"] = "2"
+                ["ProcessCount"] = "2"
             };
         }
 
@@ -97,14 +97,14 @@ namespace VirtualClient.Actions
         public void HPLinpackExecutorThrowsOnValidateParametersFailing(PlatformID platform, Architecture architecture)
         {
             this.SetupTest(platform, architecture);
-            this.mockFixture.Parameters["NumberOfProcesses"] = 100;
+            this.mockFixture.Parameters["ProcessCount"] = 100;
             using (TestHPLExecutor executor = new TestHPLExecutor(this.mockFixture))
             {
                 WorkloadException exception = Assert.ThrowsAsync<WorkloadException>(
                     () => executor.ExecuteAsync(EventContext.None, CancellationToken.None));
 
                 Assert.AreEqual(
-                    $"The 'NumberOfProcesses' parameter value should be less than or equal to number of logical processors on the system.",
+                    $"The 'ProcessCount' parameter value should be less than or equal to number of logical processors on the system.",
                     exception.Message);
             }
         }
@@ -115,7 +115,7 @@ namespace VirtualClient.Actions
         public async Task HPLinpackExecutorExecutesWorkloadAsExpectedWithNoPerformanceLibrariesOnUnixPlatform(PlatformID platform, Architecture architecture)
         {
             this.SetupTest(platform, architecture);
-            string numProcesses = (this.mockFixture.Parameters["NumberOfProcesses"] ?? Environment.ProcessorCount).ToString();
+            string processCount = (this.mockFixture.Parameters["ProcessCount"] ?? Environment.ProcessorCount).ToString();
 
             using (TestHPLExecutor executor = new TestHPLExecutor(this.mockFixture))
             {
@@ -126,7 +126,7 @@ namespace VirtualClient.Actions
                     $"mv Make.UNKNOWN Make.Linux_GCC",
                     $"ln -s {this.mockFixture.Combine(this.mockPackage.Path, this.mockFixture.PlatformArchitectureName, "setup", "Make.Linux_GCC" )} Make.Linux_GCC",
                     $"make arch=Linux_GCC",
-                    $"sudo runuser -u {Environment.UserName} -- mpirun --use-hwthread-cpus -np {numProcesses} --allow-run-as-root --bind-to core ./xhpl"
+                    $"sudo runuser -u {Environment.UserName} -- mpirun --use-hwthread-cpus -np {processCount} --allow-run-as-root --bind-to core ./xhpl"
                 };
 
                 this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
@@ -160,7 +160,7 @@ namespace VirtualClient.Actions
             this.SetupTest(platform, architecture);
             this.mockFixture.Parameters["PerformanceLibrary"] = "ARM";
             this.mockFixture.Parameters["PerformanceLibraryVersion"] = performanceLibraryVersion;
-            string numProcesses = (this.mockFixture.Parameters["NumberOfProcesses"] ?? Environment.ProcessorCount).ToString();
+            string processCount = (this.mockFixture.Parameters["ProcessCount"] ?? Environment.ProcessorCount).ToString();
 
             using (TestHPLExecutor executor = new TestHPLExecutor(this.mockFixture))
             {
@@ -173,7 +173,7 @@ namespace VirtualClient.Actions
                     $"mv Make.UNKNOWN Make.Linux_GCC",
                     $"ln -s {this.mockPackage.Path}/linux-arm64/setup/Make.Linux_GCC Make.Linux_GCC",
                     $"make arch=Linux_GCC",
-                    $"sudo runuser -u {Environment.UserName} -- mpirun --use-hwthread-cpus -np {numProcesses} --allow-run-as-root --bind-to core ./xhpl"
+                    $"sudo runuser -u {Environment.UserName} -- mpirun --use-hwthread-cpus -np {processCount} --allow-run-as-root --bind-to core ./xhpl"
                 };
 
                 this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
@@ -206,7 +206,7 @@ namespace VirtualClient.Actions
             this.SetupTest(platform, architecture);
             this.mockFixture.Parameters["PerformanceLibrary"] = "AMD";
             this.mockFixture.Parameters["PerformanceLibraryVersion"] = $"{performanceLibraryVersion}";
-            string numProcesses = (this.mockFixture.Parameters["NumberOfProcesses"] ?? Environment.ProcessorCount).ToString();
+            string processCount = (this.mockFixture.Parameters["ProcessCount"] ?? Environment.ProcessorCount).ToString();
 
             using (TestHPLExecutor executor = new TestHPLExecutor(this.mockFixture))
             {
@@ -219,7 +219,7 @@ namespace VirtualClient.Actions
                     $"mv Make.UNKNOWN Make.Linux_GCC",
                     $"ln -s {this.mockPackage.Path}/linux-x64/setup/Make.Linux_GCC Make.Linux_GCC",
                     $"make arch=Linux_GCC",
-                    $"sudo runuser -u {Environment.UserName} -- mpirun --use-hwthread-cpus -np {numProcesses} --allow-run-as-root --bind-to core ./xhpl"
+                    $"sudo runuser -u {Environment.UserName} -- mpirun --use-hwthread-cpus -np {processCount} --allow-run-as-root --bind-to core ./xhpl"
                 };
 
                 this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>

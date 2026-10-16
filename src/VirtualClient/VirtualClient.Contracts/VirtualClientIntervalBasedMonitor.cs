@@ -71,11 +71,13 @@ namespace VirtualClient.Contracts
         /// The number of iterations with which this monitor runs
         /// Default is set to -1 for infinite loop.
         /// </summary>
-        public long MonitorIterations
+        public long MonitorIterationCount
         {
             get
             {
-                return this.Parameters.GetValue<long>(nameof(this.MonitorIterations), -1);
+                return this.Parameters.GetValue<long>(
+                    new string[] { nameof(this.MonitorIterationCount), "MonitorIterations" },
+                    -1);
             }
         }
 
@@ -99,12 +101,12 @@ namespace VirtualClient.Contracts
         /// <returns>True if the expected iterations are completed. False if not.</returns>
         public bool IsIterationComplete(long currentIteration)
         {
-            if (this.MonitorIterations <= 0)
+            if (this.MonitorIterationCount <= 0)
             {
                 return false;
             }
 
-            return currentIteration > this.MonitorIterations;
+            return currentIteration > this.MonitorIterationCount;
         }
     }
 }

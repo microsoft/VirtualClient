@@ -106,7 +106,7 @@ namespace VirtualClient.Actions
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>
             {
                 { nameof(NetworkPingExecutor.IPAddress), "example.com" },
-                { nameof(NetworkPingExecutor.PingIterations), 1 }
+                { nameof(NetworkPingExecutor.PingIterationCount), 1 }
             };
 
             IPAddress expectedAddress = IPAddress.Parse("192.0.2.1");
@@ -151,7 +151,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public void NetworkPingExecutorUsesDefaultPingIterationsWhenNotSpecified()
+        public void NetworkPingExecutorUsesDefaultPingIterationCountWhenNotSpecified()
         {
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>
             {
@@ -160,7 +160,7 @@ namespace VirtualClient.Actions
 
             using (NetworkPingExecutor executor = new NetworkPingExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
-                Assert.AreEqual(50, executor.PingIterations);
+                Assert.AreEqual(50, executor.PingIterationCount);
             }
         }
 
@@ -168,17 +168,17 @@ namespace VirtualClient.Actions
         [TestCase(100)]
         [TestCase(200)]
         [TestCase(500)]
-        public void NetworkPingExecutorParsesPingIterationsParameter(int iterations)
+        public void NetworkPingExecutorParsesPingIterationCountParameter(int pingIterationCount)
         {
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>
             {
                 { nameof(NetworkPingExecutor.IPAddress), "192.168.1.1" },
-                { nameof(NetworkPingExecutor.PingIterations), iterations }
+                { nameof(NetworkPingExecutor.PingIterationCount), pingIterationCount }
             };
 
             using (NetworkPingExecutor executor = new NetworkPingExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
-                Assert.AreEqual(iterations, executor.PingIterations);
+                Assert.AreEqual(pingIterationCount, executor.PingIterationCount);
             }
         }
 
@@ -266,21 +266,21 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public void NetworkPingExecutorSupportsSettingBothDurationAndPingIterations()
+        public void NetworkPingExecutorSupportsSettingBothDurationAndPingIterationCount()
         {
-            // When Duration is set, it takes precedence over PingIterations
+            // When Duration is set, it takes precedence over PingIterationCount
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>
             {
                 { nameof(NetworkPingExecutor.IPAddress), "192.168.1.1" },
                 { nameof(NetworkPingExecutor.Duration), "00:05:00" },
-                { nameof(NetworkPingExecutor.PingIterations), 100 }
+                { nameof(NetworkPingExecutor.PingIterationCount), 100 }
             };
 
             using (NetworkPingExecutor executor = new NetworkPingExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
                 Assert.IsNotNull(executor.Duration);
                 Assert.AreEqual(300, executor.Duration.Value.TotalSeconds);
-                Assert.AreEqual(100, executor.PingIterations);
+                Assert.AreEqual(100, executor.PingIterationCount);
             }
         }
 
@@ -292,14 +292,14 @@ namespace VirtualClient.Actions
             {
                 { nameof(NetworkPingExecutor.IPAddress), "192.168.1.1" },
                 { nameof(NetworkPingExecutor.Duration), null },
-                { nameof(NetworkPingExecutor.PingIterations), 300 }
+                { nameof(NetworkPingExecutor.PingIterationCount), 300 }
             };
 
             using (NetworkPingExecutor executor = new NetworkPingExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
                 Assert.AreEqual("192.168.1.1", executor.IPAddress);
                 Assert.IsNull(executor.Duration);
-                Assert.AreEqual(300, executor.PingIterations);
+                Assert.AreEqual(300, executor.PingIterationCount);
             }
         }
 
@@ -312,7 +312,7 @@ namespace VirtualClient.Actions
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>
             {
                 { nameof(NetworkPingExecutor.IPAddress), "192.168.1.1" },
-                { nameof(NetworkPingExecutor.PingIterations), 10 }
+                { nameof(NetworkPingExecutor.PingIterationCount), 10 }
             };
 
             using (TestNetworkPingExecutor executor = new TestNetworkPingExecutor(
@@ -326,15 +326,15 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public void NetworkPingExecutorTerminatesAfterPingIterationsWhenTheTargetNeverResponds()
+        public void NetworkPingExecutorTerminatesAfterPingIterationCountWhenTheTargetNeverResponds()
         {
             // Regression test for the infinite-loop bug: a timed-out ping must still advance the
-            // iteration counter so the loop is bounded by PingIterations (previously a timed-out
+            // iteration counter so the loop is bounded by PingIterationCount (previously a timed-out
             // ping decremented the counter, so the loop only ended on a successful ping).
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>
             {
                 { nameof(NetworkPingExecutor.IPAddress), "192.168.1.1" },
-                { nameof(NetworkPingExecutor.PingIterations), 15 }
+                { nameof(NetworkPingExecutor.PingIterationCount), 15 }
             };
 
             using (TestNetworkPingExecutor executor = new TestNetworkPingExecutor(
@@ -342,7 +342,7 @@ namespace VirtualClient.Actions
             {
                 Assert.ThrowsAsync<WorkloadException>(() => executor.ExecuteAsync(CancellationToken.None));
 
-                // Exactly PingIterations attempts are made and then the loop terminates.
+                // Exactly PingIterationCount attempts are made and then the loop terminates.
                 Assert.AreEqual(15, executor.SendPingCallCount);
             }
         }
@@ -353,7 +353,7 @@ namespace VirtualClient.Actions
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>
             {
                 { nameof(NetworkPingExecutor.IPAddress), "192.168.1.1" },
-                { nameof(NetworkPingExecutor.PingIterations), 3 }
+                { nameof(NetworkPingExecutor.PingIterationCount), 3 }
             };
 
             using (TestNetworkPingExecutor executor = new TestNetworkPingExecutor(
@@ -361,7 +361,7 @@ namespace VirtualClient.Actions
             {
                 Assert.DoesNotThrowAsync(() => executor.ExecuteAsync(CancellationToken.None));
 
-                // Each successful ping advances the loop; the loop is bounded by PingIterations.
+                // Each successful ping advances the loop; the loop is bounded by PingIterationCount.
                 Assert.AreEqual(3, executor.SendPingCallCount);
             }
         }

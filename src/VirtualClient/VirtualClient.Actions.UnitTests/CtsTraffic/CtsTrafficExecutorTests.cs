@@ -37,8 +37,8 @@ namespace VirtualClient.Actions
                 ["SecondaryPort"] = "4444",
                 ["NumaNode"] = 0,
                 ["BufferInBytes"] = 36654,
-                ["Connections"] = 1,
-                ["Iterations"] = 1,
+                ["ConnectionCount"] = 1,
+                ["IterationCount"] = 1,
                 ["ServerExitLimit"] = 1
             };
 

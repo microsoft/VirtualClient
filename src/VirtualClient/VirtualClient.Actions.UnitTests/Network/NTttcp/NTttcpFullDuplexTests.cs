@@ -42,7 +42,7 @@ namespace VirtualClient.Actions
                 .Returns(true);
 
             this.mockFixture.Parameters["PackageName"] = "networking";
-            this.mockFixture.Parameters["Connections"] = "256";
+            this.mockFixture.Parameters["ConnectionCount"] = "256";
             this.mockFixture.Parameters["TestDuration"] = "00:05:00";
             this.mockFixture.Parameters["WarmupTime"] = "00:05:00";
             this.mockFixture.Parameters["Protocol"] = "TCP";
@@ -52,8 +52,8 @@ namespace VirtualClient.Actions
             this.mockFixture.Parameters["Port"] = 5500;
             this.mockFixture.Parameters["ReceiverMultiClientMode"] = true;
             this.mockFixture.Parameters["SenderLastClient"] = true;
-            this.mockFixture.Parameters["ThreadsPerServerPort"] = 2;
-            this.mockFixture.Parameters["ConnectionsPerThread"] = 2;
+            this.mockFixture.Parameters["ThreadCountPerServerPort"] = 2;
+            this.mockFixture.Parameters["ConnectionCountPerThread"] = 2;
             this.mockFixture.Parameters["DevInterruptsDifferentiator"] = "mlx";
             this.mockFixture.Parameters["DuplexMode"] = "Full";
 

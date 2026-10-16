@@ -11,7 +11,7 @@
         "Timeout": "00:20:00",
         "FileSizeInKB": 1,
         "EmitLatencySpectrum": false,
-        "Workers": null,
+        "WorkerCount": null,
         "TargetService": "reverse-proxy",
         "Rate": 1000,
         "CommandArguments": "--rate {Rate} --latency --threads {ThreadCount} --connections {Connection} --duration {TestDuration.TotalSeconds}s --timeout 10s https://{reverseproxyip}/{FileSizeInKB}kb"
@@ -24,7 +24,7 @@
                 "PackageName": "nginxconfiguration",
                 "FileSizeInKB": "$.Parameters.FileSizeInKB",
                 "Timeout": "$.Parameters.Timeout",
-                "Workers": "$.Parameters.Workers"
+                "WorkerCount": "$.Parameters.WorkerCount"
             }
         },
         {
@@ -34,7 +34,7 @@
                 "PackageName": "nginxconfiguration",
                 "FileSizeInKB": "$.Parameters.FileSizeInKB",
                 "Timeout": "$.Parameters.Timeout",
-                "Workers": "$.Parameters.Workers"
+                "WorkerCount": "$.Parameters.WorkerCount"
             }
         },
         {

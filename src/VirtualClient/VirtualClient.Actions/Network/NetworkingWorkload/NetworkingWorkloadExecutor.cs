@@ -211,16 +211,18 @@ namespace VirtualClient.Actions.NetworkPerformance
         /// <summary>
         /// Parameter defines the number of connections to use in the workload toolset tests.
         /// </summary>
-        public int Connections
+        public int ConnectionCount
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(NetworkingWorkloadExecutor.Connections), 8);
+                return this.Parameters.GetValue<int>(
+                    new string[] { nameof(NetworkingWorkloadExecutor.ConnectionCount), "Connections" },
+                    8);
             }
 
             set
             {
-                this.Parameters[nameof(NetworkingWorkloadExecutor.Connections)] = value;
+                this.Parameters[nameof(NetworkingWorkloadExecutor.ConnectionCount)] = value;
             }
         }
         
@@ -309,34 +311,42 @@ namespace VirtualClient.Actions.NetworkPerformance
         /// <summary>
         /// Parameter defines the number of threads per each server port in the workload toolset tests.
         /// </summary>
-        public int? ThreadsPerServerPort
+        public int? ThreadCountPerServerPort
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(NetworkingWorkloadExecutor.ThreadsPerServerPort), out IConvertible threadsPerServerPort);
-                return threadsPerServerPort?.ToInt32(CultureInfo.InvariantCulture);
+                string parameterName = this.Parameters.ContainsKey(nameof(NetworkingWorkloadExecutor.ThreadCountPerServerPort))
+                    ? nameof(NetworkingWorkloadExecutor.ThreadCountPerServerPort)
+                    : "ThreadsPerServerPort";
+
+                this.Parameters.TryGetValue(parameterName, out IConvertible threadCountPerServerPort);
+                return threadCountPerServerPort?.ToInt32(CultureInfo.InvariantCulture);
             }
 
             set
             {
-                this.Parameters[nameof(NetworkingWorkloadExecutor.ThreadsPerServerPort)] = value;
+                this.Parameters[nameof(NetworkingWorkloadExecutor.ThreadCountPerServerPort)] = value;
             }
         }
 
         /// <summary>
         /// Parameter defines the number of connections in each sender thread in the workload toolset tests.
         /// </summary>
-        public int? ConnectionsPerThread
+        public int? ConnectionCountPerThread
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(NetworkingWorkloadExecutor.ConnectionsPerThread), out IConvertible connectionsPerThread);
-                return connectionsPerThread?.ToInt32(CultureInfo.InvariantCulture);
+                string parameterName = this.Parameters.ContainsKey(nameof(NetworkingWorkloadExecutor.ConnectionCountPerThread))
+                    ? nameof(NetworkingWorkloadExecutor.ConnectionCountPerThread)
+                    : "ConnectionsPerThread";
+
+                this.Parameters.TryGetValue(parameterName, out IConvertible connectionCountPerThread);
+                return connectionCountPerThread?.ToInt32(CultureInfo.InvariantCulture);
             }
 
             set
             {
-                this.Parameters[nameof(NetworkingWorkloadExecutor.ConnectionsPerThread)] = value;
+                this.Parameters[nameof(NetworkingWorkloadExecutor.ConnectionCountPerThread)] = value;
             }
         }
 
@@ -818,14 +828,14 @@ namespace VirtualClient.Actions.NetworkPerformance
                                     this.TestMode = serverInstructions.TestMode;
                                     this.TestDuration = serverInstructions.TestDuration;
                                     this.MessageSize = serverInstructions.MessageSize;
-                                    this.Connections = serverInstructions.Connections;
+                                    this.ConnectionCount = serverInstructions.ConnectionCount;
                                     this.WarmupTime = serverInstructions.WarmupTime;
                                     this.DelayTime = serverInstructions.DelayTime;
                                     this.Port = serverInstructions.Port;
                                     this.ReceiverMultiClientMode = serverInstructions.ReceiverMultiClientMode;
                                     this.SenderLastClient = serverInstructions.SenderLastClient;
-                                    this.ThreadsPerServerPort = serverInstructions.ThreadsPerServerPort;
-                                    this.ConnectionsPerThread = serverInstructions.ConnectionsPerThread;
+                                    this.ThreadCountPerServerPort = serverInstructions.ThreadCountPerServerPort;
+                                    this.ConnectionCountPerThread = serverInstructions.ConnectionCountPerThread;
                                     this.DevInterruptsDifferentiator = serverInstructions.DevInterruptsDifferentiator;
                                     this.MessagesPerSecond = serverInstructions.MessagesPerSecond;
                                     this.ConfidenceLevel = serverInstructions.ConfidenceLevel;
@@ -985,7 +995,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                             this.ThreadCount,
                             this.BufferSizeClient,
                             this.BufferSizeServer,
-                            this.Connections,
+                            this.ConnectionCount,
                             this.TestDuration.ToString(),
                             this.WarmupTime.ToString(),
                             this.DelayTime.ToString(),
@@ -994,8 +1004,8 @@ namespace VirtualClient.Actions.NetworkPerformance
                             this.Port,
                             this.ReceiverMultiClientMode,
                             this.SenderLastClient,
-                            this.ThreadsPerServerPort,
-                            this.ConnectionsPerThread,
+                            this.ThreadCountPerServerPort,
+                            this.ConnectionCountPerThread,
                             this.DevInterruptsDifferentiator,
                             this.MessagesPerSecond,
                             this.ConfidenceLevel,

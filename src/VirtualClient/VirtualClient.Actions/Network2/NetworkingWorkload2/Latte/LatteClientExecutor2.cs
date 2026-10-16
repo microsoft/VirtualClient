@@ -55,11 +55,11 @@ namespace VirtualClient.Actions
         /// <summary>
         /// The number of iterations for the network send/receive operations.
         /// </summary>
-        public int Iterations
+        public int IterationCount
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.Iterations), 100100);
+                return this.Parameters.GetValue<int>(nameof(this.IterationCount), 100100);
             }
         }
 
@@ -379,7 +379,7 @@ namespace VirtualClient.Actions
             string clientIPAddress = this.GetLayoutClientInstances(ClientRole.Client).First().IPAddress;
             string serverIPAddress = this.GetLayoutClientInstances(ClientRole.Server).First().IPAddress;
 
-            return $"-so -c -a {serverIPAddress}:{this.Port} -rio -i {this.Iterations} -riopoll {this.RioPoll} -{this.Protocol.ToString().ToLowerInvariant()} " +
+            return $"-so -c -a {serverIPAddress}:{this.Port} -rio -i {this.IterationCount} -riopoll {this.RioPoll} -{this.Protocol.ToString().ToLowerInvariant()} " +
             $"-hist -hl 1 -hc 9998 -bl {clientIPAddress}";
         }
 

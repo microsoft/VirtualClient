@@ -46,7 +46,7 @@ namespace VirtualClient.Actions
                 ["CommandLine"] = "--protected-mode no --io-threads {ServerThreadCount} --maxmemory-policy noeviction --ignore-warnings ARM64-COW-BUG --save --daemonize yes",
                 ["BindToCores"] = true,
                 ["Port"] = 6379,
-                ["ServerInstances"] = 1,
+                ["ServerInstanceCount"] = 1,
                 ["ServerThreadCount"] = 4,
                 ["IsTLSEnabled"] = false
             };
@@ -78,6 +78,22 @@ namespace VirtualClient.Actions
             {
                 await component.InitializeAsync(EventContext.None, CancellationToken.None);
                 this.fixture.PackageManager.Verify(mgr => mgr.GetPackageAsync(this.mockRedisPackage.Name, It.IsAny<CancellationToken>()));
+            }
+        }
+
+        [Test]
+        public void RedisServerExecutorSupportsCurrentAndLegacyServerInstanceCountParameters()
+        {
+            this.fixture.Parameters.Remove("ServerInstanceCount");
+            this.fixture.Parameters["ServerInstances"] = 2;
+
+            using (var executor = new TestRedisServerExecutor(this.fixture.Dependencies, this.fixture.Parameters))
+            {
+                Assert.AreEqual(2, executor.ServerInstanceCount);
+
+                executor.Parameters["ServerInstanceCount"] = 3;
+
+                Assert.AreEqual(3, executor.ServerInstanceCount);
             }
         }
 
@@ -114,7 +130,7 @@ namespace VirtualClient.Actions
 
             using (var executor = new TestRedisServerExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
-                executor.Parameters[nameof(executor.ServerInstances)] = 2;
+                executor.Parameters[nameof(executor.ServerInstanceCount)] = 2;
 
                 await executor.ExecuteAsync(CancellationToken.None);
 

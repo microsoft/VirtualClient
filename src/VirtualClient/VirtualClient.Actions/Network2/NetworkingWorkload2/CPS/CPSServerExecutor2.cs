@@ -86,11 +86,13 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Parameter defines the number of connections to use in the workload toolset tests.
         /// </summary>
-        public int Connections
+        public int ConnectionCount
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.Connections), 8);
+                return this.Parameters.GetValue<int>(
+                    new string[] { nameof(this.ConnectionCount), "Connections" },
+                    8);
             }
         }
 
@@ -106,14 +108,16 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// ConnectionsPerThread is only for client/sender role.
+        /// ConnectionCountPerThread is only for client/sender role.
         /// Parameter defines the number of connections in each sender thread.
         /// </summary>
-        public int ConnectionsPerThread
+        public int ConnectionCountPerThread
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.ConnectionsPerThread), 100);
+                return this.Parameters.GetValue<int>(
+                    new string[] { nameof(this.ConnectionCountPerThread), "ConnectionsPerThread" },
+                    100);
             }
         }
 
@@ -403,7 +407,7 @@ namespace VirtualClient.Actions
         private string GetCommandLineArguments()
         {
             string serverIPAddress = this.GetLayoutClientInstances(ClientRole.Server).First().IPAddress;
-            return $"-s -r {this.Connections} {serverIPAddress},{this.Port} -i {this.DisplayInterval} -wt {this.WarmupTime.TotalSeconds} -t {this.TestDuration.TotalSeconds} " +
+            return $"-s -r {this.ConnectionCount} {serverIPAddress},{this.Port} -i {this.DisplayInterval} -wt {this.WarmupTime.TotalSeconds} -t {this.TestDuration.TotalSeconds} " +
                 $"{((this.DelayTime != TimeSpan.Zero) ? $"-ds {this.DelayTime.TotalSeconds}" : string.Empty)} ";
         }
 

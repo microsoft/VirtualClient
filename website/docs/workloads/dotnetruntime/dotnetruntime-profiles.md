@@ -30,8 +30,8 @@ This profile is designed by the Intel team as part of Cloud R1 Workload to ident
 
   | Parameter                 | Purpose                                                                         | Default value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
-  | NumberOfJvmInstances      | Optional. This specifies the number of JVM(Java Virtual Machine) application instances to run. | 1 
-  | NumberOfWarehouses        | Optional. This specifies the number of warehouses that we can have. | 8 
+  | JvmInstanceCount          | Optional. This specifies the number of JVM(Java Virtual Machine) application instances to run. | 1
+  | WarehouseCount            | Optional. This specifies the number of warehouses that we can have. | 8
   | RampUpSeconds             | Optional. This specifies the time in seconds that the workload will ramp up/warm up. | 60 
   | MeasurementSeconds        | Optional. This specifies the time in seconds that the workload will run. | 3600 
   | FixedThroughput           | Optional. This specifies the target throughput. The workload will try to target the specified throughput. | 16000 |
@@ -52,6 +52,6 @@ This profile is designed by the Intel team as part of Cloud R1 Workload to ident
   VirtualClient.exe --profile=PERF-CPU-DOTNETRUNTIME.json --system=Juno --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
 
   # Increase the scale factors.
-  VirtualClient.exe --profile=PERF-CPU-DOTNETRUNTIME.json --system=Juno --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=NumberOfJvmInstances=2
-  VirtualClient.exe --profile=PERF-CPU-DOTNETRUNTIME.json --system=Juno --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=NumberOfJvmInstances=2,,,NumberOfWarehouses=16
+  VirtualClient.exe --profile=PERF-CPU-DOTNETRUNTIME.json --system=Juno --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=JvmInstanceCount=2
+  VirtualClient.exe --profile=PERF-CPU-DOTNETRUNTIME.json --system=Juno --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=JvmInstanceCount=2,,,WarehouseCount=16
   ```

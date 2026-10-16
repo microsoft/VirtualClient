@@ -76,11 +76,11 @@ Runs the Memtier workload against to generate various network traffic patterns a
   | Parameter                 | Purpose                                                                         | Default Value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
   | Username                  | <mark>Required when Virtual Client itself is launched by any process running as 'root' (e.g. a daemon).</mark><br/><br/>Defines a specific username under which to run the Memcached server.  | The user account for the process that launches Virtual Client.  |
-  | ClientInstances           | Optional. Defines the number of distinct client instances that to execute requests against the server concurrently. | 1 |
+  | ClientInstanceCount       | Optional. Defines the number of distinct client instances that to execute requests against the server concurrently. | 1 |
   | EmitAggregateMetrics      | Optional. "True" to emit aggregate/rollup metrics from all individual Memtier client/Redis server request streams. The profile executes a Redis server per logical processor on the system and can thus emit a lot of metrics. As such emitting the metrics as aggregates of all Redis server processes may be desirable. | false |
   | EmitRawMetrics            | Optional. "True" to emit the raw metrics from each individual Memtier client/Redis server request stream. This is the default option.. | true |
   | Duration                  | Optional. Defines the length of time to execute the Memtier benchmark operations against the Memcached server for each scenario in the profile. | 2 mins |
-  | ServerMaxConnections      | Optional. The Maxium number of connections the Memcached server will allow. This allows the user to adjust alongside the number of client instances for higher scale situations.  |  |
+  | MaxServerConnectionCount  | Optional. The maximum number of connections the Memcached server will allow. This allows the user to adjust alongside the number of client instances for higher scale situations.  |  |
   | ServerPort                | Optional. The initial port on which the Memcached server will listen for traffic. | 6379 |
 
 * **Component Parameters**  
@@ -94,13 +94,13 @@ Runs the Memtier workload against to generate various network traffic patterns a
   | PackageName               | The name of the package that contains the Memcached server binaries/scripts.    |               |
   | Port                      | The initial port on which the Memcached servers will listen for traffic. Additional ports will be used for each 1 server instance defined in a sequental manner (e.g. 6379, 6380, 6381) | |
   | ServerThreadCount         | The number of threads to use by the Memcached server to handle operations. | 4 |
-  | ServerMaxConnections      | The maximum number of connections the Memcached server will allow in total. | 16384 |
+  | MaxServerConnectionCount  | The maximum number of connections the Memcached server will allow in total. | 16384 |
   | Username                  | <mark>Required when Virtual Client itself is launched by any process running as 'root' (e.g. a daemon).</mark><br/><br/>Defines a specific username under which to run the Memcached server. | The user account for the process that launches Virtual Client.  |
 
   | Client Role Parameter     | Purpose                                                                         | Default Value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
   | Scenario                  | Scenario used to define the purpose of the action in the profile. This can be used to specify exact actions to run or exclude from the profile. | |
-  | ClientInstances           | Defines the number of concurrent Memtier processes to start for execution of requests against the Memcached server. Note that each client instance will open 1 connection against the server for each --thread and --clients definition (e.g. --threads 16 --clients 16 == 256 connections). Ensure the Memcached server OS limits exceed this number of connections (e.g. ulimit -Sn on Linux).  | 1 |
+  | ClientInstanceCount       | Defines the number of concurrent Memtier processes to start for execution of requests against the Memcached server. Note that each client instance will open 1 connection against the server for each --thread and --clients definition (e.g. --threads 16 --clients 16 == 256 connections). Ensure the Memcached server OS limits exceed this number of connections (e.g. ulimit -Sn on Linux).  | 1 |
   | EmitAggregateMetrics      | Optional. "True" to emit aggregate/rollup metrics from all individual Memtier client/Redis server request streams. The profile executes a Redis server per logical processor on the system and can thus emit a lot of metrics. As such emitting the metrics as aggregates of all Redis server processes may be desirable. | false |
   | EmitRawMetrics            | Optional. "True" to emit the raw metrics from each individual Memtier client/Redis server request stream. This is the default option.. | true |
   | CommandLine               | The command line to use for executing the Memtier workload against the Memcached server. Note that the --port and --server options will be added automatically by the executor. For the --key-pattern option, 'S' means sequential distribution, 'R' means uniform random distribution and 'G' means Gaussian distribution of object. | |

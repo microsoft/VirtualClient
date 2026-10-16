@@ -49,11 +49,11 @@ namespace VirtualClient.Actions
         /// Parameter defines the number of Memtier benchmark instances to execute against
         /// each server instance. Default = # of logical cores/vCPUs on system.
         /// </summary>
-        public int ClientInstances
+        public int ClientInstanceCount
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.ClientInstances), 1);
+                return this.Parameters.GetValue<int>(nameof(this.ClientInstanceCount), 1);
             }
         }
 
@@ -278,7 +278,7 @@ namespace VirtualClient.Actions
                     List<Task> workloadProcesses = new List<Task>();
                     foreach (PortDescription serverPort in serverState.Ports)
                     {
-                        for (int i = 0; i < this.ClientInstances; i++)
+                        for (int i = 0; i < this.ClientInstanceCount; i++)
                         {
                             // e.g.
                             // sudo bash -c "/home/user/virtualclient/linux-x64/src/redis-benchmark -h 1.2.3.5 -p 6379 -c 2 -n 10000 -P 32 -q --csv"

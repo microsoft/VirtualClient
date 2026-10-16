@@ -75,7 +75,7 @@ scenario is Balanced.
     "BenchmarkName": "OLTP",
     "DatabaseName": "sbtest",
     "DatabaseScenario": "Configure",
-    "Threads": "8",
+    "ThreadCount": "8",
     "NumTables": "16",
     "RecordCount": "500",
     "Duration": "00:20:00",
@@ -233,7 +233,7 @@ There are a lot of moving parts to this workload that allows for both out-of-box
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
                 "PackageName": "sysbench",
-                "Threads": "$.Parameters.Threads",
+                "ThreadCount": "$.Parameters.ThreadCount",
                 "RecordCount": "$.Parameters.RecordCount",
                 "TableCount": "$.Parameters.TableCount",
                 "Role": "Client"
@@ -258,7 +258,7 @@ There are a lot of moving parts to this workload that allows for both out-of-box
                 "Duration": "$.Parameters.Duration",
                 "Workload": "oltp_read_only",
                 "PackageName": "sysbench",
-                "Threads": "$.Parameters.Threads",
+                "ThreadCount": "$.Parameters.ThreadCount",
                 "RecordCount": "$.Parameters.RecordCount",
                 "TableCount": "$.Parameters.TableCount",
                 "Role": "Client"
@@ -303,7 +303,7 @@ Runs a system-intensive workload using the Sysbench Benchmark to test the bandwi
 
   | Parameter                 | Purpose                                                                                                                 |Default      |
   |---------------------------|-------------------------------------------------------------------------------------------------------------------------|-------------|
-  | Threads              | Optional. Number of threads to use during workload execution.                | vCPU * 8     |
+  | ThreadCount          | Optional. Number of threads to use during workload execution.                | vCPU * 8     |
   | RecordCount          | Optional. Number of records per table in the database (OLTP only).                   | 10^(log2(vCPU) + 2)         |
   | NumTables             | Optional. Number of tables created in the database.                         | 10              |
 
@@ -359,7 +359,7 @@ Runs a system-intensive workload using the Sysbench Benchmark to test the bandwi
 
   | Parameter                 | Purpose                                                                                                                 |Default      |
   |---------------------------|-------------------------------------------------------------------------------------------------------------------------|-------------|
-  | Threads              | Optional. Number of threads to use during workload execution.                | vCPU * 8     |
+  | ThreadCount          | Optional. Number of threads to use during workload execution.                | vCPU * 8     |
   | WarehouseCount       | Optional. Number of warehouses per table in the database.                                               | 100       |
   | NumTables             | Optional. Number of tables created in the database.                         | 10              |
 
