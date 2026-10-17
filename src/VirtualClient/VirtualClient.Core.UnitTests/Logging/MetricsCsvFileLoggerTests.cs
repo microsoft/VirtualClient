@@ -59,6 +59,33 @@ namespace VirtualClient.Logging
         }
 
         [Test]
+        public void MetricsCsvFileLoggerDoesNotExportNumaCpuListsFromMetricMetadata()
+        {
+            EventContext context = new EventContext(Guid.NewGuid(), new Dictionary<string, object>
+            {
+                ["toolName"] = "SPECcpu",
+                ["scenarioName"] = "ExecuteSPECBenchmark",
+                ["metricName"] = "node-cpus-0",
+                ["metricValue"] = 4,
+                ["metricUnit"] = "count",
+                ["metadata_metrics"] = new Dictionary<string, IConvertible>
+                {
+                    ["cpuIds"] = "0,1,48,49",
+                    ["selectedCpuIds"] = "0,48",
+                    ["processorAffinity"] = "0,1,48,49"
+                }
+            });
+
+            string csv = MetricsCsvFileLogger.CreateMessage(context);
+
+            StringAssert.Contains("\"SPECcpu\"", csv);
+            StringAssert.Contains("\"node-cpus-0\",\"4\",\"count\"", csv);
+            StringAssert.DoesNotContain("0,1,48,49", csv);
+            StringAssert.DoesNotContain("0,48", csv);
+            StringAssert.DoesNotContain("cpuIds", csv);
+        }
+
+        [Test]
         public void MetricsCsvFileLoggerWritesTheExpectedCsvToFiles_1()
         {
             Guid expectedExperimentId = Guid.NewGuid();

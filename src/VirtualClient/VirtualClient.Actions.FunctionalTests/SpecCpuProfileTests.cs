@@ -5,6 +5,7 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
+    using System.IO;
     using System.Linq;
     using System.Runtime.InteropServices;
     using System.Threading;
@@ -43,6 +44,44 @@ namespace VirtualClient.Actions
             {
                 WorkloadAssert.ParameterReferencesInlined(executor.Profile);
             }
+        }
+
+        [Test]
+        [TestCase("PERF-SPECCPU-INTRATE.json", PlatformID.Unix, "intrate", null)]
+        [TestCase("PERF-SPECCPU-INTRATE.json", PlatformID.Unix, "intrate", "2,4,8,10")]
+        [TestCase("PERF-SPECCPU-INTRATE.json", PlatformID.Win32NT, "505 525 541 548 557", null)]
+        [TestCase("PERF-SPECCPU-FPRATE.json", PlatformID.Unix, "fprate", null)]
+        [TestCase("PERF-SPECCPU-FPRATE.json", PlatformID.Unix, "fprate", "2,4,8,10")]
+        [TestCase("PERF-SPECCPU-FPRATE.json", PlatformID.Win32NT, "503 508 510 519 544 549 554", null)]
+        public async Task SpecCpuRateProfilesRunTheFullSuiteWithOptionalProcessorAffinity(
+            string profileName,
+            PlatformID platform,
+            string expectedBenchmarks,
+            string processorAffinity)
+        {
+            this.mockFixture.Setup(platform);
+
+            ExecutionProfile profile = await ExecutionProfile.ReadProfileAsync(Path.Combine(MockFixture.TestResourcesDirectory, "profiles", profileName));
+            if (processorAffinity != null)
+            {
+                profile.Parameters["ProcessorAffinity"] = processorAffinity;
+            }
+
+            profile.Parameters["CopyCount"] = 4;
+
+            Assert.AreEqual(1, profile.Actions.Count, "A SPEC CPU rate suite must run as one action, not separate benchmarks.");
+            ExecutionProfileElement action = profile.Actions.Single();
+            Assert.AreEqual("SpecCpuExecutor", action.Type);
+            Assert.AreEqual("ExecuteSPECBenchmark", action.Parameters["Scenario"]);
+            Assert.AreEqual("$.Parameters.Benchmarks", action.Parameters["Benchmarks"], "The suite action must use the platform-specific benchmark selection.");
+            Assert.IsFalse(profile.Actions.Any(item => item.Parameters["Scenario"].ToString().StartsWith("benchmark_", StringComparison.OrdinalIgnoreCase)));
+
+            profile.Inline();
+            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, action.Parameters);
+
+            Assert.AreEqual(expectedBenchmarks, action.Parameters["Benchmarks"]);
+            Assert.AreEqual(processorAffinity ?? string.Empty, action.Parameters["ProcessorAffinity"]);
+            Assert.AreEqual("4", action.Parameters["CopyCount"].ToString());
         }
 
         [Test]

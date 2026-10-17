@@ -10,6 +10,7 @@ namespace VirtualClient.Actions
     using System.IO.Abstractions;
     using System.Linq;
     using System.Reflection;
+    using System.Runtime.InteropServices;
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
@@ -589,10 +590,249 @@ namespace VirtualClient.Actions
             Assert.IsFalse(writtenConfigText.Contains("$Gcc10Workaround$"), "Placeholder '$Gcc10Workaround$' should be replaced.");
         }
 
-        private void SetupLinux()
+        [TestCase("intrate", "0-3", "$SPECCOPYNUM", null)]
+        [TestCase("intrate", "0,1,48,49", "$BIND", "bind = 0,1,48,49")]
+        [TestCase("intrate", "2,4,8,10", "$BIND", "bind = 2,4,8,10")]
+        [TestCase("fprate", "2,4,8,10", "$BIND", "bind = 2,4,8,10")]
+        public async Task SpecCpu2017ExecutorPinsRateCopies(string profile, string cpuIds, string copyCpu, string expectedBind)
+        {
+            this.SetupLinux();
+            this.SetupInstalledAffinityRun(cpuIds);
+            this.mockFixture.Parameters[nameof(SpecCpuExecutor.SpecProfile)] = profile;
+            this.mockFixture.Parameters[nameof(SpecCpuExecutor.Benchmarks)] = profile;
+
+            string pinnedConfig = null;
+            string pinnedPath = null;
+            this.mockFixture.File.Setup(f => f.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Callback<string, string, CancellationToken>((path, content, token) =>
+                {
+                    pinnedPath = path;
+                    pinnedConfig = content;
+                })
+                .Returns(Task.CompletedTask);
+
+            List<string> commands = new List<string>();
+            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            {
+                commands.Add($"{exe} {arguments}");
+                return new InMemoryProcess
+                {
+                    StartInfo = new ProcessStartInfo { FileName = exe, Arguments = arguments },
+                    ExitCode = 0,
+                    OnStart = () => true,
+                    OnHasExited = () => true
+                };
+            };
+
+            using (TestSpecCpu2017Executor executor = new TestSpecCpu2017Executor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                await executor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+            }
+
+            StringAssert.Contains("vc-linux-x64-2017-affinity-", Path.GetFileName(pinnedPath));
+            StringAssert.Contains($"submit = numactl --localalloc --physcpubind={copyCpu} -- $command", pinnedConfig);
+            if (expectedBind != null)
+            {
+                StringAssert.Contains(expectedBind, pinnedConfig);
+            }
+
+            Assert.IsTrue(commands.Any(command => command == "numactl --version"));
+            Assert.IsTrue(commands.Any(command => command == $"numactl --localalloc -C {cpuIds} true"));
+            Assert.IsTrue(commands.Any(command => command.Contains($"--config {Path.GetFileName(pinnedPath)}") && command.Contains("--copies 4")));
+        }
+
+        [TestCase("", false, Architecture.X64)]
+        [TestCase("0-3", true, Architecture.X64)]
+        [TestCase("0-3", true, Architecture.Arm64)]
+        public async Task SpecCpu2017ExecutorPreservesSuiteTelemetryAndMetadataWithOptionalAffinity(string processorAffinity, bool pinned, Architecture architecture)
+        {
+            this.SetupLinux(architecture);
+            this.SetupInstalledAffinityRun(processorAffinity);
+            this.mockFixture.Parameters[nameof(SpecCpuExecutor.Scenario)] = "ExecuteSPECBenchmark";
+            string topology = "available: 2 nodes (0-1)\nnode 0 cpus: 0 1\nnode 0 size: 16000 MB\nnode 0 free: 12000 MB\nnode 1 cpus: 2 3\nnode 1 size: 16000 MB\nnode 1 free: 11000 MB";
+
+            string configurationFile = null;
+            this.mockFixture.File.Setup(f => f.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Callback<string, string, CancellationToken>((path, content, token) => configurationFile = Path.GetFileName(path))
+                .Returns(Task.CompletedTask);
+
+            List<string> commands = new List<string>();
+            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            {
+                commands.Add($"{exe} {arguments}");
+                return new InMemoryProcess
+                {
+                    StartInfo = new ProcessStartInfo { FileName = exe, Arguments = arguments },
+                    StandardOutput = new ConcurrentBuffer(new StringBuilder(exe == "numactl" && arguments == "--hardware" ? topology : string.Empty)),
+                    ExitCode = 0,
+                    OnStart = () => true,
+                    OnHasExited = () => true
+                };
+            };
+
+            using (TestSpecCpu2017Executor executor = new TestSpecCpu2017Executor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                await executor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+            }
+
+            string expectedConfig = pinned ? configurationFile : $"vc-linux-{(architecture == Architecture.Arm64 ? "arm64" : "x64")}-2017.cfg";
+            Assert.AreEqual(pinned, commands.Any(command => command == "numactl --version"));
+            Assert.AreEqual(pinned, commands.Any(command => command == "numactl --hardware"));
+            Assert.AreEqual(1, commands.Count(command => command.StartsWith("bash runspeccpu.sh", StringComparison.Ordinal)));
+            Assert.IsTrue(commands.Any(command => command.Contains($"--config {expectedConfig}") && command.EndsWith("--reportable intrate\"")));
+
+            var topologyEvents = this.mockFixture.Logger.Where(entry => entry.Item2.Name.EndsWith(".NumactlTopology", StringComparison.Ordinal)).ToList();
+            Assert.AreEqual(pinned ? 1 : 0, topologyEvents.Count);
+            if (pinned)
+            {
+                EventContext topologyContext = (EventContext)topologyEvents.Single().Item3;
+                Assert.AreEqual("0,1,2,3", topologyContext.Properties["cpuIds"]);
+                Assert.AreEqual(true, topologyContext.Properties["available"]);
+                Assert.AreEqual(topology, topologyContext.Properties["topology"]);
+            }
+
+            EventContext runContext = (EventContext)this.mockFixture.Logger.Single(entry => entry.Item2.Name.EndsWith(".RunStarted", StringComparison.Ordinal)).Item3;
+            Assert.AreEqual("ExecuteSPECBenchmark", runContext.Properties["scenario"]);
+            Assert.AreEqual(pinned, runContext.Properties["pinningEnabled"]);
+            Assert.AreEqual(expectedConfig, runContext.Properties["configurationFile"]);
+
+            EventContext metricsContext = (EventContext)this.mockFixture.Logger.Single(entry => entry.Item2.Name.EndsWith(".MetricsCaptured", StringComparison.Ordinal)).Item3;
+            IDictionary<string, object> metadata = (IDictionary<string, object>)metricsContext.Properties["metadata_scenario"];
+            Assert.AreEqual("SPECcpu/intrate", metadata["toolName"]);
+            StringAssert.Contains($"--config {expectedConfig}", metadata["toolArguments"].ToString());
+
+            var numaMetrics = this.mockFixture.Logger.Where(entry => entry.Item2.Name == "SPECcpu.ScenarioResult").ToList();
+            Assert.AreEqual(pinned ? 6 : 0, numaMetrics.Count);
+            if (pinned)
+            {
+                EventContext cpuMetric = (EventContext)numaMetrics.Single(entry => ((EventContext)entry.Item3).Properties["metricName"].Equals("node-cpus-0")).Item3;
+                Assert.AreEqual(2, cpuMetric.Properties["metricValue"]);
+                Assert.AreEqual("count", cpuMetric.Properties["metricUnit"]);
+                Assert.AreEqual("NUMA-diagnostic", cpuMetric.Properties["metricCategorization"]);
+                Assert.AreEqual("ExecuteSPECBenchmark", cpuMetric.Properties["scenarioName"]);
+                IDictionary<string, IConvertible> cpuMetadata = (IDictionary<string, IConvertible>)cpuMetric.Properties["metadata_metrics"];
+                Assert.AreEqual("0,1", cpuMetadata["cpuIds"]);
+                Assert.AreEqual("0,1", cpuMetadata["selectedCpuIds"]);
+                Assert.AreEqual("0,1,2,3", cpuMetadata["processorAffinity"]);
+                Assert.AreEqual("physcpubind", cpuMetadata["processorBinding"]);
+                Assert.AreEqual("localalloc", cpuMetadata["numaMemoryPolicy"]);
+                Assert.AreEqual("5", cpuMetric.Properties["metricVerbosity"]);
+                EventContext secondNodeCpuMetric = (EventContext)numaMetrics.Single(entry => ((EventContext)entry.Item3).Properties["metricName"].Equals("node-cpus-1")).Item3;
+                IDictionary<string, IConvertible> secondNodeMetadata = (IDictionary<string, IConvertible>)secondNodeCpuMetric.Properties["metadata_metrics"];
+                Assert.AreEqual("2,3", secondNodeMetadata["cpuIds"]);
+                Assert.AreEqual("2,3", secondNodeMetadata["selectedCpuIds"]);
+
+                EventContext sizeMetric = (EventContext)numaMetrics.Single(entry => ((EventContext)entry.Item3).Properties["metricName"].Equals("node-size-0")).Item3;
+                Assert.AreEqual(16000, sizeMetric.Properties["metricValue"]);
+                Assert.AreEqual("MB", sizeMetric.Properties["metricUnit"]);
+                EventContext freeMetric = (EventContext)numaMetrics.Single(entry => ((EventContext)entry.Item3).Properties["metricName"].Equals("node-free-1")).Item3;
+                Assert.AreEqual(11000, freeMetric.Properties["metricValue"]);
+                Assert.AreEqual(cpuMetadata["topologyCapturedAt"], ((IDictionary<string, IConvertible>)freeMetric.Properties["metadata_metrics"])["topologyCapturedAt"]);
+                Assert.Less(this.mockFixture.Logger.IndexOf(numaMetrics.Last()), this.mockFixture.Logger.FindIndex(entry => entry.Item2.Name.EndsWith(".MetricsCaptured", StringComparison.Ordinal)));
+            }
+        }
+
+        [TestCase("", 1)]
+        [TestCase("available: 2 nodes (0-1)\nnode 0 cpus: 0 1\nnode 0 size: 16000 MB\nnode 0 free: 12000 MB\nnode 1 cpus: 2 3\nnode 1 size: 16000 MB", 0)]
+        [TestCase("available: 1 nodes (0)\nnode 0 cpus: 8 9 10 11\nnode 0 size: 16000 MB\nnode 0 free: 12000 MB", 0)]
+        public async Task SpecCpu2017ExecutorReportsUnavailableTopologyWithoutBlockingTheRun(string topology, int probeExitCode)
+        {
+            this.SetupLinux(Architecture.Arm64);
+            this.SetupInstalledAffinityRun("0-3");
+            bool ranSuite = false;
+            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            {
+                ranSuite |= exe == "bash";
+                return new InMemoryProcess
+                {
+                    StartInfo = new ProcessStartInfo { FileName = exe, Arguments = arguments },
+                    StandardOutput = new ConcurrentBuffer(new StringBuilder(exe == "numactl" && arguments == "--hardware" ? topology : string.Empty)),
+                    ExitCode = exe == "numactl" && arguments == "--hardware" ? probeExitCode : 0,
+                    OnStart = () => true,
+                    OnHasExited = () => true
+                };
+            };
+
+            using (TestSpecCpu2017Executor executor = new TestSpecCpu2017Executor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                await executor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+            }
+
+            EventContext topologyContext = (EventContext)this.mockFixture.Logger.Single(entry => entry.Item2.Name.EndsWith(".NumactlTopology", StringComparison.Ordinal)).Item3;
+            Assert.AreEqual(false, topologyContext.Properties["available"]);
+            Assert.IsFalse(this.mockFixture.Logger.Any(entry => entry.Item2.Name == "SPECcpu.ScenarioResult"));
+            Assert.IsTrue(ranSuite);
+        }
+
+        [TestCase("0-2")]
+        [TestCase("0,invalid,2,3")]
+        public void SpecCpu2017ExecutorRejectsInvalidProcessorAffinity(string cpuIds)
+        {
+            this.SetupLinux();
+            this.SetupInstalledAffinityRun(cpuIds);
+
+            using (TestSpecCpu2017Executor executor = new TestSpecCpu2017Executor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                Assert.ThrowsAsync<ArgumentException>(async () => await executor.ExecuteAsync(CancellationToken.None));
+            }
+        }
+
+        [Test]
+        public void SpecCpu2017ExecutorRejectsAffinityOnSpeedRuns()
+        {
+            this.SetupLinux();
+            this.SetupInstalledAffinityRun("0-3");
+            this.mockFixture.Parameters[nameof(SpecCpuExecutor.SpecProfile)] = "intspeed";
+
+            using (TestSpecCpu2017Executor executor = new TestSpecCpu2017Executor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                Assert.ThrowsAsync<NotSupportedException>(async () => await executor.ExecuteAsync(CancellationToken.None));
+            }
+        }
+
+        [TestCase("--version", typeof(DependencyException))]
+        [TestCase("--localalloc", typeof(ArgumentException))]
+        public void SpecCpu2017ExecutorValidatesNumactl(string failingCommand, Type expectedException)
+        {
+            this.SetupLinux();
+            this.SetupInstalledAffinityRun("0-3");
+            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) => new InMemoryProcess
+            {
+                StartInfo = new ProcessStartInfo { FileName = exe, Arguments = arguments },
+                ExitCode = exe == "numactl" && arguments.StartsWith(failingCommand) ? 1 : 0,
+                OnStart = () => true,
+                OnHasExited = () => true
+            };
+
+            using (TestSpecCpu2017Executor executor = new TestSpecCpu2017Executor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                Assert.ThrowsAsync(expectedException, async () => await executor.ExecuteAsync(CancellationToken.None));
+            }
+        }
+
+        [Test]
+        public void SpecCpu2017ExecutorRejectsAffinityOnWindows()
+        {
+            this.SetupWindows();
+            this.SetupInstalledAffinityRun("0-3");
+
+            using (TestSpecCpu2017Executor executor = new TestSpecCpu2017Executor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                Assert.ThrowsAsync<NotSupportedException>(async () => await executor.ExecuteAsync(CancellationToken.None));
+            }
+        }
+
+        private void SetupInstalledAffinityRun(string cpuIds)
+        {
+            State state = new State(new Dictionary<string, IConvertible> { ["SpecCpuInitialized"] = true });
+            this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.Parse(state.ToJson()));
+            this.mockFixture.Parameters[nameof(SpecCpuExecutor.ProcessorAffinity)] = cpuIds;
+        }
+
+        private void SetupLinux(Architecture architecture = Architecture.X64)
         {
             this.mockFixture = new MockFixture();
-            this.mockFixture.Setup(PlatformID.Unix);
+            this.mockFixture.Setup(PlatformID.Unix, architecture);
             this.mockPackage = new DependencyPath("SPECcpu", this.mockFixture.PlatformSpecifics.GetPackagePath("speccpu", "1.1.8"));
 
             this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPackage);
