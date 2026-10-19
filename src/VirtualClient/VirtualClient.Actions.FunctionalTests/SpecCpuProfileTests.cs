@@ -53,18 +53,18 @@ namespace VirtualClient.Actions
         [TestCase("PERF-SPECCPU-FPRATE.json", PlatformID.Unix, "fprate", null)]
         [TestCase("PERF-SPECCPU-FPRATE.json", PlatformID.Unix, "fprate", "2,4,8,10")]
         [TestCase("PERF-SPECCPU-FPRATE.json", PlatformID.Win32NT, "503 508 510 519 544 549 554", null)]
-        public async Task SpecCpuRateProfilesRunTheFullSuiteWithOptionalProcessorAffinity(
+        public async Task SpecCpuRateProfilesRunTheFullSuiteWithOptionalNumaProcessorAffinity(
             string profileName,
             PlatformID platform,
             string expectedBenchmarks,
-            string processorAffinity)
+            string numaProcessorAffinity)
         {
             this.mockFixture.Setup(platform);
 
             ExecutionProfile profile = await ExecutionProfile.ReadProfileAsync(Path.Combine(MockFixture.TestResourcesDirectory, "profiles", profileName));
-            if (processorAffinity != null)
+            if (numaProcessorAffinity != null)
             {
-                profile.Parameters["ProcessorAffinity"] = processorAffinity;
+                profile.Parameters["NumaProcessorAffinity"] = numaProcessorAffinity;
             }
 
             profile.Parameters["CopyCount"] = 4;
@@ -80,7 +80,7 @@ namespace VirtualClient.Actions
             await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, action.Parameters);
 
             Assert.AreEqual(expectedBenchmarks, action.Parameters["Benchmarks"]);
-            Assert.AreEqual(processorAffinity ?? string.Empty, action.Parameters["ProcessorAffinity"]);
+            Assert.AreEqual(numaProcessorAffinity ?? string.Empty, action.Parameters["NumaProcessorAffinity"]);
             Assert.AreEqual("4", action.Parameters["CopyCount"].ToString());
         }
 

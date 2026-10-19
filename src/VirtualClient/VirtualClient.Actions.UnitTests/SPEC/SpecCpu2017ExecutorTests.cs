@@ -644,10 +644,10 @@ namespace VirtualClient.Actions
         [TestCase("", false, Architecture.X64)]
         [TestCase("0-3", true, Architecture.X64)]
         [TestCase("0-3", true, Architecture.Arm64)]
-        public async Task SpecCpu2017ExecutorPreservesSuiteTelemetryAndMetadataWithOptionalAffinity(string processorAffinity, bool pinned, Architecture architecture)
+        public async Task SpecCpu2017ExecutorPreservesSuiteTelemetryAndMetadataWithOptionalAffinity(string numaProcessorAffinity, bool pinned, Architecture architecture)
         {
             this.SetupLinux(architecture);
-            this.SetupInstalledAffinityRun(processorAffinity);
+            this.SetupInstalledAffinityRun(numaProcessorAffinity);
             this.mockFixture.Parameters[nameof(SpecCpuExecutor.Scenario)] = "ExecuteSPECBenchmark";
             string topology = "available: 2 nodes (0-1)\nnode 0 cpus: 0 1\nnode 0 size: 16000 MB\nnode 0 free: 12000 MB\nnode 1 cpus: 2 3\nnode 1 size: 16000 MB\nnode 1 free: 11000 MB";
 
@@ -713,7 +713,7 @@ namespace VirtualClient.Actions
                 IDictionary<string, IConvertible> cpuMetadata = (IDictionary<string, IConvertible>)cpuMetric.Properties["metadata_metrics"];
                 Assert.AreEqual("0,1", cpuMetadata["cpuIds"]);
                 Assert.AreEqual("0,1", cpuMetadata["selectedCpuIds"]);
-                Assert.AreEqual("0,1,2,3", cpuMetadata["processorAffinity"]);
+                Assert.AreEqual("0,1,2,3", cpuMetadata["numaProcessorAffinity"]);
                 Assert.AreEqual("physcpubind", cpuMetadata["processorBinding"]);
                 Assert.AreEqual("localalloc", cpuMetadata["numaMemoryPolicy"]);
                 Assert.AreEqual("5", cpuMetric.Properties["metricVerbosity"]);
@@ -766,7 +766,7 @@ namespace VirtualClient.Actions
 
         [TestCase("0-2")]
         [TestCase("0,invalid,2,3")]
-        public void SpecCpu2017ExecutorRejectsInvalidProcessorAffinity(string cpuIds)
+        public void SpecCpu2017ExecutorRejectsInvalidNumaProcessorAffinity(string cpuIds)
         {
             this.SetupLinux();
             this.SetupInstalledAffinityRun(cpuIds);
@@ -826,7 +826,7 @@ namespace VirtualClient.Actions
         {
             State state = new State(new Dictionary<string, IConvertible> { ["SpecCpuInitialized"] = true });
             this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.Parse(state.ToJson()));
-            this.mockFixture.Parameters[nameof(SpecCpuExecutor.ProcessorAffinity)] = cpuIds;
+            this.mockFixture.Parameters[nameof(SpecCpuExecutor.NumaProcessorAffinity)] = cpuIds;
         }
 
         private void SetupLinux(Architecture architecture = Architecture.X64)

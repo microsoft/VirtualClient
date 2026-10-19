@@ -163,11 +163,11 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Optional list of physical CPU IDs to assign to SPECrate copies, one CPU per copy.
         /// </summary>
-        public string ProcessorAffinity
+        public string NumaProcessorAffinity
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(SpecCpuExecutor.ProcessorAffinity), string.Empty);
+                return this.Parameters.GetValue<string>(nameof(SpecCpuExecutor.NumaProcessorAffinity), string.Empty);
             }
         }
 
@@ -242,7 +242,7 @@ namespace VirtualClient.Actions
                 using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
                     string configurationFile = this.GetConfigurationFileName();
-                    if (!string.IsNullOrWhiteSpace(this.ProcessorAffinity))
+                    if (!string.IsNullOrWhiteSpace(this.NumaProcessorAffinity))
                     {
                         stage = "AffinityConfiguration";
                         configurationFile = await this.WritePinnedSpecCpuConfigAsync(telemetryContext, cancellationToken);
@@ -651,7 +651,7 @@ namespace VirtualClient.Actions
                     metric.Verbosity = 5;
                     metric.Metadata["cpuIds"] = string.Join(",", node.Cpus);
                     metric.Metadata["selectedCpuIds"] = string.Join(",", this.numaTopology.SelectedCpus.Where(node.Cpus.Contains));
-                    metric.Metadata["processorAffinity"] = affinity;
+                    metric.Metadata["numaProcessorAffinity"] = affinity;
                     metric.Metadata["processorBinding"] = "physcpubind";
                     metric.Metadata["numaMemoryPolicy"] = "localalloc";
                     metric.Metadata["topologyCapturedAt"] = this.numaTopology.CapturedAt.ToString("o", CultureInfo.InvariantCulture);
@@ -766,7 +766,7 @@ namespace VirtualClient.Actions
 
         private async Task<string> WritePinnedSpecCpuConfigAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            this.LogSpecCpuStep(telemetryContext, "AffinityValidationStarted", ("requestedCpuIds", this.ProcessorAffinity));
+            this.LogSpecCpuStep(telemetryContext, "AffinityValidationStarted", ("requestedCpuIds", this.NumaProcessorAffinity));
             if (this.Platform != PlatformID.Unix ||
                 (!string.Equals(this.SpecProfile, "intrate", StringComparison.OrdinalIgnoreCase) &&
                  !string.Equals(this.SpecProfile, "fprate", StringComparison.OrdinalIgnoreCase)))
@@ -774,11 +774,11 @@ namespace VirtualClient.Actions
                 throw new NotSupportedException("SPEC CPU per-copy processor affinity is supported only for Linux intrate and fprate runs.");
             }
 
-            LinuxProcessAffinityConfiguration affinityConfig = (LinuxProcessAffinityConfiguration)ProcessAffinityConfiguration.Create(this.Platform, this.ProcessorAffinity);
+            LinuxProcessAffinityConfiguration affinityConfig = (LinuxProcessAffinityConfiguration)ProcessAffinityConfiguration.Create(this.Platform, this.NumaProcessorAffinity);
             IReadOnlyList<int> cores = affinityConfig.Cores;
             if (cores.Count != this.CopyCount)
             {
-                throw new ArgumentException($"ProcessorAffinity must specify exactly one distinct CPU per SPEC copy (CopyCount={this.CopyCount}, CPUs={cores.Count}).", nameof(this.ProcessorAffinity));
+                throw new ArgumentException($"NumaProcessorAffinity must specify exactly one distinct CPU per SPEC copy (CopyCount={this.CopyCount}, CPUs={cores.Count}).", nameof(this.NumaProcessorAffinity));
             }
 
             bool useCopyNumber = cores.Select((core, copy) => core == copy).All(matches => matches);
@@ -841,7 +841,7 @@ namespace VirtualClient.Actions
                 await process.StartAndWaitAsync(cancellationToken);
                 if (!cancellationToken.IsCancellationRequested && process.IsErrored())
                 {
-                    throw new ArgumentException($"ProcessorAffinity contains CPUs that cannot be bound with numactl --localalloc. {process.StandardError}", nameof(this.ProcessorAffinity));
+                    throw new ArgumentException($"NumaProcessorAffinity contains CPUs that cannot be bound with numactl --localalloc. {process.StandardError}", nameof(this.NumaProcessorAffinity));
                 }
 
                 this.LogSpecCpuStep(telemetryContext, "AffinityPreflightCompleted", ("exitCode", process.ExitCode));
@@ -964,7 +964,7 @@ namespace VirtualClient.Actions
                 .AddContext("specProfile", this.SpecProfile ?? string.Empty)
                 .AddContext("benchmarks", this.Benchmarks ?? string.Empty)
                 .AddContext("copies", this.CopyCount)
-                .AddContext("pinningEnabled", !string.IsNullOrWhiteSpace(this.ProcessorAffinity));
+                .AddContext("pinningEnabled", !string.IsNullOrWhiteSpace(this.NumaProcessorAffinity));
 
             foreach ((string name, object value) in details)
             {
