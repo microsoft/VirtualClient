@@ -50,7 +50,7 @@ not mean the profile emits producer metrics.
 
 | Package name | Blob in the `packages` container | Purpose |
 |---|---|---|
-| `kafka` | `kafka_2.13-3.8.0-2.zip` | Kafka 3.8.0, Scala 2.13, KRaft configuration, and bundled performance tools |
+| `kafka` | `kafka_2.13-3.8.0-3.zip` | Kafka 3.8.0, Scala 2.13, KRaft configuration, and bundled performance tools |
 | `javadevelopmentkit` | `microsoft-jdk-21.0.1.zip` | Platform-specific Java runtime |
 
 The JDK installer registers the platform-specific runtime. The executors set `JAVA_HOME` and explicitly
@@ -63,15 +63,16 @@ and distribution information.
 
 ### Windows package adjustments
 
-The `-2` Kafka package contains Windows script changes:
+The `-3` Kafka package contains Windows script changes:
 
 * `kafka-run-class.bat` uses a wildcard library classpath to avoid "The input line is too long".
 * `kafka-server-start.bat` does not depend on WMIC for detecting 32-bit Windows; supported Windows
   platforms are 64-bit.
 * Kafka and ZooKeeper stop scripts use PowerShell/CIM instead of the deprecated `wmic.exe`.
 
-These changes are already packaged; no manual script editing is required. Do not substitute the
-unmodified upstream archive when verifying this workload.
+These changes are already packaged; no manual script editing is required. Revision `-3` adds explicit
+modification notices to the scripts changed in revision `-2`, without changing script logic, binaries,
+or existing license/notice files. Do not substitute the unmodified upstream archive when verifying this workload.
 
 ## Metrics
 
@@ -115,7 +116,7 @@ does **not** emit these metrics during producer actions.
 |---|---|
 | Package missing or download fails | Verify the package-store URL, container, exact blob names, access, and package registration. A cached package is not proof that a fresh system can download it. |
 | Java cannot start on Linux | Verify the selected JDK architecture, executable permissions, and `JAVA_HOME` in the elevated process. |
-| Windows classpath or WMIC errors | Confirm the profile downloaded `kafka_2.13-3.8.0-2.zip`, not an older cached or upstream archive. |
+| Windows classpath or WMIC errors | Confirm the profile downloaded `kafka_2.13-3.8.0-3.zip`, not an older cached or upstream archive. |
 | Client waits for the server | Verify layout names/roles/IP addresses, server logs, Virtual Client API reachability, and Kafka broker/controller ports. |
 | Broker fails to start | Check Java memory, disk capacity, port conflicts, KRaft configuration, and log-directory permissions. |
 | No producer metrics | Expected: the executor captures benchmark metrics only for consumer commands. Inspect producer process logs for generation results. |

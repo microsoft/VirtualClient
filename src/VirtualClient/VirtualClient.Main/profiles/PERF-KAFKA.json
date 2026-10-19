@@ -144,7 +144,7 @@
       "Parameters": {
         "Scenario": "DownloadKafkaPackage",
         "BlobContainer": "packages",
-        "BlobName": "kafka_2.13-3.8.0-2.zip",
+        "BlobName": "kafka_2.13-3.8.0-3.zip",
         "PackageName": "kafka",
         "Extract": true
       }

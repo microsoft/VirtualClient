@@ -95,7 +95,7 @@ namespace VirtualClient.Actions
                     dependency => dependency.Parameters.TryGetValue("PackageName", out IConvertible packageName)
                         && packageName.ToString() == "kafka");
 
-                Assert.AreEqual("kafka_2.13-3.8.0-2.zip", kafkaPackage.Parameters["BlobName"].ToString());
+                Assert.AreEqual("kafka_2.13-3.8.0-3.zip", kafkaPackage.Parameters["BlobName"].ToString());
             }
         }
 
