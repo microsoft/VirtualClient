@@ -5,12 +5,14 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
     using Moq;
     using NUnit.Framework;
     using VirtualClient;
+    using VirtualClient.Common;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
     using VirtualClient.TestExtensions;
@@ -135,6 +137,131 @@ namespace VirtualClient.Actions
 
                 await executor.ExecuteAsync(CancellationToken.None);
                 Assert.IsEmpty(expectedCommands);
+            }
+        }
+
+        [Test]
+        [TestCase(PlatformID.Unix)]
+        [TestCase(PlatformID.Win32NT)]
+        public async Task KafkaServerExecutorPreservesKraftStateAcrossInitializations(PlatformID platform)
+        {
+            this.SetupTests(platform);
+            this.fixture.FileSystem.Setup(fs => fs.File.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync("node.id=1");
+
+            using (var executor = new TestKafkaServerExecutor(this.fixture.Dependencies, this.fixture.Parameters))
+            {
+                await executor.InitializeAsync(EventContext.None, CancellationToken.None);
+                await executor.InitializeAsync(EventContext.None, CancellationToken.None);
+
+                this.fixture.FileSystem.Verify(fs => fs.Directory.Delete("/tmp/kraft-combined-logs-1", true), Times.Once);
+                this.fixture.FileSystem.Verify(fs => fs.File.Copy(It.IsAny<string>(), It.IsAny<string>(), true), Times.Once);
+            }
+        }
+
+        [Test]
+        [TestCase(PlatformID.Unix)]
+        [TestCase(PlatformID.Win32NT)]
+        public async Task KafkaServerExecutorKeepsLiveBrokersAcrossIterationsAndStopsOwnedProcessesOnDisposal(PlatformID platform)
+        {
+            this.SetupTests(platform);
+            this.fixture.Layout = null;
+            this.fixture.FileSystem.Setup(fs => fs.File.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync("node.id=1");
+            RunningBrokerProcess broker = null;
+            int starts = 0;
+            int formats = 0;
+            this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
+            {
+                if (arguments.Contains("kafka-server-start"))
+                {
+                    starts++;
+                    broker = new RunningBrokerProcess
+                    {
+                        StartInfo = new ProcessStartInfo(command, arguments)
+                    };
+                    return broker;
+                }
+
+                if (arguments.Contains(" format "))
+                {
+                    formats++;
+                }
+
+                return this.fixture.Process;
+            };
+
+            using (var executor = new TestKafkaServerExecutor(this.fixture.Dependencies, this.fixture.Parameters))
+            {
+                await executor.ExecuteAsync(CancellationToken.None);
+                await executor.ExecuteAsync(CancellationToken.None);
+
+                Assert.AreEqual(1, starts);
+                Assert.AreEqual(1, formats);
+                Assert.IsFalse(broker.HasExited);
+                this.fixture.FileSystem.Verify(fs => fs.Directory.Delete("/tmp/kraft-combined-logs-1", true), Times.Once);
+            }
+
+            Assert.IsTrue(broker.HasExited);
+            Assert.IsTrue(broker.WasDisposed);
+        }
+
+        [Test]
+        public async Task KafkaServerExecutorDoesNotReformatStorageWhenABrokerRestarts()
+        {
+            this.SetupTests(PlatformID.Unix);
+            this.fixture.FileSystem.Setup(fs => fs.File.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync("node.id=1");
+            int starts = 0;
+            int formats = 0;
+            this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
+            {
+                if (arguments.Contains("kafka-server-start"))
+                {
+                    starts++;
+                }
+
+                if (arguments.Contains(" format "))
+                {
+                    formats++;
+                }
+
+                return this.fixture.Process;
+            };
+
+            using (var executor = new TestKafkaServerExecutor(this.fixture.Dependencies, this.fixture.Parameters))
+            {
+                await executor.ExecuteAsync(CancellationToken.None);
+                await executor.ExecuteAsync(CancellationToken.None);
+
+                Assert.AreEqual(2, starts);
+                Assert.AreEqual(1, formats);
+            }
+        }
+
+        private class RunningBrokerProcess : InMemoryProcess, IProcessProxy
+        {
+            private readonly TaskCompletionSource<bool> exited = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+            public RunningBrokerProcess()
+            {
+                this.OnHasExited = () => this.exited.Task.IsCompleted;
+                this.OnKill = () => this.exited.TrySetResult(true);
+                this.OnDispose = () => this.WasDisposed = true;
+            }
+
+            public bool WasDisposed { get; private set; }
+
+            async Task IProcessProxy.WaitForExitAsync(CancellationToken cancellationToken, TimeSpan? timeout)
+            {
+                if (timeout != null)
+                {
+                    await this.exited.Task.WaitAsync(timeout.Value).ConfigureAwait(false);
+                }
+                else
+                {
+                    await this.exited.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
+                }
             }
         }
 

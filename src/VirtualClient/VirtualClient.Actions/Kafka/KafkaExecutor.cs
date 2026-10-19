@@ -288,8 +288,24 @@ namespace VirtualClient.Actions
                 this.Logger.LogTraceMessage($"Executing: {command} {SensitiveData.ObscureSecrets(commandArguments)}".Trim(), relatedContext);
 
                 beforeExecution?.Invoke(process);
-                await process.StartAndWaitAsync(cancellationToken)
-                    .ConfigureAwait(false);
+                bool completed = false;
+                try
+                {
+                    await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
+                    completed = true;
+                }
+                finally
+                {
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        process.SafeKill(this.Logger, TimeSpan.FromSeconds(30));
+                    }
+
+                    if (!completed)
+                    {
+                        process.Dispose();
+                    }
+                }
             }
 
             return process;

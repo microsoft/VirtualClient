@@ -4,6 +4,7 @@
 namespace VirtualClient.Actions
 {
     using System;
+    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.IO.Abstractions;
     using System.Linq;
@@ -27,10 +28,12 @@ namespace VirtualClient.Actions
     public class KafkaServerExecutor : KafkaExecutor
     {
         private readonly int port = 9092;
+        private readonly ConcurrentDictionary<IProcessProxy, byte> brokerProcesses = new ConcurrentDictionary<IProcessProxy, byte>();
         private IFileSystem fileSystem;
         private ISystemManagement systemManagement;
         private List<Task> serverProcesses;
         private bool disposed;
+        private bool storageFormatted;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="KafkaServerExecutor"/> class.
@@ -86,7 +89,7 @@ namespace VirtualClient.Actions
         protected string KafkaKraftDirectoryPath { get; set; }
 
         /// <summary>
-        /// True/false whether the Producer test has ran once
+        /// True once the broker configuration and initial log directories have been prepared.
         /// </summary>
         protected bool OneTimeConfigSetup { get; set; }
 
@@ -96,27 +99,18 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override void Dispose(bool disposing)
         {
-            if (disposing)
+            try
             {
-                if (!this.disposed && this.serverProcesses.Any())
+                if (disposing && !this.disposed)
                 {
-                    try
-                    {
-                        Console.WriteLine("Disposed");
-                        // We MUST stop the server instances from running before VC exits or they will
-                        // continue running until explicitly stopped. This is a problem for running Kafka
-                        // workloads back to back because the requisite ports will be in use already on next
-                        // VC startup.
-                        this.KillServerInstancesAsync(CancellationToken.None)
-                            .GetAwaiter().GetResult();
-                    }
-                    catch
-                    {
-                        // Best effort
-                    }
-
+                    this.StopServersAsync(EventContext.None, CancellationToken.None).GetAwaiter().GetResult();
+                    this.ServerCancellationSource?.Dispose();
                     this.disposed = true;
                 }
+            }
+            finally
+            {
+                base.Dispose(disposing);
             }
         }
 
@@ -166,9 +160,10 @@ namespace VirtualClient.Actions
             }
 
             this.OpenKafkaPorts(cancellationToken);
-            this.OneTimeConfigSetup = false;
-
-            await this.ConfigurePropertiesFileAsync(telemetryContext, cancellationToken);
+            if (!this.OneTimeConfigSetup)
+            {
+                await this.ConfigurePropertiesFileAsync(telemetryContext, cancellationToken);
+            }
         }
 
         /// <summary>
@@ -188,7 +183,7 @@ namespace VirtualClient.Actions
 
                     if (this.ResetServer(telemetryContext))
                     {
-                        await this.KillServerInstancesAsync(cancellationToken);
+                        await this.StopServersAsync(telemetryContext, cancellationToken);
 
                         await this.StartServerInstancesAsync(telemetryContext, cancellationToken);
                     }
@@ -224,6 +219,8 @@ namespace VirtualClient.Actions
         private Task StartServerInstancesAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             this.serverProcesses.Clear();
+            this.ServerCancellationSource?.Dispose();
+            this.ServerCancellationSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
             EventContext relatedContext = telemetryContext.Clone()
                 .AddContext("serverInstanceCount", this.ServerInstanceCount)
@@ -238,8 +235,12 @@ namespace VirtualClient.Actions
                     relatedContext.AddContext("workingDir", this.KafkaPackagePath);
 
                     // Get Cluster Id
-                    string clusterId = await this.GetClusterId(this.PlatformSpecificCommandType, this.KafkaPackagePath, relatedContext, cancellationToken);
-                    clusterId = Regex.Replace(clusterId, $"(\n\r)|(\r\n)", " ");
+                    string clusterId = null;
+                    if (!this.storageFormatted)
+                    {
+                        clusterId = await this.GetClusterId(this.PlatformSpecificCommandType, this.KafkaPackagePath, relatedContext, cancellationToken);
+                        clusterId = Regex.Replace(clusterId, $"(\n\r)|(\r\n)", " ");
+                    }
 
                     // Start kafka servers based on server instances provided
                     for (int serverInstance = 0; serverInstance < this.ServerInstanceCount; serverInstance++)
@@ -247,10 +248,13 @@ namespace VirtualClient.Actions
                         string propertiesFilePath = this.PlatformSpecifics.Combine(this.KafkaKraftDirectoryPath, $"server-{serverInstance + 1}.properties");
 
                         // Format log directories
-                        string formatLogDirCmdArgs = $"format -t {clusterId} -c {propertiesFilePath}";
-                        formatLogDirCmdArgs = this.GetPlatformFormattedCommandArguement(this.KafkaStorageScriptPath, formatLogDirCmdArgs);
+                        if (!this.storageFormatted)
+                        {
+                            string formatLogDirCmdArgs = $"format -t {clusterId} -c {propertiesFilePath}";
+                            formatLogDirCmdArgs = this.GetPlatformFormattedCommandArguement(this.KafkaStorageScriptPath, formatLogDirCmdArgs);
 
-                        await this.StartServerAndWaitForExitAsync("Format Directory: Complete", this.PlatformSpecificCommandType, formatLogDirCmdArgs, this.KafkaPackagePath, relatedContext, cancellationToken);
+                            await this.StartServerAndWaitForExitAsync("Format Directory: Complete", this.PlatformSpecificCommandType, formatLogDirCmdArgs, this.KafkaPackagePath, relatedContext, cancellationToken);
+                        }
 
                         // Give permissions to log directories
                         if (this.Platform == PlatformID.Unix)
@@ -268,10 +272,12 @@ namespace VirtualClient.Actions
                             commandArguments,
                             this.KafkaPackagePath,
                             relatedContext,
-                            cancellationToken,
+                            this.ServerCancellationSource.Token,
                             "Kafka",
-                            addCleanupTasks: false));
+                            isBroker: true));
                     }
+
+                    this.storageFormatted = true;
                 }
                 catch (OperationCanceledException)
                 {
@@ -326,14 +332,29 @@ namespace VirtualClient.Actions
             }
         }
 
-        private Task StartServerAndWaitForExitAsync(string logMessage, string command, string commandArguments, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken, string toolName = null, bool addCleanupTasks = true)
+        private Task StartServerAndWaitForExitAsync(string logMessage, string command, string commandArguments, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken, string toolName = null, bool isBroker = false)
         {
             return (this.ServerRetryPolicy ?? Policy.NoOpAsync()).ExecuteAsync(async () =>
             {
+                IProcessProxy brokerProcess = null;
                 try
                 {
                     telemetryContext.AddContext(nameof(commandArguments), commandArguments);
-                    using (IProcessProxy process = await this.RunProcessAsync(command, commandArguments, workingDirectory, telemetryContext, cancellationToken, runElevated: true))
+                    using (IProcessProxy process = await this.RunProcessAsync(
+                        command,
+                        commandArguments,
+                        workingDirectory,
+                        telemetryContext,
+                        cancellationToken,
+                        runElevated: true,
+                        beforeExecution: created =>
+                        {
+                            if (isBroker)
+                            {
+                                brokerProcess = created;
+                                this.brokerProcesses.TryAdd(created, 0);
+                            }
+                        }).ConfigureAwait(false))
                     {
                         if (!cancellationToken.IsCancellationRequested)
                         {
@@ -356,6 +377,13 @@ namespace VirtualClient.Actions
 
                     throw;
                 }
+                finally
+                {
+                    if (brokerProcess != null)
+                    {
+                        this.brokerProcesses.TryRemove(brokerProcess, out _);
+                    }
+                }
             });
         }
 
@@ -365,7 +393,7 @@ namespace VirtualClient.Actions
 
             for (int serverInstance = 1; serverInstance <= this.ServerInstanceCount; serverInstance++)
             {
-                this.fileSystem.Directory.DeleteAsync(logDir + Convert.ToString(serverInstance));
+                await this.fileSystem.Directory.DeleteAsync(logDir + Convert.ToString(serverInstance));
                 telemetryContext.AddContext("DeletedKraftLogDirectory" + Convert.ToString(serverInstance), logDir);
             }
 
@@ -427,38 +455,39 @@ namespace VirtualClient.Actions
         private Task KillServerInstancesAsync(CancellationToken cancellationToken)
         {
             this.Logger.LogTraceMessage($"{this.TypeName}.KillServerInstances");
-            IEnumerable<IProcessProxy> processes = this.SystemManagement.ProcessManager.GetProcesses("java");
-
-            if (processes?.Any() == true)
+            foreach (IProcessProxy process in this.brokerProcesses.Keys)
             {
-                foreach (IProcessProxy process in processes)
+                process.SafeKill(this.Logger, TimeSpan.FromSeconds(30));
+                if (!process.HasExited)
                 {
-                    process.SafeKill();
+                    throw new WorkloadException("A Kafka broker process did not exit during cleanup.", ErrorReason.WorkloadFailed);
                 }
             }
 
-            return this.WaitAsync(TimeSpan.FromSeconds(3), cancellationToken);
+            return Task.CompletedTask;
         }
 
         private async Task StopServersAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             this.Logger.LogTraceMessage($"{this.TypeName}.StopServerInstances");
-            string kafkaStopArgs = this.KafkaStopScriptPath;
-            if (this.Platform == PlatformID.Win32NT)
+            this.SetServerOnline(false);
+            if (this.ServerCancellationSource != null)
             {
-                kafkaStopArgs = $"/c {this.KafkaStopScriptPath}";
+                await this.ServerCancellationSource.CancelAsync().ConfigureAwait(false);
             }
 
-            await this.StartServerAndWaitForExitAsync(
-                            $"Stop Kafka servers...",
-                            this.PlatformSpecificCommandType,
-                            kafkaStopArgs,
-                            this.KafkaPackagePath,
-                            telemetryContext,
-                            cancellationToken,
-                            "Kafka");
-
-            this.WaitAsync(TimeSpan.FromSeconds(3), cancellationToken);
+            await this.KillServerInstancesAsync(cancellationToken).ConfigureAwait(false);
+            if (this.serverProcesses.Any())
+            {
+                try
+                {
+                    await Task.WhenAll(this.serverProcesses).WaitAsync(TimeSpan.FromSeconds(30), cancellationToken).ConfigureAwait(false);
+                }
+                catch (TimeoutException exc)
+                {
+                    throw new WorkloadException("Kafka broker shutdown did not complete within 30 seconds.", exc, ErrorReason.WorkloadFailed);
+                }
+            }
         }
 
         private bool ResetServer(EventContext telemetryContext)

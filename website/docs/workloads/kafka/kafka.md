@@ -124,10 +124,15 @@ does **not** emit these metrics during producer actions.
 
 ### State and cleanup
 
-The workload rewrites per-broker configuration and resets `/tmp/kraft-combined-logs-<index>` directories.
-On Windows, Kafka/Java path handling determines the corresponding log location. Server reset and disposal
-can terminate Java processes on the benchmark host, including Java processes unrelated to Kafka.
-Do not run on a system hosting other Java applications or valuable Kafka data.
+The workload initially rewrites per-broker configuration and resets
+`/tmp/kraft-combined-logs-<index>` directories. It preserves the configuration and formatted KRaft state
+across profile iterations and broker restarts; it does not delete live brokers' log directories.
+On Windows, Kafka/Java path handling determines the corresponding log location.
+
+Shutdown targets the broker process trees started by this executor, including their elevated wrappers,
+with bounded exit waits. It does not enumerate and terminate unrelated Java processes. Stale brokers
+from an interrupted earlier application must be stopped separately before another run can bind their ports.
+Use a dedicated system without valuable Kafka data.
 
 For repeatable comparisons, use dedicated disposable systems and reset Kafka processes, logs/topics,
 Virtual Client state, and dependency caches between runs. Compare identical OS images, machine sizes,
