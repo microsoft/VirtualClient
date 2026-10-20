@@ -43,7 +43,6 @@ namespace VirtualClient.Actions
         private IPackageManager packageManager;
         private IStateManager stateManager;
         private ISystemManagement systemManager;
-        private NumaTopologySnapshot numaTopology;
         private string tuning;
 
         /// <summary>
@@ -236,7 +235,6 @@ namespace VirtualClient.Actions
         protected async Task ExecuteSpecCpuAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             string stage = "Configuration";
-            this.numaTopology = null;
             try
             {
                 using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
@@ -285,7 +283,6 @@ namespace VirtualClient.Actions
                             stage = "Metrics";
                             this.MetadataContract.AddForScenario($"SPECcpu/{this.SpecProfile}", process.FullCommand(), toolVersion: null);
                             this.MetadataContract.Apply(telemetryContext);
-                            await this.CaptureNumaMetricsAsync(commandLineArguments, telemetryContext, cancellationToken);
                             await this.CaptureMetricsAsync(process, commandLineArguments, telemetryContext, cancellationToken);
                         }
                     }
@@ -628,49 +625,6 @@ namespace VirtualClient.Actions
             }
         }
 
-        private Task CaptureNumaMetricsAsync(string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            if (this.numaTopology == null || cancellationToken.IsCancellationRequested)
-            {
-                return Task.CompletedTask;
-            }
-
-            string affinity = string.Join(",", this.numaTopology.SelectedCpus);
-            foreach (NumaNode node in this.numaTopology.Nodes)
-            {
-                Metric[] metrics =
-                [
-                    new Metric($"node-cpus-{node.Id}", node.Cpus.Count, "count"),
-                    new Metric($"node-size-{node.Id}", node.SizeMb.Value, "MB"),
-                    new Metric($"node-free-{node.Id}", node.FreeMb.Value, "MB")
-                ];
-
-                foreach (Metric metric in metrics)
-                {
-                    metric.Categorization = "NUMA-diagnostic";
-                    metric.Verbosity = 5;
-                    metric.Metadata["cpuIds"] = string.Join(",", node.Cpus);
-                    metric.Metadata["selectedCpuIds"] = string.Join(",", this.numaTopology.SelectedCpus.Where(node.Cpus.Contains));
-                    metric.Metadata["numaProcessorAffinity"] = affinity;
-                    metric.Metadata["processorBinding"] = "physcpubind";
-                    metric.Metadata["numaMemoryPolicy"] = "localalloc";
-                    metric.Metadata["topologyCapturedAt"] = this.numaTopology.CapturedAt.ToString("o", CultureInfo.InvariantCulture);
-
-                    this.Logger.LogMetric(
-                        metric,
-                        toolName: "SPECcpu",
-                        scenarioName: this.Scenario,
-                        this.numaTopology.CapturedAt,
-                        this.numaTopology.CapturedAt,
-                        commandArguments,
-                        telemetryContext,
-                        this.Tags);
-                }
-            }
-
-            return Task.CompletedTask;
-        }
-
         private async Task CaptureMetricsAsync(
             IProcessProxy process,
             string commandArguments,
@@ -812,12 +766,7 @@ namespace VirtualClient.Actions
                     cancellationToken.ThrowIfCancellationRequested();
 
                     string topology = process.StandardOutput.ToString().Trim();
-                    IReadOnlyList<NumaNode> nodes = null;
-                    bool available = !process.IsErrored() && SpecCpuExecutor.TryParseNumaTopology(topology, cores, out nodes);
-                    if (available)
-                    {
-                        this.numaTopology = new NumaTopologySnapshot(nodes, cores.ToArray(), DateTime.UtcNow);
-                    }
+                    bool available = !process.IsErrored() && SpecCpuExecutor.TryParseNumaTopology(topology, cores, out _);
 
                     this.LogSpecCpuStep(
                         telemetryContext,
@@ -1055,22 +1004,6 @@ namespace VirtualClient.Actions
             public double? SizeMb { get; set; }
 
             public double? FreeMb { get; set; }
-        }
-
-        private sealed class NumaTopologySnapshot
-        {
-            public NumaTopologySnapshot(IReadOnlyList<NumaNode> nodes, IReadOnlyList<int> selectedCpus, DateTime capturedAt)
-            {
-                this.Nodes = nodes;
-                this.SelectedCpus = selectedCpus;
-                this.CapturedAt = capturedAt;
-            }
-
-            public IReadOnlyList<NumaNode> Nodes { get; }
-
-            public IReadOnlyList<int> SelectedCpus { get; }
-
-            public DateTime CapturedAt { get; }
         }
 
         private static class SpecCpuConfigPlaceholder

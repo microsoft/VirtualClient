@@ -700,36 +700,6 @@ namespace VirtualClient.Actions
             IDictionary<string, object> metadata = (IDictionary<string, object>)metricsContext.Properties["metadata_scenario"];
             Assert.AreEqual("SPECcpu/intrate", metadata["toolName"]);
             StringAssert.Contains($"--config {expectedConfig}", metadata["toolArguments"].ToString());
-
-            var numaMetrics = this.mockFixture.Logger.Where(entry => entry.Item2.Name == "SPECcpu.ScenarioResult").ToList();
-            Assert.AreEqual(pinned ? 6 : 0, numaMetrics.Count);
-            if (pinned)
-            {
-                EventContext cpuMetric = (EventContext)numaMetrics.Single(entry => ((EventContext)entry.Item3).Properties["metricName"].Equals("node-cpus-0")).Item3;
-                Assert.AreEqual(2, cpuMetric.Properties["metricValue"]);
-                Assert.AreEqual("count", cpuMetric.Properties["metricUnit"]);
-                Assert.AreEqual("NUMA-diagnostic", cpuMetric.Properties["metricCategorization"]);
-                Assert.AreEqual("ExecuteSPECBenchmark", cpuMetric.Properties["scenarioName"]);
-                IDictionary<string, IConvertible> cpuMetadata = (IDictionary<string, IConvertible>)cpuMetric.Properties["metadata_metrics"];
-                Assert.AreEqual("0,1", cpuMetadata["cpuIds"]);
-                Assert.AreEqual("0,1", cpuMetadata["selectedCpuIds"]);
-                Assert.AreEqual("0,1,2,3", cpuMetadata["numaProcessorAffinity"]);
-                Assert.AreEqual("physcpubind", cpuMetadata["processorBinding"]);
-                Assert.AreEqual("localalloc", cpuMetadata["numaMemoryPolicy"]);
-                Assert.AreEqual("5", cpuMetric.Properties["metricVerbosity"]);
-                EventContext secondNodeCpuMetric = (EventContext)numaMetrics.Single(entry => ((EventContext)entry.Item3).Properties["metricName"].Equals("node-cpus-1")).Item3;
-                IDictionary<string, IConvertible> secondNodeMetadata = (IDictionary<string, IConvertible>)secondNodeCpuMetric.Properties["metadata_metrics"];
-                Assert.AreEqual("2,3", secondNodeMetadata["cpuIds"]);
-                Assert.AreEqual("2,3", secondNodeMetadata["selectedCpuIds"]);
-
-                EventContext sizeMetric = (EventContext)numaMetrics.Single(entry => ((EventContext)entry.Item3).Properties["metricName"].Equals("node-size-0")).Item3;
-                Assert.AreEqual(16000, sizeMetric.Properties["metricValue"]);
-                Assert.AreEqual("MB", sizeMetric.Properties["metricUnit"]);
-                EventContext freeMetric = (EventContext)numaMetrics.Single(entry => ((EventContext)entry.Item3).Properties["metricName"].Equals("node-free-1")).Item3;
-                Assert.AreEqual(11000, freeMetric.Properties["metricValue"]);
-                Assert.AreEqual(cpuMetadata["topologyCapturedAt"], ((IDictionary<string, IConvertible>)freeMetric.Properties["metadata_metrics"])["topologyCapturedAt"]);
-                Assert.Less(this.mockFixture.Logger.IndexOf(numaMetrics.Last()), this.mockFixture.Logger.FindIndex(entry => entry.Item2.Name.EndsWith(".MetricsCaptured", StringComparison.Ordinal)));
-            }
         }
 
         [TestCase("", 1)]
