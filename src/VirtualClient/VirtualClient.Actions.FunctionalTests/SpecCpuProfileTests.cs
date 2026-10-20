@@ -47,26 +47,18 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("PERF-SPECCPU-INTRATE.json", PlatformID.Unix, "intrate", null)]
-        [TestCase("PERF-SPECCPU-INTRATE.json", PlatformID.Unix, "intrate", "2,4,8,10")]
-        [TestCase("PERF-SPECCPU-INTRATE.json", PlatformID.Win32NT, "505 525 541 548 557", null)]
-        [TestCase("PERF-SPECCPU-FPRATE.json", PlatformID.Unix, "fprate", null)]
-        [TestCase("PERF-SPECCPU-FPRATE.json", PlatformID.Unix, "fprate", "2,4,8,10")]
-        [TestCase("PERF-SPECCPU-FPRATE.json", PlatformID.Win32NT, "503 508 510 519 544 549 554", null)]
-        public async Task SpecCpuRateProfilesRunTheFullSuiteWithOptionalNumaProcessorAffinity(
+        [TestCase("PERF-SPECCPU-INTRATE.json", PlatformID.Unix, "intrate")]
+        [TestCase("PERF-SPECCPU-INTRATE.json", PlatformID.Win32NT, "505 525 541 548 557")]
+        [TestCase("PERF-SPECCPU-FPRATE.json", PlatformID.Unix, "fprate")]
+        [TestCase("PERF-SPECCPU-FPRATE.json", PlatformID.Win32NT, "503 508 510 519 544 549 554")]
+        public async Task SpecCpuRateProfilesRunTheFullSuiteWithoutManualNumaProcessorAffinity(
             string profileName,
             PlatformID platform,
-            string expectedBenchmarks,
-            string numaProcessorAffinity)
+            string expectedBenchmarks)
         {
             this.mockFixture.Setup(platform);
 
             ExecutionProfile profile = await ExecutionProfile.ReadProfileAsync(Path.Combine(MockFixture.TestResourcesDirectory, "profiles", profileName));
-            if (numaProcessorAffinity != null)
-            {
-                profile.Parameters["NumaProcessorAffinity"] = numaProcessorAffinity;
-            }
-
             profile.Parameters["CopyCount"] = 4;
 
             Assert.AreEqual(1, profile.Actions.Count, "A SPEC CPU rate suite must run as one action, not separate benchmarks.");
@@ -74,14 +66,37 @@ namespace VirtualClient.Actions
             Assert.AreEqual("SpecCpuExecutor", action.Type);
             Assert.AreEqual("ExecuteSPECBenchmark", action.Parameters["Scenario"]);
             Assert.AreEqual("$.Parameters.Benchmarks", action.Parameters["Benchmarks"], "The suite action must use the platform-specific benchmark selection.");
+            Assert.IsFalse(profile.Parameters.ContainsKey("NumaProcessorAffinity"));
+            Assert.IsFalse(action.Parameters.ContainsKey("NumaProcessorAffinity"));
             Assert.IsFalse(profile.Actions.Any(item => item.Parameters["Scenario"].ToString().StartsWith("benchmark_", StringComparison.OrdinalIgnoreCase)));
 
             profile.Inline();
             await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, action.Parameters);
 
             Assert.AreEqual(expectedBenchmarks, action.Parameters["Benchmarks"]);
-            Assert.AreEqual(numaProcessorAffinity ?? string.Empty, action.Parameters["NumaProcessorAffinity"]);
+            Assert.IsFalse(action.Parameters.ContainsKey("NumaProcessorAffinity"));
+            Assert.AreEqual("False", action.Parameters["NumaProcessorAffinitySymmetric"].ToString());
             Assert.AreEqual("4", action.Parameters["CopyCount"].ToString());
+        }
+
+        [Test]
+        [TestCase("PERF-SPECCPU-INTRATE.json", 2)]
+        [TestCase("PERF-SPECCPU-INTRATE.json", 4)]
+        [TestCase("PERF-SPECCPU-FPRATE.json", 2)]
+        [TestCase("PERF-SPECCPU-FPRATE.json", 4)]
+        public async Task SpecCpuRateProfilesForwardSymmetricNumaAffinity(string profileName, int copyCount)
+        {
+            this.mockFixture.Setup(PlatformID.Unix);
+            ExecutionProfile profile = await ExecutionProfile.ReadProfileAsync(Path.Combine(MockFixture.TestResourcesDirectory, "profiles", profileName));
+            profile.Parameters["CopyCount"] = copyCount;
+            profile.Parameters["NumaProcessorAffinitySymmetric"] = true;
+
+            profile.Inline();
+
+            ExecutionProfileElement action = profile.Actions.Single();
+            Assert.AreEqual("True", action.Parameters["NumaProcessorAffinitySymmetric"].ToString());
+            Assert.IsFalse(action.Parameters.ContainsKey("NumaProcessorAffinity"));
+            Assert.AreEqual(copyCount.ToString(), action.Parameters["CopyCount"].ToString());
         }
 
         [Test]

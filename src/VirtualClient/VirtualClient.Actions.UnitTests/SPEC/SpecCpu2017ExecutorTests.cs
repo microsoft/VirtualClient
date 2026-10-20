@@ -641,6 +641,127 @@ namespace VirtualClient.Actions
             Assert.IsTrue(commands.Any(command => command.Contains($"--config {Path.GetFileName(pinnedPath)}") && command.Contains("--copies 4")));
         }
 
+        [TestCase(2, 2, "0,48", "0,48")]
+        [TestCase(2, 3, "0,1,48", "0,1,48")]
+        [TestCase(2, 4, "0,1,48,49", "0,1,48,49")]
+        [TestCase(2, 40, "0-19,48-67", "0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67")]
+        [TestCase(3, 2, "0,32", "0,32")]
+        [TestCase(3, 3, "0,32,64", "0,32,64")]
+        [TestCase(3, 40, "0-13,32-44,64-76", "0,1,2,3,4,5,6,7,8,9,10,11,12,13,32,33,34,35,36,37,38,39,40,41,42,43,44,64,65,66,67,68,69,70,71,72,73,74,75,76")]
+        public async Task SpecCpu2017ExecutorSelectsSymmetricNumaAffinity(int nodeCount, int copyCount, string expectedCoreSpec, string expectedCpus)
+        {
+            this.SetupLinux(Architecture.Arm64);
+            this.SetupInstalledAffinityRun(string.Empty);
+            this.mockFixture.Parameters[nameof(SpecCpuExecutor.NumaProcessorAffinitySymmetric)] = true;
+            this.mockFixture.Parameters[nameof(SpecCpuExecutor.CopyCount)] = copyCount;
+
+            int coresPerNode = 96 / nodeCount;
+            string topology = $"available: {nodeCount} nodes (0-{nodeCount - 1})\n" + string.Join("\n", Enumerable.Range(0, nodeCount).Select(node =>
+                $"node {node} cpus: {string.Join(" ", Enumerable.Range(node * coresPerNode, coresPerNode))}\nnode {node} size: 16000 MB\nnode {node} free: 12000 MB"));
+
+            string pinnedConfig = null;
+            this.mockFixture.File.Setup(f => f.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Callback<string, string, CancellationToken>((path, content, token) => pinnedConfig = content)
+                .Returns(Task.CompletedTask);
+
+            List<string> commands = new List<string>();
+            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            {
+                commands.Add($"{exe} {arguments}");
+                return new InMemoryProcess
+                {
+                    StartInfo = new ProcessStartInfo { FileName = exe, Arguments = arguments },
+                    StandardOutput = new ConcurrentBuffer(new StringBuilder(exe == "numactl" && arguments == "--hardware" ? topology : string.Empty)),
+                    ExitCode = 0,
+                    OnStart = () => true,
+                    OnHasExited = () => true
+                };
+            };
+
+            using (TestSpecCpu2017Executor executor = new TestSpecCpu2017Executor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                await executor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+            }
+
+            StringAssert.Contains($"bind = {expectedCpus}", pinnedConfig);
+            StringAssert.Contains("submit = numactl --localalloc --physcpubind=$BIND -- $command", pinnedConfig);
+            Assert.IsTrue(commands.Any(command => command == $"numactl --localalloc -C {expectedCoreSpec} true"));
+            Assert.IsTrue(commands.Any(command => command.Contains($"--copies {copyCount}")));
+            EventContext selection = (EventContext)this.mockFixture.Logger.Single(entry => entry.Item2.Name.EndsWith(".SymmetricAffinitySelected", StringComparison.Ordinal)).Item3;
+            Assert.AreEqual(expectedCpus, selection.Properties["cpuIds"]);
+            Assert.AreEqual(true, selection.Properties["pinningEnabled"]);
+            Assert.AreEqual(expectedCpus, ((IDictionary<string, object>)selection.Properties["metadata_scenario"])["NumaProcessorAffinity"]);
+        }
+
+        [Test]
+        public void SpecCpu2017ExecutorRejectsManualAndSymmetricAffinityTogether()
+        {
+            this.SetupLinux();
+            this.SetupInstalledAffinityRun("0-3");
+            this.mockFixture.Parameters[nameof(SpecCpuExecutor.NumaProcessorAffinitySymmetric)] = true;
+
+            using (TestSpecCpu2017Executor executor = new TestSpecCpu2017Executor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                Assert.ThrowsAsync<ArgumentException>(async () => await executor.ExecuteAsync(CancellationToken.None));
+            }
+        }
+
+        [Test]
+        public void SpecCpu2017ExecutorRejectsSymmetricAffinityWhenTopologyIsUnreadable()
+        {
+            this.SetupLinux();
+            this.SetupInstalledAffinityRun(string.Empty);
+            this.mockFixture.Parameters[nameof(SpecCpuExecutor.NumaProcessorAffinitySymmetric)] = true;
+            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) => new InMemoryProcess
+            {
+                StartInfo = new ProcessStartInfo { FileName = exe, Arguments = arguments },
+                StandardOutput = new ConcurrentBuffer(new StringBuilder("invalid topology")),
+                ExitCode = 0,
+                OnStart = () => true,
+                OnHasExited = () => true
+            };
+
+            using (TestSpecCpu2017Executor executor = new TestSpecCpu2017Executor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                Assert.ThrowsAsync<DependencyException>(async () => await executor.ExecuteAsync(CancellationToken.None));
+            }
+        }
+
+        [Test]
+        public void SpecCpu2017ExecutorRejectsSymmetricAffinityOnSpeedRuns()
+        {
+            this.SetupLinux();
+            this.SetupInstalledAffinityRun(string.Empty);
+            this.mockFixture.Parameters[nameof(SpecCpuExecutor.NumaProcessorAffinitySymmetric)] = true;
+            this.mockFixture.Parameters[nameof(SpecCpuExecutor.SpecProfile)] = "intspeed";
+
+            using (TestSpecCpu2017Executor executor = new TestSpecCpu2017Executor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                Assert.ThrowsAsync<NotSupportedException>(async () => await executor.ExecuteAsync(CancellationToken.None));
+            }
+        }
+
+        [Test]
+        public void SpecCpu2017ExecutorRejectsSymmetricAffinityWhenTopologyHasTooFewCpus()
+        {
+            this.SetupLinux();
+            this.SetupInstalledAffinityRun(string.Empty);
+            this.mockFixture.Parameters[nameof(SpecCpuExecutor.NumaProcessorAffinitySymmetric)] = true;
+            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) => new InMemoryProcess
+            {
+                StartInfo = new ProcessStartInfo { FileName = exe, Arguments = arguments },
+                StandardOutput = new ConcurrentBuffer(new StringBuilder("available: 1 nodes (0)\nnode 0 cpus: 0 1\nnode 0 size: 16000 MB\nnode 0 free: 12000 MB")),
+                ExitCode = 0,
+                OnStart = () => true,
+                OnHasExited = () => true
+            };
+
+            using (TestSpecCpu2017Executor executor = new TestSpecCpu2017Executor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                Assert.ThrowsAsync<ArgumentException>(async () => await executor.ExecuteAsync(CancellationToken.None));
+            }
+        }
+
         [TestCase("", false, Architecture.X64)]
         [TestCase("0-3", true, Architecture.X64)]
         [TestCase("0-3", true, Architecture.Arm64)]

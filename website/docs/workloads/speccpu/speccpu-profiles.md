@@ -44,7 +44,7 @@ for evaluating the performance of the CPU for processing calculations.
   | RunPeak                   | Optional. True to run the workload 'Peak' scenario, False to run the workload 'Base' scenario. | false (Base) |
   | ThreadCount               | Optional. Determines the number of threads to use for running the benchmark. | # logical processors |
   | CopyCount                 | Optional. Determines the number of copies of the benchmark to run concurrently. | # logical processors |
-  | NumaProcessorAffinity     | Optional. Linux SPECrate only (intrate/fprate). Assign one distinct CPU ID to each copy; requires `numactl`. Leave empty to run without pinning. | empty (no pinning) |
+  | NumaProcessorAffinitySymmetric | Optional. Linux SPECrate only. Balances copies across NUMA nodes as available CPUs allow, assigning one CPU per copy using `numactl`; false leaves copies unpinned. | false |
   | BaseOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Base' scenario | <ul><li>X64 systems: -g -O2 -march=x86-64-v3 -flto -frecord-gcc-switches</li><li>ARM64 systems: -g -O2 -march=armv8.2-a -flto -frecord-gcc-switches</li></ul> |
   | PeakOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Peak' scenario | <ul><li>X64 systems: -g -O3 -march=x86-64-v3 -flto -frecord-gcc-switches</li><li>ARM64 systems: -g -O3 -march=armv8.2-a -flto -frecord-gcc-switches</li></ul> |
 
@@ -65,7 +65,7 @@ for evaluating the performance of the CPU for processing calculations.
 
 * **Notes**  
   On Windows, only the following benchmarks are supported: 503.bwaves_r, 508.namd_r, 510.parest_r, 519.lbm_r, 544.nab_r, 549.fotonik3d_r, 554.roms_r.
-  The Linux `NumaProcessorAffinity` examples in the INTRATE section below also apply to this profile when `PERF-SPECCPU-FPRATE.json` is used instead.
+  The Linux `NumaProcessorAffinitySymmetric` examples in the INTRATE section below also apply to this profile.
 
   ``` bash
   # Execute the workload profile
@@ -157,7 +157,7 @@ for evaluating the performance of the CPU for processing calculations.
   | RunPeak                   | Optional. True to run the workload 'Peak' scenario, False to run the workload 'Base' scenario. | false (Base) |
   | ThreadCount               | Optional. Determines the number of threads to use for running the benchmark. | # logical processors |
   | CopyCount                 | Optional. Determines the number of copies of the benchmark to run concurrently. | # logical processors |
-  | NumaProcessorAffinity     | Optional. Linux SPECrate only (intrate/fprate). Assign one distinct CPU ID to each copy; requires `numactl`. Leave empty to run without pinning. | empty (no pinning) |
+  | NumaProcessorAffinitySymmetric | Optional. Linux SPECrate only. Balances copies across NUMA nodes as available CPUs allow, assigning one CPU per copy using `numactl`; false leaves copies unpinned. | false |
   | BaseOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Base' scenario | <ul><li>X64 systems: -g -O2 -march=x86-64-v3 -flto -frecord-gcc-switches</li><li>ARM64 systems: -g -O2 -march=armv8.2-a -flto -frecord-gcc-switches</li></ul> |
   | PeakOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Peak' scenario | <ul><li>X64 systems: -g -O3 -march=x86-64-v3 -flto -frecord-gcc-switches</li><li>ARM64 systems: -g -O3 -march=armv8.2-a -flto -frecord-gcc-switches</li></ul> |
 
@@ -177,17 +177,17 @@ for evaluating the performance of the CPU for processing calculations.
 
 * **Notes**  
   On Windows, only the following benchmarks are supported: 505.mcf_r, 525.x264_r, 541.leela_r, 548.exchange2_r, 557.xz_r.
-  On Linux, check the CPU-to-node mapping with `numactl --hardware` before choosing CPU IDs. `NumaProcessorAffinity` must contain exactly as many distinct CPU IDs as `CopyCount`. Pinned copies use `numactl --localalloc` for local memory allocation. The CPU IDs below are examples; use IDs appropriate for your machine.
+  On Linux, `NumaProcessorAffinitySymmetric=true` selects CPUs from `numactl --hardware`, giving each node as even a share of `CopyCount` as its available CPUs allow. If `CopyCount` is not divisible by the number of nodes, lower-numbered nodes receive the extra copies. Pinned copies use `numactl --localalloc` for local memory allocation. These examples assume 96 CPUs on two NUMA nodes: CPUs 0-47 on node 0 and 48-95 on node 1. Check the actual topology with `numactl --hardware`.
 
   ``` bash
-  # Empty NumaProcessorAffinity (default): run without pinning, as before.
-  ./VirtualClient --profile=PERF-SPECCPU-INTRATE.json --iterations=1 --logger=csv
+  # Two INTRATE copies: CPU 0 on node 0 and CPU 48 on node 1.
+  ./VirtualClient --profile=PERF-SPECCPU-INTRATE.json --iterations=1 --parameters="CopyCount=2,,,NumaProcessorAffinitySymmetric=true" --logger=csv
 
-  # Single NUMA node: CPUs 0-3 must all belong to the same node.
-  ./VirtualClient --profile=PERF-SPECCPU-INTRATE.json --iterations=1 --parameters="CopyCount=4,,,NumaProcessorAffinity=0-3" --logger=csv
+  # Four INTRATE copies: CPUs 0-1 on node 0 and 48-49 on node 1.
+  ./VirtualClient --profile=PERF-SPECCPU-INTRATE.json --iterations=1 --parameters="CopyCount=4,,,NumaProcessorAffinitySymmetric=true" --logger=csv
 
-  # Two NUMA nodes: CPUs 0-1 on node 0 and 48-49 on node 1.
-  ./VirtualClient --profile=PERF-SPECCPU-INTRATE.json --iterations=1 --parameters="CopyCount=4,,,NumaProcessorAffinity=0,1,48,49" --logger=csv
+  # Four FPRATE copies: the same two-per-node distribution.
+  ./VirtualClient --profile=PERF-SPECCPU-FPRATE.json --iterations=1 --parameters="CopyCount=4,,,NumaProcessorAffinitySymmetric=true" --logger=csv
   ```
 
 ## PERF-SPECCPU-INTSPEED.json

@@ -171,6 +171,19 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// When enabled, distributes SPECrate copies as evenly as available CPUs allow across NUMA nodes,
+        /// assigning one CPU per copy using numactl.
+        /// Defaults to false; cannot be combined with manual NumaProcessorAffinity.
+        /// </summary>
+        public bool NumaProcessorAffinitySymmetric
+        {
+            get
+            {
+                return this.Parameters.GetValue<bool>(nameof(SpecCpuExecutor.NumaProcessorAffinitySymmetric), false);
+            }
+        }
+
+        /// <summary>
         /// A feature flag to apply. For example 'UseCsvResults' can be used to parse the CSV file results vs. the standard output.
         /// The CSV results have finer-grained results with additional significant figures.
         /// </summary>
@@ -239,6 +252,16 @@ namespace VirtualClient.Actions
             {
                 using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
+                    if (this.NumaProcessorAffinitySymmetric)
+                    {
+                        stage = "SymmetricAffinityConfiguration";
+                        string affinity = await this.GetSymmetricNumaProcessorAffinityAsync(cancellationToken);
+                        this.Parameters[nameof(this.NumaProcessorAffinity)] = affinity;
+                        this.MetadataContract.Add(nameof(this.NumaProcessorAffinity), affinity, MetadataContract.ScenarioCategory);
+                        this.MetadataContract.Apply(telemetryContext);
+                        this.LogSpecCpuStep(telemetryContext, "SymmetricAffinitySelected", ("cpuIds", affinity));
+                    }
+
                     string configurationFile = this.GetConfigurationFileName();
                     if (!string.IsNullOrWhiteSpace(this.NumaProcessorAffinity))
                     {
@@ -716,6 +739,87 @@ namespace VirtualClient.Actions
 
             command = reportable ? $"{command} --reportable" : $"{command} --noreportable";
             return $"{command} {this.Benchmarks}";
+        }
+
+        /// <summary>
+        /// Reads numactl --hardware and takes the lowest CPU IDs from each node in round-robin order,
+        /// distributing copies as evenly as node capacity allows. Returns a comma-separated list
+        /// containing one CPU per <see cref="CopyCount"/>.
+        /// </summary>
+        /// <remarks>
+        /// For two 48-CPU nodes (0-47, 48-95), 2 copies select 0 and 48; 4 copies select 0, 1, 48, 49;
+        /// and 40 copies select 0-19 and 48-67. For three 32-CPU nodes (0-31, 32-63, 64-95),
+        /// 3 copies select 0, 32, 64 and 40 copies select 0-13, 32-44, 64-76.
+        /// The returned list contains individual CPU IDs, not range notation.
+        /// </remarks>
+        /// <param name="cancellationToken">A token used to cancel the topology query.</param>
+        /// <returns>The selected CPU IDs in ascending order, separated by commas.</returns>
+        private async Task<string> GetSymmetricNumaProcessorAffinityAsync(CancellationToken cancellationToken)
+        {
+            if (this.Platform != PlatformID.Unix ||
+                (!string.Equals(this.SpecProfile, "intrate", StringComparison.OrdinalIgnoreCase) &&
+                 !string.Equals(this.SpecProfile, "fprate", StringComparison.OrdinalIgnoreCase)))
+            {
+                throw new NotSupportedException("Symmetric NUMA processor affinity is supported only for Linux intrate and fprate runs.");
+            }
+
+            if (!string.IsNullOrWhiteSpace(this.NumaProcessorAffinity))
+            {
+                throw new ArgumentException("NumaProcessorAffinity and NumaProcessorAffinitySymmetric cannot both be specified.", nameof(this.NumaProcessorAffinity));
+            }
+
+            if (this.CopyCount <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(this.CopyCount), this.CopyCount, "CopyCount must be greater than zero for symmetric NUMA processor affinity.");
+            }
+
+            IReadOnlyList<NumaNode> nodes;
+            try
+            {
+                using (IProcessProxy process = this.systemManager.ProcessManager.CreateProcess("numactl", "--hardware", this.PackageDirectory))
+                {
+                    await process.StartAndWaitAsync(cancellationToken);
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    string topology = process.StandardOutput.ToString().Trim();
+                    if (process.IsErrored() || !SpecCpuExecutor.TryParseNumaTopology(topology, Array.Empty<int>(), out nodes))
+                    {
+                        throw new DependencyException("Symmetric NUMA processor affinity requires a readable numactl --hardware topology.", ErrorReason.WorkloadDependencyMissing);
+                    }
+                }
+            }
+            catch (Win32Exception exc)
+            {
+                throw new DependencyException("Symmetric NUMA processor affinity requires numactl to be installed.", exc, ErrorReason.WorkloadDependencyMissing);
+            }
+
+            List<IReadOnlyList<int>> nodeCpus = nodes
+                .Where(node => node.Cpus.Count > 0)
+                .Select(node => (IReadOnlyList<int>)node.Cpus.OrderBy(cpu => cpu).ToList())
+                .ToList();
+
+            if (nodeCpus.Sum(cpus => cpus.Count) < this.CopyCount)
+            {
+                throw new ArgumentException($"CopyCount={this.CopyCount} exceeds the number of CPUs available across NUMA nodes.", nameof(this.CopyCount));
+            }
+
+            List<int> selectedCpus = new List<int>(this.CopyCount);
+            for (int index = 0; selectedCpus.Count < this.CopyCount; index++)
+            {
+                foreach (IReadOnlyList<int> cpus in nodeCpus)
+                {
+                    if (index < cpus.Count)
+                    {
+                        selectedCpus.Add(cpus[index]);
+                        if (selectedCpus.Count == this.CopyCount)
+                        {
+                            break;
+                        }
+                    }
+                }
+            }
+
+            return string.Join(",", selectedCpus.OrderBy(cpu => cpu));
         }
 
         private async Task<string> WritePinnedSpecCpuConfigAsync(EventContext telemetryContext, CancellationToken cancellationToken)
