@@ -161,6 +161,7 @@ namespace VirtualClient.Actions
 
         /// <summary>
         /// Optional list of physical CPU IDs to assign to SPECrate copies, one CPU per copy.
+        /// Set to "symmetric" (case-insensitive) to select CPUs evenly across NUMA nodes automatically.
         /// For two 48-CPU NUMA nodes (CPUs 0-47 and 48-95):
         /// 2 copies: NumaProcessorAffinity=0,48;
         /// 4 copies: NumaProcessorAffinity=0,1,48,49;
@@ -180,13 +181,14 @@ namespace VirtualClient.Actions
         /// <summary>
         /// When enabled, distributes SPECrate copies as evenly as available CPUs allow across NUMA nodes,
         /// assigning one CPU per copy using numactl.
-        /// Defaults to false; cannot be combined with manual NumaProcessorAffinity.
+        /// Defaults to false unless NumaProcessorAffinity is "symmetric"; cannot be combined with manual CPU IDs.
         /// </summary>
-        public bool EnableNumaProcessorAffinity
+        public bool EnableNumaProcessorAffinitySymmetric
         {
             get
             {
-                return this.Parameters.GetValue<bool>(nameof(SpecCpuExecutor.EnableNumaProcessorAffinity), false);
+                return string.Equals(this.NumaProcessorAffinity, "symmetric", StringComparison.OrdinalIgnoreCase)
+                    || this.Parameters.GetValue<bool>(nameof(SpecCpuExecutor.EnableNumaProcessorAffinitySymmetric), false);
             }
         }
 
@@ -259,9 +261,10 @@ namespace VirtualClient.Actions
             {
                 using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
-                    if (this.EnableNumaProcessorAffinity)
+                    if (this.NumaProcessorAffinity == "symmetric")
                     {
                         stage = "SymmetricAffinityConfiguration";
+                        this.Parameters[nameof(this.NumaProcessorAffinity)] = "symmetric";
                         string affinity = await this.GetSymmetricNumaProcessorAffinityAsync(cancellationToken);
                         this.Parameters[nameof(this.NumaProcessorAffinity)] = affinity;
                         this.MetadataContract.Add(nameof(this.NumaProcessorAffinity), affinity, MetadataContract.ScenarioCategory);
@@ -770,9 +773,10 @@ namespace VirtualClient.Actions
                 throw new NotSupportedException("Symmetric NUMA processor affinity is supported only for Linux intrate and fprate runs.");
             }
 
-            if (!string.IsNullOrWhiteSpace(this.NumaProcessorAffinity))
+            if (!string.IsNullOrWhiteSpace(this.NumaProcessorAffinity) &&
+                !string.Equals(this.NumaProcessorAffinity, "symmetric", StringComparison.OrdinalIgnoreCase))
             {
-                throw new ArgumentException("NumaProcessorAffinity and EnableNumaProcessorAffinity cannot both be specified.", nameof(this.NumaProcessorAffinity));
+                throw new ArgumentException("NumaProcessorAffinity and EnableNumaProcessorAffinitySymmetric cannot both be specified.", nameof(this.NumaProcessorAffinity));
             }
 
             if (this.CopyCount <= 0)

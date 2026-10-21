@@ -641,18 +641,20 @@ namespace VirtualClient.Actions
             Assert.IsTrue(commands.Any(command => command.Contains($"--config {Path.GetFileName(pinnedPath)}") && command.Contains("--copies 4")));
         }
 
-        [TestCase(2, 2, "0,48", "0,48")]
-        [TestCase(2, 3, "0,1,48", "0,1,48")]
-        [TestCase(2, 4, "0,1,48,49", "0,1,48,49")]
-        [TestCase(2, 40, "0-19,48-67", "0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67")]
-        [TestCase(3, 2, "0,32", "0,32")]
-        [TestCase(3, 3, "0,32,64", "0,32,64")]
-        [TestCase(3, 40, "0-13,32-44,64-76", "0,1,2,3,4,5,6,7,8,9,10,11,12,13,32,33,34,35,36,37,38,39,40,41,42,43,44,64,65,66,67,68,69,70,71,72,73,74,75,76")]
-        public async Task SpecCpu2017ExecutorSelectsSymmetricNumaAffinity(int nodeCount, int copyCount, string expectedCoreSpec, string expectedCpus)
+        [TestCase(2, 2, "0,48", "0,48", null)]
+        [TestCase(2, 3, "0,1,48", "0,1,48", null)]
+        [TestCase(2, 4, "0,1,48,49", "0,1,48,49", null)]
+        [TestCase(2, 40, "0-19,48-67", "0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67", null)]
+        [TestCase(3, 2, "0,32", "0,32", null)]
+        [TestCase(3, 3, "0,32,64", "0,32,64", null)]
+        [TestCase(3, 40, "0-13,32-44,64-76", "0,1,2,3,4,5,6,7,8,9,10,11,12,13,32,33,34,35,36,37,38,39,40,41,42,43,44,64,65,66,67,68,69,70,71,72,73,74,75,76", null)]
+        [TestCase(2, 2, "0,48", "0,48", "symmetric")]
+        [TestCase(2, 4, "0,1,48,49", "0,1,48,49", "SyMmEtRiC")]
+        public async Task SpecCpu2017ExecutorSelectsSymmetricNumaAffinity(int nodeCount, int copyCount, string expectedCoreSpec, string expectedCpus, string affinity)
         {
             this.SetupLinux(Architecture.Arm64);
-            this.SetupInstalledAffinityRun(string.Empty);
-            this.mockFixture.Parameters[nameof(SpecCpuExecutor.EnableNumaProcessorAffinity)] = true;
+            this.SetupInstalledAffinityRun(affinity ?? string.Empty);
+            this.mockFixture.Parameters[nameof(SpecCpuExecutor.EnableNumaProcessorAffinitySymmetric)] = affinity == null;
             this.mockFixture.Parameters[nameof(SpecCpuExecutor.CopyCount)] = copyCount;
 
             int coresPerNode = 96 / nodeCount;
@@ -680,7 +682,9 @@ namespace VirtualClient.Actions
 
             using (TestSpecCpu2017Executor executor = new TestSpecCpu2017Executor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
+                Assert.IsTrue(executor.EnableNumaProcessorAffinitySymmetric);
                 await executor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+                Assert.IsTrue(executor.EnableNumaProcessorAffinitySymmetric);
             }
 
             StringAssert.Contains($"bind = {expectedCpus}", pinnedConfig);
@@ -698,7 +702,7 @@ namespace VirtualClient.Actions
         {
             this.SetupLinux();
             this.SetupInstalledAffinityRun("0-3");
-            this.mockFixture.Parameters[nameof(SpecCpuExecutor.EnableNumaProcessorAffinity)] = true;
+            this.mockFixture.Parameters[nameof(SpecCpuExecutor.EnableNumaProcessorAffinitySymmetric)] = true;
 
             using (TestSpecCpu2017Executor executor = new TestSpecCpu2017Executor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
@@ -711,7 +715,7 @@ namespace VirtualClient.Actions
         {
             this.SetupLinux();
             this.SetupInstalledAffinityRun(string.Empty);
-            this.mockFixture.Parameters[nameof(SpecCpuExecutor.EnableNumaProcessorAffinity)] = true;
+            this.mockFixture.Parameters[nameof(SpecCpuExecutor.EnableNumaProcessorAffinitySymmetric)] = true;
             this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) => new InMemoryProcess
             {
                 StartInfo = new ProcessStartInfo { FileName = exe, Arguments = arguments },
@@ -732,7 +736,7 @@ namespace VirtualClient.Actions
         {
             this.SetupLinux();
             this.SetupInstalledAffinityRun(string.Empty);
-            this.mockFixture.Parameters[nameof(SpecCpuExecutor.EnableNumaProcessorAffinity)] = true;
+            this.mockFixture.Parameters[nameof(SpecCpuExecutor.EnableNumaProcessorAffinitySymmetric)] = true;
             this.mockFixture.Parameters[nameof(SpecCpuExecutor.SpecProfile)] = "intspeed";
 
             using (TestSpecCpu2017Executor executor = new TestSpecCpu2017Executor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
@@ -746,7 +750,7 @@ namespace VirtualClient.Actions
         {
             this.SetupLinux();
             this.SetupInstalledAffinityRun(string.Empty);
-            this.mockFixture.Parameters[nameof(SpecCpuExecutor.EnableNumaProcessorAffinity)] = true;
+            this.mockFixture.Parameters[nameof(SpecCpuExecutor.EnableNumaProcessorAffinitySymmetric)] = true;
             this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) => new InMemoryProcess
             {
                 StartInfo = new ProcessStartInfo { FileName = exe, Arguments = arguments },
