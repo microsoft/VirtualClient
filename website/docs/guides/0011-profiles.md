@@ -80,66 +80,34 @@ set. This helps to ensure the purpose and consistency of the profile operations 
 ]
 ```
 
-## Legacy Parameter Aliases
+### Count Parameter Naming
 
-Packaged profiles continue to accept the legacy count parameter names listed below with `--parameters`.
-Aliases are resolved **before** profile parameter references are inlined, so an explicit legacy override
-replaces the standardized profile default. If both names are explicitly supplied, the standardized name
-wins, including when its value is null. With neither name supplied, the profile default is unchanged.
-Names are case-insensitive.
+Use a singular noun followed by `Count` for parameters that represent a numeric quantity. For example,
+use `ThreadCount` instead of `Threads` or `NumberOfThreads`, and `IterationCount` instead of `Iterations`.
+This distinguishes a count from a collection and keeps naming consistent across workloads and monitors.
 
-Aliases are profile-specific: generic names such as `Threads`, `Iterations`, and `Connections` are not
-globally rewritten. Existing custom profiles keep their existing parameter names and behavior.
-Custom profiles that adopt standardized names can opt in by declaring a `ParameterAliases` dictionary
-mapping legacy names to standardized names:
-
-```json
-{
-    "Description": "Example profile with a legacy alias",
-    "ParameterAliases": {
-        "Threads": "ThreadCount"
-    },
-    "Parameters": {
-        "ThreadCount": 8
-    },
-    "Actions": [
-        {
-            "Type": "SysbenchClientExecutor",
-            "Parameters": {
-                "ThreadCount": "$.Parameters.ThreadCount"
-            }
-        }
-    ]
-}
-```
-
-The YAML equivalent is `parameter_aliases`. Aliases apply to explicit top-level overrides, not to
-component parameter names, and are resolved independently for each profile before multiple profiles
-are combined. Programmatic callers can use `ExecutionProfile.ApplyParameterOverrides` before calling
-`Inline`; directly writing a legacy entry into `Parameters` after inlining cannot change an already
-bound component value.
-
-| Profile/workload context | Legacy name → standardized name |
+| Parameter | Meaning |
 | --- | --- |
-| ApacheBench | `NoOfRequests` → `RequestCount`; `NoOfConcurrentRequests` → `ConcurrentRequestCount` |
-| ctsTraffic | `Connections` → `ConnectionCount`; `Iterations` → `IterationCount` |
-| DotNetRuntime | `NumberOfJvmInstances` → `JvmInstanceCount`; `NumberOfWarehouses` → `WarehouseCount` |
-| HPLinpack (including AMD, ARM, Intel) | `NumberOfProcesses` → `ProcessCount` |
-| HammerDB TPCC/TPCH | `VirtualUsers` → `VirtualUserCount` |
-| Memcached | `ServerMaxConnections` → `MaxServerConnectionCount`; `ClientInstances` → `ClientInstanceCount` |
-| Network ping | `PingIterations` → `PingIterationCount` |
-| Nginx WRK/WRK2 (including reverse proxy) | `Workers` → `WorkerCount` |
-| OpenFOAM | `Iterations` → `IterationCount` |
-| Redis and GET-STARTED-REDIS | `ServerInstances` → `ServerInstanceCount`; `ClientInstances` → `ClientInstanceCount` |
-| SPEC CPU / SPEC CPU 2026 | `Iterations` → `IterationCount`; `Threads` → `ThreadCount`; `Copies` → `CopyCount` |
-| NVIDIA GPU monitor | `MonitorIterations` → `MonitorIterationCount` |
-| OpenSSL TLS | `ClientInstances` → `ClientInstanceCount` (currently an unused count setting; this does not change launched clients) |
+| `ThreadCount` | Number of threads |
+| `ClientInstanceCount` | Number of client instances |
+| `IterationCount` | Number of iterations |
+| `RequestCount` | Number of requests |
+| `MonitorIterationCount` | Number of monitor iterations |
+| `ConnectionCountPerThread` | Number of connections per thread |
 
-Component parameter readers also retain the legacy names above where applicable. In addition,
-Latte client/server readers accept `Iterations` for `IterationCount`, Sysbench accepts `Threads` for
-`ThreadCount`, and the Redis benchmark client accepts `ClientInstances` for `ClientInstanceCount`.
-These component aliases support older custom component definitions without changing their defaults,
-null handling, or value conversion.
+Retain qualifiers that describe the count, such as `PerThread` or `PerServerPort`, and limits such as
+`MinimumIterationCount` or `MaxServerConnectionCount`. Use the same standardized name in the profile
+parameter, its references, the corresponding component property, and documentation. This convention
+applies to numeric counts, not to parameters that contain collections or lists.
+
+### Legacy Name Compatibility
+
+Updated packaged profiles accept their previous count parameter names through profile-specific aliases.
+Legacy `--parameters` overrides are resolved before profile binding; if both names are explicitly supplied,
+the standardized name wins. Use the standardized names for new profiles and command lines.
+
+Custom profiles can opt in with a `ParameterAliases` mapping such as `"Threads": "ThreadCount"`
+(`parameter_aliases` in YAML). Names are case-insensitive; undeclared aliases are not globally rewritten.
 
 ## ParametersOn
 The section 'ParametersOn' within a profile defines a sets of parameters each with a "condition" that when evaluated to true will cause that specific set of parameters
