@@ -6,6 +6,10 @@
     "SupportedPlatforms": "linux-x64,linux-arm64,win-x64",
     "SupportedOperatingSystems": "Debian,Ubuntu,Windows"
   },
+  "ParameterAliases": {
+      "NoOfRequests": "RequestCount",
+      "NoOfConcurrentRequests": "ConcurrentRequestCount"
+  },
   "Parameters": {
     "RequestCount": "50000",
     "ConcurrentRequestCount": "50"

@@ -16,6 +16,29 @@ namespace VirtualClient.Contracts
     public static class ExecutionProfileExtensions
     {
         /// <summary>
+        /// Applies explicit overrides, resolving only aliases declared by this profile.
+        /// </summary>
+        /// <param name="profile">The profile whose defaults are overridden.</param>
+        /// <param name="overrides">Explicit parameter overrides, before reference binding.</param>
+        public static void ApplyParameterOverrides(this ExecutionProfile profile, IDictionary<string, IConvertible> overrides)
+        {
+            profile.ThrowIfNull(nameof(profile));
+            overrides.ThrowIfNull(nameof(overrides));
+
+            var explicitParameters = new Dictionary<string, IConvertible>(overrides, StringComparer.OrdinalIgnoreCase);
+            profile.Parameters.AddRange(explicitParameters, true);
+
+            foreach (var alias in profile.ParameterAliases)
+            {
+                if (!explicitParameters.ContainsKey(alias.Value)
+                    && explicitParameters.TryGetValue(alias.Key, out IConvertible value))
+                {
+                    profile.Parameters[alias.Value] = value;
+                }
+            }
+        }
+
+        /// <summary>
         /// Resolves parameter references within the profile.
         /// </summary>
         /// <param name="profile">The profile to inline.</param>

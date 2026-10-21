@@ -6,6 +6,9 @@
         "SupportedOperatingSystems": "Ubuntu",
         "SupportedPerformanceLibraries": "23.04.1, 24.10, 25.04.1, 26.01.1"
     },
+    "ParameterAliases": {
+        "NumberOfProcesses": "ProcessCount"
+    },
     "Parameters": {
         "CompilerVersion": null,
         "ProblemSizeN": null,
