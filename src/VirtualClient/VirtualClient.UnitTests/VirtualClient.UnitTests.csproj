@@ -34,11 +34,9 @@
 		<ItemGroup>
 			<ProfileFiles Include="profiles\*.*" />
 			<ProfileFiles Include="..\VirtualClient.Main\profiles\MONITORS-DEFAULT.json" />
-			<PackagedProfileFiles Include="..\VirtualClient.Main\profiles\*.json" />
 		</ItemGroup>
 
 		<Copy SourceFiles="@(ProfileFiles)" DestinationFiles="@(ProfileFiles->'$(OutputPath)profiles\%(RecursiveDir)%(Filename)%(Extension)')" />
-		<Copy SourceFiles="@(PackagedProfileFiles)" DestinationFiles="@(PackagedProfileFiles->'$(OutputPath)packaged_profiles\%(Filename)%(Extension)')" />
 	</Target>
 	
 	<!--
