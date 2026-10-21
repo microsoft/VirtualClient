@@ -261,10 +261,10 @@ namespace VirtualClient.Actions
             {
                 using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
-                    if (this.NumaProcessorAffinity == "symmetric")
+                    if (this.EnableNumaProcessorAffinitySymmetric)
                     {
                         stage = "SymmetricAffinityConfiguration";
-                        this.Parameters[nameof(this.NumaProcessorAffinity)] = "symmetric";
+                        this.Parameters[nameof(this.EnableNumaProcessorAffinitySymmetric)] = true;
                         string affinity = await this.GetSymmetricNumaProcessorAffinityAsync(cancellationToken);
                         this.Parameters[nameof(this.NumaProcessorAffinity)] = affinity;
                         this.MetadataContract.Add(nameof(this.NumaProcessorAffinity), affinity, MetadataContract.ScenarioCategory);
