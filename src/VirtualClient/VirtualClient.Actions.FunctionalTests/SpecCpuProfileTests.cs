@@ -75,7 +75,7 @@ namespace VirtualClient.Actions
 
             Assert.AreEqual(expectedBenchmarks, action.Parameters["Benchmarks"]);
             Assert.IsFalse(action.Parameters.ContainsKey("NumaProcessorAffinity"));
-            Assert.AreEqual("False", action.Parameters["NumaProcessorAffinitySymmetric"].ToString());
+            Assert.AreEqual("False", action.Parameters["EnableNumaProcessorAffinity"].ToString());
             Assert.AreEqual("4", action.Parameters["CopyCount"].ToString());
         }
 
@@ -89,12 +89,12 @@ namespace VirtualClient.Actions
             this.mockFixture.Setup(PlatformID.Unix);
             ExecutionProfile profile = await ExecutionProfile.ReadProfileAsync(Path.Combine(MockFixture.TestResourcesDirectory, "profiles", profileName));
             profile.Parameters["CopyCount"] = copyCount;
-            profile.Parameters["NumaProcessorAffinitySymmetric"] = true;
+            profile.Parameters["EnableNumaProcessorAffinity"] = true;
 
             profile.Inline();
 
             ExecutionProfileElement action = profile.Actions.Single();
-            Assert.AreEqual("True", action.Parameters["NumaProcessorAffinitySymmetric"].ToString());
+            Assert.AreEqual("True", action.Parameters["EnableNumaProcessorAffinity"].ToString());
             Assert.IsFalse(action.Parameters.ContainsKey("NumaProcessorAffinity"));
             Assert.AreEqual(copyCount.ToString(), action.Parameters["CopyCount"].ToString());
         }

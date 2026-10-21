@@ -10,7 +10,7 @@
         "RecommendedMinimumExecutionTime": "(4-cores)=02:00:00,(16-cores)=05:00:00,(64-cores)=10:00:00",
         "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64",
         "SupportedOperatingSystems": "AzureLinux,CentOS,Debian,OpenSuse,RedHat,Ubuntu,Windows",
-        "Notes": "Private package speccpu.2017.1.1.9-danielbowers.zip supports Ubuntu 24; SPEC CPU 2017 was not designed for win-arm64. NumaProcessorAffinitySymmetric (Linux rate only): true balances copies across NUMA nodes, one CPU each; false (default) does not pin.",
+        "Notes": "Private package speccpu.2017.1.1.9-danielbowers.zip supports Ubuntu 24; SPEC CPU 2017 was not designed for win-arm64. EnableNumaProcessorAffinity (Linux rate only): true balances copies across NUMA nodes, one CPU each; false (default) does not pin.",
         "Limitations": "The following benchmarks don't work on Windows: 507, 511, 521, 526, 527, 538"
     },
     "Parameters": {
@@ -20,7 +20,7 @@
         "RunPeak": false,
         "ThreadCount": "{LogicalCoreCount}",
         "CopyCount": "{LogicalCoreCount}",
-        "NumaProcessorAffinitySymmetric": false,
+        "EnableNumaProcessorAffinity": false,
         "BaseOptimizingFlags": "-O2 -march={calculate((\"{Architecture}\" == \"x64\") ? \"x86-64-v3\" : \"armv8.2-a\")} -flto -frecord-gcc-switches",
         "PeakOptimizingFlags": "-O3 -march={calculate((\"{Architecture}\" == \"x64\") ? \"x86-64-v3\" : \"armv8.2-a\")} -flto -frecord-gcc-switches"
     },
@@ -36,7 +36,7 @@
                 "RunPeak": "$.Parameters.RunPeak",
                 "ThreadCount": "$.Parameters.ThreadCount",
                 "CopyCount": "$.Parameters.CopyCount",
-                "NumaProcessorAffinitySymmetric": "$.Parameters.NumaProcessorAffinitySymmetric",
+                "EnableNumaProcessorAffinity": "$.Parameters.EnableNumaProcessorAffinity",
                 "BaseOptimizingFlags": "$.Parameters.BaseOptimizingFlags",
                 "PeakOptimizingFlags": "$.Parameters.PeakOptimizingFlags"
             }

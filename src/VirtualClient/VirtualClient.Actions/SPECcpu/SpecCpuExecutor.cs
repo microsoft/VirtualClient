@@ -161,6 +161,13 @@ namespace VirtualClient.Actions
 
         /// <summary>
         /// Optional list of physical CPU IDs to assign to SPECrate copies, one CPU per copy.
+        /// For two 48-CPU NUMA nodes (CPUs 0-47 and 48-95):
+        /// 2 copies: NumaProcessorAffinity=0,48;
+        /// 4 copies: NumaProcessorAffinity=0,1,48,49;
+        /// 40 copies: NumaProcessorAffinity=0-19,48-67.
+        /// For three 32-CPU NUMA nodes (CPUs 0-31, 32-63, and 64-95):
+        /// 3 copies: NumaProcessorAffinity=0,32,64;
+        /// 40 copies: NumaProcessorAffinity=0-13,32-44,64-76.
         /// </summary>
         public string NumaProcessorAffinity
         {
@@ -175,11 +182,11 @@ namespace VirtualClient.Actions
         /// assigning one CPU per copy using numactl.
         /// Defaults to false; cannot be combined with manual NumaProcessorAffinity.
         /// </summary>
-        public bool NumaProcessorAffinitySymmetric
+        public bool EnableNumaProcessorAffinity
         {
             get
             {
-                return this.Parameters.GetValue<bool>(nameof(SpecCpuExecutor.NumaProcessorAffinitySymmetric), false);
+                return this.Parameters.GetValue<bool>(nameof(SpecCpuExecutor.EnableNumaProcessorAffinity), false);
             }
         }
 
@@ -252,7 +259,7 @@ namespace VirtualClient.Actions
             {
                 using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
-                    if (this.NumaProcessorAffinitySymmetric)
+                    if (this.EnableNumaProcessorAffinity)
                     {
                         stage = "SymmetricAffinityConfiguration";
                         string affinity = await this.GetSymmetricNumaProcessorAffinityAsync(cancellationToken);
@@ -765,7 +772,7 @@ namespace VirtualClient.Actions
 
             if (!string.IsNullOrWhiteSpace(this.NumaProcessorAffinity))
             {
-                throw new ArgumentException("NumaProcessorAffinity and NumaProcessorAffinitySymmetric cannot both be specified.", nameof(this.NumaProcessorAffinity));
+                throw new ArgumentException("NumaProcessorAffinity and EnableNumaProcessorAffinity cannot both be specified.", nameof(this.NumaProcessorAffinity));
             }
 
             if (this.CopyCount <= 0)

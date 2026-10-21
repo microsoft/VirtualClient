@@ -652,7 +652,7 @@ namespace VirtualClient.Actions
         {
             this.SetupLinux(Architecture.Arm64);
             this.SetupInstalledAffinityRun(string.Empty);
-            this.mockFixture.Parameters[nameof(SpecCpuExecutor.NumaProcessorAffinitySymmetric)] = true;
+            this.mockFixture.Parameters[nameof(SpecCpuExecutor.EnableNumaProcessorAffinity)] = true;
             this.mockFixture.Parameters[nameof(SpecCpuExecutor.CopyCount)] = copyCount;
 
             int coresPerNode = 96 / nodeCount;
@@ -698,7 +698,7 @@ namespace VirtualClient.Actions
         {
             this.SetupLinux();
             this.SetupInstalledAffinityRun("0-3");
-            this.mockFixture.Parameters[nameof(SpecCpuExecutor.NumaProcessorAffinitySymmetric)] = true;
+            this.mockFixture.Parameters[nameof(SpecCpuExecutor.EnableNumaProcessorAffinity)] = true;
 
             using (TestSpecCpu2017Executor executor = new TestSpecCpu2017Executor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
@@ -711,7 +711,7 @@ namespace VirtualClient.Actions
         {
             this.SetupLinux();
             this.SetupInstalledAffinityRun(string.Empty);
-            this.mockFixture.Parameters[nameof(SpecCpuExecutor.NumaProcessorAffinitySymmetric)] = true;
+            this.mockFixture.Parameters[nameof(SpecCpuExecutor.EnableNumaProcessorAffinity)] = true;
             this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) => new InMemoryProcess
             {
                 StartInfo = new ProcessStartInfo { FileName = exe, Arguments = arguments },
@@ -732,7 +732,7 @@ namespace VirtualClient.Actions
         {
             this.SetupLinux();
             this.SetupInstalledAffinityRun(string.Empty);
-            this.mockFixture.Parameters[nameof(SpecCpuExecutor.NumaProcessorAffinitySymmetric)] = true;
+            this.mockFixture.Parameters[nameof(SpecCpuExecutor.EnableNumaProcessorAffinity)] = true;
             this.mockFixture.Parameters[nameof(SpecCpuExecutor.SpecProfile)] = "intspeed";
 
             using (TestSpecCpu2017Executor executor = new TestSpecCpu2017Executor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
@@ -746,7 +746,7 @@ namespace VirtualClient.Actions
         {
             this.SetupLinux();
             this.SetupInstalledAffinityRun(string.Empty);
-            this.mockFixture.Parameters[nameof(SpecCpuExecutor.NumaProcessorAffinitySymmetric)] = true;
+            this.mockFixture.Parameters[nameof(SpecCpuExecutor.EnableNumaProcessorAffinity)] = true;
             this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) => new InMemoryProcess
             {
                 StartInfo = new ProcessStartInfo { FileName = exe, Arguments = arguments },
