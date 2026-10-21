@@ -80,6 +80,67 @@ set. This helps to ensure the purpose and consistency of the profile operations 
 ]
 ```
 
+## Legacy Parameter Aliases
+
+Packaged profiles continue to accept the legacy count parameter names listed below with `--parameters`.
+Aliases are resolved **before** profile parameter references are inlined, so an explicit legacy override
+replaces the standardized profile default. If both names are explicitly supplied, the standardized name
+wins, including when its value is null. With neither name supplied, the profile default is unchanged.
+Names are case-insensitive.
+
+Aliases are profile-specific: generic names such as `Threads`, `Iterations`, and `Connections` are not
+globally rewritten. Existing custom profiles keep their existing parameter names and behavior.
+Custom profiles that adopt standardized names can opt in by declaring a `ParameterAliases` dictionary
+mapping legacy names to standardized names:
+
+```json
+{
+    "Description": "Example profile with a legacy alias",
+    "ParameterAliases": {
+        "Threads": "ThreadCount"
+    },
+    "Parameters": {
+        "ThreadCount": 8
+    },
+    "Actions": [
+        {
+            "Type": "SysbenchClientExecutor",
+            "Parameters": {
+                "ThreadCount": "$.Parameters.ThreadCount"
+            }
+        }
+    ]
+}
+```
+
+The YAML equivalent is `parameter_aliases`. Aliases apply to explicit top-level overrides, not to
+component parameter names, and are resolved independently for each profile before multiple profiles
+are combined. Programmatic callers can use `ExecutionProfile.ApplyParameterOverrides` before calling
+`Inline`; directly writing a legacy entry into `Parameters` after inlining cannot change an already
+bound component value.
+
+| Profile/workload context | Legacy name → standardized name |
+| --- | --- |
+| ApacheBench | `NoOfRequests` → `RequestCount`; `NoOfConcurrentRequests` → `ConcurrentRequestCount` |
+| ctsTraffic | `Connections` → `ConnectionCount`; `Iterations` → `IterationCount` |
+| DotNetRuntime | `NumberOfJvmInstances` → `JvmInstanceCount`; `NumberOfWarehouses` → `WarehouseCount` |
+| HPLinpack (including AMD, ARM, Intel) | `NumberOfProcesses` → `ProcessCount` |
+| HammerDB TPCC/TPCH | `VirtualUsers` → `VirtualUserCount` |
+| Memcached | `ServerMaxConnections` → `MaxServerConnectionCount`; `ClientInstances` → `ClientInstanceCount` |
+| Network ping | `PingIterations` → `PingIterationCount` |
+| Nginx WRK/WRK2 (including reverse proxy) | `Workers` → `WorkerCount` |
+| OpenFOAM | `Iterations` → `IterationCount` |
+| Redis and GET-STARTED-REDIS | `ServerInstances` → `ServerInstanceCount`; `ClientInstances` → `ClientInstanceCount` |
+| SPEC CPU / SPEC CPU 2026 | `Iterations` → `IterationCount`; `Threads` → `ThreadCount`; `Copies` → `CopyCount` |
+| NVIDIA GPU monitor | `MonitorIterations` → `MonitorIterationCount` |
+| OpenSSL TLS | `ClientInstances` → `ClientInstanceCount` (currently an unused count setting; this does not change launched clients) |
+
+Component parameter readers also retain the legacy names above where applicable. In addition,
+Latte client/server readers accept `Iterations` for `IterationCount`, Sysbench accepts `Threads` for
+`ThreadCount`, and the Redis benchmark client accepts `ClientInstances` for `ClientInstanceCount`.
+These component aliases support older custom component definitions without changing their defaults,
+null handling, or value conversion.
+
 ## ParametersOn
 The section 'ParametersOn' within a profile defines a sets of parameters each with a "condition" that when evaluated to true will cause that specific set of parameters
 to be added to the profile parameters and used. Any parameters with keys matching in the conditional set will override those in the profile. Note that this

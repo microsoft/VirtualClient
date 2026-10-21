@@ -99,7 +99,8 @@ namespace VirtualClient.Actions
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(HammerDBExecutor.VirtualUserCount), out IConvertible virtualUserCount);
+                string parameter = this.Parameters.ContainsKey(nameof(this.VirtualUserCount)) ? nameof(this.VirtualUserCount) : "VirtualUsers";
+                this.Parameters.TryGetValue(parameter, out IConvertible virtualUserCount);
                 return virtualUserCount?.ToString(CultureInfo.InvariantCulture);
             }
         }

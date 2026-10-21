@@ -7,6 +7,10 @@
         "Notes_ConnectionLimits": "Each Memtier benchmark action will establish (--threads * --clients) connections against the Memcached server for each client instance/process. Ensure that the server-side OS does not place a limit on connections that might exceed this (e.g. ulimit -Sn on Linux).",
         "Notes_AggregateMetrics": "When EmitAggregateMetrics = true, the metrics produced by each individual client instance against an individual Redis server will be aggregated into min, max, avg, stddev etc."
     },
+    "ParameterAliases": {
+        "ServerInstances": "ServerInstanceCount",
+        "ClientInstances": "ClientInstanceCount"
+    },
     "Parameters": {
         "ServerPort": 6379,
         "ServerThreadCount": 4,
