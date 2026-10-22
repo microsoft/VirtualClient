@@ -70,20 +70,18 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Gets the PostgreSQL superuser password from PGPASSWORD.
         /// </summary>
-        public string SuperUserPassword
+        /// <returns>The PostgreSQL superuser password.</returns>
+        public string GetSuperUserPassword()
         {
-            get
+            string password = Environment.GetEnvironmentVariable("PGPASSWORD");
+            if (string.IsNullOrEmpty(password))
             {
-                string password = Environment.GetEnvironmentVariable("PGPASSWORD");
-                if (string.IsNullOrEmpty(password))
-                {
-                    throw new WorkloadException(
-                        "The PGPASSWORD environment variable must be set before running HammerDB.",
-                        ErrorReason.InvalidProfileDefinition);
-                }
-
-                return password;
+                throw new WorkloadException(
+                    "The PGPASSWORD environment variable must be set before running HammerDB.",
+                    ErrorReason.InvalidProfileDefinition);
             }
+
+            return password;
         }
 
         /// <summary>
@@ -338,7 +336,7 @@ namespace VirtualClient.Actions
             string password = await this.GetPostgreSQLPasswordAsync(cancellationToken).ConfigureAwait(false);
             await this.GenerateCommandLineArguments(cancellationToken);
 
-            bool preservePassword = this.Platform == PlatformID.Unix && !PlatformSpecifics.RunningInContainer;
+            bool preservePassword = this.Platform == PlatformID.Unix && !this.SystemManager.RunningInContainer;
             string command = preservePassword ? "sudo" : "python3";
             string arguments = preservePassword
                 ? $"--preserve-env=PGPASSWORD python3 {this.HammerDBScenarioArguments}"

@@ -101,20 +101,18 @@ namespace VirtualClient.Dependencies
         /// <summary>
         /// Gets the PostgreSQL superuser password from the PGPASSWORD environment variable.
         /// </summary>
-        public string SuperUserPassword
+        /// <returns>The PostgreSQL superuser password.</returns>
+        public string GetSuperUserPassword()
         {
-            get
+            string password = Environment.GetEnvironmentVariable("PGPASSWORD");
+            if (string.IsNullOrEmpty(password))
             {
-                string password = Environment.GetEnvironmentVariable("PGPASSWORD");
-                if (string.IsNullOrEmpty(password))
-                {
-                    throw new DependencyException(
-                        "The PGPASSWORD environment variable must be set before configuring PostgreSQL Server.",
-                        ErrorReason.InvalidProfileDefinition);
-                }
-
-                return password;
+                throw new DependencyException(
+                    "The PGPASSWORD environment variable must be set before configuring PostgreSQL Server.",
+                    ErrorReason.InvalidProfileDefinition);
             }
+
+            return password;
         }
 
         /// <summary>

@@ -84,7 +84,7 @@ namespace VirtualClient.Actions
             {
                 Environment.SetEnvironmentVariable("PGPASSWORD", password);
                 using TestHammerDBExecutor executor = new TestHammerDBExecutor(this.fixture.Dependencies, this.fixture.Parameters);
-                Assert.AreEqual(password, executor.SuperUserPassword);
+                Assert.AreEqual(password, executor.GetSuperUserPassword());
             }
             finally
             {
@@ -102,7 +102,7 @@ namespace VirtualClient.Actions
             {
                 Environment.SetEnvironmentVariable("PGPASSWORD", password);
                 using TestHammerDBExecutor executor = new TestHammerDBExecutor(this.fixture.Dependencies, this.fixture.Parameters);
-                WorkloadException exception = Assert.Throws<WorkloadException>(() => _ = executor.SuperUserPassword);
+                WorkloadException exception = Assert.Throws<WorkloadException>(() => executor.GetSuperUserPassword());
                 Assert.AreEqual(ErrorReason.InvalidProfileDefinition, exception.Reason);
                 StringAssert.Contains("PGPASSWORD", exception.Message);
             }

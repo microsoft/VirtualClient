@@ -212,7 +212,7 @@ namespace VirtualClient.Dependencies
             this.SetupTest(PlatformID.Unix, Architecture.X64);
 
             using TestPostgreSQLServerConfiguration component = new TestPostgreSQLServerConfiguration(this.mockFixture);
-            Assert.AreEqual(Environment.GetEnvironmentVariable("PGPASSWORD"), component.SuperUserPassword);
+            Assert.AreEqual(Environment.GetEnvironmentVariable("PGPASSWORD"), component.GetSuperUserPassword());
         }
 
         [Test]

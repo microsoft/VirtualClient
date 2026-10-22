@@ -145,39 +145,24 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Gets the PostgreSQL password from PGPASSWORD, or the existing MySQL password.
         /// </summary>
-        public string SuperUserPassword
+        /// <returns>The database superuser password.</returns>
+        public string GetSuperUserPassword()
         {
-            get
+            if (string.Equals(this.DatabaseSystem, "PostgreSQL", StringComparison.OrdinalIgnoreCase))
             {
-                if (string.Equals(this.DatabaseSystem, "PostgreSQL", StringComparison.OrdinalIgnoreCase))
+                string password = Environment.GetEnvironmentVariable("PGPASSWORD");
+                if (string.IsNullOrEmpty(password))
                 {
-                    string password = Environment.GetEnvironmentVariable("PGPASSWORD");
-                    if (string.IsNullOrEmpty(password))
-                    {
-                        throw new WorkloadException(
-                            "The PGPASSWORD environment variable must be set before running Sysbench with PostgreSQL.",
-                            ErrorReason.InvalidProfileDefinition);
-                    }
-
-                    return password;
+                    throw new WorkloadException(
+                        "The PGPASSWORD environment variable must be set before running Sysbench with PostgreSQL.",
+                        ErrorReason.InvalidProfileDefinition);
                 }
 
-                byte[] hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes("default"));
-                return Convert.ToHexString(hashBytes);
+                return password;
             }
-        }
 
-        /// <summary>
-        /// Gets the credential arguments, excluding PostgreSQL passwords from command lines.
-        /// </summary>
-        protected string PasswordArguments
-        {
-            get
-            {
-                return string.Equals(this.DatabaseSystem, "PostgreSQL", StringComparison.OrdinalIgnoreCase)
-                    ? string.Empty
-                    : $" --password {this.SuperUserPassword}";
-            }
+            byte[] hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes("default"));
+            return Convert.ToHexString(hashBytes);
         }
 
         /// <summary>
@@ -209,6 +194,19 @@ namespace VirtualClient.Actions
         /// Virtual Client API at server side.
         /// </summary>
         public IApiClient ServerApiClient { get; set; }
+
+        /// <summary>
+        /// Gets the credential arguments, excluding PostgreSQL passwords from command lines.
+        /// </summary>
+        protected string PasswordArguments
+        {
+            get
+            {
+                return string.Equals(this.DatabaseSystem, "PostgreSQL", StringComparison.OrdinalIgnoreCase)
+                    ? string.Empty
+                    : $" --password {this.GetSuperUserPassword()}";
+            }
+        }
 
         /// <summary>
         /// Cancellation Token Source for Server.

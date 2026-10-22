@@ -89,7 +89,7 @@ namespace VirtualClient.Actions
                 this.fixture.Parameters[nameof(SysbenchExecutor.DatabaseSystem)] = databaseSystem;
 
                 using TestSysbenchExecutor executor = new TestSysbenchExecutor(this.fixture.Dependencies, this.fixture.Parameters);
-                Assert.AreEqual(password, executor.SuperUserPassword);
+                Assert.AreEqual(password, executor.GetSuperUserPassword());
                 Assert.AreEqual(string.Empty, executor.PasswordArguments);
             }
             finally
@@ -110,7 +110,7 @@ namespace VirtualClient.Actions
                 this.fixture.Parameters[nameof(SysbenchExecutor.DatabaseSystem)] = "PostgreSQL";
 
                 using TestSysbenchExecutor executor = new TestSysbenchExecutor(this.fixture.Dependencies, this.fixture.Parameters);
-                WorkloadException exception = Assert.Throws<WorkloadException>(() => _ = executor.SuperUserPassword);
+                WorkloadException exception = Assert.Throws<WorkloadException>(() => executor.GetSuperUserPassword());
                 Assert.AreEqual(ErrorReason.InvalidProfileDefinition, exception.Reason);
                 StringAssert.Contains("PGPASSWORD", exception.Message);
             }
@@ -130,8 +130,8 @@ namespace VirtualClient.Actions
                 this.fixture.Parameters[nameof(SysbenchExecutor.DatabaseSystem)] = "MySQL";
 
                 using TestSysbenchExecutor executor = new TestSysbenchExecutor(this.fixture.Dependencies, this.fixture.Parameters);
-                StringAssert.IsMatch("^[A-F0-9]{64}$", executor.SuperUserPassword);
-                Assert.AreEqual($" --password {executor.SuperUserPassword}", executor.PasswordArguments);
+                StringAssert.IsMatch("^[A-F0-9]{64}$", executor.GetSuperUserPassword());
+                Assert.AreEqual($" --password {executor.GetSuperUserPassword()}", executor.PasswordArguments);
             }
             finally
             {
