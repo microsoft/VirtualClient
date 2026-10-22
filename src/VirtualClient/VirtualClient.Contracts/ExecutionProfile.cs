@@ -68,6 +68,8 @@ namespace VirtualClient.Contracts
                 ? new Dictionary<string, IConvertible>(parameters, StringComparer.OrdinalIgnoreCase)
                 : new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
 
+            this.ParameterAliases = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
             this.ParametersOn = parametersOn != null
                 ? parametersOn
                 : new List<IDictionary<string, IConvertible>>();
@@ -102,7 +104,8 @@ namespace VirtualClient.Contracts
                   other?.Metadata, 
                   other?.Parameters,
                   other?.ParametersOn)
-        { 
+        {
+            this.ParameterAliases.AddRange(other.ParameterAliases);
         }
 
         /// <summary>
@@ -120,6 +123,10 @@ namespace VirtualClient.Contracts
                   other?.Parameters,
                   other?.ParametersOn)
         {
+            if (other.ParameterAliases != null)
+            {
+                this.ParameterAliases.AddRange(other.ParameterAliases);
+            }
         }
 
         /// <summary>
@@ -147,6 +154,12 @@ namespace VirtualClient.Contracts
         [JsonProperty(PropertyName = "Parameters", Required = Required.Default, Order = 70)]
         [JsonConverter(typeof(ParameterDictionaryJsonConverter))]
         public IDictionary<string, IConvertible> Parameters { get; }
+
+        /// <summary>
+        /// Profile-specific legacy parameter names mapped to their canonical names.
+        /// </summary>
+        [JsonProperty(PropertyName = "ParameterAliases", Required = Required.Default, Order = 72)]
+        public IDictionary<string, string> ParameterAliases { get; }
 
         /// <summary>
         /// List of parameter dictionaries that are associated with the profile.

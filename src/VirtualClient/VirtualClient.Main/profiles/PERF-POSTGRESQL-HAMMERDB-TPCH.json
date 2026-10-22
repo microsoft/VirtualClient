@@ -6,6 +6,9 @@
         "SupportedPlatforms": "linux-x64",
         "SupportedOperatingSystems": "Debian,Ubuntu"
     },
+    "ParameterAliases": {
+        "VirtualUsers": "VirtualUserCount"
+    },
     "Parameters": {
         "DatabaseName": "hammerdb_tpch",
         "DiskFilter": "osdisk:false&sizegreaterthan:256g",

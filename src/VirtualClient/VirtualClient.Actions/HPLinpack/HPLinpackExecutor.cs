@@ -88,7 +88,7 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.ProcessCount), this.cpuInfo.LogicalProcessorCount);
+                return this.Parameters.GetValue<int>(new string[] { nameof(this.ProcessCount), "NumberOfProcesses" }, this.cpuInfo.LogicalProcessorCount);
             }
         }
 

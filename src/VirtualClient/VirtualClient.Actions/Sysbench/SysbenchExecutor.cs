@@ -125,7 +125,8 @@ namespace VirtualClient.Actions
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(SysbenchClientExecutor.ThreadCount), out IConvertible threadCount);
+                string parameter = this.Parameters.ContainsKey(nameof(this.ThreadCount)) ? nameof(this.ThreadCount) : "Threads";
+                this.Parameters.TryGetValue(parameter, out IConvertible threadCount);
                 return threadCount?.ToInt32(CultureInfo.InvariantCulture);
             }
         }

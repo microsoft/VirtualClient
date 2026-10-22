@@ -5,6 +5,9 @@
         "SupportedPlatforms": "linux-x64",
         "SupportedOperatingSystems": "Ubuntu"
     },
+    "ParameterAliases": {
+        "Workers": "WorkerCount"
+    },
     "Parameters": {
         "TestDuration": "00:02:30",
         "Timeout": "00:20:00",

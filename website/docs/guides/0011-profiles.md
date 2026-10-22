@@ -80,6 +80,35 @@ set. This helps to ensure the purpose and consistency of the profile operations 
 ]
 ```
 
+### Count Parameter Naming
+
+Use a singular noun followed by `Count` for parameters that represent a numeric quantity. For example,
+use `ThreadCount` instead of `Threads` or `NumberOfThreads`, and `IterationCount` instead of `Iterations`.
+This distinguishes a count from a collection and keeps naming consistent across workloads and monitors.
+
+| Parameter | Meaning |
+| --- | --- |
+| `ThreadCount` | Number of threads |
+| `ClientInstanceCount` | Number of client instances |
+| `IterationCount` | Number of iterations |
+| `RequestCount` | Number of requests |
+| `MonitorIterationCount` | Number of monitor iterations |
+| `ConnectionCountPerThread` | Number of connections per thread |
+
+Retain qualifiers that describe the count, such as `PerThread` or `PerServerPort`, and limits such as
+`MinimumIterationCount` or `MaxServerConnectionCount`. Use the same standardized name in the profile
+parameter, its references, the corresponding component property, and documentation. This convention
+applies to numeric counts, not to parameters that contain collections or lists.
+
+### Legacy Name Compatibility
+
+Updated packaged profiles accept their previous count parameter names through profile-specific aliases.
+Legacy `--parameters` overrides are resolved before profile binding; if both names are explicitly supplied,
+the standardized name wins. Use the standardized names for new profiles and command lines.
+
+Custom profiles can opt in with a `ParameterAliases` mapping such as `"Threads": "ThreadCount"`
+(`parameter_aliases` in YAML). Names are case-insensitive; undeclared aliases are not globally rewritten.
+
 ## ParametersOn
 The section 'ParametersOn' within a profile defines a sets of parameters each with a "condition" that when evaluated to true will cause that specific set of parameters
 to be added to the profile parameters and used. Any parameters with keys matching in the conditional set will override those in the profile. Note that this
