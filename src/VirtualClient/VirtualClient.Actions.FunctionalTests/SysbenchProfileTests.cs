@@ -17,6 +17,7 @@ namespace VirtualClient.Actions
 
     [TestFixture]
     [Category("Functional")]
+    [NonParallelizable]
     public class SysbenchProfileTests
     {
         private DependencyFixture fixture;
@@ -25,6 +26,20 @@ namespace VirtualClient.Actions
         private string sysbenchPackagePath;
         private string mySQLPackagePath;
         private string postgreSQLPackagePath;
+        private string originalPassword;
+
+        [SetUp]
+        public void SetPasswordEnvironmentVariable()
+        {
+            this.originalPassword = Environment.GetEnvironmentVariable("PGPASSWORD");
+            Environment.SetEnvironmentVariable("PGPASSWORD", "test-postgresql-password");
+        }
+
+        [TearDown]
+        public void RestorePasswordEnvironmentVariable()
+        {
+            Environment.SetEnvironmentVariable("PGPASSWORD", this.originalPassword);
+        }
 
         [OneTimeSetUp]
         public void SetupFixture()
@@ -564,23 +579,23 @@ namespace VirtualClient.Actions
                             "apt install python3 --yes --quiet",
 
                             $"python3 {this.postgreSQLPackagePath}/install-server.py",
-                            $"python3 {this.postgreSQLPackagePath}/configure-server.py --dbName sbtest --serverIp 127.0.0.1 --password [A-Za-z0-9+/=]+ --port 5432 --inMemory [0-9]+",
-                            $"python3 {this.postgreSQLPackagePath}/setup-database.py --dbName sbtest --password [A-Za-z0-9+/=]+ --port 5432",
+                            $"python3 {this.postgreSQLPackagePath}/configure-server.py --dbName sbtest --serverIp 127.0.0.1 --port 5432 --inMemory [0-9]+",
+                            $"python3 {this.postgreSQLPackagePath}/setup-database.py --dbName sbtest --port 5432",
 
                             $"python3 {this.sysbenchPackagePath}/configure-workload-generator.py --distro Ubuntu --databaseSystem PostgreSQL --packagePath {this.sysbenchPackagePath}",
 
-                            $"python3 {this.sysbenchPackagePath}/populate-database.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1 --password [A-Za-z0-9+/=]+",
+                            $"python3 {this.sysbenchPackagePath}/populate-database.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1",
                             $"python3 {this.postgreSQLPackagePath}/distribute-database.py --dbName sbtest --directories \"/mnt_vc_0;/mnt_vc_1;/mnt_vc_2;\" --password [A-Za-z0-9+/=]+",
-                            $"python3 {this.sysbenchPackagePath}/populate-database.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --password [A-Za-z0-9+/=]+",
+                            $"python3 {this.sysbenchPackagePath}/populate-database.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000",
 
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --workload oltp_read_write --hostIpAddress 127.0.0.1 --durationSecs 300 --password [A-Za-z0-9+/=]+",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --workload oltp_read_only --hostIpAddress 127.0.0.1 --durationSecs 300 --password [A-Za-z0-9+/=]+",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --workload oltp_delete --hostIpAddress 127.0.0.1 --durationSecs 300 --password [A-Za-z0-9+/=]+",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --workload oltp_insert --hostIpAddress 127.0.0.1 --durationSecs 300 --password [A-Za-z0-9+/=]+",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --workload oltp_update_index --hostIpAddress 127.0.0.1 --durationSecs 300 --password [A-Za-z0-9+/=]+",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --workload oltp_update_non_index --hostIpAddress 127.0.0.1 --durationSecs 300 --password [A-Za-z0-9+/=]+",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 8 --tableCount 1 --recordCount 1000 --workload select_random_points --hostIpAddress 127.0.0.1 --durationSecs 300 --password [A-Za-z0-9+/=]+",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 8 --tableCount 1 --recordCount 1000 --workload select_random_ranges --hostIpAddress 127.0.0.1 --durationSecs 300 --password [A-Za-z0-9+/=]+"
+                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --workload oltp_read_write --hostIpAddress 127.0.0.1 --durationSecs 300",
+                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --workload oltp_read_only --hostIpAddress 127.0.0.1 --durationSecs 300",
+                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --workload oltp_delete --hostIpAddress 127.0.0.1 --durationSecs 300",
+                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --workload oltp_insert --hostIpAddress 127.0.0.1 --durationSecs 300",
+                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --workload oltp_update_index --hostIpAddress 127.0.0.1 --durationSecs 300",
+                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --workload oltp_update_non_index --hostIpAddress 127.0.0.1 --durationSecs 300",
+                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 8 --tableCount 1 --recordCount 1000 --workload select_random_points --hostIpAddress 127.0.0.1 --durationSecs 300",
+                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 8 --tableCount 1 --recordCount 1000 --workload select_random_ranges --hostIpAddress 127.0.0.1 --durationSecs 300"
                         };
                     }
                     else
@@ -590,16 +605,16 @@ namespace VirtualClient.Actions
                             "apt install python3 --yes --quiet",
 
                             $"python3 {this.postgreSQLPackagePath}/install-server.py",
-                            $"python3 {this.postgreSQLPackagePath}/configure-server.py --dbName sbtest --serverIp 127.0.0.1 --password [A-Za-z0-9+/=]+ --port 5432 --inMemory [0-9]+",
-                            $"python3 {this.postgreSQLPackagePath}/setup-database.py --dbName sbtest --password [A-Za-z0-9+/=]+ --port 5432",
+                            $"python3 {this.postgreSQLPackagePath}/configure-server.py --dbName sbtest --serverIp 127.0.0.1 --port 5432 --inMemory [0-9]+",
+                            $"python3 {this.postgreSQLPackagePath}/setup-database.py --dbName sbtest --port 5432",
 
                             $"python3 {this.sysbenchPackagePath}/configure-workload-generator.py --distro Ubuntu --databaseSystem PostgreSQL --packagePath {this.sysbenchPackagePath}",
 
-                            $"python3 {this.sysbenchPackagePath}/populate-database.py --dbName sbtest --databaseSystem PostgreSQL --benchmark TPCC --threadCount 8 --tableCount 10 --warehouses 1 --password [A-Za-z0-9+/=]+",
+                            $"python3 {this.sysbenchPackagePath}/populate-database.py --dbName sbtest --databaseSystem PostgreSQL --benchmark TPCC --threadCount 8 --tableCount 10 --warehouses 1",
                             $"python3 {this.postgreSQLPackagePath}/distribute-database.py --dbName sbtest --directories \"/mnt_vc_0;/mnt_vc_1;/mnt_vc_2;\" --password [A-Za-z0-9+/=]+",
-                            $"python3 {this.sysbenchPackagePath}/populate-database.py --dbName sbtest --databaseSystem PostgreSQL --benchmark TPCC --threadCount 8 --tableCount 10 --warehouses 0 --password [A-Za-z0-9+/=]+",
+                            $"python3 {this.sysbenchPackagePath}/populate-database.py --dbName sbtest --databaseSystem PostgreSQL --benchmark TPCC --threadCount 8 --tableCount 10 --warehouses 0",
 
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark TPCC --threadCount 8 --tableCount 10 --warehouses 1 --workload tpcc --hostIpAddress 127.0.0.1 --durationSecs 1800 --password [A-Za-z0-9+/=]+",
+                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark TPCC --threadCount 8 --tableCount 10 --warehouses 1 --workload tpcc --hostIpAddress 127.0.0.1 --durationSecs 1800",
                         };
                     }
                 }
@@ -613,14 +628,14 @@ namespace VirtualClient.Actions
 
                             $"python3 {this.sysbenchPackagePath}/configure-workload-generator.py --distro Ubuntu --databaseSystem PostgreSQL --packagePath {this.sysbenchPackagePath}",
 
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --workload oltp_read_write --hostIpAddress 1.2.3.5 --durationSecs 300 --password [A-Za-z0-9+/=]+",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --workload oltp_read_only --hostIpAddress 1.2.3.5 --durationSecs 300 --password [A-Za-z0-9+/=]+",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --workload oltp_delete --hostIpAddress 1.2.3.5 --durationSecs 300 --password [A-Za-z0-9+/=]+",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --workload oltp_insert --hostIpAddress 1.2.3.5 --durationSecs 300 --password [A-Za-z0-9+/=]+",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --workload oltp_update_index --hostIpAddress 1.2.3.5 --durationSecs 300 --password [A-Za-z0-9+/=]+",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --workload oltp_update_non_index --hostIpAddress 1.2.3.5 --durationSecs 300 --password [A-Za-z0-9+/=]+",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 8 --tableCount 1 --recordCount 1000 --workload select_random_points --hostIpAddress 1.2.3.5 --durationSecs 300 --password [A-Za-z0-9+/=]+",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 8 --tableCount 1 --recordCount 1000 --workload select_random_ranges --hostIpAddress 1.2.3.5 --durationSecs 300 --password [A-Za-z0-9+/=]+"
+                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --workload oltp_read_write --hostIpAddress 1.2.3.5 --durationSecs 300",
+                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --workload oltp_read_only --hostIpAddress 1.2.3.5 --durationSecs 300",
+                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --workload oltp_delete --hostIpAddress 1.2.3.5 --durationSecs 300",
+                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --workload oltp_insert --hostIpAddress 1.2.3.5 --durationSecs 300",
+                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --workload oltp_update_index --hostIpAddress 1.2.3.5 --durationSecs 300",
+                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --workload oltp_update_non_index --hostIpAddress 1.2.3.5 --durationSecs 300",
+                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 8 --tableCount 1 --recordCount 1000 --workload select_random_points --hostIpAddress 1.2.3.5 --durationSecs 300",
+                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 8 --tableCount 1 --recordCount 1000 --workload select_random_ranges --hostIpAddress 1.2.3.5 --durationSecs 300"
                         };
                     }
                     else
@@ -629,7 +644,7 @@ namespace VirtualClient.Actions
                         {
                             "apt install python3 --yes --quiet",
                             $"python3 {this.sysbenchPackagePath}/configure-workload-generator.py --distro Ubuntu --databaseSystem PostgreSQL --packagePath {this.sysbenchPackagePath}",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark TPCC --threadCount 8 --tableCount 10 --warehouses 1 --workload tpcc --hostIpAddress 1.2.3.5 --durationSecs 1800 --password [A-Za-z0-9+/=]+",
+                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark TPCC --threadCount 8 --tableCount 10 --warehouses 1 --workload tpcc --hostIpAddress 1.2.3.5 --durationSecs 1800",
                         };
                     }
                 }

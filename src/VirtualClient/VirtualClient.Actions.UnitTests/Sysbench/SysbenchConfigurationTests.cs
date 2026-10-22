@@ -29,11 +29,26 @@ namespace VirtualClient.Actions
 
     [TestFixture]
     [Category("Unit")]
+    [NonParallelizable]
     public class SysbenchConfigurationTests
     {
         private MockFixture fixture;
         private DependencyPath mockPackage;
         private string mockPackagePath;
+        private string originalPassword;
+
+        [SetUp]
+        public void SetPasswordEnvironmentVariable()
+        {
+            this.originalPassword = Environment.GetEnvironmentVariable("PGPASSWORD");
+            Environment.SetEnvironmentVariable("PGPASSWORD", "password with 'quotes' and $symbols");
+        }
+
+        [TearDown]
+        public void RestorePasswordEnvironmentVariable()
+        {
+            Environment.SetEnvironmentVariable("PGPASSWORD", this.originalPassword);
+        }
 
         [SetUp]
         public void SetupDefaultBehavior()
@@ -163,12 +178,20 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public async Task SysbenchConfigurationPreparesDatabase()
+        [TestCase("MySQL")]
+        [TestCase("PostgreSQL")]
+        public async Task SysbenchConfigurationPreparesDatabase(string databaseSystem)
         {
+            this.fixture.Parameters[nameof(SysbenchConfiguration.DatabaseSystem)] = databaseSystem;
+            const string filePassword = "file-password-with-$symbols";
+            this.fixture.Parameters["PostgreSQLPasswordFile"] = "/secure/Password.json";
+            this.fixture.File.Setup(file => file.ReadAllTextAsync("/secure/Password.json", It.IsAny<CancellationToken>()))
+                .ReturnsAsync("{\"Password\":\"file-password-with-$symbols\"}");
+            string passwordArguments = databaseSystem == "MySQL" ? " --password [A-Za-z0-9+/=]+" : string.Empty;
             string[] expectedCommands =
             {
-                $"python3 {this.mockPackagePath}/configure-workload-generator.py --distro Ubuntu --databaseSystem MySQL --packagePath {this.mockPackagePath}",
-                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --password [A-Za-z0-9+/=]+",
+                $"python3 {this.mockPackagePath}/configure-workload-generator.py --distro Ubuntu --databaseSystem {databaseSystem} --packagePath {this.mockPackagePath}",
+                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --databaseSystem {databaseSystem} --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000{passwordArguments}",
             };
 
             int commandNumber = 0;
@@ -176,6 +199,13 @@ namespace VirtualClient.Actions
 
             this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
+                if (databaseSystem == "PostgreSQL")
+                {
+                    StringAssert.DoesNotContain("--password", arguments);
+                    StringAssert.DoesNotContain(Environment.GetEnvironmentVariable("PGPASSWORD"), arguments);
+                    StringAssert.DoesNotContain(filePassword, arguments);
+                }
+
                 string expectedCommand = expectedCommands[commandNumber];
 
                 if (Regex.Match($"{exe} {arguments}", expectedCommand).Success)
@@ -198,6 +228,15 @@ namespace VirtualClient.Actions
                     OnStart = () => true,
                     OnHasExited = () => true
                 };
+
+                if (databaseSystem == "PostgreSQL" && arguments.Contains("populate-database.py"))
+                {
+                    process.OnStart = () =>
+                    {
+                        Assert.AreEqual(filePassword, process.EnvironmentVariables["PGPASSWORD"]);
+                        return true;
+                    };
+                }
 
                 return process;
             };

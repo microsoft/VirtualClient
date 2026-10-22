@@ -8,8 +8,6 @@ namespace VirtualClient.Actions
     using System.Globalization;
     using System.Linq;
     using System.Net;
-    using System.Security.Cryptography;
-    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
@@ -70,14 +68,21 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Parameter defines the SuperUser Password for PostgreSQL Server.
+        /// Gets the PostgreSQL superuser password from PGPASSWORD.
         /// </summary>
         public string SuperUserPassword
         {
             get
             {
-                byte[] hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes("default"));
-                return Convert.ToHexString(hashBytes);
+                string password = Environment.GetEnvironmentVariable("PGPASSWORD");
+                if (string.IsNullOrEmpty(password))
+                {
+                    throw new WorkloadException(
+                        "The PGPASSWORD environment variable must be set before running HammerDB.",
+                        ErrorReason.InvalidProfileDefinition);
+                }
+
+                return password;
             }
         }
 
@@ -307,6 +312,7 @@ namespace VirtualClient.Actions
 
         private async Task PrepareSQLDatabase(EventContext telemetryContext, CancellationToken cancellationToken)
         {
+            string password = await this.GetPostgreSQLPasswordAsync(cancellationToken).ConfigureAwait(false);
             string command = "python3";
             string arguments = $"{this.PlatformSpecifics.Combine(this.HammerDBPackagePath, "populate-database.py")} --createDBTCLPath {createDBTclName}";
             
@@ -315,7 +321,8 @@ namespace VirtualClient.Actions
                 arguments,
                 this.HammerDBPackagePath,
                 telemetryContext,
-                cancellationToken))
+                cancellationToken,
+                beforeExecution: childProcess => childProcess.EnvironmentVariables["PGPASSWORD"] = password))
             {
                 if (!cancellationToken.IsCancellationRequested)
                 {
@@ -327,15 +334,23 @@ namespace VirtualClient.Actions
 
         private async Task ConfigureCreateHammerDBFile(EventContext telemetryContext, CancellationToken cancellationToken)
         {
+            string password = await this.GetPostgreSQLPasswordAsync(cancellationToken).ConfigureAwait(false);
             await this.GenerateCommandLineArguments(cancellationToken);
 
+            bool preservePassword = this.Platform == PlatformID.Unix && !PlatformSpecifics.RunningInContainer;
+            string command = preservePassword ? "sudo" : "python3";
+            string arguments = preservePassword
+                ? $"--preserve-env=PGPASSWORD python3 {this.HammerDBScenarioArguments}"
+                : this.HammerDBScenarioArguments;
+
             using (IProcessProxy process = await this.ExecuteCommandAsync(
-                $"python3",
-                this.HammerDBScenarioArguments,
+                command,
+                arguments,
                 this.HammerDBPackagePath,
                 telemetryContext,
                 cancellationToken,
-                runElevated: true))
+                runElevated: true,
+                beforeExecution: childProcess => childProcess.EnvironmentVariables["PGPASSWORD"] = password))
             {
                 if (!cancellationToken.IsCancellationRequested)
                 {
@@ -348,7 +363,7 @@ namespace VirtualClient.Actions
         private Task GenerateCommandLineArguments(CancellationToken cancellationToken)
         {
             string arguments = $"{this.PlatformSpecifics.Combine(this.HammerDBPackagePath, "configure-workload-generator.py")} --workload {this.Workload} --sqlServer {this.SQLServer} --port {this.Port}" +
-                    $" --virtualUsers {this.VirtualUserCount} --password {this.SuperUserPassword} --dbName {this.DatabaseName} --hostIPAddress {this.ServerIpAddress}";
+                $" --virtualUsers {this.VirtualUserCount} --dbName {this.DatabaseName} --hostIPAddress {this.ServerIpAddress}";
 
             if (this.Workload.Equals("tpcc", StringComparison.OrdinalIgnoreCase))
             {

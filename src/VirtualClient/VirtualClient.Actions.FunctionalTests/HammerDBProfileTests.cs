@@ -20,6 +20,7 @@ namespace VirtualClient.Actions
 
     [TestFixture]
     [Category("Functional")]
+    [NonParallelizable]
     public class HammerDBProfileTests
     {
         private DependencyFixture fixture;
@@ -27,6 +28,20 @@ namespace VirtualClient.Actions
         private string serverAgentId;
         private string hammerdbPackagePath;
         private string postgreSQLPackagePath;
+        private string originalPassword;
+
+        [SetUp]
+        public void SetPasswordEnvironmentVariable()
+        {
+            this.originalPassword = Environment.GetEnvironmentVariable("PGPASSWORD");
+            Environment.SetEnvironmentVariable("PGPASSWORD", "test-postgresql-password");
+        }
+
+        [TearDown]
+        public void RestorePasswordEnvironmentVariable()
+        {
+            Environment.SetEnvironmentVariable("PGPASSWORD", this.originalPassword);
+        }
 
         [Test]
         [TestCase("PERF-POSTGRESQL-HAMMERDB-TPCC.json", PlatformID.Unix, Architecture.X64)]
@@ -234,14 +249,14 @@ namespace VirtualClient.Actions
                     "sudo apt list python3",
 
                     $"python3 {this.postgreSQLPackagePath}/install-server.py",
-                    $"python3 {this.postgreSQLPackagePath}/configure-server.py --dbName hammerdbtest --password [A-Za-z0-9+/=]+ --port 5432 --sharedMemoryBuffer [0-9]+ --serverIp 1.2.3.5",
+                    $"python3 {this.postgreSQLPackagePath}/configure-server.py --dbName hammerdbtest --port 5432 --sharedMemoryBuffer [0-9]+ --serverIp 1.2.3.5",
 
-                    $"python3 {this.hammerdbPackagePath}/configure-workload-generator.py --workload tpcc --sqlServer postgresql --port 5432 --virtualUsers [0-9]+ --warehouseCount [0-9]+ --password [A-Za-z0-9+/=]+ --dbName hammerdbtest --hostIPAddress",
+                    $"python3 {this.hammerdbPackagePath}/configure-workload-generator.py --workload tpcc --sqlServer postgresql --port 5432 --virtualUsers [0-9]+ --warehouseCount [0-9]+ --dbName hammerdbtest --hostIPAddress",
                     $"python3 {this.hammerdbPackagePath}/populate-database.py --createDBTCLPath createDB.tcl",
                     
                     $"python3 {this.postgreSQLPackagePath}/distribute-database.py --dbName hammerdbtest --directories {currentDirectory}/mnt_vc_0;{currentDirectory}/mnt_vc_1;{currentDirectory}/mnt_vc_2; --password [A-Za-z0-9+/=]+",
 
-                    $"python3 {this.hammerdbPackagePath}/configure-workload-generator.py --workload tpcc --sqlServer postgresql --port 5432 --virtualUsers [0-9]+ --warehouseCount [0-9]+ --password [A-Za-z0-9+/=]+ --dbName hammerdbtest --hostIPAddress",
+                    $"python3 {this.hammerdbPackagePath}/configure-workload-generator.py --workload tpcc --sqlServer postgresql --port 5432 --virtualUsers [0-9]+ --warehouseCount [0-9]+ --dbName hammerdbtest --hostIPAddress",
                     $"python3 {this.hammerdbPackagePath}/populate-database.py --createDBTCLPath createDB.tcl",
 
                     $"python3 {this.hammerdbPackagePath}/run-workload.py --runTransactionsTCLFilePath runTransactions.tcl",
@@ -255,7 +270,7 @@ namespace VirtualClient.Actions
                     "apt install python3 --yes --quiet",
                     "sudo apt list python3",
 
-                    $"python3 {this.hammerdbPackagePath}/configure-workload-generator.py --workload tpcc --sqlServer postgresql --port 5432 --virtualUsers [0-9]+ --warehouseCount [0-9]+ --password [A-Za-z0-9+/=]+ --dbName hammerdbtest --hostIPAddress",
+                    $"python3 {this.hammerdbPackagePath}/configure-workload-generator.py --workload tpcc --sqlServer postgresql --port 5432 --virtualUsers [0-9]+ --warehouseCount [0-9]+ --dbName hammerdbtest --hostIPAddress",
 
                     $"python3 {this.hammerdbPackagePath}/run-workload.py --runTransactionsTCLFilePath runTransactions.tcl",
                 };
@@ -271,14 +286,14 @@ namespace VirtualClient.Actions
                 return new List<string>()
                 {
                     $"python3 {this.postgreSQLPackagePath}/install-server.py",
-                    $"python3 {tempPostgreSqlPackagePath}/configure-server.py --dbName hammerdbtest --password [A-Za-z0-9+/=]+ --port 5432 --sharedMemoryBuffer [0-9]+ --serverIp 1.2.3.5",
+                    $"python3 {tempPostgreSqlPackagePath}/configure-server.py --dbName hammerdbtest --port 5432 --sharedMemoryBuffer [0-9]+ --serverIp 1.2.3.5",
 
-                    $"python3 {temphammerdbPackagePath}/configure-workload-generator.py --workload tpcc --sqlServer postgresql --port 5432 --virtualUsers [0-9]+ --warehouseCount [0-9]+ --password [A-Za-z0-9+/=]+ --dbName hammerdbtest --hostIPAddress",
+                    $"python3 {temphammerdbPackagePath}/configure-workload-generator.py --workload tpcc --sqlServer postgresql --port 5432 --virtualUsers [0-9]+ --warehouseCount [0-9]+ --dbName hammerdbtest --hostIPAddress",
                     $"python3 {this.hammerdbPackagePath}/populate-database.py --createDBTCLPath createDB.tcl",
 
                     $"python3 {tempPostgreSqlPackagePath}/distribute-database.py --dbName hammerdbtest --directories E:\\\\;F:\\\\;G:\\\\; --password [A-Za-z0-9+/=]+",
 
-                    $"python3 {temphammerdbPackagePath}/configure-workload-generator.py --workload tpcc --sqlServer postgresql --port 5432 --virtualUsers [0-9]+ --warehouseCount [0-9]+ --password [A-Za-z0-9+/=]+ --dbName hammerdbtest --hostIPAddress",
+                    $"python3 {temphammerdbPackagePath}/configure-workload-generator.py --workload tpcc --sqlServer postgresql --port 5432 --virtualUsers [0-9]+ --warehouseCount [0-9]+ --dbName hammerdbtest --hostIPAddress",
                     $"python3 {this.hammerdbPackagePath}/populate-database.py --createDBTCLPath createDB.tcl",
 
                     $"python3 {this.hammerdbPackagePath}/run-workload.py --runTransactionsTCLFilePath runTransactions.tcl",
@@ -288,7 +303,7 @@ namespace VirtualClient.Actions
             {
                 return new List<string>()
                 {
-                    $"python3 {temphammerdbPackagePath}/configure-workload-generator.py --workload tpcc --sqlServer postgresql --port 5432 --virtualUsers [0-9]+ --warehouseCount [0-9]+ --password [A-Za-z0-9+/=]+ --dbName hammerdbtest --hostIPAddress",
+                    $"python3 {temphammerdbPackagePath}/configure-workload-generator.py --workload tpcc --sqlServer postgresql --port 5432 --virtualUsers [0-9]+ --warehouseCount [0-9]+ --dbName hammerdbtest --hostIPAddress",
 
                     $"python3 {this.hammerdbPackagePath}/run-workload.py --runTransactionsTCLFilePath runTransactions.tcl",
                 };

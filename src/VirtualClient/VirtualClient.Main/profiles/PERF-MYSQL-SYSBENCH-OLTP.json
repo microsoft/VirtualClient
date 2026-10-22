@@ -193,7 +193,7 @@
             "Parameters": {
                 "Scenario": "DownloadSysbenchPackage",
                 "BlobContainer": "packages",
-                "BlobName": "sysbench-1.0.20.rev5.zip",
+                "BlobName": "sysbench-1.0.20.rev6.zip",
                 "PackageName": "sysbench",
                 "Extract": true
             }

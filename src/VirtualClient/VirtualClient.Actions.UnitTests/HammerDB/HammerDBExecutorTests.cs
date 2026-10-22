@@ -29,6 +29,7 @@ namespace VirtualClient.Actions
 
     [TestFixture]
     [Category("Unit")]
+    [NonParallelizable]
     public class HammerDBExecutorTests
     {
         private MockFixture fixture;
@@ -75,21 +76,39 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public void SuperUserPasswordUsesHexEncodingWithNoSpecialCharacters()
+        [TestCase("password with 'quotes' and $symbols")]
+        public void SuperUserPasswordReadsEnvironmentWithoutTransformingValue(string password)
         {
-            using (TestHammerDBExecutor executor = new TestHammerDBExecutor(this.fixture.Dependencies, this.fixture.Parameters))
+            string originalPassword = Environment.GetEnvironmentVariable("PGPASSWORD");
+            try
             {
-                string password = executor.SuperUserPassword;
+                Environment.SetEnvironmentVariable("PGPASSWORD", password);
+                using TestHammerDBExecutor executor = new TestHammerDBExecutor(this.fixture.Dependencies, this.fixture.Parameters);
+                Assert.AreEqual(password, executor.SuperUserPassword);
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable("PGPASSWORD", originalPassword);
+            }
+        }
 
-                // Password must be hex-encoded (alphanumeric only) to avoid breaking
-                // HammerDB TCL diset command argument parsing.
-                Assert.IsTrue(System.Text.RegularExpressions.Regex.IsMatch(password, "^[A-Fa-f0-9]+$"),
-                    $"SuperUserPassword must be hex-encoded (alphanumeric only). Got: {password}");
-
-                // Must not contain Base64 special characters that break TCL parsing
-                Assert.IsFalse(password.Contains("+"), "Password must not contain '+' (breaks TCL parsing)");
-                Assert.IsFalse(password.Contains("="), "Password must not contain '=' (breaks TCL parsing)");
-                Assert.IsFalse(password.Contains("/"), "Password must not contain '/' (breaks TCL parsing)");
+        [Test]
+        [TestCase(null)]
+        [TestCase("")]
+        public void SuperUserPasswordRejectsMissingEnvironmentVariable(string password)
+        {
+            string originalPassword = Environment.GetEnvironmentVariable("PGPASSWORD");
+            try
+            {
+                Environment.SetEnvironmentVariable("PGPASSWORD", password);
+                using TestHammerDBExecutor executor = new TestHammerDBExecutor(this.fixture.Dependencies, this.fixture.Parameters);
+                WorkloadException exception = Assert.Throws<WorkloadException>(() => _ = executor.SuperUserPassword);
+                Assert.AreEqual(ErrorReason.InvalidProfileDefinition, exception.Reason);
+                StringAssert.Contains("PGPASSWORD", exception.Message);
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable("PGPASSWORD", originalPassword);
             }
         }
 

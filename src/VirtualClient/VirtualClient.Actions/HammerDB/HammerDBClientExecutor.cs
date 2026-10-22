@@ -151,6 +151,7 @@ namespace VirtualClient.Actions
             {
                 using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
+                    string password = await this.GetPostgreSQLPasswordAsync(cancellationToken).ConfigureAwait(false);
                     string command = "python3";
                     string script = this.PlatformSpecifics.Combine(this.HammerDBPackagePath, "run-workload.py");
 
@@ -159,7 +160,8 @@ namespace VirtualClient.Actions
                         $"{script} --runTransactionsTCLFilePath {runTransactionsTclName}", 
                         this.HammerDBPackagePath, 
                         telemetryContext, 
-                        cancellationToken))
+                        cancellationToken,
+                        beforeExecution: childProcess => childProcess.EnvironmentVariables["PGPASSWORD"] = password))
                     {
                         if (!cancellationToken.IsCancellationRequested)
                         {
