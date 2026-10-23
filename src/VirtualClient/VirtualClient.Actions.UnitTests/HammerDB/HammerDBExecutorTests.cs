@@ -29,6 +29,7 @@ namespace VirtualClient.Actions
 
     [TestFixture]
     [Category("Unit")]
+    [NonParallelizable]
     public class HammerDBExecutorTests
     {
         private MockFixture fixture;
@@ -75,21 +76,100 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public void SuperUserPasswordUsesHexEncodingWithNoSpecialCharacters()
+        [TestCase("password with 'quotes' and $symbols")]
+        public void SuperUserPasswordReadsEnvironmentWithoutTransformingValue(string password)
         {
-            using (TestHammerDBExecutor executor = new TestHammerDBExecutor(this.fixture.Dependencies, this.fixture.Parameters))
+            string originalPassword = Environment.GetEnvironmentVariable("PGPASSWORD");
+            try
             {
-                string password = executor.SuperUserPassword;
+                Environment.SetEnvironmentVariable("PGPASSWORD", password);
+                using TestHammerDBExecutor executor = new TestHammerDBExecutor(this.fixture.Dependencies, this.fixture.Parameters);
+                Assert.AreEqual(password, executor.GetSuperUserPassword());
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable("PGPASSWORD", originalPassword);
+            }
+        }
 
-                // Password must be hex-encoded (alphanumeric only) to avoid breaking
-                // HammerDB TCL diset command argument parsing.
-                Assert.IsTrue(System.Text.RegularExpressions.Regex.IsMatch(password, "^[A-Fa-f0-9]+$"),
-                    $"SuperUserPassword must be hex-encoded (alphanumeric only). Got: {password}");
+        [Test]
+        [TestCase(null)]
+        [TestCase("")]
+        public void SuperUserPasswordRejectsMissingEnvironmentVariable(string password)
+        {
+            string originalPassword = Environment.GetEnvironmentVariable("PGPASSWORD");
+            try
+            {
+                Environment.SetEnvironmentVariable("PGPASSWORD", password);
+                using TestHammerDBExecutor executor = new TestHammerDBExecutor(this.fixture.Dependencies, this.fixture.Parameters);
+                WorkloadException exception = Assert.Throws<WorkloadException>(() => executor.GetSuperUserPassword());
+                Assert.AreEqual(ErrorReason.InvalidProfileDefinition, exception.Reason);
+                StringAssert.Contains("PGPASSWORD", exception.Message);
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable("PGPASSWORD", originalPassword);
+            }
+        }
 
-                // Must not contain Base64 special characters that break TCL parsing
-                Assert.IsFalse(password.Contains("+"), "Password must not contain '+' (breaks TCL parsing)");
-                Assert.IsFalse(password.Contains("="), "Password must not contain '=' (breaks TCL parsing)");
-                Assert.IsFalse(password.Contains("/"), "Password must not contain '/' (breaks TCL parsing)");
+        [TestCase(0, "password with 'quotes' and $symbols")]
+        [TestCase(1, "password with 'quotes' and $symbols")]
+        [TestCase(0, "1")]
+        public async Task ProcessOutputObscuresCredentialInTelemetryFilesAndFailures(int exitCode, string password)
+        {
+            this.fixture.Parameters[nameof(HammerDBExecutor.LogToFile)] = true;
+            List<string> logFiles = new List<string>();
+            List<string> loggedOutput = new List<string>();
+            this.fixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Callback<string, string, CancellationToken>((path, content, token) =>
+                {
+                    if (path.EndsWith(".log", StringComparison.Ordinal))
+                    {
+                        logFiles.Add(content);
+                    }
+                })
+                .Returns(Task.CompletedTask);
+            this.fixture.Logger.OnLog = (level, eventInfo, state, error) =>
+            {
+                if (eventInfo.Name.EndsWith(".ProcessDetails", StringComparison.Ordinal))
+                {
+                    JObject details = JObject.FromObject(((EventContext)state).Properties["process"]);
+                    loggedOutput.Add(details["standardOutput"].Value<string>());
+                    loggedOutput.Add(details["standardError"].Value<string>());
+                }
+            };
+
+            using InMemoryProcess process = new InMemoryProcess
+            {
+                StartInfo = new ProcessStartInfo { FileName = "hammerdbcli", Arguments = "auto runTransactions.tcl" },
+                ExitCode = exitCode,
+                OnHasExited = () => true
+            };
+            string output = $"Changed tpcc:pg_pass from postgres to {password} for PostgreSQL\nTransactions/sec: 120";
+            process.StandardOutput.Append(output);
+            process.StandardError.Append($"Connection details: {password}");
+
+            using TestHammerDBExecutor executor = new TestHammerDBExecutor(this.fixture.Dependencies, this.fixture.Parameters);
+            await executor.OnLogPostgreSQLProcessDetails(process, password, EventContext.None, "HammerDB");
+
+            Assert.AreEqual(1, logFiles.Count);
+            Assert.AreEqual(2, loggedOutput.Count);
+            Assert.AreEqual(output.Replace(password, "...", StringComparison.Ordinal), loggedOutput[0]);
+            Assert.AreEqual("Connection details: ...", loggedOutput[1]);
+            StringAssert.Contains(loggedOutput[0], logFiles[0]);
+            StringAssert.Contains(loggedOutput[1], logFiles[0]);
+            StringAssert.DoesNotContain($"to {password} for PostgreSQL", logFiles[0]);
+            StringAssert.DoesNotContain($"Connection details: {password}", logFiles[0]);
+
+            if (exitCode == 0)
+            {
+                Assert.AreEqual(output, process.StandardOutput.ToString(), "Metric input must remain unchanged.");
+            }
+            else
+            {
+                WorkloadException exception = Assert.Throws<WorkloadException>(() =>
+                    process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadFailed));
+                StringAssert.DoesNotContain(password, exception.ToString());
             }
         }
 
@@ -101,6 +181,8 @@ namespace VirtualClient.Actions
             }
 
             public Func<EventContext, CancellationToken, Task> OnInitialize => base.InitializeAsync;
+
+            public Func<IProcessProxy, string, EventContext, string, Task> OnLogPostgreSQLProcessDetails => base.LogPostgreSQLProcessDetailsAsync;
         }
     }
 }

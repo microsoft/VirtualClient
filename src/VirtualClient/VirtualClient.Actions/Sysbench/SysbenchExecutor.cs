@@ -143,18 +143,6 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Parameter defines the SuperUser Password for PostgreSQL Server.
-        /// </summary>
-        public string SuperUserPassword
-        {
-            get
-            {
-                byte[] hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes("default"));
-                return Convert.ToHexString(hashBytes);
-            }
-        }
-
-        /// <summary>
         /// Number of warehouses.
         /// </summary>
         public int? WarehouseCount
@@ -185,6 +173,17 @@ namespace VirtualClient.Actions
         public IApiClient ServerApiClient { get; set; }
 
         /// <summary>
+        /// Gets the credential arguments. Sysbench wrapper scripts do not accept password arguments.
+        /// </summary>
+        protected string PasswordArguments
+        {
+            get
+            {
+                return string.Empty;
+            }
+        }
+
+        /// <summary>
         /// Cancellation Token Source for Server.
         /// </summary>
         protected CancellationTokenSource ServerCancellationSource { get; set; }
@@ -203,6 +202,30 @@ namespace VirtualClient.Actions
         /// An interface that can be used to communicate with the underlying system.
         /// </summary>
         protected ISystemManagement SystemManager => this.Dependencies.GetService<ISystemManagement>();
+
+        private static string MySQLPasswordHash => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes("default")));
+
+        /// <summary>
+        /// Gets the PostgreSQL password from PGPASSWORD, or the existing MySQL password.
+        /// </summary>
+        /// <returns>The database superuser password.</returns>
+        public string GetSuperUserPassword()
+        {
+            if (string.Equals(this.DatabaseSystem, "PostgreSQL", StringComparison.OrdinalIgnoreCase))
+            {
+                string password = Environment.GetEnvironmentVariable("PGPASSWORD");
+                if (string.IsNullOrEmpty(password))
+                {
+                    throw new WorkloadException(
+                        "The PGPASSWORD environment variable must be set before running Sysbench with PostgreSQL.",
+                        ErrorReason.InvalidProfileDefinition);
+                }
+
+                return password;
+            }
+
+            return MySQLPasswordHash;
+        }
 
         /// <summary>
         /// Method to determine the table count for the given run.

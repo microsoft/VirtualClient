@@ -7,8 +7,6 @@ namespace VirtualClient.Dependencies
     using System.Collections.Generic;
     using System.Linq;
     using System.Net;
-    using System.Security.Cryptography;
-    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
@@ -101,18 +99,6 @@ namespace VirtualClient.Dependencies
         }
 
         /// <summary>
-        /// Parameter defines the SuperUser Password for PostgreSQL Server.
-        /// </summary>
-        public string SuperUserPassword
-        {
-            get
-            {
-                byte[] hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes("default"));
-                return Convert.ToHexString(hashBytes);
-            }
-        }
-
-        /// <summary>
         /// Shared Buffer Size for PostgreSQL
         /// </summary>
         public string SharedMemoryBuffer
@@ -128,6 +114,23 @@ namespace VirtualClient.Dependencies
         /// Retrieves the interface to interacting with the underlying system.
         /// </summary>
         protected ISystemManagement SystemManager { get; }
+
+        /// <summary>
+        /// Gets the PostgreSQL superuser password from the PGPASSWORD environment variable.
+        /// </summary>
+        /// <returns>The PostgreSQL superuser password.</returns>
+        public string GetSuperUserPassword()
+        {
+            string password = Environment.GetEnvironmentVariable("PGPASSWORD");
+            if (string.IsNullOrEmpty(password))
+            {
+                throw new DependencyException(
+                    "The PGPASSWORD environment variable must be set before configuring PostgreSQL Server.",
+                    ErrorReason.InvalidProfileDefinition);
+            }
+
+            return password;
+        }
 
         /// <summary>
         /// Executes PostgreSQL configuration steps.
@@ -171,20 +174,23 @@ namespace VirtualClient.Dependencies
 
         private async Task ConfigurePostgreSQLServerAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
+            string password = await this.GetPostgreSQLPasswordAsync(cancellationToken).ConfigureAwait(false);
+
             string serverIp = (this.GetLayoutClientInstances(ClientRole.Server, false) ?? Enumerable.Empty<ClientInstance>())
                                     .FirstOrDefault()?.IPAddress
                                     ?? IPAddress.Loopback.ToString();
 
             string directory = await this.GetPostgreSQLDataDirectoryAsync(cancellationToken);
 
-            string arguments = $"{this.packageDirectory}/configure-server.py --dbName {this.DatabaseName} --serverIp {serverIp} --password {this.SuperUserPassword} --port {this.Port} --inMemory {this.SharedMemoryBuffer} --directory {directory}";
+            string arguments = $"{this.packageDirectory}/configure-server.py --dbName {this.DatabaseName} --serverIp {serverIp} --port {this.Port} --inMemory {this.SharedMemoryBuffer} --directory {directory}";
 
             using (IProcessProxy process = await this.ExecuteCommandAsync(
                "python3",
                arguments,
                this.packageDirectory,
                telemetryContext,
-               cancellationToken))
+               cancellationToken,
+               beforeExecution: childProcess => childProcess.EnvironmentVariables["PGPASSWORD"] = password))
             {
                 if (!cancellationToken.IsCancellationRequested)
                 {
@@ -281,14 +287,17 @@ namespace VirtualClient.Dependencies
 
         private async Task SetupPostgreSQLDatabaseAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string arguments = $"{this.packageDirectory}/setup-database.py --dbName {this.DatabaseName} --password {this.SuperUserPassword} --port {this.Port}";
+            string password = await this.GetPostgreSQLPasswordAsync(cancellationToken).ConfigureAwait(false);
+
+            string arguments = $"{this.packageDirectory}/setup-database.py --dbName {this.DatabaseName} --port {this.Port}";
 
             using (IProcessProxy process = await this.ExecuteCommandAsync(
                "python3",
                arguments,
                this.packageDirectory,
                telemetryContext,
-               cancellationToken))
+               cancellationToken,
+               beforeExecution: childProcess => childProcess.EnvironmentVariables["PGPASSWORD"] = password))
             {
                 if (!cancellationToken.IsCancellationRequested)
                 {

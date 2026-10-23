@@ -28,6 +28,7 @@ namespace VirtualClient.Actions
 
     [TestFixture]
     [Category("Unit")]
+    [NonParallelizable]
     public class SysbenchClientExecutorTests
     {
         private MockFixture fixture;
@@ -35,6 +36,20 @@ namespace VirtualClient.Actions
         private string apiClientId;
         private ClientInstance clientInstance;
         private string mockPackagePath;
+        private string originalPassword;
+
+        [SetUp]
+        public void SetPasswordEnvironmentVariable()
+        {
+            this.originalPassword = Environment.GetEnvironmentVariable("PGPASSWORD");
+            Environment.SetEnvironmentVariable("PGPASSWORD", "password with 'quotes' and $symbols");
+        }
+
+        [TearDown]
+        public void RestorePasswordEnvironmentVariable()
+        {
+            Environment.SetEnvironmentVariable("PGPASSWORD", this.originalPassword);
+        }
 
         [SetUp]
         public void SetupDefaultBehavior()
@@ -86,15 +101,29 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public async Task SysbenchClientExecutorRunsTheExpectedWorkloadCommand()
+        [TestCase("MySQL")]
+        [TestCase("PostgreSQL")]
+        public async Task SysbenchClientExecutorRunsTheExpectedWorkloadCommand(string databaseSystem)
         {
             SetupDefaultBehavior();
 
-            string expectedCommand = @$"python3 {this.mockPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --workload oltp_read_write --hostIpAddress 1.2.3.5 --durationSecs 10 --password [A-Za-z0-9+/=]+";
+            this.fixture.Parameters[nameof(SysbenchClientExecutor.DatabaseSystem)] = databaseSystem;
+            const string filePassword = "file-password-with-$symbols";
+            this.fixture.Parameters["PostgreSQLPasswordFile"] = "/secure/Password.json";
+            this.fixture.File.Setup(file => file.ReadAllTextAsync("/secure/Password.json", It.IsAny<CancellationToken>()))
+                .ReturnsAsync("{\"Password\":\"file-password-with-$symbols\"}");
+            string expectedCommand = @$"python3 {this.mockPackagePath}/run-workload.py --dbName sbtest --databaseSystem {databaseSystem} --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --workload oltp_read_write --hostIpAddress 1.2.3.5 --durationSecs 10";
             bool commandExecuted = false;
 
             this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
+                StringAssert.DoesNotContain("--password", arguments);
+                if (databaseSystem == "PostgreSQL")
+                {
+                    StringAssert.DoesNotContain(Environment.GetEnvironmentVariable("PGPASSWORD"), arguments);
+                    StringAssert.DoesNotContain(filePassword, arguments);
+                }
+
                 if (Regex.Match($"{exe} {arguments}", expectedCommand).Success)
                 {
                     commandExecuted = true;
@@ -111,6 +140,15 @@ namespace VirtualClient.Actions
                     OnStart = () => true,
                     OnHasExited = () => true
                 };
+
+                if (databaseSystem == "PostgreSQL")
+                {
+                    process.OnStart = () =>
+                    {
+                        Assert.AreEqual(filePassword, process.EnvironmentVariables["PGPASSWORD"]);
+                        return true;
+                    };
+                }
 
                 string resultsPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "test_examples", "Sysbench", "SysbenchExample.txt");
                 process.StandardOutput.Append(File.ReadAllText(resultsPath));
@@ -136,7 +174,7 @@ namespace VirtualClient.Actions
             this.fixture.Parameters[nameof(SysbenchClientExecutor.TableCount)] = "40";
             this.fixture.Parameters[nameof(SysbenchClientExecutor.DatabaseScenario)] = "Configure";
 
-            string expectedCommand = @$"python3 {this.mockPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --threadCount 64 --tableCount 40 --recordCount 1000 --workload oltp_read_write --hostIpAddress 1.2.3.5 --durationSecs 10 --password [A-Za-z0-9+/=]+";
+            string expectedCommand = @$"python3 {this.mockPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --threadCount 64 --tableCount 40 --recordCount 1000 --workload oltp_read_write --hostIpAddress 1.2.3.5 --durationSecs 10";
             bool commandExecuted = false;
 
             this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
@@ -179,7 +217,7 @@ namespace VirtualClient.Actions
 
             this.fixture.Parameters[nameof(SysbenchClientExecutor.DatabaseScenario)] = "Balanced";
 
-            string expectedCommand = $"python3 {this.mockPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --workload oltp_read_write --hostIpAddress 1.2.3.5 --durationSecs 10 --password [A-Za-z0-9+/=]+";
+            string expectedCommand = $"python3 {this.mockPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --workload oltp_read_write --hostIpAddress 1.2.3.5 --durationSecs 10";
             bool commandExecuted = false;
 
             this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
@@ -222,7 +260,7 @@ namespace VirtualClient.Actions
 
             this.fixture.Parameters[nameof(SysbenchClientExecutor.DatabaseScenario)] = "InMemory";
 
-            string expectedCommand = $"python3 {this.mockPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 100000 --workload oltp_read_write --hostIpAddress 1.2.3.5 --durationSecs 10 --password [A-Za-z0-9+/=]+";
+            string expectedCommand = $"python3 {this.mockPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 100000 --workload oltp_read_write --hostIpAddress 1.2.3.5 --durationSecs 10";
             bool commandExecuted = false;
 
             this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
@@ -266,7 +304,7 @@ namespace VirtualClient.Actions
             this.fixture.Parameters[nameof(SysbenchClientExecutor.Benchmark)] = "TPCC";
             this.fixture.Parameters[nameof(SysbenchClientExecutor.Workload)] = "tpcc";
 
-            string expectedCommand = $"python3 {this.mockPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark TPCC --threadCount 8 --tableCount 10 --warehouses 1 --workload tpcc --hostIpAddress 1.2.3.5 --durationSecs 10 --password [A-Za-z0-9+/=]+";
+            string expectedCommand = $"python3 {this.mockPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark TPCC --threadCount 8 --tableCount 10 --warehouses 1 --workload tpcc --hostIpAddress 1.2.3.5 --durationSecs 10";
             bool commandExecuted = false;
 
             this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
@@ -309,7 +347,7 @@ namespace VirtualClient.Actions
 
             this.fixture.Parameters[nameof(SysbenchClientExecutor.DatabaseSystem)] = "PostgreSQL";
 
-            string expectedCommand = $"python3 {this.mockPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --workload oltp_read_write --hostIpAddress 1.2.3.5 --durationSecs 10 --password [A-Za-z0-9+/=]+";
+            string expectedCommand = $"python3 {this.mockPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --workload oltp_read_write --hostIpAddress 1.2.3.5 --durationSecs 10";
             bool commandExecuted = false;
 
             this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
@@ -354,7 +392,7 @@ namespace VirtualClient.Actions
             this.fixture.Parameters[nameof(SysbenchClientExecutor.Benchmark)] = "TPCC";
             this.fixture.Parameters[nameof(SysbenchClientExecutor.Workload)] = "tpcc";
 
-            string expectedCommand = $"python3 {this.mockPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark TPCC --threadCount 8 --tableCount 10 --warehouses 1 --workload tpcc --hostIpAddress 1.2.3.5 --durationSecs 10 --password [A-Za-z0-9+/=]+";
+            string expectedCommand = $"python3 {this.mockPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark TPCC --threadCount 8 --tableCount 10 --warehouses 1 --workload tpcc --hostIpAddress 1.2.3.5 --durationSecs 10";
             bool commandExecuted = false;
 
             this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>

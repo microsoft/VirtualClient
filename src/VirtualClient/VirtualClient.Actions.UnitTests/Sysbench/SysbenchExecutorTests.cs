@@ -29,6 +29,7 @@ namespace VirtualClient.Actions
 
     [TestFixture]
     [Category("Unit")]
+    [NonParallelizable]
     public class SysbenchExecutorTests
     {
         private MockFixture fixture;
@@ -75,6 +76,90 @@ namespace VirtualClient.Actions
             }
         }
 
+        [Test]
+        [TestCase("PostgreSQL")]
+        [TestCase("postgresql")]
+        public void SysbenchPostgreSQLPasswordComesFromEnvironmentAndIsNotAnArgument(string databaseSystem)
+        {
+            string originalPassword = Environment.GetEnvironmentVariable("PGPASSWORD");
+            try
+            {
+                const string password = "password with 'quotes' and $symbols";
+                Environment.SetEnvironmentVariable("PGPASSWORD", password);
+                this.fixture.Parameters[nameof(SysbenchExecutor.DatabaseSystem)] = databaseSystem;
+
+                using TestSysbenchExecutor executor = new TestSysbenchExecutor(this.fixture.Dependencies, this.fixture.Parameters);
+                Assert.AreEqual(password, executor.GetSuperUserPassword());
+                Assert.AreEqual(string.Empty, executor.PasswordArguments);
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable("PGPASSWORD", originalPassword);
+            }
+        }
+
+        [Test]
+        [TestCase(null)]
+        [TestCase("")]
+        public void SysbenchPostgreSQLRejectsMissingPassword(string password)
+        {
+            string originalPassword = Environment.GetEnvironmentVariable("PGPASSWORD");
+            try
+            {
+                Environment.SetEnvironmentVariable("PGPASSWORD", password);
+                this.fixture.Parameters[nameof(SysbenchExecutor.DatabaseSystem)] = "PostgreSQL";
+
+                using TestSysbenchExecutor executor = new TestSysbenchExecutor(this.fixture.Dependencies, this.fixture.Parameters);
+                WorkloadException exception = Assert.Throws<WorkloadException>(() => executor.GetSuperUserPassword());
+                Assert.AreEqual(ErrorReason.InvalidProfileDefinition, exception.Reason);
+                StringAssert.Contains("PGPASSWORD", exception.Message);
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable("PGPASSWORD", originalPassword);
+            }
+        }
+
+        [Test]
+        [TestCase(null)]
+        [TestCase("postgresql-secret-with-'quotes'-and-$symbols")]
+        public async Task SysbenchMySQLPasswordArgumentsDoNotDependOnPostgreSQLPassword(string password)
+        {
+            string originalPassword = Environment.GetEnvironmentVariable("PGPASSWORD");
+            try
+            {
+                Environment.SetEnvironmentVariable("PGPASSWORD", password);
+                this.fixture.Parameters[nameof(SysbenchExecutor.DatabaseSystem)] = "MySQL";
+
+                using TestSysbenchExecutor executor = new TestSysbenchExecutor(this.fixture.Dependencies, this.fixture.Parameters);
+                StringAssert.IsMatch("^[A-F0-9]{64}$", executor.GetSuperUserPassword());
+                Assert.AreEqual(string.Empty, executor.PasswordArguments);
+                if (password != null)
+                {
+                    StringAssert.DoesNotContain(password, executor.PasswordArguments);
+                }
+
+                using IProcessProxy process = await executor.ExecuteCommandAsync(
+                    "python3",
+                    $"run-workload.py{executor.PasswordArguments}",
+                    this.mockPackagePath,
+                    EventContext.None,
+                    CancellationToken.None);
+
+                string logs = JsonConvert.SerializeObject(this.fixture.Logger);
+                StringAssert.DoesNotContain("--password", logs);
+                StringAssert.DoesNotContain(executor.GetSuperUserPassword(), logs);
+                if (password != null)
+                {
+                    StringAssert.DoesNotContain(password, logs);
+                }
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable("PGPASSWORD", originalPassword);
+            }
+        }
+
         private class TestSysbenchExecutor : SysbenchExecutor
         {
             public TestSysbenchExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters = null)
@@ -83,6 +168,8 @@ namespace VirtualClient.Actions
             }
 
             public Func<EventContext, CancellationToken, Task> OnInitialize => base.InitializeAsync;
+
+            public new string PasswordArguments => base.PasswordArguments;
         }
     }
 }

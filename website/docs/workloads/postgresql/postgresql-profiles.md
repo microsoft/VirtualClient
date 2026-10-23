@@ -52,6 +52,9 @@ idea. The name of the client must match the name of the system or the value of t
 
 The TPCC scenario uses HammerDB to create and populate a PostgreSQL database with transactional workload patterns. Database creation and population can only be performed on the Server side.
 
+HammerDB requires the schema-building `VirtualUserCount` to be no greater than
+`WarehouseCount`. For a one-warehouse smoke test, set both parameters to `1`.
+
 **Important**: HammerDB will automatically distribute and populate the database tables across the target disks you specify. Make sure to provide the `DiskFilter` parameter to point to your target disks for optimal performance.
 
 ``` bash

@@ -179,8 +179,11 @@ namespace VirtualClient.Actions
             {
                 using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
+                    string password = string.Equals(this.DatabaseSystem, "PostgreSQL", StringComparison.OrdinalIgnoreCase)
+                        ? await this.GetPostgreSQLPasswordAsync(cancellationToken).ConfigureAwait(false)
+                        : null;
                     this.sysbenchLoggingArguments = this.BuildSysbenchLoggingArguments();
-                    this.sysbenchExecutionArguments = $"{this.sysbenchLoggingArguments} --workload {this.Workload} --hostIpAddress {this.ServerIpAddress} --durationSecs {this.Duration.TotalSeconds} --password {this.SuperUserPassword}";
+                    this.sysbenchExecutionArguments = $"{this.sysbenchLoggingArguments} --workload {this.Workload} --hostIpAddress {this.ServerIpAddress} --durationSecs {this.Duration.TotalSeconds}{this.PasswordArguments}";
 
                     string script = $"{this.SysbenchPackagePath}/run-workload.py ";
 
@@ -189,7 +192,14 @@ namespace VirtualClient.Actions
                         script + this.sysbenchExecutionArguments,
                         this.SysbenchPackagePath,
                         telemetryContext,
-                        cancellationToken))
+                        cancellationToken,
+                        beforeExecution: childProcess =>
+                        {
+                            if (password != null)
+                            {
+                                childProcess.EnvironmentVariables["PGPASSWORD"] = password;
+                            }
+                        }))
                     {
                         if (!cancellationToken.IsCancellationRequested)
                         {

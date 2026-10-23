@@ -128,8 +128,11 @@ namespace VirtualClient.Actions
                 {
                     string serverIp = (this.IsMultiRoleLayout() && this.IsInRole(ClientRole.Client)) ? this.ServerIpAddress : "localhost";
 
+                    string password = string.Equals(this.DatabaseSystem, "PostgreSQL", StringComparison.OrdinalIgnoreCase)
+                        ? await this.GetPostgreSQLPasswordAsync(cancellationToken).ConfigureAwait(false)
+                        : null;
                     string sysbenchLoggingArguments = this.BuildSysbenchLoggingArguments();
-                    this.sysbenchPopulationArguments = $"{sysbenchLoggingArguments} --password {this.SuperUserPassword} --hostIpAddress \"{serverIp}\"";
+                    this.sysbenchPopulationArguments = $"{sysbenchLoggingArguments}{this.PasswordArguments} --hostIpAddress \"{serverIp}\"";
 
                     string script = $"{this.SysbenchPackagePath}/populate-database.py";
 
@@ -138,7 +141,14 @@ namespace VirtualClient.Actions
                         $"{script} {this.sysbenchPopulationArguments}",
                         this.SysbenchPackagePath,
                         telemetryContext,
-                        cancellationToken))
+                        cancellationToken,
+                        beforeExecution: childProcess =>
+                        {
+                            if (password != null)
+                            {
+                                childProcess.EnvironmentVariables["PGPASSWORD"] = password;
+                            }
+                        }))
                     {
                         if (!cancellationToken.IsCancellationRequested)
                         {

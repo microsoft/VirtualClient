@@ -19,11 +19,26 @@ namespace VirtualClient.Dependencies
 
     [TestFixture]
     [Category("Unit")]
+    [NonParallelizable]
     public class PostgreSQLServerConfigurationTests
     {
         private MockFixture mockFixture;
         private DependencyPath mockPackage;
         private string packagePath;
+        private string originalPassword;
+
+        [SetUp]
+        public void SetPasswordEnvironmentVariable()
+        {
+            this.originalPassword = Environment.GetEnvironmentVariable("PGPASSWORD");
+            Environment.SetEnvironmentVariable("PGPASSWORD", "test-password with 'quotes' and $symbols");
+        }
+
+        [TearDown]
+        public void RestorePasswordEnvironmentVariable()
+        {
+            Environment.SetEnvironmentVariable("PGPASSWORD", this.originalPassword);
+        }
 
         public void SetupTest(PlatformID platform, Architecture architecture)
         {
@@ -32,7 +47,6 @@ namespace VirtualClient.Dependencies
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { "PackageName", "postgresql" },
-                { "ServerPassword", "postgresqlpassword" },
                 { "Port", 5432 },
                 { "DatabaseName", "hammerdbtest" },
                 { "SharedMemoryBuffer", "454567" }
@@ -91,7 +105,7 @@ namespace VirtualClient.Dependencies
 
             string[] expectedCommands =
             {
-                $"python3 {tempPackagePath}/configure-server.py --dbName hammerdbtest --serverIp 1.2.3.5 --password [A-Za-z0-9+/=]+ --port 5432 --inMemory [0-9]+ --directory \\S+",
+                $"python3 {tempPackagePath}/configure-server.py --dbName hammerdbtest --serverIp 1.2.3.5 --port 5432 --inMemory [0-9]+ --directory \\S+",
             };
 
             int commandNumber = 0;
@@ -102,6 +116,8 @@ namespace VirtualClient.Dependencies
                 string executedCommand = $"{exe} {arguments}";
 
                 Assert.IsTrue(Regex.IsMatch(executedCommand, expectedCommand));
+                StringAssert.DoesNotContain("--password", arguments);
+                StringAssert.DoesNotContain(Environment.GetEnvironmentVariable("PGPASSWORD"), arguments);
                 commandNumber++;
 
                 InMemoryProcess process = new InMemoryProcess
@@ -188,6 +204,98 @@ namespace VirtualClient.Dependencies
             }
 
             Assert.AreEqual(0, commandsExecuted);
+        }
+
+        [Test]
+        public void PostgreSQLServerConfigurationReadsPasswordFromEnvironment()
+        {
+            this.SetupTest(PlatformID.Unix, Architecture.X64);
+
+            using TestPostgreSQLServerConfiguration component = new TestPostgreSQLServerConfiguration(this.mockFixture);
+            Assert.AreEqual(Environment.GetEnvironmentVariable("PGPASSWORD"), component.GetSuperUserPassword());
+        }
+
+        [Test]
+        [TestCase("ConfigureServer")]
+        [TestCase("SetupDatabase")]
+        public void PostgreSQLServerConfigurationRejectsMissingPasswordBeforeStartingProcess(string action)
+        {
+            this.SetupTest(PlatformID.Unix, Architecture.X64);
+            this.mockFixture.Parameters["Action"] = action;
+            Environment.SetEnvironmentVariable("PGPASSWORD", null);
+
+            this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
+            {
+                Assert.Fail("No process should start without PGPASSWORD.");
+                return this.mockFixture.Process;
+            };
+
+            using TestPostgreSQLServerConfiguration component = new TestPostgreSQLServerConfiguration(this.mockFixture);
+            DependencyException exception = Assert.ThrowsAsync<DependencyException>(() => component.ExecuteAsync(CancellationToken.None));
+            Assert.AreEqual(ErrorReason.InvalidProfileDefinition, exception.Reason);
+            StringAssert.Contains("PGPASSWORD", exception.Message);
+        }
+
+        [Test]
+        public async Task PostgreSQLServerConfigurationOmitsPasswordFromSetupDatabaseCommand()
+        {
+            this.SetupTest(PlatformID.Unix, Architecture.X64);
+            this.mockFixture.Parameters["Action"] = "SetupDatabase";
+            int commandsExecuted = 0;
+
+            this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
+            {
+                Assert.AreEqual("python3", command);
+                Assert.AreEqual($"{this.packagePath}/setup-database.py --dbName hammerdbtest --port 5432", arguments);
+                StringAssert.DoesNotContain(Environment.GetEnvironmentVariable("PGPASSWORD"), arguments);
+                commandsExecuted++;
+                this.mockFixture.Process.ExitCode = 0;
+                this.mockFixture.Process.OnHasExited = () => true;
+                return this.mockFixture.Process;
+            };
+
+            using TestPostgreSQLServerConfiguration component = new TestPostgreSQLServerConfiguration(this.mockFixture);
+            await component.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+            Assert.AreEqual(1, commandsExecuted);
+        }
+
+        [Test]
+        [TestCase("ConfigureServer")]
+        [TestCase("SetupDatabase")]
+        public async Task PostgreSQLServerConfigurationPassesFilePasswordOnlyToChildEnvironment(string action)
+        {
+            this.SetupTest(PlatformID.Unix, Architecture.X64);
+            this.mockFixture.Parameters["Action"] = action;
+            this.mockFixture.Parameters["PostgreSQLPasswordFile"] = "/secure/Password.json";
+            const string password = "file password with 'quotes' and $symbols";
+            string originalPassword = Environment.GetEnvironmentVariable("PGPASSWORD");
+            this.mockFixture.File.Setup(file => file.ReadAllTextAsync("/secure/Password.json", It.IsAny<CancellationToken>()))
+                .ReturnsAsync(JObject.FromObject(new { Password = password }).ToString());
+            int commandsStarted = 0;
+
+            this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
+            {
+                StringAssert.DoesNotContain(password, arguments);
+                StringAssert.DoesNotContain("--password", arguments);
+                InMemoryProcess childProcess = new InMemoryProcess
+                {
+                    StartInfo = new ProcessStartInfo { FileName = command, Arguments = arguments },
+                    ExitCode = 0,
+                    OnHasExited = () => true
+                };
+                childProcess.OnStart = () =>
+                {
+                    Assert.AreEqual(password, childProcess.EnvironmentVariables["PGPASSWORD"]);
+                    commandsStarted++;
+                    return true;
+                };
+                return childProcess;
+            };
+
+            using TestPostgreSQLServerConfiguration component = new TestPostgreSQLServerConfiguration(this.mockFixture);
+            await component.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+            Assert.AreEqual(1, commandsStarted);
+            Assert.AreEqual(originalPassword, Environment.GetEnvironmentVariable("PGPASSWORD"));
         }
 
         private class TestPostgreSQLServerConfiguration : PostgreSQLServerConfiguration
