@@ -173,15 +173,13 @@ namespace VirtualClient.Actions
         public IApiClient ServerApiClient { get; set; }
 
         /// <summary>
-        /// Gets the credential arguments, excluding PostgreSQL passwords from command lines.
+        /// Gets the credential arguments. Sysbench wrapper scripts do not accept password arguments.
         /// </summary>
         protected string PasswordArguments
         {
             get
             {
-                return string.Equals(this.DatabaseSystem, "PostgreSQL", StringComparison.OrdinalIgnoreCase)
-                    ? string.Empty
-                    : $" --password {MySQLPasswordHash}";
+                return string.Empty;
             }
         }
 

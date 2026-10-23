@@ -133,7 +133,7 @@ namespace VirtualClient.Actions
 
                 using TestSysbenchExecutor executor = new TestSysbenchExecutor(this.fixture.Dependencies, this.fixture.Parameters);
                 StringAssert.IsMatch("^[A-F0-9]{64}$", executor.GetSuperUserPassword());
-                Assert.AreEqual($" --password {executor.GetSuperUserPassword()}", executor.PasswordArguments);
+                Assert.AreEqual(string.Empty, executor.PasswordArguments);
                 if (password != null)
                 {
                     StringAssert.DoesNotContain(password, executor.PasswordArguments);
@@ -147,7 +147,7 @@ namespace VirtualClient.Actions
                     CancellationToken.None);
 
                 string logs = JsonConvert.SerializeObject(this.fixture.Logger);
-                StringAssert.Contains("--password ...", logs);
+                StringAssert.DoesNotContain("--password", logs);
                 StringAssert.DoesNotContain(executor.GetSuperUserPassword(), logs);
                 if (password != null)
                 {
