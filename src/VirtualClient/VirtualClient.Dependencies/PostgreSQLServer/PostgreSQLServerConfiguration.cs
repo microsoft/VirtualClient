@@ -99,23 +99,6 @@ namespace VirtualClient.Dependencies
         }
 
         /// <summary>
-        /// Gets the PostgreSQL superuser password from the PGPASSWORD environment variable.
-        /// </summary>
-        /// <returns>The PostgreSQL superuser password.</returns>
-        public string GetSuperUserPassword()
-        {
-            string password = Environment.GetEnvironmentVariable("PGPASSWORD");
-            if (string.IsNullOrEmpty(password))
-            {
-                throw new DependencyException(
-                    "The PGPASSWORD environment variable must be set before configuring PostgreSQL Server.",
-                    ErrorReason.InvalidProfileDefinition);
-            }
-
-            return password;
-        }
-
-        /// <summary>
         /// Shared Buffer Size for PostgreSQL
         /// </summary>
         public string SharedMemoryBuffer
@@ -131,6 +114,23 @@ namespace VirtualClient.Dependencies
         /// Retrieves the interface to interacting with the underlying system.
         /// </summary>
         protected ISystemManagement SystemManager { get; }
+
+        /// <summary>
+        /// Gets the PostgreSQL superuser password from the PGPASSWORD environment variable.
+        /// </summary>
+        /// <returns>The PostgreSQL superuser password.</returns>
+        public string GetSuperUserPassword()
+        {
+            string password = Environment.GetEnvironmentVariable("PGPASSWORD");
+            if (string.IsNullOrEmpty(password))
+            {
+                throw new DependencyException(
+                    "The PGPASSWORD environment variable must be set before configuring PostgreSQL Server.",
+                    ErrorReason.InvalidProfileDefinition);
+            }
+
+            return password;
+        }
 
         /// <summary>
         /// Executes PostgreSQL configuration steps.

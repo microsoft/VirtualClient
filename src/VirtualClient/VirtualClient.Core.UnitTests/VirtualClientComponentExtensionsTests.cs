@@ -56,6 +56,7 @@ namespace VirtualClient
             DependencyPath package = new DependencyPath("postgresql", this.mockFixture.GetPackagePath("postgresql"));
             this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(package);
             string platformPath = this.mockFixture.ToPlatformSpecificPath(package, PlatformID.Unix, architecture).Path;
+            this.mockFixture.Directory.Setup(directory => directory.Exists(platformPath)).Returns(true);
             string passwordFile = this.mockFixture.PlatformSpecifics.Combine(platformPath, "Password.json");
             this.mockFixture.File.Setup(file => file.Exists(passwordFile)).Returns(true);
             this.mockFixture.File.Setup(file => file.ReadAllTextAsync(passwordFile, It.IsAny<CancellationToken>()))

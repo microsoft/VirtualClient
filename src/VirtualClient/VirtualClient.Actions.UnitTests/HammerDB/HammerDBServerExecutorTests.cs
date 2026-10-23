@@ -99,6 +99,10 @@ namespace VirtualClient.Actions
 
             this.fixture.File.Setup(f => f.Exists(It.IsAny<string>())).Returns(true);
             this.fixture.Directory.Setup(d => d.Exists(It.IsAny<string>())).Returns(true);
+            string passwordFile = this.fixture.PlatformSpecifics.Combine(this.mockPackage.Path, "Password.json");
+            this.fixture.Parameters["PostgreSQLPasswordFile"] = passwordFile;
+            this.fixture.File.Setup(file => file.ReadAllTextAsync(passwordFile, It.IsAny<CancellationToken>()))
+                .ReturnsAsync("{\"Password\":\"test-password\"}");
 
             this.fixture.Parameters[nameof(HammerDBClientExecutor.PackageName)] = "hammerdb";
             this.fixture.Parameters[nameof(HammerDBClientExecutor.Port)] = 5432;

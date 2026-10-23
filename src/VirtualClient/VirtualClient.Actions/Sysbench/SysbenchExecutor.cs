@@ -143,29 +143,6 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Gets the PostgreSQL password from PGPASSWORD, or the existing MySQL password.
-        /// </summary>
-        /// <returns>The database superuser password.</returns>
-        public string GetSuperUserPassword()
-        {
-            if (string.Equals(this.DatabaseSystem, "PostgreSQL", StringComparison.OrdinalIgnoreCase))
-            {
-                string password = Environment.GetEnvironmentVariable("PGPASSWORD");
-                if (string.IsNullOrEmpty(password))
-                {
-                    throw new WorkloadException(
-                        "The PGPASSWORD environment variable must be set before running Sysbench with PostgreSQL.",
-                        ErrorReason.InvalidProfileDefinition);
-                }
-
-                return password;
-            }
-
-            byte[] hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes("default"));
-            return Convert.ToHexString(hashBytes);
-        }
-
-        /// <summary>
         /// Number of warehouses.
         /// </summary>
         public int? WarehouseCount
@@ -227,6 +204,29 @@ namespace VirtualClient.Actions
         /// An interface that can be used to communicate with the underlying system.
         /// </summary>
         protected ISystemManagement SystemManager => this.Dependencies.GetService<ISystemManagement>();
+
+        /// <summary>
+        /// Gets the PostgreSQL password from PGPASSWORD, or the existing MySQL password.
+        /// </summary>
+        /// <returns>The database superuser password.</returns>
+        public string GetSuperUserPassword()
+        {
+            if (string.Equals(this.DatabaseSystem, "PostgreSQL", StringComparison.OrdinalIgnoreCase))
+            {
+                string password = Environment.GetEnvironmentVariable("PGPASSWORD");
+                if (string.IsNullOrEmpty(password))
+                {
+                    throw new WorkloadException(
+                        "The PGPASSWORD environment variable must be set before running Sysbench with PostgreSQL.",
+                        ErrorReason.InvalidProfileDefinition);
+                }
+
+                return password;
+            }
+
+            byte[] hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes("default"));
+            return Convert.ToHexString(hashBytes);
+        }
 
         /// <summary>
         /// Method to determine the table count for the given run.

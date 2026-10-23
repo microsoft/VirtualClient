@@ -506,7 +506,7 @@ namespace VirtualClient.Actions
 
             string[] expectedCommands =
             {
-                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 16 --tableCount 40 --recordCount 1000 --password [A-Za-z0-9+/=]+"
+                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 16 --tableCount 40 --recordCount 1000 --hostIpAddress \"1.2.3.5\""
             };
 
             int commandNumber = 0;
@@ -564,7 +564,7 @@ namespace VirtualClient.Actions
 
             string[] expectedCommands =
             {
-                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --databaseSystem PostgreSQL --benchmark TPCC --threadCount 16 --tableCount 40 --warehouses 1000 --password [A-Za-z0-9+/=]+ --hostIpAddress \"1.2.3.5\""
+                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --databaseSystem PostgreSQL --benchmark TPCC --threadCount 16 --tableCount 40 --warehouses 1000 --hostIpAddress \"1.2.3.5\""
             };
 
             int commandNumber = 0;

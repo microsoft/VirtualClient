@@ -68,23 +68,6 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Gets the PostgreSQL superuser password from PGPASSWORD.
-        /// </summary>
-        /// <returns>The PostgreSQL superuser password.</returns>
-        public string GetSuperUserPassword()
-        {
-            string password = Environment.GetEnvironmentVariable("PGPASSWORD");
-            if (string.IsNullOrEmpty(password))
-            {
-                throw new WorkloadException(
-                    "The PGPASSWORD environment variable must be set before running HammerDB.",
-                    ErrorReason.InvalidProfileDefinition);
-            }
-
-            return password;
-        }
-
-        /// <summary>
         /// Parameter defines the port number on which the PostgreSQL server will run on.
         /// </summary>
         public int Port
@@ -198,6 +181,23 @@ namespace VirtualClient.Actions
         /// An interface that can be used to communicate with the underlying system.
         /// </summary>
         protected ISystemManagement SystemManager => this.Dependencies.GetService<ISystemManagement>();
+
+        /// <summary>
+        /// Gets the PostgreSQL superuser password from PGPASSWORD.
+        /// </summary>
+        /// <returns>The PostgreSQL superuser password.</returns>
+        public string GetSuperUserPassword()
+        {
+            string password = Environment.GetEnvironmentVariable("PGPASSWORD");
+            if (string.IsNullOrEmpty(password))
+            {
+                throw new WorkloadException(
+                    "The PGPASSWORD environment variable must be set before running HammerDB.",
+                    ErrorReason.InvalidProfileDefinition);
+            }
+
+            return password;
+        }
 
         /// <summary>
         /// Executes the workload.
