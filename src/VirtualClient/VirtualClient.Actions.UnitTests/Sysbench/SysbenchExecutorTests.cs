@@ -123,7 +123,7 @@ namespace VirtualClient.Actions
         [Test]
         [TestCase(null)]
         [TestCase("postgresql-secret-with-'quotes'-and-$symbols")]
-        public void SysbenchMySQLPasswordArgumentsDoNotDependOnPostgreSQLPassword(string password)
+        public async Task SysbenchMySQLPasswordArgumentsDoNotDependOnPostgreSQLPassword(string password)
         {
             string originalPassword = Environment.GetEnvironmentVariable("PGPASSWORD");
             try
@@ -137,6 +137,21 @@ namespace VirtualClient.Actions
                 if (password != null)
                 {
                     StringAssert.DoesNotContain(password, executor.PasswordArguments);
+                }
+
+                using IProcessProxy process = await executor.ExecuteCommandAsync(
+                    "python3",
+                    $"run-workload.py{executor.PasswordArguments}",
+                    this.mockPackagePath,
+                    EventContext.None,
+                    CancellationToken.None);
+
+                string logs = JsonConvert.SerializeObject(this.fixture.Logger);
+                StringAssert.Contains("--password ...", logs);
+                StringAssert.DoesNotContain(executor.GetSuperUserPassword(), logs);
+                if (password != null)
+                {
+                    StringAssert.DoesNotContain(password, logs);
                 }
             }
             finally

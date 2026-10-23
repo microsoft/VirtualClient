@@ -181,7 +181,7 @@ namespace VirtualClient.Actions
             {
                 return string.Equals(this.DatabaseSystem, "PostgreSQL", StringComparison.OrdinalIgnoreCase)
                     ? string.Empty
-                    : $" --password {GetMySQLPassword()}";
+                    : $" --password {MySQLPasswordHash}";
             }
         }
 
@@ -205,6 +205,8 @@ namespace VirtualClient.Actions
         /// </summary>
         protected ISystemManagement SystemManager => this.Dependencies.GetService<ISystemManagement>();
 
+        private static string MySQLPasswordHash => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes("default")));
+
         /// <summary>
         /// Gets the PostgreSQL password from PGPASSWORD, or the existing MySQL password.
         /// </summary>
@@ -224,7 +226,7 @@ namespace VirtualClient.Actions
                 return password;
             }
 
-            return GetMySQLPassword();
+            return MySQLPasswordHash;
         }
 
         /// <summary>
@@ -436,12 +438,6 @@ namespace VirtualClient.Actions
             }
 
             return loggingArguments;
-        }
-
-        private static string GetMySQLPassword()
-        {
-            byte[] hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes("default"));
-            return Convert.ToHexString(hashBytes);
         }
 
         private async Task CheckDistroSupportAsync(EventContext telemetryContext, CancellationToken cancellationToken)
