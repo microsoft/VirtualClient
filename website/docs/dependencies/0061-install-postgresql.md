@@ -97,6 +97,9 @@ HammerDB preserves `PGPASSWORD` when invoking its configuration script through
 calls in the package scripts must also preserve the variable when it is needed.
 HammerDB scripts must safely escape arbitrary passwords when generating TCL files,
 and restrict access to generated files containing credentials.
+HammerDB echoes configuration values, including credentials, in its output. Virtual
+Client obscures the resolved PostgreSQL credential before writing HammerDB process
+output to telemetry or log files, and before including failed-process output in exceptions.
 
 ## Example
 Here is the usage of the dependency by the PostgreSQL/HammerDB workload as an example. The Postgresql dependency is responsible for downloading the service, but the workload itself is responsible for creating the database and populating it.

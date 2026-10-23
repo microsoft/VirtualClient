@@ -309,6 +309,30 @@ namespace VirtualClient.Actions
             await this.stateManager.SaveStateAsync<HammerDBState>(nameof(HammerDBState), state, cancellationToken);
         }
 
+        /// <summary>
+        /// Logs HammerDB output without the PostgreSQL credential echoed by its configuration commands.
+        /// Failed-process buffers are also obscured before they can be included in an exception.
+        /// </summary>
+        /// <param name="process">The completed HammerDB process.</param>
+        /// <param name="password">The PostgreSQL credential supplied to the process.</param>
+        /// <param name="telemetryContext">The context for process telemetry.</param>
+        /// <param name="toolName">The tool name used for process logs.</param>
+        protected Task LogPostgreSQLProcessDetailsAsync(IProcessProxy process, string password, EventContext telemetryContext, string toolName)
+        {
+            ProcessDetails details = process.ToProcessDetails(toolName);
+            details.StandardOutput = details.StandardOutput?.Replace(password, "...", StringComparison.Ordinal);
+            details.StandardError = details.StandardError?.Replace(password, "...", StringComparison.Ordinal);
+
+            // Preserve successful output for metric parsing, including passwords that overlap metric values.
+            if (process.IsErrored())
+            {
+                process.StandardOutput.Replace(password, "...");
+                process.StandardError.Replace(password, "...");
+            }
+
+            return this.LogProcessDetailsAsync(details, telemetryContext, logToFile: true);
+        }
+
         private async Task PrepareSQLDatabase(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             string password = await this.GetPostgreSQLPasswordAsync(cancellationToken).ConfigureAwait(false);
@@ -325,7 +349,7 @@ namespace VirtualClient.Actions
             {
                 if (!cancellationToken.IsCancellationRequested)
                 {
-                    await this.LogProcessDetailsAsync(process, telemetryContext, "HammerDB", logToFile: true);
+                    await this.LogPostgreSQLProcessDetailsAsync(process, password, telemetryContext, "HammerDB");
                     process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
                 }
             }
@@ -353,7 +377,7 @@ namespace VirtualClient.Actions
             {
                 if (!cancellationToken.IsCancellationRequested)
                 {
-                    await this.LogProcessDetailsAsync(process, telemetryContext, "HammerDBExecutor", logToFile: true);
+                    await this.LogPostgreSQLProcessDetailsAsync(process, password, telemetryContext, "HammerDBExecutor");
                     process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
                 }
             }

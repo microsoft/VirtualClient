@@ -165,7 +165,7 @@ namespace VirtualClient.Actions
                     {
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            await this.LogProcessDetailsAsync(process, telemetryContext, "HammerDB", logToFile: true);
+                            await this.LogPostgreSQLProcessDetailsAsync(process, password, telemetryContext, "HammerDB");
                             process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadFailed);
 
                             this.CaptureMetrics(process, telemetryContext, cancellationToken);
