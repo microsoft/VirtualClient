@@ -181,7 +181,7 @@ namespace VirtualClient.Actions
             {
                 return string.Equals(this.DatabaseSystem, "PostgreSQL", StringComparison.OrdinalIgnoreCase)
                     ? string.Empty
-                    : $" --password {this.GetSuperUserPassword()}";
+                    : $" --password {GetMySQLPassword()}";
             }
         }
 
@@ -224,8 +224,7 @@ namespace VirtualClient.Actions
                 return password;
             }
 
-            byte[] hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes("default"));
-            return Convert.ToHexString(hashBytes);
+            return GetMySQLPassword();
         }
 
         /// <summary>
@@ -437,6 +436,12 @@ namespace VirtualClient.Actions
             }
 
             return loggingArguments;
+        }
+
+        private static string GetMySQLPassword()
+        {
+            byte[] hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes("default"));
+            return Convert.ToHexString(hashBytes);
         }
 
         private async Task CheckDistroSupportAsync(EventContext telemetryContext, CancellationToken cancellationToken)

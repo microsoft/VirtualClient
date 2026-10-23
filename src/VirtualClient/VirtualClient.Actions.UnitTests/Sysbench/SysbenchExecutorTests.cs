@@ -121,17 +121,23 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public void SysbenchMySQLKeepsExistingPasswordArgumentsWithoutEnvironmentVariable()
+        [TestCase(null)]
+        [TestCase("postgresql-secret-with-'quotes'-and-$symbols")]
+        public void SysbenchMySQLPasswordArgumentsDoNotDependOnPostgreSQLPassword(string password)
         {
             string originalPassword = Environment.GetEnvironmentVariable("PGPASSWORD");
             try
             {
-                Environment.SetEnvironmentVariable("PGPASSWORD", null);
+                Environment.SetEnvironmentVariable("PGPASSWORD", password);
                 this.fixture.Parameters[nameof(SysbenchExecutor.DatabaseSystem)] = "MySQL";
 
                 using TestSysbenchExecutor executor = new TestSysbenchExecutor(this.fixture.Dependencies, this.fixture.Parameters);
                 StringAssert.IsMatch("^[A-F0-9]{64}$", executor.GetSuperUserPassword());
                 Assert.AreEqual($" --password {executor.GetSuperUserPassword()}", executor.PasswordArguments);
+                if (password != null)
+                {
+                    StringAssert.DoesNotContain(password, executor.PasswordArguments);
+                }
             }
             finally
             {
