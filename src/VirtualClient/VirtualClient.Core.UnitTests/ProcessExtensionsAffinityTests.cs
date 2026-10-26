@@ -58,6 +58,24 @@ namespace VirtualClient.Core
         }
 
         [Test]
+        public void CreateProcessAffinityOverloadCreatesExpectedBashCommandOnLinux()
+        {
+            this.SetupDefaults(PlatformID.Unix);
+
+            ProcessAffinityConfiguration config = ProcessAffinityConfiguration.Create(PlatformID.Unix, new[] { 0, 1, 2 });
+
+            using (IProcessProxy process = this.mockFixture.ProcessManager.CreateProcess(
+                "bash -c",
+                "myworkload --option1=value",
+                "/home/user/workdir",
+                config))
+            {
+                Assert.AreEqual("bash -c \"numactl -C 0-2 myworkload --option1=value\"", process.StartInfo.FileName);
+                Assert.AreEqual("/home/user/workdir", process.StartInfo.WorkingDirectory);
+            }
+        }
+
+        [Test]
         public void CreateProcessWithAffinityThrowsOnNullConfiguration()
         {
             this.SetupDefaults(PlatformID.Unix);
@@ -103,6 +121,26 @@ namespace VirtualClient.Core
                 config))
             {
                 Assert.IsNotNull(process);
+                Assert.AreEqual("sudo", process.StartInfo.FileName);
+                Assert.AreEqual("bash -c \"numactl -C 0-2 myworkload --option1=value\"", process.StartInfo.Arguments);
+                Assert.AreEqual("/home/user/workdir", process.StartInfo.WorkingDirectory);
+            }
+        }
+
+        [Test]
+        public void CreateProcessElevatedAffinityOverloadCreatesExpectedCommandOnLinux()
+        {
+            this.SetupDefaults(PlatformID.Unix);
+
+            ProcessAffinityConfiguration config = ProcessAffinityConfiguration.Create(PlatformID.Unix, new[] { 0, 1, 2 });
+
+            using (IProcessProxy process = this.mockFixture.ProcessManager.CreateProcess(
+                PlatformID.Unix,
+                "bash -c",
+                "myworkload --option1=value",
+                "/home/user/workdir",
+                config))
+            {
                 Assert.AreEqual("sudo", process.StartInfo.FileName);
                 Assert.AreEqual("bash -c \"numactl -C 0-2 myworkload --option1=value\"", process.StartInfo.Arguments);
                 Assert.AreEqual("/home/user/workdir", process.StartInfo.WorkingDirectory);
