@@ -50,7 +50,7 @@
             "Parameters": {
                 "Scenario": "DownloadSystemConfigPackage",
                 "BlobContainer": "packages",
-                "BlobName": "system_config.1.1.0.zip",
+                "BlobName": "system_config.2.0.0.zip",
                 "PackageName": "system_config",
                 "Extract": true,
                 "Role": "Server"
