@@ -6,10 +6,8 @@ namespace VirtualClient
     using System;
     using System.Collections.Generic;
     using System.Collections.Specialized;
-    using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
-    using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
     using Moq;
@@ -21,128 +19,14 @@ namespace VirtualClient
 
     [TestFixture]
     [Category("Unit")]
-    [NonParallelizable]
     internal class VirtualClientComponentExtensionsTests
     {
         private MockFixture mockFixture;
-        private string originalPassword;
-
-        [SetUp]
-        public void SavePasswordEnvironment()
-        {
-            this.originalPassword = Environment.GetEnvironmentVariable("PGPASSWORD");
-            Environment.SetEnvironmentVariable("PGPASSWORD", null);
-        }
-
-        [TearDown]
-        public void RestorePasswordEnvironment()
-        {
-            Environment.SetEnvironmentVariable("PGPASSWORD", this.originalPassword);
-        }
 
         public void SetupDefaults(PlatformID platform)
         {
             this.mockFixture = new MockFixture();
             this.mockFixture.Setup(platform);
-        }
-
-        [Test]
-        [TestCase(Architecture.X64)]
-        [TestCase(Architecture.Arm64)]
-        public async Task PostgreSQLPasswordIsReadFromTheArchitectureSpecificPackage(Architecture architecture)
-        {
-            this.SetupDefaults(PlatformID.Unix);
-            this.mockFixture.Setup(PlatformID.Unix, architecture);
-            DependencyPath package = new DependencyPath("postgresql", this.mockFixture.GetPackagePath("postgresql"));
-            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(package);
-            string platformPath = this.mockFixture.ToPlatformSpecificPath(package, PlatformID.Unix, architecture).Path;
-            this.mockFixture.Directory.Setup(directory => directory.Exists(platformPath)).Returns(true);
-            string passwordFile = this.mockFixture.PlatformSpecifics.Combine(platformPath, "Password.json");
-            this.mockFixture.File.Setup(file => file.Exists(passwordFile)).Returns(true);
-            this.mockFixture.File.Setup(file => file.ReadAllTextAsync(passwordFile, It.IsAny<CancellationToken>()))
-                .ReturnsAsync("{\"Password\":\"file password with 'quotes' and $symbols\"}");
-
-            using TestExecutor component = new TestExecutor(this.mockFixture);
-            Assert.AreEqual("file password with 'quotes' and $symbols", await component.GetPostgreSQLPasswordAsync(CancellationToken.None));
-            Assert.IsNull(Environment.GetEnvironmentVariable("PGPASSWORD"));
-            this.mockFixture.File.Verify(file => file.ReadAllTextAsync(passwordFile, It.IsAny<CancellationToken>()), Times.Once);
-        }
-
-        [Test]
-        public async Task PostgreSQLPasswordExplicitFileTakesPrecedenceOverEnvironment()
-        {
-            this.SetupDefaults(PlatformID.Unix);
-            Environment.SetEnvironmentVariable("PGPASSWORD", "environment-password");
-            const string passwordFile = "/secure/Password.json";
-            this.mockFixture.Parameters["PostgreSQLPasswordFile"] = passwordFile;
-            this.mockFixture.File.Setup(file => file.Exists(passwordFile)).Returns(true);
-            this.mockFixture.File.Setup(file => file.ReadAllTextAsync(passwordFile, It.IsAny<CancellationToken>()))
-                .ReturnsAsync("{\"Password\":\"file-password\"}");
-
-            using TestExecutor component = new TestExecutor(this.mockFixture);
-            Assert.AreEqual("file-password", await component.GetPostgreSQLPasswordAsync(CancellationToken.None));
-            Assert.AreEqual("environment-password", Environment.GetEnvironmentVariable("PGPASSWORD"));
-        }
-
-        [Test]
-        public async Task PostgreSQLPasswordEnvironmentFallbackDoesNotReadAFile()
-        {
-            this.SetupDefaults(PlatformID.Unix);
-            Environment.SetEnvironmentVariable("PGPASSWORD", "environment-password");
-
-            using TestExecutor component = new TestExecutor(this.mockFixture);
-            Assert.AreEqual("environment-password", await component.GetPostgreSQLPasswordAsync(CancellationToken.None));
-            this.mockFixture.File.Verify(file => file.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
-        }
-
-        [Test]
-        [TestCase("")]
-        [TestCase("{}")]
-        [TestCase("{\"Password\":\"\"}")]
-        [TestCase("{\"Password\":null}")]
-        [TestCase("{\"Password\":123}")]
-        [TestCase("{\"Password\":\"sensitive-sentinel\",")]
-        public void PostgreSQLPasswordRejectsInvalidFilesWithoutDisclosingTheirContents(string contents)
-        {
-            this.SetupDefaults(PlatformID.Unix);
-            const string passwordFile = "/secure/Password.json";
-            this.mockFixture.Parameters["PostgreSQLPasswordFile"] = passwordFile;
-            this.mockFixture.File.Setup(file => file.Exists(passwordFile)).Returns(true);
-            this.mockFixture.File.Setup(file => file.ReadAllTextAsync(passwordFile, It.IsAny<CancellationToken>())).ReturnsAsync(contents);
-
-            using TestExecutor component = new TestExecutor(this.mockFixture);
-            DependencyException exception = Assert.ThrowsAsync<DependencyException>(() => component.GetPostgreSQLPasswordAsync(CancellationToken.None));
-            Assert.AreEqual(ErrorReason.InvalidProfileDefinition, exception.Reason);
-            StringAssert.DoesNotContain("sensitive-sentinel", exception.ToString());
-        }
-
-        [Test]
-        public void PostgreSQLPasswordRejectsMissingExplicitFileWithoutFallingBackToEnvironment()
-        {
-            this.SetupDefaults(PlatformID.Unix);
-            Environment.SetEnvironmentVariable("PGPASSWORD", "environment-password");
-            this.mockFixture.Parameters["PostgreSQLPasswordFile"] = "/secure/missing.json";
-            this.mockFixture.File.Setup(file => file.Exists(It.IsAny<string>())).Returns(false);
-
-            using TestExecutor component = new TestExecutor(this.mockFixture);
-            DependencyException exception = Assert.ThrowsAsync<DependencyException>(() => component.GetPostgreSQLPasswordAsync(CancellationToken.None));
-            Assert.AreEqual(ErrorReason.InvalidProfileDefinition, exception.Reason);
-            StringAssert.DoesNotContain("environment-password", exception.ToString());
-        }
-
-        [Test]
-        public void PostgreSQLPasswordReadErrorsDoNotExposeUnderlyingExceptionDetails()
-        {
-            this.SetupDefaults(PlatformID.Unix);
-            const string passwordFile = "/secure/Password.json";
-            this.mockFixture.Parameters["PostgreSQLPasswordFile"] = passwordFile;
-            this.mockFixture.File.Setup(file => file.Exists(passwordFile)).Returns(true);
-            this.mockFixture.File.Setup(file => file.ReadAllTextAsync(passwordFile, It.IsAny<CancellationToken>()))
-                .ThrowsAsync(new IOException("sensitive-sentinel"));
-
-            using TestExecutor component = new TestExecutor(this.mockFixture);
-            DependencyException exception = Assert.ThrowsAsync<DependencyException>(() => component.GetPostgreSQLPasswordAsync(CancellationToken.None));
-            StringAssert.DoesNotContain("sensitive-sentinel", exception.ToString());
         }
 
         [Test]

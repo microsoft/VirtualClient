@@ -174,7 +174,7 @@ namespace VirtualClient.Dependencies
 
         private async Task ConfigurePostgreSQLServerAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string password = await this.GetPostgreSQLPasswordAsync(cancellationToken).ConfigureAwait(false);
+            string password = await PostgreSQLCredentials.GetPasswordAsync(this, cancellationToken).ConfigureAwait(false);
 
             string serverIp = (this.GetLayoutClientInstances(ClientRole.Server, false) ?? Enumerable.Empty<ClientInstance>())
                                     .FirstOrDefault()?.IPAddress
@@ -287,7 +287,7 @@ namespace VirtualClient.Dependencies
 
         private async Task SetupPostgreSQLDatabaseAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string password = await this.GetPostgreSQLPasswordAsync(cancellationToken).ConfigureAwait(false);
+            string password = await PostgreSQLCredentials.GetPasswordAsync(this, cancellationToken).ConfigureAwait(false);
 
             string arguments = $"{this.packageDirectory}/setup-database.py --dbName {this.DatabaseName} --port {this.Port}";
 

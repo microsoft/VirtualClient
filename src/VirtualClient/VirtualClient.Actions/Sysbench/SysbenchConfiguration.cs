@@ -129,7 +129,7 @@ namespace VirtualClient.Actions
                     string serverIp = (this.IsMultiRoleLayout() && this.IsInRole(ClientRole.Client)) ? this.ServerIpAddress : "localhost";
 
                     string password = string.Equals(this.DatabaseSystem, "PostgreSQL", StringComparison.OrdinalIgnoreCase)
-                        ? await this.GetPostgreSQLPasswordAsync(cancellationToken).ConfigureAwait(false)
+                        ? await PostgreSQLCredentials.GetPasswordAsync(this, cancellationToken).ConfigureAwait(false)
                         : null;
                     string sysbenchLoggingArguments = this.BuildSysbenchLoggingArguments();
                     this.sysbenchPopulationArguments = $"{sysbenchLoggingArguments}{this.PasswordArguments} --hostIpAddress \"{serverIp}\"";

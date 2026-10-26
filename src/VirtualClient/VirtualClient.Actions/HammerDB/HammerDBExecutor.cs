@@ -335,7 +335,7 @@ namespace VirtualClient.Actions
 
         private async Task PrepareSQLDatabase(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string password = await this.GetPostgreSQLPasswordAsync(cancellationToken).ConfigureAwait(false);
+            string password = await PostgreSQLCredentials.GetPasswordAsync(this, cancellationToken).ConfigureAwait(false);
             string command = "python3";
             string arguments = $"{this.PlatformSpecifics.Combine(this.HammerDBPackagePath, "populate-database.py")} --createDBTCLPath {createDBTclName}";
             
@@ -357,7 +357,7 @@ namespace VirtualClient.Actions
 
         private async Task ConfigureCreateHammerDBFile(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string password = await this.GetPostgreSQLPasswordAsync(cancellationToken).ConfigureAwait(false);
+            string password = await PostgreSQLCredentials.GetPasswordAsync(this, cancellationToken).ConfigureAwait(false);
             await this.GenerateCommandLineArguments(cancellationToken);
 
             bool preservePassword = this.Platform == PlatformID.Unix && !this.SystemManager.RunningInContainer;
