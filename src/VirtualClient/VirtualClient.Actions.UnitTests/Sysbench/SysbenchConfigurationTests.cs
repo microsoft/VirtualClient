@@ -29,11 +29,26 @@ namespace VirtualClient.Actions
 
     [TestFixture]
     [Category("Unit")]
+    [NonParallelizable]
     public class SysbenchConfigurationTests
     {
         private MockFixture fixture;
         private DependencyPath mockPackage;
         private string mockPackagePath;
+        private string originalPassword;
+
+        [SetUp]
+        public void SetPasswordEnvironmentVariable()
+        {
+            this.originalPassword = Environment.GetEnvironmentVariable("PGPASSWORD");
+            Environment.SetEnvironmentVariable("PGPASSWORD", "password with 'quotes' and $symbols");
+        }
+
+        [TearDown]
+        public void RestorePasswordEnvironmentVariable()
+        {
+            Environment.SetEnvironmentVariable("PGPASSWORD", this.originalPassword);
+        }
 
         [SetUp]
         public void SetupDefaultBehavior()
@@ -79,7 +94,7 @@ namespace VirtualClient.Actions
 
             string[] expectedCommands =
             {
-                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --password [A-Za-z0-9+/=]+ --hostIpAddress \"1.2.3.5\"",
+                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --hostIpAddress \"1.2.3.5\"",
             };
 
             int commandNumber = 0;
@@ -163,12 +178,24 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public async Task SysbenchConfigurationPreparesDatabase()
+        [TestCase("MySQL", null)]
+        [TestCase("MySQL", "password with 'quotes' and $symbols")]
+        [TestCase("PostgreSQL", null)]
+        [TestCase("PostgreSQL", "password with 'quotes' and $symbols")]
+        [TestCase("postgresql", null)]
+        public async Task SysbenchConfigurationPreparesDatabase(string databaseSystem, string environmentPassword)
         {
+            Environment.SetEnvironmentVariable("PGPASSWORD", environmentPassword);
+            bool isPostgreSQL = string.Equals(databaseSystem, "PostgreSQL", StringComparison.OrdinalIgnoreCase);
+            this.fixture.Parameters[nameof(SysbenchConfiguration.DatabaseSystem)] = databaseSystem;
+            const string filePassword = "file-password-with-$symbols";
+            this.fixture.Parameters["PostgreSQLPasswordFile"] = "/secure/Password.json";
+            this.fixture.File.Setup(file => file.ReadAllTextAsync("/secure/Password.json", It.IsAny<CancellationToken>()))
+                .ReturnsAsync("{\"Password\":\"file-password-with-$symbols\"}");
             string[] expectedCommands =
             {
-                $"python3 {this.mockPackagePath}/configure-workload-generator.py --distro Ubuntu --databaseSystem MySQL --packagePath {this.mockPackagePath}",
-                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --password [A-Za-z0-9+/=]+",
+                $"python3 {this.mockPackagePath}/configure-workload-generator.py --distro Ubuntu --databaseSystem {databaseSystem} --packagePath {this.mockPackagePath}",
+                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --databaseSystem {databaseSystem} --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000",
             };
 
             int commandNumber = 0;
@@ -176,6 +203,13 @@ namespace VirtualClient.Actions
 
             this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
+                StringAssert.DoesNotContain("--password", arguments);
+                if (!string.IsNullOrEmpty(environmentPassword))
+                {
+                    StringAssert.DoesNotContain(environmentPassword, arguments);
+                }
+
+                StringAssert.DoesNotContain(filePassword, arguments);
                 string expectedCommand = expectedCommands[commandNumber];
 
                 if (Regex.Match($"{exe} {arguments}", expectedCommand).Success)
@@ -199,6 +233,15 @@ namespace VirtualClient.Actions
                     OnHasExited = () => true
                 };
 
+                if (isPostgreSQL && arguments.Contains("populate-database.py"))
+                {
+                    process.OnStart = () =>
+                    {
+                        Assert.AreEqual(filePassword, process.EnvironmentVariables["PGPASSWORD"]);
+                        return true;
+                    };
+                }
+
                 return process;
             };
 
@@ -206,6 +249,11 @@ namespace VirtualClient.Actions
             {
                 await SysbenchExecutor.ExecuteAsync(CancellationToken.None);
             }
+
+            Assert.AreEqual(expectedCommands.Length, commandNumber);
+            this.fixture.File.Verify(
+                file => file.ReadAllTextAsync("/secure/Password.json", It.IsAny<CancellationToken>()),
+                isPostgreSQL ? Times.Once() : Times.Never());
         }
 
         [Test]
@@ -253,7 +301,7 @@ namespace VirtualClient.Actions
             string[] expectedCommands =
             {
                 $"python3 {this.mockPackagePath}/configure-workload-generator.py --distro Ubuntu --databaseSystem MySQL --packagePath {this.mockPackagePath}",
-                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --threadCount 16 --tableCount 40 --recordCount 1000 --password [A-Za-z0-9+/=]+",
+                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --threadCount 16 --tableCount 40 --recordCount 1000",
             };
 
             int commandNumber = 0;
@@ -355,7 +403,7 @@ namespace VirtualClient.Actions
 
             string[] expectedCommands =
             {
-                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --databaseSystem MySQL --benchmark TPCC --threadCount 8 --tableCount 10 --warehouses 1 --password [A-Za-z0-9+/=]+ --hostIpAddress \"1.2.3.5\""
+                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --databaseSystem MySQL --benchmark TPCC --threadCount 8 --tableCount 10 --warehouses 1 --hostIpAddress \"1.2.3.5\""
             };
 
             int commandNumber = 0;
@@ -411,7 +459,7 @@ namespace VirtualClient.Actions
 
             string[] expectedCommands =
             {
-                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --databaseSystem MySQL --benchmark TPCC --threadCount 16 --tableCount 40 --warehouses 1000 --password [A-Za-z0-9+/=]+ --hostIpAddress \"1.2.3.5\""
+                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --databaseSystem MySQL --benchmark TPCC --threadCount 16 --tableCount 40 --warehouses 1000 --hostIpAddress \"1.2.3.5\""
             };
 
             int commandNumber = 0;
@@ -467,7 +515,7 @@ namespace VirtualClient.Actions
 
             string[] expectedCommands =
             {
-                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 16 --tableCount 40 --recordCount 1000 --password [A-Za-z0-9+/=]+"
+                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 16 --tableCount 40 --recordCount 1000 --hostIpAddress \"1.2.3.5\""
             };
 
             int commandNumber = 0;
@@ -525,7 +573,7 @@ namespace VirtualClient.Actions
 
             string[] expectedCommands =
             {
-                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --databaseSystem PostgreSQL --benchmark TPCC --threadCount 16 --tableCount 40 --warehouses 1000 --password [A-Za-z0-9+/=]+ --hostIpAddress \"1.2.3.5\""
+                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --databaseSystem PostgreSQL --benchmark TPCC --threadCount 16 --tableCount 40 --warehouses 1000 --hostIpAddress \"1.2.3.5\""
             };
 
             int commandNumber = 0;

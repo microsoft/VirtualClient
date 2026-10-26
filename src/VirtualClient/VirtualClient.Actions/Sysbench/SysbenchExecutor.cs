@@ -6,15 +6,17 @@ namespace VirtualClient.Actions
     using System;
     using System.Collections.Generic;
     using System.Globalization;
+    using System.IO;
+    using System.IO.Abstractions;
     using System.Linq;
     using System.Net;
     using System.Runtime.InteropServices;
-    using System.Security.Cryptography;
-    using System.Text;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
+    using Newtonsoft.Json;
+    using Newtonsoft.Json.Linq;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
@@ -83,8 +85,7 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Parameter defines the scenario to use for the MySQL user accounts used
-        /// to create the DB and run transactions against it.
+        /// Defines how table, record, warehouse, and thread counts are sized for the workload.
         /// </summary>
         public string DatabaseScenario
         {
@@ -143,18 +144,6 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Parameter defines the SuperUser Password for PostgreSQL Server.
-        /// </summary>
-        public string SuperUserPassword
-        {
-            get
-            {
-                byte[] hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes("default"));
-                return Convert.ToHexString(hashBytes);
-            }
-        }
-
-        /// <summary>
         /// Number of warehouses.
         /// </summary>
         public int? WarehouseCount
@@ -190,7 +179,7 @@ namespace VirtualClient.Actions
         protected CancellationTokenSource ServerCancellationSource { get; set; }
 
         /// <summary>
-        /// Server IpAddress on which MySQL Server runs.
+        /// IP address of the target database server.
         /// </summary>
         protected string ServerIpAddress { get; set; }
 
@@ -249,9 +238,7 @@ namespace VirtualClient.Actions
 
         /// <summary>
         /// Method to determine the warehouse count for the given run.
-        /// Warehouses are scaled from the record count using the TPC-C sizing ratio:
-        /// 1 warehouse ≈ 100 MB (~500K rows), 1 OLTP record ≈ 200 bytes across 10 tables,
-        /// so 1 warehouse ≈ 50,000 OLTP records.
+        /// Estimates one warehouse per 50,000 OLTP records, with a minimum of one warehouse.
         /// </summary>
         /// <returns></returns>
         public static int GetWarehouseCount(ISystemManagement systemManagement, string databaseScenario, int? warehouses)
@@ -268,7 +255,7 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Method to determine the record count for the given run.
+        /// Method to determine the thread count for the given run.
         /// </summary>
         /// <returns></returns>
         public static int GetThreadCount(ISystemManagement systemManagement, string databaseScenario, int? threads)
@@ -290,6 +277,61 @@ namespace VirtualClient.Actions
         protected override Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Reads the explicit PostgreSQL password file first, otherwise uses non-empty PGPASSWORD,
+        /// otherwise reads Password.json in the platform-specific PostgreSQL package.
+        /// </summary>
+        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+        /// <returns>The password to supply only to the database child process environment.</returns>
+        protected async Task<string> GetPostgreSQLPasswordAsync(CancellationToken cancellationToken)
+        {
+            string passwordFile = this.Parameters.GetValue<string>("PostgreSQLPasswordFile", string.Empty);
+            if (string.IsNullOrWhiteSpace(passwordFile))
+            {
+                string environmentPassword = Environment.GetEnvironmentVariable("PGPASSWORD");
+                if (!string.IsNullOrEmpty(environmentPassword))
+                {
+                    return environmentPassword;
+                }
+
+                DependencyPath package = await this.GetPlatformSpecificPackageAsync("postgresql", cancellationToken).ConfigureAwait(false);
+                passwordFile = this.Combine(package.Path, "Password.json");
+            }
+
+            IFileSystem fileSystem = this.SystemManager.FileSystem;
+            string password = null;
+            try
+            {
+                if (fileSystem.File.Exists(passwordFile))
+                {
+                    string contents = await fileSystem.File.ReadAllTextAsync(passwordFile, cancellationToken).ConfigureAwait(false);
+                    if (!string.IsNullOrWhiteSpace(contents))
+                    {
+                        JToken value = JObject.Parse(contents)["Password"];
+                        if (value?.Type == JTokenType.String)
+                        {
+                            password = value.Value<string>();
+                        }
+                    }
+                }
+            }
+            catch (Exception exception) when (exception is JsonException || exception is IOException || exception is UnauthorizedAccessException)
+            {
+                throw new DependencyException(
+                    "Unable to read the PostgreSQL password file. Check its permissions and JSON format.",
+                    ErrorReason.InvalidProfileDefinition);
+            }
+
+            if (string.IsNullOrEmpty(password))
+            {
+                throw new DependencyException(
+                    "The selected PostgreSQL password file must exist and contain a non-empty string named 'Password'.",
+                    ErrorReason.InvalidProfileDefinition);
+            }
+
+            return password;
         }
 
         /// <summary>
@@ -351,8 +393,6 @@ namespace VirtualClient.Actions
         /// </summary>
         protected async Task InitializeExecutablesAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            // store state with initialization status & record/table counts, if does not exist already
-
             SysbenchState state = await this.stateManager.GetStateAsync<SysbenchState>(nameof(SysbenchState), cancellationToken)
                 ?? new SysbenchState();
 
@@ -386,7 +426,7 @@ namespace VirtualClient.Actions
 
         /// <summary>
         /// Build the Sysbench Logging Basic Arguments, having the common parameters
-        /// dbName, databaseSystem, benchmark and tableCount.
+        /// dbName, databaseSystem, benchmark, threadCount, tableCount, and recordCount or warehouses.
         /// </summary>
         /// <returns></returns>
         protected string BuildSysbenchLoggingArguments()
@@ -491,7 +531,7 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Defines the Sysbench OLTP benchmark scenario.
+        /// Defines the supported Sysbench benchmarks.
         /// </summary>
         internal class BenchmarkName
         {

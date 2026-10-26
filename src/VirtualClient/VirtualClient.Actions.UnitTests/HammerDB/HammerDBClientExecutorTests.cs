@@ -29,6 +29,7 @@ namespace VirtualClient.Actions
 
     [TestFixture]
     [Category("Unit")]
+    [NonParallelizable]
     public class HammerDBClientExecutorTests
     {
         private MockFixture fixture;
@@ -36,26 +37,42 @@ namespace VirtualClient.Actions
         private string apiClientId;
         private ClientInstance clientInstance;
         private string mockPackagePath;
+        private string originalPassword;
+
+        [SetUp]
+        public void SetPasswordEnvironmentVariable()
+        {
+            this.originalPassword = Environment.GetEnvironmentVariable("PGPASSWORD");
+            Environment.SetEnvironmentVariable("PGPASSWORD", "password with 'quotes' and $symbols");
+        }
+
+        [TearDown]
+        public void RestorePasswordEnvironmentVariable()
+        {
+            Environment.SetEnvironmentVariable("PGPASSWORD", this.originalPassword);
+        }
 
         [Test]
-        [TestCase(PlatformID.Unix, Architecture.X64)]
-        [TestCase(PlatformID.Win32NT, Architecture.X64)]
-        public async Task HammerDBClientExecutorRunsTheExpectedWorkloadCommand(PlatformID platform, Architecture architecture)
+        [TestCase(PlatformID.Unix, Architecture.X64, "tpcc")]
+        [TestCase(PlatformID.Unix, Architecture.X64, "tpch")]
+        [TestCase(PlatformID.Win32NT, Architecture.X64, "tpcc")]
+        [TestCase(PlatformID.Win32NT, Architecture.X64, "tpch")]
+        public async Task HammerDBClientExecutorRunsTheExpectedWorkloadCommand(PlatformID platform, Architecture architecture, string workload)
         {
             this.SetupDefaultBehavior(platform, architecture);
+            this.fixture.Parameters[nameof(HammerDBClientExecutor.Workload)] = workload;
+            const string filePassword = "file-password-with-$symbols";
+            this.fixture.Parameters["PostgreSQLPasswordFile"] = "/secure/Password.json";
+            this.fixture.File.Setup(file => file.ReadAllTextAsync("/secure/Password.json", It.IsAny<CancellationToken>()))
+                .ReturnsAsync("{\"Password\":\"file-password-with-$symbols\"}");
 
-            List<string> expectedCommands = new List<string>();
-
-            if (platform == PlatformID.Unix)
+            string configurationCommand = platform == PlatformID.Unix ? "sudo --preserve-env=PGPASSWORD python3" : "python3";
+            string workloadArguments = workload == "tpcc" ? "--warehouseCount 1" : "--scaleFactor 10";
+            List<string> expectedCommands = new List<string>
             {
-                expectedCommands.Add($"sudo python3 {this.fixture.PlatformSpecifics.Combine(this.mockPackagePath, "configure-workload-generator.py")} --workload tpcc --sqlServer postgresql --port 5432 --virtualUsers 1 --password [A-Fa-f0-9]+ --dbName hammerdbtest --hostIPAddress [0-9.]+ --warehouseCount 1 --duration 1");
-                expectedCommands.Add($"python3 {this.fixture.PlatformSpecifics.Combine(this.mockPackagePath, "run-workload.py")} --runTransactionsTCLFilePath runTransactions.tcl");
-            }
-            else
-            {
-                expectedCommands.Add($"python3 {this.fixture.PlatformSpecifics.Combine(this.mockPackagePath, "configure-workload-generator.py")} --workload tpcc --sqlServer postgresql --port 5432 --virtualUsers 1 --password [A-Fa-f0-9]+ --dbName hammerdbtest --hostIPAddress [0-9.]+ --warehouseCount 1 --duration 1");
-                expectedCommands.Add($"python3 {this.fixture.PlatformSpecifics.Combine(this.mockPackagePath, "run-workload.py")} --runTransactionsTCLFilePath runTransactions.tcl");
-            }
+                $"{configurationCommand} {this.fixture.PlatformSpecifics.Combine(this.mockPackagePath, "configure-workload-generator.py")} --workload {workload} --sqlServer postgresql --port 5432 --virtualUsers 1 --dbName hammerdbtest --hostIPAddress [0-9.]+ {workloadArguments} --duration 1",
+                $"python3 {this.fixture.PlatformSpecifics.Combine(this.mockPackagePath, "run-workload.py")} --runTransactionsTCLFilePath runTransactions.tcl"
+            };
 
             if (this.fixture.Platform == PlatformID.Win32NT)
             {
@@ -70,6 +87,9 @@ namespace VirtualClient.Actions
             {
                 string expectedCommand = expectedCommands[commandNumber];
                 string executedCommand = $"{exe} {arguments}";
+                StringAssert.DoesNotContain("--password", arguments);
+                StringAssert.DoesNotContain(Environment.GetEnvironmentVariable("PGPASSWORD"), arguments);
+                StringAssert.DoesNotContain(filePassword, arguments);
                 bool executed = Regex.IsMatch(executedCommand,expectedCommands[commandNumber]);
                 Assert.IsTrue(executed);
                 commandNumber += 1;
@@ -86,6 +106,12 @@ namespace VirtualClient.Actions
                     OnHasExited = () => true
                 };
 
+                process.OnStart = () =>
+                {
+                    Assert.AreEqual(filePassword, process.EnvironmentVariables["PGPASSWORD"]);
+                    return true;
+                };
+
                 return process;
             };
 
@@ -93,6 +119,8 @@ namespace VirtualClient.Actions
             {
                 await HammerDBExecutor.ExecuteAsync(CancellationToken.None);
             }
+
+            Assert.AreEqual(expectedCommands.Count, commandNumber);
         }
         public void SetupDefaultBehavior(PlatformID platform, Architecture architecture)
         {
@@ -107,11 +135,11 @@ namespace VirtualClient.Actions
             {
                 { nameof(HammerDBClientExecutor.Port), "5432"},
                 { nameof(HammerDBClientExecutor.DatabaseName), "hammerdbtest" },
-                { nameof(HammerDBClientExecutor.SuperUserPassword), "pass" },
                 { nameof(HammerDBClientExecutor.Workload), "tpcc" },
                 { nameof(HammerDBClientExecutor.SQLServer), "postgresql" },
                 { nameof(HammerDBClientExecutor.VirtualUserCount), "1"},
                 { nameof(HammerDBClientExecutor.WarehouseCount), "1"},
+                { nameof(HammerDBClientExecutor.ScaleFactor), "10"},
                 { nameof(HammerDBClientExecutor.Duration), "00:01:00" },
                 { "ServerIpAddress", "localhost"},
                 { nameof(HammerDBClientExecutor.PackageName), "hammerdb" },
