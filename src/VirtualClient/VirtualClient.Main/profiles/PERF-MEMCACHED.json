@@ -6,6 +6,10 @@
         "SupportedOperatingSystems": "Ubuntu",
         "Notes_ConnectionLimits": "Each Memtier benchmark action will establish (--threads x --clients) connections against the Memcached server for each client instance/process. Ensure that the server-side OS does not place a limit on connections that might exceed this (e.g. ulimit -Sn on Linux)."
     },
+  "ParameterAliases": {
+      "ServerMaxConnections": "MaxServerConnectionCount",
+      "ClientInstances": "ClientInstanceCount"
+  },
   "Parameters": {
     "ServerPort": 6379,
     "MaxServerConnectionCount": 16384,

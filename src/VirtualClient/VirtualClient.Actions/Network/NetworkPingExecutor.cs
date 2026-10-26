@@ -61,7 +61,7 @@ namespace VirtualClient.Actions.NetworkPerformance
             get
             {
                 const int defaultPingIterationCount = 50;
-                return this.Parameters.GetValue<int>(nameof(NetworkPingExecutor.PingIterationCount), defaultPingIterationCount);
+                return this.Parameters.GetValue<int>(new string[] { nameof(this.PingIterationCount), "PingIterations" }, defaultPingIterationCount);
             }
         }
 

@@ -86,7 +86,7 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(MemcachedServerExecutor.MaxServerConnectionCount));
+                return this.Parameters.GetValue<int>(new string[] { nameof(this.MaxServerConnectionCount), "ServerMaxConnections" });
             }
         }
 

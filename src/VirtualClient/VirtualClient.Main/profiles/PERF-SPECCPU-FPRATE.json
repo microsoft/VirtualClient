@@ -13,6 +13,11 @@
         "Notes": "Private package speccpu.2017.1.1.9-danielbowers.zip supports Ubuntu 24; SPEC CPU 2017 was not designed for win-arm64. NumaProcessorAffinity (Linux rate only): 'symmetric' balances copies across NUMA nodes, one CPU each; explicit CPU IDs pin copies manually; empty (default) does not pin.",
         "Limitations": "The following benchmarks don't work on Windows: 507, 511, 521, 526, 527, 538"
     },
+    "ParameterAliases": {
+        "Iterations": "IterationCount",
+        "Threads": "ThreadCount",
+        "Copies": "CopyCount"
+    },
     "Parameters": {
         "CompilerVersion": 13,
         "IterationCount": 2,

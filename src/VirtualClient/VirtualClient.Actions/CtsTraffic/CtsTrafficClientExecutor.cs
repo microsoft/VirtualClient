@@ -41,7 +41,7 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.ConnectionCount), 1);
+                return this.Parameters.GetValue<int>(new string[] { nameof(this.ConnectionCount), "Connections" }, 1);
             }
         }
 
@@ -52,7 +52,7 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.IterationCount), 1);
+                return this.Parameters.GetValue<int>(new string[] { nameof(this.IterationCount), "Iterations" }, 1);
             }
         }
 
