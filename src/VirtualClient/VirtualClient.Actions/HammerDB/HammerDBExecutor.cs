@@ -6,11 +6,15 @@ namespace VirtualClient.Actions
     using System;
     using System.Collections.Generic;
     using System.Globalization;
+    using System.IO;
+    using System.IO.Abstractions;
     using System.Linq;
     using System.Net;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
+    using Newtonsoft.Json;
+    using Newtonsoft.Json.Linq;
     using VirtualClient;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
@@ -258,6 +262,61 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// Reads PostgreSQL credentials from an explicit file, the process environment, or the platform-specific PostgreSQL package.
+        /// </summary>
+        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+        /// <returns>The password to supply only to the database child process environment.</returns>
+        protected async Task<string> GetPostgreSQLPasswordAsync(CancellationToken cancellationToken)
+        {
+            string passwordFile = this.Parameters.GetValue<string>("PostgreSQLPasswordFile", string.Empty);
+            if (string.IsNullOrWhiteSpace(passwordFile))
+            {
+                string environmentPassword = Environment.GetEnvironmentVariable("PGPASSWORD");
+                if (!string.IsNullOrEmpty(environmentPassword))
+                {
+                    return environmentPassword;
+                }
+
+                DependencyPath package = await this.GetPlatformSpecificPackageAsync("postgresql", cancellationToken).ConfigureAwait(false);
+                passwordFile = this.Combine(package.Path, "Password.json");
+            }
+
+            IFileSystem fileSystem = this.SystemManager.FileSystem;
+            string password = null;
+            try
+            {
+                if (fileSystem.File.Exists(passwordFile))
+                {
+                    string contents = await fileSystem.File.ReadAllTextAsync(passwordFile, cancellationToken).ConfigureAwait(false);
+                    if (!string.IsNullOrWhiteSpace(contents))
+                    {
+                        JToken value = JObject.Parse(contents)["Password"];
+                        if (value?.Type == JTokenType.String)
+                        {
+                            password = value.Value<string>();
+                        }
+                    }
+                }
+            }
+            catch (Exception exception) when (exception is JsonException || exception is IOException || exception is UnauthorizedAccessException)
+            {
+                throw new DependencyException(
+                    "Unable to read the PostgreSQL password file. Check its permissions and JSON format.",
+                    ErrorReason.InvalidProfileDefinition);
+            }
+
+            if (string.IsNullOrEmpty(password))
+            {
+                throw new DependencyException(
+                    "The PostgreSQL password file must contain a non-empty string named 'Password'. " +
+                    "Provision Password.json in the platform-specific postgresql package, set PostgreSQLPasswordFile, or supply PGPASSWORD.",
+                    ErrorReason.InvalidProfileDefinition);
+            }
+
+            return password;
+        }
+
+        /// <summary>
         /// Initializes API client.
         /// </summary>
         protected void InitializeApiClients(CancellationToken cancellationToken)
@@ -335,7 +394,7 @@ namespace VirtualClient.Actions
 
         private async Task PrepareSQLDatabase(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string password = await PostgreSQLCredentials.GetPasswordAsync(this, cancellationToken).ConfigureAwait(false);
+            string password = await this.GetPostgreSQLPasswordAsync(cancellationToken).ConfigureAwait(false);
             string command = "python3";
             string arguments = $"{this.PlatformSpecifics.Combine(this.HammerDBPackagePath, "populate-database.py")} --createDBTCLPath {createDBTclName}";
             
@@ -357,7 +416,7 @@ namespace VirtualClient.Actions
 
         private async Task ConfigureCreateHammerDBFile(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string password = await PostgreSQLCredentials.GetPasswordAsync(this, cancellationToken).ConfigureAwait(false);
+            string password = await this.GetPostgreSQLPasswordAsync(cancellationToken).ConfigureAwait(false);
             await this.GenerateCommandLineArguments(cancellationToken);
 
             bool preservePassword = this.Platform == PlatformID.Unix && !this.SystemManager.RunningInContainer;

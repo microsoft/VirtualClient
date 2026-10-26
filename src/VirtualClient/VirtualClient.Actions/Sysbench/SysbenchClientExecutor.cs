@@ -180,7 +180,7 @@ namespace VirtualClient.Actions
                 using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
                     string password = string.Equals(this.DatabaseSystem, "PostgreSQL", StringComparison.OrdinalIgnoreCase)
-                        ? await PostgreSQLCredentials.GetPasswordAsync(this, cancellationToken).ConfigureAwait(false)
+                        ? await this.GetPostgreSQLPasswordAsync(cancellationToken).ConfigureAwait(false)
                         : null;
                     this.sysbenchLoggingArguments = this.BuildSysbenchLoggingArguments();
                     this.sysbenchExecutionArguments = $"{this.sysbenchLoggingArguments} --workload {this.Workload} --hostIpAddress {this.ServerIpAddress} --durationSecs {this.Duration.TotalSeconds}{this.PasswordArguments}";

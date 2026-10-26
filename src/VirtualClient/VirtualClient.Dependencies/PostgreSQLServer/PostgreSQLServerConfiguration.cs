@@ -5,12 +5,15 @@ namespace VirtualClient.Dependencies
 {
     using System;
     using System.Collections.Generic;
+    using System.IO;
+    using System.IO.Abstractions;
     using System.Linq;
     using System.Net;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
     using Newtonsoft.Json;
+    using Newtonsoft.Json.Linq;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
@@ -172,9 +175,64 @@ namespace VirtualClient.Dependencies
             }
         }
 
+        /// <summary>
+        /// Reads PostgreSQL credentials from an explicit file, the process environment, or the platform-specific PostgreSQL package.
+        /// </summary>
+        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+        /// <returns>The password to supply only to the database child process environment.</returns>
+        protected async Task<string> GetPostgreSQLPasswordAsync(CancellationToken cancellationToken)
+        {
+            string passwordFile = this.Parameters.GetValue<string>("PostgreSQLPasswordFile", string.Empty);
+            if (string.IsNullOrWhiteSpace(passwordFile))
+            {
+                string environmentPassword = Environment.GetEnvironmentVariable("PGPASSWORD");
+                if (!string.IsNullOrEmpty(environmentPassword))
+                {
+                    return environmentPassword;
+                }
+
+                DependencyPath package = await this.GetPlatformSpecificPackageAsync("postgresql", cancellationToken).ConfigureAwait(false);
+                passwordFile = this.Combine(package.Path, "Password.json");
+            }
+
+            IFileSystem fileSystem = this.SystemManager.FileSystem;
+            string password = null;
+            try
+            {
+                if (fileSystem.File.Exists(passwordFile))
+                {
+                    string contents = await fileSystem.File.ReadAllTextAsync(passwordFile, cancellationToken).ConfigureAwait(false);
+                    if (!string.IsNullOrWhiteSpace(contents))
+                    {
+                        JToken value = JObject.Parse(contents)["Password"];
+                        if (value?.Type == JTokenType.String)
+                        {
+                            password = value.Value<string>();
+                        }
+                    }
+                }
+            }
+            catch (Exception exception) when (exception is JsonException || exception is IOException || exception is UnauthorizedAccessException)
+            {
+                throw new DependencyException(
+                    "Unable to read the PostgreSQL password file. Check its permissions and JSON format.",
+                    ErrorReason.InvalidProfileDefinition);
+            }
+
+            if (string.IsNullOrEmpty(password))
+            {
+                throw new DependencyException(
+                    "The PostgreSQL password file must contain a non-empty string named 'Password'. " +
+                    "Provision Password.json in the platform-specific postgresql package, set PostgreSQLPasswordFile, or supply PGPASSWORD.",
+                    ErrorReason.InvalidProfileDefinition);
+            }
+
+            return password;
+        }
+
         private async Task ConfigurePostgreSQLServerAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string password = await PostgreSQLCredentials.GetPasswordAsync(this, cancellationToken).ConfigureAwait(false);
+            string password = await this.GetPostgreSQLPasswordAsync(cancellationToken).ConfigureAwait(false);
 
             string serverIp = (this.GetLayoutClientInstances(ClientRole.Server, false) ?? Enumerable.Empty<ClientInstance>())
                                     .FirstOrDefault()?.IPAddress
@@ -287,7 +345,7 @@ namespace VirtualClient.Dependencies
 
         private async Task SetupPostgreSQLDatabaseAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string password = await PostgreSQLCredentials.GetPasswordAsync(this, cancellationToken).ConfigureAwait(false);
+            string password = await this.GetPostgreSQLPasswordAsync(cancellationToken).ConfigureAwait(false);
 
             string arguments = $"{this.packageDirectory}/setup-database.py --dbName {this.DatabaseName} --port {this.Port}";
 
