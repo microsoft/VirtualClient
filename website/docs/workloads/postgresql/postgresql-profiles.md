@@ -3,7 +3,10 @@ slug: /workloads/postgresql-profiles
 ---
 
 # PostgreSQL Profiles
-The following profiles run customer-representative or benchmarking scenarios using the postgresql workload.
+The following profiles run customer-representative or benchmarking scenarios using PostgreSQL.
+Provision matching credentials on each participating VM before running the profiles;
+see [PostgreSQL credentials](/docs/dependencies/install-postgresql#postgresql-server-configuration-credentials)
+for password-file and `PGPASSWORD` precedence.
 
 * [Workload Details](/docs/workloads/postgresql) 
 * [Client/Server Workloads](/docs/guides/client-server)
@@ -30,8 +33,11 @@ idea. The name of the client must match the name of the system or the value of t
 
 # On Server Role System...
 ./VirtualClient --profile=PERF-POSTGRESQL-HAMMERDB-TPCC.json --system=Juno --timeout=1440 --client-id=Server01 --layout=/any/path/to/layout.json
+```
 
-# Example contents of the 'layout.json' file:
+Example contents of `layout.json`:
+
+```json
 {
     "clients": [
         {
@@ -55,42 +61,43 @@ The TPCC scenario uses HammerDB to create and populate a PostgreSQL database wit
 HammerDB requires the schema-building `VirtualUserCount` to be no greater than
 `WarehouseCount`. For a one-warehouse smoke test, set both parameters to `1`.
 
-**Important**: HammerDB will automatically distribute and populate the database tables across the target disks you specify. Make sure to provide the `DiskFilter` parameter to point to your target disks for optimal performance.
+**Important**: The profile's `StripeDisks` dependency prepares the server storage selected
+by `DiskFilter`. `PostgreSQLServerConfiguration` selects the data directory on mounted
+storage; HammerDB populates tables in that database rather than distributing tables itself.
 
-``` bash
+```json
 {
   "Type": "HammerDBExecutor",
   "Parameters": 
   {
     "Scenario": "PopulatePostgreSQLDatabase",
-    "Action": "PopulateTables",
     "DatabaseName": "$.Parameters.DatabaseName",
-    "DiskFilter": "$.Parameters.DiskFilter",
     "Workload": "tpcc",
     "SQLServer": "postgresql",
     "PackageName": "hammerdb",
     "VirtualUserCount": "{calculate({LogicalCoreCount})}",
-    "WarehouseCount": "{calculate({SystemMemoryMegabytes} * 15 / 800)}",
+    "WarehouseCount": "{calculate({LogicalCoreCount} * 10)}",
+    "Duration": "$.Parameters.Duration",
     "Port": "$.Parameters.Port",
     "Role": "Server"
   }
-},
+}
 ```
 
 ## Configuring the TPCH Scenario
 
 The TPCH scenario uses HammerDB to create and populate a PostgreSQL database with analytical workload patterns (decision support queries). Like TPCC, database creation and population can only be performed on the Server side.
 
-**Important**: HammerDB will automatically distribute and populate the database tables across the target disks you specify. Make sure to provide the `DiskFilter` parameter to point to your target disks for optimal performance.
+**Important**: Use `DiskFilter` to select the server storage prepared by the profile's
+`StripeDisks` dependency. HammerDB does not distribute tables across individual disks.
 
-``` bash
+```json
 {
   "Type": "HammerDBExecutor",
   "Parameters": 
   {
     "Scenario": "PopulatePostgreSQLDatabase",
     "DatabaseName": "$.Parameters.DatabaseName",
-    "DiskFilter": "$.Parameters.DiskFilter",
     "Workload": "tpch",
     "SQLServer": "postgresql",
     "PackageName": "hammerdb",
@@ -100,7 +107,7 @@ The TPCH scenario uses HammerDB to create and populate a PostgreSQL database wit
     "Duration": "$.Parameters.Duration",
     "Role": "Server"
   }
-},
+}
 ```
 
 ## Profile Components
@@ -108,21 +115,22 @@ There are a lot of moving parts to this workload that allows for both out-of-box
 
 ### Dependencies
 
-* **FormatDisks** and **MountDisks**: Format any unformatted disks on the server, then mount any unmounted disks.
-* **DependencyPackageInstallation**: On all VMs, download the hammerdb package; on the server-side, also download the postgresql package.
+* **StripeDisks**: Prepares and mounts the selected server disks as striped storage.
+* **DependencyPackageInstallation**: Downloads the `postgresql` package on all participating VMs, and the `hammerdb` or `sysbench` package required by the profile. The default password-file location is in the platform-specific `postgresql` directory on each VM.
 * **LinuxPackageInstallation**: Download the python3 package to execute the python scripts provided for installation and configuration of the packages.
 * **PostgreSQLServerInstallation and PostgreSQLServerConfiguration**: Runs python scripts to install and configure the PostgreSQL server (ie. set up network, database, variables, and users).
 * **ApiServer**: Starts the API server for Client-Server workloads.
 
 ### Actions
 
-* **HammerDBExecutor**: Creates and populates the PostgreSQL database using the HammerDB tool. HammerDB automatically handles the distribution of database tables across the target disks specified by the `DiskFilter` parameter. The database creation and population must be performed on the Server side. Once populated, VC persists the state, and it will not drop or recreate tables. The workload supports both TPCC (transactional) and TPCH (analytical) scenarios.
+* **HammerDBExecutor**: Creates and populates the benchmark database on the server using HammerDB. Once populated, VC persists the state and skips repeated population. This component supports TPCC (transactional) and TPCH (analytical) scenarios; server storage is prepared by the profile's dependencies.
 
-* **HammerDBServerExecutor**: Manages the server-side execution of HammerDB workloads, handling the database operations and serving client requests.
+* **HammerDBServerExecutor**: Signals server readiness and coordinates with clients during the workload.
 
 * **HammerDBClientExecutor**: Runs the workload from the client-side, generating load against the server database. This executor connects to the server and executes the specified workload (TPCC or TPCH) scenarios.
 
-* **SysbenchClientExecutor**: Runs a given workload from the client-side on the server database. Note that this action can run with different arguments from HammerDBExecutor. VC does not support dropping and recreating a new database or table configuration within the same profile or system.
+* **SysbenchConfiguration**: Populates benchmark tables or cleans them up with the `Cleanup` action. Clean up existing populated tables before changing their configuration.
+* **SysbenchClientExecutor**: Runs the selected Sysbench workload against the server database.
 * **SysbenchServerExecutor**: Sets the server online for client interaction.
 
 ## PERF-POSTGRESQL-HAMMERDB-TPCC.json
@@ -155,12 +163,10 @@ Runs the PostgreSQL workload against the HammerDB tool which generates analytica
   |---------------------------|---------------------------------------------------------------------------------|---------------|
   | DatabaseName     | Optional. Provide the name of the database under test. | "hammerdb_tpcc" or "hammerdb_tpch" |
   | Port     | Optional. Provide the port number that PostgreSQL server will listen on. | 5432 |
-  | DiskFilter     | Optional. Filter to specify target disks for database distribution. | "osdisk:false&sizegreaterthan:256g" |
+  | DiskFilter     | Optional. Filter selecting the server disks to stripe and mount. | "osdisk:false&sizegreaterthan:256g" |
   | Duration     | Optional. Duration for the workload execution. | "00:20:00" |
-  | Workload              | Required. Either "tpcc" or "tpch"                                          | N/A          |
-  | SQLServer              | Required. Normally "postgresql"                                          | N/A          |
   | VirtualUserCount          | Optional. Number of virtual users (threads) for the workload setup           |   vCPU    |
-  | WarehouseCount             | Optional. Number of warehouses created (TPCC only).                         |  mem*15/800    |
+  | WarehouseCount             | Optional. Number of warehouses created (TPCC only).                         |  vCPU*10    |
   | ScaleFactor             | Optional. Scale factor for TPCH workload.                         |  10    |
   | SharedMemoryBuffer             | Optional. PostgreSQL shared memory buffer size.                         |  mem*85/100   |
 

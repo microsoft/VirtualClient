@@ -4,8 +4,6 @@
 namespace VirtualClient.Actions
 {
     using System;
-    using System.Collections.Generic;
-    using System.Linq;
     using System.Net;
     using System.Runtime.InteropServices;
     using System.Threading;
@@ -23,16 +21,18 @@ namespace VirtualClient.Actions
         private DependencyFixture fixture;
         private string clientAgentId;
         private string serverAgentId;
-        private string sysbenchPackagePath;
-        private string mySQLPackagePath;
-        private string postgreSQLPackagePath;
         private string originalPassword;
 
         [SetUp]
-        public void SetPasswordEnvironmentVariable()
+        public void SetupFixture()
         {
             this.originalPassword = Environment.GetEnvironmentVariable("PGPASSWORD");
             Environment.SetEnvironmentVariable("PGPASSWORD", "test-postgresql-password");
+            this.fixture = new DependencyFixture();
+            this.fixture.Setup(PlatformID.Unix, Architecture.X64);
+            this.clientAgentId = $"{Environment.MachineName}-Client";
+            this.serverAgentId = $"{Environment.MachineName}-Server";
+            ComponentTypeCache.Instance.LoadComponentTypes(MockFixture.TestAssemblyDirectory);
         }
 
         [TearDown]
@@ -41,342 +41,11 @@ namespace VirtualClient.Actions
             Environment.SetEnvironmentVariable("PGPASSWORD", this.originalPassword);
         }
 
-        [OneTimeSetUp]
-        public void SetupFixture()
-        {
-            this.fixture = new DependencyFixture();
-            this.clientAgentId = $"{Environment.MachineName}-Client";
-            this.serverAgentId = $"{Environment.MachineName}-Server";
-
-            ComponentTypeCache.Instance.LoadComponentTypes(MockFixture.TestAssemblyDirectory);
-        }
-
-        [Test]
         [TestCase("PERF-MYSQL-SYSBENCH-OLTP.json")]
-        public void MySQLSysbenchOLTPWorkloadProfileParametersAreInlinedCorrectly(string profile)
-        {
-            using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(profile, this.fixture.Dependencies))
-            {
-                WorkloadAssert.ParameterReferencesInlined(executor.Profile);
-            }
-        }
-
-        [Test]
-        [TestCase("PERF-MYSQL-SYSBENCH-OLTP.json", PlatformID.Unix, Architecture.X64)]
-        public void MySQLSysbenchOLTPWorkloadProfileActionsWillNotBeExecutedIfTheWorkloadPackageDoesNotExist(string profile, PlatformID platform, Architecture architecture)
-        {
-            this.fixture.Setup(platform);
-            this.fixture.PackageManager.Clear();
-
-            using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(profile, this.fixture.Dependencies))
-            {
-                executor.ExecuteDependencies = false;
-
-                DependencyException error = Assert.ThrowsAsync<DependencyException>(() => executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None));
-                Assert.IsTrue(error.Reason == ErrorReason.WorkloadDependencyMissing);
-            }
-        }
-
-        [Test]
-        [TestCase("PERF-MYSQL-SYSBENCH-OLTP.json", PlatformID.Unix, Architecture.X64)]
-        [Ignore("This functional test takes more than a minute to run. There is likely a Task.Delay somewhere that needs to be designed better to avoid long blocking behavior")]
-        public async Task MySQLSysbenchOLTPWorkloadProfileExecutesTheExpectedWorkloadsOnUnixPlatform(string profile, PlatformID platform, Architecture architecture)
-        {
-            this.fixture.Setup(platform, architecture, this.clientAgentId).SetupLayout(
-                new ClientInstance(this.clientAgentId, "1.2.3.4", "Client"),
-                new ClientInstance(this.serverAgentId, "1.2.3.5", "Server"));
-
-            this.SetupApiClient(this.serverAgentId, serverIPAddress: "1.2.3.5");
-
-            this.sysbenchPackagePath = this.fixture.GetPackagePath("sysbench");
-            this.fixture.SetupPackage("sysbench");
-            this.fixture.SetupDirectory(this.sysbenchPackagePath);
-
-            IEnumerable<string> expectedCommands = this.GetProfileExpectedCommands(singleVM: false, benchmark: "OLTP", databaseSystem: "MySQL");
-
-            this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
-            {
-                IProcessProxy process = this.fixture.CreateProcess(command, arguments, workingDir);
-                if (arguments.Contains("run", StringComparison.OrdinalIgnoreCase))
-                {
-                    process.StandardOutput.Append(MockFixture.ReadTestResourcesFile("Results_Sysbench.txt"));
-                }
-
-                return process;
-            };
-
-            using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(profile, this.fixture.Dependencies))
-            {
-                await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
-                WorkloadAssert.CommandsExecuted(this.fixture, expectedCommands.ToArray());
-            }
-        }
-
-        [Test]
-        [TestCase("PERF-MYSQL-SYSBENCH-OLTP.json", PlatformID.Unix, Architecture.X64)]
-        [Ignore("This functional test takes more than a minute to run. There is likely a Task.Delay somewhere that needs to be designed better to avoid long blocking behavior")]
-        public async Task MySQLSysbenchOLTPWorkloadProfileExecutesTheExpectedWorkloadsOnSingleVMUnixPlatform(string profile, PlatformID platform, Architecture architecture)
-        {
-            this.fixture.Setup(platform, architecture, this.clientAgentId).SetupLayout(
-                new ClientInstance(this.clientAgentId, "1.2.3.4", "Server"));
-
-            this.fixture.Setup(platform);
-            this.fixture.SetupDisks(withUnformatted: true);
-
-            this.sysbenchPackagePath = this.fixture.PlatformSpecifics.GetPackagePath("sysbench");
-            DependencyPath mySqlPackage = new DependencyPath("mysql-server", this.fixture.GetPackagePath("mysql-server"));
-            this.mySQLPackagePath = this.fixture.ToPlatformSpecificPath(mySqlPackage, PlatformID.Unix, Architecture.X64).Path;
-
-            this.fixture.SetupPackage("sysbench");
-            this.fixture.SetupPackage("mysql-server");
-
-            this.fixture.SetupDirectory(this.sysbenchPackagePath);
-            this.fixture.SetupDirectory(this.mySQLPackagePath);
-
-            IEnumerable<string> expectedCommands = this.GetProfileExpectedCommands(singleVM: true, benchmark: "OLTP", databaseSystem: "MySQL");
-
-            this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
-            {
-                IProcessProxy process = this.fixture.CreateProcess(command, arguments, workingDir);
-                if (arguments.Contains("run", StringComparison.OrdinalIgnoreCase))
-                {
-                    process.StandardOutput.Append(MockFixture.ReadTestResourcesFile("Results_Sysbench.txt"));
-                }
-
-                return process;
-            };
-
-            using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(profile, this.fixture.Dependencies))
-            {
-                await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
-
-                WorkloadAssert.DisksAreInitialized(this.fixture);
-                WorkloadAssert.DisksHaveAccessPaths(this.fixture);
-
-                WorkloadAssert.WorkloadPackageInstalled(this.fixture, "sysbench");
-
-                WorkloadAssert.CommandsExecuted(this.fixture, expectedCommands.ToArray());
-            }
-        }
-
-        [Test]
         [TestCase("PERF-MYSQL-SYSBENCH-TPCC.json")]
-        public void MySQLSysbenchTPCCWorkloadProfileParametersAreInlinedCorrectly(string profile)
-        {
-            using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(profile, this.fixture.Dependencies))
-            {
-                WorkloadAssert.ParameterReferencesInlined(executor.Profile);
-            }
-        }
-
-        [Test]
-        [TestCase("PERF-MYSQL-SYSBENCH-TPCC.json", PlatformID.Unix, Architecture.X64)]
-        public void MySQLSysbenchTPCCWorkloadProfileActionsWillNotBeExecutedIfTheWorkloadPackageDoesNotExist(string profile, PlatformID platform, Architecture architecture)
-        {
-            this.fixture.Setup(platform);
-            this.fixture.PackageManager.Clear();
-
-            using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(profile, this.fixture.Dependencies))
-            {
-                executor.ExecuteDependencies = false;
-
-                DependencyException error = Assert.ThrowsAsync<DependencyException>(() => executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None));
-                Assert.IsTrue(error.Reason == ErrorReason.WorkloadDependencyMissing);
-            }
-        }
-
-        [Test]
-        [TestCase("PERF-MYSQL-SYSBENCH-TPCC.json", PlatformID.Unix, Architecture.X64)]
-        public async Task MySQLSysbenchTPCCWorkloadProfileExecutesTheExpectedWorkloadsOnUnixPlatform(string profile, PlatformID platform, Architecture architecture)
-        {
-            this.fixture.Setup(platform, architecture, this.clientAgentId).SetupLayout(
-                new ClientInstance(this.clientAgentId, "1.2.3.4", "Client"),
-                new ClientInstance(this.serverAgentId, "1.2.3.5", "Server"));
-
-            this.SetupApiClient(this.serverAgentId, serverIPAddress: "1.2.3.5");
-
-            this.sysbenchPackagePath = this.fixture.GetPackagePath("sysbench");
-            this.fixture.SetupPackage("sysbench");
-            this.fixture.SetupDirectory(this.sysbenchPackagePath);
-
-            IEnumerable<string> expectedCommands = this.GetProfileExpectedCommands(singleVM: false, benchmark: "TPCC", databaseSystem: "MySQL");
-
-            this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
-            {
-                IProcessProxy process = this.fixture.CreateProcess(command, arguments, workingDir);
-                if (arguments.Contains("run", StringComparison.OrdinalIgnoreCase))
-                {
-                    process.StandardOutput.Append(MockFixture.ReadTestResourcesFile("Results_Sysbench.txt"));
-                }
-
-                return process;
-            };
-
-            using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(profile, this.fixture.Dependencies))
-            {
-                await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
-                WorkloadAssert.CommandsExecuted(this.fixture, expectedCommands.ToArray());
-            }
-        }
-
-        [Test]
-        [TestCase("PERF-MYSQL-SYSBENCH-TPCC.json", PlatformID.Unix, Architecture.X64)]
-        [Ignore("This functional test takes more than a minute to run. There is likely a Task.Delay somewhere that needs to be designed better to avoid long blocking behavior")]
-        public async Task MySQLSysbenchTPCCWorkloadProfileExecutesTheExpectedWorkloadsOnMySQLSingleVMUnixPlatform(string profile, PlatformID platform, Architecture architecture)
-        {
-            this.fixture.Setup(platform, architecture, this.clientAgentId).SetupLayout(
-                new ClientInstance(this.clientAgentId, "1.2.3.4", "Server"));
-
-            this.fixture.Setup(platform);
-            this.fixture.SetupDisks(withUnformatted: true);
-
-            this.sysbenchPackagePath = this.fixture.PlatformSpecifics.GetPackagePath("sysbench");
-            DependencyPath mySqlPackage = new DependencyPath("mysql-server", this.fixture.GetPackagePath("mysql-server"));
-            this.mySQLPackagePath = this.fixture.ToPlatformSpecificPath(mySqlPackage, PlatformID.Unix, Architecture.X64).Path;
-
-            this.fixture.SetupPackage("sysbench");
-            this.fixture.SetupPackage("mysql-server");
-
-            this.fixture.SetupDirectory(this.sysbenchPackagePath);
-            this.fixture.SetupDirectory(this.mySQLPackagePath);
-
-            IEnumerable<string> expectedCommands = this.GetProfileExpectedCommands(singleVM: true, benchmark: "TPCC", databaseSystem: "MySQL");
-
-            this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
-            {
-                IProcessProxy process = this.fixture.CreateProcess(command, arguments, workingDir);
-                if (arguments.Contains("run", StringComparison.OrdinalIgnoreCase))
-                {
-                    process.StandardOutput.Append(MockFixture.ReadTestResourcesFile("Results_Sysbench.txt"));
-                }
-
-                return process;
-            };
-
-            using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(profile, this.fixture.Dependencies))
-            {
-                await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
-
-                WorkloadAssert.DisksAreInitialized(this.fixture);
-                WorkloadAssert.DisksHaveAccessPaths(this.fixture);
-
-                WorkloadAssert.WorkloadPackageInstalled(this.fixture, "sysbench");
-
-                WorkloadAssert.CommandsExecuted(this.fixture, expectedCommands.ToArray());
-            }
-        }
-
-        [Test]
         [TestCase("PERF-POSTGRESQL-SYSBENCH-OLTP.json")]
-        public void PostgreSQLSysbenchOLTPWorkloadProfileParametersAreInlinedCorrectly(string profile)
-        {
-            using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(profile, this.fixture.Dependencies))
-            {
-                WorkloadAssert.ParameterReferencesInlined(executor.Profile);
-            }
-        }
-
-        [Test]
-        [TestCase("PERF-POSTGRESQL-SYSBENCH-OLTP.json", PlatformID.Unix, Architecture.X64)]
-        public void PostgreSQLSysbenchOLTPWorkloadProfileActionsWillNotBeExecutedIfTheWorkloadPackageDoesNotExist(string profile, PlatformID platform, Architecture architecture)
-        {
-            this.fixture.Setup(platform);
-            this.fixture.PackageManager.Clear();
-
-            using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(profile, this.fixture.Dependencies))
-            {
-                executor.ExecuteDependencies = false;
-
-                DependencyException error = Assert.ThrowsAsync<DependencyException>(() => executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None));
-                Assert.IsTrue(error.Reason == ErrorReason.WorkloadDependencyMissing);
-            }
-        }
-
-        [Test]
-        [TestCase("PERF-POSTGRESQL-SYSBENCH-OLTP.json", PlatformID.Unix, Architecture.X64)]
-        [Ignore("This functional test takes more than a minute to run. There is likely a Task.Delay somewhere that needs to be designed better to avoid long blocking behavior")]
-        public async Task PostgreSQLSysbenchOLTPWorkloadProfileExecutesTheExpectedWorkloadsOnUnixPlatform(string profile, PlatformID platform, Architecture architecture)
-        {
-            this.fixture.Setup(platform, architecture, this.clientAgentId).SetupLayout(
-                new ClientInstance(this.clientAgentId, "1.2.3.4", "Client"),
-                new ClientInstance(this.serverAgentId, "1.2.3.5", "Server"));
-
-            this.SetupApiClient(this.serverAgentId, serverIPAddress: "1.2.3.5");
-
-            this.sysbenchPackagePath = this.fixture.GetPackagePath("sysbench");
-            this.fixture.SetupPackage("sysbench");
-            this.fixture.SetupDirectory(this.sysbenchPackagePath);
-
-            IEnumerable<string> expectedCommands = this.GetProfileExpectedCommands(singleVM: false, benchmark: "OLTP", databaseSystem: "PostgreSQL");
-
-            this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
-            {
-                IProcessProxy process = this.fixture.CreateProcess(command, arguments, workingDir);
-                if (arguments.Contains("run", StringComparison.OrdinalIgnoreCase))
-                {
-                    process.StandardOutput.Append(MockFixture.ReadTestResourcesFile("Results_Sysbench.txt"));
-                }
-
-                return process;
-            };
-
-            using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(profile, this.fixture.Dependencies))
-            {
-                await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
-                WorkloadAssert.CommandsExecuted(this.fixture, expectedCommands.ToArray());
-            }
-        }
-
-        [Test]
-        [TestCase("PERF-POSTGRESQL-SYSBENCH-OLTP.json", PlatformID.Unix, Architecture.X64)]
-        [Ignore("This functional test takes more than a minute to run. There is likely a Task.Delay somewhere that needs to be designed better to avoid long blocking behavior")]
-        public async Task PostgreSQLSysbenchOLTPWorkloadProfileExecutesTheExpectedWorkloadsOnSingleVMUnixPlatform(string profile, PlatformID platform, Architecture architecture)
-        {
-            this.fixture.Setup(platform, architecture, this.clientAgentId).SetupLayout(
-                new ClientInstance(this.clientAgentId, "1.2.3.4", "Server"));
-
-            this.fixture.Setup(platform);
-            this.fixture.SetupDisks(withUnformatted: true);
-
-            this.sysbenchPackagePath = this.fixture.PlatformSpecifics.GetPackagePath("sysbench");
-            DependencyPath postgreSQLPackage = new DependencyPath("postgresql", this.fixture.GetPackagePath("postgresql"));
-            this.postgreSQLPackagePath = this.fixture.ToPlatformSpecificPath(postgreSQLPackage, platform, architecture).Path;
-
-            this.fixture.SetupPackage("sysbench");
-            this.fixture.SetupPackage("postgresql", new Dictionary<string, IConvertible>() { { $"InstallationPath-{this.fixture.PlatformSpecifics.PlatformArchitectureName}", "/etc/postgresql/14/main" } });
-
-            this.fixture.SetupDirectory(this.sysbenchPackagePath);
-            this.fixture.SetupDirectory(this.postgreSQLPackagePath);
-
-            IEnumerable<string> expectedCommands = this.GetProfileExpectedCommands(singleVM: true, benchmark: "OLTP", databaseSystem: "PostgreSQL");
-
-            this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
-            {
-                IProcessProxy process = this.fixture.CreateProcess(command, arguments, workingDir);
-                if (arguments.Contains("run", StringComparison.OrdinalIgnoreCase))
-                {
-                    process.StandardOutput.Append(MockFixture.ReadTestResourcesFile("Results_Sysbench.txt"));
-                }
-
-                return process;
-            };
-
-            using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(profile, this.fixture.Dependencies))
-            {
-                await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
-
-                WorkloadAssert.DisksAreInitialized(this.fixture);
-                WorkloadAssert.DisksHaveAccessPaths(this.fixture);
-
-                WorkloadAssert.WorkloadPackageInstalled(this.fixture, "sysbench");
-
-                WorkloadAssert.CommandsExecuted(this.fixture, expectedCommands.ToArray());
-            }
-        }
-
-        [Test]
         [TestCase("PERF-POSTGRESQL-SYSBENCH-TPCC.json")]
-        public void PostgreSQLSysbenchTPCCWorkloadProfileParametersAreInlinedCorrectly(string profile)
+        public void SysbenchWorkloadProfileParametersAreInlinedCorrectly(string profile)
         {
             using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(profile, this.fixture.Dependencies))
             {
@@ -384,11 +53,12 @@ namespace VirtualClient.Actions
             }
         }
 
-        [Test]
-        [TestCase("PERF-POSTGRESQL-SYSBENCH-TPCC.json", PlatformID.Unix, Architecture.X64)]
-        public void PostgreSQLSysbenchTPCCWorkloadProfileActionsWillNotBeExecutedIfTheWorkloadPackageDoesNotExist(string profile, PlatformID platform, Architecture architecture)
+        [TestCase("PERF-MYSQL-SYSBENCH-OLTP.json")]
+        [TestCase("PERF-MYSQL-SYSBENCH-TPCC.json")]
+        [TestCase("PERF-POSTGRESQL-SYSBENCH-OLTP.json")]
+        [TestCase("PERF-POSTGRESQL-SYSBENCH-TPCC.json")]
+        public void SysbenchWorkloadProfileActionsWillNotBeExecutedIfTheWorkloadPackageDoesNotExist(string profile)
         {
-            this.fixture.Setup(platform);
             this.fixture.PackageManager.Clear();
 
             using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(profile, this.fixture.Dependencies))
@@ -396,30 +66,37 @@ namespace VirtualClient.Actions
                 executor.ExecuteDependencies = false;
 
                 DependencyException error = Assert.ThrowsAsync<DependencyException>(() => executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None));
-                Assert.IsTrue(error.Reason == ErrorReason.WorkloadDependencyMissing);
+                Assert.AreEqual(ErrorReason.WorkloadDependencyMissing, error.Reason);
             }
         }
 
-        [Test]
-        [TestCase("PERF-POSTGRESQL-SYSBENCH-TPCC.json", PlatformID.Unix, Architecture.X64)]
-        public async Task PostgreSQLSysbenchTPCCWorkloadProfileExecutesTheExpectedWorkloadsOnUnixPlatform(string profile, PlatformID platform, Architecture architecture)
+        [TestCase("PERF-MYSQL-SYSBENCH-TPCC.json", "MySQL")]
+        [TestCase("PERF-POSTGRESQL-SYSBENCH-TPCC.json", "PostgreSQL")]
+        public async Task SysbenchTPCCProfileExecutesExpectedClientCommands(string profile, string databaseSystem)
         {
-            this.fixture.Setup(platform, architecture, this.clientAgentId).SetupLayout(
+            this.fixture.Setup(PlatformID.Unix, Architecture.X64, this.clientAgentId).SetupLayout(
                 new ClientInstance(this.clientAgentId, "1.2.3.4", "Client"),
                 new ClientInstance(this.serverAgentId, "1.2.3.5", "Server"));
 
-            this.SetupApiClient(this.serverAgentId, serverIPAddress: "1.2.3.5");
+            this.fixture.ApiClientManager.GetOrCreateApiClient("1.2.3.5", IPAddress.Parse("1.2.3.5"));
 
-            this.sysbenchPackagePath = this.fixture.GetPackagePath("sysbench");
+            string sysbenchPackagePath = this.fixture.GetPackagePath("sysbench");
             this.fixture.SetupPackage("sysbench");
-            this.fixture.SetupDirectory(this.sysbenchPackagePath);
+            this.fixture.SetupDirectory(sysbenchPackagePath);
 
-            IEnumerable<string> expectedCommands = this.GetProfileExpectedCommands(singleVM: false, benchmark: "TPCC", databaseSystem: "PostgreSQL");
+            string[] expectedCommands =
+            {
+                "apt install python3 --yes --quiet",
+                $"python3 {sysbenchPackagePath}/configure-workload-generator.py --distro Ubuntu --databaseSystem {databaseSystem} --packagePath {sysbenchPackagePath}",
+                $"python3 {sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem {databaseSystem} --benchmark TPCC --threadCount 8 --tableCount 10 --warehouses 1 --workload tpcc --hostIpAddress 1.2.3.5 --durationSecs 1800"
+            };
 
             this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
+                StringAssert.DoesNotContain("--password", arguments);
+                StringAssert.DoesNotContain("test-postgresql-password", arguments);
                 IProcessProxy process = this.fixture.CreateProcess(command, arguments, workingDir);
-                if (arguments.Contains("run", StringComparison.OrdinalIgnoreCase))
+                if (arguments.Contains("run-workload.py", StringComparison.OrdinalIgnoreCase))
                 {
                     process.StandardOutput.Append(MockFixture.ReadTestResourcesFile("Results_Sysbench.txt"));
                 }
@@ -430,231 +107,8 @@ namespace VirtualClient.Actions
             using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(profile, this.fixture.Dependencies))
             {
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
-                WorkloadAssert.CommandsExecuted(this.fixture, expectedCommands.ToArray());
+                WorkloadAssert.CommandsExecuted(this.fixture, expectedCommands);
             }
-        }
-
-        [Test]
-        [TestCase("PERF-POSTGRESQL-SYSBENCH-TPCC.json", PlatformID.Unix, Architecture.X64)]
-        [Ignore("This functional test takes more than a minute to run. There is likely a Task.Delay somewhere that needs to be designed better to avoid long blocking behavior")]
-        public async Task PostgreSQLSysbenchTPCCWorkloadProfileExecutesTheExpectedWorkloadsOnSingleVMUnixPlatform(string profile, PlatformID platform, Architecture architecture)
-        {
-            this.fixture.Setup(platform, architecture, this.clientAgentId).SetupLayout(
-                new ClientInstance(this.clientAgentId, "1.2.3.4", "Server"));
-
-            this.fixture.Setup(platform);
-            this.fixture.SetupDisks(withUnformatted: true);
-
-            this.sysbenchPackagePath = this.fixture.PlatformSpecifics.GetPackagePath("sysbench");
-            DependencyPath postgreSQLPackage = new DependencyPath("postgresql", this.fixture.GetPackagePath("postgresql"));
-            this.postgreSQLPackagePath = this.fixture.ToPlatformSpecificPath(postgreSQLPackage, platform, architecture).Path;
-
-            this.fixture.SetupPackage("sysbench");
-            this.fixture.SetupPackage("postgresql", new Dictionary<string, IConvertible>() { { $"InstallationPath-{this.fixture.PlatformSpecifics.PlatformArchitectureName}", "/etc/postgresql/14/main" } });
-
-            this.fixture.SetupDirectory(this.sysbenchPackagePath);
-            this.fixture.SetupDirectory(this.postgreSQLPackagePath);
-
-            IEnumerable<string> expectedCommands = this.GetProfileExpectedCommands(singleVM: true, benchmark: "TPCC", databaseSystem: "PostgreSQL");
-
-            this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
-            {
-                IProcessProxy process = this.fixture.CreateProcess(command, arguments, workingDir);
-                if (arguments.Contains("run", StringComparison.OrdinalIgnoreCase))
-                {
-                    process.StandardOutput.Append(MockFixture.ReadTestResourcesFile("Results_Sysbench.txt"));
-                }
-
-                return process;
-            };
-
-            using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(profile, this.fixture.Dependencies))
-            {
-                await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
-
-                WorkloadAssert.DisksAreInitialized(this.fixture);
-                WorkloadAssert.DisksHaveAccessPaths(this.fixture);
-
-                WorkloadAssert.WorkloadPackageInstalled(this.fixture, "sysbench");
-
-                WorkloadAssert.CommandsExecuted(this.fixture, expectedCommands.ToArray());
-            }
-        }
-
-        private IEnumerable<string> GetProfileExpectedCommands(bool singleVM, string databaseSystem, string benchmark)
-        {
-            if (databaseSystem == "MySQL")
-            {
-                if (singleVM)
-                {
-                    string currentDirectory = this.fixture.PlatformSpecifics.CurrentDirectory;
-
-                    if (benchmark == "OLTP")
-                    {
-                        return new List<string>()
-                        {
-                            "apt install python3 --yes --quiet",
-
-                            $"python3 {this.mySQLPackagePath}/install.py --distro Ubuntu",
-                            $"python3 {this.mySQLPackagePath}/configure.py --serverIp 127.0.0.1 --innoDbDirs \"/mnt_vc_0;/mnt_vc_1;/mnt_vc_2;\"",
-                            $"python3 {this.mySQLPackagePath}/setup-database.py --dbName sbtest",
-
-                            $"python3 {this.sysbenchPackagePath}/configure-workload-generator.py --distro Ubuntu --databaseSystem MySQL --packagePath {this.sysbenchPackagePath}",
-
-                            $"python3 {this.sysbenchPackagePath}/populate-database.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1",
-                            $"python3 {this.mySQLPackagePath}/distribute-database.py --dbName sbtest --directories \"/mnt_vc_0;/mnt_vc_1;/mnt_vc_2;\"",
-                            $"python3 {this.sysbenchPackagePath}/populate-database.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000",
-
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --workload oltp_read_write --hostIpAddress 127.0.0.1 --durationSecs 300",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --workload oltp_read_only --hostIpAddress 127.0.0.1 --durationSecs 300",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --workload oltp_delete --hostIpAddress 127.0.0.1 --durationSecs 300",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --workload oltp_insert --hostIpAddress 127.0.0.1 --durationSecs 300",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --workload oltp_update_index --hostIpAddress 127.0.0.1 --durationSecs 300",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --workload oltp_update_non_index --hostIpAddress 127.0.0.1 --durationSecs 300",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --threadCount 8 --tableCount 1 --recordCount 1000 --workload select_random_points --hostIpAddress 127.0.0.1 --durationSecs 300",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --threadCount 8 --tableCount 1 --recordCount 1000 --workload select_random_ranges --hostIpAddress 127.0.0.1 --durationSecs 300"
-                        };
-                    }
-                    else
-                    {
-                        return new List<string>()
-                        {
-                            "apt install python3 --yes --quiet",
-
-                            $"python3 {this.mySQLPackagePath}/install.py --distro Ubuntu",
-                            $"python3 {this.mySQLPackagePath}/configure.py --serverIp 127.0.0.1 --innoDbDirs \"/mnt_vc_0;/mnt_vc_1;/mnt_vc_2;\"",
-                            $"python3 {this.mySQLPackagePath}/setup-database.py --dbName sbtest",
-
-                            $"python3 {this.sysbenchPackagePath}/configure-workload-generator.py --distro Ubuntu --databaseSystem MySQL --packagePath {this.sysbenchPackagePath}",
-
-                            $"python3 {this.sysbenchPackagePath}/populate-database.py --dbName sbtest --databaseSystem MySQL --benchmark TPCC --threadCount 8 --tableCount 10 --warehouses 1",
-                            $"python3 {this.mySQLPackagePath}/distribute-database.py --dbName sbtest --directories \"/mnt_vc_0;/mnt_vc_1;/mnt_vc_2;\"",
-                            $"python3 {this.sysbenchPackagePath}/populate-database.py --dbName sbtest --databaseSystem MySQL --benchmark TPCC --threadCount 8 --tableCount 10 --warehouses 0",
-
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark TPCC --threadCount 8 --tableCount 10 --warehouses 1 --workload tpcc --hostIpAddress 127.0.0.1 --durationSecs 1800",
-                        };
-                    }
-                }
-                else
-                {
-                    if (benchmark == "OLTP")
-                    {
-                        return new List<string>()
-                        {
-                            "apt install python3 --yes --quiet",
-
-                            $"python3 {this.sysbenchPackagePath}/configure-workload-generator.py --distro Ubuntu --databaseSystem MySQL --packagePath {this.sysbenchPackagePath}",
-
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --workload oltp_read_write --hostIpAddress 1.2.3.5 --durationSecs 300",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --workload oltp_read_only --hostIpAddress 1.2.3.5 --durationSecs 300",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --workload oltp_delete --hostIpAddress 1.2.3.5 --durationSecs 300",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --workload oltp_insert --hostIpAddress 1.2.3.5 --durationSecs 300",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --workload oltp_update_index --hostIpAddress 1.2.3.5 --durationSecs 300",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --workload oltp_update_non_index --hostIpAddress 1.2.3.5 --durationSecs 300",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --threadCount 8 --tableCount 1 --recordCount 1000 --workload select_random_points --hostIpAddress 1.2.3.5 --durationSecs 300",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark OLTP --threadCount 8 --tableCount 1 --recordCount 1000 --workload select_random_ranges --hostIpAddress 1.2.3.5 --durationSecs 300"
-                        };
-                    }
-                    else
-                    {
-                        return new List<string>()
-                        {
-                            "apt install python3 --yes --quiet",
-                            $"python3 {this.sysbenchPackagePath}/configure-workload-generator.py --distro Ubuntu --databaseSystem MySQL --packagePath {this.sysbenchPackagePath}",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem MySQL --benchmark TPCC --threadCount 8 --tableCount 10 --warehouses 1 --workload tpcc --hostIpAddress 1.2.3.5 --durationSecs 1800",
-                        };
-                    }
-                }
-            }
-            else
-            {
-                if (singleVM)
-                {
-                    string currentDirectory = this.fixture.PlatformSpecifics.CurrentDirectory;
-
-                    if (benchmark == "OLTP")
-                    {
-                        return new List<string>()
-                        {
-                            "apt install python3 --yes --quiet",
-
-                            $"python3 {this.postgreSQLPackagePath}/install-server.py",
-                            $"python3 {this.postgreSQLPackagePath}/configure-server.py --dbName sbtest --serverIp 127.0.0.1 --port 5432 --inMemory [0-9]+",
-                            $"python3 {this.postgreSQLPackagePath}/setup-database.py --dbName sbtest --port 5432",
-
-                            $"python3 {this.sysbenchPackagePath}/configure-workload-generator.py --distro Ubuntu --databaseSystem PostgreSQL --packagePath {this.sysbenchPackagePath}",
-
-                            $"python3 {this.sysbenchPackagePath}/populate-database.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1",
-                            $"python3 {this.postgreSQLPackagePath}/distribute-database.py --dbName sbtest --directories \"/mnt_vc_0;/mnt_vc_1;/mnt_vc_2;\" --password [A-Za-z0-9+/=]+",
-                            $"python3 {this.sysbenchPackagePath}/populate-database.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000",
-
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --workload oltp_read_write --hostIpAddress 127.0.0.1 --durationSecs 300",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --workload oltp_read_only --hostIpAddress 127.0.0.1 --durationSecs 300",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --workload oltp_delete --hostIpAddress 127.0.0.1 --durationSecs 300",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --workload oltp_insert --hostIpAddress 127.0.0.1 --durationSecs 300",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --workload oltp_update_index --hostIpAddress 127.0.0.1 --durationSecs 300",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --workload oltp_update_non_index --hostIpAddress 127.0.0.1 --durationSecs 300",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 8 --tableCount 1 --recordCount 1000 --workload select_random_points --hostIpAddress 127.0.0.1 --durationSecs 300",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 8 --tableCount 1 --recordCount 1000 --workload select_random_ranges --hostIpAddress 127.0.0.1 --durationSecs 300"
-                        };
-                    }
-                    else
-                    {
-                        return new List<string>()
-                        {
-                            "apt install python3 --yes --quiet",
-
-                            $"python3 {this.postgreSQLPackagePath}/install-server.py",
-                            $"python3 {this.postgreSQLPackagePath}/configure-server.py --dbName sbtest --serverIp 127.0.0.1 --port 5432 --inMemory [0-9]+",
-                            $"python3 {this.postgreSQLPackagePath}/setup-database.py --dbName sbtest --port 5432",
-
-                            $"python3 {this.sysbenchPackagePath}/configure-workload-generator.py --distro Ubuntu --databaseSystem PostgreSQL --packagePath {this.sysbenchPackagePath}",
-
-                            $"python3 {this.sysbenchPackagePath}/populate-database.py --dbName sbtest --databaseSystem PostgreSQL --benchmark TPCC --threadCount 8 --tableCount 10 --warehouses 1",
-                            $"python3 {this.postgreSQLPackagePath}/distribute-database.py --dbName sbtest --directories \"/mnt_vc_0;/mnt_vc_1;/mnt_vc_2;\" --password [A-Za-z0-9+/=]+",
-                            $"python3 {this.sysbenchPackagePath}/populate-database.py --dbName sbtest --databaseSystem PostgreSQL --benchmark TPCC --threadCount 8 --tableCount 10 --warehouses 0",
-
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark TPCC --threadCount 8 --tableCount 10 --warehouses 1 --workload tpcc --hostIpAddress 127.0.0.1 --durationSecs 1800",
-                        };
-                    }
-                }
-                else
-                {
-                    if (benchmark == "OLTP")
-                    {
-                        return new List<string>()
-                        {
-                            "apt install python3 --yes --quiet",
-
-                            $"python3 {this.sysbenchPackagePath}/configure-workload-generator.py --distro Ubuntu --databaseSystem PostgreSQL --packagePath {this.sysbenchPackagePath}",
-
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --workload oltp_read_write --hostIpAddress 1.2.3.5 --durationSecs 300",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --workload oltp_read_only --hostIpAddress 1.2.3.5 --durationSecs 300",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --workload oltp_delete --hostIpAddress 1.2.3.5 --durationSecs 300",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --workload oltp_insert --hostIpAddress 1.2.3.5 --durationSecs 300",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --workload oltp_update_index --hostIpAddress 1.2.3.5 --durationSecs 300",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 8 --tableCount 10 --recordCount 1000 --workload oltp_update_non_index --hostIpAddress 1.2.3.5 --durationSecs 300",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 8 --tableCount 1 --recordCount 1000 --workload select_random_points --hostIpAddress 1.2.3.5 --durationSecs 300",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark OLTP --threadCount 8 --tableCount 1 --recordCount 1000 --workload select_random_ranges --hostIpAddress 1.2.3.5 --durationSecs 300"
-                        };
-                    }
-                    else
-                    {
-                        return new List<string>()
-                        {
-                            "apt install python3 --yes --quiet",
-                            $"python3 {this.sysbenchPackagePath}/configure-workload-generator.py --distro Ubuntu --databaseSystem PostgreSQL --packagePath {this.sysbenchPackagePath}",
-                            $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --databaseSystem PostgreSQL --benchmark TPCC --threadCount 8 --tableCount 10 --warehouses 1 --workload tpcc --hostIpAddress 1.2.3.5 --durationSecs 1800",
-                        };
-                    }
-                }
-            }
-        }
-
-        private void SetupApiClient(string serverName, string serverIPAddress)
-        {
-            IPAddress.TryParse(serverIPAddress, out IPAddress ipAddress);
-            IApiClient apiClient = this.fixture.ApiClientManager.GetOrCreateApiClient(serverIPAddress, ipAddress);
         }
     }
 }

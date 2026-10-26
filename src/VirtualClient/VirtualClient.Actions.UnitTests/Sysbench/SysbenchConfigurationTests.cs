@@ -178,10 +178,15 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("MySQL")]
-        [TestCase("PostgreSQL")]
-        public async Task SysbenchConfigurationPreparesDatabase(string databaseSystem)
+        [TestCase("MySQL", null)]
+        [TestCase("MySQL", "password with 'quotes' and $symbols")]
+        [TestCase("PostgreSQL", null)]
+        [TestCase("PostgreSQL", "password with 'quotes' and $symbols")]
+        [TestCase("postgresql", null)]
+        public async Task SysbenchConfigurationPreparesDatabase(string databaseSystem, string environmentPassword)
         {
+            Environment.SetEnvironmentVariable("PGPASSWORD", environmentPassword);
+            bool isPostgreSQL = string.Equals(databaseSystem, "PostgreSQL", StringComparison.OrdinalIgnoreCase);
             this.fixture.Parameters[nameof(SysbenchConfiguration.DatabaseSystem)] = databaseSystem;
             const string filePassword = "file-password-with-$symbols";
             this.fixture.Parameters["PostgreSQLPasswordFile"] = "/secure/Password.json";
@@ -199,12 +204,12 @@ namespace VirtualClient.Actions
             this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 StringAssert.DoesNotContain("--password", arguments);
-                if (databaseSystem == "PostgreSQL")
+                if (!string.IsNullOrEmpty(environmentPassword))
                 {
-                    StringAssert.DoesNotContain(Environment.GetEnvironmentVariable("PGPASSWORD"), arguments);
-                    StringAssert.DoesNotContain(filePassword, arguments);
+                    StringAssert.DoesNotContain(environmentPassword, arguments);
                 }
 
+                StringAssert.DoesNotContain(filePassword, arguments);
                 string expectedCommand = expectedCommands[commandNumber];
 
                 if (Regex.Match($"{exe} {arguments}", expectedCommand).Success)
@@ -228,7 +233,7 @@ namespace VirtualClient.Actions
                     OnHasExited = () => true
                 };
 
-                if (databaseSystem == "PostgreSQL" && arguments.Contains("populate-database.py"))
+                if (isPostgreSQL && arguments.Contains("populate-database.py"))
                 {
                     process.OnStart = () =>
                     {
@@ -244,6 +249,11 @@ namespace VirtualClient.Actions
             {
                 await SysbenchExecutor.ExecuteAsync(CancellationToken.None);
             }
+
+            Assert.AreEqual(expectedCommands.Length, commandNumber);
+            this.fixture.File.Verify(
+                file => file.ReadAllTextAsync("/secure/Password.json", It.IsAny<CancellationToken>()),
+                isPostgreSQL ? Times.Once() : Times.Never());
         }
 
         [Test]

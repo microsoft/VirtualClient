@@ -16,7 +16,6 @@ namespace VirtualClient.Dependencies
     using NUnit.Framework;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
-    using VirtualClient.Dependencies.MySqlServer;
 
     [TestFixture]
     [Category("Unit")]
@@ -257,15 +256,15 @@ namespace VirtualClient.Dependencies
         }
 
         [Test]
-        [TestCase(PlatformID.Unix, Architecture.X64)]
-        [TestCase(PlatformID.Win32NT, Architecture.X64)]
-        public async Task PostgreSQLConfigurationSkipsDatabaseCreationWhenOneExists(PlatformID platform, Architecture architecture)
+        [TestCase("ConfigureServer")]
+        [TestCase("SetupDatabase")]
+        public async Task PostgreSQLConfigurationSkipsCompletedConfigurationAction(string action)
         {
-            this.SetupTest(platform, architecture);
-            this.mockFixture.Parameters["Action"] = "CreateDatabase";
+            this.SetupTest(PlatformID.Unix, Architecture.X64);
+            this.mockFixture.Parameters["Action"] = action;
 
             this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(
-                new MySQLServerConfiguration.ConfigurationState(MySQLServerConfiguration.ConfigurationAction.CreateDatabase)));
+                new PostgreSQLServerConfiguration.ConfigurationState(action)));
 
             int commandsExecuted = 0;
 
@@ -297,33 +296,26 @@ namespace VirtualClient.Dependencies
         }
 
         [Test]
-        public void PostgreSQLServerConfigurationReadsPasswordFromEnvironment()
-        {
-            this.SetupTest(PlatformID.Unix, Architecture.X64);
-
-            using TestPostgreSQLServerConfiguration component = new TestPostgreSQLServerConfiguration(this.mockFixture);
-            Assert.AreEqual(Environment.GetEnvironmentVariable("PGPASSWORD"), component.GetSuperUserPassword());
-        }
-
-        [Test]
         [TestCase("ConfigureServer")]
         [TestCase("SetupDatabase")]
-        public void PostgreSQLServerConfigurationRejectsMissingPasswordBeforeStartingProcess(string action)
+        public void PostgreSQLServerConfigurationRejectsMissingCredentialsBeforeStartingProcess(string action)
         {
             this.SetupTest(PlatformID.Unix, Architecture.X64);
             this.mockFixture.Parameters["Action"] = action;
             Environment.SetEnvironmentVariable("PGPASSWORD", null);
+            this.mockFixture.File.Setup(file => file.Exists(this.mockFixture.PlatformSpecifics.Combine(this.packagePath, "Password.json")))
+                .Returns(false);
 
             this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
             {
-                Assert.Fail("No process should start without PGPASSWORD.");
+                Assert.Fail("No process should start without PostgreSQL credentials.");
                 return this.mockFixture.Process;
             };
 
             using TestPostgreSQLServerConfiguration component = new TestPostgreSQLServerConfiguration(this.mockFixture);
             DependencyException exception = Assert.ThrowsAsync<DependencyException>(() => component.ExecuteAsync(CancellationToken.None));
             Assert.AreEqual(ErrorReason.InvalidProfileDefinition, exception.Reason);
-            StringAssert.Contains("PGPASSWORD", exception.Message);
+            StringAssert.Contains("password file", exception.Message);
         }
 
         [Test]

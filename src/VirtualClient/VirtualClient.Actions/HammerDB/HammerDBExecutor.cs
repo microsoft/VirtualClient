@@ -22,7 +22,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Contracts;
 
     /// <summary>
-    /// PostgreSQL Executor
+    /// Prepares PostgreSQL databases for HammerDB workloads.
     /// </summary>
     [SupportedPlatforms("linux-x64")]
     public class HammerDBExecutor : VirtualClientComponent
@@ -46,18 +46,6 @@ namespace VirtualClient.Actions
             };
 
             this.stateManager = this.SystemManager.StateManager;
-        }
-
-        /// <summary>
-        /// The specifed action that controls the execution of the dependency.
-        /// </summary>
-        public string Action
-        {
-            get
-            {
-                this.Parameters.TryGetValue(nameof(this.Action), out IConvertible action);
-                return action?.ToString();
-            }
         }
 
         /// <summary>
@@ -144,7 +132,7 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// The workload option passed to HammerDB.
+        /// The database engine option passed to HammerDB (e.g. postgresql).
         /// </summary>
         public string SQLServer
         {
@@ -167,7 +155,7 @@ namespace VirtualClient.Actions
         protected CancellationTokenSource ServerCancellationSource { get; set; }
 
         /// <summary>
-        /// Server IpAddress on which MySQL Server runs.
+        /// IP address of the PostgreSQL server.
         /// </summary>
         protected string ServerIpAddress { get; set; }
 
@@ -177,7 +165,7 @@ namespace VirtualClient.Actions
         protected string HammerDBPackagePath { get; set; }
 
         /// <summary>
-        /// The true HammerDB scenario arguments used to prepare the database.
+        /// The HammerDB configuration script arguments.
         /// </summary>
         protected string HammerDBScenarioArguments { get; set; }
 
@@ -185,23 +173,6 @@ namespace VirtualClient.Actions
         /// An interface that can be used to communicate with the underlying system.
         /// </summary>
         protected ISystemManagement SystemManager => this.Dependencies.GetService<ISystemManagement>();
-
-        /// <summary>
-        /// Gets the PostgreSQL superuser password from PGPASSWORD.
-        /// </summary>
-        /// <returns>The PostgreSQL superuser password.</returns>
-        public string GetSuperUserPassword()
-        {
-            string password = Environment.GetEnvironmentVariable("PGPASSWORD");
-            if (string.IsNullOrEmpty(password))
-            {
-                throw new WorkloadException(
-                    "The PGPASSWORD environment variable must be set before running HammerDB.",
-                    ErrorReason.InvalidProfileDefinition);
-            }
-
-            return password;
-        }
 
         /// <summary>
         /// Executes the workload.
@@ -262,7 +233,8 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Reads PostgreSQL credentials from an explicit file, the process environment, or the platform-specific PostgreSQL package.
+        /// Reads the explicit PostgreSQL password file first, otherwise uses non-empty PGPASSWORD,
+        /// otherwise reads Password.json in the platform-specific PostgreSQL package.
         /// </summary>
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
         /// <returns>The password to supply only to the database child process environment.</returns>
@@ -308,8 +280,7 @@ namespace VirtualClient.Actions
             if (string.IsNullOrEmpty(password))
             {
                 throw new DependencyException(
-                    "The PostgreSQL password file must contain a non-empty string named 'Password'. " +
-                    "Provision Password.json in the platform-specific postgresql package, set PostgreSQLPasswordFile, or supply PGPASSWORD.",
+                    "The selected PostgreSQL password file must exist and contain a non-empty string named 'Password'.",
                     ErrorReason.InvalidProfileDefinition);
             }
 
@@ -347,8 +318,6 @@ namespace VirtualClient.Actions
         /// </summary>
         protected async Task InitializeExecutablesAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            // store state with initialization status & record/table counts, if does not exist already
-
             HammerDBState state = await this.stateManager.GetStateAsync<HammerDBState>(nameof(HammerDBState), cancellationToken)
                 ?? new HammerDBState();
 

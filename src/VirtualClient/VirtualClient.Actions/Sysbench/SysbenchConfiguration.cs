@@ -15,7 +15,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Contracts.Metadata;
 
     /// <summary>
-    /// Configures the MySQL database for Sysbench use.
+    /// Populates or cleans up MySQL and PostgreSQL tables for Sysbench.
     /// </summary>
     public class SysbenchConfiguration : SysbenchExecutor
     {
@@ -132,7 +132,7 @@ namespace VirtualClient.Actions
                         ? await this.GetPostgreSQLPasswordAsync(cancellationToken).ConfigureAwait(false)
                         : null;
                     string sysbenchLoggingArguments = this.BuildSysbenchLoggingArguments();
-                    this.sysbenchPopulationArguments = $"{sysbenchLoggingArguments}{this.PasswordArguments} --hostIpAddress \"{serverIp}\"";
+                    this.sysbenchPopulationArguments = $"{sysbenchLoggingArguments} --hostIpAddress \"{serverIp}\"";
 
                     string script = $"{this.SysbenchPackagePath}/populate-database.py";
 
@@ -222,7 +222,7 @@ namespace VirtualClient.Actions
         internal class ConfigurationAction
         {
             /// <summary>
-            /// Creates Database on MySQL server and Users on Server and any Clients.
+            /// Populates the tables used by the Sysbench benchmark.
             /// </summary>
             public const string PopulateTables = nameof(PopulateTables);
 

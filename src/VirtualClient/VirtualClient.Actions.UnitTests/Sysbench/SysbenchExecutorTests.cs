@@ -4,29 +4,15 @@
 namespace VirtualClient.Actions
 {
     using System;
-    using System.CodeDom.Compiler;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.IO;
-    using System.Linq;
-    using System.Net;
-    using System.Net.Http;
-    using System.Reflection;
     using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
-    using AutoFixture;
     using Microsoft.Extensions.DependencyInjection;
     using Moq;
-    using Newtonsoft.Json;
-    using Newtonsoft.Json.Linq;
     using NUnit.Framework;
-    using Polly;
-    using VirtualClient.Common;
-    using VirtualClient.Common.Extensions;
-    using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
-    using static VirtualClient.Actions.SysbenchExecutor;
 
     [TestFixture]
     [Category("Unit")]
@@ -35,8 +21,6 @@ namespace VirtualClient.Actions
     {
         private MockFixture fixture;
         private DependencyPath mockPackage;
-        private string scriptPath;
-        private string mockPackagePath;
         private string originalPassword;
 
         [SetUp]
@@ -48,9 +32,6 @@ namespace VirtualClient.Actions
             this.fixture.Setup(PlatformID.Unix);
             this.mockPackage = new DependencyPath("sysbench", this.fixture.PlatformSpecifics.GetPackagePath("sysbench"));
             this.fixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPackage);
-
-            this.mockPackagePath = this.mockPackage.Path;
-            this.scriptPath = this.fixture.PlatformSpecifics.GetScriptPath("sysbench");
 
             this.fixture.Layout = new EnvironmentLayout(new List<ClientInstance>
             {
@@ -157,7 +138,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public void SysbenchOLTPExecutorThrowsOnUnsupportedDistroAsync()
+        public void SysbenchExecutorThrowsOnUnsupportedDistroAsync()
         {
             LinuxDistributionInfo mockInfo = new LinuxDistributionInfo()
             {
@@ -174,90 +155,6 @@ namespace VirtualClient.Actions
             }
         }
 
-        [Test]
-        [TestCase("PostgreSQL")]
-        [TestCase("postgresql")]
-        public void SysbenchPostgreSQLPasswordComesFromEnvironmentAndIsNotAnArgument(string databaseSystem)
-        {
-            string originalPassword = Environment.GetEnvironmentVariable("PGPASSWORD");
-            try
-            {
-                const string password = "password with 'quotes' and $symbols";
-                Environment.SetEnvironmentVariable("PGPASSWORD", password);
-                this.fixture.Parameters[nameof(SysbenchExecutor.DatabaseSystem)] = databaseSystem;
-
-                using TestSysbenchExecutor executor = new TestSysbenchExecutor(this.fixture.Dependencies, this.fixture.Parameters);
-                Assert.AreEqual(password, executor.GetSuperUserPassword());
-                Assert.AreEqual(string.Empty, executor.PasswordArguments);
-            }
-            finally
-            {
-                Environment.SetEnvironmentVariable("PGPASSWORD", originalPassword);
-            }
-        }
-
-        [Test]
-        [TestCase(null)]
-        [TestCase("")]
-        public void SysbenchPostgreSQLRejectsMissingPassword(string password)
-        {
-            string originalPassword = Environment.GetEnvironmentVariable("PGPASSWORD");
-            try
-            {
-                Environment.SetEnvironmentVariable("PGPASSWORD", password);
-                this.fixture.Parameters[nameof(SysbenchExecutor.DatabaseSystem)] = "PostgreSQL";
-
-                using TestSysbenchExecutor executor = new TestSysbenchExecutor(this.fixture.Dependencies, this.fixture.Parameters);
-                WorkloadException exception = Assert.Throws<WorkloadException>(() => executor.GetSuperUserPassword());
-                Assert.AreEqual(ErrorReason.InvalidProfileDefinition, exception.Reason);
-                StringAssert.Contains("PGPASSWORD", exception.Message);
-            }
-            finally
-            {
-                Environment.SetEnvironmentVariable("PGPASSWORD", originalPassword);
-            }
-        }
-
-        [Test]
-        [TestCase(null)]
-        [TestCase("postgresql-secret-with-'quotes'-and-$symbols")]
-        public async Task SysbenchMySQLPasswordArgumentsDoNotDependOnPostgreSQLPassword(string password)
-        {
-            string originalPassword = Environment.GetEnvironmentVariable("PGPASSWORD");
-            try
-            {
-                Environment.SetEnvironmentVariable("PGPASSWORD", password);
-                this.fixture.Parameters[nameof(SysbenchExecutor.DatabaseSystem)] = "MySQL";
-
-                using TestSysbenchExecutor executor = new TestSysbenchExecutor(this.fixture.Dependencies, this.fixture.Parameters);
-                StringAssert.IsMatch("^[A-F0-9]{64}$", executor.GetSuperUserPassword());
-                Assert.AreEqual(string.Empty, executor.PasswordArguments);
-                if (password != null)
-                {
-                    StringAssert.DoesNotContain(password, executor.PasswordArguments);
-                }
-
-                using IProcessProxy process = await executor.ExecuteCommandAsync(
-                    "python3",
-                    $"run-workload.py{executor.PasswordArguments}",
-                    this.mockPackagePath,
-                    EventContext.None,
-                    CancellationToken.None);
-
-                string logs = JsonConvert.SerializeObject(this.fixture.Logger);
-                StringAssert.DoesNotContain("--password", logs);
-                StringAssert.DoesNotContain(executor.GetSuperUserPassword(), logs);
-                if (password != null)
-                {
-                    StringAssert.DoesNotContain(password, logs);
-                }
-            }
-            finally
-            {
-                Environment.SetEnvironmentVariable("PGPASSWORD", originalPassword);
-            }
-        }
-
         private class TestSysbenchExecutor : SysbenchExecutor
         {
             public TestSysbenchExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters = null)
@@ -265,11 +162,7 @@ namespace VirtualClient.Actions
             {
             }
 
-            public Func<EventContext, CancellationToken, Task> OnInitialize => base.InitializeAsync;
-
             public Func<CancellationToken, Task<string>> OnGetPostgreSQLPassword => base.GetPostgreSQLPasswordAsync;
-
-            public new string PasswordArguments => base.PasswordArguments;
         }
     }
 }

@@ -4,29 +4,20 @@
 namespace VirtualClient.Actions
 {
     using System;
-    using System.CodeDom.Compiler;
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.IO;
-    using System.Linq;
-    using System.Net;
-    using System.Net.Http;
-    using System.Reflection;
     using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
-    using AutoFixture;
     using Microsoft.Extensions.DependencyInjection;
     using Moq;
-    using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
     using NUnit.Framework;
-    using Polly;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
-    using static VirtualClient.Actions.HammerDBExecutor;
 
     [TestFixture]
     [Category("Unit")]
@@ -35,8 +26,6 @@ namespace VirtualClient.Actions
     {
         private MockFixture fixture;
         private DependencyPath mockPackage;
-        private string scriptPath;
-        private string mockPackagePath;
         private string originalPassword;
 
         [SetUp]
@@ -49,8 +38,6 @@ namespace VirtualClient.Actions
             this.mockPackage = new DependencyPath("hammerdb", this.fixture.PlatformSpecifics.GetPackagePath("hammerdb"));
             this.fixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPackage);
 
-            this.mockPackagePath = this.mockPackage.Path;
-            this.scriptPath = this.fixture.PlatformSpecifics.GetScriptPath("hammerdb");
             this.fixture.Layout = new EnvironmentLayout(new List<ClientInstance>
             {
                 new ClientInstance($"{Environment.MachineName}-Server", "1.2.3.4", "Server"),
@@ -156,7 +143,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public void HammerDBPExecutorThrowsOnUnsupportedDistroAsync()
+        public void HammerDBExecutorThrowsOnUnsupportedDistroAsync()
         {
             LinuxDistributionInfo mockInfo = new LinuxDistributionInfo()
             {
@@ -170,43 +157,6 @@ namespace VirtualClient.Actions
                 WorkloadException exception = Assert.ThrowsAsync<WorkloadException>(
                     () => HammerDBExecutor.ExecuteAsync(CancellationToken.None));
                 Assert.AreEqual(ErrorReason.LinuxDistributionNotSupported, exception.Reason);
-            }
-        }
-
-        [Test]
-        [TestCase("password with 'quotes' and $symbols")]
-        public void SuperUserPasswordReadsEnvironmentWithoutTransformingValue(string password)
-        {
-            string originalPassword = Environment.GetEnvironmentVariable("PGPASSWORD");
-            try
-            {
-                Environment.SetEnvironmentVariable("PGPASSWORD", password);
-                using TestHammerDBExecutor executor = new TestHammerDBExecutor(this.fixture.Dependencies, this.fixture.Parameters);
-                Assert.AreEqual(password, executor.GetSuperUserPassword());
-            }
-            finally
-            {
-                Environment.SetEnvironmentVariable("PGPASSWORD", originalPassword);
-            }
-        }
-
-        [Test]
-        [TestCase(null)]
-        [TestCase("")]
-        public void SuperUserPasswordRejectsMissingEnvironmentVariable(string password)
-        {
-            string originalPassword = Environment.GetEnvironmentVariable("PGPASSWORD");
-            try
-            {
-                Environment.SetEnvironmentVariable("PGPASSWORD", password);
-                using TestHammerDBExecutor executor = new TestHammerDBExecutor(this.fixture.Dependencies, this.fixture.Parameters);
-                WorkloadException exception = Assert.Throws<WorkloadException>(() => executor.GetSuperUserPassword());
-                Assert.AreEqual(ErrorReason.InvalidProfileDefinition, exception.Reason);
-                StringAssert.Contains("PGPASSWORD", exception.Message);
-            }
-            finally
-            {
-                Environment.SetEnvironmentVariable("PGPASSWORD", originalPassword);
             }
         }
 
@@ -277,8 +227,6 @@ namespace VirtualClient.Actions
                 : base(dependencies, parameters)
             {
             }
-
-            public Func<EventContext, CancellationToken, Task> OnInitialize => base.InitializeAsync;
 
             public Func<CancellationToken, Task<string>> OnGetPostgreSQLPassword => base.GetPostgreSQLPasswordAsync;
 

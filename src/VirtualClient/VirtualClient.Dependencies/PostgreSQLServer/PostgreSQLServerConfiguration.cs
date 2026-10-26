@@ -18,7 +18,6 @@ namespace VirtualClient.Dependencies
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
-    using VirtualClient.Dependencies.MySqlServer;
 
     /// <summary>
     /// Provides functionality for configuring PostgreSQL Server.
@@ -26,7 +25,6 @@ namespace VirtualClient.Dependencies
     [SupportedPlatforms("linux-x64,linux-arm64")]
     public class PostgreSQLServerConfiguration : ExecuteCommand
     {
-        private const string PythonCommand = "python3";
         private readonly IStateManager stateManager;
         private string packageDirectory;
 
@@ -57,7 +55,7 @@ namespace VirtualClient.Dependencies
         }
 
         /// <summary>
-        /// The specifed action that controls the execution of the dependency.
+        /// Whether to skip configuration even if the action has not completed previously.
         /// </summary>
         public bool SkipInitialize
         {
@@ -119,23 +117,6 @@ namespace VirtualClient.Dependencies
         protected ISystemManagement SystemManager { get; }
 
         /// <summary>
-        /// Gets the PostgreSQL superuser password from the PGPASSWORD environment variable.
-        /// </summary>
-        /// <returns>The PostgreSQL superuser password.</returns>
-        public string GetSuperUserPassword()
-        {
-            string password = Environment.GetEnvironmentVariable("PGPASSWORD");
-            if (string.IsNullOrEmpty(password))
-            {
-                throw new DependencyException(
-                    "The PGPASSWORD environment variable must be set before configuring PostgreSQL Server.",
-                    ErrorReason.InvalidProfileDefinition);
-            }
-
-            return password;
-        }
-
-        /// <summary>
         /// Executes PostgreSQL configuration steps.
         /// </summary>
         /// <param name="telemetryContext">Provides context information that will be captured with telemetry events.</param>
@@ -176,7 +157,8 @@ namespace VirtualClient.Dependencies
         }
 
         /// <summary>
-        /// Reads PostgreSQL credentials from an explicit file, the process environment, or the platform-specific PostgreSQL package.
+        /// Reads the explicit PostgreSQL password file first, otherwise uses non-empty PGPASSWORD,
+        /// otherwise reads Password.json in the platform-specific PostgreSQL package.
         /// </summary>
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
         /// <returns>The password to supply only to the database child process environment.</returns>
@@ -222,8 +204,7 @@ namespace VirtualClient.Dependencies
             if (string.IsNullOrEmpty(password))
             {
                 throw new DependencyException(
-                    "The PostgreSQL password file must contain a non-empty string named 'Password'. " +
-                    "Provision Password.json in the platform-specific postgresql package, set PostgreSQLPasswordFile, or supply PGPASSWORD.",
+                    "The selected PostgreSQL password file must exist and contain a non-empty string named 'Password'.",
                     ErrorReason.InvalidProfileDefinition);
             }
 
@@ -371,12 +352,12 @@ namespace VirtualClient.Dependencies
         internal class ConfigurationAction
         {
             /// <summary>
-            /// Setup the required configurations of the SQL Server.
+            /// Configures PostgreSQL server access, credentials, memory, and data directory.
             /// </summary>
             public const string ConfigureServer = nameof(ConfigureServer);
 
             /// <summary>
-            /// Creates Database on PostgreSQL server and Users on Server and any Clients.
+            /// Runs the PostgreSQL database setup script.
             /// </summary>
             public const string SetupDatabase = nameof(SetupDatabase);
         }

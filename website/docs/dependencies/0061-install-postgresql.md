@@ -6,13 +6,14 @@ slug: /dependencies/install-postgresql
 Virtual Client has dependency components that can be added to a workload or monitor profile to create a PostgreSQL database on the system. The following section illustrates the
 details for integrating this into the profile.
 
-- [PostgreSQL Documentation](https://learn.microsoft.com/en-us/dotnet/core/sdk)
+- [PostgreSQL Documentation](https://www.postgresql.org/docs/)
 
-## Supported Platform-Architectures
+## Supported Configuration and Workload Platforms
 * linux-x64
 * linux-arm64
-* win-x64
-* win-arm64
+
+HammerDB is limited to `linux-x64`. The installation component also accepts Windows,
+but `PostgreSQLServerConfiguration` and the workload profiles described here are Linux-only.
 
 ## Profile Component Parameters
 The following section describes the parameters used by the individual component in the profile.
@@ -28,18 +29,19 @@ PostgreSQL configuration, HammerDB, and Sysbench PostgreSQL actions resolve the
 superuser password in this order:
 
 1. The JSON file specified by the component parameter `PostgreSQLPasswordFile`, if supplied.
-2. The existing `PGPASSWORD` environment variable in the Virtual Client process.
+2. The existing `PGPASSWORD` environment variable in the Virtual Client process, if non-empty.
 3. `Password.json` in the platform-specific `postgresql` package directory, such as
    `linux-x64/Password.json` or `linux-arm64/Password.json`.
 
-Each architecture includes `generate-password.py`. Run it after package extraction
-and before PostgreSQL configuration:
+When using a password file, provision it after package extraction and before
+PostgreSQL configuration. For packages that include `generate-password.py`, run:
 
 ```bash
 python3 /path/to/postgresql/linux-x64/generate-password.py
 ```
 
-Use the `linux-arm64` script on ARM64. The generator creates `Password.json` beside
+Use the `linux-arm64` script on ARM64. Virtual Client does not invoke the generator
+automatically. The generator creates `Password.json` beside
 itself by default, or at the path specified by `--output`. It uses Python's `secrets`
 module, sets owner-only permissions on Linux, and never prints the password. A valid
 existing file is retained; an invalid or empty file is not silently overwritten.
@@ -52,7 +54,9 @@ passwords. Alternatively, provision the JSON `Password` value from your secret p
 An earlier process launched by Virtual Client can create this file; no shell export needs to persist across steps.
 The file is parsed as JSON, not sourced or executed as a shell script. Empty passwords,
 missing files, malformed JSON, and unreadable files cause the step to fail. An explicit
-file path never silently falls back to the environment if its file is invalid.
+file path always takes precedence over `PGPASSWORD` and never silently falls back
+if its file is invalid. Without an explicit path, a non-empty `PGPASSWORD` bypasses
+file reading entirely.
 
 Virtual Client reads the credential when the step runs and sets `PGPASSWORD` only in
 the relevant child process environment before starting it. It does not change Virtual
@@ -76,8 +80,8 @@ privileged processes.
 This configuration requires a PostgreSQL package whose `configure-server.py` and
 `setup-database.py` scripts read `os.environ["PGPASSWORD"]` instead of requiring a
 `--password` argument. These scripts are distributed in the workload package, not in
-this repository. Update both scripts before using this configuration change; older
-packages that require `--password` are incompatible. Scripts must not log the password
+this repository. Older or custom packages that require `--password` are incompatible.
+Scripts must not log the password
 or interpolate it into subprocess command arguments. Environment variables are not
 a secret store and can still be read by sufficiently privileged processes.
 
@@ -102,15 +106,18 @@ Client obscures the resolved PostgreSQL credential before writing HammerDB proce
 output to telemetry or log files, and before including failed-process output in exceptions.
 
 ## Example
-Here is the usage of the dependency by the PostgreSQL/HammerDB workload as an example. The Postgresql dependency is responsible for downloading the service, but the workload itself is responsible for creating the database and populating it.
+The profile downloads the package with `DependencyPackageInstallation`, installs
+PostgreSQL with `PostgreSQLServerInstallation`, and configures the server with
+`PostgreSQLServerConfiguration`. HammerDB or Sysbench then populates the benchmark tables.
 
-* [Profile Example](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-SQL-POSTGRESQL.json)
+* [Profile Example](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-POSTGRESQL-HAMMERDB-TPCC.json)
 
 ```json
 {
-    "Type": "PostgreSQLInstallation",
+    "Type": "PostgreSQLServerInstallation",
     "Parameters": {
         "Scenario": "InstallPostgreSQLServer",
+        "Action": "InstallServer",
         "PackageName": "postgresql"
     }
 }

@@ -11,8 +11,6 @@ namespace VirtualClient.Actions
     using System.Linq;
     using System.Net;
     using System.Runtime.InteropServices;
-    using System.Security.Cryptography;
-    using System.Text;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
@@ -87,8 +85,7 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Parameter defines the scenario to use for the MySQL user accounts used
-        /// to create the DB and run transactions against it.
+        /// Defines how table, record, warehouse, and thread counts are sized for the workload.
         /// </summary>
         public string DatabaseScenario
         {
@@ -177,23 +174,12 @@ namespace VirtualClient.Actions
         public IApiClient ServerApiClient { get; set; }
 
         /// <summary>
-        /// Gets the credential arguments. Sysbench wrapper scripts do not accept password arguments.
-        /// </summary>
-        protected string PasswordArguments
-        {
-            get
-            {
-                return string.Empty;
-            }
-        }
-
-        /// <summary>
         /// Cancellation Token Source for Server.
         /// </summary>
         protected CancellationTokenSource ServerCancellationSource { get; set; }
 
         /// <summary>
-        /// Server IpAddress on which MySQL Server runs.
+        /// IP address of the target database server.
         /// </summary>
         protected string ServerIpAddress { get; set; }
 
@@ -206,30 +192,6 @@ namespace VirtualClient.Actions
         /// An interface that can be used to communicate with the underlying system.
         /// </summary>
         protected ISystemManagement SystemManager => this.Dependencies.GetService<ISystemManagement>();
-
-        private static string MySQLPasswordHash => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes("default")));
-
-        /// <summary>
-        /// Gets the PostgreSQL password from PGPASSWORD, or the existing MySQL password.
-        /// </summary>
-        /// <returns>The database superuser password.</returns>
-        public string GetSuperUserPassword()
-        {
-            if (string.Equals(this.DatabaseSystem, "PostgreSQL", StringComparison.OrdinalIgnoreCase))
-            {
-                string password = Environment.GetEnvironmentVariable("PGPASSWORD");
-                if (string.IsNullOrEmpty(password))
-                {
-                    throw new WorkloadException(
-                        "The PGPASSWORD environment variable must be set before running Sysbench with PostgreSQL.",
-                        ErrorReason.InvalidProfileDefinition);
-                }
-
-                return password;
-            }
-
-            return MySQLPasswordHash;
-        }
 
         /// <summary>
         /// Method to determine the table count for the given run.
@@ -276,9 +238,7 @@ namespace VirtualClient.Actions
 
         /// <summary>
         /// Method to determine the warehouse count for the given run.
-        /// Warehouses are scaled from the record count using the TPC-C sizing ratio:
-        /// 1 warehouse ≈ 100 MB (~500K rows), 1 OLTP record ≈ 200 bytes across 10 tables,
-        /// so 1 warehouse ≈ 50,000 OLTP records.
+        /// Estimates one warehouse per 50,000 OLTP records, with a minimum of one warehouse.
         /// </summary>
         /// <returns></returns>
         public static int GetWarehouseCount(ISystemManagement systemManagement, string databaseScenario, int? warehouses)
@@ -295,7 +255,7 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Method to determine the record count for the given run.
+        /// Method to determine the thread count for the given run.
         /// </summary>
         /// <returns></returns>
         public static int GetThreadCount(ISystemManagement systemManagement, string databaseScenario, int? threads)
@@ -320,7 +280,8 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Reads PostgreSQL credentials from an explicit file, the process environment, or the platform-specific PostgreSQL package.
+        /// Reads the explicit PostgreSQL password file first, otherwise uses non-empty PGPASSWORD,
+        /// otherwise reads Password.json in the platform-specific PostgreSQL package.
         /// </summary>
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
         /// <returns>The password to supply only to the database child process environment.</returns>
@@ -366,8 +327,7 @@ namespace VirtualClient.Actions
             if (string.IsNullOrEmpty(password))
             {
                 throw new DependencyException(
-                    "The PostgreSQL password file must contain a non-empty string named 'Password'. " +
-                    "Provision Password.json in the platform-specific postgresql package, set PostgreSQLPasswordFile, or supply PGPASSWORD.",
+                    "The selected PostgreSQL password file must exist and contain a non-empty string named 'Password'.",
                     ErrorReason.InvalidProfileDefinition);
             }
 
@@ -433,8 +393,6 @@ namespace VirtualClient.Actions
         /// </summary>
         protected async Task InitializeExecutablesAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            // store state with initialization status & record/table counts, if does not exist already
-
             SysbenchState state = await this.stateManager.GetStateAsync<SysbenchState>(nameof(SysbenchState), cancellationToken)
                 ?? new SysbenchState();
 
@@ -468,7 +426,7 @@ namespace VirtualClient.Actions
 
         /// <summary>
         /// Build the Sysbench Logging Basic Arguments, having the common parameters
-        /// dbName, databaseSystem, benchmark and tableCount.
+        /// dbName, databaseSystem, benchmark, threadCount, tableCount, and recordCount or warehouses.
         /// </summary>
         /// <returns></returns>
         protected string BuildSysbenchLoggingArguments()
@@ -573,7 +531,7 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Defines the Sysbench OLTP benchmark scenario.
+        /// Defines the supported Sysbench benchmarks.
         /// </summary>
         internal class BenchmarkName
         {

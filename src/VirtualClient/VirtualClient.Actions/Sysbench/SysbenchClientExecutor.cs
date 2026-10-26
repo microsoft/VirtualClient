@@ -183,7 +183,7 @@ namespace VirtualClient.Actions
                         ? await this.GetPostgreSQLPasswordAsync(cancellationToken).ConfigureAwait(false)
                         : null;
                     this.sysbenchLoggingArguments = this.BuildSysbenchLoggingArguments();
-                    this.sysbenchExecutionArguments = $"{this.sysbenchLoggingArguments} --workload {this.Workload} --hostIpAddress {this.ServerIpAddress} --durationSecs {this.Duration.TotalSeconds}{this.PasswordArguments}";
+                    this.sysbenchExecutionArguments = $"{this.sysbenchLoggingArguments} --workload {this.Workload} --hostIpAddress {this.ServerIpAddress} --durationSecs {this.Duration.TotalSeconds}";
 
                     string script = $"{this.SysbenchPackagePath}/run-workload.py ";
 
