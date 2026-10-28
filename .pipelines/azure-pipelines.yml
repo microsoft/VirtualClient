@@ -15,7 +15,7 @@ trigger:
 pr: none
 
 pool:
-  vmImage: windows-latest
+  name: VirtualClient-1ES-Windows-Pool
 
 variables:
   ROOT: $(Build.SourcesDirectory)
