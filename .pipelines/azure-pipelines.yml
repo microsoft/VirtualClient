@@ -15,7 +15,7 @@ trigger:
 pr: none
 
 pool:
-  vmImage: windows-latest
+  name: VirtualClient-1ES-Windows-Pool
 
 variables:
   ROOT: $(Build.SourcesDirectory)
@@ -60,46 +60,46 @@ steps:
 - script: $(Build.SourcesDirectory)\build-packages.cmd --suffix $(VersionSuffix)
   displayName: 'Build NuGet Packages'
 
-- task: EsrpCodeSigning@5
-  inputs:
-    ConnectedServiceName: 'virtualclient-esrp-ame'
-    AppRegistrationClientId: '0225fe5c-2a99-4459-af16-27a7dcd1c14a'
-    AppRegistrationTenantId: '33e01921-4d64-4f8c-a055-5bdaffd5e33d'
-    AuthAKVName: 'virtualclient-vault-esrp'
-    AuthCertName: 'virtualclient-esrp-cert-auth'
-    AuthSignCertName: 'virtualclient-esrp-cert-sign'
-    FolderPath: '$(System.DefaultWorkingDirectory)'
-    Pattern: '*.nupkg'
-    signConfigType: 'inlineSignParams'
-    inlineOperation: |
-      [    
-          {
-            "KeyCode": "CP-401405",
-            "OperationCode": "NuGetSign",
-            "Parameters": {},
-            "ToolName": "sign",
-            "ToolVersion": "1.0"
-          },
-          {
-            "KeyCode": "CP-401405",
-            "OperationCode": "NuGetVerify",
-            "Parameters": {},
-            "ToolName": "sign",
-            "ToolVersion": "1.0"
-          }
-      ]
-    SessionTimeout: '60'
-    MaxConcurrency: '50'
-    MaxRetryAttempts: '5'
-    PendingAnalysisWaitTimeoutMinutes: '5'
-
-- task: NuGetAuthenticate@1
-  displayName: 'Authenticate with NuGet feed'
-
-- script: dotnet nuget push $(Build.SourcesDirectory)\out\packages\*.nupkg --api-key VSTS --timeout 1200 --source https://msazure.pkgs.visualstudio.com/_packaging/CRC-VC/nuget/v3/index.json --skip-duplicate
-  displayName: 'Publish NuGet to ADO Artifact Packages as temporary workaround to ADO lagging behind in package availability'
-
-- script: $(Build.SourcesDirectory)\upload-packages.cmd $(Build.SourcesDirectory)\out\packages $(NUGETORGAPIKEY)
-  displayName: 'Publish NuGet Packages'
-
-
+#- task: EsrpCodeSigning@5
+  #inputs:
+    #ConnectedServiceName: 'virtualclient-esrp-ame'
+    #AppRegistrationClientId: '0225fe5c-2a99-4459-af16-27a7dcd1c14a'
+    #AppRegistrationTenantId: '33e01921-4d64-4f8c-a055-5bdaffd5e33d'
+    #AuthAKVName: 'virtualclient-vault-esrp'
+    #AuthCertName: 'virtualclient-esrp-cert-auth'
+    #AuthSignCertName: 'virtualclient-esrp-cert-sign'
+    #FolderPath: '$(System.DefaultWorkingDirectory)'
+    #Pattern: '*.nupkg'
+    #signConfigType: 'inlineSignParams'
+    #inlineOperation: |
+      #[    
+          #{
+            #"KeyCode": "CP-401405",
+            #"OperationCode": "NuGetSign",
+            #"Parameters": {},
+            #"ToolName": "sign",
+            #"ToolVersion": "1.0"
+          #},
+          #{
+            #"KeyCode": "CP-401405",
+            #"OperationCode": "NuGetVerify",
+            #"Parameters": {},
+            #"ToolName": "sign",
+            #"ToolVersion": "1.0"
+          #}
+      #]
+    #SessionTimeout: '60'
+    #MaxConcurrency: '50'
+    #MaxRetryAttempts: '5'
+    #PendingAnalysisWaitTimeoutMinutes: '5'
+#
+#- task: NuGetAuthenticate@1
+  #displayName: 'Authenticate with NuGet feed'
+#
+#- script: dotnet nuget push $(Build.SourcesDirectory)\out\packages\*.nupkg --api-key VSTS --timeout 1200 --source https://msazure.pkgs.visualstudio.com/_packaging/CRC-VC/nuget/v3/index.json --skip-duplicate
+  #displayName: 'Publish NuGet to ADO Artifact Packages as temporary workaround to ADO lagging behind in package availability'
+#
+#- script: $(Build.SourcesDirectory)\upload-packages.cmd $(Build.SourcesDirectory)\out\packages $(NUGETORGAPIKEY)
+  #displayName: 'Publish NuGet Packages'
+#
+#
