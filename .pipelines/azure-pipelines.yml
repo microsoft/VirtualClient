@@ -60,7 +60,7 @@ steps:
 - script: $(Build.SourcesDirectory)\build-packages.cmd --suffix $(VersionSuffix)
   displayName: 'Build NuGet Packages'
 
-- task: EsrpCodeSigning@5
+- task: EsrpCodeSigning@6
   inputs:
     ConnectedServiceName: 'virtualclient-esrp-ame'
     AppRegistrationClientId: '0225fe5c-2a99-4459-af16-27a7dcd1c14a'
