@@ -55,6 +55,18 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// GCC Compiler Version to use for HPLinpack benckmark execution
+        /// </summary>
+        public string CompilerVersion
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(this.CompilerVersion), out IConvertible compilerVersion);
+                return compilerVersion?.ToString();
+            }
+        }
+
+        /// <summary>
         /// The order of the coefficient matrix also known as problem size (N)
         /// </summary>
         public string ProblemSizeN
@@ -193,6 +205,8 @@ namespace VirtualClient.Actions
             this.totalMemoryKilobytes = memoryInfo.TotalMemory;
 
             this.ValidateParameters();
+
+            this.SetCompilerEnviromentVariables();
 
             DependencyPath workloadPackage = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken);
             this.HPLinpackPackagePath = workloadPackage.Path;
@@ -353,6 +367,18 @@ namespace VirtualClient.Actions
             }
         }
 
+        private void SetCompilerEnviromentVariables()
+        {
+            // Set the compiler version to use for HPLinpack execution on ARM64 architecture with ARM performance libraries.
+            // If the compiler version is not specified, the default system compiler will be used, though there is a risk of compatibility issues. (ex. MPIFort getting gfortran-15 when gcc-13 is used for compilation)
+            if (!string.IsNullOrEmpty(this.CompilerVersion) && this.PerformanceLibrary == "ARM" && this.CpuArchitecture == Architecture.Arm64)
+            {
+                this.PlatformSpecifics.SetEnvironmentVariable("OMPI_CC", $"/usr/bin/gcc-{this.CompilerVersion}");
+                this.PlatformSpecifics.SetEnvironmentVariable("OMPI_CXX", $"/usr/bin/g++-{this.CompilerVersion}");
+                this.PlatformSpecifics.SetEnvironmentVariable("OMPI_FC", $"/usr/bin/gfortran-{this.CompilerVersion}");
+            }
+        }
+
         private async Task ConfigurePerformanceLibrary(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             if (this.CpuArchitecture == Architecture.Arm64 && this.PerformanceLibrary == "ARM")
@@ -372,8 +398,11 @@ namespace VirtualClient.Actions
                     case "26.01.1":
                         this.hplArmPerfLibrary = "arm-performance-libraries_26.01.1.sh";
                         break;
+                    case "26.07":
+                        this.hplArmPerfLibrary = "arm-performance-libraries_26.07_deb.sh";
+                        break;
                     default:
-                        throw new WorkloadException($"The HPL workload currently only supports versions 23.04.1, 24.10, 25.04.1 and 26.01.1 of the ARM performance libraries");
+                        throw new WorkloadException($"The HPL workload currently only supports versions 23.04.1, 24.10, 25.04.1, 26.01.1 and 26.07 of the ARM performance libraries");
                 }
 
                 this.armPerfLibrariesPath = this.Combine(this.PerformanceLibraryPackagePath, "linux-arm64");
@@ -466,9 +495,12 @@ namespace VirtualClient.Actions
                     case "26.01.1":
                         await this.fileSystem.File.ReplaceInFileAsync(makeFilePath, @"LAlib *= *[^\n]*", "LAlib = /opt/arm/armpl_26.01.1_gcc/lib/libarmpl.a", cancellationToken);
                         break;
+                    case "26.07":
+                        await this.fileSystem.File.ReplaceInFileAsync(makeFilePath, @"LAlib *= *[^\n]*", "LAlib = /opt/arm/armpl_26.07_gcc/lib/libarmpl.a", cancellationToken);
+                        break;
                     default:
                         throw new WorkloadException(
-                            $"The HPL workload is currently only supports the perf libraries versions 23.04.1, 24.10, 25.04.1 and 26.01.1 on the following platform/architectures: " +
+                            $"The HPL workload is currently only supports the perf libraries versions 23.04.1, 24.10, 25.04.1, 26.01.1 and 26.07 on the following platform/architectures: " +
                             $"'{PlatformSpecifics.LinuxArm64}'.",
                             ErrorReason.PlatformNotSupported);
                 }

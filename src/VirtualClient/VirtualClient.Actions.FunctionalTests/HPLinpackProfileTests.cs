@@ -32,6 +32,9 @@ namespace VirtualClient.Actions
 
         [Test]
         [TestCase("PERF-CPU-HPLINPACK.json")]
+        [TestCase("PERF-CPU-HPLINPACK-AMD.json")]
+        [TestCase("PERF-CPU-HPLINPACK-ARM.json")]
+        [TestCase("PERF-CPU-HPLINPACK-INTEL.json")]
         public void HPLinpackWorkloadProfileParametersAreInlinedCorrectly(string profile)
         {
             this.mockFixture.Setup(PlatformID.Unix);
@@ -43,6 +46,9 @@ namespace VirtualClient.Actions
 
         [Test]
         [TestCase("PERF-CPU-HPLINPACK.json")]
+        [TestCase("PERF-CPU-HPLINPACK-AMD.json")]
+        [TestCase("PERF-CPU-HPLINPACK-ARM.json")]
+        [TestCase("PERF-CPU-HPLINPACK-INTEL.json")]
         public async Task HPLinpackWorkloadProfileInstallsTheExpectedDependenciesOnUnixPlatform(string profile)
         {
             this.mockFixture.Setup(PlatformID.Unix);

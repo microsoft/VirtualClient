@@ -155,6 +155,7 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Unix, Architecture.Arm64, "24.10", "arm-performance-libraries_24.10.sh")]
         [TestCase(PlatformID.Unix, Architecture.Arm64, "25.04.1", "arm-performance-libraries_25.04.1.sh")]
         [TestCase(PlatformID.Unix, Architecture.Arm64, "26.01.1", "arm-performance-libraries_26.01.1.sh")]
+        [TestCase(PlatformID.Unix, Architecture.Arm64, "26.07", "arm-performance-libraries_26.07_deb.sh")]
         public async Task HPLinpackExecutorExecutesWorkloadAsExpectedWithArmPerformanceLibraries(PlatformID platform, Architecture architecture, string performanceLibraryVersion, string performanceLibraryScript)
         {
             this.SetupTest(platform, architecture);
