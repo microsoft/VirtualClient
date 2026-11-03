@@ -32,11 +32,6 @@
 				<dependency id="SSH.NET" version="$SSH_NET_Version$" exclude="Build,Analyzers" />
 				<dependency id="System.Diagnostics.PerformanceCounter" version="$System_Diagnostics_PerformanceCounter_Version$" exclude="Build,Analyzers" />
 				<dependency id="System.IO.Abstractions" version="$System_IO_Abstractions_Version$" exclude="Build,Analyzers" />
-				<dependency id="System.IO.FileSystem.Primitives" version="$System_IO_FileSystem_Primitives_Version$" exclude="Build,Analyzers" />
-				<dependency id="System.Net.Http" version="$System_Net_Http_Version$" exclude="Build,Analyzers" />
-				<dependency id="System.Net.NameResolution" version="$System_Net_NameResolution_Version$" exclude="Build,Analyzers" />
-				<dependency id="System.Private.Uri" version="$System_Private_Uri_Version$" exclude="Build,Analyzers" />
-				<dependency id="System.Text.RegularExpressions" version="$System_Text_RegularExpressions_Version$" exclude="Build,Analyzers" />
 				<dependency id="YamlDotNet" version="$YamlDotNet_Version$" exclude="Build,Analyzers" />
 			</group>
             <group targetFramework="net9.0">
@@ -60,11 +55,6 @@
                 <dependency id="SSH.NET" version="$SSH_NET_Version$" exclude="Build,Analyzers" />
                 <dependency id="System.Diagnostics.PerformanceCounter" version="$System_Diagnostics_PerformanceCounter_Version$" exclude="Build,Analyzers" />
                 <dependency id="System.IO.Abstractions" version="$System_IO_Abstractions_Version$" exclude="Build,Analyzers" />
-                <dependency id="System.IO.FileSystem.Primitives" version="$System_IO_FileSystem_Primitives_Version$" exclude="Build,Analyzers" />
-				<dependency id="System.Net.Http" version="$System_Net_Http_Version$" exclude="Build,Analyzers" />
-                <dependency id="System.Net.NameResolution" version="$System_Net_NameResolution_Version$" exclude="Build,Analyzers" />
-				<dependency id="System.Private.Uri" version="$System_Private_Uri_Version$" exclude="Build,Analyzers" />
-				<dependency id="System.Text.RegularExpressions" version="$System_Text_RegularExpressions_Version$" exclude="Build,Analyzers" />
                 <dependency id="YamlDotNet" version="$YamlDotNet_Version$" exclude="Build,Analyzers" />
             </group>
             <group targetFramework="net10.0">
