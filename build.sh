@@ -88,7 +88,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Set defaults if no runtime is explicitly selected
-if [[ "BUILD_ALL" == true ]]; then
+if [[ "$BUILD_ALL" == true ]]; then
     BUILD_LINUX_X64=true
     BUILD_LINUX_ARM64=true
     BUILD_WIN_X64=true

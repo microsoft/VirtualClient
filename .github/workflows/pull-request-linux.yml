@@ -32,7 +32,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@55ec9447dda3d1cf6bd587150f3262f30ee10815 # v3.4.2
       with:
-        dotnet-version: 9.0.x
+        dotnet-version: 10.0.x
 
     - name: Add permission to run shell
       run: chmod -R +x *.sh

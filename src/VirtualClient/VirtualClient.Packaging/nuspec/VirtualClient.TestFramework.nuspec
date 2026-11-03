@@ -21,6 +21,11 @@
                 <dependency id="Moq" version="$Moq_Version$" exclude="Build,Analyzers" />
                 <dependency id="VirtualClient.Framework" version="$Version$" exclude="Build,Analyzers" />
             </group>
+            <group targetFramework="net10.0">
+                <dependency id="AutoFixture" version="$AutoFixture_Version$" exclude="Build,Analyzers" />
+                <dependency id="Moq" version="$Moq_Version$" exclude="Build,Analyzers" />
+                <dependency id="VirtualClient.Framework" version="$Version$" exclude="Build,Analyzers" />
+            </group>
         </dependencies>
     </metadata>
 
@@ -64,6 +69,26 @@
 		<file src="$BinConfigDir$\AnyCPU\VirtualClient.TestExtensions\net9.0\VirtualClient.TestExtensions.dll" target="lib\net9.0" />
 		<file src="$BinConfigDir$\AnyCPU\VirtualClient.TestExtensions\net9.0\VirtualClient.TestExtensions.pdb" target="lib\net9.0" />
 		<file src="$BinConfigDir$\AnyCPU\VirtualClient.TestExtensions\net9.0\VirtualClient.TestExtensions.xml" target="lib\net9.0" />
+
+		<!--
+		.NET 10.0 Support
+		- 'refs' support SDK/Compile time referencing
+		- 'libs' support runtime time build includes (e.g. linux-arm64, linux-x64, win-arm64, win-x64)
+        =============================================================================================
+        -->
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.TestFramework\net10.0\VirtualClient.TestFramework.dll" target="ref\net10.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.TestFramework\net10.0\VirtualClient.TestFramework.pdb" target="ref\net10.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.TestFramework\net10.0\VirtualClient.TestFramework.xml" target="ref\net10.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.TestExtensions\net10.0\VirtualClient.TestExtensions.dll" target="ref\net10.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.TestExtensions\net10.0\VirtualClient.TestExtensions.pdb" target="ref\net10.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.TestExtensions\net10.0\VirtualClient.TestExtensions.xml" target="ref\net10.0" />
+
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.TestFramework\net10.0\VirtualClient.TestFramework.dll" target="lib\net10.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.TestFramework\net10.0\VirtualClient.TestFramework.pdb" target="lib\net10.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.TestFramework\net10.0\VirtualClient.TestFramework.xml" target="lib\net10.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.TestExtensions\net10.0\VirtualClient.TestExtensions.dll" target="lib\net10.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.TestExtensions\net10.0\VirtualClient.TestExtensions.pdb" target="lib\net10.0" />
+		<file src="$BinConfigDir$\AnyCPU\VirtualClient.TestExtensions\net10.0\VirtualClient.TestExtensions.xml" target="lib\net10.0" />
 
     </files>
 </package>
