@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-		<TargetFrameworks>net8.0;net9.0</TargetFrameworks>
+		<TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
         <AssemblyName>VirtualClient.Contracts</AssemblyName>
         <NoWarn>SA1117;SA1508;IL2026;IL2072</NoWarn>
     </PropertyGroup>
@@ -11,7 +11,6 @@
         <PackageReference Include="Microsoft.Extensions.Http.Polly" />
 		<PackageReference Include="MimeMapping" />
         <PackageReference Include="System.IO.Abstractions" />
-        <PackageReference Include="System.IO.FileSystem.Primitives" />
         <PackageReference Include="YamlDotNet" />
     </ItemGroup>
 

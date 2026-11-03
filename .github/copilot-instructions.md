@@ -8,7 +8,7 @@ structured metrics. Supports Windows and Linux on x64 and ARM64.
 
 ## Tech Stack
 
-- **Runtime**: .NET 9 (`global.json`)
+- **Runtime**: .NET 10 (`global.json`)
 - **Platforms**: `linux-x64`, `linux-arm64`, `win-x64`, `win-arm64`
 - **Serialization**: `Newtonsoft.Json`, `YamlDotNet`
 - **DI**: `Microsoft.Extensions.DependencyInjection`

@@ -32,7 +32,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 9.0.x
+        dotnet-version: 10.0.x
 
     - name: Initialize CodeQL
       if: false # this is causing PR to fail on Windows with single slashes on Windows, temporarily disabling since we have it in Linux PR

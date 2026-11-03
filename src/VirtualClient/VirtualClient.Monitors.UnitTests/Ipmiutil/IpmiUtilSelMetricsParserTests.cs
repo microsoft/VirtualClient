@@ -128,7 +128,7 @@ namespace VirtualClient.Monitors
             // Setup:
             // The raw results are in random order from the decoded results.
             List<string> randomizedRecords = new List<string>(rawResults.Take(4));
-            randomizedRecords.AddRange(rawResults.Skip(4).Shuffle());
+            randomizedRecords.AddRange(VirtualClient.Common.Extensions.CollectionExtensions.Shuffle(rawResults.Skip(4)));
             this.exampleRawResults = string.Join(Environment.NewLine, randomizedRecords);
 
             string combinedResults = IpmiUtilSelMetricsParser.CombineRecords(this.exampleRawResults, this.exampleDecodedResults);
@@ -220,7 +220,7 @@ namespace VirtualClient.Monitors
             // Setup:
             // The decoded results are in random order from the raw results.
             List<string> randomizedRecords = new List<string>(decodedResults.Take(4));
-            randomizedRecords.AddRange(decodedResults.Skip(4).Shuffle());
+            randomizedRecords.AddRange(VirtualClient.Common.Extensions.CollectionExtensions.Shuffle(decodedResults.Skip(4)));
             this.exampleDecodedResults = string.Join(Environment.NewLine, randomizedRecords);
 
             string combinedResults = IpmiUtilSelMetricsParser.CombineRecords(this.exampleRawResults, this.exampleDecodedResults);
