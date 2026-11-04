@@ -13,6 +13,11 @@
         "Notes": "Uses the SPEC CPU 2026 1.0.1 package. Windows uses the x64 Cygwin GCC/G++/GFortran toolchain. On Windows ARM64, the compiler and benchmark binaries run through x64 compatibility.",
         "Limitations": "SPEC CPU 2026 recommends approximately 2 GB of memory and 5 GB of disk per SPECrate copy."
     },
+    "ParameterAliases": {
+        "Iterations": "IterationCount",
+        "Threads": "ThreadCount",
+        "Copies": "CopyCount"
+    },
     "Parameters": {
         "CompilerVersion": 13,
         "IterationCount": 2,

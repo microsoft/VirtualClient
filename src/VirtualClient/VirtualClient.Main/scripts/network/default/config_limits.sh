@@ -126,9 +126,6 @@ sysctl -w net.ipv4.tcp_max_syn_backlog=2048 || Error
 # disable reverse path filtering (for network workloads)
 sysctl -w net.ipv4.conf.all.rp_filter=0 || Error
 
-# disable connection tracking
-sysctl -w net.netfilter.nf_conntrack_max=0 || Error
-
 # Busy poll settings
 if [[ "$ENABLE_BUSY_POLL" == true ]]; then
     sysctl -w net.core.busy_poll=50 || Error

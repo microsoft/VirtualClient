@@ -71,7 +71,8 @@ namespace VirtualClient.Actions
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(OpenFOAMExecutor.IterationCount), out IConvertible iterationCount);
+                string parameter = this.Parameters.ContainsKey(nameof(this.IterationCount)) ? nameof(this.IterationCount) : "Iterations";
+                this.Parameters.TryGetValue(parameter, out IConvertible iterationCount);
                 return iterationCount?.ToString();
             }
         }

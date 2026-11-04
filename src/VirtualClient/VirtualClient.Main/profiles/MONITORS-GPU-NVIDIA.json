@@ -5,6 +5,9 @@
         "SupportedOperatingSystems": "CentOS,Debian,OpenSuse,RedHat,Ubuntu,Windows",
         "PreliminaryRequirements": "Please note that the Nvidia GPU driver and CUDA toolsets MUST be already installed on the system for the monitors to function correctly."
     },
+    "ParameterAliases": {
+        "MonitorIterations": "MonitorIterationCount"
+    },
     "Parameters": {
         "MonitorFrequency": "00:01:00",
         "MonitorWarmupPeriod": "00:01:00",

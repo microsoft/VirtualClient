@@ -59,7 +59,7 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.IterationCount), 100100);
+                return this.Parameters.GetValue<int>(new string[] { nameof(this.IterationCount), "Iterations" }, 100100);
             }
         }
 

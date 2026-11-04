@@ -66,7 +66,8 @@ namespace VirtualClient.Actions
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(DotNetRuntimeExecutor.JvmInstanceCount), out IConvertible jvmInstanceCount);
+                string parameter = this.Parameters.ContainsKey(nameof(this.JvmInstanceCount)) ? nameof(this.JvmInstanceCount) : "NumberOfJvmInstances";
+                this.Parameters.TryGetValue(parameter, out IConvertible jvmInstanceCount);
                 return jvmInstanceCount?.ToString();
             }
         }
@@ -78,7 +79,8 @@ namespace VirtualClient.Actions
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(DotNetRuntimeExecutor.WarehouseCount), out IConvertible warehouseCount);
+                string parameter = this.Parameters.ContainsKey(nameof(this.WarehouseCount)) ? nameof(this.WarehouseCount) : "NumberOfWarehouses";
+                this.Parameters.TryGetValue(parameter, out IConvertible warehouseCount);
                 return warehouseCount?.ToString();
             }
         }

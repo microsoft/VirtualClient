@@ -5,18 +5,24 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
+    using System.ComponentModel;
+    using System.Globalization;
     using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
     using System.Runtime.InteropServices;
+    using System.Security.Cryptography;
     using System.Text;
+    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using global::VirtualClient.Common;
     using global::VirtualClient.Common.Extensions;
+    using global::VirtualClient.Common.ProcessAffinity;
     using global::VirtualClient.Common.Telemetry;
     using global::VirtualClient.Contracts;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
     using VirtualClient.Contracts.Metadata;
 
     /// <summary>
@@ -154,7 +160,41 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// Optional list of physical CPU IDs to assign to SPECrate copies, one CPU per copy.
+        /// Set to "symmetric" (case-insensitive) to select CPUs evenly across NUMA nodes automatically.
+        /// For two 48-CPU NUMA nodes (CPUs 0-47 and 48-95):
+        /// 2 copies: NumaProcessorAffinity=0,48;
+        /// 4 copies: NumaProcessorAffinity=0,1,48,49;
+        /// 40 copies: NumaProcessorAffinity=0-19,48-67.
+        /// For three 32-CPU NUMA nodes (CPUs 0-31, 32-63, and 64-95):
+        /// 3 copies: NumaProcessorAffinity=0,32,64;
+        /// 40 copies: NumaProcessorAffinity=0-13,32-44,64-76.
+        /// </summary>
+        public string NumaProcessorAffinity
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(SpecCpuExecutor.NumaProcessorAffinity), string.Empty);
+            }
+        }
+
+        /// <summary>
+        /// When enabled, distributes SPECrate copies as evenly as available CPUs allow across NUMA nodes,
+        /// assigning one CPU per copy using numactl.
+        /// Defaults to false unless NumaProcessorAffinity is "symmetric"; cannot be combined with manual CPU IDs.
+        /// </summary>
+        public bool EnableNumaProcessorAffinitySymmetric
+        {
+            get
+            {
+                return string.Equals(this.NumaProcessorAffinity, "symmetric", StringComparison.OrdinalIgnoreCase)
+                    || this.Parameters.GetValue<bool>(nameof(SpecCpuExecutor.EnableNumaProcessorAffinitySymmetric), false);
+            }
+        }
+
+        /// <summary>
         /// A feature flag to apply. For example 'UseCsvResults' can be used to parse the CSV file results vs. the standard output.
+        /// The CSV results have finer-grained results with additional significant figures.
         /// </summary>
         public string FeatureFlag
         {
@@ -216,11 +256,32 @@ namespace VirtualClient.Actions
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
         protected async Task ExecuteSpecCpuAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
+            string stage = "Configuration";
             try
             {
                 using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
-                    string commandLineArguments = this.GetCommandLineArguments();
+                    if (this.EnableNumaProcessorAffinitySymmetric)
+                    {
+                        stage = "SymmetricAffinityConfiguration";
+                        this.Parameters[nameof(this.EnableNumaProcessorAffinitySymmetric)] = true;
+                        string affinity = await this.GetSymmetricNumaProcessorAffinityAsync(cancellationToken);
+                        this.Parameters[nameof(this.NumaProcessorAffinity)] = affinity;
+                        this.MetadataContract.Add(nameof(this.NumaProcessorAffinity), affinity, MetadataContract.ScenarioCategory);
+                        this.MetadataContract.Apply(telemetryContext);
+                        this.LogSpecCpuStep(telemetryContext, "SymmetricAffinitySelected", ("cpuIds", affinity));
+                    }
+
+                    string configurationFile = this.GetConfigurationFileName();
+                    if (!string.IsNullOrWhiteSpace(this.NumaProcessorAffinity))
+                    {
+                        stage = "AffinityConfiguration";
+                        configurationFile = await this.WritePinnedSpecCpuConfigAsync(telemetryContext, cancellationToken);
+                    }
+
+                    this.LogSpecCpuStep(telemetryContext, "ConfigSelected", ("configurationFile", configurationFile));
+                    string commandLineArguments = this.GetCommandLineArguments(configurationFile);
+
                     string command;
                     string commandArguments;
 
@@ -235,6 +296,9 @@ namespace VirtualClient.Actions
                         commandArguments = $"/c {SpecCpuExecutor.SpecCpuRunBat} {commandLineArguments}";
                     }
 
+                    stage = "Run";
+                    this.LogSpecCpuStep(telemetryContext, "RunStarted", ("configurationFile", configurationFile), ("command", command), ("arguments", commandArguments));
+                    DateTime runStart = DateTime.UtcNow;
                     using (IProcessProxy process = await this.ExecuteCommandAsync(
                         command,
                         commandArguments,
@@ -246,12 +310,26 @@ namespace VirtualClient.Actions
                         if (!cancellationToken.IsCancellationRequested)
                         {
                             await this.LogProcessDetailsAsync(process, telemetryContext, "SPECcpu", logToFile: true);
+                            this.LogSpecCpuStep(telemetryContext, "RunCompleted", ("configurationFile", configurationFile), ("exitCode", process.ExitCode), ("durationMs", (DateTime.UtcNow - runStart).TotalMilliseconds));
                             process.ThrowIfWorkloadFailed();
 
+                            stage = "Metrics";
+                            this.MetadataContract.AddForScenario($"SPECcpu/{this.SpecProfile}", process.FullCommand(), toolVersion: null);
+                            this.MetadataContract.Apply(telemetryContext);
                             await this.CaptureMetricsAsync(process, commandLineArguments, telemetryContext, cancellationToken);
                         }
                     }
                 }
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                this.LogSpecCpuStep(telemetryContext, "Cancelled", ("stage", stage));
+                throw;
+            }
+            catch (Exception exc)
+            {
+                this.LogSpecCpuFailure(telemetryContext, stage, exc);
+                throw;
             }
             finally
             {
@@ -269,28 +347,48 @@ namespace VirtualClient.Actions
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
         protected async Task InitializeSpecCpuAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            DependencyPath workloadPackage = await this.packageManager.GetPackageAsync(this.PackageName, CancellationToken.None);
-
-            if (workloadPackage == null)
+            string stage = "PackageLookup";
+            try
             {
-                throw new DependencyException(
-                    $"The expected package '{this.PackageName}' does not exist on the system or is not registered.",
-                    ErrorReason.WorkloadDependencyMissing);
+                this.LogSpecCpuStep(telemetryContext, "PackageLookupStarted", ("packageName", this.PackageName));
+                DependencyPath workloadPackage = await this.packageManager.GetPackageAsync(this.PackageName, CancellationToken.None);
+
+                if (workloadPackage == null)
+                {
+                    throw new DependencyException(
+                        $"The expected package '{this.PackageName}' does not exist on the system or is not registered.",
+                        ErrorReason.WorkloadDependencyMissing);
+                }
+
+                this.PackageDirectory = workloadPackage.Path;
+                this.ResultsDirectory = this.Combine(this.PackageDirectory, "result");
+                this.LogSpecCpuStep(telemetryContext, "PackageReady", ("packageName", this.PackageName));
+
+                // Clean any previous results from the system.
+                if (this.fileSystem.Directory.Exists(this.ResultsDirectory))
+                {
+                    await this.fileSystem.Directory.DeleteAsync(this.ResultsDirectory);
+                    this.fileSystem.Directory.CreateDirectory(this.ResultsDirectory);
+                }
+
+                stage = "Setup";
+                string imageFile = this.GetIsoFilePath(workloadPackage);
+                telemetryContext.AddContext(nameof(imageFile), imageFile);
+
+                this.LogSpecCpuStep(telemetryContext, "SetupStarted", ("imageFile", Path.GetFileName(imageFile)));
+                await this.SetupSpecCpuAsync(imageFile, telemetryContext, cancellationToken);
+                this.LogSpecCpuStep(telemetryContext, "SetupCompleted");
             }
-
-            this.PackageDirectory = workloadPackage.Path;
-            this.ResultsDirectory = this.Combine(this.PackageDirectory, "result");
-
-            if (this.fileSystem.Directory.Exists(this.ResultsDirectory))
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
-                await this.fileSystem.Directory.DeleteAsync(this.ResultsDirectory);
-                this.fileSystem.Directory.CreateDirectory(this.ResultsDirectory);
+                this.LogSpecCpuStep(telemetryContext, "Cancelled", ("stage", stage));
+                throw;
             }
-
-            string imageFile = this.GetIsoFilePath(workloadPackage);
-            telemetryContext.AddContext(nameof(imageFile), imageFile);
-
-            await this.SetupSpecCpuAsync(imageFile, telemetryContext, cancellationToken);
+            catch (Exception exc)
+            {
+                this.LogSpecCpuFailure(telemetryContext, stage, exc);
+                throw;
+            }
         }
 
         /// <summary>
@@ -439,11 +537,13 @@ namespace VirtualClient.Actions
             SpecCpuState state = await this.stateManager.GetStateAsync<SpecCpuState>(stateId, cancellationToken)
                 ?? new SpecCpuState();
 
+            this.LogSpecCpuStep(telemetryContext, "SetupStateRead", ("alreadyInitialized", state.SpecCpuInitialized));
             if (state.SpecCpuInitialized)
             {
                 return;
             }
 
+            this.LogSpecCpuStep(telemetryContext, "InstallationStarted");
             string mountPath = this.PlatformSpecifics.Combine(this.PlatformSpecifics.GetPackagePath(), "speccpu_mount");
             this.fileSystem.Directory.CreateDirectory(mountPath);
 
@@ -458,6 +558,7 @@ namespace VirtualClient.Actions
 
             state.SpecCpuInitialized = true;
             await this.stateManager.SaveStateAsync<SpecCpuState>(stateId, state, cancellationToken);
+            this.LogSpecCpuStep(telemetryContext, "InstallationCompleted");
         }
 
         private async Task LinuxSetupAsync(
@@ -565,13 +666,6 @@ namespace VirtualClient.Actions
         {
             if (!cancellationToken.IsCancellationRequested)
             {
-                this.MetadataContract.AddForScenario(
-                    $"SPECcpu/{this.SpecProfile}",
-                    process.FullCommand(),
-                    toolVersion: null);
-
-                this.MetadataContract.Apply(telemetryContext);
-
                 bool useCsv = string.Equals(this.FeatureFlag, SpecCpuExecutor.FeatureFlagUseCsvResults, StringComparison.OrdinalIgnoreCase);
                 string extension = useCsv ? "csv" : "txt";
                 string[] outputFiles = this.fileSystem.Directory.GetFiles(
@@ -579,6 +673,7 @@ namespace VirtualClient.Actions
                     this.GetResultsFileSearchPattern(extension),
                     SearchOption.TopDirectoryOnly);
 
+                int metricCount = 0;
                 foreach (string file in outputFiles)
                 {
                     KeyValuePair<string, string> results = await this.LoadResultsAsync(file, cancellationToken);
@@ -588,6 +683,7 @@ namespace VirtualClient.Actions
                     IList<Metric> metrics = parser.Parse();
 
                     metrics.LogConsole(this.Scenario, "SPECcpu");
+                    metricCount += metrics.Count;
                     metrics.ToList().ForEach(m => m.Categorization = $"{this.SpecProfile}-{this.tuning}");
 
                     foreach (Metric metric in metrics)
@@ -603,6 +699,8 @@ namespace VirtualClient.Actions
                             this.Tags);
                     }
                 }
+
+                this.LogSpecCpuStep(telemetryContext, "MetricsCaptured", ("resultFileCount", outputFiles.Length), ("metricCount", metricCount), ("format", useCsv ? "csv" : "txt"));
             }
         }
 
@@ -640,10 +738,9 @@ namespace VirtualClient.Actions
             }
         }
 
-        private string GetCommandLineArguments()
+        private string GetCommandLineArguments(string configurationFile)
         {
             List<string> suites = new List<string> { "intrate", "intspeed", "fprate", "fpspeed" };
-            string configurationFile = this.GetConfigurationFileName();
             string command = $"--config {configurationFile} --iterations {this.IterationCount} --copies {this.CopyCount} --threads {this.ThreadCount} --tune {this.tuning}";
 
             bool reportable = this.Platform == PlatformID.Unix
@@ -652,6 +749,304 @@ namespace VirtualClient.Actions
 
             command = reportable ? $"{command} --reportable" : $"{command} --noreportable";
             return $"{command} {this.Benchmarks}";
+        }
+
+        /// <summary>
+        /// Reads numactl --hardware and takes the lowest CPU IDs from each node in round-robin order,
+        /// distributing copies as evenly as node capacity allows. Returns a comma-separated list
+        /// containing one CPU per <see cref="CopyCount"/>.
+        /// </summary>
+        /// <remarks>
+        /// For two 48-CPU nodes (0-47, 48-95), 2 copies select 0 and 48; 4 copies select 0, 1, 48, 49;
+        /// and 40 copies select 0-19 and 48-67. For three 32-CPU nodes (0-31, 32-63, 64-95),
+        /// 3 copies select 0, 32, 64 and 40 copies select 0-13, 32-44, 64-76.
+        /// The returned list contains individual CPU IDs, not range notation.
+        /// </remarks>
+        /// <param name="cancellationToken">A token used to cancel the topology query.</param>
+        /// <returns>The selected CPU IDs in ascending order, separated by commas.</returns>
+        private async Task<string> GetSymmetricNumaProcessorAffinityAsync(CancellationToken cancellationToken)
+        {
+            if (this.Platform != PlatformID.Unix ||
+                (!string.Equals(this.SpecProfile, "intrate", StringComparison.OrdinalIgnoreCase) &&
+                 !string.Equals(this.SpecProfile, "fprate", StringComparison.OrdinalIgnoreCase)))
+            {
+                throw new NotSupportedException("Symmetric NUMA processor affinity is supported only for Linux intrate and fprate runs.");
+            }
+
+            if (!string.IsNullOrWhiteSpace(this.NumaProcessorAffinity) &&
+                !string.Equals(this.NumaProcessorAffinity, "symmetric", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new ArgumentException("NumaProcessorAffinity and EnableNumaProcessorAffinitySymmetric cannot both be specified.", nameof(this.NumaProcessorAffinity));
+            }
+
+            if (this.CopyCount <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(this.CopyCount), this.CopyCount, "CopyCount must be greater than zero for symmetric NUMA processor affinity.");
+            }
+
+            IReadOnlyList<NumaNode> nodes;
+            try
+            {
+                using (IProcessProxy process = this.systemManager.ProcessManager.CreateProcess("numactl", "--hardware", this.PackageDirectory))
+                {
+                    await process.StartAndWaitAsync(cancellationToken);
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    string topology = process.StandardOutput.ToString().Trim();
+                    if (process.IsErrored() || !SpecCpuExecutor.TryParseNumaTopology(topology, Array.Empty<int>(), out nodes))
+                    {
+                        throw new DependencyException("Symmetric NUMA processor affinity requires a readable numactl --hardware topology.", ErrorReason.WorkloadDependencyMissing);
+                    }
+                }
+            }
+            catch (Win32Exception exc)
+            {
+                throw new DependencyException("Symmetric NUMA processor affinity requires numactl to be installed.", exc, ErrorReason.WorkloadDependencyMissing);
+            }
+
+            List<IReadOnlyList<int>> nodeCpus = nodes
+                .Where(node => node.Cpus.Count > 0)
+                .Select(node => (IReadOnlyList<int>)node.Cpus.OrderBy(cpu => cpu).ToList())
+                .ToList();
+
+            if (nodeCpus.Sum(cpus => cpus.Count) < this.CopyCount)
+            {
+                throw new ArgumentException($"CopyCount={this.CopyCount} exceeds the number of CPUs available across NUMA nodes.", nameof(this.CopyCount));
+            }
+
+            List<int> selectedCpus = new List<int>(this.CopyCount);
+            for (int index = 0; selectedCpus.Count < this.CopyCount; index++)
+            {
+                foreach (IReadOnlyList<int> cpus in nodeCpus)
+                {
+                    if (index < cpus.Count)
+                    {
+                        selectedCpus.Add(cpus[index]);
+                        if (selectedCpus.Count == this.CopyCount)
+                        {
+                            break;
+                        }
+                    }
+                }
+            }
+
+            return string.Join(",", selectedCpus.OrderBy(cpu => cpu));
+        }
+
+        private async Task<string> WritePinnedSpecCpuConfigAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            this.LogSpecCpuStep(telemetryContext, "AffinityValidationStarted", ("requestedCpuIds", this.NumaProcessorAffinity));
+            if (this.Platform != PlatformID.Unix ||
+                (!string.Equals(this.SpecProfile, "intrate", StringComparison.OrdinalIgnoreCase) &&
+                 !string.Equals(this.SpecProfile, "fprate", StringComparison.OrdinalIgnoreCase)))
+            {
+                throw new NotSupportedException("SPEC CPU per-copy processor affinity is supported only for Linux intrate and fprate runs.");
+            }
+
+            LinuxProcessAffinityConfiguration affinityConfig = (LinuxProcessAffinityConfiguration)ProcessAffinityConfiguration.Create(this.Platform, this.NumaProcessorAffinity);
+            IReadOnlyList<int> cores = affinityConfig.Cores;
+            if (cores.Count != this.CopyCount)
+            {
+                throw new ArgumentException($"NumaProcessorAffinity must specify exactly one distinct CPU per SPEC copy (CopyCount={this.CopyCount}, CPUs={cores.Count}).", nameof(this.NumaProcessorAffinity));
+            }
+
+            bool useCopyNumber = cores.Select((core, copy) => core == copy).All(matches => matches);
+            string copyCpu = useCopyNumber ? "$SPECCOPYNUM" : "$BIND";
+            this.LogSpecCpuStep(telemetryContext, "AffinityValidated", ("cpuIds", string.Join(",", cores)), ("mapping", copyCpu));
+
+            this.LogSpecCpuStep(telemetryContext, "NumactlCheckStarted");
+            try
+            {
+                using (IProcessProxy process = this.systemManager.ProcessManager.CreateProcess("numactl", "--version", this.PackageDirectory))
+                {
+                    await process.StartAndWaitAsync(cancellationToken);
+                    if (!cancellationToken.IsCancellationRequested && process.IsErrored())
+                    {
+                        throw new DependencyException("SPEC CPU processor affinity requires a working numactl installation.", ErrorReason.WorkloadDependencyMissing);
+                    }
+
+                    this.LogSpecCpuStep(telemetryContext, "NumactlChecked", ("exitCode", process.ExitCode));
+                }
+            }
+            catch (Win32Exception exc)
+            {
+                throw new DependencyException("SPEC CPU processor affinity requires numactl to be installed.", exc, ErrorReason.WorkloadDependencyMissing);
+            }
+
+            try
+            {
+                using (IProcessProxy process = this.systemManager.ProcessManager.CreateProcess("numactl", "--hardware", this.PackageDirectory))
+                {
+                    await process.StartAndWaitAsync(cancellationToken);
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    string topology = process.StandardOutput.ToString().Trim();
+                    bool available = !process.IsErrored() && SpecCpuExecutor.TryParseNumaTopology(topology, cores, out _);
+
+                    this.LogSpecCpuStep(
+                        telemetryContext,
+                        "NumactlTopology",
+                        ("cpuIds", string.Join(",", cores)),
+                        ("topology", topology),
+                        ("available", available),
+                        ("exitCode", process.ExitCode),
+                        ("error", process.IsErrored() ? process.StandardError.ToString().Trim() : available ? string.Empty : "Unable to parse NUMA topology for the selected CPUs."));
+                }
+            }
+            catch (Win32Exception exc)
+            {
+                this.LogSpecCpuStep(telemetryContext, "NumactlTopology", ("cpuIds", string.Join(",", cores)), ("available", false), ("error", exc.Message));
+            }
+
+            (string executable, string arguments) = affinityConfig.GetAffinityProcessInfo("true");
+            this.LogSpecCpuStep(telemetryContext, "AffinityPreflightStarted", ("arguments", $"--localalloc {arguments}"));
+            using (IProcessProxy process = this.systemManager.ProcessManager.CreateProcess(executable, $"--localalloc {arguments}", this.PackageDirectory))
+            {
+                await process.StartAndWaitAsync(cancellationToken);
+                if (!cancellationToken.IsCancellationRequested && process.IsErrored())
+                {
+                    throw new ArgumentException($"NumaProcessorAffinity contains CPUs that cannot be bound with numactl --localalloc. {process.StandardError}", nameof(this.NumaProcessorAffinity));
+                }
+
+                this.LogSpecCpuStep(telemetryContext, "AffinityPreflightCompleted", ("exitCode", process.ExitCode));
+            }
+
+            string configurationFile = this.GetConfigurationFileName();
+            string configurationPath = this.Combine(this.PackageDirectory, "config", configurationFile);
+            string configText = await this.fileSystem.File.ReadAllTextAsync(configurationPath);
+            const string rateSection = "intrate,fprate:";
+            if (!configText.Contains(rateSection, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new WorkloadException($"SPEC CPU configuration '{configurationPath}' is missing the '{rateSection}' section required for processor affinity.");
+            }
+
+            string bind = useCopyNumber ? string.Empty : $"   bind = {string.Join(",", cores)}\n";
+            string submit = $"   submit = numactl --localalloc --physcpubind={copyCpu} -- $command";
+            configText = configText.Replace(rateSection, $"{rateSection}\n{bind}{submit}", StringComparison.OrdinalIgnoreCase);
+
+            string configId = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(string.Join(",", cores)))).Substring(0, 16);
+            string pinnedConfigFile = $"{Path.GetFileNameWithoutExtension(configurationFile)}-affinity-{configId}.cfg";
+            await this.fileSystem.File.WriteAllTextAsync(this.Combine(this.PackageDirectory, "config", pinnedConfigFile), configText, cancellationToken);
+            this.LogSpecCpuStep(telemetryContext, "ConfigGenerated", ("configurationFile", pinnedConfigFile), ("cpuIds", string.Join(",", cores)), ("submit", submit));
+            return pinnedConfigFile;
+        }
+
+        private static bool TryParseNumaTopology(string topology, IReadOnlyList<int> selectedCpus, out IReadOnlyList<NumaNode> parsedNodes)
+        {
+            parsedNodes = null;
+            Match header = Regex.Match(topology, @"(?m)^available:[ \t]*(?<count>\d+)[ \t]+nodes\b");
+            if (!header.Success || !int.TryParse(header.Groups["count"].Value, out int nodeCount) || nodeCount == 0)
+            {
+                return false;
+            }
+
+            Dictionary<int, NumaNode> nodes = new Dictionary<int, NumaNode>();
+            MatchCollection entries = Regex.Matches(topology, @"(?m)^node[ \t]+(?<id>\d+)[ \t]+(?<field>cpus|size|free):[ \t]*(?<value>[^\r\n]*)");
+            foreach (Match entry in entries)
+            {
+                if (!int.TryParse(entry.Groups["id"].Value, out int nodeId))
+                {
+                    return false;
+                }
+
+                if (!nodes.TryGetValue(nodeId, out NumaNode node))
+                {
+                    node = new NumaNode(nodeId);
+                    nodes.Add(nodeId, node);
+                }
+
+                string field = entry.Groups["field"].Value;
+                string value = entry.Groups["value"].Value.Trim();
+                if (field == "cpus")
+                {
+                    if (node.Cpus != null)
+                    {
+                        return false;
+                    }
+
+                    List<int> cpus = new List<int>();
+                    foreach (string cpu in value.Split((char[])null, StringSplitOptions.RemoveEmptyEntries))
+                    {
+                        if (!int.TryParse(cpu, out int cpuId) || cpuId < 0)
+                        {
+                            return false;
+                        }
+
+                        cpus.Add(cpuId);
+                    }
+
+                    node.Cpus = cpus;
+                }
+                else
+                {
+                    Match memory = Regex.Match(value, @"^(?<mb>\d+(?:\.\d+)?)[ \t]+MB$");
+                    if (!memory.Success || !double.TryParse(memory.Groups["mb"].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out double megabytes))
+                    {
+                        return false;
+                    }
+
+                    if (field == "size")
+                    {
+                        if (node.SizeMb.HasValue)
+                        {
+                            return false;
+                        }
+
+                        node.SizeMb = megabytes;
+                    }
+                    else
+                    {
+                        if (node.FreeMb.HasValue)
+                        {
+                            return false;
+                        }
+
+                        node.FreeMb = megabytes;
+                    }
+                }
+            }
+
+            if (nodes.Count != nodeCount || nodes.Values.Any(node => node.Cpus == null || !node.SizeMb.HasValue || !node.FreeMb.HasValue))
+            {
+                return false;
+            }
+
+            if (nodes.Values.SelectMany(node => node.Cpus).Distinct().Count() != nodes.Values.Sum(node => node.Cpus.Count)
+                || selectedCpus.Any(cpu => nodes.Values.Count(node => node.Cpus.Contains(cpu)) != 1))
+            {
+                return false;
+            }
+
+            parsedNodes = nodes.Values.OrderBy(node => node.Id).ToList();
+            return true;
+        }
+
+        private void LogSpecCpuStep(EventContext telemetryContext, string step, params (string Name, object Value)[] details)
+        {
+            EventContext stepContext = telemetryContext.Clone()
+                .AddContext("scenario", this.Scenario ?? string.Empty)
+                .AddContext("specProfile", this.SpecProfile ?? string.Empty)
+                .AddContext("benchmarks", this.Benchmarks ?? string.Empty)
+                .AddContext("copies", this.CopyCount)
+                .AddContext("pinningEnabled", !string.IsNullOrWhiteSpace(this.NumaProcessorAffinity));
+
+            foreach ((string name, object value) in details)
+            {
+                stepContext.AddContext(name, value);
+            }
+
+            this.Logger.LogMessage($"{this.TypeName}.{step}", LogLevel.Information, stepContext);
+        }
+
+        private void LogSpecCpuFailure(EventContext telemetryContext, string stage, Exception exception)
+        {
+            EventContext errorContext = telemetryContext.Clone()
+                .AddContext("scenario", this.Scenario ?? string.Empty)
+                .AddContext("specProfile", this.SpecProfile ?? string.Empty)
+                .AddContext("stage", stage)
+                .AddError(exception);
+
+            this.Logger.LogMessage($"{this.TypeName}.Failed", LogLevel.Error, errorContext);
         }
 
         private async Task WriteSpecCpuConfigAsync(CancellationToken cancellationToken)
@@ -708,6 +1103,22 @@ namespace VirtualClient.Actions
                     this.Properties[nameof(SpecCpuState.SpecCpuInitialized)] = value;
                 }
             }
+        }
+
+        private sealed class NumaNode
+        {
+            public NumaNode(int id)
+            {
+                this.Id = id;
+            }
+
+            public int Id { get; }
+
+            public List<int> Cpus { get; set; }
+
+            public double? SizeMb { get; set; }
+
+            public double? FreeMb { get; set; }
         }
 
         private static class SpecCpuConfigPlaceholder

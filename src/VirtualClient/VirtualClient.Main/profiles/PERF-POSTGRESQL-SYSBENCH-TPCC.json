@@ -51,7 +51,7 @@
             "Parameters": {
                 "Scenario": "DownloadSystemConfigPackage",
                 "BlobContainer": "packages",
-                "BlobName": "system_config.1.1.0.zip",
+                "BlobName": "system_config.2.0.0.zip",
                 "PackageName": "system_config",
                 "Extract": true,
                 "Role": "Server"
@@ -71,10 +71,9 @@
             "Parameters": {
                 "Scenario": "DownloadPostgreSQLServerPackage",
                 "BlobContainer": "packages",
-                "BlobName": "postgresql.14.0.0.rev4.zip",
+                "BlobName": "postgresql.14.0.0.rev5.zip",
                 "PackageName": "postgresql",
-                "Extract": true,
-                "Role": "Server"
+                "Extract": true
             }
         },
         {
@@ -82,7 +81,7 @@
             "Parameters": {
                 "Scenario": "DownloadSysbenchPackage",
                 "BlobContainer": "packages",
-                "BlobName": "sysbench-1.0.20.rev5.zip",
+                "BlobName": "sysbench-1.0.20.rev6.zip",
                 "PackageName": "sysbench",
                 "Extract": true
             }

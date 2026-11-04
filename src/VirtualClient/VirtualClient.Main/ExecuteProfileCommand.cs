@@ -820,7 +820,7 @@ namespace VirtualClient
             {
                 // Command-line parameters override parameters defined in the profile
                 // itself.
-                profile.Parameters.AddRange(this.Parameters, true);
+                profile.ApplyParameterOverrides(this.Parameters);
             }
 
             // Process conditional parameters (ParametersOn feature)

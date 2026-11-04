@@ -13,6 +13,11 @@
         "Notes": "Using a private package 'speccpu.2017.1.1.9-danielbowers.zip' to enable support for speccpu on Ubuntu 24. SPEC CPU 2017 was not initially designed for win-arm64.",
         "Limitations": "The following benchmarks don't work on Windows: 600, 602, 605, 620, 623, 625, 631, 648, 657"
     },
+    "ParameterAliases": {
+        "Iterations": "IterationCount",
+        "Threads": "ThreadCount",
+        "Copies": "CopyCount"
+    },
     "Parameters": {
         "CompilerVersion": 13,
         "IterationCount": 2,

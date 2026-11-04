@@ -4,6 +4,10 @@
         "SupportedPlatforms": "win-x64",
         "SupportedOperatingSystems": "Windows"
     },
+    "ParameterAliases": {
+        "NumberOfJvmInstances": "JvmInstanceCount",
+        "NumberOfWarehouses": "WarehouseCount"
+    },
     "Parameters": {
         "JvmInstanceCount": "1",
         "WarehouseCount": "8",

@@ -45,7 +45,7 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.WorkerCount), 0);
+                return this.Parameters.GetValue<int>(new string[] { nameof(this.WorkerCount), "Workers" }, 0);
             }
         }
 

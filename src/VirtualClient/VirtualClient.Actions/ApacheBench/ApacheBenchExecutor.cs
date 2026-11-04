@@ -74,7 +74,8 @@ namespace VirtualClient.Actions
             {
                 int noOfRequests = 50000;
 
-                if (this.Parameters.TryGetValue(nameof(this.RequestCount), out IConvertible value) && value != null)
+                string parameter = this.Parameters.ContainsKey(nameof(this.RequestCount)) ? nameof(this.RequestCount) : "NoOfRequests";
+                if (this.Parameters.TryGetValue(parameter, out IConvertible value) && value != null)
                 {
                     noOfRequests = value.ToInt32(CultureInfo.InvariantCulture);
                 }
@@ -92,7 +93,8 @@ namespace VirtualClient.Actions
             {
                 int noOfConcurrentRequests = 50;
 
-                if (this.Parameters.TryGetValue(nameof(this.ConcurrentRequestCount), out IConvertible value) && value != null)
+                string parameter = this.Parameters.ContainsKey(nameof(this.ConcurrentRequestCount)) ? nameof(this.ConcurrentRequestCount) : "NoOfConcurrentRequests";
+                if (this.Parameters.TryGetValue(parameter, out IConvertible value) && value != null)
                 {
                     noOfConcurrentRequests = value.ToInt32(CultureInfo.InvariantCulture);
                 }

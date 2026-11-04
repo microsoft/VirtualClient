@@ -30,6 +30,7 @@ namespace VirtualClient.Contracts
             this.Monitors = new List<ExecutionProfileElementYamlShim>();
             this.Metadata = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
             this.Parameters = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
+            this.ParameterAliases = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             this.ParametersOn = new List<IDictionary<string, IConvertible>>();
         }
 
@@ -74,6 +75,8 @@ namespace VirtualClient.Contracts
                 this.ParametersOn.AddRange(other.ParametersOn);
             }
 
+            this.ParameterAliases.AddRange(other.ParameterAliases);
+
             if (this.Actions?.Any() == true)
             {
                 this.Actions.ForEach(action => action.ComponentType = ComponentType.Action);
@@ -113,6 +116,12 @@ namespace VirtualClient.Contracts
         /// </summary>
         [YamlMember(Alias = "parameters", Order = 20, ScalarStyle = ScalarStyle.Plain)]
         public IDictionary<string, IConvertible> Parameters { get; set; }
+
+        /// <summary>
+        /// Profile-specific legacy parameter names mapped to their canonical names.
+        /// </summary>
+        [YamlMember(Alias = "parameter_aliases", Order = 22, ScalarStyle = ScalarStyle.Plain)]
+        public IDictionary<string, string> ParameterAliases { get; set; }
 
         /// <summary>
         /// Collection of parameters that are associated with the profile.

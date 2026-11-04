@@ -5,6 +5,10 @@
         "SupportedPlatforms": "win-x64,win-arm64",
         "SupportedOperatingSystems": "Windows"
     },
+    "ParameterAliases": {
+        "Connections": "ConnectionCount",
+        "Iterations": "IterationCount"
+    },
     "Parameters": {
         "Port": "4444",
         "NumaNodeIndex": "-1",
