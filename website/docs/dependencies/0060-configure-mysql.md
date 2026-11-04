@@ -36,6 +36,45 @@ The following section describes the different options for the 'Action' parameter
 | ConfigureNetwork           | Modifies the configuration file to make MySQL server accessible to the private network of VMs.                  |
 | CreateUser                 | Creates user access to the server for each client VM in the provided environment layout.                        |
 
+## HammerDB credentials
+
+The Linux x64 MySQL HammerDB profiles opt in to `ConfigureCredentials` after
+database creation and before HammerDB population. This action requires the updated
+MySQL package containing `configure-mysql-credentials.py`. It creates a dedicated
+`hammerdb` account with access to the workload database, without changing root
+authentication or enabling password authentication for existing Sysbench profiles.
+
+The configuration action generates a random password in `Password.json` in the
+platform-specific MySQL package directory. HammerDB always reads this default
+location. The JSON contains a non-empty `Password` string. The file is
+created atomically with owner-only permissions (0600) and reused on retries.
+Malformed or permissive files fail explicitly. Like other configuration actions,
+this action is skipped after successful initialization. A missing file then fails
+when HammerDB reads the credential rather than silently rotating it.
+
+HammerDB receives the password only through the child process's
+`MYSQLPASSWORD` environment variable. The MySQL Tcl templates resolve it at
+runtime without writing it into generated Tcl, printing it, or persisting it
+through HammerDB's `diset` command.
+Job snapshots are also disabled for these MySQL processes to prevent credentials
+from being persisted in HammerDB's job database.
+
+For multi-VM layouts, `ConfigureCredentials` copies the same password to each
+`--clientIps` address over authenticated SSH after configuring the MySQL accounts.
+The client destination is the same absolute package path as on the server.
+The profiles download the package on clients without installing MySQL there.
+Files are published atomically with permissions `0600`, owned by the client package
+directory's owner. Clients wait up to 40 minutes for the file before initializing
+HammerDB. Missing client package directories are also waited for, with the same bound;
+failed transfers fail credential configuration rather than saving success.
+
+SSH keys and trusted host keys must already be configured for the account running
+the script (**root** for this elevated MySQL action). Clients must allow that SSH
+identity to run `sudo -n python3`. See the shared
+[SSH provisioning requirements](./0061-install-postgresql.md#automatic-client-distribution).
+VC does not use its unauthenticated coordination API to transfer credentials.
+Standalone runs create only the local file and do not invoke SSH.
+
 ## Example
 Here is the usage of the dependency by the Sysbench OLTP workload as an example, that uses all three actions to configure the server.
 

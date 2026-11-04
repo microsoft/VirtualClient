@@ -99,15 +99,18 @@ namespace VirtualClient.Actions
 
             this.fixture.File.Setup(f => f.Exists(It.IsAny<string>())).Returns(true);
             this.fixture.Directory.Setup(d => d.Exists(It.IsAny<string>())).Returns(true);
-            string passwordFile = this.fixture.PlatformSpecifics.Combine(this.mockPackage.Path, "Password.json");
-            this.fixture.Parameters["PostgreSQLPasswordFile"] = passwordFile;
+            DependencyPath postgreSQLPackage = new DependencyPath("postgresql", this.fixture.GetPackagePath("postgresql"));
+            this.fixture.PackageManager.OnGetPackage("postgresql").ReturnsAsync(postgreSQLPackage);
+            string passwordFile = this.fixture.PlatformSpecifics.Combine(
+                this.fixture.ToPlatformSpecificPath(postgreSQLPackage, platform, architecture).Path, "Password.json");
             this.fixture.File.Setup(file => file.ReadAllTextAsync(passwordFile, It.IsAny<CancellationToken>()))
                 .ReturnsAsync("{\"Password\":\"test-password\"}");
 
             this.fixture.Parameters[nameof(HammerDBClientExecutor.PackageName)] = "hammerdb";
             this.fixture.Parameters[nameof(HammerDBClientExecutor.Port)] = 5432;
             this.fixture.Parameters[nameof(HammerDBClientExecutor.DatabaseName)] = "hammerdbtest";
-            this.fixture.Parameters[nameof(HammerDBClientExecutor.SQLServer)] = "postgresql";
+            this.fixture.Parameters[nameof(HammerDBExecutor.SQLServer)] = DatabaseServer.PostgreSQL;
+            this.fixture.Parameters[nameof(HammerDBClientExecutor.DatabasePackageName)] = "postgresql";
             this.fixture.Parameters[nameof(HammerDBClientExecutor.Duration)] = "00:01:00";
             this.fixture.Parameters[nameof(HammerDBClientExecutor.Workload)] = "TPCC";
         }

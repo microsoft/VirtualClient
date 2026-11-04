@@ -20,54 +20,64 @@ The following section describes the parameters used by the individual component 
 
 | **Parameter** | **Required** | **Description**                                                                                                 |
 |---------------|--------------|-----------------------------------------------------------------------------------------------------------------|
-| PostgreSQLPasswordFile | No | Path to a provisioned JSON file containing a non-empty string named `Password`. Supported by PostgreSQL configuration, HammerDB, and Sysbench PostgreSQL actions. |
+| PostgreSQLPasswordFile | No | Legacy override supported only by Sysbench PostgreSQL actions. PostgreSQL configuration and HammerDB always use the package's `Password.json`. |
 | Password | Not supported | Do not pass passwords in profiles or command-line arguments. |
 
 ## PostgreSQL Server Configuration Credentials
 
-PostgreSQL configuration, HammerDB, and Sysbench PostgreSQL actions resolve the
-superuser password in this order:
+PostgreSQL configuration and HammerDB always read `Password.json` in the
+platform-specific `postgresql` package directory. They do not use custom password
+paths or an inherited `PGPASSWORD` as input.
 
-1. The JSON file specified by the component parameter `PostgreSQLPasswordFile`, if supplied.
-2. The existing `PGPASSWORD` environment variable in the Virtual Client process, if non-empty.
-3. `Password.json` in the platform-specific `postgresql` package directory, such as
-   `linux-x64/Password.json` or `linux-arm64/Password.json`.
+The HammerDB profiles run the server-only `ConfigureCredentials` action before
+`ConfigureServer`. With `postgresql.14.0.0.rev6.zip`, this invokes
+`generate-password.py` in the selected architecture directory. The generator uses
+Python's `secrets` module, creates an owner-only file, and never prints the password.
+A valid existing file is retained; invalid or empty files fail explicitly.
+Generation does not change the database password: the later `ConfigureServer`
+action applies the generated credential to PostgreSQL.
 
-When using a password file, provision it after package extraction and before
-PostgreSQL configuration. For packages that include `generate-password.py`, run:
-
-```bash
-python3 /path/to/postgresql/linux-x64/generate-password.py
-```
-
-Use the `linux-arm64` script on ARM64. Virtual Client does not invoke the generator
-automatically. The generator creates `Password.json` beside
-itself by default, or at the path specified by `--output`. It uses Python's `secrets`
-module, sets owner-only permissions on Linux, and never prints the password. A valid
-existing file is retained; an invalid or empty file is not silently overwritten.
-Generation does not set the database password; the later PostgreSQL configuration
-step applies the generated credential to the server.
-
-Generate the credential once and securely provision the same file on all participating
-client and server VMs. Running the generator independently on each VM produces different
-passwords. Alternatively, provision the JSON `Password` value from your secret provider.
-An earlier process launched by Virtual Client can create this file; no shell export needs to persist across steps.
-The file is parsed as JSON, not sourced or executed as a shell script. Empty passwords,
-missing files, malformed JSON, and unreadable files cause the step to fail. An explicit
-file path always takes precedence over `PGPASSWORD` and never silently falls back
-if its file is invalid. Without an explicit path, a non-empty `PGPASSWORD` bypasses
-file reading entirely.
+Other profiles must provision the default file before configuration or opt in to
+`ConfigureCredentials` with the updated package. Do not generate independently on
+clients, as that produces different passwords. Sysbench's PostgreSQL actions retain
+their existing explicit-file and `PGPASSWORD` fallbacks; leave those overrides unset
+when using the generated package credential.
 
 Virtual Client reads the credential when the step runs and sets `PGPASSWORD` only in
 the relevant child process environment before starting it. It does not change Virtual
 Client's own environment, include the password in command arguments, or store it in
 VC state. The Python scripts and their descendants receive the variable as before.
 
-Provision the same password on each client and server VM. There is no automatic
-cross-VM credential distribution. The PostgreSQL Sysbench profiles download the
-PostgreSQL package on clients as well as servers so the default file location is
-available. Alternatively, set `PostgreSQLPasswordFile` on each relevant component to
-use an independently provisioned file outside the package.
+### Automatic Client Distribution
+
+For multi-VM layouts, `ConfigureCredentials` passes the client IP addresses to
+`generate-password.py --clientIps`. The generator copies the server credential over
+SSH to the same absolute package path on each client. The MySQL package uses the
+same transfer implementation after configuring its database accounts.
+
+Before starting the workload:
+
+* Deploy VC with matching absolute database package paths on all VMs, including the
+  architecture directory. Client IPs alone cannot identify a different deployment path.
+* Configure OpenSSH key authentication and trusted host keys for each client IP under
+  the account executing the configuration script. MySQL's configuration script runs
+  elevated, so its SSH configuration and keys must be accessible to root.
+* Allow SSH network access and passwordless `sudo -n python3` on clients. The SSH
+  username and identity can be selected in that execution account's SSH configuration;
+  no SSH passwords or private keys are passed in profiles or command arguments.
+
+Transfers use noninteractive SSH with strict host-key checking and no pseudo-terminal.
+The password is sent through encrypted stdin, not command arguments. The receiver
+waits up to 40 minutes for package extraction, then atomically writes `Password.json`
+with permissions `0600` and ownership matching the package directory. HammerDB
+clients also wait up to 40 minutes for the file before initialization. Invalid
+existing files still fail rather than being ignored.
+
+Any transfer failure fails `ConfigureCredentials`; VC saves success only after all
+copies succeed. Retries reuse the server's password. Like other configuration
+actions, a successfully completed action is skipped on subsequent runs. This does
+not bootstrap SSH access or automatically synchronize newly added clients.
+Standalone runs do not invoke SSH. No secret is served by VC's coordination API.
 
 The file is plaintext. Restrict it to the account running Virtual Client (for example,
 `chmod 600` on Linux), protect its parent directory, and never publish a package archive

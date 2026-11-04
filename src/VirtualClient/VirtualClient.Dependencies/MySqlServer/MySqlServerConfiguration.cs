@@ -147,10 +147,41 @@ namespace VirtualClient.Dependencies.MySqlServer
                             await this.SetMySQLGlobalVariableAsync(telemetryContext, cancellationToken)
                                 .ConfigureAwait(false);
                             break;
+                        case ConfigurationAction.ConfigureCredentials:
+                            await this.ConfigureCredentialsAsync(telemetryContext, cancellationToken)
+                                .ConfigureAwait(false);
+                            break;
                     }
 
                     await this.stateManager.SaveStateAsync(stateId, new ConfigurationState(this.Action), cancellationToken);
                 }
+            }
+        }
+
+        private async Task ConfigureCredentialsAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            string serverIp = (this.GetLayoutClientInstances(ClientRole.Server, false) ?? Enumerable.Empty<ClientInstance>())
+                .FirstOrDefault()?.IPAddress ?? IPAddress.Loopback.ToString();
+
+            string arguments = $"\"configure-mysql-credentials.py\" --dbName \"{this.DatabaseName}\"" +
+                $" --passwordFile \"Password.json\" --serverIp {serverIp}";
+
+            if (this.IsMultiRoleLayout())
+            {
+                arguments += $" --clientIps \"{this.GetClientIpAddresses()}\"";
+            }
+
+            using (IProcessProxy process = await this.ExecuteCommandAsync(
+                PythonCommand,
+                arguments,
+                this.packageDirectory,
+                telemetryContext,
+                cancellationToken,
+                runElevated: true))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                await this.LogProcessDetailsAsync(process, telemetryContext, "MySQLServerConfiguration", logToFile: true);
+                process.ThrowIfDependencyInstallationFailed(process.StandardError.ToString());
             }
         }
 
@@ -365,6 +396,11 @@ namespace VirtualClient.Dependencies.MySqlServer
             /// ie. "MAX_PREPARED_STMT_COUNT=1000000;MAX_CONNECTIONS=1024"
             /// </summary>
             public const string SetGlobalVariables = nameof(SetGlobalVariables);
+
+            /// <summary>
+            /// Configures the isolated HammerDB account using a protected, reusable password file.
+            /// </summary>
+            public const string ConfigureCredentials = nameof(ConfigureCredentials);
         }
 
         internal class ConfigurationState

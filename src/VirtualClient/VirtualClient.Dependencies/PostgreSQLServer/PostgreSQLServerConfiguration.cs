@@ -141,6 +141,10 @@ namespace VirtualClient.Dependencies
                 {
                     switch (this.Action)
                     {
+                        case ConfigurationAction.ConfigureCredentials:
+                            await this.ConfigureCredentialsAsync(telemetryContext, cancellationToken)
+                                .ConfigureAwait(false);
+                            break;
                         case ConfigurationAction.ConfigureServer:
                             await this.ConfigurePostgreSQLServerAsync(telemetryContext, cancellationToken)
                                 .ConfigureAwait(false);
@@ -157,25 +161,14 @@ namespace VirtualClient.Dependencies
         }
 
         /// <summary>
-        /// Reads the explicit PostgreSQL password file first, otherwise uses non-empty PGPASSWORD,
-        /// otherwise reads Password.json in the platform-specific PostgreSQL package.
+        /// Reads Password.json in the platform-specific PostgreSQL package.
         /// </summary>
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
         /// <returns>The password to supply only to the database child process environment.</returns>
         protected async Task<string> GetPostgreSQLPasswordAsync(CancellationToken cancellationToken)
         {
-            string passwordFile = this.Parameters.GetValue<string>("PostgreSQLPasswordFile", string.Empty);
-            if (string.IsNullOrWhiteSpace(passwordFile))
-            {
-                string environmentPassword = Environment.GetEnvironmentVariable("PGPASSWORD");
-                if (!string.IsNullOrEmpty(environmentPassword))
-                {
-                    return environmentPassword;
-                }
-
-                DependencyPath package = await this.GetPlatformSpecificPackageAsync("postgresql", cancellationToken).ConfigureAwait(false);
-                passwordFile = this.Combine(package.Path, "Password.json");
-            }
+            DependencyPath package = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken).ConfigureAwait(false);
+            string passwordFile = this.Combine(package.Path, "Password.json");
 
             IFileSystem fileSystem = this.SystemManager.FileSystem;
             string password = null;
@@ -209,6 +202,24 @@ namespace VirtualClient.Dependencies
             }
 
             return password;
+        }
+
+        private async Task ConfigureCredentialsAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            string arguments = "\"generate-password.py\"";
+            if (this.IsMultiRoleLayout())
+            {
+                string clientIps = string.Join(";", this.GetLayoutClientInstances(ClientRole.Client).Select(client => client.IPAddress));
+                arguments += $" --clientIps \"{clientIps}\"";
+            }
+
+            using (IProcessProxy process = await this.ExecuteCommandAsync(
+                "python3", arguments, this.packageDirectory, telemetryContext, cancellationToken))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                await this.LogProcessDetailsAsync(process, telemetryContext, "PostgreSQLServerConfiguration", logToFile: true);
+                process.ThrowIfDependencyInstallationFailed(process.StandardError.ToString());
+            }
         }
 
         private async Task ConfigurePostgreSQLServerAsync(EventContext telemetryContext, CancellationToken cancellationToken)
@@ -351,6 +362,11 @@ namespace VirtualClient.Dependencies
         /// </summary>
         internal class ConfigurationAction
         {
+            /// <summary>
+            /// Generates the package credential and distributes it to clients over SSH.
+            /// </summary>
+            public const string ConfigureCredentials = nameof(ConfigureCredentials);
+
             /// <summary>
             /// Configures PostgreSQL server access, credentials, memory, and data directory.
             /// </summary>

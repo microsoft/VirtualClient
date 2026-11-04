@@ -1,0 +1,178 @@
+{
+    "Description": "HammerDB MySQL TPCH Database Server Performance Workload",
+    "MinimumExecutionInterval": "00:01:00",
+    "Metadata": {
+        "RecommendedMinimumExecutionTime": "04:00:00",
+        "SupportedPlatforms": "linux-x64",
+        "SupportedOperatingSystems": "Debian,Ubuntu"
+    },
+    "ParameterAliases": {
+        "VirtualUsers": "VirtualUserCount"
+    },
+    "Parameters": {
+        "DatabaseName": "hammerdb_tpch",
+        "DatabasePackageName": "mysql-server",
+        "DiskFilter": "osdisk:false&sizegreaterthan:256g",
+        "Port": "3306",
+        "Duration": "00:20:00",
+        "VirtualUserCount": "{calculate({LogicalCoreCount})}",
+        "ScaleFactor": "1",
+        "InnodbBufferPoolSize": "{calculate({SystemMemoryBytes} * 80 / 100)}"
+    },
+    "Actions": [
+        {
+            "Type": "HammerDBServerExecutor",
+            "Parameters": {
+                "Scenario": "ExecuteServer",
+                "PackageName": "hammerdb",
+                "Workload": "TPCH",
+                "SQLServer": "MySQL",
+                "DatabasePackageName": "$.Parameters.DatabasePackageName",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "Port": "$.Parameters.Port",
+                "VirtualUserCount": "$.Parameters.VirtualUserCount",
+                "ScaleFactor": "$.Parameters.ScaleFactor",
+                "Duration": "$.Parameters.Duration",
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "HammerDBClientExecutor",
+            "Parameters": {
+                "Scenario": "tpch",
+                "Workload": "TPCH",
+                "SQLServer": "MySQL",
+                "DatabasePackageName": "$.Parameters.DatabasePackageName",
+                "PackageName": "hammerdb",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "Port": "$.Parameters.Port",
+                "VirtualUserCount": "$.Parameters.VirtualUserCount",
+                "ScaleFactor": "$.Parameters.ScaleFactor",
+                "Duration": "$.Parameters.Duration",
+                "Role": "Client"
+            }
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "LinuxPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallLinuxPackages",
+                "Packages": "python3,openssh-client,libmysqlclient21"
+            }
+        },
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "DownloadSystemConfigPackage",
+                "BlobContainer": "packages",
+                "BlobName": "system_config.2.0.0.zip",
+                "PackageName": "system_config",
+                "Extract": true,
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "StripeDisks",
+            "Parameters": {
+                "Scenario": "StripeAndMountDisks",
+                "PackageName": "system_config",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "DownloadMySqlServerPackage",
+                "BlobContainer": "packages",
+                "BlobName": "mysql-server-8.0.36-v6.zip",
+                "PackageName": "$.Parameters.DatabasePackageName",
+                "Extract": true
+            }
+        },
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "DownloadHammerDBPackage",
+                "BlobContainer": "packages",
+                "BlobName": "hammerdb.4.12.0.rev6.zip",
+                "PackageName": "hammerdb",
+                "Extract": true
+            }
+        },
+        {
+            "Type": "MySQLServerInstallation",
+            "Parameters": {
+                "Scenario": "InstallMySQLServer",
+                "Action": "InstallServer",
+                "PackageName": "$.Parameters.DatabasePackageName",
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "MySQLServerConfiguration",
+            "Parameters": {
+                "Scenario": "ConfigureMySQLServer",
+                "Action": "ConfigureServer",
+                "DiskFilter": "Logical",
+                "PackageName": "$.Parameters.DatabasePackageName",
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "MySQLServerConfiguration",
+            "Parameters": {
+                "Scenario": "CreateMySQLDatabase",
+                "Action": "CreateDatabase",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "PackageName": "$.Parameters.DatabasePackageName",
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "MySQLServerConfiguration",
+            "Parameters": {
+                "Scenario": "ConfigureCredentials",
+                "Action": "ConfigureCredentials",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "PackageName": "$.Parameters.DatabasePackageName",
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "MySQLServerConfiguration",
+            "Parameters": {
+                "Scenario": "SetMySQLGlobalVariables",
+                "Action": "SetGlobalVariables",
+                "InnodbBufferPoolSize": "$.Parameters.InnodbBufferPoolSize",
+                "Variables": "MAX_PREPARED_STMT_COUNT=1000000;MAX_CONNECTIONS=100000;innodb_buffer_pool_size={InnodbBufferPoolSize};innodb_lock_wait_timeout=300;innodb_io_capacity=10000;innodb_io_capacity_max=10000;innodb_buffer_pool_dump_at_shutdown=OFF;innodb_change_buffering=0;table_open_cache=20000;",
+                "PackageName": "$.Parameters.DatabasePackageName",
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "HammerDBExecutor",
+            "Parameters": {
+                "Scenario": "PopulateMySQLDatabase",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "Workload": "TPCH",
+                "SQLServer": "MySQL",
+                "DatabasePackageName": "$.Parameters.DatabasePackageName",
+                "PackageName": "hammerdb",
+                "VirtualUserCount": "$.Parameters.VirtualUserCount",
+                "ScaleFactor": "$.Parameters.ScaleFactor",
+                "Port": "$.Parameters.Port",
+                "Duration": "$.Parameters.Duration",
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "ApiServer",
+            "Parameters": {
+                "Scenario": "StartAPIServer",
+                "Role": "Server"
+            }
+        }
+    ]
+}

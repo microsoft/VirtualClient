@@ -53,24 +53,46 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase(PlatformID.Unix, Architecture.X64, "tpcc")]
-        [TestCase(PlatformID.Unix, Architecture.X64, "tpch")]
-        [TestCase(PlatformID.Win32NT, Architecture.X64, "tpcc")]
-        [TestCase(PlatformID.Win32NT, Architecture.X64, "tpch")]
-        public async Task HammerDBClientExecutorRunsTheExpectedWorkloadCommand(PlatformID platform, Architecture architecture, string workload)
+        [TestCase(PlatformID.Unix, Architecture.X64, "tpcc", "postgresql", false)]
+        [TestCase(PlatformID.Unix, Architecture.X64, "tpch", "postgresql", false)]
+        [TestCase(PlatformID.Win32NT, Architecture.X64, "tpcc", "postgresql", false)]
+        [TestCase(PlatformID.Win32NT, Architecture.X64, "tpch", "postgresql", false)]
+        [TestCase(PlatformID.Unix, Architecture.X64, "tpcc", "PostgreSQL", true)]
+        [TestCase(PlatformID.Unix, Architecture.X64, "tpcc", "mysql", false)]
+        [TestCase(PlatformID.Unix, Architecture.X64, "tpch", "MySQL", false)]
+        [TestCase(PlatformID.Unix, Architecture.X64, "tpch", "mysql", true)]
+        [TestCase(PlatformID.Unix, Architecture.X64, BenchmarkName.TPCC, DatabaseServer.PostgreSQL, false)]
+        [TestCase(PlatformID.Unix, Architecture.X64, BenchmarkName.TPCH, DatabaseServer.MySQL, false)]
+        public async Task HammerDBClientExecutorRunsTheExpectedWorkloadCommand(
+            PlatformID platform, Architecture architecture, string workload, string sqlServer, bool runningInContainer)
         {
             this.SetupDefaultBehavior(platform, architecture);
+            bool isPostgreSQL = string.Equals(sqlServer, DatabaseServer.PostgreSQL, StringComparison.OrdinalIgnoreCase);
+            int port = isPostgreSQL ? 5432 : 3306;
+            this.fixture.SystemManagement.SetupGet(manager => manager.RunningInContainer).Returns(runningInContainer);
             this.fixture.Parameters[nameof(HammerDBClientExecutor.Workload)] = workload;
+            this.fixture.Parameters[nameof(HammerDBExecutor.SQLServer)] = sqlServer;
+            this.fixture.Parameters[nameof(HammerDBClientExecutor.Port)] = port;
             const string filePassword = "file-password-with-$symbols";
-            this.fixture.Parameters["PostgreSQLPasswordFile"] = "/secure/Password.json";
-            this.fixture.File.Setup(file => file.ReadAllTextAsync("/secure/Password.json", It.IsAny<CancellationToken>()))
+            string databasePackageName = isPostgreSQL ? "postgresql" : "mysql-server";
+            this.fixture.Parameters[nameof(HammerDBClientExecutor.DatabasePackageName)] = databasePackageName;
+            DependencyPath databasePackage = new DependencyPath(databasePackageName, this.fixture.GetPackagePath(databasePackageName));
+            this.fixture.PackageManager.OnGetPackage(databasePackageName).ReturnsAsync(databasePackage);
+            string passwordFile = this.fixture.PlatformSpecifics.Combine(
+                this.fixture.ToPlatformSpecificPath(databasePackage, platform, architecture).Path, "Password.json");
+            this.fixture.File.Setup(file => file.ReadAllTextAsync(passwordFile, It.IsAny<CancellationToken>()))
                 .ReturnsAsync("{\"Password\":\"file-password-with-$symbols\"}");
 
-            string configurationCommand = platform == PlatformID.Unix ? "sudo --preserve-env=PGPASSWORD python3" : "python3";
-            string workloadArguments = workload == "tpcc" ? "--warehouseCount 1" : "--scaleFactor 10";
+            string passwordEnvironmentVariable = isPostgreSQL ? "PGPASSWORD" : "MYSQLPASSWORD";
+            string configurationCommand = platform == PlatformID.Unix
+                ? $"sudo --preserve-env={passwordEnvironmentVariable} python3"
+                : "python3";
+            string workloadArguments = string.Equals(workload, BenchmarkName.TPCC, StringComparison.OrdinalIgnoreCase)
+                ? "--warehouseCount 1"
+                : "--scaleFactor 10";
             List<string> expectedCommands = new List<string>
             {
-                $"{configurationCommand} {this.fixture.PlatformSpecifics.Combine(this.mockPackagePath, "configure-workload-generator.py")} --workload {workload} --sqlServer postgresql --port 5432 --virtualUsers 1 --dbName hammerdbtest --hostIPAddress [0-9.]+ {workloadArguments} --duration 1",
+                $"{configurationCommand} {this.fixture.PlatformSpecifics.Combine(this.mockPackagePath, "configure-workload-generator.py")} --workload {workload.ToLowerInvariant()} --sqlServer {sqlServer.ToLowerInvariant()} --port {port} --virtualUsers 1 --dbName hammerdbtest --hostIPAddress [0-9.]+ {workloadArguments} --duration 1",
                 $"python3 {this.fixture.PlatformSpecifics.Combine(this.mockPackagePath, "run-workload.py")} --runTransactionsTCLFilePath runTransactions.tcl"
             };
 
@@ -108,7 +130,10 @@ namespace VirtualClient.Actions
 
                 process.OnStart = () =>
                 {
-                    Assert.AreEqual(filePassword, process.EnvironmentVariables["PGPASSWORD"]);
+                    Assert.AreEqual(
+                        isPostgreSQL ? filePassword : Environment.GetEnvironmentVariable("PGPASSWORD"),
+                        process.EnvironmentVariables["PGPASSWORD"]);
+                    Assert.AreEqual(filePassword, process.EnvironmentVariables[passwordEnvironmentVariable]);
                     return true;
                 };
 
@@ -121,6 +146,9 @@ namespace VirtualClient.Actions
             }
 
             Assert.AreEqual(expectedCommands.Count, commandNumber);
+            this.fixture.File.Verify(
+                file => file.ReadAllTextAsync(passwordFile, It.IsAny<CancellationToken>()),
+                Times.Once);
         }
         public void SetupDefaultBehavior(PlatformID platform, Architecture architecture)
         {
@@ -136,7 +164,7 @@ namespace VirtualClient.Actions
                 { nameof(HammerDBClientExecutor.Port), "5432"},
                 { nameof(HammerDBClientExecutor.DatabaseName), "hammerdbtest" },
                 { nameof(HammerDBClientExecutor.Workload), "tpcc" },
-                { nameof(HammerDBClientExecutor.SQLServer), "postgresql" },
+                { nameof(HammerDBExecutor.SQLServer), DatabaseServer.PostgreSQL },
                 { nameof(HammerDBClientExecutor.VirtualUserCount), "1"},
                 { nameof(HammerDBClientExecutor.WarehouseCount), "1"},
                 { nameof(HammerDBClientExecutor.ScaleFactor), "10"},
