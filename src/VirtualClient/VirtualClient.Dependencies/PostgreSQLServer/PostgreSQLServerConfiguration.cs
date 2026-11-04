@@ -206,7 +206,7 @@ namespace VirtualClient.Dependencies
 
         private async Task ConfigureCredentialsAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string arguments = $"\"{this.Combine(this.packageDirectory, "generate-password.py")}\"";
+            string arguments = "\"generate-password.py\"";
             if (this.IsMultiRoleLayout())
             {
                 string clientIps = string.Join(";", this.GetLayoutClientInstances(ClientRole.Client).Select(client => client.IPAddress));

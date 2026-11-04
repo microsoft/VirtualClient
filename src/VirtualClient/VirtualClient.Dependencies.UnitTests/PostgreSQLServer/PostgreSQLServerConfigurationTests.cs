@@ -388,6 +388,7 @@ namespace VirtualClient.Dependencies
             this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
             {
                 commands.Add(arguments);
+                Assert.AreEqual(this.packagePath, workingDirectory);
                 this.mockFixture.Process.ExitCode = distributionFails ? 1 : 0;
                 this.mockFixture.Process.OnHasExited = () => true;
                 return this.mockFixture.Process;
@@ -403,7 +404,7 @@ namespace VirtualClient.Dependencies
                 await component.ExecuteAsync(CancellationToken.None);
             }
 
-            StringAssert.Contains("generate-password.py", commands[0]);
+            StringAssert.StartsWith("\"generate-password.py\"", commands[0]);
             StringAssert.Contains("--clientIps \"1.2.3.5\"", commands[0]);
             Assert.AreEqual(1, commands.Count);
             Assert.AreEqual(distributionFails ? 0 : 1, statesSaved);

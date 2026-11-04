@@ -350,9 +350,10 @@ namespace VirtualClient.Dependencies.MySqlServer
             {
                 commandsExecuted++;
                 StringAssert.StartsWith("python3 ", arguments);
-                StringAssert.Contains($"\"{this.packagePath}/configure-mysql-credentials.py\"", arguments);
-                StringAssert.Contains($"--dbName \"hammerdb_tpcc\" --passwordFile \"{this.packagePath}/Password.json\" --serverIp 1.2.3.4", arguments);
+                StringAssert.Contains("\"configure-mysql-credentials.py\"", arguments);
+                StringAssert.Contains("--dbName \"hammerdb_tpcc\" --passwordFile \"Password.json\" --serverIp 1.2.3.4", arguments);
                 StringAssert.Contains("--clientIps \"1.2.3.5;\"", arguments);
+                Assert.AreEqual(this.packagePath, workingDir);
                 return this.fixture.Process;
             };
 
@@ -369,12 +370,13 @@ namespace VirtualClient.Dependencies.MySqlServer
             this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 executedArguments = arguments;
+                Assert.AreEqual(this.packagePath, workingDir);
                 return this.fixture.Process;
             };
 
             using TestMySQLServerConfiguration component = new TestMySQLServerConfiguration(this.fixture);
             await component.ExecuteAsync(CancellationToken.None);
-            StringAssert.Contains($"--passwordFile \"{this.packagePath}/Password.json\"", executedArguments);
+            StringAssert.Contains("--passwordFile \"Password.json\"", executedArguments);
         }
 
         [Test]

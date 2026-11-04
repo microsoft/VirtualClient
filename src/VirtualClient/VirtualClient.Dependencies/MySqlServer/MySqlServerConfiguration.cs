@@ -160,13 +160,11 @@ namespace VirtualClient.Dependencies.MySqlServer
 
         private async Task ConfigureCredentialsAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string passwordFile = this.Combine(this.packageDirectory, "Password.json");
-
             string serverIp = (this.GetLayoutClientInstances(ClientRole.Server, false) ?? Enumerable.Empty<ClientInstance>())
                 .FirstOrDefault()?.IPAddress ?? IPAddress.Loopback.ToString();
 
-            string arguments = $"\"{this.Combine(this.packageDirectory, "configure-mysql-credentials.py")}\"" +
-                $" --dbName \"{this.DatabaseName}\" --passwordFile \"{passwordFile}\" --serverIp {serverIp}";
+            string arguments = $"\"configure-mysql-credentials.py\" --dbName \"{this.DatabaseName}\"" +
+                $" --passwordFile \"Password.json\" --serverIp {serverIp}";
 
             if (this.IsMultiRoleLayout())
             {
@@ -176,7 +174,7 @@ namespace VirtualClient.Dependencies.MySqlServer
             using (IProcessProxy process = await this.ExecuteCommandAsync(
                 PythonCommand,
                 arguments,
-                Environment.CurrentDirectory,
+                this.packageDirectory,
                 telemetryContext,
                 cancellationToken,
                 runElevated: true))
