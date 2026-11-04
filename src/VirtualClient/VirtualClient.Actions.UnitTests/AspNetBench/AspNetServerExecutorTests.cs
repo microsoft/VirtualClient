@@ -201,9 +201,9 @@ namespace VirtualClient.Actions
             {
                 get
                 {
-                    var field = typeof(AspNetServerExecutor).GetField("aspnetBenchDirectory",
+                    var fieldInfo = typeof(AspNetServerExecutor).GetField("aspnetBenchDirectory",
                         System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                    return field?.GetValue(this) as string;
+                    return fieldInfo?.GetValue(this) as string;
                 }
             }
 
@@ -211,9 +211,9 @@ namespace VirtualClient.Actions
             {
                 get
                 {
-                    var field = typeof(AspNetServerExecutor).GetField("aspnetBenchDllPath",
+                    var fieldInfo = typeof(AspNetServerExecutor).GetField("aspnetBenchDllPath",
                         System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                    return field?.GetValue(this) as string;
+                    return fieldInfo?.GetValue(this) as string;
                 }
             }
 
@@ -221,9 +221,9 @@ namespace VirtualClient.Actions
             {
                 get
                 {
-                    var field = typeof(AspNetServerExecutor).GetField("dotnetExePath",
+                    var fieldInfo = typeof(AspNetServerExecutor).GetField("dotnetExePath",
                         System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                    return field?.GetValue(this) as string;
+                    return fieldInfo?.GetValue(this) as string;
                 }
             }
 

@@ -341,7 +341,7 @@ at the bottom of the [General Developer Guide](/docs/developing/develop-guide) f
 
   Note that in this scenario, we are executing the debugging scenario from Visual Studio in the extensions project. It is a good idea (for consistency) to reference a 
   "just-built" version of the Virtual Client runtime executable in many cases. This is typically done by cloning the Virtual Client platform repo, building it and referencing the 
-  VirtualClient.exe from the built output location (e.g. /\{repoDir\}/out/bin/Debug/x64/VirtualClient.Main/net9.0/VirtualClient.exe).
+  VirtualClient.exe from the built output location (e.g. /\{repoDir\}/out/bin/Debug/x64/VirtualClient.Main/net10.0/VirtualClient.exe).
 
   ``` json
   # A custom profile is created and placed on the file system somewhere (typically somewhere outside of the source directory). In this profile, the

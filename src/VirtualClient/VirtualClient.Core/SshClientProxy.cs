@@ -677,6 +677,7 @@ namespace VirtualClient
         /// <param name="cancellationToken">A token that can be used to cancel the operations.</param>
         /// <param name="outputReceived">An action/delegate to invoke as output is received from the SSH session command stream.</param>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("AsyncUsage", "AsyncFixer04:Fire-and-forget async call inside a using block", Justification = "Intended usage")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2024:Do not use StreamReader.EndOfStream in async methods", Justification = "Preserves the existing SSH output polling behavior. The rule is newly enforced for net10.0.")]
         protected virtual async Task<ProcessDetails> ExecuteCommandOnRemoteSystemAsync(string command, CancellationToken cancellationToken, Action<SshCommandOutputInfo> outputReceived = null)
         {
             using (SshCommand sshCommand = this.SessionClient.CreateCommand(command))
