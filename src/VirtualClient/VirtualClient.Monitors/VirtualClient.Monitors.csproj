@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <AssemblyName>VirtualClient.Monitors</AssemblyName>
         <RootNamespace>VirtualClient.Monitors</RootNamespace>
         <NoWarn>CA1416;CA2227;SA1116</NoWarn>
@@ -12,7 +12,6 @@
         <PackageReference Include="Microsoft.Diagnostics.Tracing.TraceEvent" />
         <PackageReference Include="System.CommandLine" />
         <PackageReference Include="System.Diagnostics.EventLog" />
-        <PackageReference Include="System.IO.FileSystem.Primitives" />
     </ItemGroup>
 
     <ItemGroup>

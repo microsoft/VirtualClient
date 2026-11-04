@@ -15,7 +15,7 @@ trigger:
 pr: none
 
 pool:
-  vmImage: windows-latest
+  name: VirtualClient-1ES-Windows-Pool
 
 variables:
   ROOT: $(Build.SourcesDirectory)
@@ -34,7 +34,7 @@ steps:
   continueOnError: false
   inputs:
     packageType: 'sdk'
-    version: '9.0.x'
+    version: '10.0.x'
     useGlobalJson: false
     performMultiLevelLookup: true
     workingDirectory: '$(Build.SourcesDirectory)'
@@ -60,7 +60,7 @@ steps:
 - script: $(Build.SourcesDirectory)\build-packages.cmd --suffix $(VersionSuffix)
   displayName: 'Build NuGet Packages'
 
-- task: EsrpCodeSigning@5
+- task: EsrpCodeSigning@6
   inputs:
     ConnectedServiceName: 'virtualclient-esrp-ame'
     AppRegistrationClientId: '0225fe5c-2a99-4459-af16-27a7dcd1c14a'

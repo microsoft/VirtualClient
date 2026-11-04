@@ -12,8 +12,8 @@ SHA256 algorithm.
 
 ## Installation
 
-Virtual Client is a self-contained .NET 9 application, so "Installation" really just means copying the Virtual Client package onto your system. It runs out-of-box on 
-[all operating systems supported by .NET 9](https://github.com/dotnet/core/blob/main/release-notes/9.0/supported-os.md).
+Virtual Client is a self-contained .NET 10 application, so "Installation" really just means copying the Virtual Client package onto your system. It runs out-of-box on
+[all operating systems supported by .NET 10](https://github.com/dotnet/core/blob/main/release-notes/10.0/supported-os.md).
 
 ### Zip Package
 You can find latest production quality release zip packages in [GitHub Releases](https://github.com/microsoft/VirtualClient/releases).
@@ -113,7 +113,7 @@ sudo dnf install virtualclient
 If preferable, the Virtual Client source code can be built on your local system. This is useful for picking up the absolute latest changes
 to the source code and for testing changes locally. Before attempting to build the Virtual Client repo, ensure the fo
 
-* [Install the .NET SDK 9.0.x](https://dotnet.microsoft.com/en-us/download/dotnet/9.0)
+* [Install the .NET SDK 10.0.x](https://dotnet.microsoft.com/en-us/download/dotnet/10.0)
 * Build artifacts are output to the following locations. The `/out/bin` directory is where all compiled binaries/executables are output. The `/out/obj` directory
   will contain intermediate files used during compilation. The `/out/packages` directory will contain any packages that are created during build + packaging 
   processes.
@@ -146,10 +146,10 @@ The following section provides instructions for building on Windows systems.
 * The build process will create ready-to-run builds of the Virtual Client for all supported platforms and architectures. Virtual Client executable and binaries can be found in the repo 'out' directory in corresponding architecture/runtimes folder locations. 
 
   ``` bash
-  {rootdir}\out\bin\Release\ARM64\VirtualClient.Main\net9.0\linux-arm64\VirtualClient
-  {rootdir}\out\bin\Release\ARM64\VirtualClient.Main\net9.0\win-arm64\VirtualClient.exe
-  {rootdir}\out\bin\Release\x64\VirtualClient.Main\net9.0\linux-x64\VirtualClient
-  {rootdir}\out\bin\Release\x64\VirtualClient.Main\net9.0\win-x64\VirtualClient.exe
+  {rootdir}\out\bin\Release\ARM64\VirtualClient.Main\net10.0\linux-arm64\VirtualClient
+  {rootdir}\out\bin\Release\ARM64\VirtualClient.Main\net10.0\win-arm64\VirtualClient.exe
+  {rootdir}\out\bin\Release\x64\VirtualClient.Main\net10.0\linux-x64\VirtualClient
+  {rootdir}\out\bin\Release\x64\VirtualClient.Main\net10.0\win-x64\VirtualClient.exe
   ```
 * VirtualClient is a self-contained .NET application. The application can be run from the build output locations noted above or copied to another
   system. When simply copy the contents of the folder for the specific platform-architecture (shown above) to the system on which you want to run. 

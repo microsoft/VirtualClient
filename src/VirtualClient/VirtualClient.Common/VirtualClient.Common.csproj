@@ -1,15 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-		<TargetFrameworks>net8.0;net9.0</TargetFrameworks>
+		<TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
         <AssemblyName>VirtualClient.Common</AssemblyName>
         <NoWarn></NoWarn>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="System.Net.Http" />
-        <PackageReference Include="System.Private.Uri" />
-        <PackageReference Include="System.Text.RegularExpressions" />
         <PackageReference Include="Azure.Messaging.EventHubs" />
         <PackageReference Include="Azure.Storage.Blobs" />
         <PackageReference Include="Microsoft.Extensions.Configuration" />
@@ -20,7 +17,6 @@
         <PackageReference Include="Serilog.Extensions.Logging" />
         <PackageReference Include="Serilog.Sinks.File" />
         <PackageReference Include="SSH.NET" />
-        <PackageReference Include="System.Net.NameResolution" />
     </ItemGroup>
 
     <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Module.props))\Module.props" />
