@@ -11,6 +11,7 @@
     },
     "Parameters": {
         "DatabaseName": "hammerdb_tpch",
+        "DatabasePackageName": "postgresql",
         "DiskFilter": "osdisk:false&sizegreaterthan:256g",
         "Port": "5432",
         "Duration": "00:20:00",
@@ -24,8 +25,9 @@
             "Parameters": {
                 "Scenario": "ExecuteServer",
                 "PackageName": "hammerdb",
-                "Workload": "tpch",
-                "SQLServer": "postgresql",
+                "Workload": "TPCH",
+                "SQLServer": "PostgreSQL",
+                "DatabasePackageName": "$.Parameters.DatabasePackageName",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "Port": "$.Parameters.Port",
                 "VirtualUserCount": "$.Parameters.VirtualUserCount",
@@ -38,8 +40,9 @@
             "Type": "HammerDBClientExecutor",
             "Parameters": {
                 "Scenario": "tpch",
-                "Workload": "tpch",
-                "SQLServer": "postgresql",
+                "Workload": "TPCH",
+                "SQLServer": "PostgreSQL",
+                "DatabasePackageName": "$.Parameters.DatabasePackageName",
                 "PackageName": "hammerdb",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "Port": "$.Parameters.Port",
@@ -55,7 +58,7 @@
             "Type": "LinuxPackageInstallation",
             "Parameters": {
                 "Scenario": "InstallLinuxPackages",
-                "Packages": "python3"
+                "Packages": "python3,openssh-client"
             }
         },
         {
@@ -84,7 +87,7 @@
                 "Scenario": "DownloadPostgreSQLPackage",
                 "BlobContainer": "packages",
                 "BlobName": "postgresql.14.0.0.rev5.zip",
-                "PackageName": "postgresql",
+                "PackageName": "$.Parameters.DatabasePackageName",
                 "Extract": true
             }
         },
@@ -93,7 +96,7 @@
             "Parameters": {
                 "Scenario": "DownloadHammerDBPackage",
                 "BlobContainer": "packages",
-                "BlobName": "hammerdb.4.12.0.rev5.zip",
+                "BlobName": "hammerdb.4.12.0.rev6.zip",
                 "PackageName": "hammerdb",
                 "Extract": true
             }
@@ -103,7 +106,16 @@
             "Parameters": {
                 "Scenario": "InstallPostgreSQLServer",
                 "Action": "InstallServer",
-                "PackageName": "postgresql"
+                "PackageName": "$.Parameters.DatabasePackageName"
+            }
+        },
+        {
+            "Type": "PostgreSQLServerConfiguration",
+            "Parameters": {
+                "Scenario": "ConfigureCredentials",
+                "Action": "ConfigureCredentials",
+                "PackageName": "$.Parameters.DatabasePackageName",
+                "Role": "Server"
             }
         },
         {
@@ -111,7 +123,7 @@
             "Parameters": {
                 "Scenario": "ConfigurePostgreSQLServer",
                 "Action": "ConfigureServer",
-                "PackageName": "postgresql",
+                "PackageName": "$.Parameters.DatabasePackageName",
                 "Role": "Server",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "Port": "$.Parameters.Port",
@@ -123,8 +135,9 @@
             "Parameters": {
                 "Scenario": "PopulatePostgreSQLDatabase",
                 "DatabaseName": "$.Parameters.DatabaseName",
-                "Workload": "tpch",
-                "SQLServer": "postgresql",
+                "Workload": "TPCH",
+                "SQLServer": "PostgreSQL",
+                "DatabasePackageName": "$.Parameters.DatabasePackageName",
                 "PackageName": "hammerdb",
                 "VirtualUserCount": "$.Parameters.VirtualUserCount",
                 "ScaleFactor": "$.Parameters.ScaleFactor",

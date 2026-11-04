@@ -24,6 +24,8 @@ namespace VirtualClient.Actions
             ComponentTypeCache.Instance.LoadComponentTypes(MockFixture.TestAssemblyDirectory);
         }
 
+        [TestCase("PERF-MYSQL-HAMMERDB-TPCC.json")]
+        [TestCase("PERF-MYSQL-HAMMERDB-TPCH.json")]
         [TestCase("PERF-POSTGRESQL-HAMMERDB-TPCC.json")]
         [TestCase("PERF-POSTGRESQL-HAMMERDB-TPCH.json")]
         public void HammerDBWorkloadProfileParametersAreInlinedCorrectly(string profile)
@@ -34,6 +36,8 @@ namespace VirtualClient.Actions
             }
         }
 
+        [TestCase("PERF-MYSQL-HAMMERDB-TPCC.json")]
+        [TestCase("PERF-MYSQL-HAMMERDB-TPCH.json")]
         [TestCase("PERF-POSTGRESQL-HAMMERDB-TPCC.json")]
         [TestCase("PERF-POSTGRESQL-HAMMERDB-TPCH.json")]
         public void HammerDBWorkloadProfileActionsWillNotBeExecutedIfTheWorkloadPackageDoesNotExist(string profile)

@@ -15,6 +15,7 @@ namespace VirtualClient.Actions
     using Microsoft.Extensions.DependencyInjection;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
+    using Polly;
     using VirtualClient;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
@@ -22,13 +23,14 @@ namespace VirtualClient.Actions
     using VirtualClient.Contracts;
 
     /// <summary>
-    /// Prepares PostgreSQL databases for HammerDB workloads.
+    /// Prepares databases for HammerDB workloads.
     /// </summary>
     [SupportedPlatforms("linux-x64")]
     public class HammerDBExecutor : VirtualClientComponent
     {
         private static string createDBTclName = "createDB.tcl";
         private readonly IStateManager stateManager;
+        private readonly IFileSystem fileSystem;
         private static readonly List<int> Factors = new List<int> { 1, 10, 30, 100, 300, 1000, 3000, 10000, 30000, 100000 };
 
         /// <summary>
@@ -46,10 +48,11 @@ namespace VirtualClient.Actions
             };
 
             this.stateManager = this.SystemManager.StateManager;
+            this.fileSystem = this.SystemManager.FileSystem;
         }
 
         /// <summary>
-        /// Defines the name of the PostgreSQL database to create/use for the transactions.
+        /// Defines the name of the database to create/use for the transactions.
         /// </summary>
         public string DatabaseName
         {
@@ -60,7 +63,29 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Parameter defines the port number on which the PostgreSQL server will run on.
+        /// Defines the package containing the database password file.
+        /// </summary>
+        public string DatabasePackageName
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.DatabasePackageName));
+            }
+        }
+
+        /// <summary>
+        /// Maximum retries waiting for a distributed password file, at 10-second intervals. Default = 60.
+        /// </summary>
+        public int MaxRetries
+        {
+            get
+            {
+                return this.Parameters.GetValue<int>(nameof(this.MaxRetries), 60);
+            }
+        }
+
+        /// <summary>
+        /// Parameter defines the port number on which the database server will run.
         /// </summary>
         public int Port
         {
@@ -113,7 +138,7 @@ namespace VirtualClient.Actions
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(HammerDBClientExecutor.Workload), out IConvertible workload);
+                this.Parameters.TryGetValue(nameof(this.Workload), out IConvertible workload);
                 return workload?.ToString();
             }
         }
@@ -126,19 +151,19 @@ namespace VirtualClient.Actions
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(HammerDBClientExecutor.ScaleFactor), out IConvertible scaleFactor);
+                this.Parameters.TryGetValue(nameof(this.ScaleFactor), out IConvertible scaleFactor);
                 return scaleFactor?.ToString();
             }
         }
 
         /// <summary>
-        /// The database engine option passed to HammerDB (e.g. postgresql).
+        /// The database engine option passed to HammerDB (e.g. postgresql or mysql).
         /// </summary>
         public string SQLServer
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(HammerDBClientExecutor.SQLServer), out IConvertible sqlServer);
+                this.Parameters.TryGetValue(nameof(this.SQLServer), out IConvertible sqlServer);
                 return sqlServer?.ToString();
             }
         }
@@ -155,7 +180,7 @@ namespace VirtualClient.Actions
         protected CancellationTokenSource ServerCancellationSource { get; set; }
 
         /// <summary>
-        /// IP address of the PostgreSQL server.
+        /// IP address of the database server.
         /// </summary>
         protected string ServerIpAddress { get; set; }
 
@@ -170,9 +195,21 @@ namespace VirtualClient.Actions
         protected string HammerDBScenarioArguments { get; set; }
 
         /// <summary>
+        /// The database password loaded during initialization.
+        /// </summary>
+        protected string DatabasePassword { get; set; }
+
+        /// <summary>
         /// An interface that can be used to communicate with the underlying system.
         /// </summary>
         protected ISystemManagement SystemManager => this.Dependencies.GetService<ISystemManagement>();
+
+        /// <summary>
+        /// The child-process environment variable used by the selected database templates.
+        /// </summary>
+        protected string PasswordEnvironmentVariable => string.Equals(this.SQLServer, DatabaseServer.MySQL, StringComparison.OrdinalIgnoreCase)
+            ? "MYSQLPASSWORD"
+            : "PGPASSWORD";
 
         /// <summary>
         /// Executes the workload.
@@ -202,8 +239,7 @@ namespace VirtualClient.Actions
         /// <inheritdoc/>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            await this.CheckDistroSupportAsync(cancellationToken)
-                .ConfigureAwait(false);
+            await this.CheckDistroSupportAsync(cancellationToken);
 
             await HammerDBExecutor.OpenFirewallPortsAsync(this.Port, this.SystemManager.FirewallManager, cancellationToken);
 
@@ -214,10 +250,17 @@ namespace VirtualClient.Actions
 
             this.InitializeApiClients(cancellationToken);
 
+            // Cache the database password, waiting for distribution on clients if needed.
+            await this.ReadPasswordFileAsync(cancellationToken);
+
+            // Build the configuration script arguments for the selected database and workload.
+            await this.GenerateCommandLineArguments(cancellationToken);
+
             await this.Logger.LogMessageAsync($"{this.TypeName}.ConfigureHammerDBFile", telemetryContext.Clone(), async () =>
             {
                 if (!cancellationToken.IsCancellationRequested)
                 {
+                    // Generate local Tcl scripts on both roles; database population runs separately on the server.
                     await this.ConfigureCreateHammerDBFile(telemetryContext, cancellationToken);
                 }
             });
@@ -233,36 +276,34 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Reads the explicit PostgreSQL password file first, otherwise uses non-empty PGPASSWORD,
-        /// otherwise reads Password.json in the platform-specific PostgreSQL package.
+        /// Reads the selected database package's password file without changing the parent environment.
         /// </summary>
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
-        /// <returns>The password to supply only to the database child process environment.</returns>
-        protected async Task<string> GetPostgreSQLPasswordAsync(CancellationToken cancellationToken)
+        /// <returns>The selected database password.</returns>
+        protected async Task ReadPasswordFileAsync(CancellationToken cancellationToken)
         {
-            string passwordFile = this.Parameters.GetValue<string>("PostgreSQLPasswordFile", string.Empty);
-            if (string.IsNullOrWhiteSpace(passwordFile))
-            {
-                string environmentPassword = Environment.GetEnvironmentVariable("PGPASSWORD");
-                if (!string.IsNullOrEmpty(environmentPassword))
-                {
-                    return environmentPassword;
-                }
+            DependencyPath package = await this.GetPlatformSpecificPackageAsync(this.DatabasePackageName, cancellationToken);
 
-                DependencyPath package = await this.GetPlatformSpecificPackageAsync("postgresql", cancellationToken).ConfigureAwait(false);
-                passwordFile = this.Combine(package.Path, "Password.json");
+            string passwordFile = this.Combine(package.Path, "Password.json");
+            string password = null;
+
+            if (this.IsMultiRoleLayout() && this.IsInRole(ClientRole.Client))
+            {
+                await Policy.HandleResult<bool>(exists => !exists)
+                    .WaitAndRetryAsync(this.MaxRetries, _ => TimeSpan.FromSeconds(10))
+                    .ExecuteAsync(_ => Task.FromResult(this.fileSystem.File.Exists(passwordFile)), cancellationToken);
             }
 
-            IFileSystem fileSystem = this.SystemManager.FileSystem;
-            string password = null;
             try
             {
-                if (fileSystem.File.Exists(passwordFile))
+                if (this.fileSystem.File.Exists(passwordFile))
                 {
-                    string contents = await fileSystem.File.ReadAllTextAsync(passwordFile, cancellationToken).ConfigureAwait(false);
+                    string contents = await this.fileSystem.File.ReadAllTextAsync(passwordFile, cancellationToken);
+
                     if (!string.IsNullOrWhiteSpace(contents))
                     {
                         JToken value = JObject.Parse(contents)["Password"];
+
                         if (value?.Type == JTokenType.String)
                         {
                             password = value.Value<string>();
@@ -273,18 +314,18 @@ namespace VirtualClient.Actions
             catch (Exception exception) when (exception is JsonException || exception is IOException || exception is UnauthorizedAccessException)
             {
                 throw new DependencyException(
-                    "Unable to read the PostgreSQL password file. Check its permissions and JSON format.",
+                    $"Unable to read the {this.SQLServer} password file. Check its permissions and JSON format.",
                     ErrorReason.InvalidProfileDefinition);
             }
 
             if (string.IsNullOrEmpty(password))
             {
                 throw new DependencyException(
-                    "The selected PostgreSQL password file must exist and contain a non-empty string named 'Password'.",
+                    $"The selected {this.SQLServer} password file must exist and contain a non-empty string named 'Password'.",
                     ErrorReason.InvalidProfileDefinition);
             }
 
-            return password;
+            this.DatabasePassword = password;
         }
 
         /// <summary>
@@ -338,24 +379,28 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Logs HammerDB output without the PostgreSQL credential echoed by its configuration commands.
+        /// Logs HammerDB output, obscuring the database credential when supplied.
         /// Failed-process buffers are also obscured before they can be included in an exception.
         /// </summary>
         /// <param name="process">The completed HammerDB process.</param>
-        /// <param name="password">The PostgreSQL credential supplied to the process.</param>
+        /// <param name="password">The database credential supplied to the process.</param>
         /// <param name="telemetryContext">The context for process telemetry.</param>
         /// <param name="toolName">The tool name used for process logs.</param>
-        protected Task LogPostgreSQLProcessDetailsAsync(IProcessProxy process, string password, EventContext telemetryContext, string toolName)
+        protected Task LogDatabaseProcessDetailsAsync(IProcessProxy process, string password, EventContext telemetryContext, string toolName)
         {
             ProcessDetails details = process.ToProcessDetails(toolName);
-            details.StandardOutput = details.StandardOutput?.Replace(password, "...", StringComparison.Ordinal);
-            details.StandardError = details.StandardError?.Replace(password, "...", StringComparison.Ordinal);
 
-            // Preserve successful output for metric parsing, including passwords that overlap metric values.
-            if (process.IsErrored())
+            if (!string.IsNullOrEmpty(password))
             {
-                process.StandardOutput.Replace(password, "...");
-                process.StandardError.Replace(password, "...");
+                details.StandardOutput = details.StandardOutput?.Replace(password, "...", StringComparison.Ordinal);
+                details.StandardError = details.StandardError?.Replace(password, "...", StringComparison.Ordinal);
+
+                // Preserve successful output for metric parsing, including passwords that overlap metric values.
+                if (process.IsErrored())
+                {
+                    process.StandardOutput.Replace(password, "...");
+                    process.StandardError.Replace(password, "...");
+                }
             }
 
             return this.LogProcessDetailsAsync(details, telemetryContext, logToFile: true);
@@ -363,21 +408,19 @@ namespace VirtualClient.Actions
 
         private async Task PrepareSQLDatabase(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string password = await this.GetPostgreSQLPasswordAsync(cancellationToken).ConfigureAwait(false);
-            string command = "python3";
-            string arguments = $"{this.PlatformSpecifics.Combine(this.HammerDBPackagePath, "populate-database.py")} --createDBTCLPath {createDBTclName}";
+            string arguments = $"populate-database.py --createDBTCLPath {createDBTclName}";
             
             using (IProcessProxy process = await this.ExecuteCommandAsync(
-                command,
+                "python3",
                 arguments,
                 this.HammerDBPackagePath,
                 telemetryContext,
                 cancellationToken,
-                beforeExecution: childProcess => childProcess.EnvironmentVariables["PGPASSWORD"] = password))
+                beforeExecution: childProcess => childProcess.EnvironmentVariables[this.PasswordEnvironmentVariable] = this.DatabasePassword))
             {
                 if (!cancellationToken.IsCancellationRequested)
                 {
-                    await this.LogPostgreSQLProcessDetailsAsync(process, password, telemetryContext, "HammerDB");
+                    await this.LogDatabaseProcessDetailsAsync(process, this.DatabasePassword, telemetryContext, "HammerDB");
                     process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
                 }
             }
@@ -385,27 +428,18 @@ namespace VirtualClient.Actions
 
         private async Task ConfigureCreateHammerDBFile(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string password = await this.GetPostgreSQLPasswordAsync(cancellationToken).ConfigureAwait(false);
-            await this.GenerateCommandLineArguments(cancellationToken);
-
-            bool preservePassword = this.Platform == PlatformID.Unix && !this.SystemManager.RunningInContainer;
-            string command = preservePassword ? "sudo" : "python3";
-            string arguments = preservePassword
-                ? $"--preserve-env=PGPASSWORD python3 {this.HammerDBScenarioArguments}"
-                : this.HammerDBScenarioArguments;
-
             using (IProcessProxy process = await this.ExecuteCommandAsync(
-                command,
-                arguments,
+                $"--preserve-env={this.PasswordEnvironmentVariable} python3",
+                this.HammerDBScenarioArguments,
                 this.HammerDBPackagePath,
                 telemetryContext,
                 cancellationToken,
                 runElevated: true,
-                beforeExecution: childProcess => childProcess.EnvironmentVariables["PGPASSWORD"] = password))
+                beforeExecution: childProcess => childProcess.EnvironmentVariables[this.PasswordEnvironmentVariable] = this.DatabasePassword))
             {
                 if (!cancellationToken.IsCancellationRequested)
                 {
-                    await this.LogPostgreSQLProcessDetailsAsync(process, password, telemetryContext, "HammerDBExecutor");
+                    await this.LogDatabaseProcessDetailsAsync(process, this.DatabasePassword, telemetryContext, "HammerDBExecutor");
                     process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
                 }
             }
@@ -413,14 +447,14 @@ namespace VirtualClient.Actions
 
         private Task GenerateCommandLineArguments(CancellationToken cancellationToken)
         {
-            string arguments = $"{this.PlatformSpecifics.Combine(this.HammerDBPackagePath, "configure-workload-generator.py")} --workload {this.Workload} --sqlServer {this.SQLServer} --port {this.Port}" +
+            string arguments = $"{this.PlatformSpecifics.Combine(this.HammerDBPackagePath, "configure-workload-generator.py")} --workload {this.Workload.ToLowerInvariant()} --sqlServer {this.SQLServer.ToLowerInvariant()} --port {this.Port}" +
                 $" --virtualUsers {this.VirtualUserCount} --dbName {this.DatabaseName} --hostIPAddress {this.ServerIpAddress}";
 
-            if (this.Workload.Equals("tpcc", StringComparison.OrdinalIgnoreCase))
+            if (this.Workload.Equals(BenchmarkName.TPCC, StringComparison.OrdinalIgnoreCase))
             {
                 arguments = $"{arguments} --warehouseCount {this.WarehouseCount} --duration {this.Duration.TotalMinutes}";
             }
-            else if (this.Workload.Equals("tpch", StringComparison.OrdinalIgnoreCase))
+            else if (this.Workload.Equals(BenchmarkName.TPCH, StringComparison.OrdinalIgnoreCase))
             {
                 if (!Factors.Contains(Convert.ToInt32(this.ScaleFactor)))
                 {
@@ -444,7 +478,7 @@ namespace VirtualClient.Actions
                 new List<FirewallEntry>
                 {
                     new FirewallEntry(
-                        "PostgreSQL: Allow Multiple Machines communications",
+                        "HammerDB: Allow Multiple Machines communications",
                         "Allows individual machine instances to communicate with other machine in client-server scenario",
                         "tcp",
                         new List<int> { port })
@@ -485,6 +519,24 @@ namespace VirtualClient.Actions
                     $"The HammerDB workload generator is not supported on the current architecture.",
                     ErrorReason.ProcessorArchitectureNotSupported);
             }
+        }
+
+        /// <summary>
+        /// Defines the supported HammerDB database engines.
+        /// </summary>
+        internal class DatabaseServer
+        {
+            public const string MySQL = nameof(MySQL);
+            public const string PostgreSQL = nameof(PostgreSQL);
+        }
+
+        /// <summary>
+        /// Defines the supported HammerDB benchmarks.
+        /// </summary>
+        internal class BenchmarkName
+        {
+            public const string TPCC = nameof(TPCC);
+            public const string TPCH = nameof(TPCH);
         }
 
         internal class HammerDBState : State

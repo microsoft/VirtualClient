@@ -333,6 +333,65 @@ namespace VirtualClient.Dependencies.MySqlServer
             }
         }
 
+        [TestCase(false)]
+        [TestCase(true)]
+        public async Task CredentialsAreConfiguredOnlyWhenConfigurationStateDoesNotExist(bool previouslyConfigured)
+        {
+            this.fixture.Parameters["Action"] = "ConfigureCredentials";
+            this.fixture.Parameters["DatabaseName"] = "hammerdb_tpcc";
+            if (previouslyConfigured)
+            {
+                this.fixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(
+                    new MySQLServerConfiguration.ConfigurationState("ConfigureCredentials")));
+            }
+
+            int commandsExecuted = 0;
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            {
+                commandsExecuted++;
+                StringAssert.StartsWith("python3 ", arguments);
+                StringAssert.Contains($"\"{this.packagePath}/configure-mysql-credentials.py\"", arguments);
+                StringAssert.Contains($"--dbName \"hammerdb_tpcc\" --passwordFile \"{this.packagePath}/Password.json\" --serverIp 1.2.3.4", arguments);
+                StringAssert.Contains("--clientIps \"1.2.3.5;\"", arguments);
+                return this.fixture.Process;
+            };
+
+            using TestMySQLServerConfiguration component = new TestMySQLServerConfiguration(this.fixture);
+            await component.ExecuteAsync(CancellationToken.None);
+            Assert.AreEqual(previouslyConfigured ? 0 : 1, commandsExecuted);
+        }
+
+        [Test]
+        public async Task HammerDBCredentialsDefaultToADedicatedFileInTheMySQLPackage()
+        {
+            this.fixture.Parameters["Action"] = "ConfigureCredentials";
+            string executedArguments = null;
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            {
+                executedArguments = arguments;
+                return this.fixture.Process;
+            };
+
+            using TestMySQLServerConfiguration component = new TestMySQLServerConfiguration(this.fixture);
+            await component.ExecuteAsync(CancellationToken.None);
+            StringAssert.Contains($"--passwordFile \"{this.packagePath}/Password.json\"", executedArguments);
+        }
+
+        [Test]
+        public void HammerDBCredentialFailuresDoNotSaveSuccessfulConfigurationState()
+        {
+            this.fixture.Parameters["Action"] = "ConfigureCredentials";
+            this.fixture.Process.ExitCode = 1;
+            this.fixture.Process.OnHasExited = () => true;
+            int statesSaved = 0;
+            this.fixture.StateManager.OnSaveState((id, state) => statesSaved++);
+
+            using TestMySQLServerConfiguration component = new TestMySQLServerConfiguration(this.fixture);
+            DependencyException exception = Assert.ThrowsAsync<DependencyException>(() => component.ExecuteAsync(CancellationToken.None));
+            Assert.AreEqual(ErrorReason.DependencyInstallationFailed, exception.Reason);
+            Assert.AreEqual(0, statesSaved);
+        }
+
         private class TestMySQLServerConfiguration : MySQLServerConfiguration
         {
             public TestMySQLServerConfiguration(MockFixture fixture)
