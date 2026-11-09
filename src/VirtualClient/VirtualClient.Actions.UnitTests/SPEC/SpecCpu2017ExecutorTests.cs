@@ -699,7 +699,7 @@ namespace VirtualClient.Actions
             EventContext selection = (EventContext)this.mockFixture.Logger.Single(entry => entry.Item2.Name.EndsWith(".SymmetricAffinitySelected", StringComparison.Ordinal)).Item3;
             Assert.AreEqual(expectedCpus, selection.Properties["cpuIds"]);
             Assert.AreEqual(true, selection.Properties["pinningEnabled"]);
-            Assert.AreEqual(expectedCpus, ((IDictionary<string, object>)selection.Properties["metadata_scenario"])["NumaProcessorAffinity"]);
+            Assert.AreEqual(expectedCoreSpec, ((IDictionary<string, object>)selection.Properties["metadata_scenario"])["NumaProcessorAffinity"]);
         }
 
         [Test]
