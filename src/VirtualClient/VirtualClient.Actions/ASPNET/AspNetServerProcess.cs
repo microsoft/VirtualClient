@@ -14,6 +14,12 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
 
+    /// <summary>
+    /// Owns an ASP.NET server's retry task, cancellation, and process cleanup.
+    /// </summary>
+    /// <remarks>
+    /// Callers must serialize lifecycle operations and await StopAsync before starting a replacement.
+    /// </remarks>
     internal sealed class AspNetServerProcess
     {
         private readonly VirtualClientComponent component;
@@ -28,8 +34,14 @@ namespace VirtualClient.Actions
             this.processLogName = processLogName;
         }
 
+        /// <summary>
+        /// Gets the current server lifetime task, or null when no lifetime is tracked. Does not indicate readiness.
+        /// </summary>
         public Task Completion { get; private set; }
 
+        /// <summary>
+        /// Starts a server lifetime linked to the caller's cancellation token, including retries.
+        /// </summary>
         public void Start(
             string command,
             string arguments,
@@ -54,6 +66,9 @@ namespace VirtualClient.Actions
             this.Completion = this.RunAsync(command, arguments, directory, affinity, retryPolicy, context, this.cancellation.Token);
         }
 
+        /// <summary>
+        /// Propagates a completed lifetime's failure without waiting for a running server to exit.
+        /// </summary>
         public async Task EnsureRunningAsync()
         {
             if (this.Completion.IsCompleted)
@@ -62,6 +77,12 @@ namespace VirtualClient.Actions
             }
         }
 
+        /// <summary>
+        /// Cancels retries and awaits owned-process cleanup. Unexpected lifetime failures still propagate.
+        /// </summary>
+        /// <remarks>
+        /// Cleanup has no caller cancellation token so an already-cancelled run cannot interrupt shutdown.
+        /// </remarks>
         public async Task StopAsync(EventContext context)
         {
             this.component.Logger.LogTraceMessage($"{this.component.TypeName}.KillServerInstances", context);
