@@ -63,14 +63,12 @@ namespace VirtualClient.Actions
                 await executor.ExecuteAsync(CancellationToken.None);
 
                 this.mockFixture.Tracking.AssertCommandsExecuted(true,
-                    "pkill OrchardCore",
-                    "fuser -n tcp -k 5014",
                     $"{Regex.Escape(this.mockDotNetPackage.Path)}/dotnet publish -c Release --sc -f net9\\.0 {Regex.Escape(this.mockOrchardCorePackage.Path)}/src/OrchardCore\\.Cms\\.Web/OrchardCore\\.Cms\\.Web\\.csproj",
-                    $"nohup {Regex.Escape(this.mockOrchardCorePackage.Path)}/src/OrchardCore\\.Cms\\.Web/bin/Release/net9\\.0/linux-x64/publish/OrchardCore\\.Cms\\.Web --urls http://\\*:5014"
+                    $"{Regex.Escape(this.mockOrchardCorePackage.Path)}/src/OrchardCore\\.Cms\\.Web/bin/Release/net9\\.0/linux-x64/publish/OrchardCore\\.Cms\\.Web --urls http://\\*:5014"
                 );
 
-                this.mockFixture.Tracking.AssertCommandExecutedTimes("pkill", 1);
-                this.mockFixture.Tracking.AssertCommandExecutedTimes("fuser", 1);
+                this.mockFixture.Tracking.AssertCommandExecutedTimes("pkill", 0);
+                this.mockFixture.Tracking.AssertCommandExecutedTimes("fuser", 0);
             }
         }
 
@@ -86,13 +84,12 @@ namespace VirtualClient.Actions
                 await executor.ExecuteAsync(CancellationToken.None);
 
                 this.mockFixture.Tracking.AssertCommandsExecuted(true,
-                    "taskkill /F /IM OrchardCore\\.Cms\\.Web\\.exe",
                     $"{Regex.Escape(this.mockDotNetPackage.Path)}\\\\dotnet\\.exe publish -c Release --sc -f net9\\.0 {Regex.Escape(this.mockOrchardCorePackage.Path)}\\\\src\\\\OrchardCore\\.Cms\\.Web\\\\OrchardCore\\.Cms\\.Web\\.csproj",
                     $"{Regex.Escape(this.mockOrchardCorePackage.Path)}\\\\src\\\\OrchardCore\\.Cms\\.Web\\\\bin\\\\Release\\\\net9\\.0\\\\win-x64\\\\publish\\\\OrchardCore\\.Cms\\.Web\\.exe --urls http://\\*:5014"
                 );
 
                 // On Windows the Linux-only 'pkill'/'fuser'/'nohup' commands must NOT be used.
-                this.mockFixture.Tracking.AssertCommandExecutedTimes("taskkill", 1);
+                this.mockFixture.Tracking.AssertCommandExecutedTimes("taskkill", 0);
                 this.mockFixture.Tracking.AssertCommandExecutedTimes("pkill", 0);
                 this.mockFixture.Tracking.AssertCommandExecutedTimes("fuser", 0);
                 this.mockFixture.Tracking.AssertCommandExecutedTimes("nohup", 0);
@@ -159,10 +156,7 @@ namespace VirtualClient.Actions
                 await executor.ExecuteAsync(CancellationToken.None);
 
                 // Verify numactl was used with correct core affinity
-                // Actual format: /bin/bash -c "numactl -C 0-3 nohup ..."
                 this.mockFixture.Tracking.AssertCommandsExecuted(true,
-                    "pkill OrchardCore",
-                    "fuser -n tcp -k 5014",
                     $"{Regex.Escape(this.mockDotNetPackage.Path)}/dotnet publish -c Release --sc -f net9\\.0 {Regex.Escape(this.mockOrchardCorePackage.Path)}/src/OrchardCore\\.Cms\\.Web/OrchardCore\\.Cms\\.Web\\.csproj",
                     "/bin/bash -c \\\"numactl -C 0-3 .*"
                 );
@@ -240,6 +234,14 @@ namespace VirtualClient.Actions
             this.mockFixture.Directory.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
             this.mockFixture.FileSystem.SetupGet(fs => fs.File).Returns(this.mockFixture.File.Object);
+            this.mockFixture.Layout = new EnvironmentLayout(new[]
+            {
+                new ClientInstance(Environment.MachineName, "127.0.0.1", ClientRole.Client)
+            });
+            this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, directory) =>
+                arguments?.Contains("--urls") == true
+                    ? new AspNetServerLifecycleTests.ServerProcess { StartInfo = new System.Diagnostics.ProcessStartInfo(command, arguments) }
+                    : new InMemoryProcess { StartInfo = new System.Diagnostics.ProcessStartInfo(command, arguments ?? string.Empty) };
 
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
             {
