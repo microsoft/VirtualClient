@@ -316,11 +316,12 @@ namespace VirtualClient.Common
         /// <param name="affinityMask">The processor affinity bitmask.</param>
         public virtual void SetProcessorAffinity(IntPtr affinityMask)
         {
-#if WINDOWS 
+            if (!OperatingSystem.IsWindows())
+            {
+                throw new PlatformNotSupportedException("Setting processor affinity is only supported on Windows platform.");
+            }
+
             this.UnderlyingProcess.ProcessorAffinity = affinityMask;
-#else
-            throw new PlatformNotSupportedException("Setting processor affinity is only supported on Windows platform.");
-#endif
         }
 
         /// <summary>
