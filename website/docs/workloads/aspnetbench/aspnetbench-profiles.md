@@ -173,7 +173,7 @@ with 256 concurrent connections. Uses .NET 8 SDK.
   |---------------------------|-------------------------------------------------------------------|---------------|
   | DotNetVersion             | The version of the .NET SDK to download and install.              | 8.0.204       |
   | TargetFramework           | The .NET target framework to run.                                 | net8.0        |
-  | ServerPort                | The port the Kestrel server listens on.                           | 9876          |
+  | ServerPort                | The port used by both Kestrel and Bombardier.                      | 9876          |
 
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes.
