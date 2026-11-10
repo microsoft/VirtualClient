@@ -29,7 +29,7 @@ namespace VirtualClient.Actions
     [SupportedPlatforms("linux-arm64,linux-x64,win-arm64,win-x64")]
     public class AspNetServerExecutor : VirtualClientMultiRoleComponent
     {
-        private Task serverProcess;
+        private readonly AspNetServerProcess serverProcess;
         private bool disposed;
         private IFileSystem fileSystem;
         private IPackageManager packageManager;
@@ -52,6 +52,7 @@ namespace VirtualClient.Actions
             this.packageManager = this.systemManagement.PackageManager;
             this.stateManager = this.systemManagement.StateManager;
             this.fileSystem = this.systemManagement.FileSystem;
+            this.serverProcess = new AspNetServerProcess(this, this.systemManagement, "AspNetBenchmarks");
             this.ServerRetryPolicy = Policy.Handle<Exception>(exc => !(exc is OperationCanceledException))
                  .WaitAndRetryAsync(3, (retries) => TimeSpan.FromSeconds(retries));
         }
@@ -157,16 +158,17 @@ namespace VirtualClient.Actions
                 {
                     try
                     {
-                        this.KillServerInstancesAsync(EventContext.None, CancellationToken.None)
-                            .GetAwaiter().GetResult();
+                        this.serverProcess.StopAsync(EventContext.None).GetAwaiter().GetResult();
                     }
-                    catch
+                    catch (Exception exception)
                     {
-                        // Best-effort cleanup during dispose.
+                        this.Logger.LogMessage($"{this.TypeName}.CleanupError", LogLevel.Error, EventContext.None.AddError(exception));
                     }
 
                     this.disposed = true;
                 }
+
+                base.Dispose(disposing);
             }
         }
 
@@ -252,39 +254,28 @@ namespace VirtualClient.Actions
                     await this.ServerApi.PollForHeartbeatAsync(TimeSpan.FromMinutes(5), cancellationToken);
 
                     await this.DeleteStateAsync(telemetryContext, cancellationToken);
-                    await this.KillServerInstancesAsync(telemetryContext, cancellationToken);
+                    await this.serverProcess.StopAsync(telemetryContext);
                     await this.BuildAspNetBenchAsync(telemetryContext, cancellationToken);
                     this.StartServerInstances(telemetryContext, cancellationToken);
                     await this.WaitForPortReadyAsync(telemetryContext, cancellationToken);
+                    await this.serverProcess.EnsureRunningAsync();
 
                     await this.SaveStateAsync(telemetryContext, cancellationToken);
                     this.SetServerOnline(true);
+                    await this.serverProcess.EnsureRunningAsync();
 
-                    if (!this.IsMultiRoleLayout())
-                    {
-                        // In single-VM mode, clear cleanup tasks to prevent the base class
-                        // CleanupAsync from killing the server process. The server must stay
-                        // alive for the subsequent client action. It will be killed by
-                        // KillServerInstancesAsync on the next iteration or by Dispose.
-                        this.CleanupTasks.Clear();
-                    }
-                    else
+                    if (this.IsMultiRoleLayout())
                     {
                         using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                         {
-                            await Task.WhenAny(this.serverProcess);
-
-                            if (cancellationToken.IsCancellationRequested)
-                            {
-                                await Task.WhenAll(this.serverProcess);
-                            }
+                            await this.serverProcess.Completion;
                         }
                     }
                 }
                 catch
                 {
                     this.SetServerOnline(false);
-                    await this.KillServerInstancesAsync(telemetryContext, cancellationToken);
+                    await this.serverProcess.StopAsync(telemetryContext);
                     throw;
                 }
             });
@@ -325,11 +316,13 @@ namespace VirtualClient.Actions
 
             while (DateTime.UtcNow < deadline && !cancellationToken.IsCancellationRequested)
             {
+                await this.serverProcess.EnsureRunningAsync();
                 try
                 {
                     using (TcpClient client = new TcpClient())
                     {
-                        await client.ConnectAsync(IPAddress.Loopback, port).ConfigureAwait(false);
+                        await client.ConnectAsync(IPAddress.Loopback, port, cancellationToken).ConfigureAwait(false);
+                        await this.serverProcess.EnsureRunningAsync();
                         this.Logger.LogTraceMessage($"{this.TypeName}: Server is accepting connections on port {port}.");
                         return;
                     }
@@ -362,29 +355,6 @@ namespace VirtualClient.Actions
             });
         }
 
-        private async Task KillServerInstancesAsync(EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            this.Logger.LogTraceMessage($"{this.TypeName}.KillServerInstances");
-
-            // The ASP.NET (Kestrel) benchmark server is hosted by the .NET runtime (dotnet). Both the
-            // server process(es) and the TCP port they hold must be released using platform-native
-            // commands. 'pkill'/'fuser' exist only on Unix; on Windows they fail to start
-            // ("The system cannot find the file specified"), which crashes the workload. On Windows the
-            // equivalent 'taskkill' is used instead (killing the process also releases its port).
-            if (this.Platform == PlatformID.Unix)
-            {
-                await this.ExecuteCommandAsync("pkill", "dotnet", this.aspnetBenchDirectory, telemetryContext, cancellationToken);
-
-                await this.ExecuteCommandAsync("fuser", $"-n tcp -k {this.ServerPort}", this.aspnetBenchDirectory, telemetryContext, cancellationToken);
-            }
-            else
-            {
-                await this.ExecuteCommandAsync("taskkill", "/F /IM dotnet.exe", this.aspnetBenchDirectory, telemetryContext, cancellationToken);
-            }
-
-            await this.WaitAsync(TimeSpan.FromSeconds(3), cancellationToken);
-        }
-
         private void StartServerInstances(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             EventContext relatedContext = telemetryContext.Clone();
@@ -404,92 +374,21 @@ namespace VirtualClient.Actions
                     relatedContext.AddContext("bindToCores", this.BindToCores);
                     relatedContext.AddContext("coreAffinity", this.CoreAffinity);
 
-                    this.serverProcess = this.StartServerInstanceAsync(this.dotnetExePath, commandArguments, workingDirectory, relatedContext, cancellationToken);
+                    ProcessAffinityConfiguration affinity = this.BindToCores
+                        ? ProcessAffinityConfiguration.Create(this.Platform, this.CoreAffinity)
+                        : null;
+                    this.serverProcess.Start(
+                        this.dotnetExePath,
+                        commandArguments,
+                        workingDirectory,
+                        affinity,
+                        this.ServerRetryPolicy,
+                        relatedContext,
+                        cancellationToken);
                 }
                 catch (OperationCanceledException)
                 {
                     // Expected whenever certain operations (e.g. Task.Delay) are cancelled.
-                }
-            });
-        }
-
-        private Task StartServerInstanceAsync(string command, string commandArguments, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            return (this.ServerRetryPolicy ?? Policy.NoOpAsync()).ExecuteAsync(async () =>
-            {
-                try
-                {
-                    IProcessProxy process = null;
-                    ProcessAffinityConfiguration affinityConfig = null;
-
-                    if (this.BindToCores && !string.IsNullOrWhiteSpace(this.CoreAffinity))
-                    {
-                        affinityConfig = ProcessAffinityConfiguration.Create(
-                            this.Platform,
-                            this.CoreAffinity);
-
-                        telemetryContext.AddContext("affinityMask", affinityConfig.ToString());
-
-                        if (this.Platform == PlatformID.Win32NT)
-                        {
-                            process = this.systemManagement.ProcessManager.CreateProcess(
-                                command,
-                                commandArguments,
-                                workingDirectory);
-                        }
-                        else
-                        {
-                            string fullCommandLine = $"{command} {commandArguments}";
-                            
-                            LinuxProcessAffinityConfiguration linuxConfig = (LinuxProcessAffinityConfiguration)affinityConfig;
-                            string wrappedCommand = linuxConfig.GetCommandWithAffinity(null, fullCommandLine);
-
-                            process = this.systemManagement.ProcessManager.CreateProcess(
-                                "/bin/bash",
-                                $"-c {wrappedCommand}",
-                                workingDirectory);
-                        }
-                    }
-                    else
-                    {
-                        process = await this.ExecuteCommandAsync(command, commandArguments, workingDirectory, telemetryContext, cancellationToken);
-                    }
-
-                    using (process)
-                    {
-                        if (affinityConfig != null)
-                        {
-                            if (this.Platform == PlatformID.Win32NT)
-                            {
-                                process.Start();
-                                process.ApplyAffinity((WindowsProcessAffinityConfiguration)affinityConfig);
-                                await process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
-                            }
-                            else
-                            {
-                                await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
-                            }
-                        }
-
-                        if (!cancellationToken.IsCancellationRequested)
-                        {
-                            await this.LogProcessDetailsAsync(process, telemetryContext, "AspNetBenchmarks");
-                            process.ThrowIfWorkloadFailed(successCodes: new int[] { 0 });
-                        }
-                    }
-                }
-                catch (OperationCanceledException)
-                {
-                    // Expected whenever certain operations (e.g. Task.Delay) are cancelled.
-                }
-                catch (Exception exc)
-                {
-                    this.Logger.LogMessage(
-                        $"{this.TypeName}.StartServerInstanceError",
-                        LogLevel.Error,
-                        telemetryContext.Clone().AddError(exc));
-
-                    throw;
                 }
             });
         }

@@ -72,14 +72,12 @@ namespace VirtualClient.Actions
                 await executor.ExecuteAsync(CancellationToken.None);
 
                 this.mockFixture.Tracking.AssertCommandsExecuted(true,
-                    "pkill dotnet",
-                    "fuser -n tcp -k 9876",
                     $"{Regex.Escape(this.mockDotNetPackage.Path)}/dotnet build -c Release -p:BenchmarksTargetFramework=net8\\.0",
                     $"{Regex.Escape(this.mockDotNetPackage.Path)}/dotnet {Regex.Escape(this.mockAspNetBenchPackage.Path)}/src/Benchmarks/bin/Release/net8\\.0/Benchmarks\\.dll --nonInteractive true --scenarios json --urls http://\\*:9876 --server Kestrel --kestrelTransport Sockets --protocol http --header \\\"Accept: application/json,text/html;q=0\\.9,application/xhtml\\+xml;q=0\\.9,application/xml;q=0\\.8,\\*/\\*;q=0\\.7\\\" --header \\\"Connection: keep-alive\\\""
                 );
 
-                this.mockFixture.Tracking.AssertCommandExecutedTimes("pkill", 1);
-                this.mockFixture.Tracking.AssertCommandExecutedTimes("fuser", 1);
+                this.mockFixture.Tracking.AssertCommandExecutedTimes("pkill", 0);
+                this.mockFixture.Tracking.AssertCommandExecutedTimes("fuser", 0);
             }
         }
 
@@ -101,13 +99,11 @@ namespace VirtualClient.Actions
                 await executor.ExecuteAsync(CancellationToken.None);
 
                 this.mockFixture.Tracking.AssertCommandsExecuted(true,
-                    "taskkill /F /IM dotnet\\.exe",
                     $"{Regex.Escape(this.mockDotNetPackage.Path)}\\\\dotnet\\.exe build -c Release -p:BenchmarksTargetFramework=net8\\.0",
                     $"{Regex.Escape(this.mockDotNetPackage.Path)}\\\\dotnet\\.exe {Regex.Escape(this.mockAspNetBenchPackage.Path)}\\\\src\\\\Benchmarks\\\\bin\\\\Release\\\\net8\\.0\\\\Benchmarks\\.dll --nonInteractive true --scenarios json --urls http://\\*:9876 --server Kestrel --kestrelTransport Sockets --protocol http --header \\\"Accept: application/json,text/html;q=0\\.9,application/xhtml\\+xml;q=0\\.9,application/xml;q=0\\.8,\\*/\\*;q=0\\.7\\\" --header \\\"Connection: keep-alive\\\""
                 );
 
-                // On Windows the Linux-only 'pkill'/'fuser' commands must NOT be used; 'taskkill' is used instead.
-                this.mockFixture.Tracking.AssertCommandExecutedTimes("taskkill", 1);
+                this.mockFixture.Tracking.AssertCommandExecutedTimes("taskkill", 0);
                 this.mockFixture.Tracking.AssertCommandExecutedTimes("pkill", 0);
                 this.mockFixture.Tracking.AssertCommandExecutedTimes("fuser", 0);
             }
@@ -181,8 +177,6 @@ namespace VirtualClient.Actions
                 // Verify numactl was used with correct core affinity
                 // The actual command format is: /bin/bash -c "numactl -C 0-7 /path/to/dotnet /path/to/dll ..."
                 this.mockFixture.Tracking.AssertCommandsExecuted(true,
-                    "pkill dotnet",
-                    "fuser -n tcp -k 9876",
                     $"{Regex.Escape(this.mockDotNetPackage.Path)}/dotnet build -c Release -p:BenchmarksTargetFramework=net8\\.0",
                     "/bin/bash -c \\\"numactl -C 0-7 .*"
                 );
@@ -275,6 +269,14 @@ namespace VirtualClient.Actions
             this.mockFixture.Directory.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
             this.mockFixture.FileSystem.SetupGet(fs => fs.File).Returns(this.mockFixture.File.Object);
+            this.mockFixture.Layout = new EnvironmentLayout(new[]
+            {
+                new ClientInstance(Environment.MachineName, "127.0.0.1", ClientRole.Client)
+            });
+            this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, directory) =>
+                arguments?.Contains("Benchmarks.dll") == true
+                    ? new AspNetServerLifecycleTests.ServerProcess { StartInfo = new ProcessStartInfo(command, arguments) }
+                    : new InMemoryProcess { StartInfo = new ProcessStartInfo(command, arguments ?? string.Empty) };
 
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
             {

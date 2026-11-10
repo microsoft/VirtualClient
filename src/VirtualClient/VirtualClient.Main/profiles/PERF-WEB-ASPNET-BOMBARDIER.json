@@ -28,7 +28,8 @@
         "Role": "Client",
         "Scenario": "ExecuteJsonSerializationBenchmark",
         "PackageName": "bombardier",
-        "CommandArguments": "--duration 15s --connections 256 --timeout 10s --fasthttp --insecure -l http://{ServerIp}:9876/json --print r --format json",
+        "ServerPort": "$.Parameters.ServerPort",
+        "CommandArguments": "--duration 15s --connections 256 --timeout 10s --fasthttp --insecure -l http://{ServerIp}:{ServerPort}/json --print r --format json",
         "WarmUp": false,
         "Timeout": "00:05:00"
       }

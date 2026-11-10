@@ -4,6 +4,7 @@
 namespace VirtualClient.Actions
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
@@ -22,6 +23,41 @@ namespace VirtualClient.Actions
         {
             this.mockFixture = new DependencyFixture();
             ComponentTypeCache.Instance.LoadComponentTypes(MockFixture.TestAssemblyDirectory);
+        }
+
+        [Test]
+        public void AspNetBombardierProfilePreservesDefaultFailurePolicy()
+        {
+            this.mockFixture.Setup(PlatformID.Win32NT);
+            using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(
+                "PERF-WEB-ASPNET-BOMBARDIER.json",
+                this.mockFixture.Dependencies))
+            {
+                WorkloadAssert.ParameterReferencesInlined(executor.Profile);
+                Assert.That(executor.Profile.Actions[0].Parameters.ContainsKey("FailFast"), Is.False);
+                Assert.That(executor.Profile.Actions[1].Parameters["ServerPort"].ToString(), Is.EqualTo("9876"));
+            }
+        }
+
+        [Test]
+        [TestCase("9876")]
+        [TestCase("9800")]
+        public async Task AspNetBombardierProfileResolvesTheConfiguredPortForBothActions(string port)
+        {
+            this.mockFixture.Setup(PlatformID.Win32NT);
+            using (ProfileExecutor executor = TestProfileResources.CreateProfileExecutor(
+                "PERF-WEB-ASPNET-BOMBARDIER.json",
+                this.mockFixture.Dependencies,
+                parameterOverrides: new Dictionary<string, IConvertible> { ["ServerPort"] = port }))
+            {
+                var serverParameters = executor.Profile.Actions[0].Parameters;
+                var clientParameters = executor.Profile.Actions[1].Parameters;
+                Assert.That(clientParameters.ContainsKey("ServerPort"), Is.True);
+                await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, clientParameters, CancellationToken.None);
+                Assert.That(serverParameters["ServerPort"].ToString(), Is.EqualTo(port));
+                Assert.That(clientParameters["CommandArguments"].ToString(), Does.Contain($":{port}/json"));
+                Assert.That(clientParameters["CommandArguments"].ToString(), Does.Not.Contain("{ServerPort}"));
+            }
         }
 
         [Test]
