@@ -540,7 +540,10 @@ namespace VirtualClient.Actions
             Assert.IsNotNull(writtenConfigText);
             Assert.IsTrue(writtenConfigText.Contains("%define GCCge15"), "Config should contain '%define GCCge15' when GCC version is 15 or greater.");
             Assert.IsTrue(writtenConfigText.Contains("%define GCCge10"), "Config should also contain '%define GCCge10' when GCC version is 15 or greater.");
+            Assert.IsTrue(writtenConfigText.Contains("%define GCCge14"), "Config should also contain '%define GCCge14' when GCC version is 15 or greater.");
+            Assert.IsTrue(writtenConfigText.Contains("EXTRA_COPTIMIZE  = -fpermissive"), "Config should downgrade GCC 14+ legacy C errors.");
             Assert.IsFalse(writtenConfigText.Contains("$Gcc15Workaround$"), "Placeholder '$Gcc15Workaround$' should be replaced.");
+            Assert.IsFalse(writtenConfigText.Contains("$Gcc14Workaround$"), "Placeholder '$Gcc14Workaround$' should be replaced.");
             Assert.IsFalse(writtenConfigText.Contains("$Gcc10Workaround$"), "Placeholder '$Gcc10Workaround$' should be replaced.");
             Assert.IsTrue(writtenConfigText.Contains("-ftree-parallelize-loops=8"), "Config should use the configured thread count.");
             Assert.IsFalse(writtenConfigText.Contains("$Threads$"), "Placeholder '$Threads$' should be replaced.");
@@ -587,8 +590,44 @@ namespace VirtualClient.Actions
             Assert.IsNotNull(writtenConfigText);
             Assert.IsFalse(writtenConfigText.Contains("%define GCCge15"), "Config should NOT contain '%define GCCge15' when GCC version is less than 15.");
             Assert.IsTrue(writtenConfigText.Contains("%define GCCge10"), "Config should contain '%define GCCge10' when GCC version is 10.");
+            Assert.IsFalse(writtenConfigText.Contains("%define GCCge14"), "Config should NOT contain '%define GCCge14' when GCC version is less than 14.");
             Assert.IsFalse(writtenConfigText.Contains("$Gcc15Workaround$"), "Placeholder '$Gcc15Workaround$' should be replaced.");
+            Assert.IsFalse(writtenConfigText.Contains("$Gcc14Workaround$"), "Placeholder '$Gcc14Workaround$' should be replaced.");
             Assert.IsFalse(writtenConfigText.Contains("$Gcc10Workaround$"), "Placeholder '$Gcc10Workaround$' should be replaced.");
+        }
+
+        [Test]
+        public async Task SpecCpu2017ExecutorAppliesGcc14WorkaroundWhenGccVersionIs14OnLinux()
+        {
+            this.SetupLinux();
+
+            string writtenConfigText = null;
+            this.mockFixture.File.Setup(f => f.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Callback<string, string, CancellationToken>((path, content, token) => writtenConfigText = content)
+                .Returns(Task.CompletedTask);
+
+            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            {
+                return new InMemoryProcess
+                {
+                    StartInfo = new ProcessStartInfo { FileName = exe, Arguments = arguments },
+                    StandardOutput = new ConcurrentBuffer(new StringBuilder(exe == "sudo" && arguments == "gcc -dumpversion" ? "14" : string.Empty)),
+                    ExitCode = 0,
+                    OnStart = () => true,
+                    OnHasExited = () => true
+                };
+            };
+
+            using (TestSpecCpu2017Executor specCpuExecutor = new TestSpecCpu2017Executor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                await specCpuExecutor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+            }
+
+            Assert.IsNotNull(writtenConfigText);
+            Assert.IsTrue(writtenConfigText.Contains("%define GCCge10"));
+            Assert.IsTrue(writtenConfigText.Contains("%define GCCge14"));
+            Assert.IsFalse(writtenConfigText.Contains("%define GCCge15"));
+            Assert.IsFalse(writtenConfigText.Contains("$Gcc14Workaround$"));
         }
 
         [TestCase("intrate", "0-3", "$SPECCOPYNUM", null)]
