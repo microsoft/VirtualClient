@@ -23,6 +23,7 @@ namespace VirtualClient.Actions
     using Newtonsoft.Json.Linq;
     using NUnit.Framework;
     using VirtualClient.Common;
+    using VirtualClient.Common.ProcessAffinity;
 
     [TestFixture]
     [Category("Unit")]
@@ -699,7 +700,56 @@ namespace VirtualClient.Actions
             EventContext selection = (EventContext)this.mockFixture.Logger.Single(entry => entry.Item2.Name.EndsWith(".SymmetricAffinitySelected", StringComparison.Ordinal)).Item3;
             Assert.AreEqual(expectedCpus, selection.Properties["cpuIds"]);
             Assert.AreEqual(true, selection.Properties["pinningEnabled"]);
-            Assert.AreEqual(expectedCpus, ((IDictionary<string, object>)selection.Properties["metadata_scenario"])["NumaProcessorAffinity"]);
+            Assert.AreEqual(expectedCoreSpec, ((IDictionary<string, object>)selection.Properties["metadata_scenario"])["NumaProcessorAffinity"]);
+        }
+
+        [TestCase(64, "0-31,64-95")]
+        [TestCase(40, "0-31,64-67,80-83")]
+        [TestCase(4, "0,1,16,17")]
+        public async Task SpecCpu2017ExecutorSelectsSymmetricNumaAffinityOnBifurcatedNodeCpuRanges(int copyCount, string expectedCoreSpec)
+        {
+            this.SetupLinux(Architecture.Arm64);
+            this.SetupInstalledAffinityRun(string.Empty);
+            this.mockFixture.Parameters[nameof(SpecCpuExecutor.EnableNumaProcessorAffinitySymmetric)] = true;
+            this.mockFixture.Parameters[nameof(SpecCpuExecutor.CopyCount)] = copyCount;
+
+            // Each NUMA node owns two non-contiguous CPU ranges (e.g. node0 = 0-15 and 64-79).
+            IEnumerable<int> node0 = Enumerable.Range(0, 16).Concat(Enumerable.Range(64, 16));
+            IEnumerable<int> node1 = Enumerable.Range(16, 16).Concat(Enumerable.Range(80, 16));
+            string topology = "available: 2 nodes (0-1)\n" +
+                $"node 0 cpus: {string.Join(" ", node0)}\nnode 0 size: 16000 MB\nnode 0 free: 12000 MB\n" +
+                $"node 1 cpus: {string.Join(" ", node1)}\nnode 1 size: 16000 MB\nnode 1 free: 12000 MB";
+
+            string pinnedConfig = null;
+            this.mockFixture.File.Setup(f => f.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Callback<string, string, CancellationToken>((path, content, token) => pinnedConfig = content)
+                .Returns(Task.CompletedTask);
+
+            List<string> commands = new List<string>();
+            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            {
+                commands.Add($"{exe} {arguments}");
+                return new InMemoryProcess
+                {
+                    StartInfo = new ProcessStartInfo { FileName = exe, Arguments = arguments },
+                    StandardOutput = new ConcurrentBuffer(new StringBuilder(exe == "numactl" && arguments == "--hardware" ? topology : string.Empty)),
+                    ExitCode = 0,
+                    OnStart = () => true,
+                    OnHasExited = () => true
+                };
+            };
+
+            using (TestSpecCpu2017Executor executor = new TestSpecCpu2017Executor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                await executor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+            }
+
+            string expectedCpus = string.Join(",", ProcessAffinityConfiguration.ParseCoreList(expectedCoreSpec).OrderBy(cpu => cpu));
+            StringAssert.Contains($"bind = {expectedCpus}", pinnedConfig);
+            Assert.IsTrue(commands.Any(command => command == $"numactl --localalloc -C {expectedCoreSpec} true"));
+            EventContext selection = (EventContext)this.mockFixture.Logger.Single(entry => entry.Item2.Name.EndsWith(".SymmetricAffinitySelected", StringComparison.Ordinal)).Item3;
+            Assert.AreEqual(expectedCpus, selection.Properties["cpuIds"]);
+            Assert.AreEqual(expectedCoreSpec, ((IDictionary<string, object>)selection.Properties["metadata_scenario"])["NumaProcessorAffinity"]);
         }
 
         [Test]

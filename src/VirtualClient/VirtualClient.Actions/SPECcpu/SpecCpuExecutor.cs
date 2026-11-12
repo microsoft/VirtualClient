@@ -267,7 +267,8 @@ namespace VirtualClient.Actions
                         this.Parameters[nameof(this.EnableNumaProcessorAffinitySymmetric)] = true;
                         string affinity = await this.GetSymmetricNumaProcessorAffinityAsync(cancellationToken);
                         this.Parameters[nameof(this.NumaProcessorAffinity)] = affinity;
-                        this.MetadataContract.Add(nameof(this.NumaProcessorAffinity), affinity, MetadataContract.ScenarioCategory);
+                        string affinityRanges = new LinuxProcessAffinityConfiguration(ProcessAffinityConfiguration.ParseCoreList(affinity)).NumactlCoreSpec;
+                        this.MetadataContract.Add(nameof(this.NumaProcessorAffinity), affinityRanges, MetadataContract.ScenarioCategory);
                         this.MetadataContract.Apply(telemetryContext);
                         this.LogSpecCpuStep(telemetryContext, "SymmetricAffinitySelected", ("cpuIds", affinity));
                     }
