@@ -26,7 +26,6 @@
         VirtualClient.
         
         - Microsoft.AspNetCore.Razor.Language.dll
-        - Microsoft.Diagnostics.Tracing.TraceEvent.dll
         -->
 
         <!-- 
@@ -36,7 +35,7 @@
 
         <file
             src="$BinConfigDir$\ARM64\VirtualClient.Main\net10.0\win-arm64\**\*"
-            exclude="**\*.pdb;*.xml;**\Microsoft.AspNetCore.Razor.Language.dll;**\Microsoft.Diagnostics.Tracing.TraceEvent.dll"
+            exclude="**\*.pdb;*.xml;**\Microsoft.AspNetCore.Razor.Language.dll"
             target="content\win-arm64"
             />
 

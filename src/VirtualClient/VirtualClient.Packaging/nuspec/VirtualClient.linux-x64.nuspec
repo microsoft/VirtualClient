@@ -26,7 +26,6 @@
         VirtualClient.
         
         - Microsoft.AspNetCore.Razor.Language.dll
-        - Microsoft.Diagnostics.Tracing.TraceEvent.dll
         -->
         
         <!-- 
