@@ -121,11 +121,7 @@ echo ""
 echo "[Build Solution]"
 echo "----------------------------------------------------------------------"
 echo ""
-echo "!!!"
-echo "!!! Note that the solution is be built with 'Debug' configuration in order to support a better debugging experience for extensions development."
-echo "!!!"
-echo ""
-dotnet build "$SCRIPT_DIR/src/VirtualClient/VirtualClient.sln" -c Debug -v Detailed \
+dotnet build "$SCRIPT_DIR/src/VirtualClient/VirtualClient.sln" -c $BUILD_CONFIGURATION -v Detailed \
 -p:AssemblyVersion=$BUILD_VERSION || Error
 
 # Runtime-specific builds

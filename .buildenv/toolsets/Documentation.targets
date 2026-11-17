@@ -5,7 +5,7 @@
     Documentation file output locations (XML comment-based).  Generates XML file as well as markdown file.
     -->
     <PropertyGroup>
-        <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
+        <DocumentationFile>$(OutputPath)$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
     </PropertyGroup>
 
 </Project>
