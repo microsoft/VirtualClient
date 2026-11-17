@@ -87,13 +87,13 @@ echo [Create NuGet Package] VirtualClient.Framework.%PACKAGE_VERSION%
 echo ----------------------------------------------------------
 REM We package the AnyCPU .dlls with Debug configuration to support extensions debugging for
 REM external users and partner teams.
-call dotnet pack %PACKAGES_PROJECT%  --force --no-restore --no-build -c Debug -v Detailed ^
+call dotnet pack %PACKAGES_PROJECT%  --force --no-restore --no-build -c %BUILD_CONFIGURATION% -v Detailed ^
 -p:Version=%PACKAGE_VERSION% -p:NuspecFile=%PACKAGE_DIR%\nuspec\VirtualClient.Framework.nuspec && echo: || Goto :Error
 
 echo:
 echo [Create NuGet Package] VirtualClient.TestFramework.%PACKAGE_VERSION%
 echo ----------------------------------------------------------
-call dotnet pack %PACKAGES_PROJECT%  --force --no-restore --no-build -c Debug -v Detailed ^
+call dotnet pack %PACKAGES_PROJECT%  --force --no-restore --no-build -c %BUILD_CONFIGURATION% -v Detailed ^
 -p:Version=%PACKAGE_VERSION% -p:NuspecFile=%PACKAGE_DIR%\nuspec\VirtualClient.TestFramework.nuspec && echo: || Goto :Error
 
 echo:

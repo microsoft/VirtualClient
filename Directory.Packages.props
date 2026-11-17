@@ -14,11 +14,11 @@
 		<PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="4.7.0" />
 		<PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.7.0" />
 		<PackageVersion Include="Microsoft.Diagnostics.Tracing.TraceEvent" Version="3.1.5" />
-		<PackageVersion Include="Microsoft.Extensions.Configuration" Version="9.0.9" />
-		<PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="9.0.9" />
-		<PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="9.0.9" />
-		<PackageVersion Include="Microsoft.Extensions.Http.Polly" Version="9.0.9" />
-		<PackageVersion Include="Microsoft.Extensions.Logging" Version="9.0.9" />
+		<PackageVersion Include="Microsoft.Extensions.Configuration" Version="10.0.15" />
+		<PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="10.0.15" />
+		<PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.15" />
+		<PackageVersion Include="Microsoft.Extensions.Http.Polly" Version="10.0.15" />
+		<PackageVersion Include="Microsoft.Extensions.Logging" Version="10.0.15" />
 		<PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.0.0" />
 		<PackageVersion Include="MimeMapping" Version="3.1.0" />
 		<PackageVersion Include="Moq" Version="4.18.2" />
@@ -31,12 +31,12 @@
 		<PackageVersion Include="SSH.NET" Version="2026.0.0" />
 		<PackageVersion Include="StyleCop.Analyzers" Version="1.1.118" />
 		<PackageVersion Include="System.CommandLine" Version="2.0.0-beta1.21308.1" />
-		<PackageVersion Include="System.Diagnostics.EventLog" Version="9.0.9" />
+		<PackageVersion Include="System.Diagnostics.EventLog" Version="10.0.15" />
 		<PackageVersion Include="Microsoft.Management.Infrastructure" Version="3.0.0" />
-		<PackageVersion Include="System.Diagnostics.PerformanceCounter" Version="9.0.9" />
+		<PackageVersion Include="System.Diagnostics.PerformanceCounter" Version="10.0.15" />
 		<PackageVersion Include="System.IO.Abstractions" Version="22.0.14" />
 		<PackageVersion Include="System.IO.FileSystem.AccessControl" Version="5.0.0" />
-		<PackageVersion Include="System.ServiceProcess.ServiceController" Version="9.0.9" />
+		<PackageVersion Include="System.ServiceProcess.ServiceController" Version="10.0.15" />
 		<PackageVersion Include="YamlDotNet" Version="15.1.1" />
 	</ItemGroup>
 </Project>

@@ -120,7 +120,7 @@ fi
 echo ""
 echo "[Create NuGet Package] VirtualClient.Framework.$PACKAGE_VERSION"
 echo "----------------------------------------------------------"
-dotnet pack "$PACKAGES_PROJECT" --force --no-restore --no-build -c Debug -v Detailed \
+dotnet pack "$PACKAGES_PROJECT" --force --no-restore --no-build -c $BUILD_CONFIGURATION -v Detailed \
 -p:Version=$PACKAGE_VERSION  -p:NuspecFile="$PACKAGES_PROJECT_DIR/nuspec/VirtualClient.Framework.nuspec"
 
 result=$?
@@ -131,7 +131,7 @@ fi
 echo ""
 echo "[Create NuGet Package] VirtualClient.TestFramework.$PACKAGE_VERSION"
 echo "----------------------------------------------------------"
-dotnet pack "$PACKAGES_PROJECT" --force --no-restore --no-build -c Debug -v Detailed \
+dotnet pack "$PACKAGES_PROJECT" --force --no-restore --no-build -c $BUILD_CONFIGURATION -v Detailed \
 -p:Version=$PACKAGE_VERSION  -p:NuspecFile="$PACKAGES_PROJECT_DIR/nuspec/VirtualClient.TestFramework.nuspec"
 
 echo ""

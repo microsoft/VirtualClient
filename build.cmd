@@ -66,14 +66,8 @@ echo **********************************************************************
 echo:
 echo [Build Solution]
 echo -------------------------------------------------------
-REM We build the AnyCPU .dlls with Debug configuration to support extensions debugging for
-REM external users and partner teams.
 echo:
-echo !!!
-echo !!! Note that the solution is be built with 'Debug' configuration in order to support a better debugging experience for extensions development.
-echo !!!
-echo:
-call dotnet build "%VC_SOLUTION_DIR%\VirtualClient.sln" -c Debug -v Detailed ^
+call dotnet build "%VC_SOLUTION_DIR%\VirtualClient.sln" -c %BUILD_CONFIGURATION% -v Detailed ^
 -p:AssemblyVersion=%BUILD_VERSION% && echo: || Goto :Error
 
 if /i "%BUILD_ALL%" == "true" (
