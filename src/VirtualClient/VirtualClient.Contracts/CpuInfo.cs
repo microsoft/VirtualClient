@@ -72,6 +72,11 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
+        /// The current CPU information.
+        /// </summary>
+        public static CpuInfo Current { get; internal set; }
+
+        /// <summary>
         /// A description of the CPU (e.g. Intel64 Family 6 Model 106 Stepping 6, GenuineIntel).
         /// </summary>
         public string Description { get; }

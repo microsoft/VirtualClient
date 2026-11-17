@@ -114,20 +114,30 @@ namespace VirtualClient
         /// <summary>
         /// Returns information about the CPU on the system.
         /// </summary>
-        public async Task<CpuInfo> GetCpuInfoAsync(CancellationToken cancellationToken)
+        public Task<CpuInfo> GetCpuInfoAsync(CancellationToken cancellationToken)
         {
-            CpuInfo info = null;
-
-            if (this.Platform == PlatformID.Win32NT)
+            return Task.Run(() =>
             {
-                info = await this.GetCpuInfoOnWindowsAsync();
-            }
-            else if (this.Platform == PlatformID.Unix)
-            {
-                info = await this.GetCpuInfoOnUnixAsync();
-            }
+                CpuInfo info = CpuInfo.Current;
+                lock (CpuInfo.Current)
+                {
+                    if (CpuInfo.Current == null)
+                    {
+                        if (this.Platform == PlatformID.Win32NT)
+                        {
+                            info = this.GetCpuInfoOnWindowsAsync().GetAwaiter().GetResult();
+                        }
+                        else if (this.Platform == PlatformID.Unix)
+                        {
+                            info = this.GetCpuInfoOnUnixAsync().GetAwaiter().GetResult();
+                        }
 
-            return info;
+                        CpuInfo.Current = info;
+                    }
+                }
+
+                return info;
+            });
         }
 
         /// <summary>
