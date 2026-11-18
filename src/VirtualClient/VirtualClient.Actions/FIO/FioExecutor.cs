@@ -677,16 +677,15 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Returns the disks to test from the set of all disks.
+        /// Returns the mounted disks to test from the set of all disks.
         /// </summary>
         /// <param name="disks">All disks on the system.</param>
         protected IEnumerable<Disk> GetDisksToTest(IEnumerable<Disk> disks)
         {
-            List<Disk> disksToTest = new List<Disk>();
             this.DiskFilter = string.IsNullOrWhiteSpace(this.DiskFilter) ? DiskFilters.DefaultDiskFilter : this.DiskFilter;
-            disksToTest = DiskFilters.FilterDisks(disks, this.DiskFilter, this.Platform).ToList();
+            IEnumerable<Disk> mountedDisks = disks.Where(disk => disk.Volumes?.Any(volume => volume.AccessPaths?.Any() == true) == true);
 
-            return disksToTest;
+            return DiskFilters.FilterDisks(mountedDisks, this.DiskFilter, this.Platform).ToList();
         }
 
         /// <summary>
@@ -830,7 +829,7 @@ namespace VirtualClient.Actions
                     this.MetadataContract.Add("fio_version", fioVersion, MetadataContract.DependenciesCategory);
                 }
             }
-            
+
             if (this.MetricFilters?.Any() == true)
             {
                 metrics = metrics.FilterBy(this.MetricFilters).ToList();

@@ -113,6 +113,20 @@ namespace VirtualClient.Actions.DiskPerformance
         }
 
         [Test]
+        public void FioExecutorExcludesUnmountedDisksEvenWhenTheyMatchTheDiskFilter()
+        {
+            Disk unmountedDisk = this.CreateDisk(4, PlatformID.Unix, os: false, "/dev/sdf", "/dev/sdf1");
+            unmountedDisk.Volumes.Single().AccessPaths = Array.Empty<string>();
+            this.profileParameters[nameof(FioExecutor.DiskFilter)] = "DiskPath:/dev/sdf";
+
+            using (TestFioExecutor workloadExecutor = new TestFioExecutor(this.Dependencies, this.profileParameters))
+            {
+                IEnumerable<Disk> actualDisks = workloadExecutor.GetDisksToTest(new[] { unmountedDisk });
+                Assert.IsEmpty(actualDisks);
+            }
+        }
+
+        [Test]
         public void FioExecutorIdentifiesTheExpectedDisksWhenTheyAreExplicitlyDefined_LinuxScenario()
         {
             // The default mock setups create 3 data disks:
