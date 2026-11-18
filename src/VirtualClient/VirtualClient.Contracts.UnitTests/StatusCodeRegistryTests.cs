@@ -11,7 +11,7 @@
         [TestCase(ErrorReason.DependencyDescriptionInvalid, StatusCodeRegistry.StatusCodeBase.ConfigurationError)]
         [TestCase(ErrorReason.DuplicateExtensionsFound, StatusCodeRegistry.StatusCodeBase.ConfigurationError)]
         [TestCase(ErrorReason.DuplicatePackagesFound, StatusCodeRegistry.StatusCodeBase.ConfigurationError)]
-        [TestCase(ErrorReason.EnvironmentIsInsufficent, StatusCodeRegistry.StatusCodeBase.ConfigurationError)]
+        [TestCase(ErrorReason.EnvironmentIsInsufficient, StatusCodeRegistry.StatusCodeBase.ConfigurationError)]
         [TestCase(ErrorReason.ExtensionAssemblyInvalid, StatusCodeRegistry.StatusCodeBase.ConfigurationError)]
         [TestCase(ErrorReason.InvalidOrMissingLicense, StatusCodeRegistry.StatusCodeBase.ConfigurationError)]
         [TestCase(ErrorReason.InvalidProfileDefinition, StatusCodeRegistry.StatusCodeBase.ConfigurationError)]

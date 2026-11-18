@@ -55,7 +55,7 @@ namespace VirtualClient.Contracts
 
                 if (eligibleVolumes.Count() == 0)
                 {
-                    throw new WorkloadException($"There is no eligible volume in {disk.DevicePath} that can run IO workloads.", ErrorReason.EnvironmentIsInsufficent);
+                    throw new WorkloadException($"There is no eligible volume in {disk.DevicePath} that can run IO workloads.", ErrorReason.EnvironmentIsInsufficient);
                 }
 
                 long biggestSize = eligibleVolumes.Max(v => v.SizeInBytes(platform));
@@ -93,7 +93,7 @@ namespace VirtualClient.Contracts
         /// <summary>
         /// Returns if a partition is OS partition.
         /// </summary>
-        /// <param name="volume">Specificed volume/partition.</param>
+        /// <param name="volume">Specified volume/partition.</param>
         /// <returns>True/False a volume is operating system.</returns>
         public static bool IsOperatingSystem(this DiskVolume volume)
         {
@@ -113,7 +113,7 @@ namespace VirtualClient.Contracts
         /// If a Disk contains an OS partition.
         /// </summary>
         /// <param name="disk">Specified Disk.</param>
-        /// <returns>True/Fals a disk contains an operating system volume.</returns>
+        /// <returns>True/False a disk contains an operating system volume.</returns>
         public static bool IsOperatingSystem(this Disk disk)
         {
             return disk.Volumes.Any(v => v.IsOperatingSystem());

@@ -70,7 +70,7 @@
                 case (int)ErrorReason.DependencyDescriptionInvalid:
                 case (int)ErrorReason.DuplicateExtensionsFound:
                 case (int)ErrorReason.DuplicatePackagesFound:
-                case (int)ErrorReason.EnvironmentIsInsufficent:
+                case (int)ErrorReason.EnvironmentIsInsufficient:
                 case (int)ErrorReason.ExtensionAssemblyInvalid:
                 case (int)ErrorReason.InvalidOrMissingLicense:
                 case (int)ErrorReason.InvalidProfileDefinition:
