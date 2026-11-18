@@ -757,7 +757,7 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
-        /// When overriden in a derived class, executes the component logic.
+        /// When overridden in a derived class, executes the component logic.
         /// </summary>
         public async Task ExecuteAsync(CancellationToken cancellationToken)
         {

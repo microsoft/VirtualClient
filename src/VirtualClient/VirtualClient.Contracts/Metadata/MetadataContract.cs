@@ -389,7 +389,7 @@ namespace VirtualClient.Contracts.Metadata
             if (!category.StartsWith("metadata", StringComparison.OrdinalIgnoreCase))
             {
                 throw new SchemaException(
-                    $"Invalid metadata contract category name '{category}'. All metadata contract category names must being with " +
+                    $"Invalid metadata contract category name '{category}'. All metadata contract category names must begin with " +
                     $"the prefix 'metadata' (e.g. metadata, metadata_hw, metdata_os).");
             }
         }
