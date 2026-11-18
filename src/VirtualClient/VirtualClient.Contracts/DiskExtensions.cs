@@ -42,7 +42,7 @@ namespace VirtualClient.Contracts
                 path = "/";
 
             }
-            else if (platform == PlatformID.Unix && disk.IsOperatingSystem())
+            else if (platform == PlatformID.Win32NT && disk.IsOperatingSystem())
             {
                 // If it is OS disk, test on OS partition
                 path = disk.Volumes.Where(v => v.IsOperatingSystem()).FirstOrDefault().AccessPaths.FirstOrDefault();
