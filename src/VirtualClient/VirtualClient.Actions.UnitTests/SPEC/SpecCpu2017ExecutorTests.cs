@@ -705,6 +705,7 @@ namespace VirtualClient.Actions
 
         [TestCase(64, "0-31,64-95")]
         [TestCase(40, "0-31,64-67,80-83")]
+        [TestCase(41, "0-31,64-68,80-83")]
         [TestCase(4, "0,1,16,17")]
         public async Task SpecCpu2017ExecutorSelectsSymmetricNumaAffinityOnBifurcatedNodeCpuRanges(int copyCount, string expectedCoreSpec)
         {
