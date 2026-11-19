@@ -82,6 +82,11 @@ namespace VirtualClient.Contracts
         };
 
         /// <summary>
+        /// The current Linux distribution information.
+        /// </summary>
+        public static LinuxDistributionInfo Current { get; internal set; }
+
+        /// <summary>
         /// Full name of the operating system distro.
         /// </summary>
         public string Name { get; set; }

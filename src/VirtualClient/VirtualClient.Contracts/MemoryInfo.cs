@@ -30,6 +30,11 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
+        /// The current memory information.
+        /// </summary>
+        public static MemoryInfo Current { get; internal set; }
+
+        /// <summary>
         /// Memory chips on the system.
         /// </summary>
         public IEnumerable<MemoryChipInfo> Chips { get; }

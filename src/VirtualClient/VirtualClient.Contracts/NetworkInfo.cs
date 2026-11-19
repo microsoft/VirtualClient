@@ -23,6 +23,11 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
+        /// The current network interface information
+        /// </summary>
+        public static NetworkInfo Current { get; internal set; }
+
+        /// <summary>
         /// The set of network interfaces on the system.
         /// </summary>
         public IEnumerable<NetworkInterfaceInfo> Interfaces { get; }

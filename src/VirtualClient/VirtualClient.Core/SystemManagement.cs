@@ -24,6 +24,8 @@ namespace VirtualClient
     /// </summary>
     public class SystemManagement : ISystemManagement
     {
+        private static readonly SemaphoreSlim LockSemaphore = new SemaphoreSlim(1, 1);
+
         internal SystemManagement()
         {
         }
@@ -114,30 +116,43 @@ namespace VirtualClient
         /// <summary>
         /// Returns information about the CPU on the system.
         /// </summary>
-        public Task<CpuInfo> GetCpuInfoAsync(CancellationToken cancellationToken)
+        public async Task<CpuInfo> GetCpuInfoAsync(CancellationToken cancellationToken)
         {
-            return Task.Run(() =>
+            if (CpuInfo.Current != null)
             {
-                CpuInfo info = CpuInfo.Current;
-                lock (CpuInfo.Current)
+                return CpuInfo.Current;
+            }
+
+            CpuInfo info = null;
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                await SystemManagement.LockSemaphore.WaitAsync(cancellationToken);
+
+                try
                 {
-                    if (CpuInfo.Current == null)
+                    if (CpuInfo.Current != null)
                     {
-                        if (this.Platform == PlatformID.Win32NT)
-                        {
-                            info = this.GetCpuInfoOnWindowsAsync().GetAwaiter().GetResult();
-                        }
-                        else if (this.Platform == PlatformID.Unix)
-                        {
-                            info = this.GetCpuInfoOnUnixAsync().GetAwaiter().GetResult();
-                        }
-
-                        CpuInfo.Current = info;
+                        return CpuInfo.Current;
                     }
-                }
 
-                return info;
-            });
+                    if (this.Platform == PlatformID.Win32NT)
+                    {
+                        info = await this.GetCpuInfoOnWindowsAsync(cancellationToken);
+                    }
+                    else if (this.Platform == PlatformID.Unix)
+                    {
+                        info = await this.GetCpuInfoOnUnixAsync(cancellationToken);
+                    }
+
+                    CpuInfo.Current = info;
+                }
+                finally
+                {
+                    SystemManagement.LockSemaphore.Release();
+                }
+            }
+
+            return info;
         }
 
         /// <summary>
@@ -145,29 +160,52 @@ namespace VirtualClient
         /// </summary>
         public async Task<LinuxDistributionInfo> GetLinuxDistributionAsync(CancellationToken cancellationToken)
         {
-            LinuxDistributionInfo result = new LinuxDistributionInfo();
-
-            try
+            if (LinuxDistributionInfo.Current != null)
             {
-                string osReleaseFile = await this.FileSystem.File.ReadAllTextAsync("/etc/os-release", cancellationToken);
-                result = LinuxDistributionInfo.Create(osReleaseFile);
+                return LinuxDistributionInfo.Current;
             }
-            catch
+
+            LinuxDistributionInfo distroInfo = null;
+            if (!cancellationToken.IsCancellationRequested)
             {
-                using (IProcessProxy process = this.ProcessManager.CreateElevatedProcess(PlatformID.Unix, "hostnamectl", string.Empty, Environment.CurrentDirectory))
+                await SystemManagement.LockSemaphore.WaitAsync(cancellationToken);
+
+                try
                 {
-                    await process.StartAndWaitAsync(cancellationToken);
+                    if (LinuxDistributionInfo.Current != null)
+                    {
+                        return LinuxDistributionInfo.Current;
+                    }
 
-                    process.ThrowIfErrored<ProcessException>(
-                        ProcessProxy.DefaultSuccessCodes, 
-                        "Unable to determine Linux distribution.", 
-                        errorReason: ErrorReason.LinuxDistributionNotSupported);
+                    try
+                    {
+                        string osReleaseFile = await this.FileSystem.File.ReadAllTextAsync("/etc/os-release", cancellationToken);
+                        distroInfo = LinuxDistributionInfo.Create(osReleaseFile);
+                    }
+                    catch
+                    {
+                        using (IProcessProxy process = this.ProcessManager.CreateElevatedProcess(PlatformID.Unix, "hostnamectl", string.Empty, Environment.CurrentDirectory))
+                        {
+                            await process.StartAndWaitAsync(cancellationToken);
 
-                    result = LinuxDistributionInfo.Create(process.StandardOutput.ToString());
+                            process.ThrowIfErrored<ProcessException>(
+                                ProcessProxy.DefaultSuccessCodes,
+                                "Unable to determine Linux distribution.",
+                                errorReason: ErrorReason.LinuxDistributionNotSupported);
+
+                            distroInfo = LinuxDistributionInfo.Create(process.StandardOutput.ToString());
+                        }
+                    }
+
+                    LinuxDistributionInfo.Current = distroInfo;
+                }
+                finally
+                {
+                    SystemManagement.LockSemaphore.Release();
                 }
             }
 
-            return result;
+            return distroInfo;
         }
 
         /// <summary>
@@ -175,17 +213,37 @@ namespace VirtualClient
         /// </summary>
         public async Task<MemoryInfo> GetMemoryInfoAsync(CancellationToken cancellationToken)
         {
-            MemoryInfo memoryInfo = null;
+            if (MemoryInfo.Current != null)
+            {
+                return MemoryInfo.Current;
+            }
 
+            MemoryInfo memoryInfo = null;
             if (!cancellationToken.IsCancellationRequested)
             {
-                if (this.Platform == PlatformID.Win32NT)
+                await SystemManagement.LockSemaphore.WaitAsync(cancellationToken);
+
+                try
                 {
-                    memoryInfo = this.GetMemoryInfoOnWindows();
+                    if (MemoryInfo.Current != null)
+                    {
+                        return MemoryInfo.Current;
+                    }
+
+                    if (this.Platform == PlatformID.Win32NT)
+                    {
+                        memoryInfo = this.GetMemoryInfoOnWindows();
+                    }
+                    else if (this.Platform == PlatformID.Unix)
+                    {
+                        memoryInfo = await this.GetMemoryInfoOnUnixAsync(cancellationToken);
+                    }
+
+                    MemoryInfo.Current = memoryInfo;
                 }
-                else if (this.Platform == PlatformID.Unix)
+                finally
                 {
-                    memoryInfo = await this.GetMemoryInfoOnUnixAsync();
+                    SystemManagement.LockSemaphore.Release();
                 }
             }
 
@@ -197,17 +255,37 @@ namespace VirtualClient
         /// </summary>
         public async Task<NetworkInfo> GetNetworkInfoAsync(CancellationToken cancellationToken)
         {
-            NetworkInfo networkInfo = null;
+            if (NetworkInfo.Current != null)
+            {
+                return NetworkInfo.Current;
+            }
 
+            NetworkInfo networkInfo = null;
             if (!cancellationToken.IsCancellationRequested)
             {
-                if (this.Platform == PlatformID.Win32NT)
+                await SystemManagement.LockSemaphore.WaitAsync(cancellationToken);
+                
+                try
                 {
-                    networkInfo = this.GetNetworkInfoOnWindows();
+                    if (NetworkInfo.Current != null)
+                    {
+                        return NetworkInfo.Current;
+                    }
+
+                    if (this.Platform == PlatformID.Win32NT)
+                    {
+                        networkInfo = this.GetNetworkInfoOnWindows();
+                    }
+                    else if (this.Platform == PlatformID.Unix)
+                    {
+                        networkInfo = await this.GetNetworkInfoOnUnixAsync();
+                    }
+
+                    NetworkInfo.Current = networkInfo;
                 }
-                else if (this.Platform == PlatformID.Unix)
+                finally
                 {
-                    networkInfo = await this.GetNetworkInfoOnUnixAsync();
+                    SystemManagement.LockSemaphore.Release();
                 }
             }
 
@@ -333,22 +411,25 @@ namespace VirtualClient
             }
         }
 
-        private async Task<CpuInfo> GetCpuInfoOnUnixAsync()
+        private async Task<CpuInfo> GetCpuInfoOnUnixAsync(CancellationToken cancellationToken)
         {
             CpuInfo cpuInfo = null;
             using (IProcessProxy process = this.ProcessManager.CreateProcess("lscpu"))
             {
-                await process.StartAndWaitAsync(CancellationToken.None);
-                process.ThrowIfWorkloadFailed();
+                await process.StartAndWaitAsync(cancellationToken);
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    process.ThrowIfWorkloadFailed();
 
-                LscpuParser parser = new LscpuParser(process.StandardOutput.ToString());
-                cpuInfo = parser.Parse();
+                    LscpuParser parser = new LscpuParser(process.StandardOutput.ToString());
+                    cpuInfo = parser.Parse();
+                }
             }
 
             return cpuInfo;
         }
 
-        private async Task<CpuInfo> GetCpuInfoOnWindowsAsync()
+        private async Task<CpuInfo> GetCpuInfoOnWindowsAsync(CancellationToken cancellationToken)
         {
             CpuInfo cpuInfo = null;
             string command = "CoreInfo64.exe";
@@ -359,36 +440,46 @@ namespace VirtualClient
 
             DependencyPath package = await this.GetPlatformSpecificPackageAsync(
                 VirtualClient.PackageManager.BuiltInSystemToolsPackageName,
-                CancellationToken.None);
+                cancellationToken);
 
             string coreInfoExe = this.PlatformSpecifics.Combine(package.Path, command);
             using (IProcessProxy process = this.ProcessManager.CreateProcess(coreInfoExe, "-nobanner /accepteula"))
             {
-                await process.StartAndWaitAsync(CancellationToken.None);
-                process.ThrowIfWorkloadFailed();
+                await process.StartAndWaitAsync(cancellationToken);
 
-                CoreInfoParser parser = new CoreInfoParser(process.StandardOutput.ToString());
-                cpuInfo = parser.Parse();
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    process.ThrowIfWorkloadFailed();
+
+                    CoreInfoParser parser = new CoreInfoParser(process.StandardOutput.ToString());
+                    cpuInfo = parser.Parse();
+                }
             }
 
             return cpuInfo;
         }
 
-        private async Task<MemoryInfo> GetMemoryInfoOnUnixAsync()
+        private async Task<MemoryInfo> GetMemoryInfoOnUnixAsync(CancellationToken cancellationToken)
         {
+            MemoryInfo memoryInfo = null;
             using (IProcessProxy process = this.ProcessManager.CreateElevatedProcess(PlatformID.Unix, "dmidecode", "--type memory"))
             {
                 IEnumerable<MemoryChipInfo> chips = null;
-                await process.StartAndWaitAsync(CancellationToken.None);
+                await process.StartAndWaitAsync(cancellationToken);
 
-                if (!process.IsErrored())
+                if (!cancellationToken.IsCancellationRequested)
                 {
-                    DmiDecodeParser parser = new DmiDecodeParser();
-                    parser.TryParse(process.StandardOutput.ToString(), out chips);
-                }
+                    if (!process.IsErrored())
+                    {
+                        DmiDecodeParser parser = new DmiDecodeParser();
+                        parser.TryParse(process.StandardOutput.ToString(), out chips);
+                    }
 
-                return new MemoryInfo(this.GetTotalSystemMemoryKiloBytes(), chips);
+                    memoryInfo = new MemoryInfo(this.GetTotalSystemMemoryKiloBytes(), chips);
+                }
             }
+
+            return memoryInfo;
         }
 
         private MemoryInfo GetMemoryInfoOnWindows()
