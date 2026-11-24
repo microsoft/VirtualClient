@@ -947,7 +947,7 @@ namespace VirtualClient
         [Test]
         public void LogLevelOptionSupportsStringRepresentationsOfTheLogLevelEnumeration()
         {
-            foreach (LogLevel level in Enum.GetValues<LogLevel>())
+            foreach (LogLevel level in Enum.GetValues<LogLevel>().Where(l => l != LogLevel.None))
             {
                 Option option = OptionFactory.CreateLogLevelOption();
                 ParseResult result = option.Parse($"--log-level={level}");

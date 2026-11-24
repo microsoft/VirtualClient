@@ -790,14 +790,26 @@ namespace VirtualClient
                 if (result.Tokens?.Any() == true)
                 {
                     string value = result.Tokens.First().Value;
-                    string[] validLogLevels = Enum.GetValues<LogLevel>().Where(l => l != LogLevel.None).Select(l => l.ToString()).ToArray();
-                    int indexOfLevel = validLogLevels.IndexOf(value, StringComparer.OrdinalIgnoreCase);
-
-                    if (indexOfLevel < 0)
+                    if (int.TryParse(value, out int numericLevel))
                     {
-                        throw new ArgumentException(
-                            $"The value '{value}' is not a valid log level. Valid log levels include: " +
-                            $"{string.Join(", ", Enum.GetValues<LogLevel>().Where(l => l != LogLevel.None).Select(l => $"{l} ({(int)l})"))}");
+                        if (!Enum.IsDefined(typeof(LogLevel), numericLevel))
+                        {
+                            throw new ArgumentException(
+                                $"The value '{value}' is not a valid log level. Valid log levels include: " +
+                                $"{string.Join(", ", Enum.GetValues<LogLevel>().Where(l => l != LogLevel.None).Select(l => $"{(int)l}"))}");
+                        }
+                    }
+                    else
+                    {
+                        string[] validLogLevels = Enum.GetValues<LogLevel>().Where(l => l != LogLevel.None).Select(l => l.ToString()).ToArray();
+                        int indexOfLevel = validLogLevels.IndexOf(value, StringComparer.OrdinalIgnoreCase);
+
+                        if (indexOfLevel < 0)
+                        {
+                            throw new ArgumentException(
+                                $"The value '{value}' is not a valid log level. Valid log levels include: " +
+                                $"{string.Join(", ", Enum.GetValues<LogLevel>().Where(l => l != LogLevel.None).Select(l => l))}");
+                        }
                     }
                 }
 
@@ -1689,11 +1701,18 @@ namespace VirtualClient
 
             if (validValues?.Any() == true)
             {
-                string[] validNames = validValues.Select(e => e.ToString()).ToArray();
-                int indexOfLevel = validNames.IndexOf(tokenValue, StringComparer.OrdinalIgnoreCase);
-                if (indexOfLevel >= 0)
+                if (int.TryParse(tokenValue, out int numericLevel) && Enum.IsDefined(typeof(LogLevel), numericLevel))
                 {
-                    value= validValues[indexOfLevel];
+                    value = (T)Enum.ToObject(typeof(T), numericLevel);
+                }
+                else
+                {
+                    string[] validNames = validValues.Select(e => e.ToString()).ToArray();
+                    int indexOfLevel = validNames.IndexOf(tokenValue, StringComparer.OrdinalIgnoreCase);
+                    if (indexOfLevel >= 0)
+                    {
+                        value = validValues[indexOfLevel];
+                    }
                 }
             }
 
