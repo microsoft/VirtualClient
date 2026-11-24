@@ -3,13 +3,6 @@
 
 namespace VirtualClient.UnitTests
 {
-    using System;
-    using System.Collections;
-    using System.Collections.Generic;
-    using System.Runtime.InteropServices;
-    using System.Security.Cryptography.X509Certificates;
-    using System.Threading;
-    using System.Threading.Tasks;
     using AutoFixture;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
@@ -17,7 +10,13 @@ namespace VirtualClient.UnitTests
     using Microsoft.Extensions.Logging;
     using Moq;
     using NUnit.Framework;
-    using VirtualClient.Common.Telemetry;
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Runtime.InteropServices;
+    using System.Security.Cryptography.X509Certificates;
+    using System.Threading;
+    using System.Threading.Tasks;
     using VirtualClient.Configuration;
     using VirtualClient.Contracts;
     using VirtualClient.Identity;
@@ -40,7 +39,7 @@ namespace VirtualClient.UnitTests
             this.mockFixture.Setup(platform, architecture);
             this.mockFixture.SetupCertificateMocks();
 
-            this.ExperimentId = null;
+            this.ExperimentId = this.mockFixture.SystemManagement.Object.ExperimentId;
             this.LogDirectory = null;
             this.PackageDirectory = null;
             this.StateDirectory = null;
@@ -393,6 +392,56 @@ namespace VirtualClient.UnitTests
             string expectedDirectory = this.mockFixture.Combine(tempDirectory, experimentId);
             string actualDirectory = this.mockFixture.PlatformSpecifics.TempDirectory;
             Assert.AreEqual(expectedDirectory, actualDirectory);
+        }
+
+        [Test]
+        [Order(22)]
+        [TestCase(PlatformID.Unix, Architecture.X64)]
+        [TestCase(PlatformID.Unix, Architecture.Arm64)]
+        [TestCase(PlatformID.Win32NT, Architecture.X64)]
+        [TestCase(PlatformID.Win32NT, Architecture.Arm64)]
+        public void ApplicationSetsExpectedEnvironmentVariablesForSdkIntegration(PlatformID platform, Architecture architecture)
+        {
+            // Scenario:
+            // The following environment variables are set at the process-level so that any child processes spawned by the Virtual Client
+            // will inherit these values. This is important for SDK script-based extensions integrations (e.g. passing the experiment ID to a script).
+            this.SetupTest(platform, architecture);
+
+            IDictionary<string, IConvertible> expectedMetadata = new Dictionary<string, IConvertible>
+            {
+                { "key1", "value1" },
+                { "key2", "value2" }
+            };
+
+            IDictionary<string, IConvertible> expectedParameters = new Dictionary<string, IConvertible>
+            {
+                { "param1", "value1" },
+                { "param2", "value2" }
+            };
+
+            this.Metadata = expectedMetadata;
+            this.Parameters = expectedParameters;
+
+            this.SetEnvironmentVariables(this.mockFixture.PlatformSpecifics);
+
+            string expectedClientId = this.mockFixture.SystemManagement.Object.AgentId;
+            string expectedExperimentId = this.mockFixture.SystemManagement.Object.ExperimentId;
+
+            Assert.AreEqual(
+                expectedClientId, 
+                this.mockFixture.PlatformSpecifics.GetEnvironmentVariable(EnvironmentVariable.SDK_CLIENT_ID));
+
+            Assert.AreEqual(
+                expectedExperimentId, 
+                this.mockFixture.PlatformSpecifics.GetEnvironmentVariable(EnvironmentVariable.SDK_EXPERIMENT_ID));
+
+            Assert.AreEqual(
+                string.Join(";", expectedMetadata.Select(kv => $"{kv.Key}={kv.Value}")),
+                this.mockFixture.PlatformSpecifics.GetEnvironmentVariable(EnvironmentVariable.SDK_METADATA));
+
+            Assert.AreEqual(
+                string.Join(";", expectedParameters.Select(kv => $"{kv.Key}={kv.Value}")),
+                this.mockFixture.PlatformSpecifics.GetEnvironmentVariable(EnvironmentVariable.SDK_PARAMETERS));
         }
 
         [Test]

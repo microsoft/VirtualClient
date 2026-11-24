@@ -130,7 +130,7 @@ namespace VirtualClient
             telemetryContext.AddContext("workingDirectory", SensitiveData.ObscureSecrets(this.WorkingDirectory));
             telemetryContext.AddContext("platforms", string.Join(VirtualClientComponent.CommonDelimiters.First(), this.SupportedPlatforms));
 
-            if (this.UseShell || this.HasFeatureFlag(ExecuteCommand.FeatureFlagShellSupport))
+            if (this.UseShell)
             {
                 await this.ExecuteWithShellSupportAsync(telemetryContext, cancellationToken);
             }

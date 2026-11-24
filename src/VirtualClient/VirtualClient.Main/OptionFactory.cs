@@ -3,6 +3,8 @@
 
 namespace VirtualClient
 {
+    using Microsoft.CodeAnalysis;
+    using Microsoft.Extensions.Logging;
     using System;
     using System.Collections.Generic;
     using System.CommandLine;
@@ -14,8 +16,7 @@ namespace VirtualClient
     using System.Net;
     using System.Runtime.InteropServices;
     using System.Text.RegularExpressions;
-    using Microsoft.CodeAnalysis;
-    using Microsoft.Extensions.Logging;
+    using VirtualClient.Actions;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Contracts;
@@ -774,7 +775,9 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreateLogLevelOption(bool required = true, object defaultValue = null)
         {
-            Option<LogLevel> option = new Option<LogLevel>(new string[] { "--log-level" })
+            Option<LogLevel> option = new Option<LogLevel>(
+                new string[] { "--log-level" },
+                new ParseArgument<LogLevel>(arg => OptionFactory.ParseEnum<LogLevel>(arg)))
             {
                 Name = "LoggingLevel",
                 Description = "Indicates the logging level for telemetry output (0 = Trace, 1 = Debug, 2 = Information, 3 = Warning, 4 = Error, 5 = Critical).",
@@ -787,11 +790,26 @@ namespace VirtualClient
                 if (result.Tokens?.Any() == true)
                 {
                     string value = result.Tokens.First().Value;
-                    if (!Enum.TryParse<LogLevel>(value, out LogLevel level) || !Enum.IsDefined<LogLevel>(level))
+                    if (int.TryParse(value, out int numericLevel))
                     {
-                        throw new ArgumentException(
-                            $"The value '{value}' is not a valid log level. Valid log levels include: " +
-                            $"{string.Join(", ", Enum.GetValues<LogLevel>().Where(l => l != LogLevel.None).Select(l => $"{l} ({(int)l})"))}");
+                        if (!Enum.IsDefined(typeof(LogLevel), numericLevel))
+                        {
+                            throw new ArgumentException(
+                                $"The value '{value}' is not a valid log level. Valid log levels include: " +
+                                $"{string.Join(", ", Enum.GetValues<LogLevel>().Where(l => l != LogLevel.None).Select(l => $"{(int)l}"))}");
+                        }
+                    }
+                    else
+                    {
+                        string[] validLogLevels = Enum.GetValues<LogLevel>().Where(l => l != LogLevel.None).Select(l => l.ToString()).ToArray();
+                        int indexOfLevel = validLogLevels.IndexOf(value, StringComparer.OrdinalIgnoreCase);
+
+                        if (indexOfLevel < 0)
+                        {
+                            throw new ArgumentException(
+                                $"The value '{value}' is not a valid log level. Valid log levels include: " +
+                                $"{string.Join(", ", Enum.GetValues<LogLevel>().Where(l => l != LogLevel.None).Select(l => l))}");
+                        }
                     }
                 }
 
@@ -1672,6 +1690,33 @@ namespace VirtualClient
             }
 
             return delimitedValues;
+        }
+
+        private static T ParseEnum<T>(ArgumentResult parsedResult)
+            where T : struct, Enum
+        {
+            T value = default(T);
+            string tokenValue = parsedResult.Tokens.First().Value;
+            T[] validValues = Enum.GetValues<T>();
+
+            if (validValues?.Any() == true)
+            {
+                if (int.TryParse(tokenValue, out int numericLevel) && Enum.IsDefined(typeof(LogLevel), numericLevel))
+                {
+                    value = (T)Enum.ToObject(typeof(T), numericLevel);
+                }
+                else
+                {
+                    string[] validNames = validValues.Select(e => e.ToString()).ToArray();
+                    int indexOfLevel = validNames.IndexOf(tokenValue, StringComparer.OrdinalIgnoreCase);
+                    if (indexOfLevel >= 0)
+                    {
+                        value = validValues[indexOfLevel];
+                    }
+                }
+            }
+
+            return value;
         }
 
         private static EnvironmentLayout ParseEnvironmentLayout(ArgumentResult parsedResult, IFileSystem fileSystem, PlatformSpecifics platformSpecifics)

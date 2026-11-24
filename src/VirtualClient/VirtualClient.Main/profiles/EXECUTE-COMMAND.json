@@ -8,7 +8,8 @@
         "Command": null,
         "Scenario": "ExecuteCommand",
         "LogFileName": null,
-        "LogFolderName": null
+        "LogFolderName": null,
+        "UseShell": true
     },
     "Actions": [
         {
@@ -17,7 +18,8 @@
                 "Scenario": "$.Parameters.Scenario",
                 "Command": "$.Parameters.Command",
                 "LogFileName": "$.Parameters.LogFileName",
-                "LogFolderName": "$.Parameters.LogFolderName"
+                "LogFolderName": "$.Parameters.LogFolderName",
+                "UseShell": "$.Parameters.UseShell"
             }
         }
     ]

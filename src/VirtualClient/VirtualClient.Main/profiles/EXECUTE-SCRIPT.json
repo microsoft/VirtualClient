@@ -13,7 +13,8 @@
         "TelemetryFileFormat": "Csv",
         "LogFileName": null,
         "LogFolderName": null,
-        "IncludeTimestampOnUpload": false
+        "IncludeTimestampOnUpload": false,
+        "UseShell": true
     },
     "Actions": [
         {
@@ -33,20 +34,19 @@
                         "LogFileName": "$.Parameters.LogFileName",
                         "LogFolderName": "$.Parameters.LogFolderName",
                         "WorkingDirectory": "{PackageDir:script_package}",
-                        "FeatureFlag": "ShellSupport",
+                        "UseShell": "$.Parameters.UseShell",
                         "Tags": "CRC,SDK,Script"
                     }
                 },
                 {
-                    "Type": "UploadFiles",
+                    "Type": "UploadTelemetry",
                     "Parameters": {
-                        "Scenario": "UploadFiles",
-                        "TargetDirectory": "{LogDir}",
-                        "Exclude": "[\\\\/]metrics(?:_[0-9]+)*.csv",
-                        "Flatten": false,
+                        "Scenario": "UploadMetricsTelemetry",
+                        "Format": "$.Parameters.TelemetryFileFormat",
+                        "Intrinsic": true,
                         "Recursive": true,
-                        "Timestamped": "$.Parameters.IncludeTimestampOnUpload",
-                        "Tags": "CRC,SDK,Script"
+                        "Schema": "Metrics",
+                        "TargetDirectory": "{LogDir}"
                     }
                 },
                 {
@@ -61,14 +61,15 @@
                     }
                 },
                 {
-                    "Type": "UploadTelemetry",
+                    "Type": "UploadFiles",
                     "Parameters": {
-                        "Scenario": "UploadMetricsTelemetry",
-                        "Format": "$.Parameters.TelemetryFileFormat",
-                        "Intrinsic": true,
+                        "Scenario": "UploadFiles",
+                        "TargetDirectory": "{LogDir}",
+                        "Exclude": "[\\\\/]metrics(?:_[0-9]+)*.csv",
+                        "Flatten": false,
                         "Recursive": true,
-                        "Schema": "Metrics",
-                        "TargetDirectory": "{LogDir}"
+                        "Timestamped": "$.Parameters.IncludeTimestampOnUpload",
+                        "Tags": "CRC,SDK,Script"
                     }
                 }
             ]

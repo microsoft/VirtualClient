@@ -80,39 +80,11 @@ namespace VirtualClient
         }
 
         [Test]
-        [TestCase("bash -c \"/home/user/anycommand&&/home/user/anyothercommand\"", "bash -c \"/home/user/anycommand&&/home/user/anyothercommand\"")]
-        [TestCase("bash -c \"/home/user/anycommand --argument=value&&/home/user/anyothercommand --argument2=value2\"", "bash -c \"/home/user/anycommand --argument=value&&/home/user/anyothercommand --argument2=value2\"")]
-        [TestCase("sudo bash -c \"/home/user/anycommand&&/home/user/anyothercommand\"", "sudo bash -c \"/home/user/anycommand&&/home/user/anyothercommand\"")]
-        [TestCase("sudo bash -c \"/home/user/anycommand --argument=value&&sudo /home/user/anyothercommand --argument2=value2\"", "sudo bash -c \"/home/user/anycommand --argument=value&&sudo /home/user/anyothercommand --argument2=value2\"")]
-        [TestCase("bash -c \"/home/user/anycommand --log-dir='home/user/log dir'&&/home/user/anyothercommand --log-dir='home/user/log dir'\"", "bash -c \"/home/user/anycommand --log-dir='home/user/log dir'&&/home/user/anyothercommand --log-dir='home/user/log dir'\"")]
-        [TestCase("bash -c '/home/user/anycommand --log-dir=\"home/user/log dir\"&&/home/user/anyothercommand --log-dir=\"home/user/log dir\"'", "bash -c '/home/user/anycommand --log-dir=\"home/user/log dir\"&&/home/user/anyothercommand --log-dir=\"home/user/log dir\"'")]
-        public async Task ExecuteCommandSupportsCommandChainingOnUnixSystems(string fullCommand, string expectedCommandExecuted)
-        {
-            this.SetupDefaults(PlatformID.Unix);
-            bool confirmed = false;
-
-            using (TestExecuteCommand command = new TestExecuteCommand(this.mockFixture))
-            {
-                command.Parameters[nameof(ExecuteCommand.Command)] = fullCommand;
-                command.Parameters["FeatureFlag"] = "ShellSupport";
-
-                this.mockFixture.ProcessManager.OnProcessCreated = (process) =>
-                {
-                    Assert.AreEqual(expectedCommandExecuted, process.FullCommand());
-                    confirmed = true;
-                };
-
-                await command.ExecuteAsync(CancellationToken.None);
-                Assert.IsTrue(confirmed);
-            }
-        }
-
-        [Test]
         [TestCase("/home/user/anycommand&&/home/user/anyothercommand", "bash -c \"/home/user/anycommand&&/home/user/anyothercommand\"")]
         [TestCase("/home/user/anycommand --argument=value&&/home/user/anyothercommand --argument2=value2", "bash -c \"/home/user/anycommand --argument=value&&/home/user/anyothercommand --argument2=value2\"")]
         [TestCase("sudo /home/user/anycommand&&/home/user/anyothercommand", "bash -c \"sudo /home/user/anycommand&&/home/user/anyothercommand\"")]
         [TestCase("sudo /home/user/anycommand --argument=value&&sudo /home/user/anyothercommand --argument2=value2", "bash -c \"sudo /home/user/anycommand --argument=value&&sudo /home/user/anyothercommand --argument2=value2\"")]
-        public async Task ExecuteCommandSupportsCommandChainingOnUnixSystems_With_UseShell(string fullCommand, string expectedCommandExecuted)
+        public async Task ExecuteCommandSupportsCommandChainingOnUnixSystems(string fullCommand, string expectedCommandExecuted)
         {
             this.SetupDefaults(PlatformID.Unix);
             this.mockFixture.Parameters[nameof(ExecuteCommand.UseShell)] = true;

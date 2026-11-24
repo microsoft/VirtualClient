@@ -166,9 +166,19 @@ namespace VirtualClient.Contracts
         public const string SDK_EXPERIMENT_ID = nameof(SDK_EXPERIMENT_ID);
 
         /// <summary>
+        /// Name = SDK_LOGS_DIR
+        /// </summary>
+        public const string SDK_LOGS_DIR = nameof(SDK_LOGS_DIR);
+
+        /// <summary>
         /// Name = SDK_METADATA
         /// </summary>
         public const string SDK_METADATA = nameof(SDK_METADATA);
+
+        /// <summary>
+        /// Name = SDK_PARAMETERS
+        /// </summary>
+        public const string SDK_PARAMETERS = nameof(SDK_PARAMETERS);
 
         /// <summary>
         /// Name = SUDO_USER

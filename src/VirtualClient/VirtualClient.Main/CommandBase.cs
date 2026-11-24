@@ -50,7 +50,7 @@ namespace VirtualClient
         protected CommandBase()
         {
             this.CertificateManager = new CertificateManager();
-            this.ClientId = Environment.MachineName.ToLowerInvariant();
+            this.ClientId = Environment.MachineName;
             this.ClientInstance = Guid.NewGuid();
             this.ExperimentId = Guid.NewGuid().ToString().ToLowerInvariant();
         }
@@ -332,7 +332,7 @@ namespace VirtualClient
                 // provided on the command line.
                 if (string.IsNullOrWhiteSpace(this.ClientId))
                 {
-                    this.ClientId = Environment.MachineName.ToLowerInvariant();
+                    this.ClientId = Environment.MachineName;
                 }
 
                 if (string.IsNullOrWhiteSpace(this.ExperimentId))
@@ -347,12 +347,12 @@ namespace VirtualClient
 
                 this.Initialize(args, platformSpecifics);
                 this.SetGlobalTelemetryProperties(args);
-                this.SetEnvironmentVariables();
 
-                // Users can override the location of the "logs", "packages" and "state" folders on the command line
+                // Users can override the location of the "logs", "packages", "state" and "temp" folders on the command line
                 // or by using environment variables. This is used in scenarios where VC may be used as a base for other
                 // applications that want to have a shared resource + dependency directories.
                 this.EvaluateDirectoryPathOverrides(platformSpecifics);
+                this.SetEnvironmentVariables(platformSpecifics);
 
                 ComponentTypeCache.Instance.LoadComponentTypes(AppDomain.CurrentDomain.BaseDirectory);
 
@@ -1014,6 +1014,33 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Sets environment variables for SDK process/script integrations.
+        /// </summary>
+        /// <param name="platformSpecifics">Provides platform-specific information.</param>
+        protected void SetEnvironmentVariables(PlatformSpecifics platformSpecifics)
+        {
+            // We set environment variables at the process-level so that any child processes spawned by the Virtual Client will inherit these values.
+            // This allows for script-based extensions to access these values without having to pass them in as parameters.
+            platformSpecifics.SetEnvironmentVariable(EnvironmentVariable.SDK_CLIENT_ID, this.ClientId, EnvironmentVariableTarget.Process);
+            platformSpecifics.SetEnvironmentVariable(EnvironmentVariable.SDK_EXPERIMENT_ID, this.ExperimentId, EnvironmentVariableTarget.Process);
+            platformSpecifics.SetEnvironmentVariable(EnvironmentVariable.SDK_LOGS_DIR, platformSpecifics.LogsDirectory, EnvironmentVariableTarget.Process);
+
+            if (this.Metadata?.Any() == true)
+            {
+                platformSpecifics.SetEnvironmentVariable(
+                    EnvironmentVariable.SDK_METADATA, string.Join(";", this.Metadata.Select(entry => $"{entry.Key}={entry.Value}")),
+                    EnvironmentVariableTarget.Process);
+            }
+
+            if (this.Parameters?.Any() == true)
+            {
+                platformSpecifics.SetEnvironmentVariable(
+                    EnvironmentVariable.SDK_PARAMETERS, string.Join(";", this.Parameters.Select(entry => $"{entry.Key}={entry.Value}")),
+                    EnvironmentVariableTarget.Process);
+            }
+        }
+
+        /// <summary>
         /// Initializes the global/persistent telemetry properties that will be included
         /// with all telemetry emitted from the Virtual Client.
         /// </summary>
@@ -1223,21 +1250,6 @@ namespace VirtualClient
             }
 
             return FileContext.ResolvePathTemplate(path, this.pathReplacements, throwIfNotMatched: true);
-        }
-
-        private void SetEnvironmentVariables()
-        {
-            // We set environment variables at the process-level so that any child processes spawned by the Virtual Client will inherit these values.
-            // This allows for script-based extensions to access these values without having to pass them in as parameters.
-            Environment.SetEnvironmentVariable(EnvironmentVariable.SDK_CLIENT_ID, this.ClientId, EnvironmentVariableTarget.Process);
-            Environment.SetEnvironmentVariable(EnvironmentVariable.SDK_EXPERIMENT_ID, this.ExperimentId, EnvironmentVariableTarget.Process);
-
-            if (this.Metadata?.Any() == true)
-            {
-                Environment.SetEnvironmentVariable(
-                    EnvironmentVariable.SDK_METADATA, string.Join(";", this.Metadata.Select(entry => $"{entry.Key}={entry.Value}")),
-                    EnvironmentVariableTarget.Process);
-            }
         }
     }
 }
