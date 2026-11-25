@@ -84,6 +84,11 @@ namespace VirtualClient.Actions
                     StringComparison.OrdinalIgnoreCase);
 
                 templateText = templateText.Replace(
+                    SpecCpu2017ConfigPlaceholder.Gcc14Workaround,
+                    Convert.ToInt32(compilerVersion) >= 14 ? SpecCpu2017ConfigPlaceholder.Gcc14WorkaroundContent : string.Empty,
+                    StringComparison.OrdinalIgnoreCase);
+
+                templateText = templateText.Replace(
                     SpecCpu2017ConfigPlaceholder.Gcc15Workaround,
                     Convert.ToInt32(compilerVersion) >= 15 ? SpecCpu2017ConfigPlaceholder.Gcc15WorkaroundContent : string.Empty,
                     StringComparison.OrdinalIgnoreCase);
@@ -93,6 +98,11 @@ namespace VirtualClient.Actions
                 templateText = templateText.Replace(
                     SpecCpu2017ConfigPlaceholder.Gcc10Workaround,
                     SpecCpu2017ConfigPlaceholder.Gcc10WorkaroundContent,
+                    StringComparison.OrdinalIgnoreCase);
+
+                templateText = templateText.Replace(
+                    SpecCpu2017ConfigPlaceholder.Gcc14Workaround,
+                    SpecCpu2017ConfigPlaceholder.Gcc14WorkaroundContent,
                     StringComparison.OrdinalIgnoreCase);
 
                 templateText = templateText.Replace(
@@ -108,6 +118,8 @@ namespace VirtualClient.Actions
         {
             public const string Gcc10Workaround = "$Gcc10Workaround$";
             public const string Gcc10WorkaroundContent = "%define GCCge10";
+            public const string Gcc14Workaround = "$Gcc14Workaround$";
+            public const string Gcc14WorkaroundContent = "%define GCCge14";
             public const string Gcc15Workaround = "$Gcc15Workaround$";
             public const string Gcc15WorkaroundContent = "%define GCCge15";
         }
